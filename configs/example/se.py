@@ -213,8 +213,7 @@ for i in xrange(np):
         system.cpu[i].fastmem = True
 
     if options.simpoint_profile:
-        system.cpu[i].simpoint_profile = True
-        system.cpu[i].simpoint_interval = options.simpoint_interval
+        system.cpu[i].addSimPointProbe(options.simpoint_interval)
 
     if options.checker:
         system.cpu[i].addCheckerCpu()

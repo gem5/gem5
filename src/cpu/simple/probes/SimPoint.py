@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -9,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2007 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,34 +33,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Curtis Dunham
 
 from m5.params import *
-from BaseSimpleCPU import BaseSimpleCPU
-from SimPoint import SimPoint
+from Probe import ProbeListenerObject
 
-class AtomicSimpleCPU(BaseSimpleCPU):
-    """Simple CPU model executing a configurable number of
-    instructions per cycle. This model uses the simplified 'atomic'
-    memory mode."""
+class SimPoint(ProbeListenerObject):
+    """Probe for collecting SimPoint Basic Block Vectors (BBVs)."""
 
-    type = 'AtomicSimpleCPU'
-    cxx_header = "cpu/simple/atomic.hh"
+    type = 'SimPoint'
+    cxx_header = "cpu/simple/probes/simpoint.hh"
 
-    @classmethod
-    def memory_mode(cls):
-        return 'atomic'
-
-    @classmethod
-    def support_take_over(cls):
-        return True
-
-    width = Param.Int(1, "CPU width")
-    simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
-    simulate_inst_stalls = Param.Bool(False, "Simulate icache stall cycles")
-    fastmem = Param.Bool(False, "Access memory directly")
-
-    def addSimPointProbe(self, interval):
-        simpoint = SimPoint()
-        simpoint.interval = interval
-        self.probeListener = simpoint
+    interval = Param.UInt64(100000000, "Interval Size (insts)")
+    profile_file = Param.String("simpoint.bb.gz", "BBV (output) file")
