@@ -39,7 +39,17 @@
 # Authors: Andreas Hansson
 
 from m5.objects import *
+from m5.defines import buildEnv
 from base_config import *
+from arm_generic import *
+from O3_ARM_v7a import O3_ARM_v7a_3
 
-root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
-                                cpu_class=DerivO3CPU).create_root()
+# If we are running ARM regressions, use a more sensible CPU
+# configuration. This makes the results more meaningful, and also
+# increases the coverage of the regressions.
+if buildEnv['TARGET_ISA'] == "arm":
+    root = ArmSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+                                   cpu_class=O3_ARM_v7a_3).create_root()
+else:
+    root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+                                   cpu_class=DerivO3CPU).create_root()

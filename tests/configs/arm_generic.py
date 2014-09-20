@@ -43,6 +43,25 @@ m5.util.addToPath('../configs/common')
 import FSConfig
 from Caches import *
 from base_config import *
+from O3_ARM_v7a import *
+
+class ArmSESystemUniprocessor(BaseSESystemUniprocessor):
+    """Syscall-emulation builder for ARM uniprocessor systems.
+
+    A small tweak of the syscall-emulation builder to use more
+    representative cache configurations.
+    """
+
+    def __init__(self, **kwargs):
+        BaseSESystem.__init__(self, **kwargs)
+
+    def create_caches_private(self, cpu):
+        # The atomic SE configurations do not use caches
+        if self.mem_mode == "timing":
+            # Use the more representative cache configuration
+            cpu.addTwoLevelCacheHierarchy(O3_ARM_v7a_ICache(),
+                                          O3_ARM_v7a_DCache(),
+                                          O3_ARM_v7aL2())
 
 class LinuxArmSystemBuilder(object):
     """Mix-in that implements create_system.
@@ -87,6 +106,12 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder,
         BaseSystem.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(self, machine_type)
 
+    def create_caches_private(self, cpu):
+        # Use the more representative cache configuration
+        cpu.addTwoLevelCacheHierarchy(O3_ARM_v7a_ICache(),
+                                      O3_ARM_v7a_DCache(),
+                                      O3_ARM_v7aL2())
+
 class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
                                    BaseFSSystemUniprocessor):
     """Basic ARM full system builder for uniprocessor systems.
@@ -99,7 +124,6 @@ class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
     def __init__(self, machine_type='RealView_PBX', **kwargs):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(self, machine_type)
-
 
 class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
     """Uniprocessor ARM system prepared for CPU switching"""
