@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009, 2012-2013 ARM Limited
+# Copyright (c) 2012-2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,38 +33,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ali Saidi
+# Authors: Vasileios Spiliopoulos
+#          Akash Bagdia
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
+from Device import BasicPioDevice
+from m5.proxy import *
 
-if env['TARGET_ISA'] == 'arm':
-    SimObject('Gic.py')
-    SimObject('RealView.py')
-    SimObject('EnergyCtrl.py')
-
-    Source('a9scu.cc')
-    Source('amba_device.cc')
-    Source('amba_fake.cc')
-    Source('base_gic.cc')
-    Source('generic_timer.cc')
-    Source('gic_pl390.cc')
-    Source('pl011.cc')
-    Source('pl111.cc')
-    Source('hdlcd.cc')
-    Source('kmi.cc')
-    Source('timer_sp804.cc')
-    Source('rv_ctrl.cc')
-    Source('realview.cc')
-    Source('rtc_pl031.cc')
-    Source('timer_cpulocal.cc')
-    Source('vgic.cc')
-    Source('energy_ctrl.cc')
-
-    DebugFlag('AMBA')
-    DebugFlag('HDLcd')
-    DebugFlag('PL111')
-    DebugFlag('Pl050')
-    DebugFlag('GIC')
-    DebugFlag('RVCTRL')
-    DebugFlag('EnergyCtrl')
-    DebugFlag('VGIC')
+class EnergyCtrl(BasicPioDevice):
+    type = 'EnergyCtrl'
+    cxx_header = "dev/arm/energy_ctrl.hh"
+    dvfs_handler = Param.DVFSHandler(Parent.dvfs_handler, "DVFS handler")
