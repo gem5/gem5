@@ -268,7 +268,7 @@ TrafficGen::parseConfig()
                     states[id] = new IdleGen(name(), masterID, duration);
                     DPRINTF(TrafficGen, "State: %d IdleGen\n", id);
                 } else if (mode == "LINEAR" || mode == "RANDOM" ||
-                           mode == "DRAM") {
+                           mode == "DRAM"   || mode == "DRAM_ROTATE") {
                     uint32_t read_percent;
                     Addr start_addr;
                     Addr end_addr;
@@ -311,7 +311,7 @@ TrafficGen::parseConfig()
                                                    min_period, max_period,
                                                    read_percent, data_limit);
                         DPRINTF(TrafficGen, "State: %d RandomGen\n", id);
-                    } else if (mode == "DRAM") {
+                    } else if (mode == "DRAM" || mode == "DRAM_ROTATE") {
                         // stride size (bytes) of the request for achieving
                         // required hit length
                         unsigned int stride_size;
@@ -319,9 +319,11 @@ TrafficGen::parseConfig()
                         unsigned int nbr_of_banks_DRAM;
                         unsigned int nbr_of_banks_util;
                         unsigned int addr_mapping;
+                        unsigned int nbr_of_ranks;
 
                         is >> stride_size >> page_size >> nbr_of_banks_DRAM >>
-                            nbr_of_banks_util >> addr_mapping;
+                            nbr_of_banks_util >> addr_mapping >>
+                            nbr_of_ranks;
 
                         if (stride_size > page_size)
                             warn("DRAM generator stride size (%d) is greater "
@@ -349,16 +351,40 @@ TrafficGen::parseConfig()
                                     stride_size, blocksize, num_seq_pkts);
                         }
 
-                        states[id] = new DramGen(name(), masterID,
-                                                 duration, start_addr,
-                                                 end_addr, blocksize,
-                                                 min_period, max_period,
-                                                 read_percent, data_limit,
-                                                 num_seq_pkts, page_size,
-                                                 nbr_of_banks_DRAM,
-                                                 nbr_of_banks_util,
-                                                 addr_mapping);
-                        DPRINTF(TrafficGen, "State: %d DramGen\n", id);
+                        if (mode == "DRAM") {
+                            states[id] = new DramGen(name(), masterID,
+                                                     duration, start_addr,
+                                                     end_addr, blocksize,
+                                                     min_period, max_period,
+                                                     read_percent, data_limit,
+                                                     num_seq_pkts, page_size,
+                                                     nbr_of_banks_DRAM,
+                                                     nbr_of_banks_util,
+                                                     addr_mapping,
+                                                     nbr_of_ranks);
+                            DPRINTF(TrafficGen, "State: %d DramGen\n", id);
+                        } else {
+                            // Will rotate to the next rank after rotating
+                            // through all banks, for each command type.
+                            // In the 50% read case, series will be issued
+                            // for both RD & WR before the rank in incremented
+                            unsigned int max_seq_count_per_rank =
+                                (read_percent == 50) ? nbr_of_banks_util * 2
+                                                     : nbr_of_banks_util;
+
+                            states[id] = new DramRotGen(name(), masterID,
+                                                     duration, start_addr,
+                                                     end_addr, blocksize,
+                                                     min_period, max_period,
+                                                     read_percent, data_limit,
+                                                     num_seq_pkts, page_size,
+                                                     nbr_of_banks_DRAM,
+                                                     nbr_of_banks_util,
+                                                     addr_mapping,
+                                                     nbr_of_ranks,
+                                                     max_seq_count_per_rank);
+                            DPRINTF(TrafficGen, "State: %d DramRotGen\n", id);
+                        }
                     }
                 } else {
                     fatal("%s: Unknown traffic generator mode: %s",

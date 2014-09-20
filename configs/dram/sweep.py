@@ -58,6 +58,20 @@ parser.add_option("--mem-type", type="choice", default="ddr3_1600_x64",
                   choices=MemConfig.mem_names(),
                   help = "type of memory to use")
 
+parser.add_option("--ranks", "-r", type="int", default=1,
+                  help = "Number of ranks to iterate across")
+
+parser.add_option("--rd_perc", type="int", default=100,
+                  help = "Percentage of read commands")
+
+parser.add_option("--mode", type="choice", default="DRAM",
+                  choices=["DRAM", "DRAM_ROTATE"],
+                  help = "DRAM: Random traffic; \
+                          DRAM_ROTATE: Traffic rotating across banks and ranks")
+
+parser.add_option("--addr_map", type="int", default=1,
+                  help = "0: RoCoRaBaCh; 1: RoRaBaCoCh/RoRaBaChCo")
+
 (options, args) = parser.parse_args()
 
 if args:
@@ -89,8 +103,17 @@ MemConfig.config_mem(options, system)
 if not isinstance(system.mem_ctrls[0], m5.objects.DRAMCtrl):
     fatal("This script assumes the memory is a DRAMCtrl subclass")
 
-# for now the generator assumes a single rank
-system.mem_ctrls[0].ranks_per_channel = 1
+# Set number of ranks based on input argument; default is 1 rank
+system.mem_ctrls[0].ranks_per_channel = options.ranks
+
+# Set the address mapping based on input argument
+# Default to RoRaBaCoCh
+if options.addr_map == 0:
+   system.mem_ctrls[0].addr_mapping = "RoCoRaBaCh"
+elif options.addr_map == 1:
+   system.mem_ctrls[0].addr_mapping = "RoRaBaCoCh"
+else:
+    fatal("Did not specify a valid address map argument")
 
 # stay in each state for 0.25 ms, long enough to warm things up, and
 # short enough to avoid hitting a refresh
@@ -134,10 +157,12 @@ max_stride = min(512, page_size)
 nxt_state = 0
 for bank in range(1, nbr_banks + 1):
     for stride_size in range(burst_size, max_stride + 1, burst_size):
-        cfg_file.write("STATE %d %d DRAM 100 0 %d "
-                       "%d %d %d %d %d %d %d %d 1\n" %
-                       (nxt_state, period, max_addr, burst_size, itt, itt, 0,
-                        stride_size, page_size, nbr_banks, bank))
+        cfg_file.write("STATE %d %d %s %d 0 %d %d "
+                       "%d %d %d %d %d %d %d %d %d\n" %
+                       (nxt_state, period, options.mode, options.rd_perc,
+                        max_addr, burst_size, itt, itt, 0, stride_size,
+                        page_size, nbr_banks, bank, options.addr_map,
+                        options.ranks))
         nxt_state = nxt_state + 1
 
 cfg_file.write("INIT 0\n")

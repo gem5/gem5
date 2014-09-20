@@ -310,7 +310,7 @@ class RandomGen : public BaseGen
 /**
  * DRAM specific generator is for issuing request with variable page
  * hit length and bank utilization. Currently assumes a single
- * channel, single rank configuration.
+ * channel configuration.
  */
 class DramGen : public RandomGen
 {
@@ -337,7 +337,7 @@ class DramGen : public RandomGen
      *                          for N banks, we will use banks: 0->(N-1)
      * @param addr_mapping Address mapping to be used,
      *                     0: RoCoRaBaCh, 1: RoRaBaCoCh/RoRaBaChCo
-     *                     assumes single channel and single rank system
+     *                     assumes single channel system
      */
     DramGen(const std::string& _name, MasterID master_id, Tick _duration,
             Addr start_addr, Addr end_addr, Addr _blocksize,
@@ -345,7 +345,8 @@ class DramGen : public RandomGen
             uint8_t read_percent, Addr data_limit,
             unsigned int num_seq_pkts, unsigned int page_size,
             unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-            unsigned int addr_mapping)
+            unsigned int addr_mapping,
+            unsigned int nbr_of_ranks)
         : RandomGen(_name, master_id, _duration, start_addr, end_addr,
           _blocksize, min_period, max_period, read_percent, data_limit),
           numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),
@@ -354,7 +355,9 @@ class DramGen : public RandomGen
           bankBits(floorLog2(nbr_of_banks_DRAM)),
           blockBits(floorLog2(_blocksize)),
           nbrOfBanksDRAM(nbr_of_banks_DRAM),
-          nbrOfBanksUtil(nbr_of_banks_util), addrMapping(addr_mapping)
+          nbrOfBanksUtil(nbr_of_banks_util), addrMapping(addr_mapping),
+          rankBits(floorLog2(nbr_of_ranks)),
+          nbrOfRanks(nbr_of_ranks)
     {
         if (addrMapping != 1 && addrMapping != 0) {
             addrMapping = 1;
@@ -364,7 +367,15 @@ class DramGen : public RandomGen
 
     PacketPtr getNextPacket();
 
-  private:
+    /** Insert bank, rank, and column bits into packed
+     *  address to create address for 1st command in a
+     *  series
+     * @param new_bank Bank number of next packet series
+     * @param new_rank Rank value of next packet series
+    */
+    void genStartAddr(unsigned int new_bank , unsigned int new_rank);
+
+  protected:
 
     /** Number of sequential DRAM packets to be generated per cpu request */
     const unsigned int numSeqPkts;
@@ -398,6 +409,84 @@ class DramGen : public RandomGen
 
     /** Address mapping to be used */
     unsigned int addrMapping;
+
+    /** Number of rank bits in DRAM address*/
+    const unsigned int rankBits;
+
+    /** Number of ranks to be utilized for a given configuration */
+    const unsigned int nbrOfRanks;
+
+};
+
+class DramRotGen : public DramGen
+{
+
+  public:
+
+    /**
+     * Create a DRAM address sequence generator.
+     * This sequence generator will rotate through:
+     * 1) Banks per rank
+     * 2) Command type (if applicable)
+     * 3) Ranks per channel
+     *
+     * @param _name Name to use for status and debug
+     * @param master_id MasterID set on each request
+     * @param _duration duration of this state before transitioning
+     * @param start_addr Start address
+     * @param end_addr End address
+     * @param _blocksize Size used for transactions injected
+     * @param min_period Lower limit of random inter-transaction time
+     * @param max_period Upper limit of random inter-transaction time
+     * @param read_percent Percent of transactions that are reads
+     * @param data_limit Upper limit on how much data to read/write
+     * @param num_seq_pkts Number of packets per stride, each of _blocksize
+     * @param page_size Page size (bytes) used in the DRAM
+     * @param nbr_of_banks_DRAM Total number of banks in DRAM
+     * @param nbr_of_banks_util Number of banks to utilized,
+     *                          for N banks, we will use banks: 0->(N-1)
+     * @param nbr_of_ranks Number of ranks utilized,
+     * @param addr_mapping Address mapping to be used,
+     *                     0: RoCoRaBaCh, 1: RoRaBaCoCh/RoRaBaChCo
+     *                     assumes single channel system
+     */
+    DramRotGen(const std::string& _name, MasterID master_id, Tick _duration,
+            Addr start_addr, Addr end_addr, Addr _blocksize,
+            Tick min_period, Tick max_period,
+            uint8_t read_percent, Addr data_limit,
+            unsigned int num_seq_pkts, unsigned int page_size,
+            unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
+            unsigned int addr_mapping,
+            unsigned int nbr_of_ranks,
+            unsigned int max_seq_count_per_rank)
+        : DramGen(_name, master_id, _duration, start_addr, end_addr,
+          _blocksize, min_period, max_period, read_percent, data_limit,
+          num_seq_pkts, page_size, nbr_of_banks_DRAM,
+          nbr_of_banks_util, addr_mapping,
+          nbr_of_ranks),
+          maxSeqCountPerRank(max_seq_count_per_rank),
+          nextSeqCount(0)
+    {
+        // Rotating traffic generation can only support a read
+        // percentage of 0, 50, or 100
+        if (readPercent != 50  && readPercent != 100 && readPercent != 0) {
+           fatal("%s: Unsupported read percentage for DramRotGen: %d",
+                 _name, readPercent);
+        }
+    }
+
+    PacketPtr getNextPacket();
+
+  private:
+    /** Number of command series issued before the rank is
+        changed.  Should rotate to the next rank after rorating
+        throughall the banks for each specified command type     */
+    const unsigned int maxSeqCountPerRank;
+
+    /** Next packet series count used to set rank and bank,
+        and update isRead Incremented at the start of a new
+        packet series       */
+    unsigned int nextSeqCount;
 };
 
 /**
