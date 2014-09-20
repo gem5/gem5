@@ -76,7 +76,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     writeLowThreshold(writeBufferSize * p->write_low_thresh_perc / 100.0),
     minWritesPerSwitch(p->min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
-    tCK(p->tCK), tWTR(p->tWTR), tRTW(p->tRTW), tBURST(p->tBURST),
+    tCK(p->tCK), tWTR(p->tWTR), tRTW(p->tRTW), tCS(p->tCS), tBURST(p->tBURST),
     tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS), tWR(p->tWR),
     tRTP(p->tRTP), tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
     tXAW(p->tXAW), activationLimit(p->activation_limit),
@@ -87,7 +87,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     backendLatency(p->static_backend_latency),
     busBusyUntil(0), refreshDueAt(0), refreshState(REF_IDLE),
     pwrStateTrans(PWR_IDLE), pwrState(PWR_IDLE), prevArrival(0),
-    nextReqTime(0), pwrStateTick(0), numBanksActive(0)
+    nextReqTime(0), pwrStateTick(0), numBanksActive(0),
+    activeRank(0)
 {
     // create the bank states based on the dimensions of the ranks and
     // banks
@@ -683,7 +684,7 @@ DRAMCtrl::processRespondEvent()
 }
 
 void
-DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue)
+DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue, bool switched_cmd_type)
 {
     // This method does the arbitration between requests. The chosen
     // packet is simply moved to the head of the queue. The other
@@ -699,13 +700,13 @@ DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue)
     if (memSchedPolicy == Enums::fcfs) {
         // Do nothing, since the correct request is already head
     } else if (memSchedPolicy == Enums::frfcfs) {
-        reorderQueue(queue);
+        reorderQueue(queue, switched_cmd_type);
     } else
         panic("No scheduling policy chosen\n");
 }
 
 void
-DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue)
+DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, bool switched_cmd_type)
 {
     // Only determine this when needed
     uint64_t earliest_banks = 0;
@@ -713,6 +714,7 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue)
     // Search for row hits first, if no row hit is found then schedule the
     // packet to one of the earliest banks available
     bool found_earliest_pkt = false;
+    bool found_prepped_diff_rank_pkt = false;
     auto selected_pkt_it = queue.begin();
 
     for (auto i = queue.begin(); i != queue.end() ; ++i) {
@@ -720,25 +722,30 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue)
         const Bank& bank = dram_pkt->bankRef;
         // Check if it is a row hit
         if (bank.openRow == dram_pkt->row) {
-            // FCFS within the hits
-            DPRINTF(DRAM, "Row buffer hit\n");
-            selected_pkt_it = i;
-            break;
-        } else if (!found_earliest_pkt) {
-            // No row hit, go for first ready
+            if (dram_pkt->rank == activeRank || switched_cmd_type) {
+                // FCFS within the hits, giving priority to commands
+                // that access the same rank as the previous burst
+                // to minimize bus turnaround delays
+                // Only give rank prioity when command type is not changing
+                DPRINTF(DRAM, "Row buffer hit\n");
+                selected_pkt_it = i;
+                break;
+            } else if (!found_prepped_diff_rank_pkt) {
+                // found row hit for command on different rank than prev burst
+                selected_pkt_it = i;
+                found_prepped_diff_rank_pkt = true;
+            }
+        } else if (!found_earliest_pkt & !found_prepped_diff_rank_pkt) {
+            // No row hit and
+            // haven't found an entry with a row hit to a new rank
             if (earliest_banks == 0)
-                earliest_banks = minBankActAt(queue);
+                // Determine entries with earliest bank prep delay
+                // Function will give priority to commands that access the
+                // same rank as previous burst and can prep the bank seamlessly
+                earliest_banks = minBankPrep(queue, switched_cmd_type);
 
-            // simplistic approximation of when the bank can issue an
-            // activate, this is calculated in minBankActAt and could
-            // be cached
-            Tick act_at = bank.openRow == Bank::NO_ROW ?
-                bank.actAllowedAt :
-                std::max(bank.preAllowedAt, curTick()) + tRP;
-
-            // Bank is ready or is the first available bank
-            if (act_at <= curTick() ||
-                bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
+            // FCFS - Bank is first available bank
+            if (bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
                 // Remember the packet to be scheduled to one of the earliest
                 // banks available, FCFS amongst the earliest banks
                 selected_pkt_it = i;
@@ -983,6 +990,9 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // read/write (add a max with tCCD here)
     bank.colAllowedAt = cmd_at + tBURST;
 
+    // Save rank of current access
+    activeRank = dram_pkt->rank;
+
     // If this is a write, we also need to respect the write recovery
     // time before a precharge, in the case of a read, respect the
     // read to precharge constraint
@@ -1095,6 +1105,9 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 void
 DRAMCtrl::processNextReqEvent()
 {
+    // pre-emptively set to false.  Overwrite if in READ_TO_WRITE
+    // or WRITE_TO_READ state
+    bool switched_cmd_type = false;
     if (busState == READ_TO_WRITE) {
         DPRINTF(DRAM, "Switching to writes after %d reads with %d reads "
                 "waiting\n", readsThisTime, readQueue.size());
@@ -1106,6 +1119,7 @@ DRAMCtrl::processNextReqEvent()
 
         // now proceed to do the actual writes
         busState = WRITE;
+        switched_cmd_type = true;
     } else if (busState == WRITE_TO_READ) {
         DPRINTF(DRAM, "Switching to reads after %d writes with %d writes "
                 "waiting\n", writesThisTime, writeQueue.size());
@@ -1114,6 +1128,7 @@ DRAMCtrl::processNextReqEvent()
         writesThisTime = 0;
 
         busState = READ;
+        switched_cmd_type = true;
     }
 
     if (refreshState != REF_IDLE) {
@@ -1160,9 +1175,25 @@ DRAMCtrl::processNextReqEvent()
         } else {
             // Figure out which read request goes next, and move it to the
             // front of the read queue
-            chooseNext(readQueue);
+            chooseNext(readQueue, switched_cmd_type);
 
             DRAMPacket* dram_pkt = readQueue.front();
+
+            // here we get a bit creative and shift the bus busy time not
+            // just the tWTR, but also a CAS latency to capture the fact
+            // that we are allowed to prepare a new bank, but not issue a
+            // read command until after tWTR, in essence we capture a
+            // bubble on the data bus that is tWTR + tCL
+            if (switched_cmd_type) {
+                // add a bubble to the data bus for write-to-read turn around
+                // or tCS (different rank bus delay).
+                busBusyUntil += (dram_pkt->rank == activeRank) ? tWTR + tCL :
+                                                                 tCS;
+            } else if (dram_pkt->rank != activeRank) {
+                // add a bubble to the data bus, as defined by the
+                // tCS parameter for rank-to-rank delay
+                busBusyUntil += tCS;
+            }
 
             doDRAMAccess(dram_pkt);
 
@@ -1197,21 +1228,23 @@ DRAMCtrl::processNextReqEvent()
         if (switch_to_writes) {
             // transition to writing
             busState = READ_TO_WRITE;
-
-            // add a bubble to the data bus, as defined by the
-            // tRTW parameter
-            busBusyUntil += tRTW;
-
-            // update the minimum timing between the requests,
-            // this shifts us back in time far enough to do any
-            // bank preparation
-            nextReqTime = busBusyUntil - (tRP + tRCD + tCL);
         }
     } else {
-        chooseNext(writeQueue);
+        chooseNext(writeQueue, switched_cmd_type);
         DRAMPacket* dram_pkt = writeQueue.front();
         // sanity check
         assert(dram_pkt->size <= burstSize);
+
+        if (switched_cmd_type) {
+            // add a bubble to the data bus, as defined by the
+            // tRTW or tCS parameter, depending on whether changing ranks
+            busBusyUntil += (dram_pkt->rank == activeRank) ? tRTW : tCS;
+        } else if (dram_pkt->rank != activeRank) {
+            // add a bubble to the data bus, as defined by the
+            // tCS parameter for rank-to-rank delay
+            busBusyUntil += tCS;
+        }
+
         doDRAMAccess(dram_pkt);
 
         writeQueue.pop_front();
@@ -1232,17 +1265,6 @@ DRAMCtrl::processNextReqEvent()
             // case, which eventually will check for any draining and
             // also pause any further scheduling if there is really
             // nothing to do
-
-            // here we get a bit creative and shift the bus busy time not
-            // just the tWTR, but also a CAS latency to capture the fact
-            // that we are allowed to prepare a new bank, but not issue a
-            // read command until after tWTR, in essence we capture a
-            // bubble on the data bus that is tWTR + tCL
-            busBusyUntil += tWTR + tCL;
-
-            // update the minimum timing between the requests, this shifts
-            // us back in time far enough to do any bank preparation
-            nextReqTime = busBusyUntil - (tRP + tRCD + tCL);
         }
     }
 
@@ -1259,12 +1281,19 @@ DRAMCtrl::processNextReqEvent()
 }
 
 uint64_t
-DRAMCtrl::minBankActAt(const deque<DRAMPacket*>& queue) const
+DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
+                      bool switched_cmd_type) const
 {
     uint64_t bank_mask = 0;
     Tick min_act_at = MaxTick;
 
-    // deterimne if we have queued transactions targetting a
+    uint64_t bank_mask_same_rank = 0;
+    Tick min_act_at_same_rank = MaxTick;
+
+    // Give precedence to commands that access same rank as previous command
+    bool same_rank_match = false;
+
+    // determine if we have queued transactions targetting the
     // bank in question
     vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
     for (auto p = queue.begin(); p != queue.end(); ++p) {
@@ -1280,21 +1309,62 @@ DRAMCtrl::minBankActAt(const deque<DRAMPacket*>& queue) const
             if (got_waiting[bank_id]) {
                 // simplistic approximation of when the bank can issue
                 // an activate, ignoring any rank-to-rank switching
-                // cost
+                // cost in this calculation
                 Tick act_at = banks[i][j].openRow == Bank::NO_ROW ?
                     banks[i][j].actAllowedAt :
                     std::max(banks[i][j].preAllowedAt, curTick()) + tRP;
 
-                if (act_at <= min_act_at) {
-                    // reset bank mask if new minimum is found
-                    if (act_at < min_act_at)
-                        bank_mask = 0;
-                    // set the bit corresponding to the available bank
-                    replaceBits(bank_mask, bank_id, bank_id, 1);
-                    min_act_at = act_at;
+                // prioritize commands that access the
+                // same rank as previous burst
+                // Calculate bank mask separately for the case and
+                // evaluate after loop iterations complete
+                if (i == activeRank && ranksPerChannel > 1) {
+                    if (act_at <= min_act_at_same_rank) {
+                        // reset same rank bank mask if new minimum is found
+                        // and previous minimum could not immediately send ACT
+                        if (act_at < min_act_at_same_rank &&
+                            min_act_at_same_rank > curTick())
+                            bank_mask_same_rank = 0;
+
+                        // Set flag indicating that a same rank
+                        // opportunity was found
+                        same_rank_match = true;
+
+                        // set the bit corresponding to the available bank
+                        replaceBits(bank_mask_same_rank, bank_id, bank_id, 1);
+                        min_act_at_same_rank = act_at;
+                    }
+                } else {
+                    if (act_at <= min_act_at) {
+                        // reset bank mask if new minimum is found
+                        // and either previous minimum could not immediately send ACT
+                        if (act_at < min_act_at && min_act_at > curTick())
+                            bank_mask = 0;
+                        // set the bit corresponding to the available bank
+                        replaceBits(bank_mask, bank_id, bank_id, 1);
+                        min_act_at = act_at;
+                    }
                 }
             }
         }
+    }
+
+    // Determine the earliest time when the next burst can issue based
+    // on the current busBusyUntil delay.
+    // Offset by tRCD to correlate with ACT timing variables
+    Tick min_cmd_at = busBusyUntil - tCL - tRCD;
+
+    // Prioritize same rank accesses that can issue B2B
+    // Only optimize for same ranks when the command type
+    // does not change; do not want to unnecessarily incur tWTR
+    //
+    // Resulting FCFS prioritization Order is:
+    // 1) Commands that access the same rank as previous burst
+    //    and can prep the bank seamlessly.
+    // 2) Commands (any rank) with earliest bank prep
+    if (!switched_cmd_type && same_rank_match &&
+        min_act_at_same_rank <= min_cmd_at) {
+        bank_mask = bank_mask_same_rank;
     }
 
     return bank_mask;

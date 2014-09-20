@@ -368,23 +368,36 @@ class DRAMCtrl : public AbstractMemory
      * The memory schduler/arbiter - picks which request needs to
      * go next, based on the specified policy such as FCFS or FR-FCFS
      * and moves it to the head of the queue.
+     * Prioritizes accesses to the same rank as previous burst unless
+     * controller is switching command type.
+     *
+     * @param queue Queued requests to consider
+     * @param switched_cmd_type Command type is changing
      */
-    void chooseNext(std::deque<DRAMPacket*>& queue);
+    void chooseNext(std::deque<DRAMPacket*>& queue, bool switched_cmd_type);
 
     /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
      * hits and earliest banks available in DRAM
+     * Prioritizes accesses to the same rank as previous burst unless
+     * controller is switching command type.
+     *
+     * @param queue Queued requests to consider
+     * @param switched_cmd_type Command type is changing
      */
-    void reorderQueue(std::deque<DRAMPacket*>& queue);
+    void reorderQueue(std::deque<DRAMPacket*>& queue, bool switched_cmd_type);
 
     /**
      * Find which are the earliest banks ready to issue an activate
      * for the enqueued requests. Assumes maximum of 64 banks per DIMM
+     * Also checks if the bank is already prepped.
      *
-     * @param Queued requests to consider
+     * @param queue Queued requests to consider
+     * @param switched_cmd_type Command type is changing
      * @return One-hot encoded mask of bank indices
      */
-    uint64_t minBankActAt(const std::deque<DRAMPacket*>& queue) const;
+    uint64_t minBankPrep(const std::deque<DRAMPacket*>& queue,
+                         bool switched_cmd_type) const;
 
     /**
      * Keep track of when row activations happen, in order to enforce
@@ -475,6 +488,7 @@ class DRAMCtrl : public AbstractMemory
     const Tick M5_CLASS_VAR_USED tCK;
     const Tick tWTR;
     const Tick tRTW;
+    const Tick tCS;
     const Tick tBURST;
     const Tick tRCD;
     const Tick tCL;
@@ -663,6 +677,9 @@ class DRAMCtrl : public AbstractMemory
 
     // To track number of banks which are currently active
     unsigned int numBanksActive;
+
+    // Holds the value of the rank of burst issued
+    uint8_t activeRank;
 
     /** @todo this is a temporary workaround until the 4-phase code is
      * committed. upstream caches needs this packet until true is returned, so

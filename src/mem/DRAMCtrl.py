@@ -156,11 +156,17 @@ class DRAMCtrl(AbstractMemory):
     # to be sent. It is 7.8 us for a 64ms refresh requirement
     tREFI = Param.Latency("Refresh command interval")
 
-    # write-to-read turn around penalty
-    tWTR = Param.Latency("Write to read switching time")
+    # write-to-read, same rank turnaround penalty
+    tWTR = Param.Latency("Write to read, same rank switching time")
 
-    # read-to-write turn around penalty, bus turnaround delay
-    tRTW = Param.Latency("Read to write switching time")
+    # read-to-write, same rank turnaround penalty
+    tRTW = Param.Latency("Read to write, same rank switching time")
+
+    # rank-to-rank bus delay penalty
+    # this does not correlate to a memory timing parameter and encompasses:
+    # 1) RD-to-RD, 2) WR-to-WR, 3) RD-to-WR, and 4) WR-to-RD
+    # different rank bus delay
+    tCS = Param.Latency("Rank to rank switching time")
 
     # minimum row activate to row activate delay time
     tRRD = Param.Latency("ACT to ACT delay")
@@ -221,8 +227,11 @@ class DDR3_1600_x64(DRAMCtrl):
     # Greater of 4 CK or 7.5 ns
     tRTP = '7.5ns'
 
-    # Default read-to-write bus around to 2 CK, @800 MHz = 2.5 ns
+    # Default same rank rd-to-wr bus turnaround to 2 CK, @800 MHz = 2.5 ns
     tRTW = '2.5ns'
+
+    # Default different rank bus delay to 2 CK, @800 MHz = 2.5 ns
+    tCS = '2.5ns'
 
     # <=85C, half for >85C
     tREFI = '7.8us'
@@ -296,8 +305,11 @@ class DDR4_2400_x64(DRAMCtrl):
     # Greater of 4 CK or 7.5 ns
     tRTP = '7.5ns'
 
-    # Default read-to-write bus around to 2 CK, @1200 MHz = 1.666 ns
+    # Default same rank rd-to-wr bus turnaround to 2 CK, @1200 MHz = 1.666 ns
     tRTW = '1.666ns'
+
+    # Default different rank bus delay to 2 CK, @1200 MHz = 1.666 ns
+    tCS = '1.666ns'
 
     # <=85C, half for >85C
     tREFI = '7.8us'
@@ -353,8 +365,11 @@ class DDR3_1333_x64_DRAMSim2(DRAMCtrl):
     # Greater of 4 CK or 7.5 ns, 4 CK @ 666.66 MHz = 6 ns
     tWTR = '7.5ns'
 
-    # Default read-to-write bus around to 2 CK, @666.66 MHz = 3 ns
+    # Default same rank rd-to-wr bus turnaround to 2 CK, @666.66 MHz = 3 ns
     tRTW = '3ns'
+
+    # Default different rank bus delay to 2 CK, @666.66 MHz = 3 ns
+    tCS = '3ns'
 
     tRRD = '6.0ns'
 
@@ -416,8 +431,11 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
 
-    # Default read-to-write bus around to 2 CK, @533 MHz = 3.75 ns
+    # Default same rank rd-to-wr bus turnaround to 2 CK, @533 MHz = 3.75 ns
     tRTW = '3.75ns'
+
+    # Default different rank bus delay to 2 CK, @533 MHz = 3.75 ns
+    tCS = '3.75ns'
 
     # Activate to activate irrespective of density and speed grade
     tRRD = '10.0ns'
@@ -473,8 +491,11 @@ class WideIO_200_x128(DRAMCtrl):
     # Greater of 2 CK or 15 ns, 2 CK @ 200 MHz = 10 ns
     tWTR = '15ns'
 
-    # Default read-to-write bus around to 2 CK, @200 MHz = 10 ns
+    # Default same rank rd-to-wr bus turnaround to 2 CK, @200 MHz = 10 ns
     tRTW = '10ns'
+
+    # Default different rank bus delay to 2 CK, @200 MHz = 10 ns
+    tCS = '10ns'
 
     # Activate to activate irrespective of density and speed grade
     tRRD = '10.0ns'
@@ -536,8 +557,11 @@ class LPDDR3_1600_x32(DRAMCtrl):
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
 
-    # Default read-to-write bus around to 2 CK, @800 MHz = 2.5 ns
+    # Default same rank rd-to-wr bus turnaround to 2 CK, @800 MHz = 2.5 ns
     tRTW = '2.5ns'
+
+    # Default different rank bus delay to 2 CK, @800 MHz = 2.5 ns
+    tCS = '2.5ns'
 
     # Activate to activate irrespective of density and speed grade
     tRRD = '10.0ns'
