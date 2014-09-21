@@ -2,6 +2,8 @@
     "name": null, 
     "sim_quantum": 0, 
     "system": {
+        "kernel": "", 
+        "kernel_addr_check": true, 
         "membus": {
             "slave": {
                 "peer": [
@@ -12,7 +14,10 @@
                 "role": "SLAVE"
             }, 
             "name": "membus", 
+            "snoop_filter": null, 
+            "clk_domain": "system.clk_domain", 
             "header_cycles": 1, 
+            "system": "system", 
             "width": 8, 
             "eventq_index": 0, 
             "master": {
@@ -21,17 +26,68 @@
                 ], 
                 "role": "MASTER"
             }, 
-            "cxx_class": "CoherentBus", 
+            "cxx_class": "CoherentXBar", 
             "path": "system.membus", 
-            "type": "CoherentBus", 
+            "type": "CoherentXBar", 
             "use_default_range": false
         }, 
-        "kernel_addr_check": true, 
+        "symbolfile": "", 
+        "readfile": "", 
+        "cxx_class": "System", 
+        "load_offset": 0, 
+        "work_end_ckpt_count": 0, 
+        "memories": [
+            "system.physmem"
+        ], 
+        "work_begin_ckpt_count": 0, 
+        "clk_domain": {
+            "name": "clk_domain", 
+            "clock": [
+                1000
+            ], 
+            "init_perf_level": 0, 
+            "voltage_domain": "system.voltage_domain", 
+            "eventq_index": 0, 
+            "cxx_class": "SrcClockDomain", 
+            "path": "system.clk_domain", 
+            "type": "SrcClockDomain", 
+            "domain_id": -1
+        }, 
+        "mem_ranges": [], 
+        "eventq_index": 0, 
+        "dvfs_handler": {
+            "enable": false, 
+            "name": "dvfs_handler", 
+            "sys_clk_domain": "system.clk_domain", 
+            "transition_latency": 100000000, 
+            "eventq_index": 0, 
+            "cxx_class": "DVFSHandler", 
+            "domains": [], 
+            "path": "system.dvfs_handler", 
+            "type": "DVFSHandler"
+        }, 
+        "work_end_exit_count": 0, 
+        "type": "System", 
+        "voltage_domain": {
+            "name": "voltage_domain", 
+            "eventq_index": 0, 
+            "voltage": [
+                "1.0"
+            ], 
+            "cxx_class": "VoltageDomain", 
+            "path": "system.voltage_domain", 
+            "type": "VoltageDomain"
+        }, 
+        "cache_line_size": 64, 
+        "boot_osflags": "a", 
         "physmem": {
-            "latency": 3.0000000000000004e-08, 
+            "range": "0:134217727", 
+            "latency": 30000, 
             "name": "physmem", 
             "eventq_index": 0, 
-            "latency_var": 0.0, 
+            "clk_domain": "system.clk_domain", 
+            "latency_var": 0, 
+            "bandwidth": "73.000000", 
             "conf_table_reported": true, 
             "cxx_class": "SimpleMemory", 
             "path": "system.physmem", 
@@ -43,45 +99,16 @@
             }, 
             "in_addr_map": true
         }, 
-        "cxx_class": "System", 
-        "load_offset": 0, 
-        "work_end_ckpt_count": 0, 
-        "work_begin_ckpt_count": 0, 
-        "clk_domain": {
-            "name": "clk_domain", 
-            "init_perf_level": 0, 
-            "eventq_index": 0, 
-            "cxx_class": "SrcClockDomain", 
-            "path": "system.clk_domain", 
-            "type": "SrcClockDomain", 
-            "domain_id": -1
-        }, 
-        "eventq_index": 0, 
-        "dvfs_handler": {
-            "enable": false, 
-            "name": "dvfs_handler", 
-            "transition_latency": 9.999999999999999e-05, 
-            "eventq_index": 0, 
-            "cxx_class": "DVFSHandler", 
-            "path": "system.dvfs_handler", 
-            "type": "DVFSHandler"
-        }, 
-        "work_end_exit_count": 0, 
-        "type": "System", 
-        "voltage_domain": {
-            "eventq_index": 0, 
-            "path": "system.voltage_domain", 
-            "type": "VoltageDomain", 
-            "name": "voltage_domain", 
-            "cxx_class": "VoltageDomain"
-        }, 
-        "cache_line_size": 64, 
         "work_cpus_ckpt_count": 0, 
         "work_begin_exit_count": 0, 
         "path": "system", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
+            "clock": [
+                500
+            ], 
             "init_perf_level": 0, 
+            "voltage_domain": "system.voltage_domain", 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.cpu_clk_domain", 
@@ -96,11 +123,8 @@
             "role": "MASTER"
         }, 
         "load_addr_mask": 1099511627775, 
-        "work_item_id": -1, 
-        "num_work_ids": 16, 
         "cpu": [
             {
-                "simpoint_interval": 100000000, 
                 "do_statistics_insts": true, 
                 "numThreads": 1, 
                 "itb": {
@@ -111,20 +135,22 @@
                     "type": "AlphaTLB", 
                     "size": 48
                 }, 
+                "simulate_data_stalls": false, 
                 "function_trace": false, 
                 "do_checkpoint_insts": true, 
                 "cxx_class": "AtomicSimpleCPU", 
                 "max_loads_all_threads": 0, 
-                "simpoint_profile": false, 
-                "simulate_data_stalls": false, 
+                "system": "system", 
+                "clk_domain": "system.cpu_clk_domain", 
                 "function_trace_start": 0, 
                 "cpu_id": 0, 
                 "width": 1, 
+                "checker": null, 
                 "eventq_index": 0, 
                 "do_quiesce": true, 
                 "type": "AtomicSimpleCPU", 
                 "fastmem": false, 
-                "profile": 0.0, 
+                "profile": 0, 
                 "icache_port": {
                     "peer": "system.membus.slave[1]", 
                     "role": "MASTER"
@@ -136,27 +162,30 @@
                     "name": "interrupts", 
                     "cxx_class": "AlphaISA::Interrupts"
                 }, 
+                "dcache_port": {
+                    "peer": "system.membus.slave[2]", 
+                    "role": "MASTER"
+                }, 
                 "socket_id": 0, 
                 "max_insts_all_threads": 0, 
                 "path": "system.cpu", 
-                "isa": [
-                    {
-                        "eventq_index": 0, 
-                        "path": "system.cpu.isa", 
-                        "type": "AlphaISA", 
-                        "name": "isa", 
-                        "cxx_class": "AlphaISA::ISA"
-                    }
-                ], 
+                "max_loads_any_thread": 0, 
                 "switched_out": false, 
                 "workload": [
                     {
                         "name": "workload", 
+                        "output": "cout", 
+                        "chkpt": "", 
+                        "errout": "cerr", 
+                        "system": "system", 
+                        "useArchPT": false, 
                         "eventq_index": 0, 
+                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu.workload", 
                         "max_stack_size": 67108864, 
-                        "type": "EioProcess"
+                        "type": "EioProcess", 
+                        "input": "None"
                     }
                 ], 
                 "name": "cpu", 
@@ -168,14 +197,21 @@
                     "type": "AlphaTLB", 
                     "size": 64
                 }, 
+                "simpoint_start_insts": [], 
                 "max_insts_any_thread": 500000, 
                 "simulate_inst_stalls": false, 
-                "progress_interval": 0.0, 
-                "dcache_port": {
-                    "peer": "system.membus.slave[2]", 
-                    "role": "MASTER"
-                }, 
-                "max_loads_any_thread": 0, 
+                "progress_interval": 0, 
+                "branchPred": null, 
+                "isa": [
+                    {
+                        "name": "isa", 
+                        "system": "system", 
+                        "eventq_index": 0, 
+                        "cxx_class": "AlphaISA::ISA", 
+                        "path": "system.cpu.isa", 
+                        "type": "AlphaISA"
+                    }
+                ], 
                 "tracer": {
                     "eventq_index": 0, 
                     "path": "system.cpu.tracer", 
@@ -185,11 +221,13 @@
                 }
             }
         ], 
+        "num_work_ids": 16, 
+        "work_item_id": -1, 
         "work_begin_cpu_id_exit": -1
     }, 
-    "time_sync_period": 0.1, 
+    "time_sync_period": 100000000000, 
     "eventq_index": 0, 
-    "time_sync_spin_threshold": 9.999999999999999e-05, 
+    "time_sync_spin_threshold": 100000000, 
     "cxx_class": "Root", 
     "path": "root", 
     "time_sync_enable": false, 
