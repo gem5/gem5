@@ -4,11 +4,11 @@ sim_seconds                                  2.233778                       # Nu
 sim_ticks                                  4467555024                       # Number of ticks simulated
 final_tick                                 4467555024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                2578014                       # Simulator instruction rate (inst/s)
-host_op_rate                                  2579027                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                5168737                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 527944                       # Number of bytes of host memory used
-host_seconds                                   864.34                       # Real time elapsed on the host
+host_inst_rate                                2544690                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2545690                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                5101926                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 520472                       # Number of bytes of host memory used
+host_seconds                                   875.66                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -21,60 +21,6 @@ system.hypervisor_desc.bw_read::cpu.data         7517                       # To
 system.hypervisor_desc.bw_read::total            7517                       # Total read bandwidth from this memory (bytes/s)
 system.hypervisor_desc.bw_total::cpu.data         7517                       # Total bandwidth to/from this memory (bytes/s)
 system.hypervisor_desc.bw_total::total           7517                       # Total bandwidth to/from this memory (bytes/s)
-system.nvram.bytes_read::cpu.data                 284                       # Number of bytes read from this memory
-system.nvram.bytes_read::total                    284                       # Number of bytes read from this memory
-system.nvram.bytes_written::cpu.data               92                       # Number of bytes written to this memory
-system.nvram.bytes_written::total                  92                       # Number of bytes written to this memory
-system.nvram.num_reads::cpu.data                  284                       # Number of read requests responded to by this memory
-system.nvram.num_reads::total                     284                       # Number of read requests responded to by this memory
-system.nvram.num_writes::cpu.data                  92                       # Number of write requests responded to by this memory
-system.nvram.num_writes::total                     92                       # Number of write requests responded to by this memory
-system.nvram.bw_read::cpu.data                    127                       # Total read bandwidth from this memory (bytes/s)
-system.nvram.bw_read::total                       127                       # Total read bandwidth from this memory (bytes/s)
-system.nvram.bw_write::cpu.data                    41                       # Write bandwidth from this memory (bytes/s)
-system.nvram.bw_write::total                       41                       # Write bandwidth from this memory (bytes/s)
-system.nvram.bw_total::cpu.data                   168                       # Total bandwidth to/from this memory (bytes/s)
-system.nvram.bw_total::total                      168                       # Total bandwidth to/from this memory (bytes/s)
-system.rom.bytes_read::cpu.inst                432296                       # Number of bytes read from this memory
-system.rom.bytes_read::cpu.data                696392                       # Number of bytes read from this memory
-system.rom.bytes_read::total                  1128688                       # Number of bytes read from this memory
-system.rom.bytes_inst_read::cpu.inst           432296                       # Number of instructions bytes read from this memory
-system.rom.bytes_inst_read::total              432296                       # Number of instructions bytes read from this memory
-system.rom.num_reads::cpu.inst                 108074                       # Number of read requests responded to by this memory
-system.rom.num_reads::cpu.data                  87049                       # Number of read requests responded to by this memory
-system.rom.num_reads::total                    195123                       # Number of read requests responded to by this memory
-system.rom.bw_read::cpu.inst                   193527                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_read::cpu.data                   311755                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_read::total                      505282                       # Total read bandwidth from this memory (bytes/s)
-system.rom.bw_inst_read::cpu.inst              193527                       # Instruction read bandwidth from this memory (bytes/s)
-system.rom.bw_inst_read::total                 193527                       # Instruction read bandwidth from this memory (bytes/s)
-system.rom.bw_total::cpu.inst                  193527                       # Total bandwidth to/from this memory (bytes/s)
-system.rom.bw_total::cpu.data                  311755                       # Total bandwidth to/from this memory (bytes/s)
-system.rom.bw_total::total                     505282                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem0.bytes_read::cpu.inst        612291324                       # Number of bytes read from this memory
-system.physmem0.bytes_read::cpu.data         97534024                       # Number of bytes read from this memory
-system.physmem0.bytes_read::total           709825348                       # Number of bytes read from this memory
-system.physmem0.bytes_inst_read::cpu.inst    612291324                       # Number of instructions bytes read from this memory
-system.physmem0.bytes_inst_read::total      612291324                       # Number of instructions bytes read from this memory
-system.physmem0.bytes_written::cpu.data      15400223                       # Number of bytes written to this memory
-system.physmem0.bytes_written::total         15400223                       # Number of bytes written to this memory
-system.physmem0.num_reads::cpu.inst         153072831                       # Number of read requests responded to by this memory
-system.physmem0.num_reads::cpu.data          12152054                       # Number of read requests responded to by this memory
-system.physmem0.num_reads::total            165224885                       # Number of read requests responded to by this memory
-system.physmem0.num_writes::cpu.data          1927067                       # Number of write requests responded to by this memory
-system.physmem0.num_writes::total             1927067                       # Number of write requests responded to by this memory
-system.physmem0.num_other::cpu.data                14                       # Number of other requests responded to by this memory
-system.physmem0.num_other::total                   14                       # Number of other requests responded to by this memory
-system.physmem0.bw_read::cpu.inst           274105779                       # Total read bandwidth from this memory (bytes/s)
-system.physmem0.bw_read::cpu.data            43663267                       # Total read bandwidth from this memory (bytes/s)
-system.physmem0.bw_read::total              317769046                       # Total read bandwidth from this memory (bytes/s)
-system.physmem0.bw_inst_read::cpu.inst      274105779                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem0.bw_inst_read::total         274105779                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem0.bw_write::cpu.data            6894251                       # Write bandwidth from this memory (bytes/s)
-system.physmem0.bw_write::total               6894251                       # Write bandwidth from this memory (bytes/s)
-system.physmem0.bw_total::cpu.inst          274105779                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem0.bw_total::cpu.data           50557518                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem0.bw_total::total             324663297                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem1.bytes_read::cpu.inst       8318106840                       # Number of bytes read from this memory
 system.physmem1.bytes_read::cpu.data       1495885127                       # Number of bytes read from this memory
 system.physmem1.bytes_read::total          9813991967                       # Number of bytes read from this memory
@@ -107,11 +53,139 @@ system.partition_desc.bw_read::cpu.data          2169                       # To
 system.partition_desc.bw_read::total             2169                       # Total read bandwidth from this memory (bytes/s)
 system.partition_desc.bw_total::cpu.data         2169                       # Total bandwidth to/from this memory (bytes/s)
 system.partition_desc.bw_total::total            2169                       # Total bandwidth to/from this memory (bytes/s)
-system.membus.throughput                   5163367605                       # Throughput (bytes/s)
-system.membus.data_through_bus            11533814443                       # Total data (bytes)
-system.membus.snoop_data_through_bus                0                       # Total snoop data (bytes)
-system.iobus.throughput                      15555081                       # Throughput (bytes/s)
-system.iobus.data_through_bus                34746591                       # Total data (bytes)
+system.physmem0.bytes_read::cpu.inst        612291324                       # Number of bytes read from this memory
+system.physmem0.bytes_read::cpu.data         97534024                       # Number of bytes read from this memory
+system.physmem0.bytes_read::total           709825348                       # Number of bytes read from this memory
+system.physmem0.bytes_inst_read::cpu.inst    612291324                       # Number of instructions bytes read from this memory
+system.physmem0.bytes_inst_read::total      612291324                       # Number of instructions bytes read from this memory
+system.physmem0.bytes_written::cpu.data      15400223                       # Number of bytes written to this memory
+system.physmem0.bytes_written::total         15400223                       # Number of bytes written to this memory
+system.physmem0.num_reads::cpu.inst         153072831                       # Number of read requests responded to by this memory
+system.physmem0.num_reads::cpu.data          12152054                       # Number of read requests responded to by this memory
+system.physmem0.num_reads::total            165224885                       # Number of read requests responded to by this memory
+system.physmem0.num_writes::cpu.data          1927067                       # Number of write requests responded to by this memory
+system.physmem0.num_writes::total             1927067                       # Number of write requests responded to by this memory
+system.physmem0.num_other::cpu.data                14                       # Number of other requests responded to by this memory
+system.physmem0.num_other::total                   14                       # Number of other requests responded to by this memory
+system.physmem0.bw_read::cpu.inst           274105779                       # Total read bandwidth from this memory (bytes/s)
+system.physmem0.bw_read::cpu.data            43663267                       # Total read bandwidth from this memory (bytes/s)
+system.physmem0.bw_read::total              317769046                       # Total read bandwidth from this memory (bytes/s)
+system.physmem0.bw_inst_read::cpu.inst      274105779                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem0.bw_inst_read::total         274105779                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem0.bw_write::cpu.data            6894251                       # Write bandwidth from this memory (bytes/s)
+system.physmem0.bw_write::total               6894251                       # Write bandwidth from this memory (bytes/s)
+system.physmem0.bw_total::cpu.inst          274105779                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem0.bw_total::cpu.data           50557518                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem0.bw_total::total             324663297                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.bytes_read::cpu.inst                432296                       # Number of bytes read from this memory
+system.rom.bytes_read::cpu.data                696392                       # Number of bytes read from this memory
+system.rom.bytes_read::total                  1128688                       # Number of bytes read from this memory
+system.rom.bytes_inst_read::cpu.inst           432296                       # Number of instructions bytes read from this memory
+system.rom.bytes_inst_read::total              432296                       # Number of instructions bytes read from this memory
+system.rom.num_reads::cpu.inst                 108074                       # Number of read requests responded to by this memory
+system.rom.num_reads::cpu.data                  87049                       # Number of read requests responded to by this memory
+system.rom.num_reads::total                    195123                       # Number of read requests responded to by this memory
+system.rom.bw_read::cpu.inst                   193527                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_read::cpu.data                   311755                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_read::total                      505282                       # Total read bandwidth from this memory (bytes/s)
+system.rom.bw_inst_read::cpu.inst              193527                       # Instruction read bandwidth from this memory (bytes/s)
+system.rom.bw_inst_read::total                 193527                       # Instruction read bandwidth from this memory (bytes/s)
+system.rom.bw_total::cpu.inst                  193527                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.bw_total::cpu.data                  311755                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.bw_total::total                     505282                       # Total bandwidth to/from this memory (bytes/s)
+system.nvram.bytes_read::cpu.data                 284                       # Number of bytes read from this memory
+system.nvram.bytes_read::total                    284                       # Number of bytes read from this memory
+system.nvram.bytes_written::cpu.data               92                       # Number of bytes written to this memory
+system.nvram.bytes_written::total                  92                       # Number of bytes written to this memory
+system.nvram.num_reads::cpu.data                  284                       # Number of read requests responded to by this memory
+system.nvram.num_reads::total                     284                       # Number of read requests responded to by this memory
+system.nvram.num_writes::cpu.data                  92                       # Number of write requests responded to by this memory
+system.nvram.num_writes::total                     92                       # Number of write requests responded to by this memory
+system.nvram.bw_read::cpu.data                    127                       # Total read bandwidth from this memory (bytes/s)
+system.nvram.bw_read::total                       127                       # Total read bandwidth from this memory (bytes/s)
+system.nvram.bw_write::cpu.data                    41                       # Write bandwidth from this memory (bytes/s)
+system.nvram.bw_write::total                       41                       # Write bandwidth from this memory (bytes/s)
+system.nvram.bw_total::cpu.data                   168                       # Total bandwidth to/from this memory (bytes/s)
+system.nvram.bw_total::total                      168                       # Total bandwidth to/from this memory (bytes/s)
+system.membus.trans_dist::ReadReq          2573267624                       # Transaction distribution
+system.membus.trans_dist::ReadResp         2573267624                       # Transaction distribution
+system.membus.trans_dist::WriteReq          189322556                       # Transaction distribution
+system.membus.trans_dist::WriteResp         189322556                       # Transaction distribution
+system.membus.trans_dist::SwapReq             5403081                       # Transaction distribution
+system.membus.trans_dist::SwapResp            5403081                       # Transaction distribution
+system.membus.pkt_count_system.cpu.icache_port::system.rom.port       216148                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.icache_port::system.physmem0.port    306145662                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.icache_port::system.physmem1.port   4159053420                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.icache_port::total   4465415230                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.t1000.iob.pio           64                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.t1000.htod.pio           32                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.bridge.slave      8712246                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.rom.port       174098                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.nvram.port          752                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.hypervisor_desc.port        18048                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.partition_desc.port         1216                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.physmem0.port     28158270                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.physmem1.port   1033506566                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::total   1070571292                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total             5535986522                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.rom.port       432296                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.physmem0.port    612291324                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.physmem1.port   8318106840                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::total   8930830460                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.t1000.iob.pio          256                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.t1000.htod.pio          128                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.bridge.slave     34746591                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.rom.port       696392                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.nvram.port          376                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.hypervisor_desc.port        16792                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.partition_desc.port         4846                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.physmem0.port    112934471                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.physmem1.port   2454584131                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::total   2602983983                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total             11533814443                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.snoops                                0                       # Total snoops (count)
+system.membus.snoop_fanout::samples        2767993261                       # Request fanout histogram
+system.membus.snoop_fanout::mean             0.806616                       # Request fanout histogram
+system.membus.snoop_fanout::stdev            0.394951                       # Request fanout histogram
+system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
+system.membus.snoop_fanout::0               535285646     19.34%     19.34% # Request fanout histogram
+system.membus.snoop_fanout::1              2232707615     80.66%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
+system.membus.snoop_fanout::total          2767993261                       # Request fanout histogram
+system.iobus.trans_dist::ReadReq              4348554                       # Transaction distribution
+system.iobus.trans_dist::ReadResp             4348554                       # Transaction distribution
+system.iobus.trans_dist::WriteReq                7569                       # Transaction distribution
+system.iobus.trans_dist::WriteResp               7569                       # Transaction distribution
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_membnks.pio           40                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2_1.pio           16                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2_2.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2_3.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2_4.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2esr_1.pio            4                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2esr_2.pio            4                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2esr_3.pio            4                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_l2esr_4.pio            4                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.fake_jbi.pio            2                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.puart0.pio        29218                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.t1000.hvuart.pio           36                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.disk0.pio      8682882                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::total      8712246                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_membnks.pio          160                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2_1.pio           64                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2_2.pio           48                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2_3.pio           48                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2_4.pio           48                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2esr_1.pio           16                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2esr_2.pio           16                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2esr_3.pio           16                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_l2esr_4.pio           16                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.fake_jbi.pio            8                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.puart0.pio        14609                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.t1000.hvuart.pio           18                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.disk0.pio     34731524                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::total     34746591                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu_clk_domain.clock                         2                       # Clock period in ticks
 system.cpu.numCycles                       2233777513                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

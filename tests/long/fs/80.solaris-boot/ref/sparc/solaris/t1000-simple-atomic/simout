@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May 12 2014 11:27:38
-gem5 started May 12 2014 11:28:05
+gem5 compiled Sep 21 2014 21:13:41
+gem5 started Sep 21 2014 21:13:51
 gem5 executing on zizzer
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/fs/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re /z/stever/hg/gem5/tests/run.py build/SPARC/tests/opt/long/fs/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second

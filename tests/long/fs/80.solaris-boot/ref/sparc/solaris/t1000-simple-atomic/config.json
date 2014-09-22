@@ -2,30 +2,16 @@
     "name": null, 
     "sim_quantum": 0, 
     "system": {
-        "bridge": {
-            "slave": {
-                "peer": "system.membus.master[2]", 
-                "role": "SLAVE"
-            }, 
-            "name": "bridge", 
-            "req_size": 16, 
-            "delay": 5.0000000000000004e-08, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": "system.iobus.slave[0]", 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "Bridge", 
-            "path": "system.bridge", 
-            "resp_size": 16, 
-            "type": "Bridge"
-        }, 
+        "kernel": "", 
         "kernel_addr_check": true, 
         "rom": {
-            "latency": 3.0000000000000004e-08, 
+            "range": "1099243192320:1099251580927", 
+            "latency": 60, 
             "name": "rom", 
             "eventq_index": 0, 
-            "latency_var": 0.0, 
+            "clk_domain": "system.clk_domain", 
+            "latency_var": 0, 
+            "bandwidth": "0.000000", 
             "conf_table_reported": true, 
             "cxx_class": "SimpleMemory", 
             "path": "system.rom", 
@@ -37,62 +23,31 @@
             }, 
             "in_addr_map": true
         }, 
-        "membus": {
+        "bridge": {
+            "ranges": [
+                "133412421632:133412421639", 
+                "134217728000:554050781183", 
+                "644245094400:652835028991", 
+                "725849473024:1095485095935", 
+                "1099255955456:1099255955463"
+            ], 
             "slave": {
-                "peer": [
-                    "system.system_port", 
-                    "system.cpu.icache_port", 
-                    "system.cpu.dcache_port"
-                ], 
+                "peer": "system.membus.master[2]", 
                 "role": "SLAVE"
             }, 
-            "name": "membus", 
-            "badaddr_responder": {
-                "ret_data8": 255, 
-                "name": "badaddr_responder", 
-                "pio": {
-                    "peer": "system.membus.default", 
-                    "role": "SLAVE"
-                }, 
-                "ret_bad_addr": true, 
-                "pio_latency": 1.0000000000000001e-07, 
-                "fake_mem": false, 
-                "pio_size": 8, 
-                "ret_data32": 4294967295, 
-                "eventq_index": 0, 
-                "update_data": false, 
-                "ret_data64": 18446744073709551615, 
-                "cxx_class": "IsaFake", 
-                "path": "system.membus.badaddr_responder", 
-                "pio_addr": 0, 
-                "type": "IsaFake", 
-                "ret_data16": 65535
-            }, 
-            "default": {
-                "peer": "system.membus.badaddr_responder.pio", 
-                "role": "MASTER"
-            }, 
-            "header_cycles": 1, 
-            "width": 8, 
+            "name": "bridge", 
+            "req_size": 16, 
+            "clk_domain": "system.clk_domain", 
+            "delay": 100, 
             "eventq_index": 0, 
             "master": {
-                "peer": [
-                    "system.t1000.iob.pio", 
-                    "system.t1000.htod.pio", 
-                    "system.bridge.slave", 
-                    "system.rom.port", 
-                    "system.nvram.port", 
-                    "system.hypervisor_desc.port", 
-                    "system.partition_desc.port", 
-                    "system.physmem0.port", 
-                    "system.physmem1.port"
-                ], 
+                "peer": "system.iobus.slave[0]", 
                 "role": "MASTER"
             }, 
-            "cxx_class": "CoherentBus", 
-            "path": "system.membus", 
-            "type": "CoherentBus", 
-            "use_default_range": false
+            "cxx_class": "Bridge", 
+            "path": "system.bridge", 
+            "resp_size": 16, 
+            "type": "Bridge"
         }, 
         "iobus": {
             "slave": {
@@ -102,6 +57,7 @@
                 "role": "SLAVE"
             }, 
             "name": "iobus", 
+            "clk_domain": "system.clk_domain", 
             "header_cycles": 1, 
             "width": 8, 
             "eventq_index": 0, 
@@ -125,9 +81,9 @@
                 ], 
                 "role": "MASTER"
             }, 
-            "cxx_class": "NoncoherentBus", 
+            "cxx_class": "NoncoherentXBar", 
             "path": "system.iobus", 
-            "type": "NoncoherentBus", 
+            "type": "NoncoherentXBar", 
             "use_default_range": false
         }, 
         "t1000": {
@@ -138,7 +94,9 @@
                     "role": "SLAVE"
                 }, 
                 "time": "Thu Jan  1 00:00:00 2009", 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
+                "system": "system", 
                 "eventq_index": 0, 
                 "cxx_class": "DumbTOD", 
                 "path": "system.t1000.htod", 
@@ -151,7 +109,11 @@
                     "peer": "system.iobus.master[12]", 
                     "role": "SLAVE"
                 }, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
+                "system": "system", 
+                "terminal": "system.t1000.pterm", 
+                "platform": "system.t1000", 
                 "eventq_index": 0, 
                 "cxx_class": "Uart8250", 
                 "path": "system.t1000.puart0", 
@@ -159,14 +121,17 @@
                 "type": "Uart8250"
             }, 
             "fake_membnks": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_membnks", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[1]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 16384, 
                 "ret_data32": 4294967295, 
@@ -181,14 +146,17 @@
             }, 
             "cxx_class": "T1000", 
             "fake_jbi": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_jbi", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[11]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 4294967296, 
                 "ret_data32": 4294967295, 
@@ -201,15 +169,19 @@
                 "type": "IsaFake", 
                 "ret_data16": 65535
             }, 
+            "intrctrl": "system.intrctrl", 
             "fake_l2esr_2": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2esr_2", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[7]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -222,11 +194,13 @@
                 "type": "IsaFake", 
                 "ret_data16": 65535
             }, 
+            "system": "system", 
             "eventq_index": 0, 
             "hterm": {
                 "name": "hterm", 
                 "output": true, 
                 "number": 0, 
+                "intr_control": "system.intrctrl", 
                 "eventq_index": 0, 
                 "cxx_class": "Terminal", 
                 "path": "system.t1000.hterm", 
@@ -235,14 +209,17 @@
             }, 
             "type": "T1000", 
             "fake_l2_4": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2_4", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[5]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -256,14 +233,17 @@
                 "ret_data16": 65535
             }, 
             "fake_l2_1": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2_1", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[2]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -277,14 +257,17 @@
                 "ret_data16": 65535
             }, 
             "fake_l2_2": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2_2", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[3]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -298,14 +281,17 @@
                 "ret_data16": 65535
             }, 
             "fake_l2_3": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2_3", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[4]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -322,6 +308,7 @@
                 "name": "pterm", 
                 "output": true, 
                 "number": 0, 
+                "intr_control": "system.intrctrl", 
                 "eventq_index": 0, 
                 "cxx_class": "Terminal", 
                 "path": "system.t1000.pterm", 
@@ -335,7 +322,10 @@
                     "peer": "system.membus.master[0]", 
                     "role": "SLAVE"
                 }, 
-                "pio_latency": 1e-09, 
+                "pio_latency": 2, 
+                "clk_domain": "system.clk_domain", 
+                "system": "system", 
+                "platform": "system.t1000", 
                 "eventq_index": 0, 
                 "cxx_class": "Iob", 
                 "path": "system.t1000.iob", 
@@ -347,7 +337,11 @@
                     "peer": "system.iobus.master[13]", 
                     "role": "SLAVE"
                 }, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
+                "system": "system", 
+                "terminal": "system.t1000.hterm", 
+                "platform": "system.t1000", 
                 "eventq_index": 0, 
                 "cxx_class": "Uart8250", 
                 "path": "system.t1000.hvuart", 
@@ -356,14 +350,17 @@
             }, 
             "name": "t1000", 
             "fake_l2esr_3": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2esr_3", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[8]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -377,14 +374,17 @@
                 "ret_data16": 65535
             }, 
             "fake_ssi": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_ssi", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[10]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 268435456, 
                 "ret_data32": 4294967295, 
@@ -398,14 +398,17 @@
                 "ret_data16": 65535
             }, 
             "fake_l2esr_1": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2esr_1", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[6]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -419,14 +422,17 @@
                 "ret_data16": 65535
             }, 
             "fake_l2esr_4": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_l2esr_4", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[9]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 8, 
                 "ret_data32": 4294967295, 
@@ -440,14 +446,17 @@
                 "ret_data16": 65535
             }, 
             "fake_clk": {
+                "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_clk", 
+                "warn_access": "", 
                 "pio": {
                     "peer": "system.iobus.master[0]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
-                "pio_latency": 1.0000000000000001e-07, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
                 "fake_mem": false, 
                 "pio_size": 4294967296, 
                 "ret_data32": 4294967295, 
@@ -461,53 +470,36 @@
                 "ret_data16": 65535
             }
         }, 
-        "partition_desc_addr": 133445976064, 
-        "physmem": [
-            {
-                "latency": 3.0000000000000004e-08, 
-                "name": "physmem0", 
-                "eventq_index": 0, 
-                "latency_var": 0.0, 
-                "conf_table_reported": true, 
-                "cxx_class": "SimpleMemory", 
-                "path": "system.physmem0", 
-                "null": false, 
-                "type": "SimpleMemory", 
-                "port": {
-                    "peer": "system.membus.master[7]", 
-                    "role": "SLAVE"
-                }, 
-                "in_addr_map": true
-            }, 
-            {
-                "latency": 3.0000000000000004e-08, 
-                "name": "physmem1", 
-                "eventq_index": 0, 
-                "latency_var": 0.0, 
-                "conf_table_reported": true, 
-                "cxx_class": "SimpleMemory", 
-                "path": "system.physmem1", 
-                "null": false, 
-                "type": "SimpleMemory", 
-                "port": {
-                    "peer": "system.membus.master[8]", 
-                    "role": "SLAVE"
-                }, 
-                "in_addr_map": true
-            }
-        ], 
+        "symbolfile": "", 
+        "readfile": "/z/stever/hg/gem5/tests/halt.sh", 
         "hypervisor_addr": 1099243257856, 
+        "mem_ranges": [
+            "1048576:68157439", 
+            "2147483648:2415919103"
+        ], 
         "cxx_class": "SparcSystem", 
         "load_offset": 0, 
+        "reset_bin": "/dist/m5/system/binaries/reset_new.bin", 
         "openboot_addr": 1099243716608, 
         "work_end_ckpt_count": 0, 
         "nvram_addr": 133429198848, 
+        "memories": [
+            "system.hypervisor_desc", 
+            "system.physmem1", 
+            "system.partition_desc", 
+            "system.physmem0", 
+            "system.rom", 
+            "system.nvram"
+        ], 
         "work_begin_ckpt_count": 0, 
         "partition_desc": {
-            "latency": 3.0000000000000004e-08, 
+            "range": "133445976064:133445984255", 
+            "latency": 60, 
             "name": "partition_desc", 
             "eventq_index": 0, 
-            "latency_var": 0.0, 
+            "clk_domain": "system.clk_domain", 
+            "latency_var": 0, 
+            "bandwidth": "0.000000", 
             "conf_table_reported": true, 
             "cxx_class": "SimpleMemory", 
             "path": "system.partition_desc", 
@@ -521,7 +513,11 @@
         }, 
         "clk_domain": {
             "name": "clk_domain", 
+            "clock": [
+                2
+            ], 
             "init_perf_level": 0, 
+            "voltage_domain": "system.voltage_domain", 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.clk_domain", 
@@ -529,10 +525,13 @@
             "domain_id": -1
         }, 
         "hypervisor_desc": {
-            "latency": 3.0000000000000004e-08, 
+            "range": "133446500352:133446508543", 
+            "latency": 60, 
             "name": "hypervisor_desc", 
             "eventq_index": 0, 
-            "latency_var": 0.0, 
+            "clk_domain": "system.clk_domain", 
+            "latency_var": 0, 
+            "bandwidth": "0.000000", 
             "conf_table_reported": true, 
             "cxx_class": "SimpleMemory", 
             "path": "system.hypervisor_desc", 
@@ -544,11 +543,77 @@
             }, 
             "in_addr_map": true
         }, 
+        "membus": {
+            "default": {
+                "peer": "system.membus.badaddr_responder.pio", 
+                "role": "MASTER"
+            }, 
+            "slave": {
+                "peer": [
+                    "system.system_port", 
+                    "system.cpu.icache_port", 
+                    "system.cpu.dcache_port"
+                ], 
+                "role": "SLAVE"
+            }, 
+            "name": "membus", 
+            "badaddr_responder": {
+                "system": "system", 
+                "ret_data8": 255, 
+                "name": "badaddr_responder", 
+                "warn_access": "", 
+                "pio": {
+                    "peer": "system.membus.default", 
+                    "role": "SLAVE"
+                }, 
+                "ret_bad_addr": true, 
+                "pio_latency": 200, 
+                "clk_domain": "system.clk_domain", 
+                "fake_mem": false, 
+                "pio_size": 8, 
+                "ret_data32": 4294967295, 
+                "eventq_index": 0, 
+                "update_data": false, 
+                "ret_data64": 18446744073709551615, 
+                "cxx_class": "IsaFake", 
+                "path": "system.membus.badaddr_responder", 
+                "pio_addr": 0, 
+                "type": "IsaFake", 
+                "ret_data16": 65535
+            }, 
+            "snoop_filter": null, 
+            "clk_domain": "system.clk_domain", 
+            "header_cycles": 1, 
+            "system": "system", 
+            "width": 8, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": [
+                    "system.t1000.iob.pio", 
+                    "system.t1000.htod.pio", 
+                    "system.bridge.slave", 
+                    "system.rom.port", 
+                    "system.nvram.port", 
+                    "system.hypervisor_desc.port", 
+                    "system.partition_desc.port", 
+                    "system.physmem0.port", 
+                    "system.physmem1.port"
+                ], 
+                "role": "MASTER"
+            }, 
+            "cxx_class": "CoherentXBar", 
+            "path": "system.membus", 
+            "type": "CoherentXBar", 
+            "use_default_range": false
+        }, 
         "nvram": {
-            "latency": 3.0000000000000004e-08, 
+            "range": "133429198848:133429207039", 
+            "latency": 60, 
             "name": "nvram", 
             "eventq_index": 0, 
-            "latency_var": 0.0, 
+            "clk_domain": "system.clk_domain", 
+            "latency_var": 0, 
+            "bandwidth": "0.000000", 
             "conf_table_reported": true, 
             "cxx_class": "SimpleMemory", 
             "path": "system.nvram", 
@@ -561,48 +626,102 @@
             "in_addr_map": true
         }, 
         "eventq_index": 0, 
+        "work_begin_cpu_id_exit": -1, 
         "dvfs_handler": {
             "enable": false, 
             "name": "dvfs_handler", 
-            "transition_latency": 9.999999999999999e-05, 
+            "sys_clk_domain": "system.clk_domain", 
+            "transition_latency": 200000, 
             "eventq_index": 0, 
             "cxx_class": "DVFSHandler", 
+            "domains": [], 
             "path": "system.dvfs_handler", 
             "type": "DVFSHandler"
         }, 
         "work_end_exit_count": 0, 
-        "type": "SparcSystem", 
+        "hypervisor_desc_bin": "/dist/m5/system/binaries/1up-hv.bin", 
+        "openboot_bin": "/dist/m5/system/binaries/openboot_new.bin", 
         "voltage_domain": {
-            "eventq_index": 0, 
-            "path": "system.voltage_domain", 
-            "type": "VoltageDomain", 
             "name": "voltage_domain", 
-            "cxx_class": "VoltageDomain"
+            "eventq_index": 0, 
+            "voltage": [
+                "1.0"
+            ], 
+            "cxx_class": "VoltageDomain", 
+            "path": "system.voltage_domain", 
+            "type": "VoltageDomain"
         }, 
         "cache_line_size": 64, 
+        "boot_osflags": "a", 
+        "system_port": {
+            "peer": "system.membus.slave[0]", 
+            "role": "MASTER"
+        }, 
+        "physmem": [
+            {
+                "range": "1048576:68157439", 
+                "latency": 60, 
+                "name": "physmem0", 
+                "eventq_index": 0, 
+                "clk_domain": "system.clk_domain", 
+                "latency_var": 0, 
+                "bandwidth": "0.000000", 
+                "conf_table_reported": true, 
+                "cxx_class": "SimpleMemory", 
+                "path": "system.physmem0", 
+                "null": false, 
+                "type": "SimpleMemory", 
+                "port": {
+                    "peer": "system.membus.master[7]", 
+                    "role": "SLAVE"
+                }, 
+                "in_addr_map": true
+            }, 
+            {
+                "range": "2147483648:2415919103", 
+                "latency": 60, 
+                "name": "physmem1", 
+                "eventq_index": 0, 
+                "clk_domain": "system.clk_domain", 
+                "latency_var": 0, 
+                "bandwidth": "0.000000", 
+                "conf_table_reported": true, 
+                "cxx_class": "SimpleMemory", 
+                "path": "system.physmem1", 
+                "null": false, 
+                "type": "SimpleMemory", 
+                "port": {
+                    "peer": "system.membus.master[8]", 
+                    "role": "SLAVE"
+                }, 
+                "in_addr_map": true
+            }
+        ], 
         "work_cpus_ckpt_count": 0, 
         "work_begin_exit_count": 0, 
-        "num_work_ids": 16, 
         "path": "system", 
+        "hypervisor_bin": "/dist/m5/system/binaries/q_new.bin", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
+            "clock": [
+                2
+            ], 
             "init_perf_level": 0, 
+            "voltage_domain": "system.voltage_domain", 
             "eventq_index": 0, 
             "cxx_class": "SrcClockDomain", 
             "path": "system.cpu_clk_domain", 
             "type": "SrcClockDomain", 
             "domain_id": -1
         }, 
+        "nvram_bin": "/dist/m5/system/binaries/nvram1", 
         "mem_mode": "atomic", 
         "name": "system", 
         "init_param": 0, 
-        "system_port": {
-            "peer": "system.membus.slave[0]", 
-            "role": "MASTER"
-        }, 
+        "type": "SparcSystem", 
+        "partition_desc_bin": "/dist/m5/system/binaries/1up-md.bin", 
         "load_addr_mask": 1099511627775, 
         "cpu": {
-            "simpoint_interval": 100000000, 
             "do_statistics_insts": true, 
             "numThreads": 1, 
             "itb": {
@@ -613,20 +732,22 @@
                 "type": "SparcTLB", 
                 "size": 64
             }, 
+            "simulate_data_stalls": false, 
             "function_trace": false, 
             "do_checkpoint_insts": true, 
             "cxx_class": "AtomicSimpleCPU", 
             "max_loads_all_threads": 0, 
-            "simpoint_profile": false, 
-            "simulate_data_stalls": false, 
+            "system": "system", 
+            "clk_domain": "system.cpu_clk_domain", 
             "function_trace_start": 0, 
             "cpu_id": 0, 
             "width": 1, 
+            "checker": null, 
             "eventq_index": 0, 
             "do_quiesce": true, 
             "type": "AtomicSimpleCPU", 
             "fastmem": false, 
-            "profile": 0.0, 
+            "profile": 0, 
             "icache_port": {
                 "peer": "system.membus.slave[1]", 
                 "role": "MASTER"
@@ -638,19 +759,16 @@
                 "name": "interrupts", 
                 "cxx_class": "SparcISA::Interrupts"
             }, 
+            "dcache_port": {
+                "peer": "system.membus.slave[2]", 
+                "role": "MASTER"
+            }, 
             "socket_id": 0, 
             "max_insts_all_threads": 0, 
             "path": "system.cpu", 
-            "isa": [
-                {
-                    "eventq_index": 0, 
-                    "path": "system.cpu.isa", 
-                    "type": "SparcISA", 
-                    "name": "isa", 
-                    "cxx_class": "SparcISA::ISA"
-                }
-            ], 
+            "max_loads_any_thread": 0, 
             "switched_out": false, 
+            "workload": [], 
             "name": "cpu", 
             "dtb": {
                 "name": "dtb", 
@@ -660,14 +778,20 @@
                 "type": "SparcTLB", 
                 "size": 64
             }, 
+            "simpoint_start_insts": [], 
             "max_insts_any_thread": 0, 
             "simulate_inst_stalls": false, 
-            "progress_interval": 0.0, 
-            "dcache_port": {
-                "peer": "system.membus.slave[2]", 
-                "role": "MASTER"
-            }, 
-            "max_loads_any_thread": 0, 
+            "progress_interval": 0, 
+            "branchPred": null, 
+            "isa": [
+                {
+                    "eventq_index": 0, 
+                    "path": "system.cpu.isa", 
+                    "type": "SparcISA", 
+                    "name": "isa", 
+                    "cxx_class": "SparcISA::ISA"
+                }
+            ], 
             "tracer": {
                 "eventq_index": 0, 
                 "path": "system.cpu.tracer", 
@@ -677,11 +801,12 @@
             }
         }, 
         "intrctrl": {
-            "eventq_index": 0, 
-            "path": "system.intrctrl", 
-            "type": "IntrControl", 
             "name": "intrctrl", 
-            "cxx_class": "IntrControl"
+            "sys": "system", 
+            "eventq_index": 0, 
+            "cxx_class": "IntrControl", 
+            "path": "system.intrctrl", 
+            "type": "IntrControl"
         }, 
         "disk0": {
             "name": "disk0", 
@@ -692,35 +817,40 @@
             "image": {
                 "read_only": false, 
                 "name": "image", 
+                "cxx_class": "CowDiskImage", 
+                "eventq_index": 0, 
                 "child": {
                     "read_only": true, 
                     "name": "child", 
                     "eventq_index": 0, 
                     "cxx_class": "RawDiskImage", 
                     "path": "system.disk0.image.child", 
+                    "image_file": "/dist/m5/system/disks/disk.s10hw2", 
                     "type": "RawDiskImage"
                 }, 
-                "eventq_index": 0, 
-                "cxx_class": "CowDiskImage", 
                 "path": "system.disk0.image", 
-                "table_size": 65536, 
-                "type": "CowDiskImage"
+                "image_file": "", 
+                "type": "CowDiskImage", 
+                "table_size": 65536
             }, 
-            "pio_latency": 1.0000000000000001e-07, 
+            "pio_latency": 200, 
+            "clk_domain": "system.clk_domain", 
+            "system": "system", 
             "eventq_index": 0, 
             "cxx_class": "MmDisk", 
             "path": "system.disk0", 
             "pio_addr": 134217728000, 
             "type": "MmDisk"
         }, 
-        "hypervisor_desc_addr": 133446500352, 
         "reset_addr": 1099243192320, 
+        "hypervisor_desc_addr": 133446500352, 
+        "partition_desc_addr": 133445976064, 
         "work_item_id": -1, 
-        "work_begin_cpu_id_exit": -1
+        "num_work_ids": 16
     }, 
-    "time_sync_period": 0.1, 
+    "time_sync_period": 200000000, 
     "eventq_index": 0, 
-    "time_sync_spin_threshold": 9.999999999999999e-05, 
+    "time_sync_spin_threshold": 200000, 
     "cxx_class": "Root", 
     "path": "root", 
     "time_sync_enable": false, 
