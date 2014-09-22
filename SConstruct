@@ -186,6 +186,9 @@ AddLocalOption('--verbose', dest='verbose', action='store_true',
 AddLocalOption('--without-python', dest='without_python',
                action='store_true',
                help='Build without Python configuration support')
+AddLocalOption('--without-tcmalloc', dest='without_tcmalloc',
+               action='store_true',
+               help='Disable linking against tcmalloc')
 
 termcap = get_termcap(GetOption('use_colors'))
 
@@ -973,15 +976,16 @@ have_posix_timers = \
     conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ], 'C',
                             'timer_create(CLOCK_MONOTONIC, NULL, NULL);')
 
-if conf.CheckLib('tcmalloc'):
-    main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
-elif conf.CheckLib('tcmalloc_minimal'):
-    main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
-else:
-    print termcap.Yellow + termcap.Bold + \
-          "You can get a 12% performance improvement by installing tcmalloc "\
-          "(libgoogle-perftools-dev package on Ubuntu or RedHat)." + \
-          termcap.Normal
+if not GetOption('without_tcmalloc'):
+    if conf.CheckLib('tcmalloc'):
+        main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+    elif conf.CheckLib('tcmalloc_minimal'):
+        main.Append(CCFLAGS=main['TCMALLOC_CCFLAGS'])
+    else:
+        print termcap.Yellow + termcap.Bold + \
+              "You can get a 12% performance improvement by "\
+              "installing tcmalloc (libgoogle-perftools-dev package "\
+              "on Ubuntu or RedHat)." + termcap.Normal
 
 if not have_posix_clock:
     print "Can't find library for POSIX clocks."
