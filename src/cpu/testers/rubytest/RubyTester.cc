@@ -52,9 +52,12 @@
 RubyTester::RubyTester(const Params *p)
   : MemObject(p), checkStartEvent(this),
     _masterId(p->system->getMasterId(name())),
+    m_checkTable_ptr(nullptr),
     m_num_cpus(p->num_cpus),
     m_checks_to_complete(p->checks_to_complete),
     m_deadlock_threshold(p->deadlock_threshold),
+    m_num_writers(0),
+    m_num_readers(0),
     m_wakeup_frequency(p->wakeup_frequency),
     m_check_flush(p->check_flush),
     m_num_inst_ports(p->port_cpuInstPort_connection_count)

@@ -917,6 +917,9 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
     if (pkt->cmd == MemCmd::WriteInvalidateReq) {
         memSidePort->sendAtomic(pkt); // complete writeback
         if (isTopLevel) {
+            // @todo Static analysis suggests this can actually happen
+            assert(blk);
+
             // top level caches allocate and write the data
             assert(blk->isDirty());
             assert(!blk->isWritable());

@@ -77,7 +77,7 @@ class CommMonitor : public MemObject
     CommMonitor(Params* params);
 
     /** Destructor */
-    ~CommMonitor() {}
+    ~CommMonitor();
 
     /**
      * Callback to flush and close all open output streams on exit. If

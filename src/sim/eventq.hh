@@ -42,6 +42,7 @@
 #include <cassert>
 #include <climits>
 #include <iosfwd>
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -448,7 +449,7 @@ class EventQueue : public Serializable
     Tick _curTick;
 
     //! Mutex to protect async queue.
-    std::mutex *async_queue_mutex;
+    std::mutex async_queue_mutex;
 
     //! List of events added by other threads to this event queue.
     std::list<Event*> async_queue;

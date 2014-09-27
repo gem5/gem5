@@ -460,29 +460,28 @@ Event::dump() const
 }
 
 EventQueue::EventQueue(const string &n)
-    : objName(n), head(NULL), _curTick(0),
-    async_queue_mutex(new std::mutex())
+    : objName(n), head(NULL), _curTick(0)
 {
 }
 
 void
 EventQueue::asyncInsert(Event *event)
 {
-    async_queue_mutex->lock();
+    async_queue_mutex.lock();
     async_queue.push_back(event);
-    async_queue_mutex->unlock();
+    async_queue_mutex.unlock();
 }
 
 void
 EventQueue::handleAsyncInsertions()
 {
     assert(this == curEventQueue());
-    async_queue_mutex->lock();
+    async_queue_mutex.lock();
 
     while (!async_queue.empty()) {
         insert(async_queue.front());
         async_queue.pop_front();
     }
 
-    async_queue_mutex->unlock();
+    async_queue_mutex.unlock();
 }

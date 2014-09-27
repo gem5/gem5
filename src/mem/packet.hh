@@ -601,7 +601,7 @@ class Packet : public Printable
      */
     Packet(Request *_req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           src(InvalidPortID), dest(InvalidPortID),
+           size(0), src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
            firstWordDelay(0), lastWordDelay(0),
            senderState(NULL)

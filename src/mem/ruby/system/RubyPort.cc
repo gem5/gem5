@@ -205,7 +205,11 @@ RubyPort::PioSlavePort::recvTimingReq(PacketPtr pkt)
         AddrRangeList l = ruby_port->master_ports[i]->getAddrRanges();
         for (auto it = l.begin(); it != l.end(); ++it) {
             if (it->contains(pkt->getAddr())) {
-                ruby_port->master_ports[i]->sendTimingReq(pkt);
+                // generally it is not safe to assume success here as
+                // the port could be blocked
+                bool M5_VAR_USED success =
+                    ruby_port->master_ports[i]->sendTimingReq(pkt);
+                assert(success);
                 return true;
             }
         }

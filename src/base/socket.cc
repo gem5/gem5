@@ -94,8 +94,9 @@ ListenSocket::listen(int port, bool reuse)
     struct sockaddr_in sockaddr;
     sockaddr.sin_family = PF_INET;
     sockaddr.sin_addr.s_addr = INADDR_ANY;
-
     sockaddr.sin_port = htons(port);
+    // finally clear sin_zero
+    memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
     int ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
     if (ret != 0) {
         if (ret == -1 && errno != EADDRINUSE)
@@ -126,7 +127,9 @@ ListenSocket::accept(bool nodelay)
     int sfd = ::accept(fd, (struct sockaddr *)&sockaddr, &slen);
     if (sfd != -1 && nodelay) {
         int i = 1;
-        ::setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, (char *)&i, sizeof(i));
+        if (::setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, (char *)&i,
+                         sizeof(i)) < 0)
+            warn("ListenSocket(accept): setsockopt() TCP_NODELAY failed!");
     }
 
     return sfd;

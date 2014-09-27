@@ -105,6 +105,12 @@ CommMonitor::CommMonitor(Params* params)
             name(), samplePeriodTicks, samplePeriod.msec());
 }
 
+CommMonitor::~CommMonitor()
+{
+    // if not already done, close the stream
+    closeStreams();
+}
+
 void
 CommMonitor::closeStreams()
 {

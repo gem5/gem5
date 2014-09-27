@@ -307,16 +307,9 @@ PhysicalMemory::serializeStore(ostream& os, unsigned int store_id,
 
     // write memory file
     string filepath = Checkpoint::dir() + "/" + filename.c_str();
-    int fd = creat(filepath.c_str(), 0664);
-    if (fd < 0) {
-        perror("creat");
-        fatal("Can't open physical memory checkpoint file '%s'\n",
-              filename);
-    }
-
-    gzFile compressed_mem = gzdopen(fd, "wb");
+    gzFile compressed_mem = gzopen(filepath.c_str(), "wb");
     if (compressed_mem == NULL)
-        fatal("Insufficient memory to allocate compression state for %s\n",
+        fatal("Can't open physical memory checkpoint file '%s'\n",
               filename);
 
     uint64_t pass_size = 0;
@@ -380,16 +373,9 @@ PhysicalMemory::unserializeStore(Checkpoint* cp, const string& section)
     string filepath = cp->cptDir + "/" + filename;
 
     // mmap memoryfile
-    int fd = open(filepath.c_str(), O_RDONLY);
-    if (fd < 0) {
-        perror("open");
-        fatal("Can't open physical memory checkpoint file '%s'", filename);
-    }
-
-    gzFile compressed_mem = gzdopen(fd, "rb");
+    gzFile compressed_mem = gzopen(filepath.c_str(), "rb");
     if (compressed_mem == NULL)
-        fatal("Insufficient memory to allocate compression state for %s\n",
-              filename);
+        fatal("Can't open physical memory checkpoint file '%s'", filename);
 
     // we've already got the actual backing store mapped
     uint8_t* pmem = backingStore[store_id].second;

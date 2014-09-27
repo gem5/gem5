@@ -255,6 +255,8 @@ OutputDirectory::remove(const string &name, bool recursive)
 
                 de = readdir(subdir);
             }
+
+            closedir(subdir);
         }
 
         // try to force recognition that we deleted the files in the directory
