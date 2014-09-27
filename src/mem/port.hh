@@ -404,7 +404,11 @@ class SlavePort : public BaseSlavePort
     /**
      * Called by the owner to send a range change
      */
-    void sendRangeChange() const { _masterPort->recvRangeChange(); }
+    void sendRangeChange() const {
+        if (!_masterPort)
+            fatal("%s cannot sendRangeChange() without master port", name());
+        _masterPort->recvRangeChange();
+    }
 
     /**
      * Get a list of the non-overlapping address ranges the owner is
