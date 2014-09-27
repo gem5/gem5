@@ -602,14 +602,12 @@ if main['GCC']:
     if not GetOption('no_lto'):
         # Pass the LTO flag when compiling to produce GIMPLE
         # output, we merely create the flags here and only append
-        # them later/
+        # them later
         main['LTO_CCFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
 
         # Use the same amount of jobs for LTO as we are running
-        # scons with, we hardcode the use of the linker plugin
-        # which requires either gold or GNU ld >= 2.21
-        main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs'),
-                               '-fuse-linker-plugin']
+        # scons with
+        main['LTO_LDFLAGS'] = ['-flto=%d' % GetOption('num_jobs')]
 
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])

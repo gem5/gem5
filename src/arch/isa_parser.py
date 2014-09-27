@@ -856,7 +856,9 @@ class PCStateOperand(Operand):
         ctype = 'TheISA::PCState'
         if self.isPCPart():
             ctype = self.ctype
-        return "%s %s;\n" % (ctype, self.base_name)
+        # Note that initializations in the declarations are solely
+        # to avoid 'uninitialized variable' errors from the compiler.
+        return '%s %s = 0;\n' % (ctype, self.base_name)
 
     def isPCState(self):
         return 1

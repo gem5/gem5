@@ -298,10 +298,10 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
    // Cannot check this is actually what went to memory because
    // there stores can be in ld/st queue or coherent operations
    // overwriting values.
-   bool extraData;
+   bool extraData = false;
    if (unverifiedReq) {
        extraData = unverifiedReq->extraDataValid() ?
-                        unverifiedReq->getExtraData() : 1;
+                        unverifiedReq->getExtraData() : true;
    }
 
    if (unverifiedReq && unverifiedMemData &&
