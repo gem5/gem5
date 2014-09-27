@@ -71,9 +71,10 @@ using namespace ArmISA;
 
 TLB::TLB(const ArmTLBParams *p)
     : BaseTLB(p), table(new TlbEntry[p->size]), size(p->size),
-    isStage2(p->is_stage2), tableWalker(p->walker), stage2Tlb(NULL),
-    stage2Mmu(NULL), rangeMRU(1), bootUncacheability(false),
-    miscRegValid(false), curTranType(NormalTran)
+      isStage2(p->is_stage2), stage2Req(false), _attr(0),
+      directToStage2(false), tableWalker(p->walker), stage2Tlb(NULL),
+      stage2Mmu(NULL), rangeMRU(1), bootUncacheability(false),
+      miscRegValid(false), curTranType(NormalTran)
 {
     tableWalker->setTlb(this);
 

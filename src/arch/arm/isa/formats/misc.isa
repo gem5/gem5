@@ -214,8 +214,8 @@ let {{
 
             if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                 if (isRead)
-                    return new Mrc15(machInst, rt, (IntRegIndex)miscReg, iss);
-                return new Mcr15(machInst, (IntRegIndex)miscReg, rt, iss);
+                    return new Mrc15(machInst, rt, miscReg, iss);
+                return new Mcr15(machInst, miscReg, rt, iss);
             } else {
                 return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
                     csprintf("%s %s", isRead ? "mrc" : "mcr",

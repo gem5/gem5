@@ -860,11 +860,11 @@ let {{
     Dest = MiscNsBankedOp1;
     '''
 
-    mrc15Iop = InstObjParams("mrc", "Mrc15", "RegRegImmOp",
+    mrc15Iop = InstObjParams("mrc", "Mrc15", "RegMiscRegImmOp",
                              { "code": mrc15code,
                                "predicate_test": predicateTest }, [])
-    header_output += RegRegImmOpDeclare.subst(mrc15Iop)
-    decoder_output += RegRegImmOpConstructor.subst(mrc15Iop)
+    header_output += RegMiscRegImmOpDeclare.subst(mrc15Iop)
+    decoder_output += RegMiscRegImmOpConstructor.subst(mrc15Iop)
     exec_output += PredOpExecute.subst(mrc15Iop)
 
 
@@ -887,12 +887,12 @@ let {{
     }
     MiscNsBankedDest = Op1;
     '''
-    mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegImmOp",
+    mcr15Iop = InstObjParams("mcr", "Mcr15", "MiscRegRegImmOp",
                              { "code": mcr15code,
                                "predicate_test": predicateTest },
                                ["IsSerializeAfter","IsNonSpeculative"])
-    header_output += RegRegImmOpDeclare.subst(mcr15Iop)
-    decoder_output += RegRegImmOpConstructor.subst(mcr15Iop)
+    header_output += MiscRegRegImmOpDeclare.subst(mcr15Iop)
+    decoder_output += MiscRegRegImmOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
 
 

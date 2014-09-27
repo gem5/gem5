@@ -48,10 +48,11 @@
 namespace ArmISA
 {
 static inline uint32_t
-rotate_imm(uint32_t immValue, int rotateValue)
+rotate_imm(uint32_t immValue, uint32_t rotateValue)
 {
-    return ((immValue >> (rotateValue & 31)) |
-            (immValue << (32 - (rotateValue & 31))));
+    rotateValue &= 31;
+    return rotateValue == 0 ? immValue :
+        (immValue >> rotateValue) | (immValue << (32 - rotateValue));
 }
 
 static inline uint32_t
