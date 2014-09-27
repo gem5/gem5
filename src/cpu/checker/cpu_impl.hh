@@ -303,7 +303,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                         microcodeRom.fetchMicroop(pcState.microPC(), NULL);
                 } else if (!curMacroStaticInst) {
                     //We're not in the middle of a macro instruction
-                    StaticInstPtr instPtr = NULL;
+                    StaticInstPtr instPtr = nullptr;
 
                     //Predecode, ie bundle up an ExtMachInst
                     //If more fetch data is needed, pass it in.

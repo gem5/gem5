@@ -56,7 +56,7 @@ ExeTracerRecord::dumpTicks(ostream &outs)
 }
 
 void
-Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
+Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
 {
     ostream &outs = Trace::output();
 

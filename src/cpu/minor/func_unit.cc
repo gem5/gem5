@@ -199,7 +199,7 @@ FUPipeline::advance()
 }
 
 MinorFUTiming *
-FUPipeline::findTiming(StaticInstPtr inst)
+FUPipeline::findTiming(const StaticInstPtr &inst)
 {
 #if THE_ISA == ARM_ISA
     /* This should work for any ISA with a POD mach_inst */

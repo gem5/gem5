@@ -77,7 +77,7 @@ void
 SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
 {
     SimpleThread* thread = p.first;
-    StaticInstPtr inst = p.second;
+    const StaticInstPtr &inst = p.second;
 
     if (!currentBBVInstCount)
         currentBBV.first = thread->pcState().instAddr();

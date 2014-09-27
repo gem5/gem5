@@ -65,8 +65,8 @@ class SparcFaultBase : public FaultBase
         const PrivilegeLevel nextPrivilegeLevel[NumLevels];
         FaultStat count;
     };
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
     virtual FaultStat & countStat() = 0;
@@ -93,8 +93,8 @@ class SparcFault : public SparcFaultBase
 
 class PowerOnReset : public SparcFault<PowerOnReset>
 {
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class WatchDogReset : public SparcFault<WatchDogReset> {};
@@ -206,8 +206,8 @@ class FastInstructionAccessMMUMiss :
     {}
     FastInstructionAccessMMUMiss() : vaddr(0)
     {}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss>
@@ -219,8 +219,8 @@ class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss>
     {}
     FastDataAccessMMUMiss() : vaddr(0)
     {}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class FastDataAccessProtection : public SparcFault<FastDataAccessProtection> {};
@@ -238,8 +238,8 @@ class SpillNNormal : public EnumeratedFault<SpillNNormal>
   public:
     SpillNNormal(uint32_t n) : EnumeratedFault<SpillNNormal>(n) {;}
     // These need to be handled specially to enable spill traps in SE
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class SpillNOther : public EnumeratedFault<SpillNOther>
@@ -255,8 +255,8 @@ class FillNNormal : public EnumeratedFault<FillNNormal>
     FillNNormal(uint32_t n) : EnumeratedFault<FillNNormal>(n)
     {}
     // These need to be handled specially to enable fill traps in SE
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class FillNOther : public EnumeratedFault<FillNOther>
@@ -272,8 +272,8 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
     TrapInstruction(uint32_t n) : EnumeratedFault<TrapInstruction>(n)
     {}
     // In SE, trap instructions are requesting services from the OS.
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 void enterREDState(ThreadContext *tc);

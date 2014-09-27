@@ -50,7 +50,7 @@
 
 namespace X86ISA
 {
-    void X86FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
+    void X86FaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     {
         if (!FullSystem) {
             FaultBase::invoke(tc, inst);
@@ -104,7 +104,7 @@ namespace X86ISA
         return ss.str();
     }
     
-    void X86Trap::invoke(ThreadContext * tc, StaticInstPtr inst)
+    void X86Trap::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     {
         X86FaultBase::invoke(tc);
         if (!FullSystem)
@@ -116,13 +116,13 @@ namespace X86ISA
         pc.uEnd();
     }
 
-    void X86Abort::invoke(ThreadContext * tc, StaticInstPtr inst)
+    void X86Abort::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     {
         panic("Abort exception!");
     }
 
     void
-    InvalidOpcode::invoke(ThreadContext * tc, StaticInstPtr inst)
+    InvalidOpcode::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     {
         if (FullSystem) {
             X86Fault::invoke(tc, inst);
@@ -132,7 +132,7 @@ namespace X86ISA
         }
     }
 
-    void PageFault::invoke(ThreadContext * tc, StaticInstPtr inst)
+    void PageFault::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     {
         if (FullSystem) {
             HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
@@ -170,7 +170,7 @@ namespace X86ISA
     }
 
     void
-    InitInterrupt::invoke(ThreadContext *tc, StaticInstPtr inst)
+    InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     {
         DPRINTF(Faults, "Init interrupt.\n");
         // The otherwise unmodified integer registers should be set to 0.
@@ -288,7 +288,7 @@ namespace X86ISA
     }
 
     void
-    StartupInterrupt::invoke(ThreadContext *tc, StaticInstPtr inst)
+    StartupInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     {
         DPRINTF(Faults, "Startup interrupt with vector %#x.\n", vector);
         HandyM5Reg m5Reg = tc->readMiscReg(MISCREG_M5_REG);

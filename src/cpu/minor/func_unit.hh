@@ -257,7 +257,7 @@ class FUPipeline : public FUPipelineBase, public FuncUnit
 
     /** Find the extra timing information for this instruction.  Returns
      *  NULL if no decode info. is found */
-    MinorFUTiming *findTiming(StaticInstPtr inst);
+    MinorFUTiming *findTiming(const StaticInstPtr &inst);
 
     /** Step the pipeline.  Allow multiple steps? */
     void advance();

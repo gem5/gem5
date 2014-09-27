@@ -426,7 +426,7 @@ ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
 }
 
 void
-ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
@@ -587,7 +587,7 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-ArmFault::invoke64(ThreadContext *tc, StaticInstPtr inst)
+ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
 {
     // Determine actual misc. register indices for ELR_ELx and SPSR_ELx
     MiscRegIndex elr_idx, spsr_idx;
@@ -678,7 +678,7 @@ ArmFault::invoke64(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-Reset::invoke(ThreadContext *tc, StaticInstPtr inst)
+Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         tc->getCpuPtr()->clearInterrupts();
@@ -706,7 +706,7 @@ Reset::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-UndefinedInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
+UndefinedInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         ArmFault::invoke(tc, inst);
@@ -767,7 +767,7 @@ UndefinedInstruction::iss() const
 }
 
 void
-SupervisorCall::invoke(ThreadContext *tc, StaticInstPtr inst)
+SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         ArmFault::invoke(tc, inst);
@@ -884,7 +884,7 @@ ArmFaultVals<T>::offset(ThreadContext *tc)
 // }
 
 void
-SecureMonitorCall::invoke(ThreadContext *tc, StaticInstPtr inst)
+SecureMonitorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         ArmFault::invoke(tc, inst);
@@ -913,7 +913,7 @@ SecureMonitorTrap::ec(ThreadContext *tc) const
 
 template<class T>
 void
-AbortFault<T>::invoke(ThreadContext *tc, StaticInstPtr inst)
+AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (tranMethod == ArmFault::UnknownTran) {
         tranMethod = longDescFormatInUse(tc) ? ArmFault::LpaeTran
@@ -1237,7 +1237,7 @@ DataAbort::annotate(AnnotationIDs id, uint64_t val)
 }
 
 void
-VirtualDataAbort::invoke(ThreadContext *tc, StaticInstPtr inst)
+VirtualDataAbort::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     AbortFault<VirtualDataAbort>::invoke(tc, inst);
     HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR);
@@ -1336,7 +1336,7 @@ VirtualFastInterrupt::VirtualFastInterrupt()
 {}
 
 void
-PCAlignmentFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+PCAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     ArmFaultVals<PCAlignmentFault>::invoke(tc, inst);
     assert(from64);
@@ -1351,7 +1351,7 @@ SystemError::SystemError()
 {}
 
 void
-SystemError::invoke(ThreadContext *tc, StaticInstPtr inst)
+SystemError::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     tc->getCpuPtr()->clearInterrupt(INT_ABT, 0);
     ArmFault::invoke(tc, inst);
@@ -1382,7 +1382,7 @@ SystemError::routeToHyp(ThreadContext *tc) const
 }
 
 void
-FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
+FlushPipe::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking FlushPipe Fault\n");
 
     // Set the PC to the next instruction of the faulting instruction.
@@ -1395,7 +1395,7 @@ FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
 }
 
 void
-ArmSev::invoke(ThreadContext *tc, StaticInstPtr inst) {
+ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
     if (!FullSystem)
         return;

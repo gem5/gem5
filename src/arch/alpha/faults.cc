@@ -106,7 +106,7 @@ FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_count;
 
 void
-AlphaFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+AlphaFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -130,7 +130,7 @@ AlphaFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-ArithmeticFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+ArithmeticFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -139,7 +139,7 @@ ArithmeticFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-DtbFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+DtbFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         // Set fault address and flags.  Even though we're modeling an
@@ -169,7 +169,7 @@ DtbFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-ItbFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+ItbFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         if (!tc->misspeculating()) {
@@ -183,7 +183,7 @@ ItbFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-ItbPageFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+ItbPageFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         ItbFault::invoke(tc);
@@ -202,7 +202,7 @@ ItbPageFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-NDtbMissFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+NDtbMissFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         DtbFault::invoke(tc, inst);

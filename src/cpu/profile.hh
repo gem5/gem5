@@ -73,7 +73,7 @@ class FunctionProfile
     FunctionProfile(const SymbolTable *symtab);
     ~FunctionProfile();
 
-    ProfileNode *consume(ThreadContext *tc, StaticInstPtr inst);
+    ProfileNode *consume(ThreadContext *tc, const StaticInstPtr &inst);
     ProfileNode *consume(const std::vector<Addr> &stack);
     void clear();
     void dump(ThreadContext *tc, std::ostream &out) const;
@@ -81,7 +81,7 @@ class FunctionProfile
 };
 
 inline ProfileNode *
-FunctionProfile::consume(ThreadContext *tc, StaticInstPtr inst)
+FunctionProfile::consume(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (!trace.trace(tc, inst))
         return NULL;

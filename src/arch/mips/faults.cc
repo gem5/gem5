@@ -131,7 +131,7 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
 }
 
 void
-MipsFaultBase::invoke(ThreadContext *tc, StaticInstPtr inst)
+MipsFaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         DPRINTF(MipsPRA, "Fault %s encountered.\n", name());
@@ -143,7 +143,7 @@ MipsFaultBase::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-ResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+ResetFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -160,13 +160,13 @@ ResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-SoftResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+SoftResetFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic("Soft reset not implemented.\n");
 }
 
 void
-NonMaskableInterrupt::invoke(ThreadContext *tc, StaticInstPtr inst)
+NonMaskableInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic("Non maskable interrupt not implemented.\n");
 }

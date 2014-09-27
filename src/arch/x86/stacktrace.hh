@@ -75,7 +75,7 @@ namespace X86ISA
 
       public:
         StackTrace();
-        StackTrace(ThreadContext *tc, StaticInstPtr inst);
+        StackTrace(ThreadContext *tc, const StaticInstPtr &inst);
         ~StackTrace();
 
         void clear()
@@ -85,7 +85,7 @@ namespace X86ISA
         }
 
         bool valid() const { return tc != NULL; }
-        bool trace(ThreadContext *tc, StaticInstPtr inst);
+        bool trace(ThreadContext *tc, const StaticInstPtr &inst);
 
       public:
         const std::vector<Addr> &getstack() const { return stack; }
@@ -107,7 +107,7 @@ namespace X86ISA
     };
 
     inline bool
-    StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
+    StackTrace::trace(ThreadContext *tc, const StaticInstPtr &inst)
     {
         if (!inst->isCall() && !inst->isReturn())
             return false;

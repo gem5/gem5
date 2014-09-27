@@ -490,7 +490,7 @@ getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, MiscReg TT, MiscReg TL)
 }
 
 void
-SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
+SparcFaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
 {
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -551,7 +551,7 @@ SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 }
 
 void
-PowerOnReset::invoke(ThreadContext *tc, StaticInstPtr inst)
+PowerOnReset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     // For SPARC, when a system is first started, there is a power
     // on reset Trap which sets the processor into the following state.
@@ -614,7 +614,8 @@ PowerOnReset::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
+FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
+                                     const StaticInstPtr &inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
@@ -634,7 +635,7 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
+FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
@@ -658,7 +659,7 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
+SpillNNormal::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
@@ -678,7 +679,7 @@ SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
+FillNNormal::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
@@ -698,7 +699,7 @@ FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
+TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);

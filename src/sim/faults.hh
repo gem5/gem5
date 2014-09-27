@@ -54,8 +54,8 @@ class FaultBase : public RefCounted
 {
   public:
     virtual FaultName name() const = 0;
-    virtual void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    virtual void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                        StaticInst::nullStaticInstPtr);
 };
 
 class UnimpFault : public FaultBase
@@ -68,8 +68,8 @@ class UnimpFault : public FaultBase
     { }
 
     FaultName name() const {return "Unimplemented simulator feature";}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class ReExec : public FaultBase
@@ -77,8 +77,8 @@ class ReExec : public FaultBase
   public:
     virtual FaultName name() const { return "Re-execution fault";}
     ReExec() {}
-    void invoke(ThreadContext *tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class GenericPageTableFault : public FaultBase
@@ -88,8 +88,8 @@ class GenericPageTableFault : public FaultBase
   public:
     FaultName name() const {return "Generic page table fault";}
     GenericPageTableFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class GenericAlignmentFault : public FaultBase
@@ -99,8 +99,8 @@ class GenericAlignmentFault : public FaultBase
   public:
     FaultName name() const {return "Generic alignment fault";}
     GenericAlignmentFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 #endif // __FAULTS_HH__

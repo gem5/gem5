@@ -87,9 +87,9 @@ class BPredUnit : public SimObject
      * @param tid The thread id.
      * @return Returns if the branch is taken or not.
      */
-    bool predict(StaticInstPtr &inst, const InstSeqNum &seqNum,
+    bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                  TheISA::PCState &pc, ThreadID tid);
-    bool predictInOrder(StaticInstPtr &inst, const InstSeqNum &seqNum,
+    bool predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                         int asid, TheISA::PCState &instPC,
                         TheISA::PCState &predPC, ThreadID tid);
 

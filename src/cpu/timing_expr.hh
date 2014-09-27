@@ -73,7 +73,7 @@ class TimingExprEvalContext
 {
   public:
     /** Special visible context */
-    StaticInstPtr inst;
+    const StaticInstPtr &inst;
     ThreadContext *thread;
 
     /** Context visible as sub expressions.  results will hold the results
@@ -83,7 +83,7 @@ class TimingExprEvalContext
     std::vector<uint64_t> results;
     std::vector<bool > resultAvailable;
 
-    TimingExprEvalContext(StaticInstPtr inst_,
+    TimingExprEvalContext(const StaticInstPtr &inst_,
         ThreadContext *thread_, TimingExprLet *let_);
 };
 

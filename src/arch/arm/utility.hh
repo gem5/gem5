@@ -279,7 +279,7 @@ uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 void skipFunction(ThreadContext *tc);
 
 inline void
-advancePC(PCState &pc, const StaticInstPtr inst)
+advancePC(PCState &pc, const StaticInstPtr &inst)
 {
     inst->advancePC(pc);
 }

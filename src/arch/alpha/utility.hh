@@ -105,7 +105,7 @@ void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 void skipFunction(ThreadContext *tc);
 
 inline void
-advancePC(PCState &pc, const StaticInstPtr inst)
+advancePC(PCState &pc, const StaticInstPtr &inst)
 {
     pc.advance();
 }

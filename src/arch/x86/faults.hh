@@ -85,8 +85,8 @@ namespace X86ISA
             return false;
         }
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
 
         virtual std::string describe() const;
 
@@ -120,8 +120,8 @@ namespace X86ISA
             : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
     };
 
     // Base class for x86 aborts which seem to be catastrophic failures.
@@ -133,8 +133,8 @@ namespace X86ISA
             : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
     };
 
     // Base class for x86 interrupts.
@@ -155,8 +155,8 @@ namespace X86ISA
             return "unimplemented_micro";
         }
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr)
         {
             panic("Unimplemented instruction!");
         }
@@ -248,8 +248,8 @@ namespace X86ISA
             X86Fault("Invalid-Opcode", "#UD", 6)
         {}
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
     };
 
     class DeviceNotAvailable : public X86Fault
@@ -331,8 +331,8 @@ namespace X86ISA
             errorCode = code;
         }
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
 
         virtual std::string describe() const;
     };
@@ -400,8 +400,8 @@ namespace X86ISA
             X86Interrupt("INIT Interrupt", "#INIT", _vector)
         {}
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
     };
 
     class StartupInterrupt : public X86Interrupt
@@ -411,8 +411,8 @@ namespace X86ISA
             X86Interrupt("Startup Interrupt", "#SIPI", _vector)
         {}
 
-        void invoke(ThreadContext * tc,
-                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
     };
 
     class SoftwareInterrupt : public X86Interrupt

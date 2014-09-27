@@ -78,7 +78,7 @@ class StackTrace
 
   public:
     StackTrace();
-    StackTrace(ThreadContext *tc, StaticInstPtr inst);
+    StackTrace(ThreadContext *tc, const StaticInstPtr &inst);
     ~StackTrace();
 
     void clear()
@@ -88,7 +88,7 @@ class StackTrace
     }
 
     bool valid() const { return tc != NULL; }
-    bool trace(ThreadContext *tc, StaticInstPtr inst);
+    bool trace(ThreadContext *tc, const StaticInstPtr &inst);
 
   public:
     const std::vector<Addr> &getstack() const { return stack; }
@@ -106,7 +106,7 @@ class StackTrace
 };
 
 inline bool
-StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
+StackTrace::trace(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (!inst->isCall() && !inst->isReturn())
         return false;

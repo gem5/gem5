@@ -102,8 +102,8 @@ class MipsFaultBase : public FaultBase
         return base(tc) + offset(tc);
     }
 
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 template <typename T>
@@ -134,23 +134,23 @@ class MachineCheckFault : public MipsFault<MachineCheckFault>
 class ResetFault : public MipsFault<ResetFault>
 {
   public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 
 };
 
 class SoftResetFault : public MipsFault<SoftResetFault>
 {
   public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 {
   public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
@@ -162,8 +162,8 @@ class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
     {}
 
     void
-    invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    invoke(ThreadContext * tc, const StaticInstPtr &inst =
+           StaticInst::nullStaticInstPtr)
     {
         MipsFault<CoprocessorUnusableFault>::invoke(tc, inst);
         if (FullSystem) {
@@ -197,8 +197,8 @@ class AddressFault : public MipsFault<T>
     {}
 
     void
-    invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    invoke(ThreadContext * tc, const StaticInstPtr &inst =
+           StaticInst::nullStaticInstPtr)
     {
         MipsFault<T>::invoke(tc, inst);
         if (FullSystem)
@@ -250,8 +250,8 @@ class TlbFault : public AddressFault<T>
     }
 
     void
-    invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    invoke(ThreadContext * tc, const StaticInstPtr &inst =
+           StaticInst::nullStaticInstPtr)
     {
         if (FullSystem) {
             DPRINTF(MipsPRA, "Fault %s encountered.\n", this->name());

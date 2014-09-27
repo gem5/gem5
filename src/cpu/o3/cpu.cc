@@ -946,12 +946,13 @@ FullO3CPU<Impl>::processInterrupts(const Fault &interrupt)
     this->interrupts->updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
-    this->trap(interrupt, 0, NULL);
+    this->trap(interrupt, 0, nullptr);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::trap(const Fault &fault, ThreadID tid, StaticInstPtr inst)
+FullO3CPU<Impl>::trap(const Fault &fault, ThreadID tid,
+                      const StaticInstPtr &inst)
 {
     // Pass the thread's TC into the invoke method.
     fault->invoke(this->threadContexts[tid], inst);

@@ -121,7 +121,7 @@ namespace ArmISA
     {
     }
 
-    StackTrace::StackTrace(ThreadContext *_tc, StaticInstPtr inst)
+    StackTrace::StackTrace(ThreadContext *_tc, const StaticInstPtr &inst)
         : tc(0), stack(64)
     {
         trace(_tc, inst);

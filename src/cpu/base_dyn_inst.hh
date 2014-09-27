@@ -156,7 +156,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     InstSeqNum seqNum;
 
     /** The StaticInst used by this BaseDynInst. */
-    StaticInstPtr staticInst;
+    const StaticInstPtr staticInst;
 
     /** Pointer to the Impl's CPU object. */
     ImplCPU *cpu;
@@ -204,7 +204,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     TheISA::PCState predPC;
 
     /** The Macroop if one exists */
-    StaticInstPtr macroop;
+    const StaticInstPtr macroop;
 
     /** How many source registers are ready. */
     uint8_t readyRegs;
@@ -427,14 +427,14 @@ class BaseDynInst : public ExecContext, public RefCounted
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    BaseDynInst(StaticInstPtr staticInst, StaticInstPtr macroop,
+    BaseDynInst(const StaticInstPtr &staticInst, const StaticInstPtr &macroop,
                 TheISA::PCState pc, TheISA::PCState predPC,
                 InstSeqNum seq_num, ImplCPU *cpu);
 
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.
      */
-    BaseDynInst(StaticInstPtr staticInst, StaticInstPtr macroop);
+    BaseDynInst(const StaticInstPtr &staticInst, const StaticInstPtr &macroop);
 
     /** BaseDynInst destructor. */
     ~BaseDynInst();

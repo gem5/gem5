@@ -40,7 +40,7 @@
 #include "base/intmath.hh"
 #include "cpu/timing_expr.hh"
 
-TimingExprEvalContext::TimingExprEvalContext (StaticInstPtr inst_,
+TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
     ThreadContext *thread_,
     TimingExprLet *let_) :
     inst(inst_), thread(thread_), let(let_)

@@ -86,8 +86,8 @@ class M5DebugFault : public FaultBase
     }
 
     void
-    invoke(ThreadContext *tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    invoke(ThreadContext *tc, const StaticInstPtr &inst =
+           StaticInst::nullStaticInstPtr)
     {
         switch (func) {
           case PanicFunc:

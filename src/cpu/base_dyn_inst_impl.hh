@@ -59,8 +59,8 @@
 #include "sim/faults.hh"
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
-                               StaticInstPtr _macroop,
+BaseDynInst<Impl>::BaseDynInst(const StaticInstPtr &_staticInst,
+                               const StaticInstPtr &_macroop,
                                TheISA::PCState _pc, TheISA::PCState _predPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
   : staticInst(_staticInst), cpu(cpu), traceData(NULL), macroop(_macroop)
@@ -74,8 +74,8 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
 }
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
-                               StaticInstPtr _macroop)
+BaseDynInst<Impl>::BaseDynInst(const StaticInstPtr &_staticInst,
+                               const StaticInstPtr &_macroop)
     : staticInst(_staticInst), traceData(NULL), macroop(_macroop)
 {
     seqNum = 0;

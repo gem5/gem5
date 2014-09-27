@@ -129,7 +129,7 @@ BPredUnit::drainSanityCheck() const
 }
 
 bool
-BPredUnit::predict(StaticInstPtr &inst, const InstSeqNum &seqNum,
+BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                    TheISA::PCState &pc, ThreadID tid)
 {
     // See if branch predictor predicts taken.
@@ -244,7 +244,7 @@ BPredUnit::predict(StaticInstPtr &inst, const InstSeqNum &seqNum,
 }
 
 bool
-BPredUnit::predictInOrder(StaticInstPtr &inst, const InstSeqNum &seqNum,
+BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                           int asid, TheISA::PCState &instPC,
                           TheISA::PCState &predPC, ThreadID tid)
 {

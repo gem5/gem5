@@ -48,7 +48,7 @@ class StackTrace
 
   public:
     bool
-    trace(ThreadContext *tc, StaticInstPtr inst)
+    trace(ThreadContext *tc, const StaticInstPtr &inst)
     {
         panic("StackTrace::trace not implemented for SPARC.\n");
         return false;

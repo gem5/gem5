@@ -48,8 +48,8 @@ class AlphaFault : public FaultBase
     virtual bool skipFaultingInstruction() {return false;}
     virtual bool setRestartAddress() {return true;}
   public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
 };
@@ -108,8 +108,8 @@ class ArithmeticFault : public AlphaFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class InterruptFault : public AlphaFault
@@ -142,8 +142,8 @@ class DtbFault : public AlphaFault
     FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class NDtbMissFault : public DtbFault
@@ -160,8 +160,8 @@ class NDtbMissFault : public DtbFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class PDtbMissFault : public DtbFault
@@ -238,8 +238,8 @@ class ItbFault : public AlphaFault
     FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class ItbPageFault : public ItbFault
@@ -254,8 +254,8 @@ class ItbPageFault : public ItbFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                StaticInst::nullStaticInstPtr);
 };
 
 class ItbAcvFault : public ItbFault
