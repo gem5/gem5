@@ -407,8 +407,9 @@ BaseXBar::recvRangeChange(PortID master_port_id)
                     r.to_string(), master_port_id);
             if (portMap.insert(r, master_port_id) == portMap.end()) {
                 PortID conflict_id = portMap.find(r)->second;
-                fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
+                fatal("%s has two ports responding within range %s:\n\t%s\n\t%s\n",
                       name(),
+                      r.to_string(),
                       masterPorts[master_port_id]->getSlavePort().name(),
                       masterPorts[conflict_id]->getSlavePort().name());
             }
