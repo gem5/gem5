@@ -153,7 +153,7 @@ RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
     if (gzclose(compressedMemory)) {
         fatal("Close failed on memory trace file '%s'\n", filename);
     }
-    delete raw_data;
+    delete[] raw_data;
 }
 
 void

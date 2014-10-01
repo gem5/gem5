@@ -1361,7 +1361,8 @@ class DistStor
         /** The number of buckets. Equal to (max-min)/bucket_size. */
         size_type buckets;
 
-        Params() : DistParams(Dist) {}
+        Params() : DistParams(Dist), min(0), max(0), bucket_size(0),
+                   buckets(0) {}
     };
 
   private:

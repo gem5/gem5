@@ -184,6 +184,8 @@ VncServer::accept()
         panic("%s: cannot accept a connection if not listening!", name());
 
     int fd = listener.accept(true);
+    fatal_if(fd < 0, "%s: failed to accept VNC connection!", name());
+
     if (dataFd != -1) {
         char message[] = "vnc server already attached!\n";
         atomic_write(fd, message, sizeof(message));
@@ -643,7 +645,8 @@ VncServer::sendFrameBufferUpdate()
     assert(fbPtr);
 
     uint8_t *tmp = vc->convert(fbPtr);
-    write(tmp, videoWidth() * videoHeight() * sizeof(uint32_t));
+    uint64_t num_pixels = videoWidth() * videoHeight();
+    write(tmp, num_pixels * sizeof(uint32_t));
     delete [] tmp;
 
 }

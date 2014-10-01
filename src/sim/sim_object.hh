@@ -101,7 +101,7 @@ class SimObject : public EventManager, public Serializable, public Drainable
     typedef SimObjectParams Params;
     const Params *params() const { return _params; }
     SimObject(const Params *_params);
-    virtual ~SimObject() {}
+    virtual ~SimObject();
 
   public:
 

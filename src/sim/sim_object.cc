@@ -70,6 +70,11 @@ SimObject::SimObject(const Params *p)
     probeManager = new ProbeManager(this);
 }
 
+SimObject::~SimObject()
+{
+    delete probeManager;
+}
+
 void
 SimObject::init()
 {

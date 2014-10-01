@@ -54,7 +54,8 @@ ObjectFile::ObjectFile(const string &_filename, int _fd,
                        size_t _len, uint8_t *_data,
                        Arch _arch, OpSys _opSys)
     : filename(_filename), descriptor(_fd), fileData(_data), len(_len),
-      arch(_arch), opSys(_opSys), globalPtr(0)
+      arch(_arch), opSys(_opSys), entry(0), globalPtr(0),
+      text{0, nullptr, 0}, data{0, nullptr, 0}, bss{0, nullptr, 0}
 {
 }
 
@@ -116,7 +117,9 @@ createObjectFile(const string &fname, bool raw)
     }
 
     // find the length of the file by seeking to the end
-    size_t len = (size_t)lseek(fd, 0, SEEK_END);
+    off_t off = lseek(fd, 0, SEEK_END);
+    fatal_if(off < 0, "Failed to determine size of object file %s\n", fname);
+    size_t len = static_cast<size_t>(off);
 
     // mmap the whole shebang
     uint8_t *fileData =
