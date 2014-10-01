@@ -97,13 +97,13 @@ class MsrRegOp : public MsrBase
 class MrrcOp : public PredOp
 {
   protected:
-    IntRegIndex op1;
+    MiscRegIndex op1;
     IntRegIndex dest;
     IntRegIndex dest2;
     uint32_t    imm;
 
     MrrcOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-           IntRegIndex _op1, IntRegIndex _dest, IntRegIndex _dest2,
+           MiscRegIndex _op1, IntRegIndex _dest, IntRegIndex _dest2,
            uint32_t _imm) :
         PredOp(mnem, _machInst, __opClass), op1(_op1), dest(_dest),
         dest2(_dest2), imm(_imm)
@@ -117,11 +117,11 @@ class McrrOp : public PredOp
   protected:
     IntRegIndex op1;
     IntRegIndex op2;
-    IntRegIndex dest;
+    MiscRegIndex dest;
     uint32_t    imm;
 
     McrrOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-           IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _dest,
+           IntRegIndex _op1, IntRegIndex _op2, MiscRegIndex _dest,
            uint32_t _imm) :
         PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2),
         dest(_dest), imm(_imm)

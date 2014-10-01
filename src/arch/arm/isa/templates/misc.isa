@@ -183,7 +183,7 @@ class %(class_name)s : public %(base_class)s
   protected:
     public:
         // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+        %(class_name)s(ExtMachInst machInst, MiscRegIndex _op1,
                        IntRegIndex _dest, IntRegIndex _dest2, uint32_t imm);
         %(BasicExecDeclare)s
 };
@@ -191,7 +191,7 @@ class %(class_name)s : public %(base_class)s
 
 def template MrrcOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          IntRegIndex op1,
+                                          MiscRegIndex op1,
                                           IntRegIndex dest,
                                           IntRegIndex dest2,
                                           uint32_t    imm)
@@ -214,7 +214,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2,
-                       IntRegIndex _dest, uint32_t imm);
+                       MiscRegIndex _dest, uint32_t imm);
         %(BasicExecDeclare)s
 };
 }};
@@ -223,7 +223,7 @@ def template McrrOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex op1,
                                           IntRegIndex op2,
-                                          IntRegIndex dest,
+                                          MiscRegIndex dest,
                                           uint32_t    imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, op2,
                          dest, imm)

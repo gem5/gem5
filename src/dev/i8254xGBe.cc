@@ -821,8 +821,9 @@ IGbE::chkInterrupt()
 template<class T>
 IGbE::DescCache<T>::DescCache(IGbE *i, const std::string n, int s)
     : igbe(i), _name(n), cachePnt(0), size(s), curFetching(0),
-      wbOut(0), pktPtr(NULL), wbDelayEvent(this),
-      fetchDelayEvent(this), fetchEvent(this), wbEvent(this)
+      wbOut(0), moreToWb(false), wbAlignment(0), pktPtr(NULL),
+      wbDelayEvent(this), fetchDelayEvent(this), fetchEvent(this),
+      wbEvent(this)
 {
     fetchBuf = new T[size];
     wbBuf = new T[size];
@@ -1540,7 +1541,8 @@ IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
 
 IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
     : DescCache<TxDesc>(i,n, s), pktDone(false), isTcp(false),
-      pktWaiting(false), completionAddress(0), completionEnabled(false),
+      pktWaiting(false), pktMultiDesc(false),
+      completionAddress(0), completionEnabled(false),
       useTso(false), tsoHeaderLen(0), tsoMss(0), tsoTotalLen(0), tsoUsedLen(0),
       tsoPrevSeq(0), tsoPktPayloadBytes(0), tsoLoadedHeader(false),
       tsoPktHasHeader(false), tsoDescBytesUsed(0), tsoCopyBytes(0), tsoPkts(0),
