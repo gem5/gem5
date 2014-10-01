@@ -1859,14 +1859,14 @@ namespace ArmISA
     // Uses just the scr.ns bit to pre flatten the misc regs. This is useful
     // for MCR/MRC instructions
     int
-    flattenMiscRegNsBanked(int reg, ThreadContext *tc);
+    flattenMiscRegNsBanked(MiscRegIndex reg, ThreadContext *tc);
 
     // Flattens a misc reg index using the specified security state. This is
     // used for opperations (eg address translations) where the security
     // state of the register access may differ from the current state of the
     // processor
     int
-    flattenMiscRegNsBanked(int reg, ThreadContext *tc, bool ns);
+    flattenMiscRegNsBanked(MiscRegIndex reg, ThreadContext *tc, bool ns);
 
     // Takes a misc reg index and returns the root reg if its one of a set of
     // banked registers

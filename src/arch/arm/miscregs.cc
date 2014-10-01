@@ -2034,22 +2034,24 @@ canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
 }
 
 int
-flattenMiscRegNsBanked(int reg, ThreadContext *tc)
+flattenMiscRegNsBanked(MiscRegIndex reg, ThreadContext *tc)
 {
+    int reg_as_int = static_cast<int>(reg);
     if (miscRegInfo[reg][MISCREG_BANKED]) {
         SCR scr = tc->readMiscReg(MISCREG_SCR);
-        reg += (ArmSystem::haveSecurity(tc) && !scr.ns) ? 2 : 1;
+        reg_as_int += (ArmSystem::haveSecurity(tc) && !scr.ns) ? 2 : 1;
     }
-    return reg;
+    return reg_as_int;
 }
 
 int
-flattenMiscRegNsBanked(int reg, ThreadContext *tc, bool ns)
+flattenMiscRegNsBanked(MiscRegIndex reg, ThreadContext *tc, bool ns)
 {
+    int reg_as_int = static_cast<int>(reg);
     if (miscRegInfo[reg][MISCREG_BANKED]) {
-        reg += (ArmSystem::haveSecurity(tc) && !ns) ? 2 : 1;
+        reg_as_int += (ArmSystem::haveSecurity(tc) && !ns) ? 2 : 1;
     }
-    return reg;
+    return reg_as_int;
 }
 
 

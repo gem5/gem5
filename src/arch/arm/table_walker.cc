@@ -1158,9 +1158,10 @@ TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
 
         // LPAE always uses remapping of memory attributes, irrespective of the
         // value of SCTLR.TRE
-        int reg = attrIndx & 0x4 ? MISCREG_MAIR1 : MISCREG_MAIR0;
-        reg     = flattenMiscRegNsBanked(reg, currState->tc, !currState->isSecure);
-        uint32_t mair = currState->tc->readMiscReg(reg);
+        MiscRegIndex reg = attrIndx & 0x4 ? MISCREG_MAIR1 : MISCREG_MAIR0;
+        int reg_as_int = flattenMiscRegNsBanked(reg, currState->tc,
+                                                !currState->isSecure);
+        uint32_t mair = currState->tc->readMiscReg(reg_as_int);
         attr = (mair >> (8 * (attrIndx % 4))) & 0xff;
         uint8_t attr_7_4 = bits(attr, 7, 4);
         uint8_t attr_3_0 = bits(attr, 3, 0);
