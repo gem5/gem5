@@ -168,13 +168,19 @@ PacketQueue::scheduleSend(Tick time)
 {
     // the next ready time is either determined by the next deferred packet,
     // or in the cache through the MSHR ready time
-    Tick nextReady = std::min(deferredPacketReadyTime(), time);
+    Tick nextReady = std::max(std::min(deferredPacketReadyTime(), time),
+                              curTick() + 1);
 
     if (nextReady != MaxTick) {
         // if the sendTiming caused someone else to call our
         // recvTiming we could already have an event scheduled, check
-        if (!sendEvent.scheduled())
-            em.schedule(&sendEvent, std::max(nextReady, curTick() + 1));
+        if (!sendEvent.scheduled()) {
+            em.schedule(&sendEvent, nextReady);
+        } else if (nextReady < sendEvent.when()) {
+            // if the new time is earlier than when the event
+            // currently is scheduled, move it forward
+            em.reschedule(&sendEvent, nextReady);
+        }
     } else {
         // no more to send, so if we're draining, we may be done
         if (drainManager && transmitList.empty() && !sendEvent.scheduled()) {
