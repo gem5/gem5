@@ -1175,6 +1175,10 @@ main.SConscript('ext/fputils/SConscript',
 main.SConscript('ext/dramsim2/SConscript',
                 variant_dir = joinpath(build_root, 'dramsim2'))
 
+# DRAMPower build is shared across all configs in the build root.
+main.SConscript('ext/drampower/SConscript',
+                variant_dir = joinpath(build_root, 'drampower'))
+
 ###################################################
 #
 # This function is used to set up a directory with switching headers

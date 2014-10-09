@@ -1,0 +1,121 @@
+Change Log:
+
+DRAMPower v4.0 - *  DRAMPower can now be compiled as a library. This enables a user
+	            to access the tool through an API and log commands and their
+	            corresponding time stamps, removing the need to store large
+	            command traces on disk. In addition, cycle counting variables
+	            have been changed to int64 to support longer simulations.
+	            The library can be compiled without Xerces to remove an optional 
+	            dependency and reduce the size of the binary.
+	             *  Improved robustness. The latest build is automatically checked 
+	            out on a test server, compiled, and tested to verify that the 
+	            output matches an expected reference. The code is also compiled
+	            with a large number of warning flags enabled and treats all 
+	            warnings as errors.
+	         *  Bug fix: Fixed bug in io/termination energy calculation.
+	         *  Bug fix: Fixed bug in calculation of auto precharge cycle.
+
+DRAMPower v3.1 - *  Added IO and Termination Power measures from Micron's DRAM Power 
+		    Calculator, for all supported DRAM generations. In the case of 
+		    Wide IO DRAMs, these measures are already included in the provided
+		    current specifications. This feature enables support for multi-rank 
+		    DRAM DIMMs (DDR2/3/4) and stacking of multiple Wide IO DRAM dies 
+		    (equivalent to ranks). To indicate use of multi-rank DRAMs or 
+		    multiple Wide IO DRAM dies/layers, the 'nbrOfRanks' parameter in 
+		    the memory specification XMLs can be employed. Note: The DRAM 
+		    command scheduler does not support multi-rank/multi-die DRAMs yet.
+		    Only the power estimation component of DRAMPower has been updated 
+		    to support them. The current measures for dual-rank DRAMs only
+		    reflect those for the active rank and not the idle rank. The 
+		    default state of the idle rank is assumed to be the same as the 
+		    current memory state, for background power estimation. Hence,
+		    rank information in the command trace is not required.
+		 *  Added warning messages: New warning messages are provided, to 
+		    identify if the memory or bank state is inconsistent in the 
+		    user-defined traces. Towards this, a state check is performed on 
+		    every memory command issued.
+		 *  Improved run-time options: Users can now point directly to the 
+		    memory specification XML, instead of just the memory ID. Also, 
+		    users can optionally include IO and termination power estimates 
+		    (for both single and dual rank DRAMs) using '-r' flag in the 
+		    command line options.
+		 *  Bug fixes: (1) Refresh handler in the DRAM Command Scheduler was 
+		    kept ON in the Self-Refresh mode, when it can be turned OFF. This 
+		    bug has now been fixed. (2) Precharge All (PREA) always considered 
+		    precharging of all banks. It has now been modified to consider 
+		    precharging of the open/active banks alone. 
+
+DRAMPower v3.0 - *  Added support for LPDDR3 and DDR4 memories, besides the already
+                    supported DDR2/DDR3, LPDDR/LPDDR2 and WIDE IO DRAM memories.
+                 *  Added DRAM Command Scheduler: To support users of DRAMPower 
+		    without access to DRAM controllers, we have added a simple DRAM 
+		    command scheduler that dynamically schedules DRAM commands as if 
+		    it were a memory controller. The scheduler assumes closed-page 
+		    policy, employs ASAP scheduling for DRAM commands (i.e. schedules 
+		    commands as soon as timing constraints are met), performs FCFS 
+		    scheduling on DRAM transactions and supports all the different 
+		    DRAM generations supported by the power model. The generated DRAM 
+		    command schedule is also analyzable for real-time applications. 
+		    Users can also select speculative usage of power-down or 
+		    self-refresh modes (if needed) for idle periods between 
+		    transactions. It should be noted that using this command scheduler 
+		    is optional and it can be (de-)selected during run-time and users 
+		    can switch back to the previously used DRAM command interface as 
+		    in the earlier versions.
+                 *  Improved run-time options: Users can specify the memory and the 
+		    trace file to be used by DRAMPower using command line options. 
+		    Additionally, if the DRAM command scheduler is being used, the 
+		    users can specify the degree of bank interleaving required, the 
+		    request size and power-down or self-refresh options. Also, for 
+		    DDR4 memories the bank group interleaving can be specified using 
+		    command line options.
+                 *  Bug fixes: (1) For command traces ending with a RD/WR/RDA/WRA 
+		    command, the tool did not consider completion of operations when 
+		    estimating the total trace energy. The missing cycles are now 
+		    taken into account.
+                    (2) The IDD5 (REF current) specification for WIDE IO SDR memory
+                    specifications only included 2 banks for refreshes instead of all 
+		    four. We would like to thank David Roberts from AMD for spotting 
+		    the issue in our DATE'13 article. These measures have been updated.
+                    (3) When estimating precharge cycle for commands with 
+		    auto-precharge, (RDA/WRA), the command analysis tool employed the 
+		    last activation cycle in the entire DRAM instead of the particular 
+		    DRAM bank. This bug has been fixed in this release.
+
+DRAMPower v2.1 - *  Added support for variation-aware power estimation, for a 
+    		    selection of DDR3 memories manufactured using 50nm process 
+		    technology, based on the Monte-Carlo analysis presented in our 
+		    DAC'13 article.
+
+DRAMPower v2.0 - *  Added support for LPDDR/LPDDR2 and WIDE IO DRAM memories, besides 
+		    the already supported DDR2/DDR3 memories.
+                 *  Faster analysis: The trace analysis component in DRAMPower v2.0
+                    triggers the evaluation only during memory state transitions
+                    (between active, precharged, active and precharged power-down,
+                    refresh, self-refresh and power-up states) and not on every clock
+                    cycle, as was the case till the last version. This optimization 
+		    speeds up the power simulations using DRAMPower by several times 
+		    over cycle-accurate analysis, resulting in fast power analysis, 
+		    without affecting the accuracy of the trace analysis or the 
+		    reported power and energy estimates.
+		 *  Verification effort: Our power model was verified by the
+                    Microelectronic System Design group at TU Kaiserslautern using
+                    circuit-level SPICE simulations of a DRAM cross-section. As a 
+		    result of this verification effort, a couple of power equations 
+		    have been modified for Refresh and Self-refresh operations. The 
+		    difference between the power and energy estimates reported by our 
+		    updated model and the equivalent circuit-level simulations is 
+		    < 2% for all memory operations of any granularity for all memories 
+		    supported by DRAMPower.
+
+DRAMPower v1.2 - *  Supports different power-down and self-refresh modes in DDR2 and 
+		    DDR3 DRAM memories.
+                 *  Bug fix: Refresh power consumption equation in DRAMPower v1,
+                    incorrectly subtracted IDD2n (precharge background current) 
+		    instead of IDD3n (active background current) from IDD5 (total 
+		    refresh current). This error has been rectified in this version.
+
+DRAMPower v1.0 - *  Performs cycle-accurate memory command trace analysis and estimates
+                    power and energy consumption numbers for the trace.
+                 *  It supports the basic memory operations like read, write, refresh,
+                    activate and (auto) precharge in DDR2 and DDR3 memories.
