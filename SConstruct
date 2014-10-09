@@ -746,6 +746,17 @@ if compareVersions(swig_version[2], min_swig_version) < 0:
     print '       Installed version:', swig_version[2]
     Exit(1)
 
+# Check for known incompatibilities. The standard library shipped with
+# gcc >= 4.9 does not play well with swig versions prior to 3.0
+if main['GCC'] and compareVersions(gcc_version, '4.9') >= 0 and \
+        compareVersions(swig_version[2], '3.0') < 0:
+    print termcap.Yellow + termcap.Bold + \
+        'Warning: This combination of gcc and swig have' + \
+        ' known incompatibilities.\n' + \
+        '         If you encounter build problems, please update ' + \
+        'swig to 3.0 or later.' + \
+        termcap.Normal
+
 # Set up SWIG flags & scanner
 swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
 main.Append(SWIGFLAGS=swig_flags)
