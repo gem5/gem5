@@ -311,3 +311,11 @@ def toVoltage(value):
 
     raise ValueError, "cannot convert '%s' to voltage" % value
 
+def toCurrent(value):
+    if not isinstance(value, str):
+        raise TypeError, "wrong type '%s' should be str" % type(value)
+
+    if value.endswith('A'):
+        return toFloat(value[:-1])
+
+    raise ValueError, "cannot convert '%s' to current" % value

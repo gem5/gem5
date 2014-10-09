@@ -1485,6 +1485,31 @@ class Voltage(float,ParamValue):
     def ini_str(self):
         return '%f' % self.getValue()
 
+class Current(float, ParamValue):
+    cxx_type = 'double'
+    ex_str = "1mA"
+    cmd_line_settable = False
+
+    def __new__(cls, value):
+        # convert to current
+        val = convert.toCurrent(value)
+        return super(cls, Current).__new__(cls, val)
+
+    def __call__(self, value):
+        val = convert.toCurrent(value)
+        self.__init__(val)
+        return value
+
+    def __str__(self):
+        return str(self.getValue())
+
+    def getValue(self):
+        value = float(self)
+        return value
+
+    def ini_str(self):
+        return '%f' % self.getValue()
+
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
     ex_str = "1Gbps"
