@@ -32,11 +32,6 @@ import sys
 
 Import('*')
 
-if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:
-    DebugFlag('CommitRate')
-    DebugFlag('IEW')
-    DebugFlag('IQ')
-
 if 'O3CPU' in env['CPU_MODELS']:
     SimObject('FUPool.py')
     SimObject('FuncUnitConfig.py')
@@ -64,6 +59,9 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('store_set.cc')
     Source('thread_context.cc')
 
+    DebugFlag('CommitRate')
+    DebugFlag('IEW')
+    DebugFlag('IQ')
     DebugFlag('LSQ')
     DebugFlag('LSQUnit')
     DebugFlag('MemDepUnit')

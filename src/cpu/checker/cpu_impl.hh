@@ -410,7 +410,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
         if (FullSystem) {
             // @todo: Determine if these should happen only if the
             // instruction hasn't faulted.  In the SimpleCPU case this may
-            // not be true, but in the O3 or Ozone case this may be true.
+            // not be true, but in the O3 case this may be true.
             Addr oldpc;
             int count = 0;
             do {
