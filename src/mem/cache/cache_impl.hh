@@ -107,6 +107,8 @@ template<class TagStore>
 void
 Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 {
+    assert(pkt->isRequest());
+
     uint64_t overwrite_val;
     bool overwrite_mem;
     uint64_t condition_val64;
@@ -149,6 +151,8 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                                        bool deferred_response,
                                        bool pending_downgrade)
 {
+    assert(pkt->isRequest());
+
     assert(blk && blk->isValid());
     // Occasionally this is not true... if we are a lower-level cache
     // satisfying a string of Read and ReadEx requests from
@@ -247,6 +251,8 @@ template<class TagStore>
 void
 Cache<TagStore>::markInService(MSHR *mshr, PacketPtr pkt)
 {
+    // packet can be either a request or response
+
     markInServiceInternal(mshr, pkt);
 #if 0
         if (mshr->originalCmd == MemCmd::HardPFReq) {
@@ -295,6 +301,9 @@ bool
 Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         Cycles &lat, PacketList &writebacks)
 {
+    // sanity check
+    assert(pkt->isRequest());
+
     DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     if (pkt->req->isUncacheable()) {
@@ -1431,6 +1440,7 @@ typename Cache<TagStore>::BlkType*
 Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
                             PacketList &writebacks)
 {
+    assert(pkt->isResponse());
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
 #if TRACING_ON
@@ -1516,6 +1526,9 @@ Cache<TagStore>::
 doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
                        bool already_copied, bool pending_inval)
 {
+    // sanity check
+    assert(req_pkt->isRequest());
+
     DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
             req_pkt->cmdString(), req_pkt->getAddr(), req_pkt->getSize());
     // timing-mode snoop responses require a new packet, unless we

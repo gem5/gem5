@@ -247,6 +247,8 @@ MSHR::markInService(PacketPtr pkt)
         popTarget();
         return true;
     }
+
+    assert(pkt != NULL);
     inService = true;
     pendingDirty = (targets.needsExclusive ||
                     (!pkt->sharedAsserted() && pkt->memInhibitAsserted()));

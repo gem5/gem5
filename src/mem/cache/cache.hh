@@ -380,7 +380,7 @@ class Cache : public BaseCache
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(MSHR *mshr, PacketPtr pkt = 0);
+    void markInService(MSHR *mshr, PacketPtr pkt = NULL);
 
     /**
      * Return whether there are any outstanding misses.
