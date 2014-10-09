@@ -4,11 +4,11 @@ sim_seconds                                  0.000016                       # Nu
 sim_ticks                                    16223000                       # Number of ticks simulated
 final_tick                                   16223000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  55920                       # Simulator instruction rate (inst/s)
-host_op_rate                                    65484                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              197542740                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 304472                       # Number of bytes of host memory used
-host_seconds                                     0.08                       # Real time elapsed on the host
+host_inst_rate                                  26356                       # Simulator instruction rate (inst/s)
+host_op_rate                                    30865                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               93111675                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 251576                       # Number of bytes of host memory used
+host_seconds                                     0.17                       # Real time elapsed on the host
 sim_insts                                        4591                       # Number of instructions simulated
 sim_ops                                          5377                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -226,6 +226,24 @@ system.physmem.memoryStateTime::REF            520000                       # Ti
 system.physmem.memoryStateTime::PRE_PDN             0                       # Time in different power states
 system.physmem.memoryStateTime::ACT          15315250                       # Time in different power states
 system.physmem.memoryStateTime::ACT_PDN             0                       # Time in different power states
+system.physmem.actEnergy::0                    317520                       # Energy for activate commands per rank (pJ)
+system.physmem.actEnergy::1                    151200                       # Energy for activate commands per rank (pJ)
+system.physmem.preEnergy::0                    173250                       # Energy for precharge commands per rank (pJ)
+system.physmem.preEnergy::1                     82500                       # Energy for precharge commands per rank (pJ)
+system.physmem.readEnergy::0                  2238600                       # Energy for read commands per rank (pJ)
+system.physmem.readEnergy::1                   795600                       # Energy for read commands per rank (pJ)
+system.physmem.writeEnergy::0                       0                       # Energy for write commands per rank (pJ)
+system.physmem.writeEnergy::1                       0                       # Energy for write commands per rank (pJ)
+system.physmem.refreshEnergy::0               1017120                       # Energy for refresh commands per rank (pJ)
+system.physmem.refreshEnergy::1               1017120                       # Energy for refresh commands per rank (pJ)
+system.physmem.actBackEnergy::0              10793520                       # Energy for active background per rank (pJ)
+system.physmem.actBackEnergy::1              10477170                       # Energy for active background per rank (pJ)
+system.physmem.preBackEnergy::0                 31500                       # Energy for precharge background per rank (pJ)
+system.physmem.preBackEnergy::1                309000                       # Energy for precharge background per rank (pJ)
+system.physmem.totalEnergy::0                14571510                       # Total energy per rank (pJ)
+system.physmem.totalEnergy::1                12832590                       # Total energy per rank (pJ)
+system.physmem.averagePower::0             920.354334                       # Core power per rank (mW)
+system.physmem.averagePower::1             810.522027                       # Core power per rank (mW)
 system.membus.trans_dist::ReadReq                 355                       # Transaction distribution
 system.membus.trans_dist::ReadResp                355                       # Transaction distribution
 system.membus.trans_dist::ReadExReq                42                       # Transaction distribution

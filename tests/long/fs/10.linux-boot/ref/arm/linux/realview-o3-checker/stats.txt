@@ -4,27 +4,15 @@ sim_seconds                                  2.542157                       # Nu
 sim_ticks                                2542156879500                       # Number of ticks simulated
 final_tick                               2542156879500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  45011                       # Simulator instruction rate (inst/s)
-host_op_rate                                    54228                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1897222602                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 464684                       # Number of bytes of host memory used
-host_seconds                                  1339.94                       # Real time elapsed on the host
+host_inst_rate                                  45837                       # Simulator instruction rate (inst/s)
+host_op_rate                                    55223                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1932040285                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 415140                       # Number of bytes of host memory used
+host_seconds                                  1315.79                       # Real time elapsed on the host
 sim_insts                                    60311972                       # Number of instructions simulated
 sim_ops                                      72661518                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
-system.realview.nvmem.bytes_read::cpu.inst           48                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_read::total            48                       # Number of bytes read from this memory
-system.realview.nvmem.bytes_inst_read::cpu.inst           48                       # Number of instructions bytes read from this memory
-system.realview.nvmem.bytes_inst_read::total           48                       # Number of instructions bytes read from this memory
-system.realview.nvmem.num_reads::cpu.inst            3                       # Number of read requests responded to by this memory
-system.realview.nvmem.num_reads::total              3                       # Number of read requests responded to by this memory
-system.realview.nvmem.bw_read::cpu.inst            19                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_read::total               19                       # Total read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::cpu.inst           19                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_inst_read::total           19                       # Instruction read bandwidth from this memory (bytes/s)
-system.realview.nvmem.bw_total::cpu.inst           19                       # Total bandwidth to/from this memory (bytes/s)
-system.realview.nvmem.bw_total::total              19                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bytes_read::realview.clcd    121110528                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.dtb.walker          640                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.itb.walker          192                       # Number of bytes read from this memory
@@ -287,6 +275,36 @@ system.physmem.memoryStateTime::REF       84888180000                       # Ti
 system.physmem.memoryStateTime::PRE_PDN             0                       # Time in different power states
 system.physmem.memoryStateTime::ACT      262709081500                       # Time in different power states
 system.physmem.memoryStateTime::ACT_PDN             0                       # Time in different power states
+system.physmem.actEnergy::0                3819501000                       # Energy for activate commands per rank (pJ)
+system.physmem.actEnergy::1                3820982760                       # Energy for activate commands per rank (pJ)
+system.physmem.preEnergy::0                2084053125                       # Energy for precharge commands per rank (pJ)
+system.physmem.preEnergy::1                2084861625                       # Energy for precharge commands per rank (pJ)
+system.physmem.readEnergy::0              59549568000                       # Energy for read commands per rank (pJ)
+system.physmem.readEnergy::1              59530130400                       # Energy for read commands per rank (pJ)
+system.physmem.writeEnergy::0               339202080                       # Energy for write commands per rank (pJ)
+system.physmem.writeEnergy::1               347386320                       # Energy for write commands per rank (pJ)
+system.physmem.refreshEnergy::0          166041280080                       # Energy for refresh commands per rank (pJ)
+system.physmem.refreshEnergy::1          166041280080                       # Energy for refresh commands per rank (pJ)
+system.physmem.actBackEnergy::0          145728636750                       # Energy for active background per rank (pJ)
+system.physmem.actBackEnergy::1          145839613185                       # Energy for active background per rank (pJ)
+system.physmem.preBackEnergy::0          1397461683000                       # Energy for precharge background per rank (pJ)
+system.physmem.preBackEnergy::1          1397364335250                       # Energy for precharge background per rank (pJ)
+system.physmem.totalEnergy::0            1775023924035                       # Total energy per rank (pJ)
+system.physmem.totalEnergy::1            1775028589620                       # Total energy per rank (pJ)
+system.physmem.averagePower::0             698.235540                       # Core power per rank (mW)
+system.physmem.averagePower::1             698.237375                       # Core power per rank (mW)
+system.realview.nvmem.bytes_read::cpu.inst           48                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_read::total            48                       # Number of bytes read from this memory
+system.realview.nvmem.bytes_inst_read::cpu.inst           48                       # Number of instructions bytes read from this memory
+system.realview.nvmem.bytes_inst_read::total           48                       # Number of instructions bytes read from this memory
+system.realview.nvmem.num_reads::cpu.inst            3                       # Number of read requests responded to by this memory
+system.realview.nvmem.num_reads::total              3                       # Number of read requests responded to by this memory
+system.realview.nvmem.bw_read::cpu.inst            19                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_read::total               19                       # Total read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::cpu.inst           19                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_inst_read::total           19                       # Instruction read bandwidth from this memory (bytes/s)
+system.realview.nvmem.bw_total::cpu.inst           19                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.nvmem.bw_total::total              19                       # Total bandwidth to/from this memory (bytes/s)
 system.membus.trans_dist::ReadReq            16348037                       # Transaction distribution
 system.membus.trans_dist::ReadResp           16348037                       # Transaction distribution
 system.membus.trans_dist::WriteReq             763357                       # Transaction distribution
