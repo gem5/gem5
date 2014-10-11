@@ -1,0 +1,374 @@
+DSENT (Design Space Exploration of Networks Tool)
+
+===============================================================================
+Overview
+===============================================================================
+DSENT is a modeling tool designed for rapid design space exploration of both
+electronical and emerging opto-electrical networks-on-chip (NoC). It provides
+analytic and parameterized models for various network components and is
+portable across a range of technology assumptions. Given architectural-level
+parameters, DSENT builds the specified models hierarchically from electrical
+and optical building blocks and outputs detailed power and area estimates. 
+
+
+===============================================================================
+Version
+===============================================================================
+Current: 0.91 (26 June 2012)
+
+Latest version or additional information can be found at
+
+    https://sites.google.com/site/mitdsent
+
+===============================================================================
+System requirements
+===============================================================================
+We have tested DSENT on the following platforms:
+
+Linux GNU g++ 4.1.2 and glibc 2.5
+Linux GNU g++ 4.3.2 and glibc 2.7
+Linux GNU g++ 4.4.5 and glibc 2.11.3
+Cygwin g++ 4.5.3 and cygwin 1.7.14
+
+===============================================================================
+License
+===============================================================================
+Please refer to the LICENSE file for licensing and copyright information.
+
+If you use DSENT in your research, please acknowledge us by referencing our 
+NOCS 2012 paper:
+
+Chen Sun, Chia-Hsin Owen Chen, George Kurian, Lan Wei, Jason Miller, 
+Anant Agarwal, Li-Shiuan Peh, Vladimir Stojanovic, "DSENT - A Tool Connecting 
+Emerging Photonics with Electronics for Opto-Electronic Networks-on-Chip 
+Modeling." The 6th ACM/IEEE International Symposium on Networks-on-Chip 
+(NOCS), May 2012, Lyngby, Denmark.
+
+
+===============================================================================
+Contact information
+===============================================================================
+If you have any questions or comments, please contact us through our mailing
+list at: mitdsent@mit.edu 
+
+We will try to reply as soon as possible.
+
+
+===============================================================================
+Build (installation)
+===============================================================================
+To build DSENT:
+
+    % make 
+
+By default DSENT is built with logging disabled. Logging keeps track of what 
+happens while running DSENT. It is an option more for the DSENT framework and 
+DSNET models developers. If you want to enable this option, simply type the 
+following: 
+
+    % make LIBUTIL_IS_LOG=true
+
+To clean the build: 
+
+    % make clean
+
+
+===============================================================================
+Usage
+===============================================================================
+DSENT builds models and runs based on the specified configuration file. In the 
+configuration file, you specify a model name and necessary information 
+(parameters and properties) required to build the model.
+
+To run DSENT:
+
+    % ./dsent -cfg <config_filename>
+
+To check what models are available:
+
+    % ./dsent -available_models
+
+To overwrite the configuration file from command line:
+    Use ';' to separate different key/value pairs. 
+
+    % ./dsent -cfg <config_filename> -overwrite <new query string>
+    % ./dsent -cfg configs/example.cfg -overwrite "NumberInputs=5; NumberOutputs=6;"
+
+To print out in a more human-friendly fasion:
+
+    % ./dsent -cfg <config_filename> -verbose
+
+To check what options are available:
+
+    % ./dsent -help
+
+Please see configs/example.cfg for an example of a configuration file.
+
+Please see configs/router.cfg for the router configuration file. 
+
+Please see QueryString and EvaluateString specifications below to know more 
+about the usage.
+
+===============================================================================
+Advanced Usage
+===============================================================================
+Since DSENT is a generic modeling framework for electrical and optical 
+components, you can create your own models. We will release guidelines on how 
+to create custom models on top of DSENT framework. You can use the provided 
+models as references.
+
+
+===============================================================================
+Quick start for Orion users
+===============================================================================
+Instead of using the SIM_port.h file, DSENT uses a text-based configuration 
+file to specify the router/link configurations. You do not need to recompile
+if you change parameters. Even though we use different parameter names, the
+ones we use should be self-explanatory. In this package, we provide template
+configuration files for the router and link:
+
+    router  - configs/router.cfg
+    link    - configs/electrical-link.cfg
+
+    Technology
+    ----------
+        We currently support 45, 32, 22, 11nm. You can specify the desired 
+        frequency but not the nominal voltage level since it is normally 
+        fixed in different processes. 
+
+    Router specs
+    ------------
+        Currently we only support the model of a widely used 3-pipeline-stage 
+        input-buffered virtual channel router and does not have distinction 
+        from ports for different components (cache, memory controller, I/O). 
+
+    Input buffer specs
+    ------------------
+        The number of virtual channels used for different message classes 
+        might be different; hence, DSENT uses NumberVirtualNetworks to 
+        specify the number of message classes and use 
+        NumberVirtualChannelsPerVirtualNetwork and 
+        NumberBuffersPerVirtualChannel to define the buffers needed for a  
+        virtual network (message class). 
+
+        Currently only DFF-based RAM is supports. This is reasonable since 
+        normally the buffer space needed at input port is small enough and 
+        does not need to use SRAMs or RFs (register files). 
+
+    Crossbar specs
+    --------------
+        Currently DSENT only supports multiplexer-based crossbars 
+        (MULTREE_CROSSBAR). You no longer need to specify the degree of the
+        multiplexers. 
+
+    Switch allocator specs
+    ----------------------
+        DSENT models a two-stage switch allocator. The first stage is used to 
+        arbitrate between VCs in the same input port, and the second stage is 
+        used to arbitrate between input ports. If there is only one VC in 
+        the input port, then the energy/power/area cost for the first stage 
+        will be zero. 
+        
+        Currently, DSENT supports MatrixArbiter. 
+
+    VC allocator specs
+    ------------------
+        We assume that the router uses a VC select scheme where the VC 
+        allocation is done by just popping a FIFO. Currently DSENT ignores 
+        this module since the FIFO that needs to keep the free VC information 
+        should be small enough. 
+
+    Clock distribution specs
+    ------------------------
+        Currently DSENT provides a broadcast H-Tree model. You can specify 
+        the number of levels of the H-Tree (normally 4 or 5 levels should be 
+        enough). 
+
+DSENT replaces the original orion_router_power, orion_router_area and 
+orion_link with QueryString and EvaluateString (see below for more detailed 
+information on how to use them). 
+
+
+===============================================================================
+QueryString specifications
+===============================================================================
+DSENT is a query-based model evaluator. You use QueryString to specify what 
+information you want DSENT to output. The syntax of a query string is shown as 
+follows: 
+
+    [Query type]>>[Instance name (with hierarchy)]:[Sub query type]@[Detail level]
+
+    E.g., Area>>Router->Crossbar:Active@4
+        * Query type:       Area
+        * Instance name:    Router->Crossbar
+        * Sub query type:   Active
+        * Detail level:     4
+
+    Query type
+    ----------
+        There are 9 types of queries: Parameter, Property, Energy, NddPower, 
+        Area, InstHier, EventHier, NddPowerHier, AreaHier. 
+
+        Parameter       - Print the model parameters needed to be specified 
+        Property        - Print the design constraints or utilization 
+            Use these to check what needs to be specified in the configuration 
+            file for the model. No sub query type is needed for these two 
+            types. 
+
+        Energy          - Print the data-dependent energy cost of an event
+        NddPower        - Print the non-data-denepent power of an instance
+        Area            - Print the area cost of an instance
+            Use these to obtain the costs of the specified model.
+
+        InstHier        - Print the instance name hierarchy
+            Use this to know what sub-instances are built for this model
+
+        EventHier       - Print the available events for Energy queries
+        NddPowerHier    - Print the available non-data-dependent power types
+        AreaHier        - Print the available area types
+            Use this to know what to specify in the "sub query type" field. 
+
+    Instance name (with hierarchy)
+    ------------------------------
+        The (sub)instance that you want to perform query. The name should be 
+        hierarchical starting from the top level model. Hierarchies are 
+        separated by the symbol "->".
+
+    Sub query type
+    --------------
+        This field is not required for 'Parameter', 'Property' and 'InstHier'.
+
+        For 'Energy', this field stands for the event that cause this energy 
+        cost, such as 'WriteBuffer'. 
+
+        For 'NddPower' and 'Area', this field stands for the power and area 
+        cost of the model, such as 'Leakage' and 'Active'. 
+
+        For 'EventHier', if this field is not specified, all events of this 
+        instance will be printed; if this field is specified, then only 
+        the specified event will be printed. 'AreaHier' and 'NddPowerHier' 
+        also have the similar behavior. 
+        
+    Detail level
+    ------------
+        Defines the hierarchy depth to be printed. '0' means current level. 
+        This field is needed for all query types for syntax correctness, 
+        although it is not used for 'Parameter' and 'Property'. 
+
+    Multi-line queries
+    ------------------
+        Query strings specified across multiple lines in the config file
+        must have each line be terminated by a '\'. It is whitespace sensitive,
+        so make sure there are no spaces after '\'. Note that the parser
+        prunes everything after the comment '#' character, including '\'!
+        See configs/router.cfg as an example.
+
+    Examples of individual QueryString's:
+
+        Parameter>>Router@0
+        Property>>Router->Crossbar@0
+        InstHier>>Router->InputPort@2
+        Energy>>Router:WriteBuffer@2
+        NddPower>>Router->Crossbar:Leakage@3
+        Area>>Router->SwitchAllocator:Active@4
+
+        
+===============================================================================
+EvaluateString specifications
+===============================================================================
+DSENT provides a way to let users do custom calculations by specifying the 
+EvaluateString in the configuration file. EvaluateString constains a sequence 
+of statements separated by one ';'. DSENT reads through the sequence and 
+evaluates the statements one-by-one. 
+
+Currently, DSENT supports:
+    Four arithmetic operations
+    --------------------------
+        3 + 4 * (5 + 6) / 7;
+
+    Define local variables through assignments
+    ------------------------------------------
+        variable 'a' will be mapped to 7 for future referencing
+
+        a = 3 + 4;
+
+    Global variable referencing
+    ---------------------------
+        $(var_name) indicates either a key in the configuration file or a 
+        query string. If var_name exists in the configuration file, then the 
+        corresponding value will be returned; otherwise, DSENT will do a query 
+        using the string var_name@0 and return the query result. 
+
+        b = $(Energy>>Router:WriteBuffer) * $(Frequency);
+
+    Printing outputs
+    ----------------
+        DSENT prints the string following the keyword 'print'. 
+
+        print <expression>
+        print "<string_to_print>";
+        print "<string_to_print>" <expression>;
+
+        print 3 + 4;                # Output: 7
+        print "Hello World";        # Output: Hello World
+        print "Hello World " 3 + 4; # Output: Hello World 7
+        
+    Multi-line evaluate strings
+    ---------------------------
+        Evaluate strings specified across multiple lines in the config file
+        must have each line be terminated by a '\'. It is whitespace sensitive,
+        so make sure there are no spaces after '\'. Note that the parser
+        prunes everything after the comment '#' character, including '\'!
+        See configs/router.cfg as an example.
+
+        
+===============================================================================
+Units
+===============================================================================
+DSENT uses only SI units for all inputs and outputs. For example:
+    time        = s (second)
+    distance    = m (meter)
+    capacitance = F (Farad)
+    power       = W (Watt)
+    energy      = J (Joule)
+    resistance  = Ohm
+    loss        = dB (Decibels)
+
+    
+===============================================================================
+Known Bugs and Issues
+===============================================================================
+
+1. If timing is not met, the timing optimizer will put the model in a state
+where everything is the maximum size (huge power, area). Thus, model results
+can be considered a gross over-estimate when timing isn't met. This is just the
+nature of the greedy timing optimizer and it will be addressed in the future.
+
+2. The VC control and credit buffer component of the router is currently
+not modeled, as they have always been assumed to be lumped into the "negligible
+control cost" category in previous models and evaluations. Our recent
+experiments have shown that this is not true and we will be adding this in the
+next iteration.
+
+3. Some of the connectivity paths have not been checked thoroughly. Thus,
+timing optimizer may miss some of the paths. However, we tried to make sure
+that the critical paths are modeled properly.
+
+4. Local interconnect will have an ever-larger impact on power and timing as
+technology scales. So far we have not implemented a method for automatically
+estimating them but we will eventually address this. Evaluations for 22nm
+and below will tend to underestimate as a result.
+
+===============================================================================
+Revision log
+===============================================================================
+V0.91:
+    Bugs fix:
+        1. Leakage power calculation printout for router (configs/router.cfg).
+
+    New feature:
+        1. Area printout for router (configs/router.cfg).
+
+V0.9:
+    First release.
+

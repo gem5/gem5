@@ -1,0 +1,89 @@
+# This file contains the model for photonic devices/circuits
+PhotonicsName = Photonics
+
+# ALL PARAMETERS IN SI UNITS!!! (J, W, m, F, dB, A)
+
+# -----------------------------------------------------------------------------
+# Waveguide
+# -----------------------------------------------------------------------------
+Waveguide->LossPerMeter                     = 100       # dB/m
+Waveguide->Pitch                            = 4e-6      # m
+Splitter->Loss                              = 1.00      # dB
+Coupler->Loss                               = 1.00      # dB
+
+# -----------------------------------------------------------------------------
+# Laser
+# -----------------------------------------------------------------------------
+
+# Continuous wave off-chip (always on) laser
+Laser->CW->Efficiency                       = 0.25      # P_Laser/P_Electrical
+Laser->CW->LaserDiodeLoss                   = 1.00      # Laser diode loss
+Laser->CW->Area                             = 0
+
+# Gated on-chip (data-dependent) laser
+Laser->GatedCW->Efficiency                  = 0.25      # P_Laser/P_Electrical
+Laser->GatedCW->LaserDiodeLoss              = 1.00      # Laser diode loss
+Laser->GatedCW->Area                        = 200e-12
+
+# -----------------------------------------------------------------------------
+# Modulators
+# -----------------------------------------------------------------------------
+# Ring Modulator
+Modulator->Ring->SupplyBoostRatio           = 1.2       # Boost the supply voltage above required reverse bias voltage by this ratio
+Modulator->Ring->ParasiticRes               = 100       # ohm
+Modulator->Ring->ParasiticCap               = 5e-15     # F
+Modulator->Ring->FCPDEffect                 = 3e-27     # Free carrier plasma dispersion effect, delta_n/delta_c (m^-3)
+Modulator->Ring->Tn                         = 0.01      # Transmisivity at the bottom of the notch
+Modulator->Ring->NA                         = 3e24      # m^3, p doping
+Modulator->Ring->ND                         = 1e24      # m^3, n doping
+Modulator->Ring->ni                         = 1e16      # m^3, intrinsic free carriers
+Modulator->Ring->JunctionRatio              = 0.8       # Junction ratio to total optical length
+Modulator->Ring->Height                     = 500e-9    # Height of the junction (m)
+Modulator->Ring->Width                      = 500e-9    # Modulator width (m)
+Modulator->Ring->ConfinementFactor          = 0.3       # Modulator confinement factor
+
+# -----------------------------------------------------------------------------
+# Ring Resonator
+# -----------------------------------------------------------------------------
+Ring->Area                                  = 100e-12   # m2
+Ring->Lambda                                = 1300e-9   # Resonant wavelength range
+Ring->GroupIndex                            = 4         # Group index
+Ring->Radius                                = 3e-6      # Bend radius of the ring
+Ring->ConfinementFactor                     = 0.3       # Confinement factor
+Ring->ThroughLoss                           = 0.01     	# [dB]
+Ring->DropLoss                              = 1.0       # [dB]
+Ring->MaxQualityFactor                      = 150e3     # Maximum quality factor
+Ring->HeatingEfficiency                     = 100000    # Ring heating efficiency [K/W]
+Ring->TuningEfficiency                      = 10e9      # Ring tuning efficiency [Hz/K]
+Ring->LocalVariationSigma                   = 40e9      # Ring resonance frequency local mismatch sigma [Hz]
+Ring->SystematicVariationSigma              = 200e9     # Ring resonance frequency systematic mismatch sigma [Hz]
+Ring->TemperatureMax                        = 380       # Maximum temperature that the tuning mechanism must still be able to work at [K]
+Ring->TemperatureMin                        = 280       # Minimum temperature that the tuning mechanism must still be able to work at [K]
+Ring->MaxElectricallyTunableFreq            = 50e9      # Maximum electrically tunable range when allowing for electrically assisted tuning [Hz]
+
+# -----------------------------------------------------------------------------
+# Photodetector
+# -----------------------------------------------------------------------------
+Photodetector->Responsivity                 = 1.1           #(A/W)
+Photodetector->Area                         = 10e-12        # m2
+Photodetector->Cap                          = 0             # F
+Photodetector->ParasiticCap                 = 5e-15         # F
+Photodetector->Loss                         = 1.00          # dB
+Photodetector->MinExtinctionRatio           = 3             # dB
+Photodetector->AvalancheGain                = 1             # avalanche gain
+
+# -----------------------------------------------------------------------------
+# Receivers
+# -----------------------------------------------------------------------------
+
+# Sense amplifier (common to all receivers)
+SenseAmp->BER                               = 1e-15     # Target bit error rate
+SenseAmp->CMRR                              = 5         # Common-mode rejection ratio
+SenseAmp->OffsetCompensationBits            = 5         # Number of bits used for fine-tuning offset compensation
+SenseAmp->OffsetRatio                       = 0.04      # Offset mismatch (as a fraction of VDD)
+SenseAmp->SupplyNoiseRandRatio              = 0.01      # Random supply noise (as a fraction VDD)
+SenseAmp->SupplyNoiseDetRatio               = 0.05      # Deterministic supply noise (as a fraction VDD)
+SenseAmp->NoiseMargin                       = 0.02      # Extra noise margin
+SenseAmp->JitterRatio                       = 0.01      # Jitter (as a fraction of Tbit)
+
+Receiver->Int->IntegrationTimeRatio         = 0.7       # Integration time (as a fraction of Tbit)

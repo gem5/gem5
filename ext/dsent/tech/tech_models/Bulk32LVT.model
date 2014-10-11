@@ -1,0 +1,168 @@
+# WARNING: Most commercial fabs will not be happy if you release their exact
+# process information! If you derive these numbers through SPICE models,
+# the process design kit, or any other confidential material, please round-off
+# the values and leave the process name unidentifiable by fab (i.e. call it
+# Bulk90LVT instead of TSMC90LVT) if you release parameters publicly. This
+# rule may not apply for open processes, but you may want to check.
+
+# All units are in SI, (volts, meters, kelvin, farads, ohms, amps, etc.)
+
+# This file contains the model for a bulk 32nm LVT process
+Name = Bulk32LVT
+
+# Supply voltage used in the circuit and for characterizations (V)
+Vdd = 0.9
+# Temperature (K)
+Temperature = 340
+
+# =============================================================================
+# Parameters for transistors
+# =============================================================================
+
+# Contacted gate pitch (m)
+Gate->PitchContacted = 0.160e-6
+
+# Min gate width (m)
+Gate->MinWidth = 0.120e-6
+
+# Gate cap per unit width (F/m)
+Gate->CapPerWidth = 0.950e-9
+# Source/Drain cap per unit width (F/m)
+Drain->CapPerWidth = 0.640e-9
+
+# Parameters characterization temperature (K)
+Nmos->CharacterizedTemperature = 300.0
+Pmos->CharacterizedTemperature = 300.0
+
+#------------------------------------------------------------------------------
+# I_Eff definition in Na, IEDM 2002
+#       I_EFF = (I(VG = 0.5, VD = 1.0) + I(VG = 1.0, VD = 0.5))/2
+#       R_EFF = VDD / I_EFF * 1 / (2 ln(2))
+# This is generally accurate for when input and output transition times
+# are similar, which is a reasonable case after timing optimization
+#------------------------------------------------------------------------------
+# Effective resistance (Ohm-m)
+Nmos->EffResWidth = 0.890e-3               
+Pmos->EffResWidth = 1.270e-3
+
+#------------------------------------------------------------------------------
+# The ratio of extra effective resistance with each additional stacked
+# transistor
+#       EffResStackRatio = (R_EFF_NAND2 - R_EFF_INV) / R_EFF_INV)
+# For example, inverter has an normalized effective drive resistance of 1.0.
+# A NAND2 (2-stack) will have an effective drive of 1.0 + 0.7, a NAND3 (3-stack)
+# will have an effective drive of 1.0 + 2 * 0.7. Use NORs for Pmos. This fit
+# works relatively well up to 4 stacks. This value will change depending on the
+# VDD used. 
+#------------------------------------------------------------------------------
+# Effective resistance stack ratio
+Nmos->EffResStackRatio = 0.78
+Pmos->EffResStackRatio = 0.66
+
+#------------------------------------------------------------------------------
+# I_OFF defined as |I_DS| for |V_DS| = V_DD and |V_GS| = 0.0
+#       Minimum off current is used as a second fit point, since I_OFF often
+#       stops scaling with transistor width below some threshold
+#------------------------------------------------------------------------------
+# Off current per width (A/m)
+Nmos->OffCurrent = 100e-3
+Pmos->OffCurrent = 100e-3
+
+# Minimum off current (A)
+Nmos->MinOffCurrent = 100e-9
+Pmos->MinOffCurrent = 20e-9
+
+# Subthreshold swing (V/dec)        
+Nmos->SubthresholdSwing = 0.100
+Pmos->SubthresholdSwing = 0.100
+
+# DIBL factor (V/V)
+Nmos->DIBL = 0.150
+Pmos->DIBL = 0.150
+
+# Subthreshold leakage temperature swing (K/dec)
+Nmos->SubthresholdTempSwing = 100
+Pmos->SubthresholdTempSwing = 100
+#------------------------------------------------------------------------------
+
+# =============================================================================
+# Parameters for interconnect
+# =============================================================================
+
+Wire->AvailableLayers = [Metal1,Local,Intermediate,Global]
+
+# Metal 1 Wire (used for std cell routing only)
+# Min width (m)
+Wire->Metal1->MinWidth = 55e-9
+# Min spacing (m)
+Wire->Metal1->MinSpacing = 55e-9
+# Resistivity (Ohm-m)
+Wire->Metal1->Resistivity = 4.00e-8
+# Metal thickness (m)
+Wire->Metal1->MetalThickness = 100.0e-9
+# Dielectric thickness (m)
+Wire->Metal1->DielectricThickness = 100.0e-9
+# Dielectric constant
+Wire->Metal1->DielectricConstant = 3.2
+
+# Local wire, 1.0X of the M1 pitch
+# Min width (m)
+Wire->Local->MinWidth = 55e-9
+# Min spacing (m)
+Wire->Local->MinSpacing = 55e-9
+# Resistivity (Ohm-m)
+Wire->Local->Resistivity = 4.00e-8
+# Metal thickness (m)
+Wire->Local->MetalThickness = 100.0e-9
+# Dielectric thickness (m)
+Wire->Local->DielectricThickness = 100.0e-9
+# Dielectric constant
+Wire->Local->DielectricConstant = 3.2
+
+# Intermediate wire, 2.0X the M1 pitch
+# Min width (m)
+Wire->Intermediate->MinWidth = 110e-9
+# Min spacing (m)
+Wire->Intermediate->MinSpacing = 110e-9
+# Resistivity (Ohm-m)
+Wire->Intermediate->Resistivity = 2.60e-8
+# Metal thickness (m)
+Wire->Intermediate->MetalThickness = 200e-9
+# Dielectric thickness (m)
+Wire->Intermediate->DielectricThickness = 170e-9
+# Dielectric constant
+Wire->Intermediate->DielectricConstant = 3.00
+
+# Global wire, 3.0X the M1 pitch
+# Min width (m)
+Wire->Global->MinWidth = 160e-9
+# Min spacing (m)
+Wire->Global->MinSpacing = 160e-9
+# Resistivity (Ohm-m)
+Wire->Global->Resistivity = 2.30e-8
+# Metal thickness (m)
+Wire->Global->MetalThickness = 280e-9
+# Dielectric thickness (m)
+Wire->Global->DielectricThickness = 250e-9
+# Dielectric constant
+Wire->Global->DielectricConstant = 2.80
+
+# =============================================================================
+# Parameters for Standard Cells
+# =============================================================================
+
+# The height of the standard cell is usually a multiple of the vertical
+# M1 pitch (tracks). By definition, an X1 size cell has transistors
+# that fit exactly in the given cell height without folding, or leaving
+# any wasted vertical area
+
+# Reasonable values for the number of M1 tracks that we have seen are 8-14
+StdCell->Tracks = 11
+# Height overhead due to supply rails, well spacing, etc. Note that this will grow
+# if the height of the standard cell decreases!
+StdCell->HeightOverheadFactor = 1.400
+
+# Sets the available sizes of each standard cell. Keep in mind that
+# 1.0 is the biggest cell without any transistor folding
+StdCell->AvailableSizes = [1.0, 1.4, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0, 16.0]
+

@@ -1,0 +1,279 @@
+#include "model/std_cells/OR2.h"
+
+#include <cmath>
+
+#include "model/PortInfo.h"
+#include "model/TransitionInfo.h"
+#include "model/EventInfo.h"
+#include "model/std_cells/StdCellLib.h"
+#include "model/std_cells/CellMacros.h"
+#include "model/timing_graph/ElectricalNet.h"
+#include "model/timing_graph/ElectricalDriver.h"
+#include "model/timing_graph/ElectricalLoad.h"
+#include "model/timing_graph/ElectricalDelay.h"
+
+namespace DSENT
+{
+    using std::max;
+
+    OR2::OR2(const String& instance_name_, const TechModel* tech_model_)
+        : StdCell(instance_name_, tech_model_)
+    {
+        initProperties();
+    }
+
+    OR2::~OR2()
+    {}
+
+    void OR2::initProperties()
+    {
+        return;
+    }
+
+    void OR2::constructModel()
+    {
+        createInputPort("A");
+        createInputPort("B");
+        createOutputPort("Y");
+
+        createLoad("A_Cap");
+        createLoad("B_Cap");
+        createDelay("A_to_Y_delay");
+        createDelay("B_to_Y_delay");
+        createDriver("Y_Ron", true);
+
+        ElectricalLoad* a_cap = getLoad("A_Cap");
+        ElectricalLoad* b_cap = getLoad("B_Cap");
+        ElectricalDelay* a_to_y_delay = getDelay("A_to_Y_delay");
+        ElectricalDelay* b_to_y_delay = getDelay("B_to_Y_delay");
+        ElectricalDriver* y_ron = getDriver("Y_Ron");
+        
+        getNet("A")->addDownstreamNode(a_cap);
+        getNet("B")->addDownstreamNode(b_cap);
+        a_cap->addDownstreamNode(a_to_y_delay);        
+        b_cap->addDownstreamNode(b_to_y_delay);        
+        a_to_y_delay->addDownstreamNode(y_ron);
+        b_to_y_delay->addDownstreamNode(y_ron);
+        y_ron->addDownstreamNode(getNet("Y"));        
+        
+        // Create Area result
+        // Create NDD Power result
+        createElectricalAtomicResults();
+        // Create OR Event Energy Result
+        createElectricalEventAtomicResult("OR2");
+
+        getEventInfo("Idle")->setStaticTransitionInfos();
+        
+        return;
+    }
+
+    void OR2::updateModel()
+    {
+        // Get parameters
+        double drive_strength = getDrivingStrength();
+        Map<double>* cache = getTechModel()->getStdCellLib()->getStdCellCache();
+
+        // Standard cell cache string
+        const String& cell_name = "OR2_X" + (String) drive_strength;
+
+        // Get timing parameters
+        getLoad("A_Cap")->setLoadCap(cache->get(cell_name + "->Cap->A"));
+        getLoad("B_Cap")->setLoadCap(cache->get(cell_name + "->Cap->B"));        
+        getDelay("A_to_Y_delay")->setDelay(cache->get(cell_name + "->Delay->A_to_Y"));
+        getDelay("B_to_Y_delay")->setDelay(cache->get(cell_name + "->Delay->B_to_Y"));        
+        getDriver("Y_Ron")->setOutputRes(cache->get(cell_name + "->DriveRes->Y"));
+
+        // Set the cell area
+        getAreaResult("Active")->setValue(cache->get(cell_name + "->ActiveArea"));
+        getAreaResult("Metal1Wire")->setValue(cache->get(cell_name + "->ActiveArea"));
+        
+        return;
+    }
+
+    void OR2::evaluateModel()
+    {
+        return;
+    }
+
+    void OR2::useModel()
+    {
+        // Get parameters
+        double drive_strength = getDrivingStrength();
+        Map<double>* cache = getTechModel()->getStdCellLib()->getStdCellCache();
+
+        // Stadard cell cache string
+        const String& cell_name = "OR2_X" + (String) drive_strength;
+
+        // Propagate the transition info and get the 0->1 transtion count
+        propagateTransitionInfo();
+        double P_A = getInputPort("A")->getTransitionInfo().getProbability1();
+        double P_B = getInputPort("B")->getTransitionInfo().getProbability1();
+        double Y_num_trans_01 = getOutputPort("Y")->getTransitionInfo().getNumberTransitions01();
+
+        // Calculate leakage
+        double leakage = 0;
+        leakage += cache->get(cell_name + "->Leakage->!A!B") * (1 - P_A) * (1 - P_B);
+        leakage += cache->get(cell_name + "->Leakage->!AB") * (1 - P_A) * P_B;
+        leakage += cache->get(cell_name + "->Leakage->A!B") * P_A * (1 - P_B);
+        leakage += cache->get(cell_name + "->Leakage->AB") * P_A * P_B;
+        getNddPowerResult("Leakage")->setValue(leakage);
+
+        // Get VDD
+        double vdd = getTechModel()->get("Vdd");
+
+        // Get capacitances
+        double y_b_cap = cache->get(cell_name + "->Cap->Y_b");
+        double y_cap = cache->get(cell_name + "->Cap->Y");
+        double y_load_cap = getNet("Y")->getTotalDownstreamCap();                
+        
+        // Calculate OR2Event energy
+        double energy_per_trans_01 = (y_b_cap + y_cap + y_load_cap) * vdd * vdd;
+        getEventResult("OR2")->setValue(energy_per_trans_01 * Y_num_trans_01);
+                
+        return;
+    }
+
+    void OR2::propagateTransitionInfo()
+    {
+        // Get input signal transition info
+        const TransitionInfo& trans_A = getInputPort("A")->getTransitionInfo();
+        const TransitionInfo& trans_B = getInputPort("B")->getTransitionInfo();
+
+        double max_freq_mult = max(trans_A.getFrequencyMultiplier(), trans_B.getFrequencyMultiplier());
+        const TransitionInfo& scaled_trans_A = trans_A.scaleFrequencyMultiplier(max_freq_mult);
+        const TransitionInfo& scaled_trans_B = trans_B.scaleFrequencyMultiplier(max_freq_mult);
+
+        double A_prob_00 = scaled_trans_A.getNumberTransitions00() / max_freq_mult;
+        double A_prob_01 = scaled_trans_A.getNumberTransitions01() / max_freq_mult;
+        double A_prob_10 = A_prob_01;
+        double A_prob_11 = scaled_trans_A.getNumberTransitions11() / max_freq_mult;
+        double B_prob_00 = scaled_trans_B.getNumberTransitions00() / max_freq_mult;
+        double B_prob_01 = scaled_trans_B.getNumberTransitions01() / max_freq_mult;
+        double B_prob_10 = B_prob_01;
+        double B_prob_11 = scaled_trans_B.getNumberTransitions11() / max_freq_mult;
+
+        // Set output transition info
+        double Y_prob_00 = A_prob_00 * B_prob_00;
+        double Y_prob_01 = A_prob_00 * B_prob_01 +
+                        A_prob_01 * (B_prob_00 + B_prob_01);
+        double Y_prob_11 = A_prob_00 * B_prob_11 +
+                        A_prob_01 * (B_prob_10 + B_prob_11) +
+                        A_prob_10 * (B_prob_01 + B_prob_11) +
+                        A_prob_11;
+
+        // Check that probabilities add up to 1.0 with some finite tolerance
+        ASSERT(LibUtil::Math::isEqual((Y_prob_00 + Y_prob_01 + Y_prob_01 + Y_prob_11), 1.0), "[Error] " + getInstanceName() + 
+            "Output transition probabilities must add up to 1 (" + (String) Y_prob_00 + ", " +
+            (String) Y_prob_01 + ", " + (String) Y_prob_11 + ")!");
+
+        // Turn probability of transitions per cycle into number of transitions per time unit
+        TransitionInfo trans_Y(Y_prob_00 * max_freq_mult, Y_prob_01 * max_freq_mult, Y_prob_11 * max_freq_mult);
+        getOutputPort("Y")->setTransitionInfo(trans_Y);
+        return;
+    }
+
+    // Creates the standard cell, characterizes and abstracts away the details
+    void OR2::cacheStdCell(StdCellLib* cell_lib_, double drive_strength_)
+    {
+        // Get parameters
+        double gate_pitch = cell_lib_->getTechModel()->get("Gate->PitchContacted");
+        Map<double>* cache = cell_lib_->getStdCellCache();
+
+        // Stadard cell cache string
+        const String& cell_name = "OR2_X" + (String) drive_strength_;
+
+        Log::printLine("=== " + cell_name + " ===");
+
+        // Now actually build the full standard cell model
+        createInputPort("A");
+        createInputPort("B");
+        createOutputPort("Y");
+
+        createNet("Y_b");
+
+        // Adds macros
+        CellMacros::addNor2(this, "NOR2", false, true, true, "A", "B", "Y_b");
+        CellMacros::addInverter(this, "INV", false, true, "Y_b", "Y");
+
+        // Update macros
+        CellMacros::updateNor2(this, "NOR2", drive_strength_ * 0.66);
+        CellMacros::updateInverter(this, "INV", drive_strength_ * 1.0);
+
+        // Cache area result
+        double area = 0.0;
+        area += gate_pitch * getTotalHeight() * 1;
+        area += gate_pitch * getTotalHeight() * getGenProperties()->get("NOR2_GatePitches").toDouble();
+        area += gate_pitch * getTotalHeight() * getGenProperties()->get("INV_GatePitches").toDouble();
+        cache->set(cell_name + "->ActiveArea", area);
+        Log::printLine(cell_name + "->ActiveArea=" + (String)area);
+        
+        // --------------------------------------------------------------------
+        // Leakage Model Calculation
+        // --------------------------------------------------------------------
+        // Cache leakage power results (for every single signal combination)
+        double leakage_00 = 0.0; // !A, !B
+        double leakage_01 = 0.0; // !A, B
+        double leakage_10 = 0.0; // A, !B
+        double leakage_11 = 0.0; // A, B
+
+        leakage_00 += getGenProperties()->get("NOR2_LeakagePower_00").toDouble();
+        leakage_00 += getGenProperties()->get("INV_LeakagePower_1").toDouble();
+
+        leakage_01 += getGenProperties()->get("NOR2_LeakagePower_01").toDouble();
+        leakage_01 += getGenProperties()->get("INV_LeakagePower_0").toDouble();
+
+        leakage_10 += getGenProperties()->get("NOR2_LeakagePower_10").toDouble();
+        leakage_10 += getGenProperties()->get("INV_LeakagePower_0").toDouble();
+
+        leakage_11 += getGenProperties()->get("NOR2_LeakagePower_11").toDouble();
+        leakage_11 += getGenProperties()->get("INV_LeakagePower_0").toDouble();
+
+        cache->set(cell_name + "->Leakage->!A!B", leakage_00);
+        cache->set(cell_name + "->Leakage->!AB", leakage_01);
+        cache->set(cell_name + "->Leakage->A!B", leakage_10);
+        cache->set(cell_name + "->Leakage->AB", leakage_11);
+        Log::printLine(cell_name + "->Leakage->!A!B=" + (String) leakage_00);
+        Log::printLine(cell_name + "->Leakage->!AB=" + (String) leakage_01);
+        Log::printLine(cell_name + "->Leakage->A!B=" + (String) leakage_10);
+        Log::printLine(cell_name + "->Leakage->AB=" + (String) leakage_11);
+        // --------------------------------------------------------------------
+
+        // --------------------------------------------------------------------
+        // Get Node Capacitances
+        // --------------------------------------------------------------------
+        double a_cap = getNet("A")->getTotalDownstreamCap();
+        double b_cap = getNet("B")->getTotalDownstreamCap();
+        double y_b_cap = getNet("Y_b")->getTotalDownstreamCap();
+        double y_cap = getNet("Y")->getTotalDownstreamCap();
+
+        cache->set(cell_name + "->Cap->A", a_cap);
+        cache->set(cell_name + "->Cap->B", b_cap);
+        cache->set(cell_name + "->Cap->Y_b", y_b_cap);
+        cache->set(cell_name + "->Cap->Y", y_cap);
+        Log::printLine(cell_name + "->Cap->A_Cap=" + (String) a_cap);
+        Log::printLine(cell_name + "->Cap->B_Cap=" + (String) b_cap);
+        Log::printLine(cell_name + "->Cap->Y_b_Cap=" + (String) y_b_cap);
+        Log::printLine(cell_name + "->Cap->Y_Cap=" + (String) y_cap);
+        // --------------------------------------------------------------------
+
+        // --------------------------------------------------------------------
+        // Build Internal Delay Model
+        // --------------------------------------------------------------------
+        double y_ron = getDriver("INV_RonZN")->getOutputRes();
+        double a_to_y_delay = getDriver("NOR2_RonZN")->calculateDelay() + 
+                              getDriver("INV_RonZN")->calculateDelay();
+        double b_to_y_delay = getDriver("NOR2_RonZN")->calculateDelay() + 
+                              getDriver("INV_RonZN")->calculateDelay();
+
+        cache->set(cell_name + "->DriveRes->Y", y_ron);
+        cache->set(cell_name + "->Delay->A_to_Y", a_to_y_delay);
+        cache->set(cell_name + "->Delay->B_to_Y", b_to_y_delay);
+        Log::printLine(cell_name + "->DriveRes->Y=" + (String) y_ron);
+        Log::printLine(cell_name + "->Delay->A_to_Y=" + (String) a_to_y_delay);
+        Log::printLine(cell_name + "->Delay->B_to_Y=" + (String) b_to_y_delay);
+        // --------------------------------------------------------------------
+
+        return;
+    }
+} // namespace DSENT
+
