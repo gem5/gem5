@@ -149,7 +149,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     bool isPresent(Address);
   }
 
-  TBETable L1_TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
+  TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
   MessageBuffer mandatoryQueue, ordered="false";
 
@@ -208,7 +208,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   AccessPermission getAccessPermission(Address addr) {
-    TBE tbe := L1_TBEs[addr];
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
       return L1Cache_State_to_permission(tbe.TBEState);
@@ -225,7 +225,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    TBE tbe := L1_TBEs[addr];
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
         return tbe.DataBlk;
     }
@@ -290,7 +290,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       // cache. We should drop this request.
                       trigger(prefetch_request_type_to_event(in_msg.Type),
                               in_msg.LineAddress,
-                              L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+                              L1Icache_entry, TBEs[in_msg.LineAddress]);
                   }
 
                   // Check to see if it is in the OTHER L1
@@ -300,7 +300,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       // this request.
                       trigger(prefetch_request_type_to_event(in_msg.Type),
                               in_msg.LineAddress,
-                              L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+                              L1Dcache_entry, TBEs[in_msg.LineAddress]);
                   }
 
                   if (L1Icache.cacheAvail(in_msg.LineAddress)) {
@@ -308,13 +308,13 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       // in the L1 so let's see if the L2 has it
                       trigger(prefetch_request_type_to_event(in_msg.Type),
                               in_msg.LineAddress,
-                              L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+                              L1Icache_entry, TBEs[in_msg.LineAddress]);
                   } else {
                       // No room in the L1, so we need to make room in the L1
                       trigger(Event:L1_Replacement,
                               L1Icache.cacheProbe(in_msg.LineAddress),
                               getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
-                              L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
+                              TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
                   }
               } else {
                   // Data prefetch
@@ -324,7 +324,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       // cache. We should drop this request.
                       trigger(prefetch_request_type_to_event(in_msg.Type),
                               in_msg.LineAddress,
-                              L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+                              L1Dcache_entry, TBEs[in_msg.LineAddress]);
                   }
 
                   // Check to see if it is in the OTHER L1
@@ -334,7 +334,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       // request.
                       trigger(prefetch_request_type_to_event(in_msg.Type),
                               in_msg.LineAddress,
-                              L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+                              L1Icache_entry, TBEs[in_msg.LineAddress]);
                   }
 
                   if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
@@ -342,13 +342,13 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                       // the L1 let's see if the L2 has it
                       trigger(prefetch_request_type_to_event(in_msg.Type),
                               in_msg.LineAddress,
-                              L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+                              L1Dcache_entry, TBEs[in_msg.LineAddress]);
                   } else {
                       // No room in the L1, so we need to make room in the L1
                       trigger(Event:L1_Replacement,
                               L1Dcache.cacheProbe(in_msg.LineAddress),
                               getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
-                              L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
+                              TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
                   }
               }
           }
@@ -362,7 +362,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         assert(in_msg.Destination.isElement(machineID));
 
         Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := L1_TBEs[in_msg.Addr];
+        TBE tbe := TBEs[in_msg.Addr];
 
         if(in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data_Exclusive, in_msg.Addr, cache_entry, tbe);
@@ -402,7 +402,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         assert(in_msg.Destination.isElement(machineID));
 
         Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := L1_TBEs[in_msg.Addr];
+        TBE tbe := TBEs[in_msg.Addr];
 
         if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.Addr, cache_entry, tbe);
@@ -435,7 +435,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           if (is_valid(L1Icache_entry)) {
             // The tag matches for the L1, so the L1 asks the L2 for it.
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                    L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+                    L1Icache_entry, TBEs[in_msg.LineAddress]);
           } else {
 
             // Check to see if it is in the OTHER L1
@@ -443,19 +443,19 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
             if (is_valid(L1Dcache_entry)) {
               // The block is in the wrong L1, put the request on the queue to the shared L2
               trigger(Event:L1_Replacement, in_msg.LineAddress,
-                      L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+                      L1Dcache_entry, TBEs[in_msg.LineAddress]);
             }
 
             if (L1Icache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it
               // in the L1 so let's see if the L2 has it.
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                      L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+                      L1Icache_entry, TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L1
               trigger(Event:L1_Replacement, L1Icache.cacheProbe(in_msg.LineAddress),
                       getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
+                      TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
             }
           }
         } else {
@@ -465,7 +465,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           if (is_valid(L1Dcache_entry)) {
             // The tag matches for the L1, so the L1 ask the L2 for it
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                    L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+                    L1Dcache_entry, TBEs[in_msg.LineAddress]);
           } else {
 
             // Check to see if it is in the OTHER L1
@@ -473,19 +473,19 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
             if (is_valid(L1Icache_entry)) {
               // The block is in the wrong L1, put the request on the queue to the shared L2
               trigger(Event:L1_Replacement, in_msg.LineAddress,
-                      L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+                      L1Icache_entry, TBEs[in_msg.LineAddress]);
             }
 
             if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it
               // in the L1 let's see if the L2 has it.
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                      L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+                      L1Dcache_entry, TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L1
               trigger(Event:L1_Replacement, L1Dcache.cacheProbe(in_msg.LineAddress),
                       getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
+                      TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
             }
           }
         }
@@ -829,10 +829,10 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(i_allocateTBE, "i", desc="Allocate TBE (isPrefetch=0, number of invalidates=0)") {
-    check_allocate(L1_TBEs);
+    check_allocate(TBEs);
     assert(is_valid(cache_entry));
-    L1_TBEs.allocate(address);
-    set_tbe(L1_TBEs[address]);
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
     tbe.isPrefetch := false;
     tbe.Dirty := cache_entry.Dirty;
     tbe.DataBlk := cache_entry.DataBlk;
@@ -853,7 +853,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
-    L1_TBEs.deallocate(address);
+    TBEs.deallocate(address);
     unset_tbe();
   }
 

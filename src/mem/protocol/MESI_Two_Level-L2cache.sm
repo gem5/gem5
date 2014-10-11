@@ -146,7 +146,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     bool isPresent(Address);
   }
 
-  TBETable L2_TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
+  TBETable TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
 
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
@@ -196,7 +196,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   AccessPermission getAccessPermission(Address addr) {
-    TBE tbe := L2_TBEs[addr];
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(tbe.TBEState));
       return L2Cache_State_to_permission(tbe.TBEState);
@@ -213,7 +213,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    TBE tbe := L2_TBEs[addr];
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
         return tbe.DataBlk;
     }
@@ -273,7 +273,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     if(L1unblockNetwork_in.isReady()) {
       peek(L1unblockNetwork_in,  ResponseMsg) {
         Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := L2_TBEs[in_msg.Addr];
+        TBE tbe := TBEs[in_msg.Addr];
         DPRINTF(RubySlicc, "Addr: %s State: %s Sender: %s Type: %s Dest: %s\n",
                 in_msg.Addr, getState(tbe, cache_entry, in_msg.Addr),
                 in_msg.Sender, in_msg.Type, in_msg.Destination);
@@ -297,7 +297,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         // test wether it's from a local L1 or an off chip source
         assert(in_msg.Destination.isElement(machineID));
         Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := L2_TBEs[in_msg.Addr];
+        TBE tbe := TBEs[in_msg.Addr];
 
         if(machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
           if(in_msg.Type == CoherenceResponseType:DATA) {
@@ -336,7 +336,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     if(L1RequestL2Network_in.isReady()) {
       peek(L1RequestL2Network_in,  RequestMsg) {
         Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := L2_TBEs[in_msg.Addr];
+        TBE tbe := TBEs[in_msg.Addr];
 
         DPRINTF(RubySlicc, "Addr: %s State: %s Req: %s Type: %s Dest: %s\n",
                 in_msg.Addr, getState(tbe, cache_entry, in_msg.Addr),
@@ -361,10 +361,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
             Entry L2cache_entry := getCacheEntry(L2cache.cacheProbe(in_msg.Addr));
             if (isDirty(L2cache_entry)) {
               trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.Addr),
-                      L2cache_entry, L2_TBEs[L2cache.cacheProbe(in_msg.Addr)]);
+                      L2cache_entry, TBEs[L2cache.cacheProbe(in_msg.Addr)]);
             } else {
               trigger(Event:L2_Replacement_clean, L2cache.cacheProbe(in_msg.Addr),
-                      L2cache_entry, L2_TBEs[L2cache.cacheProbe(in_msg.Addr)]);
+                      L2cache_entry, TBEs[L2cache.cacheProbe(in_msg.Addr)]);
             }
           }
         }
@@ -573,10 +573,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // OTHER ACTIONS
   action(i_allocateTBE, "i", desc="Allocate TBE for request") {
-    check_allocate(L2_TBEs);
+    check_allocate(TBEs);
     assert(is_valid(cache_entry));
-    L2_TBEs.allocate(address);
-    set_tbe(L2_TBEs[address]);
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
     tbe.L1_GetS_IDs.clear();
     tbe.DataBlk := cache_entry.DataBlk;
     tbe.Dirty := cache_entry.Dirty;
@@ -584,7 +584,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate external TBE") {
-    L2_TBEs.deallocate(address);
+    TBEs.deallocate(address);
     unset_tbe();
   }
 
