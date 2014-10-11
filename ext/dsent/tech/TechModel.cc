@@ -1,3 +1,24 @@
+/* Copyright (c) 2012 Massachusetts Institute of Technology
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "tech/TechModel.h"
 
 #include <cmath>
@@ -7,11 +28,16 @@
 namespace DSENT
 {
     TechModel::TechModel()
-        : Config(), m_std_cell_lib_(NULL), m_available_wire_layers_(NULL)
+        : m_std_cell_lib_(NULL), m_available_wire_layers_(NULL)
     {}
 
     TechModel::~TechModel()
     {}
+
+    const String& TechModel::get(const String &key_) const
+    {
+        return params.at(key_);
+    }
 
     void TechModel::setStdCellLib(const StdCellLib* std_cell_lib_)
     {
@@ -32,17 +58,16 @@ namespace DSENT
     void TechModel::readFile(const String& filename_)
     {
         // Read the main technology file
-        LibUtil::Config::readFile(filename_);
+        LibUtil::readFile(filename_, params);
 
         // Search for "INCLUDE" to include more technology files
-        StringMap::ConstIterator it;
-        for(it = begin(); it != end(); ++it)
+        for (const auto &it : params)
         {
-            const String& key = it->first;
+            const String& key = it.first;
             if(key.compare(0, 8, "INCLUDE_") == 0)
             {
-                const String& include_filename = it->second;
-                LibUtil::Config::readFile(include_filename);
+                const String& include_filename = it.second;
+                LibUtil::readFile(include_filename, params);
             }
         }
 
@@ -53,7 +78,6 @@ namespace DSENT
         {
             m_available_wire_layers_->insert(available_wire_layer_vector[i]);
         }
-        return;
     }
 
     //-------------------------------------------------------------------------
@@ -314,7 +338,7 @@ namespace DSENT
     //-------------------------------------------------------------------------
 
     TechModel::TechModel(const TechModel& tech_model_)
-        : Config(tech_model_), m_std_cell_lib_(tech_model_.m_std_cell_lib_)
+        : m_std_cell_lib_(tech_model_.m_std_cell_lib_),
+          params(tech_model_.params)
     {}
 } // namespace DSENT
-

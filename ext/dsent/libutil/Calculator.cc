@@ -1,3 +1,24 @@
+/* Copyright (c) 2012 Massachusetts Institute of Technology
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "Calculator.h"
 
 #include <cctype>
@@ -23,9 +44,13 @@ namespace LibUtil
         return;
     }
 
-    void Calculator::evaluateString(const String& str_)
+    void Calculator::evaluateString(const String& str_,
+                                    const map<String, String> &config,
+                                    DSENT::Model *ms_model,
+                                    map<string, double> &outputs)
     {
         istringstream ist(str_);
+
         while(ist)
         {
             getToken(ist);
@@ -42,26 +67,28 @@ namespace LibUtil
                     getToken(ist);
                     if(m_curr_token_ == SEP)
                     {
+                        outputs[print_str] = 0;
                         cout << print_str << endl;
                     }
                     else
                     {
-                        double v = expr(ist, false);
-                        cout << scientific << print_str << v << endl;
+                        double v = expr(ist, false, config, ms_model);
+                        outputs[print_str] = v;
+                        cout << print_str << v << endl;
                     }
                 }
                 else
                 {
-                    double v = expr(ist, false);
-                    cout << scientific << v << endl;
+                    double v = expr(ist, false, config, ms_model);
+                    outputs["Missing Expression"] = v;
+                    cout << v << endl;
                 }
             }
             else
             {
-                expr(ist, false);
+                expr(ist, false, config, ms_model);
             }
         }
-        return;
     }
 
     Calculator::Token Calculator::getToken(istringstream& ist_)
@@ -146,7 +173,9 @@ namespace LibUtil
         }
     }
 
-    double Calculator::prim(istringstream& ist_, bool is_get_)
+    double Calculator::prim(istringstream& ist_, bool is_get_,
+                            const map<String, String> &config,
+                            DSENT::Model *ms_model)
     {
         if(is_get_)
         {
@@ -164,7 +193,7 @@ namespace LibUtil
                 if(getToken(ist_) == ASSIGN)
                 {
                     String var_name = m_value_string_;
-                    v = expr(ist_, true);
+                    v = expr(ist_, true, config, ms_model);
                     m_var_.set(var_name, v);
                 }
                 else
@@ -173,13 +202,13 @@ namespace LibUtil
                 }
                 return v;
             case NAME2:
-                v = getEnvVar(m_value_string_);
+                v = getEnvVar(m_value_string_, config, ms_model);
                 getToken(ist_);
                 return v;
             case MINUS:
-                return -prim(ist_, true);
+                return -prim(ist_, true, config, ms_model);
             case LP:
-                v = expr(ist_, true);
+                v = expr(ist_, true, config, ms_model);
                 ASSERT((m_curr_token_ == RP), "[Error] ')' expected");
                 getToken(ist_);
                 return v;
@@ -188,9 +217,11 @@ namespace LibUtil
         }
     }
 
-    double Calculator::term(istringstream& ist_, bool is_get_)
+    double Calculator::term(istringstream& ist_, bool is_get_,
+                            const map<String, String> &config,
+                            DSENT::Model *ms_model)
     {
-        double left = prim(ist_, is_get_);
+        double left = prim(ist_, is_get_, config, ms_model);
 
         while(1)
         {
@@ -198,10 +229,10 @@ namespace LibUtil
             switch(m_curr_token_)
             {
                 case MUL:
-                    left *= prim(ist_, true);
+                    left *= prim(ist_, true, config, ms_model);
                     break;
                 case DIV:
-                    d = prim(ist_, true);
+                    d = prim(ist_, true, config, ms_model);
                     ASSERT(d, "[Error] divided by 0");
                     left /= d;
                     break;
@@ -211,19 +242,21 @@ namespace LibUtil
         }
     }
 
-    double Calculator::expr(istringstream& ist_, bool is_get_)
+    double Calculator::expr(istringstream& ist_, bool is_get_,
+                            const map<String, String> &config,
+                            DSENT::Model *ms_model)
     {
-        double left = term(ist_, is_get_);
+        double left = term(ist_, is_get_, config, ms_model);
 
         while(1)
         {
             switch(m_curr_token_)
             {
                 case PLUS:
-                    left += term(ist_, true);
+                    left += term(ist_, true, config, ms_model);
                     break;
                 case MINUS:
-                    left -= term(ist_, true);
+                    left -= term(ist_, true, config, ms_model);
                     break;
                 default:
                     return left;
@@ -231,9 +264,10 @@ namespace LibUtil
         }
     }
 
-    double Calculator::getEnvVar(const String& var_name_) const
+    double Calculator::getEnvVar(const String& var_name_,
+                                 const map<String, String> &config,
+                                 DSENT::Model *ms_model) const
     {
         return m_var_.get(var_name_);
     }
 } // namespace LibUtil
-
