@@ -45,6 +45,7 @@
 #ifndef __BASE_MISC_HH__
 #define __BASE_MISC_HH__
 
+#include <cassert>
 #include <iostream>
 
 #include "base/compiler.hh"
