@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
-#define __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_DIRECTORYMEMORY_HH__
+#define __MEM_RUBY_STRUCTURES_DIRECTORYMEMORY_HH__
 
 #include <iostream>
 #include <string>
@@ -101,4 +101,4 @@ operator<<(std::ostream& out, const DirectoryMemory& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
+#endif // __MEM_RUBY_STRUCTURES_DIRECTORYMEMORY_HH__

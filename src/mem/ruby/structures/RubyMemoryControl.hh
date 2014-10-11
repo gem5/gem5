@@ -27,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
-#define __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
+#ifndef __MEM_RUBY_STRUCTURES_MEMORY_CONTROL_HH__
+#define __MEM_RUBY_STRUCTURES_MEMORY_CONTROL_HH__
 
 #include <iostream>
 #include <list>
@@ -169,4 +169,4 @@ class RubyMemoryControl : public MemoryControl
 
 std::ostream& operator<<(std::ostream& out, const RubyMemoryControl& obj);
 
-#endif // __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
+#endif // __MEM_RUBY_STRUCTURES_MEMORY_CONTROL_HH__

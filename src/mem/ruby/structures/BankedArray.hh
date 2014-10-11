@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef __MEM_RUBY_SYSTEM_BANKEDARRAY_HH__
-#define __MEM_RUBY_SYSTEM_BANKEDARRAY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_BANKEDARRAY_HH__
+#define __MEM_RUBY_STRUCTURES_BANKEDARRAY_HH__
 
 #include <vector>
 

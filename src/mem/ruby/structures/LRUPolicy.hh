@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_LRUPOLICY_HH__
-#define __MEM_RUBY_SYSTEM_LRUPOLICY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
+#define __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
 
 #include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 
@@ -92,4 +92,4 @@ LRUPolicy::getVictim(int64 set) const
     return smallest_index;
 }
 
-#endif // __MEM_RUBY_SYSTEM_LRUPOLICY_HH__
+#endif // __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__

@@ -27,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
-#define __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_SPARSEMEMORY_HH__
+#define __MEM_RUBY_STRUCTURES_SPARSEMEMORY_HH__
 
 #include <iostream>
 #include <string>
@@ -95,4 +95,4 @@ class SparseMemory
     Stats::Vector m_removes_per_level;
 };
 
-#endif // __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
+#endif // __MEM_RUBY_STRUCTURES_SPARSEMEMORY_HH__

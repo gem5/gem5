@@ -35,8 +35,8 @@
  * message is enqueued to be sent back to the directory.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_MEMORYNODE_HH__
-#define __MEM_RUBY_SYSTEM_MEMORYNODE_HH__
+#ifndef __MEM_RUBY_STRUCTURES_MEMORYNODE_HH__
+#define __MEM_RUBY_STRUCTURES_MEMORYNODE_HH__
 
 #include <iostream>
 
@@ -89,4 +89,4 @@ operator<<(std::ostream& out, const MemoryNode& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_SYSTEM_MEMORYNODE_HH__
+#endif // __MEM_RUBY_STRUCTURES_MEMORYNODE_HH__

@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef __MEM_RUBY_SYSTEM_WIREBUFFER_HH__
-#define __MEM_RUBY_SYSTEM_WIREBUFFER_HH__
+#ifndef __MEM_RUBY_STRUCTURES_WIREBUFFER_HH__
+#define __MEM_RUBY_STRUCTURES_WIREBUFFER_HH__
 
 #include <iostream>
 #include <string>
@@ -99,4 +99,4 @@ class WireBuffer : public SimObject
 
 std::ostream& operator<<(std::ostream& out, const WireBuffer& obj);
 
-#endif // __MEM_RUBY_SYSTEM_WireBuffer_HH__
+#endif // __MEM_RUBY_STRUCTURES_WireBuffer_HH__

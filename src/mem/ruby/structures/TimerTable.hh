@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_TIMERTABLE_HH__
-#define __MEM_RUBY_SYSTEM_TIMERTABLE_HH__
+#ifndef __MEM_RUBY_STRUCTURES_TIMERTABLE_HH__
+#define __MEM_RUBY_STRUCTURES_TIMERTABLE_HH__
 
 #include <cassert>
 #include <iostream>
@@ -104,4 +104,4 @@ operator<<(std::ostream& out, const TimerTable& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_SYSTEM_TIMERTABLE_HH__
+#endif // __MEM_RUBY_STRUCTURES_TIMERTABLE_HH__

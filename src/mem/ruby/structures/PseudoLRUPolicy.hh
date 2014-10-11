@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_PSEUDOLRUPOLICY_HH__
-#define __MEM_RUBY_SYSTEM_PSEUDOLRUPOLICY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_PSEUDOLRUPOLICY_HH__
+#define __MEM_RUBY_STRUCTURES_PSEUDOLRUPOLICY_HH__
 
 #include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 
@@ -134,4 +134,4 @@ PseudoLRUPolicy::getVictim(int64 set) const
     return (index > (m_assoc - 1)) ? m_assoc - 1 : index;
 }
 
-#endif // __MEM_RUBY_SYSTEM_PSEUDOLRUPOLICY_HH__
+#endif // __MEM_RUBY_STRUCTURES_PSEUDOLRUPOLICY_HH__

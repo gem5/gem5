@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
-#define __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
+#ifndef __MEM_RUBY_STRUCTURES_MEMORYVECTOR_HH__
+#define __MEM_RUBY_STRUCTURES_MEMORYVECTOR_HH__
 
 #include "base/trace.hh"
 #include "debug/RubyCacheTrace.hh"
@@ -234,4 +234,4 @@ MemoryVector::populatePages(uint8_t *raw_data)
     }
 }
 
-#endif // __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
+#endif // __MEM_RUBY_STRUCTURES_MEMORYVECTOR_HH__

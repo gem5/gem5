@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_PERFECTCACHEMEMORY_HH__
-#define __MEM_RUBY_SYSTEM_PERFECTCACHEMEMORY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__
+#define __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__
 
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessPermission.hh"
@@ -189,4 +189,4 @@ PerfectCacheMemory<ENTRY>::print(std::ostream& out) const
 {
 }
 
-#endif // __MEM_RUBY_SYSTEM_PERFECTCACHEMEMORY_HH__
+#endif // __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__

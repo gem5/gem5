@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
-#define __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
+#ifndef __MEM_RUBY_STRUCTURES_CACHEMEMORY_HH__
+#define __MEM_RUBY_STRUCTURES_CACHEMEMORY_HH__
 
 #include <string>
 #include <vector>
@@ -170,4 +170,4 @@ class CacheMemory : public SimObject
 
 std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);
 
-#endif // __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
+#endif // __MEM_RUBY_STRUCTURES_CACHEMEMORY_HH__
