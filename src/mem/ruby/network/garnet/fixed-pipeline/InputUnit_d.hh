@@ -159,6 +159,7 @@ class InputUnit_d : public Consumer
     { return m_num_buffer_writes[vnet]; }
 
     uint32_t functionalWrite(Packet *pkt);
+    void resetStats();
 
   private:
     int m_id;

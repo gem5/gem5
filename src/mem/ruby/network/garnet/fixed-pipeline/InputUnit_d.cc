@@ -105,3 +105,12 @@ InputUnit_d::functionalWrite(Packet *pkt)
 
     return num_functional_writes;
 }
+
+void
+InputUnit_d::resetStats()
+{
+    for (int j = 0; j < m_num_buffer_reads.size(); j++) {
+        m_num_buffer_reads[j] = 0;
+        m_num_buffer_writes[j] = 0;
+    }
+}

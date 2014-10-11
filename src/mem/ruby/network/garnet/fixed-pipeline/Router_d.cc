@@ -57,20 +57,6 @@ Router_d::Router_d(const Params *p)
 
     m_input_unit.clear();
     m_output_unit.clear();
-
-    crossbar_count = 0;
-    sw_local_arbit_count = 0;
-    sw_global_arbit_count = 0;
-    buf_read_count.resize(m_virtual_networks);
-    buf_write_count.resize(m_virtual_networks);
-    vc_local_arbit_count.resize(m_virtual_networks);
-    vc_global_arbit_count.resize(m_virtual_networks);
-    for (int i = 0; i < m_virtual_networks; i++) {
-        buf_read_count[i] = 0;
-        buf_write_count[i] = 0;
-        vc_local_arbit_count[i] = 0;
-        vc_global_arbit_count[i] = 0;
-    }
 }
 
 Router_d::~Router_d()
@@ -158,21 +144,70 @@ Router_d::update_sw_winner(int inport, flit_d *t_flit)
 }
 
 void
+Router_d::regStats()
+{
+    m_buffer_reads
+        .name(name() + ".buffer_reads")
+        .flags(Stats::nozero)
+    ;
+
+    m_buffer_writes
+        .name(name() + ".buffer_writes")
+        .flags(Stats::nozero)
+    ;
+
+    m_crossbar_activity
+        .name(name() + ".crossbar_activity")
+        .flags(Stats::nozero)
+    ;
+
+    m_sw_local_arbiter_activity
+        .name(name() + ".sw_local_arbiter_activity")
+        .flags(Stats::nozero)
+    ;
+
+    m_sw_global_arbiter_activity
+        .name(name() + ".sw_global_arbiter_activity")
+        .flags(Stats::nozero)
+    ;
+
+    m_vc_local_arbiter_activity
+        .name(name() + ".vc_local_arbiter_activity")
+        .flags(Stats::nozero)
+    ;
+
+    m_vc_global_arbiter_activity
+        .name(name() + ".vc_global_arbiter_activity")
+        .flags(Stats::nozero)
+    ;
+}
+
+void
 Router_d::collateStats()
 {
     for (int j = 0; j < m_virtual_networks; j++) {
         for (int i = 0; i < m_input_unit.size(); i++) {
-            buf_read_count[j] += m_input_unit[i]->get_buf_read_count(j);
-            buf_write_count[j] += m_input_unit[i]->get_buf_write_count(j);
+            m_buffer_reads += m_input_unit[i]->get_buf_read_count(j);
+            m_buffer_writes += m_input_unit[i]->get_buf_write_count(j);
         }
 
-        vc_local_arbit_count[j]  = m_vc_alloc->get_local_arbit_count(j);
-        vc_global_arbit_count[j] = m_vc_alloc->get_global_arbit_count(j);
+        m_vc_local_arbiter_activity  += m_vc_alloc->get_local_arbit_count(j);
+        m_vc_global_arbiter_activity += m_vc_alloc->get_global_arbit_count(j);
     }
 
-    sw_local_arbit_count = m_sw_alloc->get_local_arbit_count();
-    sw_global_arbit_count = m_sw_alloc->get_global_arbit_count();
-    crossbar_count = m_switch->get_crossbar_count();
+    m_sw_local_arbiter_activity = m_sw_alloc->get_local_arbit_count();
+    m_sw_global_arbiter_activity = m_sw_alloc->get_global_arbit_count();
+    m_crossbar_activity = m_switch->get_crossbar_count();
+}
+
+void
+Router_d::resetStats()
+{
+    for (int j = 0; j < m_virtual_networks; j++) {
+        for (int i = 0; i < m_input_unit.size(); i++) {
+            m_input_unit[i]->resetStats();
+        }
+    }
 }
 
 void
