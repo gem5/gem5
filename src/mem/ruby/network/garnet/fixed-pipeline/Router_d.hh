@@ -35,13 +35,12 @@
 #include <vector>
 
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/BasicRouter.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/ruby/network/orion/NetworkPower.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "params/GarnetRouter_d.hh"
 
-class GarnetNetwork_d;
 class NetworkLink_d;
 class CreditLink_d;
 class InputUnit_d;
@@ -89,7 +88,7 @@ class Router_d : public BasicRouter
     void printFaultVector(std::ostream& out);
     void printAggregateFaultProbability(std::ostream& out);
 
-    void calculate_power();
+    void calculate_power() {}
     void calculate_performance_numbers();
     double get_dynamic_power() const { return m_power_dyn; }
     double get_static_power() const { return m_power_sta; }

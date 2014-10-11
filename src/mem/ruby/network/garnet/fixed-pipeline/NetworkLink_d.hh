@@ -37,7 +37,6 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/ruby/network/orion/NetworkPower.hh"
 #include "params/NetworkLink_d.hh"
 #include "sim/clocked_object.hh"
 
@@ -56,7 +55,7 @@ class NetworkLink_d : public ClockedObject, public Consumer
     int get_id(){return m_id;}
     void wakeup();
 
-    void calculate_power(double);
+    void calculate_power(double) {}
     double get_dynamic_power() const { return m_power_dyn; }
     double get_static_power()const { return m_power_sta; }
 

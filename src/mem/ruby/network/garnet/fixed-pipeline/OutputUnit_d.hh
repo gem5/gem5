@@ -38,10 +38,9 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-
-class Router_d;
 
 class OutputUnit_d : public Consumer
 {

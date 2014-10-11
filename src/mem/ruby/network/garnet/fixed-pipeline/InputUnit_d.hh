@@ -37,11 +37,10 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/VirtualChannel_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-
-class Router_d;
 
 class InputUnit_d : public Consumer
 {
