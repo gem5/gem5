@@ -58,6 +58,7 @@ class AddrRange
   private:
 
     /// Private fields for the start and end of the range
+    /// Both _start and _end are part of the range.
     Addr _start;
     Addr _end;
 
@@ -166,7 +167,7 @@ class AddrRange
     /**
      * Determine if the range is valid.
      */
-    bool valid() const { return _start < _end; }
+    bool valid() const { return _start <= _end; }
 
     /**
      * Get the start address of the range.
