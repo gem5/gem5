@@ -4,6 +4,7 @@ BIOS-provided physical RAM map:
  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
  BIOS-e820: 000000000009fc00 - 0000000000100000 (reserved)
  BIOS-e820: 0000000000100000 - 0000000008000000 (usable)
+ BIOS-e820: 0000000008000000 - 00000000c0000000 (reserved)
  BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
 end_pfn_map = 1048576
 kernel direct mapping tables up to 100000000 @ 8000-d000
@@ -22,9 +23,9 @@ Processor #1
 I/O APIC #2 at 0xFEC00000.
 Setting APIC routing to flat
 Processors: 2
-Allocating PCI resources starting at 10000000 (gap: 8000000:f7ff0000)
+Allocating PCI resources starting at c4000000 (gap: c0000000:3fff0000)
 PERCPU: Allocating 34160 bytes of per cpu data
-Built 1 zonelists.  Total pages: 30615
+Built 1 zonelists.  Total pages: 30613
 Kernel command line: earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1
 Initializing CPU#0
 PID hash table entries: 512 (order: 9, 4096 bytes)
@@ -35,7 +36,7 @@ console handover: boot [earlyser0] -> real [ttyS0]
 Dentry cache hash table entries: 16384 (order: 5, 131072 bytes)
 Inode-cache hash table entries: 8192 (order: 4, 65536 bytes)
 Checking aperture...
-Memory: 122004k/131072k available (3699k kernel code, 8516k reserved, 1767k data, 248k init)
+Memory: 121996k/131072k available (3699k kernel code, 8524k reserved, 1767k data, 248k init)
 Calibrating delay loop (skipped)... 3999.96 BogoMIPS preset
 Mount-cache hash table entries: 256
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
@@ -59,6 +60,7 @@ usbcore: registered new interface driver usbfs
 usbcore: registered new interface driver hub
 usbcore: registered new device driver usb
 PCI: Probing PCI hardware
+PCI->APIC IRQ transform: 0000:00:04.0[A] -> IRQ 16
 PCI-GART: No AMD northbridge found.
 NET: Registered protocol family 2
 IP route cache hash table entries: 1024 (order: 1, 8192 bytes)

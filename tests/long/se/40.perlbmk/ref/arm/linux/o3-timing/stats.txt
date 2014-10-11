@@ -4,11 +4,11 @@ sim_seconds                                  0.407884                       # Nu
 sim_ticks                                407883784500                       # Number of ticks simulated
 final_tick                               407883784500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  91837                       # Simulator instruction rate (inst/s)
-host_op_rate                                   113063                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               58469822                       # Simulator tick rate (ticks/s)
-host_mem_usage                                2565440                       # Number of bytes of host memory used
-host_seconds                                  6975.97                       # Real time elapsed on the host
+host_inst_rate                                  65117                       # Simulator instruction rate (inst/s)
+host_op_rate                                    80168                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               41458433                       # Simulator tick rate (ticks/s)
+host_mem_usage                                2600432                       # Number of bytes of host memory used
+host_seconds                                  9838.38                       # Real time elapsed on the host
 sim_insts                                   640649298                       # Number of instructions simulated
 sim_ops                                     788724957                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -420,7 +420,7 @@ system.cpu.numCycles                        815767570                       # nu
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.fetch.icacheStallCycles           84062545                       # Number of cycles fetch is stalled on an Icache miss
-system.cpu.fetch.Insts                     1200075863                       # Number of instructions fetch has processed
+system.cpu.fetch.Insts                     1200075862                       # Number of instructions fetch has processed
 system.cpu.fetch.Branches                   233961455                       # Number of branches that fetch encountered
 system.cpu.fetch.predictedBranches          133292629                       # Number of branches that fetch has predicted taken
 system.cpu.fetch.Cycles                     716015819                       # Number of cycles fetch has run and was not squashing or blocked

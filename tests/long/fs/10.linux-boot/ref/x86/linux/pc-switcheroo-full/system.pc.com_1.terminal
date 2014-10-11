@@ -4,6 +4,7 @@ BIOS-provided physical RAM map:
  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
  BIOS-e820: 000000000009fc00 - 0000000000100000 (reserved)
  BIOS-e820: 0000000000100000 - 0000000008000000 (usable)
+ BIOS-e820: 0000000008000000 - 00000000c0000000 (reserved)
  BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
 end_pfn_map = 1048576
 kernel direct mapping tables up to 100000000 @ 8000-d000
@@ -23,18 +24,18 @@ Setting APIC routing to flat
 Processors: 1
 swsusp: Registered nosave memory region: 000000000009f000 - 00000000000a0000
 swsusp: Registered nosave memory region: 00000000000a0000 - 0000000000100000
-Allocating PCI resources starting at 10000000 (gap: 8000000:f7ff0000)
-Built 1 zonelists.  Total pages: 30612
+Allocating PCI resources starting at c4000000 (gap: c0000000:3fff0000)
+Built 1 zonelists.  Total pages: 30610
 Kernel command line: earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1
 Initializing CPU#0
 PID hash table entries: 512 (order: 9, 4096 bytes)
-time.c: Detected 1999.986 MHz processor.
+time.c: Detected 2000.002 MHz processor.
 Console: colour dummy device 80x25
 console handover: boot [earlyser0] -> real [ttyS0]
 Dentry cache hash table entries: 16384 (order: 5, 131072 bytes)
 Inode-cache hash table entries: 8192 (order: 4, 65536 bytes)
 Checking aperture...
-Memory: 122184k/131072k available (3742k kernel code, 8464k reserved, 1874k data, 232k init)
+Memory: 122176k/131072k available (3742k kernel code, 8472k reserved, 1874k data, 232k init)
 Calibrating delay loop (skipped)... 3999.96 BogoMIPS preset
 Mount-cache hash table entries: 256
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
@@ -44,7 +45,7 @@ ACPI: Core revision 20070126
 ACPI Exception (tbxface-0618): AE_NO_ACPI_TABLES, While loading namespace from ACPI tables [20070126]
 ACPI: Unable to load the System Description Tables
 Using local APIC timer interrupts.
-result 7812464
+result 7812527
 Detected 7.812 MHz APIC timer.
 NET: Registered protocol family 16
 PCI: Using configuration type 1
@@ -56,6 +57,7 @@ usbcore: registered new interface driver usbfs
 usbcore: registered new interface driver hub
 usbcore: registered new device driver usb
 PCI: Probing PCI hardware
+PCI->APIC IRQ transform: 0000:00:04.0[A] -> IRQ 16
 PCI-GART: No AMD northbridge found.
 NET: Registered protocol family 2
 Time: tsc clocksource has been installed.

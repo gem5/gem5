@@ -471,7 +471,7 @@
             }
         }, 
         "symbolfile": "", 
-        "readfile": "/z/stever/hg/gem5/tests/halt.sh", 
+        "readfile": "/scratch/nilay/GEM5/gem5/tests/halt.sh", 
         "hypervisor_addr": 1099243257856, 
         "mem_ranges": [
             "1048576:68157439", 
@@ -479,17 +479,17 @@
         ], 
         "cxx_class": "SparcSystem", 
         "load_offset": 0, 
-        "reset_bin": "/dist/m5/system/binaries/reset_new.bin", 
+        "reset_bin": "/scratch/nilay/GEM5/system/binaries/reset_new.bin", 
         "openboot_addr": 1099243716608, 
         "work_end_ckpt_count": 0, 
         "nvram_addr": 133429198848, 
         "memories": [
-            "system.hypervisor_desc", 
+            "system.nvram", 
             "system.physmem1", 
+            "system.hypervisor_desc", 
             "system.partition_desc", 
             "system.physmem0", 
-            "system.rom", 
-            "system.nvram"
+            "system.rom"
         ], 
         "work_begin_ckpt_count": 0, 
         "partition_desc": {
@@ -639,8 +639,8 @@
             "type": "DVFSHandler"
         }, 
         "work_end_exit_count": 0, 
-        "hypervisor_desc_bin": "/dist/m5/system/binaries/1up-hv.bin", 
-        "openboot_bin": "/dist/m5/system/binaries/openboot_new.bin", 
+        "hypervisor_desc_bin": "/scratch/nilay/GEM5/system/binaries/1up-hv.bin", 
+        "openboot_bin": "/scratch/nilay/GEM5/system/binaries/openboot_new.bin", 
         "voltage_domain": {
             "name": "voltage_domain", 
             "eventq_index": 0, 
@@ -700,7 +700,7 @@
         "work_cpus_ckpt_count": 0, 
         "work_begin_exit_count": 0, 
         "path": "system", 
-        "hypervisor_bin": "/dist/m5/system/binaries/q_new.bin", 
+        "hypervisor_bin": "/scratch/nilay/GEM5/system/binaries/q_new.bin", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
             "clock": [
@@ -714,12 +714,12 @@
             "type": "SrcClockDomain", 
             "domain_id": -1
         }, 
-        "nvram_bin": "/dist/m5/system/binaries/nvram1", 
+        "nvram_bin": "/scratch/nilay/GEM5/system/binaries/nvram1", 
         "mem_mode": "atomic", 
         "name": "system", 
         "init_param": 0, 
         "type": "SparcSystem", 
-        "partition_desc_bin": "/dist/m5/system/binaries/1up-md.bin", 
+        "partition_desc_bin": "/scratch/nilay/GEM5/system/binaries/1up-md.bin", 
         "load_addr_mask": 1099511627775, 
         "cpu": {
             "do_statistics_insts": true, 
@@ -825,7 +825,7 @@
                     "eventq_index": 0, 
                     "cxx_class": "RawDiskImage", 
                     "path": "system.disk0.image.child", 
-                    "image_file": "/dist/m5/system/disks/disk.s10hw2", 
+                    "image_file": "/scratch/nilay/GEM5/system/disks/disk.s10hw2", 
                     "type": "RawDiskImage"
                 }, 
                 "path": "system.disk0.image", 
