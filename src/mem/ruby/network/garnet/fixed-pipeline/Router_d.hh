@@ -85,14 +85,10 @@ class Router_d : public BasicRouter
     void route_req(flit_d *t_flit, InputUnit_d* in_unit, int invc);
     void vcarb_req();
     void swarb_req();
+
     void printFaultVector(std::ostream& out);
     void printAggregateFaultProbability(std::ostream& out);
-
-    void calculate_power() {}
-    void calculate_performance_numbers();
-    double get_dynamic_power() const { return m_power_dyn; }
-    double get_static_power() const { return m_power_sta; }
-    double get_clk_power() const { return m_clk_power; }
+    void collateStats();
 
     bool get_fault_vector(int temperature, float fault_vector[]){ 
         return m_network_ptr->fault_model->fault_vector(m_id, temperature, 
@@ -118,11 +114,6 @@ class Router_d : public BasicRouter
     VCallocator_d *m_vc_alloc;
     SWallocator_d *m_sw_alloc;
     Switch_d *m_switch;
-
-    // Statistical variables for power
-    double m_power_dyn;
-    double m_power_sta;
-    double m_clk_power;
 
     // Statistical variables for performance
     std::vector<double> buf_read_count;

@@ -210,13 +210,7 @@ void
 GarnetNetwork_d::regStats()
 {
     BaseGarnetNetwork::regStats();
-    regLinkStats();
-    regPowerStats();
-}
 
-void
-GarnetNetwork_d::regLinkStats()
-{
     m_average_link_utilization.name(name() + ".avg_link_utilization");
 
     m_average_vc_load
@@ -227,33 +221,7 @@ GarnetNetwork_d::regLinkStats()
 }
 
 void
-GarnetNetwork_d::regPowerStats()
-{
-    m_dynamic_link_power.name(name() + ".link_dynamic_power");
-    m_static_link_power.name(name() + ".link_static_power");
-
-    m_total_link_power.name(name() + ".link_total_power");
-    m_total_link_power = m_dynamic_link_power + m_static_link_power;
-
-    m_dynamic_router_power.name(name() + ".router_dynamic_power");
-    m_static_router_power.name(name() + ".router_static_power");
-    m_clk_power.name(name() + ".clk_power");
-
-    m_total_router_power.name(name() + ".router_total_power");
-    m_total_router_power = m_dynamic_router_power +
-                           m_static_router_power +
-                           m_clk_power;
-}
-
-void
 GarnetNetwork_d::collateStats()
-{
-    collateLinkStats();
-    collatePowerStats();
-}
-
-void
-GarnetNetwork_d::collateLinkStats()
 {
     for (int i = 0; i < m_links.size(); i++) {
         m_average_link_utilization +=
@@ -266,23 +234,10 @@ GarnetNetwork_d::collateLinkStats()
                 ((double)vc_load[j] / (double)(curCycle() - g_ruby_start));
         }
     }
-}
 
-void
-GarnetNetwork_d::collatePowerStats()
-{
-    double sim_cycles = (double)(curCycle() - g_ruby_start);
-    for (int i = 0; i < m_links.size(); i++) {
-        m_links[i]->calculate_power(sim_cycles);
-        m_dynamic_link_power += m_links[i]->get_dynamic_power();
-        m_static_link_power += m_links[i]->get_static_power();
-    }
-
+    // Ask the routers to collate their statistics
     for (int i = 0; i < m_routers.size(); i++) {
-        m_routers[i]->calculate_power();
-        m_dynamic_router_power += m_routers[i]->get_dynamic_power();
-        m_static_router_power += m_routers[i]->get_static_power();
-        m_clk_power += m_routers[i]->get_clk_power();
+        m_routers[i]->collateStats();
     }
 }
 

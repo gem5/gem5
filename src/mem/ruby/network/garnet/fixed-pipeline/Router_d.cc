@@ -158,7 +158,7 @@ Router_d::update_sw_winner(int inport, flit_d *t_flit)
 }
 
 void
-Router_d::calculate_performance_numbers()
+Router_d::collateStats()
 {
     for (int j = 0; j < m_virtual_networks; j++) {
         for (int i = 0; i < m_input_unit.size(); i++) {
