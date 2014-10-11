@@ -126,6 +126,50 @@ for alias, target in _mem_aliases_all:
         # Normal alias
         _mem_aliases[alias] = target
 
+def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, cache_line_size):
+    """
+    Helper function for creating a single memoy controller from the given
+    options.  This function is invoked multiple times in config_mem function
+    to create an array of controllers.
+    """
+
+    import math
+    # The default behaviour is to interleave on cache line granularity
+    cache_line_bit = int(math.log(cache_line_size, 2)) - 1
+    intlv_low_bit = cache_line_bit
+
+    # Create an instance so we can figure out the address
+    # mapping and row-buffer size
+    ctrl = cls()
+
+    # Only do this for DRAMs
+    if issubclass(cls, m5.objects.DRAMCtrl):
+        # Inform each controller how many channels to account
+        # for
+        ctrl.channels = nbr_mem_ctrls
+
+        # If the channel bits are appearing after the column
+        # bits, we need to add the appropriate number of bits
+        # for the row buffer size
+        if ctrl.addr_mapping.value == 'RoRaBaChCo':
+            # This computation only really needs to happen
+            # once, but as we rely on having an instance we
+            # end up having to repeat it for each and every
+            # one
+            rowbuffer_size = ctrl.device_rowbuffer_size.value * \
+                ctrl.devices_per_rank.value
+
+            intlv_low_bit = int(math.log(rowbuffer_size, 2)) - 1
+
+    # We got all we need to configure the appropriate address
+    # range
+    ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
+                                      intlvHighBit = \
+                                          intlv_low_bit + intlv_bits,
+                                      intlvBits = intlv_bits,
+                                      intlvMatch = i)
+    return ctrl
+
 def config_mem(options, system):
     """
     Create the memory controllers based on the options and attach them.
@@ -143,49 +187,18 @@ def config_mem(options, system):
     intlv_bits = int(math.log(nbr_mem_ctrls, 2))
     if 2 ** intlv_bits != nbr_mem_ctrls:
         fatal("Number of memory channels must be a power of 2")
+
     cls = get(options.mem_type)
     mem_ctrls = []
-
-    # The default behaviour is to interleave on cache line granularity
-    cache_line_bit = int(math.log(system.cache_line_size.value, 2)) - 1
-    intlv_low_bit = cache_line_bit
 
     # For every range (most systems will only have one), create an
     # array of controllers and set their parameters to match their
     # address mapping in the case of a DRAM
     for r in system.mem_ranges:
         for i in xrange(nbr_mem_ctrls):
-            # Create an instance so we can figure out the address
-            # mapping and row-buffer size
-            ctrl = cls()
-
-            # Only do this for DRAMs
-            if issubclass(cls, m5.objects.DRAMCtrl):
-                # Inform each controller how many channels to account
-                # for
-                ctrl.channels = nbr_mem_ctrls
-
-                # If the channel bits are appearing after the column
-                # bits, we need to add the appropriate number of bits
-                # for the row buffer size
-                if ctrl.addr_mapping.value == 'RoRaBaChCo':
-                    # This computation only really needs to happen
-                    # once, but as we rely on having an instance we
-                    # end up having to repeat it for each and every
-                    # one
-                    rowbuffer_size = ctrl.device_rowbuffer_size.value * \
-                        ctrl.devices_per_rank.value
-
-                    intlv_low_bit = int(math.log(rowbuffer_size, 2)) - 1
-
-            # We got all we need to configure the appropriate address
-            # range
-            ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
-                                              intlvHighBit = \
-                                                  intlv_low_bit + intlv_bits,
-                                              intlvBits = intlv_bits,
-                                              intlvMatch = i)
-            mem_ctrls.append(ctrl)
+            mem_ctrls.append(create_mem_ctrl(cls, r, i, nbr_mem_ctrls,
+                                             intlv_bits,
+                                             system.cache_line_size.value))
 
     system.mem_ctrls = mem_ctrls
 
