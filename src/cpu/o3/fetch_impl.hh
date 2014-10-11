@@ -1511,7 +1511,9 @@ template<class Impl>
 ThreadID
 DefaultFetch<Impl>::iqCount()
 {
-    std::priority_queue<unsigned> PQ;
+    //sorted from lowest->highest
+    std::priority_queue<unsigned,vector<unsigned>,
+                        std::greater<unsigned> > PQ;
     std::map<unsigned, ThreadID> threadMap;
 
     list<ThreadID>::iterator threads = activeThreads->begin();
@@ -1521,6 +1523,8 @@ DefaultFetch<Impl>::iqCount()
         ThreadID tid = *threads++;
         unsigned iqCount = fromIEW->iewInfo[tid].iqCount;
 
+        //we can potentially get tid collisions if two threads
+        //have the same iqCount, but this should be rare.
         PQ.push(iqCount);
         threadMap[iqCount] = tid;
     }
@@ -1544,7 +1548,9 @@ template<class Impl>
 ThreadID
 DefaultFetch<Impl>::lsqCount()
 {
-    std::priority_queue<unsigned> PQ;
+    //sorted from lowest->highest
+    std::priority_queue<unsigned,vector<unsigned>,
+                        std::greater<unsigned> > PQ;
     std::map<unsigned, ThreadID> threadMap;
 
     list<ThreadID>::iterator threads = activeThreads->begin();
@@ -1554,6 +1560,8 @@ DefaultFetch<Impl>::lsqCount()
         ThreadID tid = *threads++;
         unsigned ldstqCount = fromIEW->iewInfo[tid].ldstqCount;
 
+        //we can potentially get tid collisions if two threads
+        //have the same iqCount, but this should be rare.
         PQ.push(ldstqCount);
         threadMap[ldstqCount] = tid;
     }
