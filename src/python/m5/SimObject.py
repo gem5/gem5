@@ -114,6 +114,279 @@ def public_value(key, value):
                isinstance(value, (FunctionType, MethodType, ModuleType,
                                   classmethod, type))
 
+def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
+    entry_class = 'CxxConfigDirectoryEntry_%s' % name
+    param_class = '%sCxxConfigParams' % name
+
+    code('#include "params/%s.hh"' % name)
+
+    if not is_header:
+        for param in simobj._params.values():
+            if isSimObjectClass(param.ptype):
+                code('#include "%s"' % param.ptype._value_dict['cxx_header'])
+                code('#include "params/%s.hh"' % param.ptype.__name__)
+            else:
+                param.ptype.cxx_ini_predecls(code)
+
+    if is_header:
+        member_prefix = ''
+        end_of_decl = ';'
+        code('#include "sim/cxx_config.hh"')
+        code()
+        code('class ${param_class} : public CxxConfigParams,'
+            ' public ${name}Params')
+        code('{')
+        code('  private:')
+        code.indent()
+        code('class DirectoryEntry : public CxxConfigDirectoryEntry')
+        code('{')
+        code('  public:')
+        code.indent()
+        code('DirectoryEntry();');
+        code()
+        code('CxxConfigParams *makeParamsObject() const')
+        code('{ return new ${param_class}; }')
+        code.dedent()
+        code('};')
+        code()
+        code.dedent()
+        code('  public:')
+        code.indent()
+    else:
+        member_prefix = '%s::' % param_class
+        end_of_decl = ''
+        code('#include "%s"' % simobj._value_dict['cxx_header'])
+        code('#include "base/str.hh"')
+        code('#include "cxx_config/${name}.hh"')
+
+        if simobj._ports.values() != []:
+            code('#include "mem/mem_object.hh"')
+            code('#include "mem/port.hh"')
+
+        code()
+        code('${member_prefix}DirectoryEntry::DirectoryEntry()');
+        code('{')
+
+        def cxx_bool(b):
+            return 'true' if b else 'false'
+
+        code.indent()
+        for param in simobj._params.values():
+            is_vector = isinstance(param, m5.params.VectorParamDesc)
+            is_simobj = issubclass(param.ptype, m5.SimObject.SimObject)
+
+            code('parameters["%s"] = new ParamDesc("%s", %s, %s);' %
+                (param.name, param.name, cxx_bool(is_vector),
+                cxx_bool(is_simobj)));
+
+        for port in simobj._ports.values():
+            is_vector = isinstance(port, m5.params.VectorPort)
+            is_master = port.role == 'MASTER'
+
+            code('ports["%s"] = new PortDesc("%s", %s, %s);' %
+                (port.name, port.name, cxx_bool(is_vector),
+                cxx_bool(is_master)))
+
+        code.dedent()
+        code('}')
+        code()
+
+    code('bool ${member_prefix}setSimObject(const std::string &name,')
+    code('    SimObject *simObject)${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        code.indent()
+        code('bool ret = true;')
+        code()
+        code('if (false) {')
+        for param in simobj._params.values():
+            is_vector = isinstance(param, m5.params.VectorParamDesc)
+            is_simobj = issubclass(param.ptype, m5.SimObject.SimObject)
+
+            if is_simobj and not is_vector:
+                code('} else if (name == "${{param.name}}") {')
+                code.indent()
+                code('this->${{param.name}} = '
+                    'dynamic_cast<${{param.ptype.cxx_type}}>(simObject);')
+                code('if (simObject && !this->${{param.name}})')
+                code('   ret = false;')
+                code.dedent()
+        code('} else {')
+        code('    ret = false;')
+        code('}')
+        code()
+        code('return ret;')
+        code.dedent()
+        code('}')
+
+    code()
+    code('bool ${member_prefix}setSimObjectVector('
+        'const std::string &name,')
+    code('    const std::vector<SimObject *> &simObjects)${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        code.indent()
+        code('bool ret = true;')
+        code()
+        code('if (false) {')
+        for param in simobj._params.values():
+            is_vector = isinstance(param, m5.params.VectorParamDesc)
+            is_simobj = issubclass(param.ptype, m5.SimObject.SimObject)
+
+            if is_simobj and is_vector:
+                code('} else if (name == "${{param.name}}") {')
+                code.indent()
+                code('this->${{param.name}}.clear();')
+                code('for (auto i = simObjects.begin(); '
+                    'ret && i != simObjects.end(); i ++)')
+                code('{')
+                code.indent()
+                code('${{param.ptype.cxx_type}} object = '
+                    'dynamic_cast<${{param.ptype.cxx_type}}>(*i);')
+                code('if (*i && !object)')
+                code('    ret = false;')
+                code('else')
+                code('    this->${{param.name}}.push_back(object);')
+                code.dedent()
+                code('}')
+                code.dedent()
+        code('} else {')
+        code('    ret = false;')
+        code('}')
+        code()
+        code('return ret;')
+        code.dedent()
+        code('}')
+
+    code()
+    code('void ${member_prefix}setName(const std::string &name_)'
+        '${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        code.indent()
+        code('this->name = name_;')
+        code('this->pyobj = NULL;')
+        code.dedent()
+        code('}')
+
+    if is_header:
+        code('const std::string &${member_prefix}getName()')
+        code('{ return this->name; }')
+
+    code()
+    code('bool ${member_prefix}setParam(const std::string &name,')
+    code('    const std::string &value, const Flags flags)${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        code.indent()
+        code('bool ret = true;')
+        code()
+        code('if (false) {')
+        for param in simobj._params.values():
+            is_vector = isinstance(param, m5.params.VectorParamDesc)
+            is_simobj = issubclass(param.ptype, m5.SimObject.SimObject)
+
+            if not is_simobj and not is_vector:
+                code('} else if (name == "${{param.name}}") {')
+                code.indent()
+                param.ptype.cxx_ini_parse(code,
+                    'value', 'this->%s' % param.name, 'ret =')
+                code.dedent()
+        code('} else {')
+        code('    ret = false;')
+        code('}')
+        code()
+        code('return ret;')
+        code.dedent()
+        code('}')
+
+    code()
+    code('bool ${member_prefix}setParamVector('
+        'const std::string &name,')
+    code('    const std::vector<std::string> &values,')
+    code('    const Flags flags)${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        code.indent()
+        code('bool ret = true;')
+        code()
+        code('if (false) {')
+        for param in simobj._params.values():
+            is_vector = isinstance(param, m5.params.VectorParamDesc)
+            is_simobj = issubclass(param.ptype, m5.SimObject.SimObject)
+
+            if not is_simobj and is_vector:
+                code('} else if (name == "${{param.name}}") {')
+                code.indent()
+                code('${{param.name}}.clear();')
+                code('for (auto i = values.begin(); '
+                    'ret && i != values.end(); i ++)')
+                code('{')
+                code.indent()
+                code('${{param.ptype.cxx_type}} elem;')
+                param.ptype.cxx_ini_parse(code,
+                    '*i', 'elem', 'ret =')
+                code('if (ret)')
+                code('    this->${{param.name}}.push_back(elem);')
+                code.dedent()
+                code('}')
+                code.dedent()
+        code('} else {')
+        code('    ret = false;')
+        code('}')
+        code()
+        code('return ret;')
+        code.dedent()
+        code('}')
+
+    code()
+    code('bool ${member_prefix}setPortConnectionCount('
+        'const std::string &name,')
+    code('    unsigned int count)${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        code.indent()
+        code('bool ret = true;')
+        code()
+        code('if (false)')
+        code('    ;')
+        for port in simobj._ports.values():
+            code('else if (name == "${{port.name}}")')
+            code('    this->port_${{port.name}}_connection_count = count;')
+        code('else')
+        code('    ret = false;')
+        code()
+        code('return ret;')
+        code.dedent()
+        code('}')
+
+    code()
+    code('SimObject *${member_prefix}simObjectCreate()${end_of_decl}')
+
+    if not is_header:
+        code('{')
+        if hasattr(simobj, 'abstract') and simobj.abstract:
+            code('    return NULL;')
+        else:
+            code('    return this->create();')
+        code('}')
+
+    if is_header:
+        code()
+        code('static CxxConfigDirectoryEntry'
+            ' *${member_prefix}makeDirectoryEntry()')
+        code('{ return new DirectoryEntry; }')
+
+    if is_header:
+        code.dedent()
+        code('};')
+
 # The metaclass for SimObject.  This class controls how new classes
 # that derive from SimObject are instantiated, and provides inherited
 # class behavior (just like a class controls how instances of that
@@ -583,6 +856,11 @@ struct PyObject;
         code('#endif // __PARAMS__${cls}__')
         return code
 
+    # Generate the C++ declaration/definition files for this SimObject's
+    # param struct to allow C++ initialisation
+    def cxx_config_param_file(cls, code, is_header):
+        createCxxConfigDirectoryEntryFile(code, cls.__name__, cls, is_header)
+        return code
 
 # This *temporary* definition is required to support calls from the
 # SimObject class definition to the MetaSimObject methods (in

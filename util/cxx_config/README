@@ -1,0 +1,44 @@
+This directory contains a demo of C++ configuration of gem5.  The intention
+is to provide a mechanism to allow pre-generated config.ini files generated
+by Python-based gem5 to be reloaded in library-base versions of gem5
+embedded in other systems using C++ calls for simulation control.
+
+This demo implements a few of the simulation control mechanisms of the Python
+gem5 on top of a C++ configured system.
+
+Read main.cc for more details of the implementation.
+
+To build:
+
+First build gem5 as a library with cxx-config support and (optionally)
+without python.  Also build a normal gem5 (cxx-config not needed, Python
+needed):
+
+> cd ../..
+> scons build/ARM/gem5.opt
+> scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
+> cd util/cxx_config
+
+Then edit Makefile to set the paths for PYTHON and run make
+
+> make
+
+Make a config file for the C++-configured gem5 using normal gem5
+
+> ../../build/ARM/gem5.opt ../../configs/example/se.py -c \
+>       ../../tests/test-progs/hello/bin/arm/linux/hello
+
+The binary 'gem5.opt.cxx' can now be used to load in the generated config
+file from the previous normal gem5 run.
+
+Try:
+
+> ./gem5.opt.cxx m5out/config.ini
+
+This should print:
+
+> Hello world!
+
+The .ini file can also be read by the Python .ini file reader example:
+
+> ../../build/ARM/gem5.opt ../../configs/example/read_config.py m5out/config.ini

@@ -173,6 +173,9 @@ AddLocalOption('--colors', dest='use_colors', action='store_true',
                help="Add color to abbreviated scons output")
 AddLocalOption('--no-colors', dest='use_colors', action='store_false',
                help="Don't add color to abbreviated scons output")
+AddLocalOption('--with-cxx-config', dest='with_cxx_config',
+               action='store_true',
+               help="Build with support for C++-based configuration")
 AddLocalOption('--default', dest='default', type='string', action='store',
                help='Override which build_opts file to use for defaults')
 AddLocalOption('--ignore-style', dest='ignore_style', action='store_true',

@@ -120,6 +120,18 @@ class ParamValue(object):
     def config_value(self):
         return str(self)
 
+    # Prerequisites for .ini parsing with cxx_ini_parse
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        pass
+
+    # parse a .ini file entry for this param from string expression
+    # src into lvalue dest (of the param's C++ type)
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code('// Unhandled param type: %s' % cls.__name__)
+        code('%s false;' % ret)
+
     # allows us to blithely call unproxy() on things without checking
     # if they're really proxies or not
     def unproxy(self, base):
@@ -454,6 +466,11 @@ class String(ParamValue,str):
         self = value
         return value
 
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s = %s;' % (dest, src))
+        code('%s true;' % ret)
+
     def getValue(self):
         return self
 
@@ -499,6 +516,19 @@ class NumericParamValue(ParamValue):
 
     def config_value(self):
         return self.value
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        # Assume that base/str.hh will be included anyway
+        # code('#include "base/str.hh"')
+        pass
+
+    # The default for parsing PODs from an .ini entry is to extract from an
+    # istringstream and let overloading choose the right type according to
+    # the dest type.
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s to_number(%s, %s);' % (ret, src, dest))
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(MetaParamValue):
@@ -592,6 +622,20 @@ class Cycles(CheckedInt):
         from m5.internal.core import Cycles
         return Cycles(self.value)
 
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        # Assume that base/str.hh will be included anyway
+        # code('#include "base/str.hh"')
+        pass
+
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code('uint64_t _temp;')
+        code('bool _ret = to_number(%s, _temp);' % src)
+        code('if (_ret)')
+        code('    %s = Cycles(_temp);' % dest)
+        code('%s _ret;' % ret)
+
 class Float(ParamValue, float):
     cxx_type = 'double'
     cmdLineSettable = True
@@ -612,6 +656,14 @@ class Float(ParamValue, float):
 
     def config_value(self):
         return self
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
 
 class MemorySize(CheckedInt):
     cxx_type = 'uint64_t'
@@ -738,6 +790,24 @@ class AddrRange(ParamValue):
     def swig_predecls(cls, code):
         Addr.swig_predecls(code)
 
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code('uint64_t _start, _end;')
+        code('char _sep;')
+        code('std::istringstream _stream(${src});')
+        code('_stream >> _start;')
+        code('_stream.get(_sep);')
+        code('_stream >> _end;')
+        code('bool _ret = !_stream.fail() &&'
+            '_stream.eof() && _sep == \':\';')
+        code('if (_ret)')
+        code('   ${dest} = AddrRange(_start, _end);')
+        code('${ret} _ret;')
+
     def getValue(self):
         # Go from the Python class to the wrapped C++ class generated
         # by swig
@@ -782,6 +852,16 @@ class Bool(ParamValue):
 
     def config_value(self):
         return self.value
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        # Assume that base/str.hh will be included anyway
+        # code('#include "base/str.hh"')
+        pass
+
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code('%s to_bool(%s, %s);' % (ret, src, dest))
 
 def IncEthernetAddr(addr, val = 1):
     bytes = map(lambda x: int(x, 16), addr.split(':'))
@@ -849,6 +929,11 @@ class EthernetAddr(ParamValue):
 
     def ini_str(self):
         return self.value
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s = Net::EthAddr(%s);' % (dest, src))
+        code('%s true;' % ret)
 
 # When initializing an IpAddress, pass in an existing IpAddress, a string of
 # the form "a.b.c.d", or an integer representing an IP.
@@ -1154,6 +1239,16 @@ class Time(ParamValue):
         assert false
         return str(self)
 
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <time.h>')
+
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code('char *_parse_ret = strptime((${src}).c_str(),')
+        code('    "%a %b %d %H:%M:%S %Y", &(${dest}));')
+        code('${ret} _parse_ret && *_parse_ret == \'\\0\';');
+
 # Enumerated types are a little more complex.  The user specifies the
 # type as Enum(foo) where foo is either a list or dictionary of
 # alternatives (typically strings, but not necessarily so).  (In the
@@ -1306,6 +1401,19 @@ class Enum(ParamValue):
     def swig_predecls(cls, code):
         code('%import "python/m5/internal/enum_$0.i"', cls.__name__)
 
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code('if (false) {')
+        for elem_name in cls.map.iterkeys():
+            code('} else if (%s == "%s") {' % (src, elem_name))
+            code.indent()
+            code('%s = Enums::%s;' % (dest, elem_name))
+            code('%s true;' % ret)
+            code.dedent()
+        code('} else {')
+        code('    %s false;' % ret)
+        code('}')
+
     def getValue(self):
         return int(self.map[self.value])
 
@@ -1335,6 +1443,16 @@ class TickParamValue(NumericParamValue):
 
     def getValue(self):
         return long(self.value)
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    # Ticks are expressed in seconds in JSON files and in plain
+    # Ticks in .ini files.  Switch based on a config flag
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('${ret} to_number(${src}, ${dest});')
 
 class Latency(TickParamValue):
     ex_str = "100ns"
@@ -1485,6 +1603,14 @@ class Voltage(float,ParamValue):
     def ini_str(self):
         return '%f' % self.getValue()
 
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
+
 class Current(float, ParamValue):
     cxx_type = 'double'
     ex_str = "1mA"
@@ -1509,6 +1635,14 @@ class Current(float, ParamValue):
 
     def ini_str(self):
         return '%f' % self.getValue()
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
 
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
@@ -1541,6 +1675,14 @@ class NetworkBandwidth(float,ParamValue):
     def config_value(self):
         return '%f' % self.getValue()
 
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
+
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
     ex_str = "1GB/s"
@@ -1570,6 +1712,14 @@ class MemoryBandwidth(float,ParamValue):
 
     def config_value(self):
         return '%f' % self.getValue()
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include <sstream>')
+
+    @classmethod
+    def cxx_ini_parse(self, code, src, dest, ret):
+        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
 
 #
 # "Constants"... handy aliases for various values.

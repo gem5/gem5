@@ -579,6 +579,18 @@ def createSimObjectParamStruct(target, source, env):
     obj.cxx_param_decl(code)
     code.write(target[0].abspath)
 
+def createSimObjectCxxConfig(is_header):
+    def body(target, source, env):
+        assert len(target) == 1 and len(source) == 1
+
+        name = str(source[0].get_contents())
+        obj = sim_objects[name]
+
+        code = code_formatter()
+        obj.cxx_config_param_file(code, is_header)
+        code.write(target[0].abspath)
+    return body
+
 def createParamSwigWrapper(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
@@ -643,6 +655,61 @@ for name,simobj in sorted(sim_objects.iteritems()):
                 MakeAction(createSimObjectParamStruct, Transform("SO PARAM")))
     env.Depends(hh_file, depends + extra_deps)
     env.Depends(SWIG, hh_file)
+
+# C++ parameter description files
+if GetOption('with_cxx_config'):
+    for name,simobj in sorted(sim_objects.iteritems()):
+        py_source = PySource.modules[simobj.__module__]
+        extra_deps = [ py_source.tnode ]
+
+        cxx_config_hh_file = File('cxx_config/%s.hh' % name)
+        cxx_config_cc_file = File('cxx_config/%s.cc' % name)
+        env.Command(cxx_config_hh_file, Value(name),
+                    MakeAction(createSimObjectCxxConfig(True),
+                    Transform("CXXCPRHH")))
+        env.Command(cxx_config_cc_file, Value(name),
+                    MakeAction(createSimObjectCxxConfig(False),
+                    Transform("CXXCPRCC")))
+        env.Depends(cxx_config_hh_file, depends + extra_deps +
+                    [File('params/%s.hh' % name), File('sim/cxx_config.hh')])
+        env.Depends(cxx_config_cc_file, depends + extra_deps +
+                    [cxx_config_hh_file])
+        Source(cxx_config_cc_file)
+
+    cxx_config_init_cc_file = File('cxx_config/init.cc')
+
+    def createCxxConfigInitCC(target, source, env):
+        assert len(target) == 1 and len(source) == 1
+
+        code = code_formatter()
+
+        for name,simobj in sorted(sim_objects.iteritems()):
+            if not hasattr(simobj, 'abstract') or not simobj.abstract:
+                code('#include "cxx_config/${name}.hh"')
+        code()
+        code('void cxxConfigInit()')
+        code('{')
+        code.indent()
+        for name,simobj in sorted(sim_objects.iteritems()):
+            not_abstract = not hasattr(simobj, 'abstract') or \
+                not simobj.abstract
+            if not_abstract and 'type' in simobj.__dict__:
+                code('cxx_config_directory["${name}"] = '
+                     '${name}CxxConfigParams::makeDirectoryEntry();')
+        code.dedent()
+        code('}')
+        code.write(target[0].abspath)
+
+    py_source = PySource.modules[simobj.__module__]
+    extra_deps = [ py_source.tnode ]
+    env.Command(cxx_config_init_cc_file, Value(name),
+        MakeAction(createCxxConfigInitCC, Transform("CXXCINIT")))
+    cxx_param_hh_files = ["cxx_config/%s.hh" % simobj
+        for simobj in sorted(sim_objects.itervalues())
+        if not hasattr(simobj, 'abstract') or not simobj.abstract]
+    Depends(cxx_config_init_cc_file, cxx_param_hh_files +
+            [File('sim/cxx_config.hh')])
+    Source(cxx_config_init_cc_file)
 
 # Generate any needed param SWIG wrapper files
 params_i_files = []
