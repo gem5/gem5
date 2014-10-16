@@ -47,9 +47,7 @@
 
 #include <list>
 
-#include "arch/isa_traits.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/base.hh"
@@ -63,7 +61,8 @@ BasePrefetcher::BasePrefetcher(const Params *p)
       serialSquash(p->serial_squash), onlyData(p->data_accesses_only),
       onMissOnly(p->on_miss_only), onReadOnly(p->on_read_only),
       onPrefetch(p->on_prefetch), system(p->sys),
-      masterId(system->getMasterId(name()))
+      masterId(system->getMasterId(name())),
+      pageBytes(system->getPageBytes())
 {
 }
 
@@ -312,9 +311,9 @@ BasePrefetcher::inPrefetch(Addr address, bool is_secure)
 }
 
 bool
-BasePrefetcher::samePage(Addr a, Addr b)
+BasePrefetcher::samePage(Addr a, Addr b) const
 {
-    return roundDown(a, TheISA::PageBytes) == roundDown(b, TheISA::PageBytes);
+    return roundDown(a, pageBytes) == roundDown(b, pageBytes);
 }
 
 

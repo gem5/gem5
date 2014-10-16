@@ -45,14 +45,12 @@
  *          Rick Strong
  */
 
-#include "arch/isa_traits.hh"
 #include "arch/remote_gdb.hh"
 #include "arch/utility.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"

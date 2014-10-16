@@ -27,7 +27,9 @@
 # Authors: Nilay Vaish
 
 from m5.SimObject import SimObject
+from System import System
 from m5.params import *
+from m5.proxy import *
 
 class Prefetcher(SimObject):
     type = 'Prefetcher'
@@ -45,3 +47,4 @@ class Prefetcher(SimObject):
     num_startup_pfs = Param.UInt32(1, "")
     cross_page = Param.Bool(False, """True if prefetched address can be on a
             page different from the observed address""")
+    sys = Param.System(Parent.any, "System this prefetcher belongs to")

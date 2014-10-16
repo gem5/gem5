@@ -59,6 +59,8 @@ SimpleMemory::SimpleMemory(const SimpleMemoryParams* p) :
 void
 SimpleMemory::init()
 {
+    AbstractMemory::init();
+
     // allow unconnected memories as this is used in several ruby
     // systems at the moment
     if (port.isConnected()) {

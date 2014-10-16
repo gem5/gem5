@@ -118,6 +118,8 @@ class BasePrefetcher : public ClockedObject
     /** Request id for prefetches */
     MasterID masterId;
 
+    const Addr pageBytes;
+
   public:
 
     Stats::Scalar pfIdentified;
@@ -172,7 +174,7 @@ class BasePrefetcher : public ClockedObject
     /**
      * Utility function: are addresses a and b on the same VM page?
      */
-    bool samePage(Addr a, Addr b);
+    bool samePage(Addr a, Addr b) const;
  public:
     const Params*
     params() const

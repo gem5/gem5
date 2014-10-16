@@ -69,7 +69,6 @@ class Address
     physical_address_t getLineAddress() const;
     physical_address_t getOffset() const;
     void makeLineAddress();
-    void makePageAddress();
     void makeNextStrideAddress(int stride);
 
     int64 memoryModuleIndex() const;
@@ -201,7 +200,6 @@ Address::shiftLowOrderBits(unsigned int number) const
 }
 
 Address next_stride_address(const Address& addr, int stride);
-Address page_address(const Address& addr);
 
 __hash_namespace_begin
 template <> struct hash<Address>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,9 +51,11 @@
 #include <utility>
 #include <vector>
 
+#include "arch/isa_traits.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
+#include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "kern/system_events.hh"
@@ -268,6 +270,16 @@ class System : public MemObject
      * @return Whether the address corresponds to a memory
      */
     bool isMemAddr(Addr addr) const;
+
+     /**
+     * Get the page bytes for the ISA.
+     */
+    Addr getPageBytes() const { return TheISA::PageBytes; }
+
+    /**
+     * Get the number of bits worth of in-page adress for the ISA.
+     */
+    Addr getPageShift() const { return TheISA::PageShift; }
 
   protected:
 

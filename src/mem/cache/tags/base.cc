@@ -46,7 +46,6 @@
  * Definitions of BaseTags.
  */
 
-#include "config/the_isa.hh"
 #include "cpu/smt.hh" //maxThreadsPerCPU
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/base.hh"

@@ -67,7 +67,7 @@ class BasePrefetcher(ClockedObject):
          "Let lower cache prefetcher train on prefetch requests")
     inst_tagged = Param.Bool(True,
          "Perform a tagged prefetch for instruction fetches always")
-    sys = Param.System(Parent.any, "System this device belongs to")
+    sys = Param.System(Parent.any, "System this prefetcher belongs to")
 
 class StridePrefetcher(BasePrefetcher):
     type = 'StridePrefetcher'

@@ -41,6 +41,7 @@
 #include "mem/ruby/system/System.hh"
 #include "params/Prefetcher.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 #define MAX_PF_INFLIGHT 8
 
@@ -139,6 +140,9 @@ class Prefetcher : public SimObject
         bool accessNonunitFilter(const Address& address, int *stride,
             bool &alloc);
 
+        /// determine the page aligned address
+        Address pageAddress(const Address& addr) const;
+
         //! number of prefetch streams available
         uint32_t m_num_streams;
         //! an array of the active prefetch streams
@@ -186,6 +190,8 @@ class Prefetcher : public SimObject
         bool m_prefetch_cross_pages;
 
         AbstractController *m_controller;
+
+        const Addr m_page_shift;
 
         //! Count of accesses to the prefetcher
         Stats::Scalar numMissObserved;

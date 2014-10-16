@@ -225,7 +225,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
 void
 DRAMCtrl::init()
 {
-    if (!port.isConnected()) {
+    AbstractMemory::init();
+
+   if (!port.isConnected()) {
         fatal("DRAMCtrl %s is unconnected!\n", name());
     } else {
         port.sendRangeChange();

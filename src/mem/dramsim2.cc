@@ -77,6 +77,8 @@ DRAMSim2::DRAMSim2(const Params* p) :
 void
 DRAMSim2::init()
 {
+    AbstractMemory::init();
+
     if (!port.isConnected()) {
         fatal("DRAMSim2 %s is unconnected!\n", name());
     } else {

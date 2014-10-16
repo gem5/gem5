@@ -45,7 +45,8 @@ Prefetcher::Prefetcher(const Params *p)
     m_unit_filter(p->unit_filter, Address(0)),
     m_negative_filter(p->unit_filter, Address(0)),
     m_nonunit_filter(p->nonunit_filter, Address(0)),
-    m_prefetch_cross_pages(p->cross_page)
+    m_prefetch_cross_pages(p->cross_page),
+    m_page_shift(p->sys->getPageShift())
 {
     assert(m_num_streams > 0);
     assert(m_num_startup_pfs <= MAX_PF_INFLIGHT);
@@ -231,12 +232,12 @@ Prefetcher::issueNextPrefetch(const Address &address, PrefetchEntry *stream)
     }
 
     // extend this prefetching stream by 1 (or more)
-    Address page_addr = page_address(stream->m_address);
+    Address page_addr = pageAddress(stream->m_address);
     Address line_addr = next_stride_address(stream->m_address,
                                             stream->m_stride);
 
     // possibly stop prefetching at page boundaries
-    if (page_addr != page_address(line_addr)) {
+    if (page_addr != pageAddress(line_addr)) {
         numPagesCrossed++;
         if (!m_prefetch_cross_pages) {
             // Deallocate the stream since we are not prefetching
@@ -295,7 +296,7 @@ Prefetcher::initializeStream(const Address& address, int stride,
     mystream->m_type = type;
 
     // create a number of initial prefetches for this stream
-    Address page_addr = page_address(mystream->m_address);
+    Address page_addr = pageAddress(mystream->m_address);
     Address line_addr = line_address(mystream->m_address);
     Address prev_addr = line_addr;
 
@@ -303,7 +304,7 @@ Prefetcher::initializeStream(const Address& address, int stride,
     for (int k = 0; k < m_num_startup_pfs; k++) {
         line_addr = next_stride_address(line_addr, stride);
         // possibly stop prefetching at page boundaries
-        if (page_addr != page_address(line_addr)) {
+        if (page_addr != pageAddress(line_addr)) {
             numPagesCrossed++;
             if (!m_prefetch_cross_pages) {
                 // deallocate this stream prefetcher
@@ -382,11 +383,11 @@ Prefetcher::accessNonunitFilter(const Address& address, int *stride,
     alloc = false;
 
     /// look for non-unit strides based on a (user-defined) page size
-    Address page_addr = page_address(address);
+    Address page_addr = pageAddress(address);
     Address line_addr = line_address(address);
 
     for (uint32_t i = 0; i < m_num_nonunit_filters; i++) {
-        if (page_address(m_nonunit_filter[i]) == page_addr) {
+        if (pageAddress(m_nonunit_filter[i]) == page_addr) {
             // hit in the non-unit filter
             // compute the actual stride (for this reference)
             int delta = line_addr.getAddress() - m_nonunit_filter[i].getAddress();
@@ -466,4 +467,12 @@ Prefetcher::print(std::ostream& out) const
             << m_array[i].m_is_valid << " "
             << m_array[i].m_use_time << std::endl;
     }
+}
+
+Address
+Prefetcher::pageAddress(const Address& addr) const
+{
+    Address temp = addr;
+    temp.maskLowOrderBits(m_page_shift);
+    return temp;
 }
