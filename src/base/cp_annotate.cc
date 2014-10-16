@@ -822,7 +822,7 @@ CPA::swSyscallLink(ThreadContext  *tc)
 CPA::AnnDataPtr
 CPA::add(int t, int f, int c, int sm, int stq, int32_t d)
 {
-    AnnDataPtr an = new AnnotateData;
+    AnnDataPtr an = std::make_shared<AnnotateData>();
     an->time = curTick();
     an->data = d;
     an->orig_data = d;
@@ -1373,7 +1373,7 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
         if (!qSize[x])
             continue;
         for (int y = 0; y < qSize[x]; y++) {
-            AnnDataPtr a = new AnnotateData;
+            AnnDataPtr a = std::make_shared<AnnotateData>();
             a->unserialize(cp, csprintf("%s.Q%d_%d", section, x, y));
             data.push_back(a);
             qData[x].push_back(a);

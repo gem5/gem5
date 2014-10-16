@@ -45,6 +45,7 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -189,7 +190,7 @@ class CPA : SimObject
         }
 
     /* struct that is written to the annotation output file */
-    struct AnnotateData : public RefCounted {
+    struct AnnotateData {
 
         Tick time;
         uint32_t data;
@@ -206,7 +207,7 @@ class CPA : SimObject
 
     };
 
-    typedef RefCountingPtr<AnnotateData> AnnDataPtr;
+    typedef std::shared_ptr<AnnotateData> AnnDataPtr;
 
     /* header for the annotation file */
     struct AnnotateHeader {
