@@ -39,7 +39,7 @@
 
 let {{
     svcCode = '''
-    fault = new SupervisorCall(machInst, bits(machInst, 20, 5));
+    fault = std::make_shared<SupervisorCall>(machInst, bits(machInst, 20, 5));
     '''
 
     svcIop = InstObjParams("svc", "Svc64", "ArmStaticInst",
@@ -57,7 +57,7 @@ let {{
     if (!ArmSystem::haveSecurity(xc->tcBase()) || inUserMode(cpsr) || scr.smd) {
         fault = disabledFault();
     } else {
-        fault = new SecureMonitorCall(machInst);
+        fault = std::make_shared<SecureMonitorCall>(machInst);
     }
     '''
 
@@ -112,7 +112,7 @@ let {{
     subst("RegRegRegImmOp64", extrIop);
 
     unknownCode = '''
-            return new UndefinedInstruction(machInst, true);
+            return std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     unknown64Iop = InstObjParams("unknown", "Unknown64", "UnknownOp64",
                                  unknownCode)
@@ -121,13 +121,14 @@ let {{
     exec_output += BasicExecute.subst(unknown64Iop)
 
     isbIop = InstObjParams("isb", "Isb64", "ArmStaticInst",
-                           "fault = new FlushPipe;", ['IsSerializeAfter'])
+                           "fault = std::make_shared<FlushPipe>();",
+                           ['IsSerializeAfter'])
     header_output += BasicDeclare.subst(isbIop)
     decoder_output += BasicConstructor64.subst(isbIop)
     exec_output += BasicExecute.subst(isbIop)
 
     dsbIop = InstObjParams("dsb", "Dsb64", "ArmStaticInst",
-                           "fault = new FlushPipe;",
+                           "fault = std::make_shared<FlushPipe>();",
                            ['IsMemBarrier', 'IsSerializeAfter'])
     header_output += BasicDeclare.subst(dsbIop)
     decoder_output += BasicConstructor64.subst(dsbIop)

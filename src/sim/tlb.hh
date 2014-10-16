@@ -45,7 +45,6 @@
 
 #include "base/misc.hh"
 #include "mem/request.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;

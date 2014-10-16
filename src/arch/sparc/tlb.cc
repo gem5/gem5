@@ -477,7 +477,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     // If the access is unaligned trap
     if (vaddr & 0x3) {
         writeSfsr(false, ct, false, OtherFault, asi);
-        return new MemAddressNotAligned;
+        return std::make_shared<MemAddressNotAligned>();
     }
 
     if (addr_mask)
@@ -485,7 +485,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
     if (!validVirtualAddress(vaddr, addr_mask)) {
         writeSfsr(false, ct, false, VaOutOfRange, asi);
-        return new InstructionAccessException;
+        return std::make_shared<InstructionAccessException>();
     }
 
     if (!lsu_im) {
@@ -499,12 +499,13 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     if (e == NULL || !e->valid) {
         writeTagAccess(vaddr, context);
         if (real) {
-            return new InstructionRealTranslationMiss;
+            return std::make_shared<InstructionRealTranslationMiss>();
         } else {
             if (FullSystem)
-                return new FastInstructionAccessMMUMiss;
+                return std::make_shared<FastInstructionAccessMMUMiss>();
             else
-                return new FastInstructionAccessMMUMiss(req->getVaddr());
+                return std::make_shared<FastInstructionAccessMMUMiss>(
+                    req->getVaddr());
         }
     }
 
@@ -512,7 +513,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     if (!priv && e->pte.priv()) {
         writeTagAccess(vaddr, context);
         writeSfsr(false, ct, false, PrivViolation, asi);
-        return new InstructionAccessException;
+        return std::make_shared<InstructionAccessException>();
     }
 
     // cache translation date for next translation
@@ -626,12 +627,12 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         if (!priv && !hpriv && !asiIsUnPriv(asi)) {
             // It appears that context should be Nucleus in these cases?
             writeSfsr(vaddr, write, Nucleus, false, IllegalAsi, asi);
-            return new PrivilegedAction;
+            return std::make_shared<PrivilegedAction>();
         }
 
         if (!hpriv && asiIsHPriv(asi)) {
             writeSfsr(vaddr, write, Nucleus, false, IllegalAsi, asi);
-            return new DataAccessException;
+            return std::make_shared<DataAccessException>();
         }
 
         if (asiIsPrimary(asi)) {
@@ -684,7 +685,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     // If the asi is unaligned trap
     if (unaligned) {
         writeSfsr(vaddr, false, ct, false, OtherFault, asi);
-        return new MemAddressNotAligned;
+        return std::make_shared<MemAddressNotAligned>();
     }
 
     if (addr_mask)
@@ -692,7 +693,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 
     if (!validVirtualAddress(vaddr, addr_mask)) {
         writeSfsr(vaddr, false, ct, true, VaOutOfRange, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
 
     if ((!lsu_dm && !hpriv && !red) || asiIsReal(asi)) {
@@ -711,12 +712,13 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         writeTagAccess(vaddr, context);
         DPRINTF(TLB, "TLB: DTB Failed to find matching TLB entry\n");
         if (real) {
-            return new DataRealTranslationMiss;
+            return std::make_shared<DataRealTranslationMiss>();
         } else {
             if (FullSystem)
-                return new FastDataAccessMMUMiss;
+                return std::make_shared<FastDataAccessMMUMiss>();
             else
-                return new FastDataAccessMMUMiss(req->getVaddr());
+                return std::make_shared<FastDataAccessMMUMiss>(
+                    req->getVaddr());
         }
 
     }
@@ -724,25 +726,25 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     if (!priv && e->pte.priv()) {
         writeTagAccess(vaddr, context);
         writeSfsr(vaddr, write, ct, e->pte.sideffect(), PrivViolation, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
 
     if (write && !e->pte.writable()) {
         writeTagAccess(vaddr, context);
         writeSfsr(vaddr, write, ct, e->pte.sideffect(), OtherFault, asi);
-        return new FastDataAccessProtection;
+        return std::make_shared<FastDataAccessProtection>();
     }
 
     if (e->pte.nofault() && !asiIsNoFault(asi)) {
         writeTagAccess(vaddr, context);
         writeSfsr(vaddr, write, ct, e->pte.sideffect(), LoadFromNfo, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
 
     if (e->pte.sideffect() && asiIsNoFault(asi)) {
         writeTagAccess(vaddr, context);
         writeSfsr(vaddr, write, ct, e->pte.sideffect(), SideEffect, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
 
     if (e->pte.sideffect() || (e->pte.paddr() >> 39) & 1)
@@ -773,15 +775,15 @@ handleIntRegAccess:
     if (!hpriv) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         if (priv)
-            return new DataAccessException;
+            return std::make_shared<DataAccessException>();
          else
-            return new PrivilegedAction;
+             return std::make_shared<PrivilegedAction>();
     }
 
     if ((asi == ASI_SWVR_UDB_INTR_W && !write) ||
         (asi == ASI_SWVR_UDB_INTR_R && write)) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
 
     goto regAccessOk;
@@ -790,18 +792,18 @@ handleIntRegAccess:
 handleScratchRegAccess:
     if (vaddr > 0x38 || (vaddr >= 0x20 && vaddr < 0x30 && !hpriv)) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
     goto regAccessOk;
 
 handleQueueRegAccess:
     if (!priv  && !hpriv) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
-        return new PrivilegedAction;
+        return std::make_shared<PrivilegedAction>();
     }
     if ((!hpriv && vaddr & 0xF) || vaddr > 0x3f8 || vaddr < 0x3c0) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
-        return new DataAccessException;
+        return std::make_shared<DataAccessException>();
     }
     goto regAccessOk;
 
@@ -809,9 +811,9 @@ handleSparcErrorRegAccess:
     if (!hpriv) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         if (priv)
-            return new DataAccessException;
+            return std::make_shared<DataAccessException>();
          else
-            return new PrivilegedAction;
+             return std::make_shared<PrivilegedAction>();
     }
     goto regAccessOk;
 

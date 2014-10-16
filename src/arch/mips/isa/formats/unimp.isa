@@ -195,9 +195,9 @@ output exec {{
     {
         if (FullSystem) {
             if (!isCoprocessorEnabled(xc, 0))
-                return new CoprocessorUnusableFault(0);
+                return std::make_shared<CoprocessorUnusableFault>(0);
             else
-                return new ReservedInstructionFault;
+                return std::make_shared<ReservedInstructionFault>();
         } else {
             panic("attempt to execute unimplemented instruction '%s' "
                     "(inst %#08x, opcode %#x, binary:%s)",
@@ -212,9 +212,9 @@ output exec {{
     {
         if (FullSystem) {
             if (!isCoprocessorEnabled(xc, 1))
-                return new CoprocessorUnusableFault(1);
+                return std::make_shared<CoprocessorUnusableFault>(1);
             else
-                return new ReservedInstructionFault;
+                return std::make_shared<ReservedInstructionFault>();
         } else {
             panic("attempt to execute unimplemented instruction '%s' "
                     "(inst %#08x, opcode %#x, binary:%s)",
@@ -229,9 +229,9 @@ output exec {{
     {
         if (FullSystem) {
             if (!isCoprocessorEnabled(xc, 2))
-                return new CoprocessorUnusableFault(2);
+                return std::make_shared<CoprocessorUnusableFault>(2);
             else
-                return new ReservedInstructionFault;
+                return std::make_shared<ReservedInstructionFault>();
         } else {
             panic("attempt to execute unimplemented instruction '%s' "
                     "(inst %#08x, opcode %#x, binary:%s)",

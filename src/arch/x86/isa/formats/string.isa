@@ -86,7 +86,7 @@ def format StringInst(*opTypeSet) {{
         } else if (LEGACY_REPNE) {
             // The repne prefix is illegal
             return new MicroFault(machInst, "illprefix", 0,
-                                  new InvalidOpcode, 0);
+                                  std::make_shared<InvalidOpcode>(), 0);
         } else {
             %s
         }

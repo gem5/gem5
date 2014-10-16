@@ -157,7 +157,7 @@ let {{
 
     if (ArmSystem::haveVirtualization(xc->tcBase()) && hstr.tjdbx &&
         !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
-        fault = new HypervisorTrap(machInst, op1, EC_TRAPPED_BXJ);
+        fault = std::make_shared<HypervisorTrap>(machInst, op1, EC_TRAPPED_BXJ);
     }
     IWNPC = Op1;
     '''

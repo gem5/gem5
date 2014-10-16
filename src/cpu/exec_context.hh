@@ -49,7 +49,6 @@
 #include "config/the_isa.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
-#include "sim/fault_fwd.hh"
 
 /**
  * The ExecContext is an abstract base class the provides the

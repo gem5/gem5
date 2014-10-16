@@ -73,7 +73,8 @@ let {{
 
     swpPreAccCode = '''
         if (!((SCTLR)Sctlr).sw) {
-            return new UndefinedInstruction(machInst, false, mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         }
     '''
 

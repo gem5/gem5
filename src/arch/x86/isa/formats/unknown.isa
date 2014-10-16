@@ -77,7 +77,7 @@ output exec {{
         Fault Unknown::execute(CPU_EXEC_CONTEXT *xc,
                 Trace::InstRecord *traceData) const
         {
-            return new InvalidOpcode();
+            return std::make_shared<InvalidOpcode>();
         }
 }};
 

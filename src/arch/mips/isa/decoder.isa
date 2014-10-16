@@ -166,10 +166,10 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x4: decode FullSystemInt {
                         0: syscall_se({{ xc->syscall(R2); }},
                                 IsSerializeAfter, IsNonSpeculative);
-                        default: syscall({{ fault = new SystemCallFault(); }});
+                      default: syscall({{ fault = std::make_shared<SystemCallFault>(); }});
                     }
                     0x7: sync({{ ; }}, IsMemBarrier);
-                    0x5: break({{fault = new BreakpointFault();}});
+                  0x5: break({{fault = std::make_shared<BreakpointFault>();}});
                 }
 
             }
@@ -214,7 +214,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             Rd = result = Rs + Rt;
                             if (FullSystem &&
                                     findOverflow(32, result, Rs, Rt)) {
-                                fault = new IntegerOverflowFault();
+                                fault = std::make_shared<IntegerOverflowFault>();
                             }
                         }});
                         0x1: addu({{ Rd_sw = Rs_sw + Rt_sw;}});
@@ -223,7 +223,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             Rd = result = Rs - Rt;
                             if (FullSystem &&
                                     findOverflow(32, result, Rs, ~Rt)) {
-                                fault = new IntegerOverflowFault();
+                                fault = std::make_shared<IntegerOverflowFault>();
                             }
                         }});
                         0x3: subu({{ Rd_sw = Rs_sw - Rt_sw; }});
@@ -327,7 +327,7 @@ decode OPCODE_HI default Unknown::unknown() {
                 Rt = result = Rs + imm;
                 if (FullSystem &&
                         findOverflow(32, result, Rs, imm)) {
-                    fault = new IntegerOverflowFault();
+                    fault = std::make_shared<IntegerOverflowFault>();
                 }
             }});
             0x1: addiu({{ Rt_sw = Rs_sw + imm; }});
@@ -601,7 +601,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 } else {
                                     // Enable this else branch once we
                                     // actually set values for Config on init
-                                    fault = new ReservedInstructionFault();
+                                    fault = std::make_shared<ReservedInstructionFault>();
                                 }
                                 Status = status;
                             }});
@@ -612,7 +612,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                     Rt = status;
                                     status.ie = 1;
                                 } else {
-                                    fault = new ReservedInstructionFault();
+                                    fault = std::make_shared<ReservedInstructionFault>();
                                 }
                             }});
                             default:CP0Unimpl::unknown();
@@ -627,7 +627,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             // Rev 2 of the architecture
                             panic("Shadow Sets Not Fully Implemented.\n");
                         } else {
-                          fault = new ReservedInstructionFault();
+                            fault = std::make_shared<ReservedInstructionFault>();
                         }
                     }});
                     0xE: wrpgpr({{
@@ -636,7 +636,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             // Rev 2 of the architecture
                             panic("Shadow Sets Not Fully Implemented.\n");
                         } else {
-                            fault = new ReservedInstructionFault();
+                            fault = std::make_shared<ReservedInstructionFault>();
                         }
                     }});
                 }

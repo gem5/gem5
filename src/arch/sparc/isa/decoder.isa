@@ -38,7 +38,7 @@ decode OP default Unknown::unknown()
     0x0: decode OP2
     {
         // Throw an illegal instruction acception
-        0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
+        0x0: Trap::illtrap({{fault = std::make_shared<IllegalInstruction>();}});
         format BranchN
         {
             // bpcc
@@ -165,13 +165,13 @@ decode OP default Unknown::unknown()
             0x0C: subc({{Rd_sdw = Rs1_sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
             0x0D: udivx({{
                 if (Rs2_or_imm13 == 0)
-                    fault = new DivisionByZero;
+                    fault = std::make_shared<DivisionByZero>();
                 else
                     Rd_udw = Rs1_udw / Rs2_or_imm13;
             }});
             0x0E: udiv({{
                 if (Rs2_or_imm13 == 0) {
-                    fault = new DivisionByZero;
+                    fault = std::make_shared<DivisionByZero>();
                 } else {
                     Rd_udw = ((Y << 32) | Rs1_udw<31:0>) / Rs2_or_imm13;
                     if (Rd_udw >> 32 != 0)
@@ -180,7 +180,7 @@ decode OP default Unknown::unknown()
             }});
             0x0F: sdiv({{
                 if (Rs2_or_imm13_sdw == 0) {
-                    fault = new DivisionByZero;
+                    fault = std::make_shared<DivisionByZero>();
                 } else {
                     Rd_udw = ((int64_t)((Y << 32) |
                             Rs1_sdw<31:0>)) / Rs2_or_imm13_sdw;
@@ -227,7 +227,7 @@ decode OP default Unknown::unknown()
                 }}, sub=True);
             0x1D: IntOpCcRes::udivxcc({{
                 if (Rs2_or_imm13_udw == 0)
-                    fault = new DivisionByZero;
+                    fault = std::make_shared<DivisionByZero>();
                 else
                     Rd = Rs1_udw / Rs2_or_imm13_udw;}});
             0x1E: IntOpCcRes::udivcc({{
@@ -235,7 +235,7 @@ decode OP default Unknown::unknown()
                     uint32_t val2 = Rs2_or_imm13_udw;
                     int32_t overflow = 0;
                     if (val2 == 0) {
-                        fault = new DivisionByZero;
+                        fault = std::make_shared<DivisionByZero>();
                     } else {
                         resTemp = (uint64_t)((Y << 32) | Rs1_udw<31:0>) / val2;
                         overflow = (resTemp<63:32> != 0);
@@ -249,7 +249,7 @@ decode OP default Unknown::unknown()
                     int64_t val2 = Rs2_or_imm13_sdw<31:0>;
                     bool overflow = false, underflow = false;
                     if (val2 == 0) {
-                        fault = new DivisionByZero;
+                        fault = std::make_shared<DivisionByZero>();
                     } else {
                         Rd = (int64_t)((Y << 32) | Rs1_sdw<31:0>) / val2;
                         overflow = ((int64_t)Rd >= std::numeric_limits<int32_t>::max());
@@ -280,7 +280,7 @@ decode OP default Unknown::unknown()
                     bool overflow = (op1 & mask(2)) || (op2 & mask(2)) ||
                         findOverflow(32, res, op1, op2);
                     if (overflow)
-                        fault = new TagOverflow;
+                        fault = std::make_shared<TagOverflow>();
                 }}, iv={{overflow}});
             0x23: tsubcctv({{
                     int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
@@ -288,7 +288,7 @@ decode OP default Unknown::unknown()
                     bool overflow = (op1 & mask(2)) || (op2 & mask(2)) ||
                         findOverflow(32, res, op1, ~op2);
                     if (overflow)
-                        fault = new TagOverflow;
+                        fault = std::make_shared<TagOverflow>();
                 }}, iv={{overflow}}, sub=True);
             0x24: mulscc({{
                     int32_t savedLSB = Rs1<0:>;
@@ -399,9 +399,9 @@ decode OP default Unknown::unknown()
             0x2B: BasicOperate::flushw({{
                 if (NWindows - 2 - Cansave != 0) {
                     if (Otherwin)
-                        fault = new SpillNOther(4*Wstate<5:3>);
+                        fault = std::make_shared<SpillNOther>(4*Wstate<5:3>);
                     else
-                        fault = new SpillNNormal(4*Wstate<2:0>);
+                        fault = std::make_shared<SpillNNormal>(4*Wstate<2:0>);
                 }
             }});
             0x2C: decode MOVCC3
@@ -451,11 +451,11 @@ decode OP default Unknown::unknown()
             }
             0x2D: sdivx({{
                 if (Rs2_or_imm13_sdw == 0)
-                    fault = new DivisionByZero;
+                    fault = std::make_shared<DivisionByZero>();
                 else
                     Rd_sdw = Rs1_sdw / Rs2_or_imm13_sdw;
             }});
-            0x2E: Trap::popc({{fault = new IllegalInstruction;}});
+            0x2E: Trap::popc({{fault = std::make_shared<IllegalInstruction>();}});
             0x2F: decode RCOND3
             {
                 0x1: movreq({{Rd = (Rs1_sdw == 0) ? Rs2_or_imm10 : Rd;}});
@@ -474,13 +474,13 @@ decode OP default Unknown::unknown()
                 // 0x04-0x05 should cause an illegal instruction exception
                 0x06: NoPriv::wrfprs({{Fprs = Rs1 ^ Rs2_or_imm13;}});
                 // 0x07-0x0E should cause an illegal instruction exception
-                0x0F: Trap::softreset({{fault = new SoftwareInitiatedReset;}});
+                0x0F: Trap::softreset({{fault = std::make_shared<SoftwareInitiatedReset>();}});
                 0x10: Priv::wrpcr({{Pcr = Rs1 ^ Rs2_or_imm13;}});
                 0x11: Priv::wrpic({{Pic = Rs1 ^ Rs2_or_imm13;}}, {{Pcr<0:>}});
                 // 0x12 should cause an illegal instruction exception
                 0x13: NoPriv::wrgsr({{
                     if (Fprs<2:> == 0 || Pstate.pef == 0)
-                        return new FpDisabled;
+                        return std::make_shared<FpDisabled>();
                     Gsr = Rs1 ^ Rs2_or_imm13;
                 }});
                 0x14: Priv::wrsoftint_set({{SoftintSet = Rs1 ^ Rs2_or_imm13;}});
@@ -489,7 +489,7 @@ decode OP default Unknown::unknown()
                 0x17: Priv::wrtick_cmpr({{TickCmpr = Rs1 ^ Rs2_or_imm13;}});
                 0x18: NoPriv::wrstick({{
                     if (!Hpstate.hpriv)
-                        return new IllegalInstruction;
+                        return std::make_shared<IllegalInstruction>();
                     Stick = Rs1 ^ Rs2_or_imm13;
                 }});
                 0x19: Priv::wrstick_cmpr({{StickCmpr = Rs1 ^ Rs2_or_imm13;}});
@@ -715,7 +715,7 @@ decode OP default Unknown::unknown()
                     0x55: fcmpes({{
                           uint8_t fcc = 0;
                           if (std::isnan(Frs1s) || std::isnan(Frs2s))
-                              fault = new FpExceptionIEEE754;
+                              fault = std::make_shared<FpExceptionIEEE754>();
                           if (Frs1s < Frs2s)
                               fcc = 1;
                           else if (Frs1s > Frs2s)
@@ -728,7 +728,7 @@ decode OP default Unknown::unknown()
                     0x56: fcmped({{
                           uint8_t fcc = 0;
                           if (std::isnan(Frs1) || std::isnan(Frs2))
-                              fault = new FpExceptionIEEE754;
+                              fault = std::make_shared<FpExceptionIEEE754>();
                           if (Frs1 < Frs2)
                               fcc = 1;
                           else if (Frs1 > Frs2)
@@ -890,10 +890,10 @@ decode OP default Unknown::unknown()
                 0x37: FailUnimpl::fmul8ulx16();
                 0x38: FailUnimpl::fmuld8sux16();
                 0x39: FailUnimpl::fmuld8ulx16();
-                0x3A: Trap::fpack32({{fault = new IllegalInstruction;}});
-                0x3B: Trap::fpack16({{fault = new IllegalInstruction;}});
-                0x3D: Trap::fpackfix({{fault = new IllegalInstruction;}});
-                0x3E: Trap::pdist({{fault = new IllegalInstruction;}});
+                0x3A: Trap::fpack32({{fault = std::make_shared<IllegalInstruction>();}});
+                0x3B: Trap::fpack16({{fault = std::make_shared<IllegalInstruction>();}});
+                0x3D: Trap::fpackfix({{fault = std::make_shared<IllegalInstruction>();}});
+                0x3E: Trap::pdist({{fault = std::make_shared<IllegalInstruction>();}});
                 0x48: BasicOperate::faligndata({{
                         uint64_t msbX = Frs1_udw;
                         uint64_t lsbX = Frs2_udw;
@@ -919,7 +919,7 @@ decode OP default Unknown::unknown()
                                       ((lsbX & lsbMask) >> lsbShift);
                         }
                 }});
-                0x4B: Trap::fpmerge({{fault = new IllegalInstruction;}});
+                0x4B: Trap::fpmerge({{fault = std::make_shared<IllegalInstruction>();}});
                 0x4C: FailUnimpl::bshuffle();
                 0x4D: FailUnimpl::fexpand();
                 0x50: FailUnimpl::fpadd16();
@@ -970,7 +970,7 @@ decode OP default Unknown::unknown()
                 0x7D: FailUnimpl::fors();
                 0x7E: FpBasic::fone({{Frd_udw = std::numeric_limits<uint64_t>::max();}});
                 0x7F: FpBasic::fones({{Frds_uw = std::numeric_limits<uint32_t>::max();}});
-                0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
+                0x80: Trap::shutdown({{fault = std::make_shared<IllegalInstruction>();}});
                 0x81: FailUnimpl::siam();
             }
             // M5 special opcodes use the reserved IMPDEP2A opcode space
@@ -990,12 +990,12 @@ decode OP default Unknown::unknown()
                         panic("M5 panic instruction called at pc = %#x.", PC);
                     }}, No_OpClass, IsNonSpeculative);
                 }
-                default: Trap::impdep2({{fault = new IllegalInstruction;}});
+                default: Trap::impdep2({{fault = std::make_shared<IllegalInstruction>();}});
             }
             0x38: Branch::jmpl({{
                 Addr target = Rs1 + Rs2_or_imm13;
                 if (target & 0x3) {
-                    fault = new MemAddressNotAligned;
+                    fault = std::make_shared<MemAddressNotAligned>();
                 } else {
                     if (Pstate.am)
                         Rd = (PC)<31:0>;
@@ -1011,11 +1011,11 @@ decode OP default Unknown::unknown()
                     // faults.
                     if (Canrestore == 0) {
                         if (Otherwin)
-                            fault = new FillNOther(4*Wstate<5:3>);
+                            fault = std::make_shared<FillNOther>(4*Wstate<5:3>);
                         else
-                            fault = new FillNNormal(4*Wstate<2:0>);
+                            fault = std::make_shared<FillNNormal>(4*Wstate<2:0>);
                     } else if (target & 0x3) { // Check for alignment faults
-                        fault = new MemAddressNotAligned;
+                        fault = std::make_shared<MemAddressNotAligned>();
                     } else {
                         NNPC = target;
                         Cwp = (Cwp - 1 + NWindows) % NWindows;
@@ -1030,14 +1030,14 @@ decode OP default Unknown::unknown()
                     if (passesCondition(Ccr<3:0>, COND2)) {
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
-                        fault = new TrapInstruction(lTrapNum);
+                        fault = std::make_shared<TrapInstruction>(lTrapNum);
                     }
                 }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
                 0x2: Trap::tccx({{
                     if (passesCondition(Ccr<7:4>, COND2)) {
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
-                        fault = new TrapInstruction(lTrapNum);
+                        fault = std::make_shared<TrapInstruction>(lTrapNum);
                     }
                 }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
             }
@@ -1046,11 +1046,11 @@ decode OP default Unknown::unknown()
             0x3C: save({{
                 if (Cansave == 0) {
                     if (Otherwin)
-                        fault = new SpillNOther(4*Wstate<5:3>);
+                        fault = std::make_shared<SpillNOther>(4*Wstate<5:3>);
                     else
-                        fault = new SpillNNormal(4*Wstate<2:0>);
+                        fault = std::make_shared<SpillNNormal>(4*Wstate<2:0>);
                 } else if (Cleanwin - Canrestore == 0) {
-                    fault = new CleanWindow;
+                    fault = std::make_shared<CleanWindow>();
                 } else {
                     Cwp = (Cwp + 1) % NWindows;
                     Rd_next = Rs1 + Rs2_or_imm13;
@@ -1061,9 +1061,9 @@ decode OP default Unknown::unknown()
             0x3D: restore({{
                 if (Canrestore == 0) {
                     if (Otherwin)
-                        fault = new FillNOther(4*Wstate<5:3>);
+                        fault = std::make_shared<FillNOther>(4*Wstate<5:3>);
                     else
-                        fault = new FillNNormal(4*Wstate<2:0>);
+                        fault = std::make_shared<FillNNormal>(4*Wstate<2:0>);
                 } else {
                     Cwp = (Cwp - 1 + NWindows) % NWindows;
                     Rd_prev = Rs1 + Rs2_or_imm13;
@@ -1251,7 +1251,7 @@ decode OP default Unknown::unknown()
                                     Fsr = Mem_udw;}});
                 default: FailUnimpl::ldfsrOther();
             }
-            0x22: ldqf({{fault = new FpDisabled;}});
+            0x22: ldqf({{fault = std::make_shared<FpDisabled>();}});
             0x23: Load::lddf({{Frd_udw = Mem_udw;}});
             0x24: Store::stf({{Mem_uw = Frds_uw;}});
             0x25: decode RD {
@@ -1265,11 +1265,11 @@ decode OP default Unknown::unknown()
                                         Mem_udw = Fsr;}});
                 default: FailUnimpl::stfsrOther();
             }
-            0x26: stqf({{fault = new FpDisabled;}});
+            0x26: stqf({{fault = std::make_shared<FpDisabled>();}});
             0x27: Store::stdf({{Mem_udw = Frd_udw;}});
             0x2D: Nop::prefetch({{ }});
             0x30: LoadAlt::ldfa({{Frds_uw = Mem_uw;}});
-            0x32: ldqfa({{fault = new FpDisabled;}});
+            0x32: ldqfa({{fault = std::make_shared<FpDisabled>();}});
             format LoadAlt {
                 0x33: decode EXT_ASI {
                     // ASI_NUCLEUS
@@ -1348,11 +1348,11 @@ decode OP default Unknown::unknown()
                     0xDB: FailUnimpl::ldshortf_16sl();
                     // Not an ASI which is legal with lddfa
                     default: Trap::lddfa_bad_asi(
-                        {{fault = new DataAccessException;}});
+                        {{fault = std::make_shared<DataAccessException>();}});
                 }
             }
             0x34: Store::stfa({{Mem_uw = Frds_uw;}});
-            0x36: stqfa({{fault = new FpDisabled;}});
+            0x36: stqfa({{fault = std::make_shared<FpDisabled>();}});
             format StoreAlt {
                 0x37: decode EXT_ASI {
                     // ASI_NUCLEUS
@@ -1431,7 +1431,7 @@ decode OP default Unknown::unknown()
                     0xDB: FailUnimpl::stshortf_16sl();
                     // Not an ASI which is legal with lddfa
                     default: Trap::stdfa_bad_asi(
-                        {{fault = new DataAccessException;}});
+                        {{fault = std::make_shared<DataAccessException>();}});
                 }
             }
             0x3C: CasAlt::casa({{

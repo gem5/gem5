@@ -303,15 +303,15 @@ let {{
     # and we're dealing with doubles
     BlockAlignmentFaultCheck = '''
         if (RD & 0xe)
-            fault = new IllegalInstruction;
+            fault = std::make_shared<IllegalInstruction>();
         else if (EA & 0x3f)
-            fault = new MemAddressNotAligned;
+            fault = std::make_shared<MemAddressNotAligned>();
     '''
     TwinAlignmentFaultCheck = '''
         if (RD & 0x1)
-            fault = new IllegalInstruction;
+            fault = std::make_shared<IllegalInstruction>();
         else if (EA & 0xf)
-            fault = new MemAddressNotAligned;
+            fault = std::make_shared<MemAddressNotAligned>();
     '''
     # XXX Need to take care of pstate.hpriv as well. The lower ASIs
     # are split into ones that are available in priv and hpriv, and
@@ -320,9 +320,9 @@ let {{
         if ((!Pstate.priv && !Hpstate.hpriv &&
              !asiIsUnPriv((ASI)EXT_ASI)) ||
             (!Hpstate.hpriv && asiIsHPriv((ASI)EXT_ASI)))
-            fault = new PrivilegedAction;
+            fault = std::make_shared<PrivilegedAction>();
         else if (asiIsAsIfUser((ASI)EXT_ASI) && !Pstate.priv)
-            fault = new PrivilegedAction;
+            fault = std::make_shared<PrivilegedAction>();
     '''
 
     TruncateEA = '''

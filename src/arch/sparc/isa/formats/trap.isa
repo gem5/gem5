@@ -126,7 +126,7 @@ output header {{
 def format FpUnimpl(*flags) {{
         fpunimpl_code = '''
             Fsr = insertBits(Fsr, 16, 14, 3);
-            fault = new FpExceptionOther;
+            fault = std::make_shared<FpExceptionOther>();
             '''
         iop = InstObjParams(name, Name, 'FpUnimpl', fpunimpl_code, flags)
         header_output = BasicDeclare.subst(iop)

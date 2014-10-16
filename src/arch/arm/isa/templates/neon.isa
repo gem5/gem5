@@ -49,11 +49,13 @@ let {{
         if (trapEnCheck) {
             CPSR cpsrEnCheck = Cpsr;
             if (cpsrEnCheck.mode == MODE_HYP) {
-                return new UndefinedInstruction(machInst, issEnCheck,
+                return std::make_shared<UndefinedInstruction>(
+                                                machInst, issEnCheck,
                                                 EC_TRAPPED_HCPTR);
             } else {
                 if (!inSecureState(Scr, Cpsr)) {
-                    return new HypervisorTrap(machInst, issEnCheck,
+                    return std::make_shared<HypervisorTrap>(
+                                              machInst, issEnCheck,
                                               EC_TRAPPED_HCPTR);
                 }
             }

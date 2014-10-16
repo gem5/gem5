@@ -44,7 +44,6 @@
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/MipsTLB.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/sim_object.hh"
 #include "sim/tlb.hh"
 

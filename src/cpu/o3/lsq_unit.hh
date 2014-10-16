@@ -61,7 +61,6 @@
 #include "debug/LSQUnit.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
-#include "sim/fault_fwd.hh"
 
 struct DerivO3CPUParams;
 
@@ -578,9 +577,9 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             delete sreqLow;
             delete sreqHigh;
         }
-        return new GenericISA::M5PanicFault(
-                "Uncachable load [sn:%llx] PC %s\n",
-                load_inst->seqNum, load_inst->pcState());
+        return std::make_shared<GenericISA::M5PanicFault>(
+            "Uncachable load [sn:%llx] PC %s\n",
+            load_inst->seqNum, load_inst->pcState());
     }
 
     // Check the SQ for any previous stores that might lead to forwarding

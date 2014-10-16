@@ -120,7 +120,7 @@ decode OPCODE default Unknown::unknown() {
                 // signed overflow occurs when operands have same sign
                 // and sign of result does not match.
                 if (Ra_sl<31:> == Rb_or_imm_sl<31:> && tmp<31:> != Ra_sl<31:>)
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Rc_sl = tmp;
             }});
             0x02: s4addl({{ Rc_sl = (Ra_sl << 2) + Rb_or_imm_sl; }});
@@ -132,7 +132,7 @@ decode OPCODE default Unknown::unknown() {
                 // signed overflow occurs when operands have same sign
                 // and sign of result does not match.
                 if (Ra<63:> == Rb_or_imm<63:> && tmp<63:> != Ra<63:>)
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Rc = tmp;
             }});
             0x22: s4addq({{ Rc = (Ra << 2) + Rb_or_imm; }});
@@ -146,7 +146,7 @@ decode OPCODE default Unknown::unknown() {
                 // sign bit of the subtrahend (Rb), i.e., if the initial
                 // signs are the *same* then no overflow can occur
                 if (Ra_sl<31:> != Rb_or_imm_sl<31:> && tmp<31:> != Ra_sl<31:>)
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Rc_sl = tmp;
             }});
             0x0b: s4subl({{ Rc_sl = (Ra_sl << 2) - Rb_or_imm_sl; }});
@@ -160,7 +160,7 @@ decode OPCODE default Unknown::unknown() {
                 // sign bit of the subtrahend (Rb), i.e., if the initial
                 // signs are the *same* then no overflow can occur
                 if (Ra<63:> != Rb_or_imm<63:> && tmp<63:> != Ra<63:>)
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Rc = tmp;
             }});
             0x2b: s4subq({{ Rc = (Ra << 2) - Rb_or_imm; }});
@@ -313,7 +313,7 @@ decode OPCODE default Unknown::unknown() {
                 // checking the upper 33 bits for all 0s or all 1s.
                 uint64_t sign_bits = tmp<63:31>;
                 if (sign_bits != 0 && sign_bits != mask(33))
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Rc_sl = tmp<31:0>;
             }}, IntMultOp);
             0x60: mulqv({{
@@ -324,7 +324,7 @@ decode OPCODE default Unknown::unknown() {
                 // the lower 64
                 if (!((hi == 0 && lo<63:> == 0) ||
                       (hi == mask(64) && lo<63:> == 1)))
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Rc = lo;
             }}, IntMultOp);
         }
@@ -603,19 +603,19 @@ decode OPCODE default Unknown::unknown() {
 #if SS_COMPATIBLE_FP
                     0x0b: sqrts({{
                         if (Fb < 0.0)
-                            fault = new ArithmeticFault;
+                            fault = std::make_shared<ArithmeticFault>();
                         Fc = sqrt(Fb);
                     }}, FloatSqrtOp);
 #else
                     0x0b: sqrts({{
                         if (Fb_sf < 0.0)
-                            fault = new ArithmeticFault;
+                            fault = std::make_shared<ArithmeticFault>();
                         Fc_sf = sqrt(Fb_sf);
                     }}, FloatSqrtOp);
 #endif
                     0x2b: sqrtt({{
                         if (Fb < 0.0)
-                            fault = new ArithmeticFault;
+                            fault = std::make_shared<ArithmeticFault>();
                         Fc = sqrt(Fb);
                     }}, FloatSqrtOp);
                 }
@@ -746,7 +746,7 @@ decode OPCODE default Unknown::unknown() {
                 // checking the upper 33 bits for all 0s or all 1s.
                 uint64_t sign_bits = Fb_uq<63:31>;
                 if (sign_bits != 0 && sign_bits != mask(33))
-                    fault = new IntegerOverflowFault;
+                    fault = std::make_shared<IntegerOverflowFault>();
                 Fc_uq = (Fb_uq<31:30> << 62) | (Fb_uq<29:0> << 29);
             }});
 
@@ -854,7 +854,7 @@ decode OPCODE default Unknown::unknown() {
                  && xc->readMiscReg(IPR_ICM) != mode_kernel)) {
                 // invalid pal function code, or attempt to do privileged
                 // PAL call in non-kernel mode
-                fault = new UnimplementedOpcodeFault;
+                fault = std::make_shared<UnimplementedOpcodeFault>();
             } else {
                 // check to see if simulator wants to do something special
                 // on this PAL call (including maybe suppress it)
@@ -904,7 +904,7 @@ decode OPCODE default Unknown::unknown() {
                         IprToMiscRegIndex[ipr_index] : -1;
                 if(miscRegIndex < 0 || !IprIsReadable(miscRegIndex) ||
                     miscRegIndex >= NumInternalProcRegs)
-                        fault = new UnimplementedOpcodeFault;
+                    fault = std::make_shared<UnimplementedOpcodeFault>();
                 else
                     Ra = xc->readMiscReg(miscRegIndex);
             }}, IsIprAccess);
@@ -919,7 +919,7 @@ decode OPCODE default Unknown::unknown() {
                         IprToMiscRegIndex[ipr_index] : -1;
                 if(miscRegIndex < 0 || !IprIsWritable(miscRegIndex) ||
                     miscRegIndex >= NumInternalProcRegs)
-                        fault = new UnimplementedOpcodeFault;
+                    fault = std::make_shared<UnimplementedOpcodeFault>();
                 else
                     xc->setMiscReg(miscRegIndex, Ra);
                 if (traceData) { traceData->setData(Ra); }

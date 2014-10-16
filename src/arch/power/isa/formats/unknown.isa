@@ -77,7 +77,7 @@ output exec {{
         panic("attempt to execute unknown instruction at %#x"
               "(inst 0x%08x, opcode 0x%x, binary: %s)",
               xc->pcState().pc(), machInst, OPCODE, inst2string(machInst));
-        return new UnimplementedOpcodeFault;
+        return std::make_shared<UnimplementedOpcodeFault>();
     }
 }};
 

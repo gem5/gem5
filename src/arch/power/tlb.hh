@@ -46,7 +46,6 @@
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/PowerTLB.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/tlb.hh"
 
 class ThreadContext;

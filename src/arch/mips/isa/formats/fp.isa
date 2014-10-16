@@ -97,7 +97,7 @@ output exec {{
             //@TODO: Implement correct CP0 checks to see if the CP1
             // unit is enable or not
           if (!isCoprocessorEnabled(xc, 1))
-             return new CoprocessorUnusableFault(1);
+              return std::make_shared<CoprocessorUnusableFault>(1);
 
           return NoFault;
         }

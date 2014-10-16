@@ -160,7 +160,7 @@ def template HiLoRsSelExecute {{
 
                 if( ACSRC > 0 && !isDspEnabled(xc) )
                 {
-                    fault = new DspStateDisabledFault();
+                    fault = std::make_shared<DspStateDisabledFault>();
                 }
                 else
                 {
@@ -186,7 +186,7 @@ def template HiLoRdSelExecute {{
 
                 if( ACDST > 0 && !isDspEnabled(xc) )
                 {
-                    fault = new DspStateDisabledFault();
+                    fault = std::make_shared<DspStateDisabledFault>();
                 }
                 else
                 {

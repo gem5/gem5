@@ -49,6 +49,8 @@
  * Authors: Gabe Black
  */
 
+#include <memory>
+
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/tlb.hh"
@@ -196,8 +198,9 @@ Walker::startWalkWrapper()
             currState->req->getVaddr());
 
         // finish the translation which will delete the translation object
-        currState->translation->finish(new UnimpFault("Squashed Inst"),
-                currState->req, currState->tc, currState->mode);
+        currState->translation->finish(
+            std::make_shared<UnimpFault>("Squashed Inst"),
+            currState->req, currState->tc, currState->mode);
 
         // delete the current request
         delete currState;
@@ -705,7 +708,8 @@ Walker::WalkerState::pageFault(bool present)
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
     if (mode == BaseTLB::Execute && !enableNX)
         mode = BaseTLB::Read;
-    return new PageFault(entry.vaddr, present, mode, m5reg.cpl == 3, false);
+    return std::make_shared<PageFault>(entry.vaddr, present, mode,
+                                       m5reg.cpl == 3, false);
 }
 
 /* end namespace X86ISA */ }

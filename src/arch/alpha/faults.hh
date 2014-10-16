@@ -48,6 +48,7 @@ class AlphaFault : public FaultBase
     virtual bool skipFaultingInstruction() {return false;}
     virtual bool setRestartAddress() {return true;}
   public:
+    virtual ~AlphaFault() {}
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
     virtual FaultVect vect() = 0;

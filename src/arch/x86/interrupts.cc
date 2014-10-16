@@ -49,6 +49,8 @@
  * Authors: Gabe Black
  */
 
+#include <memory>
+
 #include "arch/x86/regs/apic.hh"
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
@@ -666,16 +668,16 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
     if (pendingUnmaskableInt) {
         if (pendingSmi) {
             DPRINTF(LocalApic, "Generated SMI fault object.\n");
-            return new SystemManagementInterrupt();
+            return std::make_shared<SystemManagementInterrupt>();
         } else if (pendingNmi) {
             DPRINTF(LocalApic, "Generated NMI fault object.\n");
-            return new NonMaskableInterrupt(nmiVector);
+            return std::make_shared<NonMaskableInterrupt>(nmiVector);
         } else if (pendingInit) {
             DPRINTF(LocalApic, "Generated INIT fault object.\n");
-            return new InitInterrupt(initVector);
+            return std::make_shared<InitInterrupt>(initVector);
         } else if (pendingStartup) {
             DPRINTF(LocalApic, "Generating SIPI fault object.\n");
-            return new StartupInterrupt(startupVector);
+            return std::make_shared<StartupInterrupt>(startupVector);
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
                     "ints were pending.\n");
@@ -683,11 +685,11 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
         }
     } else if (pendingExtInt) {
         DPRINTF(LocalApic, "Generated external interrupt fault object.\n");
-        return new ExternalInterrupt(extIntVector);
+        return std::make_shared<ExternalInterrupt>(extIntVector);
     } else {
         DPRINTF(LocalApic, "Generated regular interrupt fault object.\n");
         // The only thing left are fixed and lowest priority interrupts.
-        return new ExternalInterrupt(IRRV);
+        return std::make_shared<ExternalInterrupt>(IRRV);
     }
 }
 

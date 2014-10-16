@@ -46,7 +46,6 @@
 #include "cpu/reg_class.hh"
 #include "debug/InOrderDynInst.hh"
 #include "mem/request.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/full_system.hh"
 
 using namespace std;
@@ -278,7 +277,7 @@ InOrderDynInst::hwrei()
 #if THE_ISA == ALPHA_ISA
     // Can only do a hwrei when in pal mode.
     if (!(this->instAddr() & 0x3))
-        return new AlphaISA::UnimplementedOpcodeFault;
+        return std::make_shared<AlphaISA::UnimplementedOpcodeFault>();
 
     // Set the next PC based on the value of the EXC_ADDR IPR.
     AlphaISA::PCState pc = this->pcState();

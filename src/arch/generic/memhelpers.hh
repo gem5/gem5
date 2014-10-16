@@ -46,7 +46,6 @@
 #include "base/types.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/insttracer.hh"
 
 /// Read from memory in timing mode.

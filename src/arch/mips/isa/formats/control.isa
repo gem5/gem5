@@ -94,7 +94,7 @@ def template CP0Execute {{
                         %(op_wb)s;
                     }
                 } else {
-                    fault = new CoprocessorUnusableFault(0);
+                    fault = std::make_shared<CoprocessorUnusableFault>(0);
                 }
                 return fault;
         }
@@ -110,7 +110,7 @@ def template CP1Execute {{
                 if (isCoprocessorEnabled(xc, 1)) {
                     %(code)s;
                 } else {
-                    fault = new CoprocessorUnusableFault(1);
+                    fault = std::make_shared<CoprocessorUnusableFault>(1);
                 }
 
                 if(fault == NoFault)
@@ -133,13 +133,13 @@ def template ControlTLBExecute {{
                     if(isMMUTLB(xc)){
                         %(code)s;
                     } else {
-                        fault = new ReservedInstructionFault();
+                        fault = std::make_shared<ReservedInstructionFault>();
                     }
                 } else {
-                    fault = new CoprocessorUnusableFault(0);
+                    fault = std::make_shared<CoprocessorUnusableFault>(0);
                 }
             } else { // Syscall Emulation Mode - No TLB Instructions
-                fault = new ReservedInstructionFault();
+                fault = std::make_shared<ReservedInstructionFault>();
             }
 
             if (fault == NoFault) {

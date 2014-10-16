@@ -90,7 +90,8 @@ def template MicroDebugExecute {{
             %(op_decl)s
             %(op_rd)s
             if (%(cond_test)s) {
-                return new GenericISA::M5DebugFault(func, message);
+                return std::make_shared<GenericISA::M5DebugFault>(func,
+                                                                  message);
             } else {
                 return NoFault;
             }

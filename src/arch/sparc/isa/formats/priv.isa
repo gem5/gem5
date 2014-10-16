@@ -203,10 +203,10 @@ def template PrivExecute {{
 
         // If the processor isn't in privileged mode, fault out right away
         if (%(check)s)
-            return new PrivilegedAction;
+            return std::make_shared<PrivilegedAction>();
 
         if (%(tlCheck)s)
-            return new IllegalInstruction;
+            return std::make_shared<IllegalInstruction>();
 
         Fault fault = NoFault;
         %(code)s;

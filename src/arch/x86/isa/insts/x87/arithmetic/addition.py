@@ -85,12 +85,12 @@ def macroop FADDP_R
 
 def macroop FADDP_M
 {
-    fault "new UnimpInstFault"
+    fault "std::make_shared<UnimpInstFault>()"
 };
 
 def macroop FADDP_P
 {
-   fault "new UnimpInstFault"
+   fault "std::make_shared<UnimpInstFault>()"
 };
 
 # FIADD

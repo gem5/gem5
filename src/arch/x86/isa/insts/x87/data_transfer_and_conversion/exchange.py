@@ -45,11 +45,11 @@ def macroop FXCH_R
 
 def macroop FXCH_M
 {
-    fault "new UnimpInstFault"
+    fault "std::make_shared<UnimpInstFault>()"
 };
 
 def macroop FXCH_P
 {
-   fault "new UnimpInstFault"
+   fault "std::make_shared<UnimpInstFault>()"
 };
 '''

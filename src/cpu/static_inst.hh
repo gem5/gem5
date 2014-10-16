@@ -45,7 +45,6 @@
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
 #include "enums/StaticInstFlags.hh"
-#include "sim/fault_fwd.hh"
 
 // forward declarations
 class Packet;

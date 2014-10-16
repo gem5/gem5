@@ -46,7 +46,7 @@ output exec {{
     {
         Fault fault = NoFault;  // dummy... this ipr access should not fault
         if (FullSystem && !ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
-            fault = new FloatEnableFault;
+            fault = std::make_shared<FloatEnableFault>();
         }
         return fault;
     }

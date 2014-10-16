@@ -42,6 +42,7 @@
  *          Steve Reinhardt
  */
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -559,10 +560,11 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         if (sctlr.a || !(flags & AllowUnaligned)) {
             if (vaddr & mask(flags & AlignmentMask)) {
                 // LPAE is always disabled in SE mode
-                return new DataAbort(vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess, is_write,
-                                     ArmFault::AlignmentFault, isStage2,
-                                     ArmFault::VmsaTran);
+                return std::make_shared<DataAbort>(
+                    vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess, is_write,
+                    ArmFault::AlignmentFault, isStage2,
+                    ArmFault::VmsaTran);
             }
         }
     }
@@ -571,7 +573,7 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
     Process *p = tc->getProcessPtr();
 
     if (!p->pTable->translate(vaddr, paddr))
-        return Fault(new GenericPageTableFault(vaddr_tainted));
+        return std::make_shared<GenericPageTableFault>(vaddr_tainted);
     req->setPaddr(paddr);
 
     return NoFault;
@@ -609,9 +611,10 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
     // as a device or strongly ordered.
     if (isStage2 && req->isPTWalk() && hcr.ptw &&
         (te->mtype != TlbEntry::MemoryType::Normal)) {
-        return new DataAbort(vaddr, te->domain, is_write,
-                             ArmFault::PermissionLL + te->lookupLevel,
-                             isStage2, tranMethod);
+        return std::make_shared<DataAbort>(
+            vaddr, te->domain, is_write,
+            ArmFault::PermissionLL + te->lookupLevel,
+            isStage2, tranMethod);
     }
 
     // Generate an alignment fault for unaligned data accesses to device or
@@ -620,9 +623,10 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
         if (te->mtype != TlbEntry::MemoryType::Normal) {
             if (vaddr & mask(flags & AlignmentMask)) {
                 alignFaults++;
-                return new DataAbort(vaddr, TlbEntry::DomainType::NoAccess, is_write,
-                                     ArmFault::AlignmentFault, isStage2,
-                                     tranMethod);
+                return std::make_shared<DataAbort>(
+                    vaddr, TlbEntry::DomainType::NoAccess, is_write,
+                    ArmFault::AlignmentFault, isStage2,
+                    tranMethod);
             }
         }
     }
@@ -632,8 +636,9 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
         if (req->isPrefetch()) {
             // Here we can safely use the fault status for the short
             // desc. format in all cases
-            return new PrefetchAbort(vaddr, ArmFault::PrefetchUncacheable,
-                                     isStage2, tranMethod);
+            return std::make_shared<PrefetchAbort>(
+                vaddr, ArmFault::PrefetchUncacheable,
+                isStage2, tranMethod);
         }
     }
 
@@ -645,13 +650,15 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
                     " domain: %#x write:%d\n", dacr,
                     static_cast<uint8_t>(te->domain), is_write);
             if (is_fetch)
-                return new PrefetchAbort(vaddr,
-                                         ArmFault::DomainLL + te->lookupLevel,
-                                         isStage2, tranMethod);
+                return std::make_shared<PrefetchAbort>(
+                    vaddr,
+                    ArmFault::DomainLL + te->lookupLevel,
+                    isStage2, tranMethod);
             else
-                return new DataAbort(vaddr, te->domain, is_write,
-                                     ArmFault::DomainLL + te->lookupLevel,
-                                     isStage2, tranMethod);
+                return std::make_shared<DataAbort>(
+                    vaddr, te->domain, is_write,
+                    ArmFault::DomainLL + te->lookupLevel,
+                    isStage2, tranMethod);
           case 1:
             // Continue with permissions check
             break;
@@ -735,16 +742,18 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
         DPRINTF(TLB, "TLB Fault: Prefetch abort on permission check. AP:%d "
                      "priv:%d write:%d ns:%d sif:%d sctlr.afe: %d \n",
                      ap, is_priv, is_write, te->ns, scr.sif,sctlr.afe);
-        return new PrefetchAbort(vaddr,
-                                 ArmFault::PermissionLL + te->lookupLevel,
-                                 isStage2, tranMethod);
+        return std::make_shared<PrefetchAbort>(
+            vaddr,
+            ArmFault::PermissionLL + te->lookupLevel,
+            isStage2, tranMethod);
     } else if (abt | hapAbt) {
         permsFaults++;
         DPRINTF(TLB, "TLB Fault: Data abort on permission check. AP:%d priv:%d"
                " write:%d\n", ap, is_priv, is_write);
-        return new DataAbort(vaddr, te->domain, is_write,
-                             ArmFault::PermissionLL + te->lookupLevel,
-                             isStage2 | !abt, tranMethod);
+        return std::make_shared<DataAbort>(
+            vaddr, te->domain, is_write,
+            ArmFault::PermissionLL + te->lookupLevel,
+            isStage2 | !abt, tranMethod);
     }
     return NoFault;
 }
@@ -772,9 +781,10 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
     // as a device or strongly ordered.
     if (isStage2 && req->isPTWalk() && hcr.ptw &&
         (te->mtype != TlbEntry::MemoryType::Normal)) {
-        return new DataAbort(vaddr_tainted, te->domain, is_write,
-                             ArmFault::PermissionLL + te->lookupLevel,
-                             isStage2, ArmFault::LpaeTran);
+        return std::make_shared<DataAbort>(
+            vaddr_tainted, te->domain, is_write,
+            ArmFault::PermissionLL + te->lookupLevel,
+            isStage2, ArmFault::LpaeTran);
     }
 
     // Generate an alignment fault for unaligned accesses to device or
@@ -783,10 +793,11 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
         if (te->mtype != TlbEntry::MemoryType::Normal) {
             if (vaddr & mask(flags & AlignmentMask)) {
                 alignFaults++;
-                return new DataAbort(vaddr_tainted,
-                                     TlbEntry::DomainType::NoAccess, is_write,
-                                     ArmFault::AlignmentFault, isStage2,
-                                     ArmFault::LpaeTran);
+                return std::make_shared<DataAbort>(
+                    vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess, is_write,
+                    ArmFault::AlignmentFault, isStage2,
+                    ArmFault::LpaeTran);
             }
         }
     }
@@ -796,9 +807,10 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
         if (req->isPrefetch()) {
             // Here we can safely use the fault status for the short
             // desc. format in all cases
-            return new PrefetchAbort(vaddr_tainted,
-                                     ArmFault::PrefetchUncacheable,
-                                     isStage2, ArmFault::LpaeTran);
+            return std::make_shared<PrefetchAbort>(
+                vaddr_tainted,
+                ArmFault::PrefetchUncacheable,
+                isStage2, ArmFault::LpaeTran);
         }
     }
 
@@ -917,16 +929,18 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
                     ap, is_priv, is_write, te->ns, scr.sif, sctlr.afe);
             // Use PC value instead of vaddr because vaddr might be aligned to
             // cache line and should not be the address reported in FAR
-            return new PrefetchAbort(req->getPC(),
-                                     ArmFault::PermissionLL + te->lookupLevel,
-                                     isStage2, ArmFault::LpaeTran);
+            return std::make_shared<PrefetchAbort>(
+                req->getPC(),
+                ArmFault::PermissionLL + te->lookupLevel,
+                isStage2, ArmFault::LpaeTran);
         } else {
             permsFaults++;
             DPRINTF(TLB, "TLB Fault: Data abort on permission check. AP:%d "
                     "priv:%d write:%d\n", ap, is_priv, is_write);
-            return new DataAbort(vaddr_tainted, te->domain, is_write,
-                                 ArmFault::PermissionLL + te->lookupLevel,
-                                 isStage2, ArmFault::LpaeTran);
+            return std::make_shared<DataAbort>(
+                vaddr_tainted, te->domain, is_write,
+                ArmFault::PermissionLL + te->lookupLevel,
+                isStage2, ArmFault::LpaeTran);
         }
     }
 
@@ -968,7 +982,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     // Generate an alignment fault for unaligned PC
     if (aarch64 && is_fetch && (req->getPC() & mask(2))) {
-        return new PCAlignmentFault(req->getPC());
+        return std::make_shared<PCAlignmentFault>(req->getPC());
     }
 
     // If this is a clrex instruction, provide a PA of 0 with no fault
@@ -990,10 +1004,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         if (sctlr.a || !(flags & AllowUnaligned)) {
             if (vaddr & mask(flags & AlignmentMask)) {
                 alignFaults++;
-                return new DataAbort(vaddr_tainted,
-                                     TlbEntry::DomainType::NoAccess, is_write,
-                                     ArmFault::AlignmentFault, isStage2,
-                                     tranMethod);
+                return std::make_shared<DataAbort>(
+                    vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess, is_write,
+                    ArmFault::AlignmentFault, isStage2,
+                    tranMethod);
             }
         }
     }
@@ -1083,10 +1098,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
                 // Unaligned accesses to Device memory should always cause an
                 // abort regardless of sctlr.a
                 alignFaults++;
-                return new DataAbort(vaddr_tainted,
-                                     TlbEntry::DomainType::NoAccess, is_write,
-                                     ArmFault::AlignmentFault, isStage2,
-                                     tranMethod);
+                return std::make_shared<DataAbort>(
+                    vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess, is_write,
+                    ArmFault::AlignmentFault, isStage2,
+                    tranMethod);
         }
 
         // Check for a trickbox generated address fault
@@ -1099,7 +1115,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     if (fault == NoFault) {
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
         if (aarch64 && is_fetch && cpsr.il == 1) {
-            return new IllegalInstSetStateFault();
+            return std::make_shared<IllegalInstSetStateFault>();
         }
     }
 
@@ -1332,7 +1348,8 @@ TLB::getTE(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
             // any further with the memory access (here we can safely use the
             // fault status for the short desc. format in all cases)
            prefetchFaults++;
-           return new PrefetchAbort(vaddr_tainted, ArmFault::PrefetchTLBMiss, isStage2);
+           return std::make_shared<PrefetchAbort>(
+               vaddr_tainted, ArmFault::PrefetchTLBMiss, isStage2);
         }
 
         if (is_fetch)

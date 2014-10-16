@@ -40,12 +40,12 @@ def macroop BOUND_R_M {
     ld t1, seg, sib, disp, dataSize="env.dataSize * 2"
     srli t2, t1, "env.dataSize * 8"
     sub t1, t1, reg, flags=(ECF,)
-    fault "new BoundRange", flags=(CECF,)
+    fault "std::make_shared<BoundRange>()", flags=(CECF,)
     sub t2, reg, t2, flags=(ECF,)
-    fault "new BoundRange", flags=(CECF,)
+    fault "std::make_shared<BoundRange>()", flags=(CECF,)
 };
 
 def macroop BOUND_R_P {
-    fault "new UnimpInstFault"
+    fault "std::make_shared<UnimpInstFault>()"
 };
 '''

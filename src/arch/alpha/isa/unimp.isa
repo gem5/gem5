@@ -118,7 +118,7 @@ output exec {{
     {
         panic("attempt to execute unimplemented instruction '%s' "
               "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
-        return new UnimplementedOpcodeFault;
+        return std::make_shared<UnimplementedOpcodeFault>();
     }
 
     Fault

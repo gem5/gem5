@@ -52,7 +52,6 @@
 #include "dev/dma_device.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/tlb.hh"
 

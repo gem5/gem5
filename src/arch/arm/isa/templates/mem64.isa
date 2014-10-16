@@ -41,7 +41,7 @@ let {{
     SPAlignmentCheckCode = '''
         if (baseIsSP && bits(XBase, 3, 0) &&
             SPAlignmentCheckEnabled(xc->tcBase())) {
-            return new SPAlignmentFault();
+            return std::make_shared<SPAlignmentFault>();
         }
    '''
 }};

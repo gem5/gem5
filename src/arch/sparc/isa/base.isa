@@ -571,7 +571,7 @@ output exec {{
             if (pstate.pef && xc->readMiscReg(MISCREG_FPRS) & 0x4) {
                 return NoFault;
             } else {
-                return new FpDisabled;
+                return std::make_shared<FpDisabled>();
             }
         } else {
             return NoFault;

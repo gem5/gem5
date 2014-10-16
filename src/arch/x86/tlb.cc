@@ -38,6 +38,7 @@
  */
 
 #include <cstring>
+#include <memory>
 
 #include "arch/generic/mmapped_ipr.hh"
 #include "arch/x86/insts/microldstop.hh"
@@ -186,7 +187,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
 
         MiscRegIndex regNum;
         if (!msrAddrToIndex(regNum, vaddr))
-            return new GeneralProtection(0);
+            return std::make_shared<GeneralProtection>(0);
 
         //The index is multiplied by the size of a MiscReg so that
         //any memory dependence calculations will not see these as
@@ -298,14 +299,14 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             if (!(seg == SEGMENT_REG_TSG || seg == SYS_SEGMENT_REG_IDTR ||
                         seg == SEGMENT_REG_HS || seg == SEGMENT_REG_LS)
                     && !tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
-                return new GeneralProtection(0);
+                return std::make_shared<GeneralProtection>(0);
             bool expandDown = false;
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
                 if (!attr.writable && (mode == Write || storeCheck))
-                    return new GeneralProtection(0);
+                    return std::make_shared<GeneralProtection>(0);
                 if (!attr.readable && mode == Read)
-                    return new GeneralProtection(0);
+                    return std::make_shared<GeneralProtection>(0);
                 expandDown = attr.expandDown;
 
             }
@@ -321,10 +322,10 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 DPRINTF(TLB, "Checking an expand down segment.\n");
                 warn_once("Expand down segments are untested.\n");
                 if (offset <= limit || endOffset <= limit)
-                    return new GeneralProtection(0);
+                    return std::make_shared<GeneralProtection>(0);
             } else {
                 if (offset > limit || endOffset > limit)
-                    return new GeneralProtection(0);
+                    return std::make_shared<GeneralProtection>(0);
             }
         }
         if (m5Reg.submode != SixtyFourBitMode ||
@@ -361,7 +362,8 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                         }
                     }
                     if (!success) {
-                        return new PageFault(vaddr, true, mode, true, false);
+                        return std::make_shared<PageFault>(vaddr, true, mode,
+                                                           true, false);
                     } else {
                         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                         DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
@@ -383,12 +385,14 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 // The page must have been present to get into the TLB in
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
-                return new PageFault(vaddr, true, mode, inUser, false);
+                return std::make_shared<PageFault>(vaddr, true, mode, inUser,
+                                                   false);
             }
             if (storeCheck && badWrite) {
                 // This would fault if this were a write, so return a page
                 // fault that reflects that happening.
-                return new PageFault(vaddr, true, Write, inUser, false);
+                return std::make_shared<PageFault>(vaddr, true, Write, inUser,
+                                                   false);
             }
 
             Addr paddr = entry->paddr | (vaddr & mask(entry->logBytes));

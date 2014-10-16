@@ -282,7 +282,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     if (req->getVaddr() & 0x3) {
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", req->getVaddr(),
                 req->getSize());
-        return new AlignmentFault();
+        return std::make_shared<AlignmentFault>();
     }
 
      Process * p = tc->getProcessPtr();

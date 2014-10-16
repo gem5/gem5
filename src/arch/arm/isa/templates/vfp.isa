@@ -48,11 +48,13 @@ let {{
         if (trapEnCheck) {
             CPSR cpsrEnCheck = Cpsr;
             if (cpsrEnCheck.mode == MODE_HYP) {
-                return new UndefinedInstruction(machInst, issEnCheck,
+                return std::make_shared<UndefinedInstruction>(
+                                                machInst, issEnCheck,
                                                 EC_TRAPPED_HCPTR, mnemonic);
             } else {
                 if (!inSecureState(Scr, Cpsr)) {
-                    return new HypervisorTrap(machInst, issEnCheck,
+                    return std::make_shared<HypervisorTrap>(
+                                              machInst, issEnCheck,
                                               EC_TRAPPED_HCPTR);
                 }
             }
@@ -63,20 +65,20 @@ let {{
         CPSR cpsrEnCheck = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsrEnCheck.el;
         if (!vfpNeon64Enabled(Cpacr64, el))
-             return new SupervisorTrap(machInst, 0x1E00000,
+             return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
                                        EC_TRAPPED_SIMD_FP);
 
         if (ArmSystem::haveVirtualization(xc->tcBase()) && el <= EL2) {
             HCPTR cptrEnCheck = xc->tcBase()->readMiscReg(MISCREG_CPTR_EL2);
             if (cptrEnCheck.tfp)
-                return new HypervisorTrap(machInst, 0x1E00000,
+                return std::make_shared<HypervisorTrap>(machInst, 0x1E00000,
                                           EC_TRAPPED_SIMD_FP);
         }
 
         if (ArmSystem::haveSecurity(xc->tcBase())) {
             HCPTR cptrEnCheck = xc->tcBase()->readMiscReg(MISCREG_CPTR_EL3);
             if (cptrEnCheck.tfp)
-                return new SecureMonitorTrap(machInst, 0x1E00000,
+                return std::make_shared<SecureMonitorTrap>(machInst, 0x1E00000,
                                              EC_TRAPPED_SIMD_FP);
         }
     '''
@@ -95,11 +97,13 @@ let {{
         if (trapEnCheck) {
             CPSR cpsrEnCheck = Cpsr;
             if (cpsrEnCheck.mode == MODE_HYP) {
-                return new UndefinedInstruction(machInst, issEnCheck,
+                return std::make_shared<UndefinedInstruction>(
+                                                machInst, issEnCheck,
                                                 EC_TRAPPED_HCPTR, mnemonic);
             } else {
                 if (!inSecureState(Scr, Cpsr)) {
-                    return new HypervisorTrap(machInst, issEnCheck,
+                    return std::make_shared<HypervisorTrap>(
+                                              machInst, issEnCheck,
                                               EC_TRAPPED_HCPTR);
                 }
             }
@@ -121,11 +125,13 @@ let {{
         if (trapEnCheck) {
             CPSR cpsrEnCheck = Cpsr;
             if (cpsrEnCheck.mode == MODE_HYP) {
-                return new UndefinedInstruction(machInst, issEnCheck,
+                return std::make_shared<UndefinedInstruction>(
+                                                machInst, issEnCheck,
                                                 EC_TRAPPED_HCPTR, mnemonic);
             } else {
                 if (!inSecureState(Scr, Cpsr)) {
-                    return new HypervisorTrap(machInst, issEnCheck,
+                    return std::make_shared<HypervisorTrap>(
+                                              machInst, issEnCheck,
                                               EC_TRAPPED_HCPTR);
                 }
             }
@@ -141,11 +147,13 @@ let {{
         if (trapEnCheck) {
             CPSR cpsrEnCheck = Cpsr;
             if (cpsrEnCheck.mode == MODE_HYP) {
-                return new UndefinedInstruction(machInst, issEnCheck,
+                return std::make_shared<UndefinedInstruction>(
+                                                machInst, issEnCheck,
                                                 EC_TRAPPED_HCPTR, mnemonic);
             } else {
                 if (!inSecureState(Scr, Cpsr)) {
-                    return new HypervisorTrap(machInst, issEnCheck,
+                    return std::make_shared<HypervisorTrap>(
+                                              machInst, issEnCheck,
                                               EC_TRAPPED_HCPTR);
                 }
             }

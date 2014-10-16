@@ -256,7 +256,7 @@ skipFunction(ThreadContext *tc)
 void
 initCPU(ThreadContext *tc, int cpuId)
 {
-    static Fault por = new PowerOnReset();
+    static Fault por = std::make_shared<PowerOnReset>();
     if (cpuId == 0)
         por->invoke(tc);
 }

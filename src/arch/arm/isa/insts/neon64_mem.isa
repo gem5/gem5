@@ -49,7 +49,7 @@ let {{
         SPAlignmentCheckCodeNeon = '''
             if (baseIsSP && bits(XURa, 3, 0) &&
                 SPAlignmentCheckEnabled(xc->tcBase())) {
-                return new SPAlignmentFault();
+                return std::make_shared<SPAlignmentFault>();
             }
         '''
         eaCode = SPAlignmentCheckCodeNeon + '''

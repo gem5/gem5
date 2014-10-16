@@ -37,6 +37,7 @@
  * Authors: Ali Saidi
  */
 
+#include <memory>
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
@@ -59,7 +60,7 @@ initCPU(ThreadContext *tc, int cpuId)
 
     // FPEXC.EN = 0
 
-    static Fault reset = new Reset;
+    static Fault reset = std::make_shared<Reset>();
     reset->invoke(tc);
 }
 

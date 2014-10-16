@@ -176,7 +176,8 @@ output exec {{
     FailUnimplemented::execute(CPU_EXEC_CONTEXT *xc,
                                Trace::InstRecord *traceData) const
     {
-        return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
 
     Fault
@@ -196,7 +197,8 @@ output exec {{
     FlushPipeInst::execute(CPU_EXEC_CONTEXT *xc,
                            Trace::InstRecord *traceData) const
     {
-        return new FlushPipe();
+        Fault fault = std::make_shared<FlushPipe>();
+        return fault;
     }
 }};
 

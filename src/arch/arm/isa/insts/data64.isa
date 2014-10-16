@@ -294,28 +294,33 @@ let {{
                 flat_idx == MISCREG_DC_CVAC_Xt ||
                 flat_idx == MISCREG_DC_CIVAC_Xt
                 )
-                return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64,
+                return std::make_shared<UndefinedInstruction>(
+                                    machInst, 0, EC_TRAPPED_MSR_MRS_64,
                                     mnemonic);
-            return new UndefinedInstruction(machInst, false, mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         }
 
         // Check for traps to supervisor (FP/SIMD regs)
         if (el <= EL1 && msrMrs64TrapToSup(flat_idx, el, Cpacr64))
-            return new SupervisorTrap(machInst, 0x1E00000, EC_TRAPPED_SIMD_FP);
+            return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
+                                                    EC_TRAPPED_SIMD_FP);
 
         bool is_vfp_neon = false;
 
         // Check for traps to hypervisor
         if ((ArmSystem::haveVirtualization(xc->tcBase()) && el <= EL2) &&
             msrMrs64TrapToHyp(flat_idx, %s, CptrEl264, Hcr64, &is_vfp_neon)) {
-            return new HypervisorTrap(machInst, is_vfp_neon ? 0x1E00000 : imm,
+            return std::make_shared<HypervisorTrap>(
+                machInst, is_vfp_neon ? 0x1E00000 : imm,
                 is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
         }
 
         // Check for traps to secure monitor
         if ((ArmSystem::haveSecurity(xc->tcBase()) && el <= EL3) &&
             msrMrs64TrapToMon(flat_idx, CptrEl364, el, &is_vfp_neon)) {
-            return new SecureMonitorTrap(machInst,
+            return std::make_shared<SecureMonitorTrap>(
+                machInst,
                 is_vfp_neon ? 0x1E00000 : imm,
                 is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
         }
@@ -388,7 +393,8 @@ let {{
         if (!canWriteAArch64SysReg(
                 (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
                 Scr64, Cpsr, xc->tcBase())) {
-            return new UndefinedInstruction(machInst, false, mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         }
         MiscDest_ud = imm;
     ''', optArgs = ["IsSerializeAfter", "IsNonSpeculative"])
@@ -397,7 +403,8 @@ let {{
         if (!canWriteAArch64SysReg(
                 (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
                 Scr64, Cpsr, xc->tcBase())) {
-            return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64,
+            return std::make_shared<UndefinedInstruction>(
+                            machInst, 0, EC_TRAPPED_MSR_MRS_64,
                             mnemonic);
         }
         CPSR cpsr = Cpsr;
@@ -409,7 +416,8 @@ let {{
         if (!canWriteAArch64SysReg(
                 (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
                 Scr64, Cpsr, xc->tcBase())) {
-            return new UndefinedInstruction(machInst, 0, EC_TRAPPED_MSR_MRS_64,
+            return std::make_shared<UndefinedInstruction>(
+                                machInst, 0, EC_TRAPPED_MSR_MRS_64,
                                 mnemonic);
         }
         CPSR cpsr = Cpsr;

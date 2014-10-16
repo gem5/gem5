@@ -64,7 +64,6 @@
 #include "cpu/translation.hh"
 #include "mem/packet.hh"
 #include "sim/byteswap.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/system.hh"
 #include "sim/tlb.hh"
 

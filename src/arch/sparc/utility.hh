@@ -38,7 +38,6 @@
 #include "base/misc.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/full_system.hh"
 
 namespace SparcISA

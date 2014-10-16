@@ -1372,7 +1372,8 @@ let {{
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-            fault = new UndefinedInstruction(machInst, false, mnemonic);
+            fault = std::make_shared<UndefinedInstruction>(machInst, false,
+                                                           mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = gtoh(srcReg1.elements[i]);
@@ -1423,7 +1424,8 @@ let {{
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-            fault = new UndefinedInstruction(machInst, false, mnemonic);
+            fault = std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = gtoh(srcReg1.elements[i]);
@@ -1472,7 +1474,8 @@ let {{
             readDestCode = 'destReg = destRegs[i];'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-            fault = new UndefinedInstruction(machInst, false, mnemonic);
+            fault = std::make_shared<UndefinedInstruction>(machInst, false,
+                                                           mnemonic);
         } else {
             for (unsigned i = 0; i < rCount; i++) {
                 FloatReg srcReg1 = srcRegs1[i];
@@ -3808,7 +3811,9 @@ let {{
             } else {
                 index -= eCount;
                 if (index >= eCount) {
-                    fault = new UndefinedInstruction(machInst, false, mnemonic);
+                    fault = std::make_shared<UndefinedInstruction>(machInst,
+                                                                   false,
+                                                                   mnemonic);
                 } else {
                     destReg.elements[i] = srcReg2.elements[index];
                 }

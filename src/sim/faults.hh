@@ -32,10 +32,8 @@
 #ifndef __FAULTS_HH__
 #define __FAULTS_HH__
 
-#include "base/refcnt.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
-#include "sim/fault_fwd.hh"
 #include "sim/stats.hh"
 
 class ThreadContext;
@@ -50,7 +48,7 @@ typedef Stats::Scalar FaultStat;
 // all faults returned using the Fault type) will use the
 // generic FaultBase name.
 
-class FaultBase : public RefCounted
+class FaultBase
 {
   public:
     virtual FaultName name() const = 0;

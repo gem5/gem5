@@ -498,7 +498,7 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
                         pkt->getAddr(), ld_inst->seqNum);
 
                 // Mark the load for re-execution
-                ld_inst->fault = new ReExec;
+                ld_inst->fault = std::make_shared<ReExec>();
             } else {
                 DPRINTF(LSQUnit, "HitExternal Snoop for addr %#x [sn:%lli]\n",
                         pkt->getAddr(), ld_inst->seqNum);
@@ -558,10 +558,10 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
 
                         ++lsqMemOrderViolation;
 
-                        return new GenericISA::M5PanicFault(
-                                "Detected fault with inst [sn:%lli] and "
-                                "[sn:%lli] at address %#x\n",
-                                inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
+                        return std::make_shared<GenericISA::M5PanicFault>(
+                            "Detected fault with inst [sn:%lli] and "
+                            "[sn:%lli] at address %#x\n",
+                            inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
                     }
                 }
 
@@ -585,9 +585,10 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
 
                 ++lsqMemOrderViolation;
 
-                return new GenericISA::M5PanicFault("Detected fault with "
-                        "inst [sn:%lli] and [sn:%lli] at address %#x\n",
-                        inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
+                return std::make_shared<GenericISA::M5PanicFault>(
+                    "Detected fault with "
+                    "inst [sn:%lli] and [sn:%lli] at address %#x\n",
+                    inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
             }
         }
 

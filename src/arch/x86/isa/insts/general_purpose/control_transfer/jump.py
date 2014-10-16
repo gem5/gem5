@@ -115,7 +115,7 @@ def rom
     # t1 has the offset and t2 has the new selector.
     # This is intended to run in protected mode.
     andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
-    fault "new GeneralProtection(0)", flags=(CEZF,)
+    fault "std::make_shared<GeneralProtection>(0)", flags=(CEZF,)
     andi t3, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
     br rom_local_label("farJmpGlobalDescriptor"), flags=(CEZF,)

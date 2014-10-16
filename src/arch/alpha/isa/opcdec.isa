@@ -69,7 +69,7 @@ output exec {{
     OpcdecFault::execute(CPU_EXEC_CONTEXT *xc,
                      Trace::InstRecord *traceData) const
     {
-        return new UnimplementedOpcodeFault;
+        return std::make_shared<UnimplementedOpcodeFault>();
     }
 }};
 

@@ -629,7 +629,7 @@ let {{
             uint64_t dividend = remainder;
             //Do the division.
             if (divisor == 0) {
-                fault = new DivideByZero;
+                fault = std::make_shared<DivideByZero>();
             } else {
                 divide(dividend, divisor, quotient, remainder);
                 //Record the final results.
@@ -652,7 +652,7 @@ let {{
             //If we overshot, do nothing. This lets us unrool division loops a
             //little.
             if (divisor == 0) {
-                fault = new DivideByZero;
+                fault = std::make_shared<DivideByZero>();
             } else if (remaining) {
                 if (divisor & (ULL(1) << 63)) {
                     while (remaining && !(dividend & (ULL(1) << 63))) {
@@ -1303,9 +1303,9 @@ let {{
             CR4 cr4 = CR4Op;
             DR7 dr7 = DR7Op;
             if ((cr4.de == 1 && (src1 == 4 || src1 == 5)) || src1 >= 8) {
-                fault = new InvalidOpcode();
+                fault = std::make_shared<InvalidOpcode>();
             } else if (dr7.gd) {
-                fault = new DebugException();
+                fault = std::make_shared<DebugException>();
             } else {
                 %s
             }
@@ -1321,12 +1321,12 @@ let {{
             CR4 cr4 = CR4Op;
             DR7 dr7 = DR7Op;
             if ((cr4.de == 1 && (dest == 4 || dest == 5)) || dest >= 8) {
-                fault = new InvalidOpcode();
+                fault = std::make_shared<InvalidOpcode>();
             } else if ((dest == 6 || dest == 7) && bits(psrc1, 63, 32) &&
                     machInst.mode.mode == LongMode) {
-                fault = new GeneralProtection(0);
+                fault = std::make_shared<GeneralProtection>(0);
             } else if (dr7.gd) {
-                fault = new DebugException();
+                fault = std::make_shared<DebugException>();
             } else {
                 DebugDest = psrc1;
             }
@@ -1338,7 +1338,7 @@ let {{
                     src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         rdcrCode = '''
             if (src1 == 1 || (src1 > 4 && src1 < 8) || (src1 > 8)) {
-                fault = new InvalidOpcode();
+                fault = std::make_shared<InvalidOpcode>();
             } else {
                 %s
             }
@@ -1352,7 +1352,7 @@ let {{
                     src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
-                fault = new InvalidOpcode();
+                fault = std::make_shared<InvalidOpcode>();
             } else {
                 // There are *s in the line below so it doesn't confuse the
                 // parser. They may be unnecessary.
@@ -1370,7 +1370,7 @@ let {{
                                 (!cr0.pe && cr0.pg) ||
                                 (!cr0.cd && cr0.nw) ||
                                 (cr0.pg && efer.lme && !oldCr4.pae))
-                            fault = new GeneralProtection(0);
+                            fault = std::make_shared<GeneralProtection>(0);
                     }
                     break;
                   case 2:
@@ -1383,16 +1383,16 @@ let {{
                         // PAE can't be disabled in long mode.
                         if (bits(newVal, 63, 11) ||
                                 (machInst.mode.mode == LongMode && !cr4.pae))
-                            fault = new GeneralProtection(0);
+                            fault = std::make_shared<GeneralProtection>(0);
                     }
                     break;
                   case 8:
                     {
                         if (bits(newVal, 63, 4))
-                            fault = new GeneralProtection(0);
+                            fault = std::make_shared<GeneralProtection>(0);
                     }
                   default:
-                    fault = new GenericISA::M5PanicFault(
+                    fault = std::make_shared<GenericISA::M5PanicFault>(
                             "Unrecognized control register %d.\\n", dest);
                 }
                 ControlDest = newVal;
@@ -1476,19 +1476,20 @@ let {{
               case SegCSCheck:
                 // Make sure it's the right type
                 if (desc.s == 0 || desc.type.codeOrData != 1) {
-                    fault = new GeneralProtection(0);
+                    fault = std::make_shared<GeneralProtection>(0);
                 } else if (m5reg.cpl != desc.dpl) {
-                    fault = new GeneralProtection(0);
+                    fault = std::make_shared<GeneralProtection>(0);
                 }
                 break;
               case SegCallGateCheck:
-                fault = new GenericISA::M5PanicFault("CS checks for far "
+                fault = std::make_shared<GenericISA::M5PanicFault>(
+                        "CS checks for far "
                         "calls/jumps through call gates not implemented.\\n");
                 break;
               case SegSoftIntGateCheck:
                 // Check permissions.
                 if (desc.dpl < m5reg.cpl) {
-                    fault = new GeneralProtection(selector);
+                    fault = std::make_shared<GeneralProtection>(selector);
                     break;
                 }
                 // Fall through on purpose
@@ -1496,22 +1497,22 @@ let {{
                 // Make sure the gate's the right type.
                 if ((m5reg.mode == LongMode && (desc.type & 0xe) != 0xe) ||
                         ((desc.type & 0x6) != 0x6)) {
-                    fault = new GeneralProtection(0);
+                    fault = std::make_shared<GeneralProtection>(0);
                 }
                 break;
               case SegSSCheck:
                 if (selector.si || selector.ti) {
                     if (!desc.p) {
-                        fault = new StackFault(selector);
+                        fault = std::make_shared<StackFault>(selector);
                     } else if (!(desc.s == 1 && desc.type.codeOrData == 0 &&
                                 desc.type.w) ||
                             (desc.dpl != m5reg.cpl) ||
                             (selector.rpl != m5reg.cpl)) {
-                        fault = new GeneralProtection(selector);
+                        fault = std::make_shared<GeneralProtection>(selector);
                     }
                 } else if (m5reg.submode != SixtyFourBitMode ||
                         m5reg.cpl == 3) {
-                    fault = new GeneralProtection(selector);
+                    fault = std::make_shared<GeneralProtection>(selector);
                 }
                 break;
               case SegIretCheck:
@@ -1521,50 +1522,51 @@ let {{
                             !(desc.s == 1 && desc.type.codeOrData == 1) ||
                             (!desc.type.c && desc.dpl != selector.rpl) ||
                             (desc.type.c && desc.dpl > selector.rpl)) {
-                        fault = new GeneralProtection(selector);
+                        fault = std::make_shared<GeneralProtection>(selector);
                     } else if (!desc.p) {
-                        fault = new SegmentNotPresent(selector);
+                        fault = std::make_shared<SegmentNotPresent>(selector);
                     }
                     break;
                 }
               case SegIntCSCheck:
                 if (m5reg.mode == LongMode) {
                     if (desc.l != 1 || desc.d != 0) {
-                        fault = new GeneralProtection(selector);
+                        fault = std::make_shared<GeneralProtection>(selector);
                     }
                 } else {
-                    fault = new GenericISA::M5PanicFault("Interrupt CS "
+                    fault = std::make_shared<GenericISA::M5PanicFault>(
+                            "Interrupt CS "
                             "checks not implemented in legacy mode.\\n");
                 }
                 break;
               case SegTRCheck:
                 if (!selector.si || selector.ti) {
-                    fault = new GeneralProtection(selector);
+                    fault = std::make_shared<GeneralProtection>(selector);
                 }
                 break;
               case SegTSSCheck:
                 if (!desc.p) {
-                    fault = new SegmentNotPresent(selector);
+                    fault = std::make_shared<SegmentNotPresent>(selector);
                 } else if (!(desc.type == 0x9 ||
                         (desc.type == 1 &&
                          m5reg.mode != LongMode))) {
-                    fault = new GeneralProtection(selector);
+                    fault = std::make_shared<GeneralProtection>(selector);
                 }
                 break;
               case SegInGDTCheck:
                 if (selector.ti) {
-                    fault = new GeneralProtection(selector);
+                    fault = std::make_shared<GeneralProtection>(selector);
                 }
                 break;
               case SegLDTCheck:
                 if (!desc.p) {
-                    fault = new SegmentNotPresent(selector);
+                    fault = std::make_shared<SegmentNotPresent>(selector);
                 } else if (desc.type != 0x2) {
-                    fault = new GeneralProtection(selector);
+                    fault = std::make_shared<GeneralProtection>(selector);
                 }
                 break;
               default:
-                fault = new GenericISA::M5PanicFault(
+                fault = std::make_shared<GenericISA::M5PanicFault>(
                         "Undefined segment check type.\\n");
             }
         '''
@@ -1598,7 +1600,7 @@ let {{
                 replaceBits(target, 31, 16, bits(desc, 63, 48));
                 break;
               default:
-                fault = new GenericISA::M5PanicFault(
+                fault = std::make_shared<GenericISA::M5PanicFault>(
                         "Wrdh used with wrong descriptor type!\\n");
             }
             DestReg = target;
@@ -1629,7 +1631,7 @@ let {{
             while (true) {
                 if (selector.si || selector.ti) {
                     if (!desc.p) {
-                        fault = new GenericISA::M5PanicFault(
+                        fault = std::make_shared<GenericISA::M5PanicFault>(
                                 "Segment not present.\\n");
                         break;
                     }
@@ -1646,7 +1648,7 @@ let {{
                     if (!desc.s) {
                         // The expand down bit happens to be set for gates.
                         if (desc.type.e) {
-                            fault = new GenericISA::M5PanicFault(
+                            fault = std::make_shared<GenericISA::M5PanicFault>(
                                     "Gate descriptor encountered.\\n");
                             break;
                         }

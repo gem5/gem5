@@ -40,7 +40,7 @@
 let {{
 
     svcCode = '''
-    fault = new SupervisorCall(machInst, imm);
+    fault = std::make_shared<SupervisorCall>(machInst, imm);
     '''
 
     svcIop = InstObjParams("svc", "Svc", "ImmOp",
@@ -59,12 +59,13 @@ let {{
     if ((cpsr.mode != MODE_USER) && FullSystem) {
         if (ArmSystem::haveVirtualization(xc->tcBase()) &&
             !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP) && hcr.tsc) {
-            fault = new HypervisorTrap(machInst, 0, EC_SMC_TO_HYP);
+            fault = std::make_shared<HypervisorTrap>(machInst, 0,
+                                                     EC_SMC_TO_HYP);
         } else {
             if (scr.scd) {
                 fault = disabledFault();
             } else {
-                fault = new SecureMonitorCall(machInst);
+                fault = std::make_shared<SecureMonitorCall>(machInst);
             }
         }
     } else {
@@ -90,7 +91,7 @@ let {{
         (ArmSystem::haveSecurity(xc->tcBase()) && (!scr.ns || !scr.hce))) {
         fault = disabledFault();
     } else {
-        fault = new HypervisorCall(machInst, imm);
+        fault = std::make_shared<HypervisorCall>(machInst, imm);
     }
     '''
 
@@ -179,7 +180,8 @@ let {{
                 Dest = xc->readMiscReg(regIdx);
             }
         } else {
-            return new UndefinedInstruction(machInst, false, mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         }
     '''
     mrsBankedRegIop = InstObjParams("mrs", "MrsBankedReg", "MrsOp",
@@ -210,7 +212,8 @@ let {{
                 xc->setMiscReg(regIdx, Op1);
             }
         } else {
-            return new UndefinedInstruction(machInst, false, mnemonic);
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          mnemonic);
         }
     '''
     msrBankedRegIop = InstObjParams("msr", "MsrBankedReg", "MsrRegOp",
@@ -618,7 +621,7 @@ let {{
     decoder_output += RegRegRegRegOpConstructor.subst(usada8Iop)
     exec_output += PredOpExecute.subst(usada8Iop)
 
-    bkptCode = 'return new PrefetchAbort(PC, ArmFault::DebugEvent);\n'
+    bkptCode = 'return std::make_shared<PrefetchAbort>(PC, ArmFault::DebugEvent);\n'
     bkptIop = InstObjParams("bkpt", "BkptInst", "PredOp", bkptCode)
     header_output += BasicDeclare.subst(bkptIop)
     decoder_output += BasicConstructor.subst(bkptIop)
@@ -650,15 +653,18 @@ let {{
         PseudoInst::quiesceSkip(tc);
     } else if (cpsr.el == EL0 && !sctlr.ntwe) {
         PseudoInst::quiesceSkip(tc);
-        fault = new SupervisorTrap(machInst, 0x1E00001, EC_TRAPPED_WFI_WFE);
+        fault = std::make_shared<SupervisorTrap>(machInst, 0x1E00001,
+                                                 EC_TRAPPED_WFI_WFE);
     } else if (ArmSystem::haveVirtualization(tc) &&
                !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP) &&
                hcr.twe) {
         PseudoInst::quiesceSkip(tc);
-        fault = new HypervisorTrap(machInst, 0x1E00001, EC_TRAPPED_WFI_WFE);
+        fault = std::make_shared<HypervisorTrap>(machInst, 0x1E00001,
+                                                 EC_TRAPPED_WFI_WFE);
     } else if (ArmSystem::haveSecurity(tc) && cpsr.el != EL3 && scr.twe) {
         PseudoInst::quiesceSkip(tc);
-        fault = new SecureMonitorTrap(machInst, 0x1E00001, EC_TRAPPED_WFI_WFE);
+        fault = std::make_shared<SecureMonitorTrap>(machInst, 0x1E00001,
+                                                    EC_TRAPPED_WFI_WFE);
     } else {
         PseudoInst::quiesce(tc);
     }
@@ -691,14 +697,17 @@ let {{
         PseudoInst::quiesceSkip(tc);
     } else if (cpsr.el == EL0 && !sctlr.ntwi) {
         PseudoInst::quiesceSkip(tc);
-        fault = new SupervisorTrap(machInst, 0x1E00000, EC_TRAPPED_WFI_WFE);
+        fault = std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
+                                                 EC_TRAPPED_WFI_WFE);
     } else if (ArmSystem::haveVirtualization(tc) && hcr.twi &&
                (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr)) {
         PseudoInst::quiesceSkip(tc);
-        fault = new HypervisorTrap(machInst, 0x1E00000, EC_TRAPPED_WFI_WFE);
+        fault = std::make_shared<HypervisorTrap>(machInst, 0x1E00000,
+                                                 EC_TRAPPED_WFI_WFE);
     } else if (ArmSystem::haveSecurity(tc) && cpsr.el != EL3 && scr.twi) {
         PseudoInst::quiesceSkip(tc);
-        fault = new SecureMonitorTrap(machInst, 0x1E00000, EC_TRAPPED_WFI_WFE);
+        fault = std::make_shared<SecureMonitorTrap>(machInst, 0x1E00000,
+                                                    EC_TRAPPED_WFI_WFE);
     } else {
         PseudoInst::quiesce(tc);
     }
@@ -750,7 +759,7 @@ let {{
     decoder_output += BasicConstructor.subst(itIop)
     exec_output += PredOpExecute.subst(itIop)
     unknownCode = '''
-    return new UndefinedInstruction(machInst, true);
+        return std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     unknownIop = InstObjParams("unknown", "Unknown", "UnknownOp", \
                                { "code": unknownCode,
@@ -804,11 +813,13 @@ let {{
     mrc14code = '''
     MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenMiscIndex(op1);
     if (!canReadCoprocReg(miscReg, Scr, Cpsr, xc->tcBase())) {
-            return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
     if (mcrMrc14TrapToHyp((const MiscRegIndex) op1, Hcr, Cpsr, Scr, Hdcr,
                           Hstr, Hcptr, imm)) {
-        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP14_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(machInst, imm,
+                                                EC_TRAPPED_CP14_MCR_MRC);
     }
     Dest = MiscOp1;
     '''
@@ -824,11 +835,13 @@ let {{
     mcr14code = '''
     MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest);
     if (!canWriteCoprocReg(miscReg, Scr, Cpsr, xc->tcBase())) {
-        return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
     if (mcrMrc14TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr,
                           Hstr, Hcptr, imm)) {
-        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP14_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(machInst, imm,
+                                                EC_TRAPPED_CP14_MCR_MRC);
     }
     MiscDest = Op1;
     '''
@@ -852,10 +865,12 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (!canRead && !(hypTrap && !inUserMode(Cpsr) && !inSecureState(Scr, Cpsr))) {
-        return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
     if (hypTrap) {
-        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(machInst, imm,
+                                                EC_TRAPPED_CP15_MCR_MRC);
     }
     Dest = MiscNsBankedOp1;
     '''
@@ -880,10 +895,12 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (!canWrite & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
-        return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
     if (hypTrap) {
-        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(machInst, imm,
+                                                EC_TRAPPED_CP15_MCR_MRC);
     }
     MiscNsBankedDest = Op1;
     '''
@@ -907,10 +924,12 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (!canRead && !(hypTrap && !inUserMode(Cpsr) && !inSecureState(Scr, Cpsr))) {
-        return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
     if (hypTrap) {
-        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCRR_MRRC);
+        return std::make_shared<HypervisorTrap>(machInst, imm,
+                                                EC_TRAPPED_CP15_MCRR_MRRC);
     }
     Dest = bits(MiscNsBankedOp164, 63, 32);
     Dest2 = bits(MiscNsBankedOp164, 31, 0);
@@ -934,10 +953,12 @@ let {{
     // the register is accessable, in other modes we trap if only if the register
     // IS accessable.
     if (!canWrite & !(hypTrap & !inUserMode(Cpsr) & !inSecureState(Scr, Cpsr))) {
-        return new UndefinedInstruction(machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
     if (hypTrap) {
-        return new HypervisorTrap(machInst, imm, EC_TRAPPED_CP15_MCRR_MRRC);
+        return std::make_shared<HypervisorTrap>(machInst, imm,
+                                                EC_TRAPPED_CP15_MCRR_MRRC);
     }
     MiscNsBankedDest64 = ((uint64_t) Op1 << 32) | Op2;
     '''
@@ -998,10 +1019,10 @@ let {{
         // If the barrier is due to a CP15 access check for hyp traps
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15ISB, Hcr, Cpsr, Scr,
             Hdcr, Hstr, Hcptr, imm)) {
-            return new HypervisorTrap(machInst, imm,
+            return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
-        fault = new FlushPipe;
+        fault = std::make_shared<FlushPipe>();
     '''
     isbIop = InstObjParams("isb", "Isb", "ImmOp",
                              {"code": isbCode,
@@ -1015,10 +1036,10 @@ let {{
         // If the barrier is due to a CP15 access check for hyp traps
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DSB, Hcr, Cpsr, Scr,
             Hdcr, Hstr, Hcptr, imm)) {
-            return new HypervisorTrap(machInst, imm,
+            return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
-        fault = new FlushPipe;
+        fault = std::make_shared<FlushPipe>();
     '''
     dsbIop = InstObjParams("dsb", "Dsb", "ImmOp",
                              {"code": dsbCode,
@@ -1032,7 +1053,7 @@ let {{
         // If the barrier is due to a CP15 access check for hyp traps
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DMB, Hcr, Cpsr, Scr,
             Hdcr, Hstr, Hcptr, imm)) {
-            return new HypervisorTrap(machInst, imm,
+            return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
     '''

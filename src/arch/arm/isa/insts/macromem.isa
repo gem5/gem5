@@ -620,7 +620,7 @@ let {{
                                             'MicroIntImmXOp', '''
         if (isSP((IntRegIndex) urb) && bits(XURb, 3, 0) &&
             SPAlignmentCheckEnabled(xc->tcBase())) {
-            return new SPAlignmentFault();
+            return std::make_shared<SPAlignmentFault>();
         }
         XURa = XURb + imm;
     ''', ['IsMicroop'])

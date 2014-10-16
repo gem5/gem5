@@ -244,22 +244,23 @@ class Interrupts : public SimObject
 
 
         if (interrupts[INT_IRQ] && take_irq)
-            return new Interrupt;
+            return std::make_shared<Interrupt>();
         if ((interrupts[INT_VIRT_IRQ] || hcr.vi) && allowVIrq)
-            return new VirtualInterrupt;
+            return std::make_shared<VirtualInterrupt>();
         if (interrupts[INT_FIQ] && take_fiq)
-            return new FastInterrupt;
+            return std::make_shared<FastInterrupt>();
         if ((interrupts[INT_VIRT_FIQ] || hcr.vf) && allowVFiq)
-            return new VirtualFastInterrupt;
+            return std::make_shared<VirtualFastInterrupt>();
         if (interrupts[INT_ABT] && take_ea)
-            return new SystemError;
+            return std::make_shared<SystemError>();
         if (hcr.va && allowVAbort)
-            return new VirtualDataAbort(0, TlbEntry::DomainType::NoAccess, false,
-                                 ArmFault::AsynchronousExternalAbort);
+            return std::make_shared<VirtualDataAbort>(
+                0, TlbEntry::DomainType::NoAccess, false,
+                ArmFault::AsynchronousExternalAbort);
         if (interrupts[INT_RST])
-            return new Reset;
+            return std::make_shared<Reset>();
         if (interrupts[INT_SEV])
-            return new ArmSev;
+            return std::make_shared<ArmSev>();
 
         panic("intStatus and interrupts not in sync\n");
     }

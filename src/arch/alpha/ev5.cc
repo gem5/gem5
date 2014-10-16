@@ -477,7 +477,7 @@ SimpleThread::hwrei()
 {
     PCState pc = pcState();
     if (!(pc.pc() & 0x3))
-        return new UnimplementedOpcodeFault;
+        return std::make_shared<UnimplementedOpcodeFault>();
 
     pc.npc(readMiscRegNoEffect(IPR_EXC_ADDR));
     pcState(pc);

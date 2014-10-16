@@ -115,7 +115,9 @@ let {{
                     newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL1);
                     break;
                   default:
-                    return new UndefinedInstruction(machInst, false, mnemonic);
+                    return std::make_shared<UndefinedInstruction>(machInst,
+                                                                  false,
+                                                                  mnemonic);
                     break;
                 }
                 if (spsr.width && (newPc & mask(2))) {

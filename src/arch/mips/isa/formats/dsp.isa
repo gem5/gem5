@@ -79,12 +79,12 @@ def template DspExecute {{
                     }
                     else
                     {
-                        fault = new DspStateDisabledFault();
+                        fault = std::make_shared<DspStateDisabledFault>();
                     }
                 }
                 else
                 {
-                    fault = new ReservedInstructionFault();
+                    fault = std::make_shared<ReservedInstructionFault>();
                 }
 
                 if(fault == NoFault)
@@ -112,12 +112,12 @@ def template DspHiLoExecute {{
                     }
                     else
                     {
-                        fault = new DspStateDisabledFault();
+                        fault = std::make_shared<DspStateDisabledFault>();
                     }
                 }
                 else
                 {
-                    fault = new ReservedInstructionFault();
+                    fault = std::make_shared<ReservedInstructionFault>();
                 }
 
                 if(fault == NoFault)

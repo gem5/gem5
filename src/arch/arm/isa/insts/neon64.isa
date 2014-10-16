@@ -1073,7 +1073,8 @@ let {{
                 } else {
                     index -= eCount;
                     if (index >= eCount) {
-                        fault = new UndefinedInstruction(machInst, false, mnemonic);
+                        fault = std::make_shared<UndefinedInstruction>(
+                                      machInst, false, mnemonic);
                     } else {
                         destReg.elements[i] = srcReg2.elements[index];
                     }

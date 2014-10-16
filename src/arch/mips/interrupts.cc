@@ -123,7 +123,7 @@ Interrupts::getInterrupt(ThreadContext * tc)
         if (status.im && cause.ip) {
             DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
                     (unsigned)status.im, (unsigned)cause.ip);
-            return new InterruptFault;
+            return std::make_shared<InterruptFault>();
         }
     }
 

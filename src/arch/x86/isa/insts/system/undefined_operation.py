@@ -38,6 +38,6 @@
 microcode = '''
 def macroop UD2
 {
-    fault "new InvalidOpcode()"
+    fault "std::make_shared<InvalidOpcode>()"
 };
 '''

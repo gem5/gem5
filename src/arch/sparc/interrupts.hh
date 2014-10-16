@@ -139,40 +139,40 @@ class Interrupts : public SimObject
             if (pstate.ie) {
                 if (interrupts[IT_HINTP]) {
                     // This will be cleaned by a HINTP write
-                    return new HstickMatch;
+                    return std::make_shared<HstickMatch>();
                 }
                 if (interrupts[IT_INT_VEC]) {
                     // this will be cleared by an ASI read (or write)
-                    return new InterruptVector;
+                    return std::make_shared<InterruptVector>();
                 }
             }
         } else {
             if (interrupts[IT_TRAP_LEVEL_ZERO]) {
                     // this is cleared by deasserting HPSTATE::tlz
-                    return new TrapLevelZero;
+                return std::make_shared<TrapLevelZero>();
             }
             // HStick matches always happen in priv mode (ie doesn't matter)
             if (interrupts[IT_HINTP]) {
-                return new HstickMatch;
+                return std::make_shared<HstickMatch>();
             }
             if (interrupts[IT_INT_VEC]) {
                 // this will be cleared by an ASI read (or write)
-                return new InterruptVector;
+                return std::make_shared<InterruptVector>();
             }
             if (pstate.ie) {
                 if (interrupts[IT_CPU_MONDO]) {
-                    return new CpuMondo;
+                    return std::make_shared<CpuMondo>();
                 }
                 if (interrupts[IT_DEV_MONDO]) {
-                    return new DevMondo;
+                    return std::make_shared<DevMondo>();
                 }
                 if (interrupts[IT_SOFT_INT]) {
                     int level = InterruptLevel(interrupts[IT_SOFT_INT]);
-                    return new InterruptLevelN(level);
+                    return std::make_shared<InterruptLevelN>(level);
                 }
 
                 if (interrupts[IT_RES_ERROR]) {
-                    return new ResumableError;
+                    return std::make_shared<ResumableError>();
                 }
             } // !hpriv && pstate.ie
         }  // !hpriv

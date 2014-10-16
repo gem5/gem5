@@ -38,6 +38,8 @@
  *          Giacomo Gabrielli
  */
 
+#include <memory>
+
 #include "arch/arm/faults.hh"
 #include "arch/arm/stage2_mmu.hh"
 #include "arch/arm/system.hh"
@@ -186,7 +188,7 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
         // this fault to re-execute the faulting instruction which should clean
         // up everything.
         if (currState->vaddr_tainted == _req->getVaddr()) {
-            return new ReExec;
+            return std::make_shared<ReExec>();
         }
     }
 
@@ -358,8 +360,9 @@ TableWalker::processWalkWrapper()
 
         if (currState->transState->squashed()) {
             // finish the translation which will delete the translation object
-            currState->transState->finish(new UnimpFault("Squashed Inst"),
-                    currState->req, currState->tc, currState->mode);
+            currState->transState->finish(
+                std::make_shared<UnimpFault>("Squashed Inst"),
+                currState->req, currState->tc, currState->mode);
         } else {
             // translate the request now that we know it will work
             tlb->translateTiming(currState->req, currState->tc,
@@ -406,15 +409,17 @@ TableWalker::processWalk()
         // Check if table walk is allowed when Security Extensions are enabled
         if (haveSecurity && currState->ttbcr.pd0) {
             if (currState->isFetch)
-                return new PrefetchAbort(currState->vaddr_tainted,
-                                         ArmFault::TranslationLL + L1,
-                                         isStage2,
-                                         ArmFault::VmsaTran);
+                return std::make_shared<PrefetchAbort>(
+                    currState->vaddr_tainted,
+                    ArmFault::TranslationLL + L1,
+                    isStage2,
+                    ArmFault::VmsaTran);
             else
-                return new DataAbort(currState->vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess, currState->isWrite,
-                                     ArmFault::TranslationLL + L1, isStage2,
-                                     ArmFault::VmsaTran);
+                return std::make_shared<DataAbort>(
+                    currState->vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess, currState->isWrite,
+                    ArmFault::TranslationLL + L1, isStage2,
+                    ArmFault::VmsaTran);
         }
         ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
             MISCREG_TTBR0, currState->tc, !currState->isSecure));
@@ -423,15 +428,17 @@ TableWalker::processWalk()
         // Check if table walk is allowed when Security Extensions are enabled
         if (haveSecurity && currState->ttbcr.pd1) {
             if (currState->isFetch)
-                return new PrefetchAbort(currState->vaddr_tainted,
-                                         ArmFault::TranslationLL + L1,
-                                         isStage2,
-                                         ArmFault::VmsaTran);
+                return std::make_shared<PrefetchAbort>(
+                    currState->vaddr_tainted,
+                    ArmFault::TranslationLL + L1,
+                    isStage2,
+                    ArmFault::VmsaTran);
             else
-                return new DataAbort(currState->vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess, currState->isWrite,
-                                     ArmFault::TranslationLL + L1, isStage2,
-                                     ArmFault::VmsaTran);
+                return std::make_shared<DataAbort>(
+                    currState->vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess, currState->isWrite,
+                    ArmFault::TranslationLL + L1, isStage2,
+                    ArmFault::VmsaTran);
         }
         ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
             MISCREG_TTBR1, currState->tc, !currState->isSecure));
@@ -527,17 +534,19 @@ TableWalker::processWalkLPAE()
             // Check if table walk is allowed
             if (currState->ttbcr.epd0) {
                 if (currState->isFetch)
-                    return new PrefetchAbort(currState->vaddr_tainted,
-                                             ArmFault::TranslationLL + L1,
-                                             isStage2,
-                                             ArmFault::LpaeTran);
+                    return std::make_shared<PrefetchAbort>(
+                        currState->vaddr_tainted,
+                        ArmFault::TranslationLL + L1,
+                        isStage2,
+                        ArmFault::LpaeTran);
                 else
-                    return new DataAbort(currState->vaddr_tainted,
-                                         TlbEntry::DomainType::NoAccess,
-                                         currState->isWrite,
-                                         ArmFault::TranslationLL + L1,
-                                         isStage2,
-                                         ArmFault::LpaeTran);
+                    return std::make_shared<DataAbort>(
+                        currState->vaddr_tainted,
+                        TlbEntry::DomainType::NoAccess,
+                        currState->isWrite,
+                        ArmFault::TranslationLL + L1,
+                        isStage2,
+                        ArmFault::LpaeTran);
             }
             ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
                 MISCREG_TTBR0, currState->tc, !currState->isSecure));
@@ -549,17 +558,19 @@ TableWalker::processWalkLPAE()
             // Check if table walk is allowed
             if (currState->ttbcr.epd1) {
                 if (currState->isFetch)
-                    return new PrefetchAbort(currState->vaddr_tainted,
-                                             ArmFault::TranslationLL + L1,
-                                             isStage2,
-                                             ArmFault::LpaeTran);
+                    return std::make_shared<PrefetchAbort>(
+                        currState->vaddr_tainted,
+                        ArmFault::TranslationLL + L1,
+                        isStage2,
+                        ArmFault::LpaeTran);
                 else
-                    return new DataAbort(currState->vaddr_tainted,
-                                         TlbEntry::DomainType::NoAccess,
-                                         currState->isWrite,
-                                         ArmFault::TranslationLL + L1,
-                                         isStage2,
-                                         ArmFault::LpaeTran);
+                    return std::make_shared<DataAbort>(
+                        currState->vaddr_tainted,
+                        TlbEntry::DomainType::NoAccess,
+                        currState->isWrite,
+                        ArmFault::TranslationLL + L1,
+                        isStage2,
+                        ArmFault::LpaeTran);
             }
             ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
                 MISCREG_TTBR1, currState->tc, !currState->isSecure));
@@ -569,15 +580,17 @@ TableWalker::processWalkLPAE()
         } else {
             // Out of boundaries -> translation fault
             if (currState->isFetch)
-                return new PrefetchAbort(currState->vaddr_tainted,
-                                         ArmFault::TranslationLL + L1,
-                                         isStage2,
-                                         ArmFault::LpaeTran);
+                return std::make_shared<PrefetchAbort>(
+                    currState->vaddr_tainted,
+                    ArmFault::TranslationLL + L1,
+                    isStage2,
+                    ArmFault::LpaeTran);
             else
-                return new DataAbort(currState->vaddr_tainted,
-                                     TlbEntry::DomainType::NoAccess,
-                                     currState->isWrite, ArmFault::TranslationLL + L1,
-                                     isStage2, ArmFault::LpaeTran);
+                return std::make_shared<DataAbort>(
+                    currState->vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess,
+                    currState->isWrite, ArmFault::TranslationLL + L1,
+                    isStage2, ArmFault::LpaeTran);
         }
 
     }
@@ -726,15 +739,17 @@ TableWalker::processWalkAArch64()
     if (fault) {
         Fault f;
         if (currState->isFetch)
-            f =  new PrefetchAbort(currState->vaddr_tainted,
-                                     ArmFault::TranslationLL + L0, isStage2,
-                                     ArmFault::LpaeTran);
+            f =  std::make_shared<PrefetchAbort>(
+                currState->vaddr_tainted,
+                ArmFault::TranslationLL + L0, isStage2,
+                ArmFault::LpaeTran);
         else
-            f = new DataAbort(currState->vaddr_tainted,
-                                 TlbEntry::DomainType::NoAccess,
-                                 currState->isWrite,
-                                 ArmFault::TranslationLL + L0,
-                                 isStage2, ArmFault::LpaeTran);
+            f = std::make_shared<DataAbort>(
+                currState->vaddr_tainted,
+                TlbEntry::DomainType::NoAccess,
+                currState->isWrite,
+                ArmFault::TranslationLL + L0,
+                isStage2, ArmFault::LpaeTran);
 
         if (currState->timing) {
             pending = false;
@@ -810,17 +825,19 @@ TableWalker::processWalkAArch64()
         DPRINTF(TLB, "Address size fault before any lookup\n");
         Fault f;
         if (currState->isFetch)
-            f = new PrefetchAbort(currState->vaddr_tainted,
-                                     ArmFault::AddressSizeLL + start_lookup_level,
-                                     isStage2,
-                                     ArmFault::LpaeTran);
+            f = std::make_shared<PrefetchAbort>(
+                currState->vaddr_tainted,
+                ArmFault::AddressSizeLL + start_lookup_level,
+                isStage2,
+                ArmFault::LpaeTran);
         else
-            f = new DataAbort(currState->vaddr_tainted,
-                                 TlbEntry::DomainType::NoAccess,
-                                 currState->isWrite,
-                                 ArmFault::AddressSizeLL + start_lookup_level,
-                                 isStage2,
-                                 ArmFault::LpaeTran);
+            f = std::make_shared<DataAbort>(
+                currState->vaddr_tainted,
+                TlbEntry::DomainType::NoAccess,
+                currState->isWrite,
+                ArmFault::AddressSizeLL + start_lookup_level,
+                isStage2,
+                ArmFault::LpaeTran);
 
 
         if (currState->timing) {
@@ -1318,17 +1335,19 @@ TableWalker::doL1Descriptor()
         DPRINTF(TLB, "L1 Descriptor Reserved/Ignore, causing fault\n");
         if (currState->isFetch)
             currState->fault =
-                new PrefetchAbort(currState->vaddr_tainted,
-                                  ArmFault::TranslationLL + L1,
-                                  isStage2,
-                                  ArmFault::VmsaTran);
+                std::make_shared<PrefetchAbort>(
+                    currState->vaddr_tainted,
+                    ArmFault::TranslationLL + L1,
+                    isStage2,
+                    ArmFault::VmsaTran);
         else
             currState->fault =
-                new DataAbort(currState->vaddr_tainted,
-                              TlbEntry::DomainType::NoAccess,
-                              currState->isWrite,
-                              ArmFault::TranslationLL + L1, isStage2,
-                              ArmFault::VmsaTran);
+                std::make_shared<DataAbort>(
+                    currState->vaddr_tainted,
+                    TlbEntry::DomainType::NoAccess,
+                    currState->isWrite,
+                    ArmFault::TranslationLL + L1, isStage2,
+                    ArmFault::VmsaTran);
         return;
       case L1Descriptor::Section:
         if (currState->sctlr.afe && bits(currState->l1Desc.ap(), 0) == 0) {
@@ -1337,12 +1356,13 @@ TableWalker::doL1Descriptor()
               * AccessFlag0
               */
 
-            currState->fault = new DataAbort(currState->vaddr_tainted,
-                                             currState->l1Desc.domain(),
-                                             currState->isWrite,
-                                             ArmFault::AccessFlagLL + L1,
-                                             isStage2,
-                                             ArmFault::VmsaTran);
+            currState->fault = std::make_shared<DataAbort>(
+                currState->vaddr_tainted,
+                currState->l1Desc.domain(),
+                currState->isWrite,
+                ArmFault::AccessFlagLL + L1,
+                isStage2,
+                ArmFault::VmsaTran);
         }
         if (currState->l1Desc.supersection()) {
             panic("Haven't implemented supersections\n");
@@ -1434,13 +1454,13 @@ TableWalker::doLongDescriptor()
                 currState->longDesc.lookupLevel,
                 ArmFault::TranslationLL + currState->longDesc.lookupLevel);
         if (currState->isFetch)
-            currState->fault = new PrefetchAbort(
+            currState->fault = std::make_shared<PrefetchAbort>(
                 currState->vaddr_tainted,
                 ArmFault::TranslationLL + currState->longDesc.lookupLevel,
                 isStage2,
                 ArmFault::LpaeTran);
         else
-            currState->fault = new DataAbort(
+            currState->fault = std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
                 currState->isWrite,
@@ -1470,14 +1490,14 @@ TableWalker::doLongDescriptor()
             }
             if (fault) {
                 if (currState->isFetch)
-                    currState->fault = new PrefetchAbort(
+                    currState->fault = std::make_shared<PrefetchAbort>(
                         currState->vaddr_tainted,
                         (aff ? ArmFault::AccessFlagLL : ArmFault::AddressSizeLL) +
                         currState->longDesc.lookupLevel,
                         isStage2,
                         ArmFault::LpaeTran);
                 else
-                    currState->fault = new DataAbort(
+                    currState->fault = std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
                         TlbEntry::DomainType::NoAccess, currState->isWrite,
                         (aff ? ArmFault::AccessFlagLL : ArmFault::AddressSizeLL) +
@@ -1519,14 +1539,14 @@ TableWalker::doLongDescriptor()
                 DPRINTF(TLB, "L%d descriptor causing Address Size Fault\n",
                         currState->longDesc.lookupLevel);
                 if (currState->isFetch)
-                    currState->fault = new PrefetchAbort(
+                    currState->fault = std::make_shared<PrefetchAbort>(
                         currState->vaddr_tainted,
                         ArmFault::AddressSizeLL
                         + currState->longDesc.lookupLevel,
                         isStage2,
                         ArmFault::LpaeTran);
                 else
-                    currState->fault = new DataAbort(
+                    currState->fault = std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
                         TlbEntry::DomainType::NoAccess, currState->isWrite,
                         ArmFault::AddressSizeLL
@@ -1607,17 +1627,17 @@ TableWalker::doL2Descriptor()
             currState->req = NULL;
         }
         if (currState->isFetch)
-            currState->fault =
-                new PrefetchAbort(currState->vaddr_tainted,
-                                  ArmFault::TranslationLL + L2,
-                                  isStage2,
-                                  ArmFault::VmsaTran);
+            currState->fault = std::make_shared<PrefetchAbort>(
+                    currState->vaddr_tainted,
+                    ArmFault::TranslationLL + L2,
+                    isStage2,
+                    ArmFault::VmsaTran);
         else
-            currState->fault =
-                new DataAbort(currState->vaddr_tainted, currState->l1Desc.domain(),
-                              currState->isWrite, ArmFault::TranslationLL + L2,
-                              isStage2,
-                              ArmFault::VmsaTran);
+            currState->fault = std::make_shared<DataAbort>(
+                currState->vaddr_tainted, currState->l1Desc.domain(),
+                currState->isWrite, ArmFault::TranslationLL + L2,
+                isStage2,
+                ArmFault::VmsaTran);
         return;
     }
 
@@ -1628,11 +1648,11 @@ TableWalker::doL2Descriptor()
          DPRINTF(TLB, "Generating access fault at L2, afe: %d, ap: %d\n",
                  currState->sctlr.afe, currState->l2Desc.ap());
 
-        currState->fault =
-            new DataAbort(currState->vaddr_tainted,
-                          TlbEntry::DomainType::NoAccess, currState->isWrite,
-                          ArmFault::AccessFlagLL + L2, isStage2,
-                          ArmFault::VmsaTran);
+        currState->fault = std::make_shared<DataAbort>(
+            currState->vaddr_tainted,
+            TlbEntry::DomainType::NoAccess, currState->isWrite,
+            ArmFault::AccessFlagLL + L2, isStage2,
+            ArmFault::VmsaTran);
     }
 
     insertTableEntry(currState->l2Desc, false);

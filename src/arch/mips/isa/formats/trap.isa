@@ -94,7 +94,7 @@ def format Trap(code, *flags) {{
 
         code ='bool cond;\n' + code
         code += 'if (cond) {\n'
-        code += 'fault = new TrapFault();\n};'
+        code += 'fault = std::make_shared<TrapFault>();\n};'
 
         iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
         header_output = BasicDeclare.subst(iop)
@@ -106,7 +106,7 @@ def format TrapImm(code, *flags) {{
 
         code ='bool cond;\n' + code
         code += 'if (cond) {\n'
-        code += 'fault = new TrapFault();\n};'
+        code += 'fault = std::make_shared<TrapFault>();\n};'
         iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)

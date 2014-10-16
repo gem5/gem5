@@ -32,6 +32,8 @@
 #ifndef __ARCH_ALPHA_INTERRUPT_HH__
 #define __ARCH_ALPHA_INTERRUPT_HH__
 
+#include <memory>
+
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "base/compiler.hh"
@@ -176,7 +178,7 @@ class Interrupts : public SimObject
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                     tc->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
 
-            return new InterruptFault;
+            return std::make_shared<InterruptFault>();
         } else {
             return NoFault;
         }

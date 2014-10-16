@@ -234,7 +234,7 @@ let {{
             break;
         }
         if (hypTrap) {
-            return new HypervisorTrap(machInst, imm,
+            return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP10_MRC_VMRS);
         }
     }

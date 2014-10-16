@@ -85,12 +85,12 @@ def macroop FSUBP_R
 
 def macroop FSUBP_M
 {
-    fault "new UnimpInstFault"
+    fault "std::make_shared<UnimpInstFault>()"
 };
 
 def macroop FSUBP_P
 {
-   fault "new UnimpInstFault"
+   fault "std::make_shared<UnimpInstFault>()"
 };
 
 # FISUB

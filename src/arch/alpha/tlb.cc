@@ -30,6 +30,7 @@
  *          Andrew Schultz
  */
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -220,7 +221,8 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
     if (req->getPaddr() & PAddrUncachedBit43) {
         // IPR memory space not implemented
         if (PAddrIprSpace(req->getPaddr())) {
-            return new UnimpFault("IPR memory space not implemented!");
+            return std::make_shared<UnimpFault>(
+                "IPR memory space not implemented!");
         } else {
             // mark request as uncacheable
             req->setFlags(Request::UNCACHEABLE);
@@ -233,7 +235,8 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
         // we don't have a ROM and we don't want to try to fetch from a device 
         // register as we destroy any data that is clear-on-read. 
         if (req->isUncacheable() && itb) 
-            return new UnimpFault("CPU trying to fetch from uncached I/O");
+            return std::make_shared<UnimpFault>(
+                "CPU trying to fetch from uncached I/O");
 
     }
     return NoFault;
@@ -387,7 +390,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->getVaddr())) {
             fetch_acv++;
-            return new ItbAcvFault(req->getVaddr());
+            return std::make_shared<ItbAcvFault>(req->getVaddr());
         }
 
 
@@ -398,7 +401,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
             if (ICM_CM(tc->readMiscRegNoEffect(IPR_ICM)) !=
                 mode_kernel) {
                 fetch_acv++;
-                return new ItbAcvFault(req->getVaddr());
+                return std::make_shared<ItbAcvFault>(req->getVaddr());
             }
 
             req->setPaddr(req->getVaddr() & PAddrImplMask);
@@ -416,7 +419,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
             if (!entry) {
                 fetch_misses++;
-                return new ItbPageFault(req->getVaddr());
+                return std::make_shared<ItbPageFault>(req->getVaddr());
             }
 
             req->setPaddr((entry->ppn << PageShift) +
@@ -428,7 +431,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
                   (1 << ICM_CM(tc->readMiscRegNoEffect(IPR_ICM))))) {
                 // instruction access fault
                 fetch_acv++;
-                return new ItbAcvFault(req->getVaddr());
+                return std::make_shared<ItbAcvFault>(req->getVaddr());
             }
 
             fetch_hits++;
@@ -437,7 +440,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
     // check that the physical address is ok (catch bad physical addresses)
     if (req->getPaddr() & ~PAddrImplMask) {
-        return new MachineCheckFault();
+        return std::make_shared<MachineCheckFault>();
     }
 
     return checkCacheability(req, true);
@@ -457,7 +460,9 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", req->getVaddr(),
                 req->getSize());
         uint64_t flags = write ? MM_STAT_WR_MASK : 0;
-        return new DtbAlignmentFault(req->getVaddr(), req->getFlags(), flags);
+        return std::make_shared<DtbAlignmentFault>(req->getVaddr(),
+                                                   req->getFlags(),
+                                                   flags);
     }
 
     if (PcPAL(req->getPC())) {
@@ -476,7 +481,9 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                 MM_STAT_BAD_VA_MASK |
                 MM_STAT_ACV_MASK;
-            return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
+            return std::make_shared<DtbPageFault>(req->getVaddr(),
+                                                  req->getFlags(),
+                                                  flags);
         }
 
         // Check for "superpage" mapping
@@ -488,8 +495,9 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 uint64_t flags = ((write ? MM_STAT_WR_MASK : 0) |
                                   MM_STAT_ACV_MASK);
 
-                return new DtbAcvFault(req->getVaddr(), req->getFlags(),
-                                       flags);
+                return std::make_shared<DtbAcvFault>(req->getVaddr(),
+                                                     req->getFlags(),
+                                                     flags);
             }
 
             req->setPaddr(req->getVaddr() & PAddrImplMask);
@@ -516,10 +524,12 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                     MM_STAT_DTB_MISS_MASK;
                 return (req->getFlags() & Request::VPTE) ?
-                    (Fault)(new PDtbMissFault(req->getVaddr(), req->getFlags(),
-                                              flags)) :
-                    (Fault)(new NDtbMissFault(req->getVaddr(), req->getFlags(),
-                                              flags));
+                    (Fault)(std::make_shared<PDtbMissFault>(req->getVaddr(),
+                                                            req->getFlags(),
+                                                            flags)) :
+                    (Fault)(std::make_shared<NDtbMissFault>(req->getVaddr(),
+                                                            req->getFlags(),
+                                                            flags));
             }
 
             req->setPaddr((entry->ppn << PageShift) +
@@ -532,28 +542,32 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                     uint64_t flags = MM_STAT_WR_MASK |
                         MM_STAT_ACV_MASK |
                         (entry->fonw ? MM_STAT_FONW_MASK : 0);
-                    return new DtbPageFault(req->getVaddr(), req->getFlags(),
-                                            flags);
+                    return std::make_shared<DtbPageFault>(req->getVaddr(),
+                                                          req->getFlags(),
+                                                          flags);
                 }
                 if (entry->fonw) {
                     write_acv++;
                     uint64_t flags = MM_STAT_WR_MASK | MM_STAT_FONW_MASK;
-                    return new DtbPageFault(req->getVaddr(), req->getFlags(),
-                                            flags);
+                    return std::make_shared<DtbPageFault>(req->getVaddr(),
+                                                          req->getFlags(),
+                                                          flags);
                 }
             } else {
                 if (!(entry->xre & MODE2MASK(mode))) {
                     read_acv++;
                     uint64_t flags = MM_STAT_ACV_MASK |
                         (entry->fonr ? MM_STAT_FONR_MASK : 0);
-                    return new DtbAcvFault(req->getVaddr(), req->getFlags(),
-                                           flags);
+                    return std::make_shared<DtbAcvFault>(req->getVaddr(),
+                                                         req->getFlags(),
+                                                         flags);
                 }
                 if (entry->fonr) {
                     read_acv++;
                     uint64_t flags = MM_STAT_FONR_MASK;
-                    return new DtbPageFault(req->getVaddr(), req->getFlags(),
-                                            flags);
+                    return std::make_shared<DtbPageFault>(req->getVaddr(),
+                                                          req->getFlags(),
+                                                          flags);
                 }
             }
         }
@@ -566,7 +580,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 
     // check that the physical address is ok (catch bad physical addresses)
     if (req->getPaddr() & ~PAddrImplMask) {
-        return new MachineCheckFault();
+        return std::make_shared<MachineCheckFault>();
     }
 
     return checkCacheability(req);

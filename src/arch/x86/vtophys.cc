@@ -45,7 +45,6 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/VtoPhys.hh"
-#include "sim/fault_fwd.hh"
 
 using namespace std;
 

@@ -140,7 +140,7 @@ def template ThreadRegisterExecute {{
                     %(code)s;
                 }
             } else {
-                fault = new CoprocessorUnusableFault(0);
+                fault = std::make_shared<CoprocessorUnusableFault>(0);
             }
 
             if(fault == NoFault)
@@ -167,10 +167,10 @@ def template MTExecute{{
                     if (config3.mt == 1) {
                         %(code)s;
                     } else {
-                        fault = new ReservedInstructionFault();
+                        fault = std::make_shared<ReservedInstructionFault>();
                     }
                 } else {
-                    fault = new CoprocessorUnusableFault(0);
+                    fault = std::make_shared<CoprocessorUnusableFault>(0);
                 }
 
                 if(fault == NoFault)
