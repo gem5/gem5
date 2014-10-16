@@ -32,6 +32,7 @@
 
 #include "python/swig/pyevent.hh"
 #include "sim/async.hh"
+#include "sim/eventq.hh"
 
 PythonEvent::PythonEvent(PyObject *obj, Priority priority)
     : Event(priority), object(obj)
@@ -59,6 +60,8 @@ PythonEvent::process()
         // that there's been an exception.
         async_event = true;
         async_exception = true;
+        /* Wake up some event queue to handle event */
+        getEventQueue(0)->wakeup();
     }
 
     // Since the object has been removed from the event queue, its

@@ -606,6 +606,21 @@ class EventQueue : public Serializable
     void handleAsyncInsertions();
 
     /**
+     *  Function to signal that the event loop should be woken up because
+     *  an event has been scheduled by an agent outside the gem5 event
+     *  loop(s) whose event insertion may not have been noticed by gem5.
+     *  This function isn't needed by the usual gem5 event loop but may
+     *  be necessary in derived EventQueues which host gem5 onto other
+     *  schedulers.
+     *
+     *  @param when Time of a delayed wakeup (if known). This parameter
+     *  can be used by an implementation to schedule a wakeup in the
+     *  future if it is sure it will remain active until then.
+     *  Or it can be ignored and the event queue can be woken up now.
+     */
+    virtual void wakeup(Tick when = (Tick)-1) { }
+
+    /**
      *  function for replacing the head of the event queue, so that a
      *  different set of events can run without disturbing events that have
      *  already been scheduled. Already scheduled events can be processed
@@ -635,6 +650,8 @@ class EventQueue : public Serializable
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 #endif
+
+    virtual ~EventQueue() { }
 };
 
 void dumpMainQueue();
@@ -691,6 +708,11 @@ class EventManager
     reschedule(Event *event, Tick when, bool always = false)
     {
         eventq->reschedule(event, when, always);
+    }
+
+    void wakeupEventQueue(Tick when = (Tick)-1)
+    {
+        eventq->wakeup(when);
     }
 
     void setCurTick(Tick newVal) { eventq->setCurTick(newVal); }

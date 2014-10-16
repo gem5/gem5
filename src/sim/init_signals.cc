@@ -48,6 +48,7 @@
 #include "base/cprintf.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
+#include "sim/eventq.hh"
 #include "sim/init_signals.hh"
 
 using namespace std;
@@ -58,6 +59,8 @@ dumpStatsHandler(int sigtype)
 {
     async_event = true;
     async_statdump = true;
+    /* Wake up some event queue to handle event */
+    getEventQueue(0)->wakeup();
 }
 
 void
@@ -66,6 +69,8 @@ dumprstStatsHandler(int sigtype)
     async_event = true;
     async_statdump = true;
     async_statreset = true;
+    /* Wake up some event queue to handle event */
+    getEventQueue(0)->wakeup();
 }
 
 /// Exit signal handler.
@@ -74,6 +79,8 @@ exitNowHandler(int sigtype)
 {
     async_event = true;
     async_exit = true;
+    /* Wake up some event queue to handle event */
+    getEventQueue(0)->wakeup();
 }
 
 /// Abort signal handler.
@@ -89,6 +96,8 @@ ioHandler(int sigtype)
 {
     async_event = true;
     async_io = true;
+    /* Wake up some event queue to handle event */
+    getEventQueue(0)->wakeup();
 }
 
 static void
