@@ -195,7 +195,7 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
 void
 EtherLink::Link::serialize(const string &base, ostream &os)
 {
-    bool packet_exists = packet;
+    bool packet_exists = packet != nullptr;
     paramOut(os, base + ".packet_exists", packet_exists);
     if (packet_exists)
         packet->serialize(base + ".packet", os);
@@ -216,7 +216,7 @@ EtherLink::Link::unserialize(const string &base, Checkpoint *cp,
     bool packet_exists;
     paramIn(cp, section, base + ".packet_exists", packet_exists);
     if (packet_exists) {
-        packet = new EthPacketData(16384);
+        packet = make_shared<EthPacketData>(16384);
         packet->unserialize(base + ".packet", cp, section);
     }
 
@@ -273,7 +273,7 @@ LinkDelayEvent::unserialize(Checkpoint *cp, const string &section,
 
     link = parent->link[number];
 
-    packet = new EthPacketData(16384);
+    packet = make_shared<EthPacketData>(16384);
     packet->unserialize("packet", cp, section);
 }
 

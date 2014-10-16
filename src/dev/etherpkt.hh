@@ -40,14 +40,13 @@
 #include <iosfwd>
 #include <memory>
 
-#include "base/refcnt.hh"
 #include "base/types.hh"
 
 /*
  * Reference counted class containing ethernet packet data
  */
 class Checkpoint;
-class EthPacketData : public RefCounted
+class EthPacketData
 {
   public:
     /*
@@ -81,6 +80,6 @@ class EthPacketData : public RefCounted
                      const std::string &section);
 };
 
-typedef RefCountingPtr<EthPacketData> EthPacketPtr;
+typedef std::shared_ptr<EthPacketData> EthPacketPtr;
 
 #endif // __ETHERPKT_HH__

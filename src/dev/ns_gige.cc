@@ -34,6 +34,7 @@
  * DP83820 ethernet controller.  Does not support priority queueing
  */
 #include <deque>
+#include <memory>
 #include <string>
 
 #include "base/debug.hh"
@@ -51,6 +52,7 @@
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std
+using std::make_shared;
 using std::min;
 using std::ostream;
 using std::string;
@@ -1676,7 +1678,7 @@ NSGigE::txKick()
       case txFifoBlock:
         if (!txPacket) {
             DPRINTF(EthernetSM, "****starting the tx of a new packet****\n");
-            txPacket = new EthPacketData(16384);
+            txPacket = make_shared<EthPacketData>(16384);
             txPacketBufPtr = txPacket->data;
         }
 
@@ -2185,7 +2187,7 @@ NSGigE::serialize(ostream &os)
     /*
      * Serialize the various helper variables
      */
-    bool txPacketExists = txPacket;
+    bool txPacketExists = txPacket != nullptr;
     SERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
         txPacket->length = txPacketBufPtr - txPacket->data;
@@ -2194,7 +2196,7 @@ NSGigE::serialize(ostream &os)
         SERIALIZE_SCALAR(txPktBufPtr);
     }
 
-    bool rxPacketExists = rxPacket;
+    bool rxPacketExists = rxPacket != nullptr;
     SERIALIZE_SCALAR(rxPacketExists);
     if (rxPacketExists) {
         rxPacket->serialize("rxPacket", os);
@@ -2352,7 +2354,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
-        txPacket = new EthPacketData(16384);
+        txPacket = make_shared<EthPacketData>(16384);
         txPacket->unserialize("txPacket", cp, section);
         uint32_t txPktBufPtr;
         UNSERIALIZE_SCALAR(txPktBufPtr);
@@ -2364,7 +2366,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxPacketExists);
     rxPacket = 0;
     if (rxPacketExists) {
-        rxPacket = new EthPacketData(16384);
+        rxPacket = make_shared<EthPacketData>(16384);
         rxPacket->unserialize("rxPacket", cp, section);
         uint32_t rxPktBufPtr;
         UNSERIALIZE_SCALAR(rxPktBufPtr);

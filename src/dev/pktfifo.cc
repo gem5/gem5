@@ -77,7 +77,7 @@ void
 PacketFifoEntry::unserialize(const string &base, Checkpoint *cp,
                              const string &section)
 {
-    packet = new EthPacketData(16384);
+    packet = make_shared<EthPacketData>(16384);
     packet->unserialize(base + ".packet", cp, section);
     paramIn(cp, section, base + ".slack", slack);
     paramIn(cp, section, base + ".number", number);

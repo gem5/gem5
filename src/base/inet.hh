@@ -182,7 +182,7 @@ class EthPtr
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
-    operator bool() const { return p; }
+    operator bool() const { return (p != nullptr); }
     int off() const { return 0; }
     int pstart() const { return off() + ((const EthHdr*)p->data)->size(); }
 };
@@ -324,7 +324,7 @@ class IpPtr
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
-    operator bool() const { return p; }
+    operator bool() const { return (p != nullptr); }
     int off() const { return (sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0)); }
     int pstart() const { return (off() + get()->size()); }
 };
@@ -440,7 +440,7 @@ class Ip6Ptr
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
-    operator bool() const { return p; }
+    operator bool() const { return (p != nullptr); }
     int off() const { return sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0); }
     int pstart() const { return off() + get()->size(); }
 };
@@ -576,7 +576,7 @@ class TcpPtr
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
-    operator bool() const { return p; }
+    operator bool() const { return (p != nullptr); }
     int off() const { return _off; }
     int pstart() const { return off() + get()->size(); }
 };
@@ -671,7 +671,7 @@ class UdpPtr
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
-    operator bool() const { return p; }
+    operator bool() const { return (p != nullptr); }
     int off() const { return _off; }
     int pstart() const { return off() + get()->size(); }
 };

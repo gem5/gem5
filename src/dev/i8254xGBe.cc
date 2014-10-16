@@ -41,6 +41,7 @@
  */
 
 #include <algorithm>
+#include <memory>
 
 #include "base/inet.hh"
 #include "base/trace.hh"
@@ -2147,7 +2148,7 @@ IGbE::txStateMachine()
     }
 
     if (!txPacket) {
-        txPacket = new EthPacketData(16384);
+        txPacket = std::make_shared<EthPacketData>(16384);
     }
 
     if (!txDescCache.packetWaiting()) {
@@ -2469,7 +2470,7 @@ IGbE::serialize(std::ostream &os)
     rxFifo.serialize("rxfifo", os);
     txFifo.serialize("txfifo", os);
 
-    bool txPktExists = txPacket;
+    bool txPktExists = txPacket != nullptr;
     SERIALIZE_SCALAR(txPktExists);
     if (txPktExists)
         txPacket->serialize("txpacket", os);
@@ -2526,7 +2527,7 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
     bool txPktExists;
     UNSERIALIZE_SCALAR(txPktExists);
     if (txPktExists) {
-        txPacket = new EthPacketData(16384);
+        txPacket = std::make_shared<EthPacketData>(16384);
         txPacket->unserialize("txpacket", cp, section);
     }
 
