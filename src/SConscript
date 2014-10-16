@@ -63,6 +63,8 @@ from m5.util import code_formatter, compareVersions
 # false).  Current filters are:
 #     main -- specifies the gem5 main() function
 #     skip_lib -- do not put this file into the gem5 library
+#     skip_no_python -- do not put this file into a no_python library
+#       as it embeds compiled Python
 #     <unittest> -- unit tests use filters based on the unit test name
 #
 # A parent can now be specified for a source file and default filter
@@ -229,7 +231,7 @@ class SwigSource(SourceFile):
 
     def __init__(self, package, source, **guards):
         '''Specify the python package, the source file, and any guards'''
-        super(SwigSource, self).__init__(source, **guards)
+        super(SwigSource, self).__init__(source, skip_no_python=True, **guards)
 
         modname,ext = self.extname
         assert ext == 'i'
@@ -238,8 +240,8 @@ class SwigSource(SourceFile):
         cc_file = joinpath(self.dirname, modname + '_wrap.cc')
         py_file = joinpath(self.dirname, modname + '.py')
 
-        self.cc_source = Source(cc_file, swig=True, parent=self)
-        self.py_source = PySource(package, py_file, parent=self)
+        self.cc_source = Source(cc_file, swig=True, parent=self, **guards)
+        self.py_source = PySource(package, py_file, parent=self, **guards)
 
 class ProtoBuf(SourceFile):
     '''Add a Protocol Buffer to build'''
@@ -874,9 +876,9 @@ EmbeddedPython embedded_${sym}(
     code.write(str(target[0]))
 
 for source in PySource.all:
-    env.Command(source.cpp, source.tnode, 
+    env.Command(source.cpp, source.tnode,
                 MakeAction(embedPyFile, Transform("EMBED PY")))
-    Source(source.cpp)
+    Source(source.cpp, skip_no_python=True)
 
 ########################################################################
 #
@@ -973,14 +975,19 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
 
         return obj
 
-    static_objs = \
-        [ make_obj(s, True) for s in Source.get(main=False, skip_lib=False) ]
-    shared_objs = \
-        [ make_obj(s, False) for s in Source.get(main=False, skip_lib=False) ]
+    lib_guards = {'main': False, 'skip_lib': False}
+
+    # Without Python, leave out all SWIG and Python content from the
+    # library builds.  The option doesn't affect gem5 built as a program
+    if GetOption('without_python'):
+        lib_guards['skip_no_python'] = False
+
+    static_objs = [ make_obj(s, True) for s in Source.get(**lib_guards) ]
+    shared_objs = [ make_obj(s, False) for s in Source.get(**lib_guards) ]
 
     static_date = make_obj(date_source, static=True, extra_deps=static_objs)
     static_objs.append(static_date)
-    
+
     shared_date = make_obj(date_source, static=False, extra_deps=shared_objs)
     shared_objs.append(shared_date)
 

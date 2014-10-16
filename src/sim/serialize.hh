@@ -255,14 +255,28 @@ class SerializableClass
 SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,                        \
                                          OBJ_CLASS::createForUnserialize);
 
+// Base class to wrap object resolving functionality.  This can be
+// provided to Checkpoint to allow it to map object names onto
+// object C++ objects in which to unserialize
+class SimObjectResolver
+{
+  public:
+    virtual ~SimObjectResolver() { }
+
+    // Find a SimObject given a full path name
+    virtual SimObject *resolveSimObject(const std::string &name) = 0;
+};
+
 class Checkpoint
 {
   private:
 
     IniFile *db;
 
+    SimObjectResolver &objNameResolver;
+
   public:
-    Checkpoint(const std::string &cpt_dir);
+    Checkpoint(const std::string &cpt_dir, SimObjectResolver &resolver);
     ~Checkpoint();
 
     const std::string cptDir;

@@ -31,8 +31,8 @@
 
 Import('*')
 
-Source('swig/pyevent.cc')
-Source('swig/pyobject.cc')
+Source('swig/pyevent.cc', skip_no_python=True)
+Source('swig/pyobject.cc', skip_no_python=True)
 
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')

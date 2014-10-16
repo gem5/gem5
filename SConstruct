@@ -183,6 +183,9 @@ AddLocalOption('--update-ref', dest='update_ref', action='store_true',
                help='Update test reference outputs')
 AddLocalOption('--verbose', dest='verbose', action='store_true',
                help='Print full tool command lines')
+AddLocalOption('--without-python', dest='without_python',
+               action='store_true',
+               help='Build without Python configuration support')
 
 termcap = get_termcap(GetOption('use_colors'))
 
@@ -884,47 +887,50 @@ if main['M5_BUILD_CACHE']:
     print 'Using build cache located at', main['M5_BUILD_CACHE']
     CacheDir(main['M5_BUILD_CACHE'])
 
-# Find Python include and library directories for embedding the
-# interpreter. We rely on python-config to resolve the appropriate
-# includes and linker flags. ParseConfig does not seem to understand
-# the more exotic linker flags such as -Xlinker and -export-dynamic so
-# we add them explicitly below. If you want to link in an alternate
-# version of python, see above for instructions on how to invoke
-# scons with the appropriate PATH set.
-#
-# First we check if python2-config exists, else we use python-config
-python_config = readCommand(['which', 'python2-config'], exception='').strip()
-if not os.path.exists(python_config):
-    python_config = readCommand(['which', 'python-config'],
+if not GetOption('without_python'):
+    # Find Python include and library directories for embedding the
+    # interpreter. We rely on python-config to resolve the appropriate
+    # includes and linker flags. ParseConfig does not seem to understand
+    # the more exotic linker flags such as -Xlinker and -export-dynamic so
+    # we add them explicitly below. If you want to link in an alternate
+    # version of python, see above for instructions on how to invoke
+    # scons with the appropriate PATH set.
+    #
+    # First we check if python2-config exists, else we use python-config
+    python_config = readCommand(['which', 'python2-config'],
                                 exception='').strip()
-py_includes = readCommand([python_config, '--includes'],
-                          exception='').split()
-# Strip the -I from the include folders before adding them to the
-# CPPPATH
-main.Append(CPPPATH=map(lambda inc: inc[2:], py_includes))
+    if not os.path.exists(python_config):
+        python_config = readCommand(['which', 'python-config'],
+                                    exception='').strip()
+    py_includes = readCommand([python_config, '--includes'],
+                              exception='').split()
+    # Strip the -I from the include folders before adding them to the
+    # CPPPATH
+    main.Append(CPPPATH=map(lambda inc: inc[2:], py_includes))
 
-# Read the linker flags and split them into libraries and other link
-# flags. The libraries are added later through the call the CheckLib.
-py_ld_flags = readCommand([python_config, '--ldflags'], exception='').split()
-py_libs = []
-for lib in py_ld_flags:
-     if not lib.startswith('-l'):
-         main.Append(LINKFLAGS=[lib])
-     else:
-         lib = lib[2:]
-         if lib not in py_libs:
-             py_libs.append(lib)
+    # Read the linker flags and split them into libraries and other link
+    # flags. The libraries are added later through the call the CheckLib.
+    py_ld_flags = readCommand([python_config, '--ldflags'],
+        exception='').split()
+    py_libs = []
+    for lib in py_ld_flags:
+         if not lib.startswith('-l'):
+             main.Append(LINKFLAGS=[lib])
+         else:
+             lib = lib[2:]
+             if lib not in py_libs:
+                 py_libs.append(lib)
 
-# verify that this stuff works
-if not conf.CheckHeader('Python.h', '<>'):
-    print "Error: can't find Python.h header in", py_includes
-    print "Install Python headers (package python-dev on Ubuntu and RedHat)"
-    Exit(1)
-
-for lib in py_libs:
-    if not conf.CheckLib(lib):
-        print "Error: can't find library %s required by python" % lib
+    # verify that this stuff works
+    if not conf.CheckHeader('Python.h', '<>'):
+        print "Error: can't find Python.h header in", py_includes
+        print "Install Python headers (package python-dev on Ubuntu and RedHat)"
         Exit(1)
+
+    for lib in py_libs:
+        if not conf.CheckLib(lib):
+            print "Error: can't find library %s required by python" % lib
+            Exit(1)
 
 # On Solaris you need to use libsocket for socket ops
 if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):

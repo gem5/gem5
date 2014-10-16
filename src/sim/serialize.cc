@@ -58,8 +58,6 @@
 
 using namespace std;
 
-extern SimObject *resolveSimObject(const string &);
-
 //
 // The base implementations use to_number for parsing and '<<' for
 // displaying, suitable for integer types.
@@ -600,8 +598,8 @@ Checkpoint::dir()
 }
 
 
-Checkpoint::Checkpoint(const string &cpt_dir)
-    : db(new IniFile), cptDir(setDir(cpt_dir))
+Checkpoint::Checkpoint(const string &cpt_dir, SimObjectResolver &resolver)
+    : db(new IniFile), objNameResolver(resolver), cptDir(setDir(cpt_dir))
 {
     string filename = cptDir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {
@@ -630,7 +628,7 @@ Checkpoint::findObj(const string &section, const string &entry,
     if (!db->find(section, entry, path))
         return false;
 
-    value = resolveSimObject(path);
+    value = objNameResolver.resolveSimObject(path);
     return true;
 }
 

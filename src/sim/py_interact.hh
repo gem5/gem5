@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,38 +28,13 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+#ifndef __SIM_PY_INTERACT_HH__
+#define __SIM_PY_INTERACT_HH__
 
-#include "sim/init.hh"
-#include "sim/init_signals.hh"
+/** @file This file provides py_interact useful for interacting with the
+ * embedded Python content in a debugger such as gdb.
+ */
 
-// main() is now pretty stripped down and just sets up python and then
-// calls initM5Python which loads the various embedded python modules
-// into the python environment and then starts things running by
-// calling m5Main.
-int
-main(int argc, char **argv)
-{
-    int ret;
+void py_interact();
 
-    // Initialize m5 special signal handling.
-    initSignals();
-
-    Py_SetProgramName(argv[0]);
-
-    // initialize embedded Python interpreter
-    Py_Initialize();
-
-    // Initialize the embedded m5 python library
-    ret = initM5Python();
-
-    if (ret == 0) {
-        // start m5
-        ret = m5Main(argc, argv);
-    }
-
-    // clean up Python intepreter.
-    Py_Finalize();
-
-    return ret;
-}
+#endif // __SIM_PY_INTERACT_HH__

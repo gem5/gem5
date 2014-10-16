@@ -76,11 +76,6 @@ struct EmbeddedSwig
     static void initAll();
 };
 
-void dumpStatsHandler(int sigtype);
-void dumprstStatsHandler(int sigtype);
-void exitNowHandler(int sigtype);
-void abortHandler(int sigtype);
-void initSignals();
 int initM5Python();
 int m5Main(int argc, char **argv);
 PyMODINIT_FUNC initm5(void);

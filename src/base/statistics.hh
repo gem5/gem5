@@ -3209,6 +3209,15 @@ void enable();
 bool enabled();
 
 /**
+ * Register reset and dump handlers.  These are the functions which
+ * will actually perform the whole statistics reset/dump actions
+ * including processing the reset/dump callbacks
+ */
+typedef void (*Handler)();
+
+void registerHandlers(Handler reset_handler, Handler dump_handler);
+
+/**
  * Register a callback that should be called whenever statistics are
  * reset
  */
@@ -3219,6 +3228,16 @@ void registerResetCallback(Callback *cb);
  * about to be dumped
  */
 void registerDumpCallback(Callback *cb);
+
+/**
+ * Process all the callbacks in the reset callbacks queue
+ */
+void processResetQueue();
+
+/**
+ * Process all the callbacks in the dump callbacks queue
+ */
+void processDumpQueue();
 
 std::list<Info *> &statsList();
 

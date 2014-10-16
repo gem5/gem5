@@ -46,7 +46,6 @@
 #include <marshal.h>
 #include <zlib.h>
 
-#include <csignal>
 #include <iostream>
 #include <list>
 #include <string>
@@ -64,90 +63,6 @@
 #endif
 
 using namespace std;
-
-/// Stats signal handler.
-void
-dumpStatsHandler(int sigtype)
-{
-    async_event = true;
-    async_statdump = true;
-}
-
-void
-dumprstStatsHandler(int sigtype)
-{
-    async_event = true;
-    async_statdump = true;
-    async_statreset = true;
-}
-
-/// Exit signal handler.
-void
-exitNowHandler(int sigtype)
-{
-    async_event = true;
-    async_exit = true;
-}
-
-/// Abort signal handler.
-void
-abortHandler(int sigtype)
-{
-    ccprintf(cerr, "Program aborted at tick %d\n", curTick());
-}
-
-// Handle SIGIO
-static void
-ioHandler(int sigtype)
-{
-    async_event = true;
-    async_io = true;
-}
-
-static void
-installSignalHandler(int signal, void (*handler)(int sigtype))
-{
-    struct sigaction sa;
-
-    memset(&sa, 0, sizeof(sa));
-    sigemptyset(&sa.sa_mask);
-    sa.sa_handler = handler;
-    sa.sa_flags = SA_RESTART;
-
-    if (sigaction(signal, &sa, NULL) == -1)
-        panic("Failed to setup handler for signal %i\n", signal);
-}
-
-/*
- * M5 can do several special things when various signals are sent.
- * None are mandatory.
- */
-void
-initSignals()
-{
-    // Floating point exceptions may happen on misspeculated paths, so
-    // ignore them
-    signal(SIGFPE, SIG_IGN);
-
-    // We use SIGTRAP sometimes for debugging
-    signal(SIGTRAP, SIG_IGN);
-
-    // Dump intermediate stats
-    installSignalHandler(SIGUSR1, dumpStatsHandler);
-
-    // Dump intermediate stats and reset them
-    installSignalHandler(SIGUSR2, dumprstStatsHandler);
-
-    // Exit cleanly on Interrupt (Ctrl-C)
-    installSignalHandler(SIGINT, exitNowHandler);
-
-    // Print out cycle number on abort
-    installSignalHandler(SIGABRT, abortHandler);
-
-    // Install a SIGIO handler to handle asynchronous file IO. See the
-    // PollQueue class.
-    installSignalHandler(SIGIO, ioHandler);
-}
 
 // The python library is totally messed up with respect to constness,
 // so make a simple macro to make life a little easier

@@ -28,38 +28,13 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+#ifndef __SIM_INIT_SIGNALS_HH__
+#define __SIM_INIT_SIGNALS_HH__
 
-#include "sim/init.hh"
-#include "sim/init_signals.hh"
+void dumpStatsHandler(int sigtype);
+void dumprstStatsHandler(int sigtype);
+void exitNowHandler(int sigtype);
+void abortHandler(int sigtype);
+void initSignals();
 
-// main() is now pretty stripped down and just sets up python and then
-// calls initM5Python which loads the various embedded python modules
-// into the python environment and then starts things running by
-// calling m5Main.
-int
-main(int argc, char **argv)
-{
-    int ret;
-
-    // Initialize m5 special signal handling.
-    initSignals();
-
-    Py_SetProgramName(argv[0]);
-
-    // initialize embedded Python interpreter
-    Py_Initialize();
-
-    // Initialize the embedded m5 python library
-    ret = initM5Python();
-
-    if (ret == 0) {
-        // start m5
-        ret = m5Main(argc, argv);
-    }
-
-    // clean up Python intepreter.
-    Py_Finalize();
-
-    return ret;
-}
+#endif // __SIM_INIT_SIGNALS_HH__

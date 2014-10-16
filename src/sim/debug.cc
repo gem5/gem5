@@ -29,8 +29,6 @@
  *          Steve Reinhardt
  */
 
-#include <Python.h>
-
 #include <string>
 #include <vector>
 
@@ -106,22 +104,6 @@ eventqDump()
     for (uint32_t i = 0; i < numMainEventQueues; ++i) {
         mainEventQueue[i]->dump();
     }
-}
-
-void
-py_interact()
-{
-    PyObject *globals;
-    PyObject *locals;
-
-    globals = PyEval_GetGlobals();
-    Py_INCREF(globals);
-    locals = PyDict_New();
-    PyRun_String("import code", Py_file_input, globals, locals);
-    PyRun_String("code.interact(local=globals())", Py_file_input,
-                 globals, locals);
-    Py_DECREF(globals);
-    Py_DECREF(locals);
 }
 
 int remote_gdb_base_port = 7000;

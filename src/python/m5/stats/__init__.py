@@ -41,6 +41,7 @@ def initText(filename, desc=True):
 
 def initSimStats():
     internal.stats.initSimStats()
+    internal.stats.registerPythonStatsHandlers()
 
 names = []
 stats_dict = {}

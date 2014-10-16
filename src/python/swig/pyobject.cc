@@ -157,9 +157,12 @@ extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 // these in sim/main.cc as well that are handled without this define.
 #define PCC(s)  const_cast<char *>(s)
 
+/** Single instance of PythonSimObjectResolver as its action is effectively
+ *  static but SimObjectResolver can use a non-persistent object */
+PythonSimObjectResolver pythonSimObjectResolver;
 
 SimObject *
-resolveSimObject(const string &name)
+PythonSimObjectResolver::resolveSimObject(const string &name)
 {
     PyObject *module = PyImport_ImportModule(PCC("m5.SimObject"));
     if (module == NULL)
@@ -187,4 +190,10 @@ resolveSimObject(const string &name)
     Py_DECREF(ptr);
 
     return obj;
+}
+
+Checkpoint *
+getCheckpoint(const std::string &cpt_dir)
+{
+    return new Checkpoint(cpt_dir, pythonSimObjectResolver);
 }
