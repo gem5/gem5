@@ -56,6 +56,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
 #include "params/BranchPredictor.hh"
+#include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
 /**
@@ -75,6 +76,8 @@ class BPredUnit : public SimObject
      * Registers statistics.
      */
     void regStats();
+
+    void regProbePoints() M5_ATTR_OVERRIDE;
 
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
@@ -290,6 +293,34 @@ class BPredUnit : public SimObject
     Stats::Scalar usedRAS;
     /** Stat for number of times the RAS is incorrect. */
     Stats::Scalar RASIncorrect;
+
+  protected:
+    /**
+     * @{
+     * @name PMU Probe points.
+     */
+
+    /**
+     * Helper method to instantiate probe points belonging to this
+     * object.
+     *
+     * @param name Name of the probe point.
+     * @return A unique_ptr to the new probe point.
+     */
+    ProbePoints::PMUUPtr pmuProbePoint(const char *name);
+
+
+    /**
+     * Branches seen by the branch predictor
+     *
+     * @note This counter includes speculative branches.
+     */
+    ProbePoints::PMUUPtr ppBranches;
+
+    /** Miss-predicted branches */
+    ProbePoints::PMUUPtr ppMisses;
+
+    /** @} */
 };
 
 #endif // __CPU_PRED_BPRED_UNIT_HH__

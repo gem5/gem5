@@ -119,6 +119,22 @@ BPredUnit::regStats()
         ;
 }
 
+ProbePoints::PMUUPtr
+BPredUnit::pmuProbePoint(const char *name)
+{
+    ProbePoints::PMUUPtr ptr;
+    ptr.reset(new ProbePoints::PMU(getProbeManager(), name));
+
+    return ptr;
+}
+
+void
+BPredUnit::regProbePoints()
+{
+    ppBranches = pmuProbePoint("Branches");
+    ppMisses = pmuProbePoint("Misses");
+}
+
 void
 BPredUnit::drainSanityCheck() const
 {
@@ -141,6 +157,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     TheISA::PCState target = pc;
 
     ++lookups;
+    ppBranches->notify(1);
 
     void *bp_history = NULL;
 
@@ -259,6 +276,8 @@ BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     TheISA::PCState target;
 
     ++lookups;
+    ppBranches->notify(1);
+
     DPRINTF(Branch, "[tid:%i] [sn:%i] %s ... PC %s doing branch "
             "prediction\n", tid, seqNum,
             inst->disassemble(instPC.instAddr()), instPC);
@@ -438,6 +457,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     History &pred_hist = predHist[tid];
 
     ++condIncorrect;
+    ppMisses->notify(1);
 
     DPRINTF(Branch, "[tid:%i]: Squashing from sequence number %i, "
             "setting target to %s.\n", tid, squashed_sn, corrTarget);
