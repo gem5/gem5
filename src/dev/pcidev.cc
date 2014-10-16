@@ -97,8 +97,15 @@ PciDevice::PciConfigPort::getAddrRanges() const
 PciDevice::PciDevice(const Params *p)
     : DmaDevice(p),
       PMCAP_BASE(p->PMCAPBaseOffset),
+      PMCAP_ID_OFFSET(p->PMCAPBaseOffset+PMCAP_ID),
+      PMCAP_PC_OFFSET(p->PMCAPBaseOffset+PMCAP_PC),
+      PMCAP_PMCS_OFFSET(p->PMCAPBaseOffset+PMCAP_PMCS),
       MSICAP_BASE(p->MSICAPBaseOffset),
       MSIXCAP_BASE(p->MSIXCAPBaseOffset),
+      MSIXCAP_ID_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_ID),
+      MSIXCAP_MXC_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MXC),
+      MSIXCAP_MTAB_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MTAB),
+      MSIXCAP_MPBA_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MPBA),
       PXCAP_BASE(p->PXCAPBaseOffset),
       platform(p->platform),
       pioDelay(p->pio_latency),
@@ -142,14 +149,14 @@ PciDevice::PciDevice(const Params *p)
     // endianess and must be converted to Little Endian when accessed
     // by the guest
     // PMCAP
-    pmcap.pid.cid = p->PMCAPCapId;
-    pmcap.pid.next = p->PMCAPNextCapability;
+    pmcap.pid = (uint16_t)p->PMCAPCapId; // pid.cid
+    pmcap.pid |= (uint16_t)p->PMCAPNextCapability << 8; //pid.next
     pmcap.pc = p->PMCAPCapabilities;
     pmcap.pmcs = p->PMCAPCtrlStatus;
 
     // MSICAP
-    msicap.mid.cid = p->MSICAPCapId;
-    msicap.mid.next = p->MSICAPNextCapability;
+    msicap.mid = (uint16_t)p->MSICAPCapId; //mid.cid
+    msicap.mid |= (uint16_t)p->MSICAPNextCapability << 8; //mid.next
     msicap.mc = p->MSICAPMsgCtrl;
     msicap.ma = p->MSICAPMsgAddr;
     msicap.mua = p->MSICAPMsgUpperAddr;
@@ -158,8 +165,8 @@ PciDevice::PciDevice(const Params *p)
     msicap.mpend = p->MSICAPPendingBits;
 
     // MSIXCAP
-    msixcap.mxid.cid = p->MSIXCAPCapId;
-    msixcap.mxid.next = p->MSIXCAPNextCapability;
+    msixcap.mxid = (uint16_t)p->MSIXCAPCapId; //mxid.cid
+    msixcap.mxid |= (uint16_t)p->MSIXCAPNextCapability << 8; //mxid.next
     msixcap.mxc = p->MSIXMsgCtrl;
     msixcap.mtab = p->MSIXTableOffset;
     msixcap.mpba = p->MSIXPbaOffset;
@@ -171,8 +178,9 @@ PciDevice::PciDevice(const Params *p)
     // little endian byte-order as according the
     // PCIe specification.  Make sure to take the proper
     // actions when manipulating these tables on the host
+    uint16_t msixcap_mxc_ts = msixcap.mxc & 0x07ff;
     if (MSIXCAP_BASE != 0x0) {
-        int msix_vecs = msixcap.mxc.ts + 1;
+        int msix_vecs = msixcap_mxc_ts + 1;
         MSIXTable tmp1 = {{0UL,0UL,0UL,0UL}};
         msix_table.resize(msix_vecs, tmp1);
 
@@ -183,10 +191,20 @@ PciDevice::PciDevice(const Params *p)
         }
         msix_pba.resize(pba_size, tmp2);
     }
+    MSIX_TABLE_OFFSET = msixcap.mtab & 0xfffffffc;
+    MSIX_TABLE_END = MSIX_TABLE_OFFSET +
+                     (msixcap_mxc_ts + 1) * sizeof(MSIXTable);
+    MSIX_PBA_OFFSET = msixcap.mpba & 0xfffffffc;
+    MSIX_PBA_END = MSIX_PBA_OFFSET +
+                   ((msixcap_mxc_ts + 1) / MSIXVECS_PER_PBA)
+                   * sizeof(MSIXPbaEntry);
+    if (((msixcap_mxc_ts + 1) % MSIXVECS_PER_PBA) > 0) {
+        MSIX_PBA_END += sizeof(MSIXPbaEntry);
+    }
 
     // PXCAP
-    pxcap.pxid.cid = p->PXCAPCapId;
-    pxcap.pxid.next = p->PXCAPNextCapability;
+    pxcap.pxid = (uint16_t)p->PXCAPCapId; //pxid.cid
+    pxcap.pxid |= (uint16_t)p->PXCAPNextCapability << 8; //pxid.next
     pxcap.pxcap = p->PXCAPCapabilities;
     pxcap.pxdcap = p->PXCAPDevCapabilities;
     pxcap.pxdc = p->PXCAPDevCtrl;
@@ -253,8 +271,30 @@ Tick
 PciDevice::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset >= PCI_DEVICE_SPECIFIC)
-        panic("Device specific PCI config space not implemented!\n");
+
+    /* Return 0 for accesses to unimplemented PCI configspace areas */
+    if (offset >= PCI_DEVICE_SPECIFIC &&
+        offset < PCI_CONFIG_SIZE) {
+        warn_once("Device specific PCI config space "
+                  "not implemented for %s!\n", this->name());
+        switch (pkt->getSize()) {
+            case sizeof(uint8_t):
+                pkt->set<uint8_t>(0);
+                break;
+            case sizeof(uint16_t):
+                pkt->set<uint16_t>(0);
+                break;
+            case sizeof(uint32_t):
+                pkt->set<uint32_t>(0);
+                break;
+            default:
+                panic("invalid access size(?) for PCI configspace!\n");
+        }
+    } else if (offset > PCI_CONFIG_SIZE) {
+        panic("Out-of-range access to PCI config space!\n");
+    }
+
+
 
     pkt->allocate();
 
@@ -303,8 +343,23 @@ Tick
 PciDevice::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset >= PCI_DEVICE_SPECIFIC)
-        panic("Device specific PCI config space not implemented!\n");
+
+    /* No effect if we write to config space that is not implemented*/
+    if (offset >= PCI_DEVICE_SPECIFIC &&
+        offset < PCI_CONFIG_SIZE) {
+        warn_once("Device specific PCI config space "
+                  "not implemented for %s!\n", this->name());
+        switch (pkt->getSize()) {
+            case sizeof(uint8_t):
+            case sizeof(uint16_t):
+            case sizeof(uint32_t):
+                break;
+            default:
+                panic("invalid access size(?) for PCI configspace!\n");
+        }
+    } else if (offset > PCI_CONFIG_SIZE) {
+        panic("Out-of-range access to PCI config space!\n");
+    }
 
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
@@ -448,7 +503,8 @@ PciDevice::serialize(std::ostream &os)
 
     // Only serialize if we have a non-zero base address
     if (MSIXCAP_BASE != 0x0) {
-        int msix_array_size = msixcap.mxc.ts + 1;
+        uint16_t msixcap_mxc_ts = msixcap.mxc & 0x07ff;
+        int msix_array_size = msixcap_mxc_ts + 1;
         int pba_array_size = msix_array_size/MSIXVECS_PER_PBA;
         if ((msix_array_size % MSIXVECS_PER_PBA) > 0) {
             pba_array_size++;

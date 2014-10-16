@@ -205,36 +205,31 @@ union PCIConfig {
  *  Defines the Power Management capability register and all its associated
  *  bitfields for a PCIe device.
  */
-struct PMCAP {
-    BitUnion16(PID)
-        Bitfield<7,0>   cid;
-        Bitfield<15,8>  next;
-    EndBitUnion(PID)
-    PID pid;
-
-    BitUnion16(PC)
-        Bitfield<2,0>   vs;
-        Bitfield<3>     pmec;
-        Bitfield<4>     reserved;
-        Bitfield<5>     dsi;
-        Bitfield<8,6>   auxc;
-        Bitfield<9>     d1s;
-        Bitfield<10>    d2s;
-        Bitfield<15,11> psup;
-    EndBitUnion(PC)
-    PC pc;
-
-    BitUnion16(PMCS)
-        Bitfield<1,0>   ps;
-        Bitfield<2>     reserved0;
-        Bitfield<3>     nsfrst;
-        Bitfield<7,4>   reserved1;
-        Bitfield<8>     pmee;
-        Bitfield<12,9>  dse;
-        Bitfield<14,13> dsc;
-        Bitfield<15>    pmes;
-    EndBitUnion(PMCS)
-    PMCS pmcs;
+union PMCAP {
+    uint8_t data[6];
+    struct {
+        uint16_t pid;  /* 0:7  cid
+                        * 8:15 next
+                        */
+        uint16_t pc;   /* 0:2   vs
+                        * 3     pmec
+                        * 4     reserved
+                        * 5     dsi
+                        * 6:8   auxc
+                        * 9     d1s
+                        * 10    d2s
+                        * 11:15 psup
+                        */
+        uint16_t pmcs; /* 0:1   ps
+                        * 2     reserved
+                        * 3     nsfrst
+                        * 4:7   reserved
+                        * 8     pmee
+                        * 9:12  dse
+                        * 13:14 dsc
+                        * 15    pmes
+                        */
+    };
 };
 
 /** @struct MSICAP
@@ -243,70 +238,51 @@ struct PMCAP {
  *  can be filled in if a device model supports both, but only 1 of
  *  MSI/MSIX/INTx interrupt mode can be selected at a given time.
  */
-struct MSICAP {
-    BitUnion16(MID)
-        Bitfield<7,0>   cid;
-        Bitfield<15,8>  next;
-    EndBitUnion(MID)
-    MID mid;
-
-    BitUnion16(MC)
-        Bitfield<0>     msie;
-        Bitfield<3,1>   mmc;
-        Bitfield<6,4>   mme;
-        Bitfield<7>     c64;
-        Bitfield<8>     pvm;
-        Bitfield<15,9>  reserved;
-    EndBitUnion(MC)
-    MC mc;
-
-    BitUnion32(MA)
-        Bitfield<1,0>   reserved;
-        Bitfield<31,2>  addr;
-    EndBitUnion(MA)
-    MA ma;
-
-    uint32_t mua;
-
-    BitUnion16(MD)
-        Bitfield<15,0> data;
-    EndBitUnion(MD)
-    MD md;
-
-    uint32_t mmask;
-    uint32_t mpend;
+union MSICAP {
+    uint8_t data[24];
+    struct {
+        uint16_t mid;  /* 0:7  cid
+                        *  8:15 next
+                        */
+        uint16_t mc;   /* 0     msie;
+                        * 1:3   mmc;
+                        * 4:6   mme;
+                        * 7     c64;
+                        * 8     pvm;
+                        * 9:15  reserved;
+                        */
+        uint32_t ma;   /* 0:1  reserved
+                        * 2:31 addr
+                        */
+        uint32_t mua;
+        uint16_t md;
+        uint32_t mmask;
+        uint32_t mpend;
+   };
 };
 
 /** @struct MSIX
  *  Defines the MSI-X Capability register and its associated bitfields for
  *  a PCIe device.
  */
-struct MSIXCAP {
-    BitUnion16(MXID)
-        Bitfield<7,0>   cid;
-        Bitfield<15,8>  next;
-    EndBitUnion(MXID)
-    MXID mxid;
-
-    BitUnion16(MXC)
-        Bitfield<10,0>  ts;
-        Bitfield<13,11> reserved;
-        Bitfield<14>    fm;
-        Bitfield<15>    mxe;
-    EndBitUnion(MXC)
-    MXC mxc;
-
-    BitUnion32(MTAB)
-        Bitfield<31,3>  to;
-        Bitfield<2,0>   tbir;
-    EndBitUnion(MTAB)
-    MTAB mtab;
-
-    BitUnion32(MPBA)
-        Bitfield<2,0>   pbir;
-        Bitfield<31,3>  pbao;
-    EndBitUnion(MPBA)
-    MPBA mpba;
+union MSIXCAP {
+    uint8_t data[12];
+    struct {
+        uint16_t mxid; /* 0:7  cid
+                        *  8:15 next
+                        */
+        uint16_t mxc;  /* 0:10  ts;
+                        * 11:13 reserved;
+                        * 14    fm;
+                        * 15    mxe;
+                        */
+        uint32_t mtab; /* 0:2   tbir;
+                        * 3:31  to;
+                        */
+        uint32_t mpba; /* 0:2   pbir;
+                        * 3:31>  pbao;
+                        */
+    };
 };
 
 union MSIXTable {
@@ -329,130 +305,105 @@ struct MSIXPbaEntry {
  *  for a PCIe device.
  */
 struct PXCAP {
-    BitUnion16(PXID)
-        Bitfield<7,0>   cid;
-        Bitfield<15,8>  next;
-    EndBitUnion(PXID)
-    PXID pxid;
-
-    BitUnion16(_PXCAP)
-        Bitfield<3,0>   ver;
-        Bitfield<7,4>   dpt;
-        Bitfield<8>     si;
-        Bitfield<13,9>  imn;
-        Bitfield<15,14> reserved;
-    EndBitUnion(_PXCAP)
-    _PXCAP pxcap;
-
-    BitUnion32(PXDCAP)
-        Bitfield<2,0>   mps;
-        Bitfield<4,3>   pfs;
-        Bitfield<5>     etfs;
-        Bitfield<8,6>   l0sl;
-        Bitfield<11,9>  l1l;
-        Bitfield<14,12> reserved0;
-        Bitfield<15>    rer;
-        Bitfield<17,16> reserved1;
-        Bitfield<25,18> csplv;
-        Bitfield<27,26> cspls;
-        Bitfield<28>    flrc;
-        Bitfield<31,29> reserved2;
-    EndBitUnion(PXDCAP)
-    PXDCAP pxdcap;
-
-    BitUnion16(PXDC)
-        Bitfield<0>     cere;
-        Bitfield<1>     nfere;
-        Bitfield<2>     fere;
-        Bitfield<3>     urre;
-        Bitfield<4>     ero;
-        Bitfield<7,5>   mps;
-        Bitfield<8>     ete;
-        Bitfield<9>     pfe;
-        Bitfield<10>    appme;
-        Bitfield<11>    ens;
-        Bitfield<14,12> mrrs;
-        Bitfield<15>    func_reset;
-    EndBitUnion(PXDC)
-    PXDC pxdc;
-
-    BitUnion16(PXDS)
-        Bitfield<0>     ced;
-        Bitfield<1>     nfed;
-        Bitfield<2>     fed;
-        Bitfield<3>     urd;
-        Bitfield<4>     apd;
-        Bitfield<5>     tp;
-        Bitfield<15,6>  reserved;
-    EndBitUnion(PXDS)
-    PXDS pxds;
-
-    BitUnion32(PXLCAP)
-        Bitfield<3,0>   sls;
-        Bitfield<9,4>   mlw;
-        Bitfield<11,10> aspms;
-        Bitfield<14,12> l0sel;
-        Bitfield<17,15> l1el;
-        Bitfield<18>    cpm;
-        Bitfield<19>    sderc;
-        Bitfield<20>    dllla;
-        Bitfield<21>    lbnc;
-        Bitfield<23,22> reserved;
-        Bitfield<31,24> pn;
-    EndBitUnion(PXLCAP)
-    PXLCAP pxlcap;
-
-    BitUnion16(PXLC)
-        Bitfield<1,0>   aspmc;
-        Bitfield<2>     reserved0;
-        Bitfield<3>     rcb;
-        Bitfield<5,4>   reserved1;
-        Bitfield<6>     ccc;
-        Bitfield<7>     es;
-        Bitfield<8>     ecpm;
-        Bitfield<9>     hawd;
-        Bitfield<15,10> reserved2;
-    EndBitUnion(PXLC)
-    PXLC pxlc;
-
-    BitUnion16(PXLS)
-        Bitfield<3,0>   cls;
-        Bitfield<9,4>   nlw;
-        Bitfield<11,10> reserved0;
-        Bitfield<12>    slot_clk_config;
-        Bitfield<15,13> reserved1;
-    EndBitUnion(PXLS)
-    PXLS pxls;
-
-    BitUnion32(PXDCAP2)
-        Bitfield<3,0>   ctrs;
-        Bitfield<4>     ctds;
-        Bitfield<5>     arifs;
-        Bitfield<6>     aors;
-        Bitfield<7>     aocs32;
-        Bitfield<8>     aocs64;
-        Bitfield<9>     ccs128;
-        Bitfield<10>    nprpr;
-        Bitfield<11>    ltrs;
-        Bitfield<13,12> tphcs;
-        Bitfield<17,14> reserved0;
-        Bitfield<19,18> obffs;
-        Bitfield<20>    effs;
-        Bitfield<21>    eetps;
-        Bitfield<23,22> meetp;
-        Bitfield<31,24> reserved1;
-    EndBitUnion(PXDCAP2)
-    PXDCAP2 pxdcap2;
-
-    BitUnion32(PXDC2)
-        Bitfield<3,0>   ctv;
-        Bitfield<4>     ctd;
-        Bitfield<9,5>   reserved0;
-        Bitfield<10>    ltrme;
-        Bitfield<12,11> reserved1;
-        Bitfield<14,13> obffe;
-        Bitfield<31,15> reserved2;
-    EndBitUnion(PXDC2)
-    PXDC2 pxdc2;
+    uint8_t data[48];
+    struct {
+        uint16_t pxid; /* 0:7  cid
+                        *  8:15 next
+                        */
+        uint16_t pxcap; /* 0:3   ver;
+                         * 4:7   dpt;
+                         * 8     si;
+                         * 9:13  imn;
+                         * 14:15 reserved;
+                         */
+        uint32_t pxdcap; /* 0:2   mps;
+                          * 3:4   pfs;
+                          * 5     etfs;
+                          * 6:8   l0sl;
+                          * 9:11  l1l;
+                          * 12:14 reserved;
+                          * 15    rer;
+                          * 16:17 reserved;
+                          * 18:25 csplv;
+                          * 26:27 cspls;
+                          * 28    flrc;
+                          * 29:31 reserved;
+                          */
+        uint16_t pxdc; /* 0     cere;
+                        * 1     nfere;
+                        * 2     fere;
+                        * 3     urre;
+                        * 4     ero;
+                        * 5:7   mps;
+                        * 8     ete;
+                        * 9     pfe;
+                        * 10    appme;
+                        * 11    ens;
+                        * 12:14 mrrs;
+                        * 15    func_reset;
+                        */
+        uint16_t pxds; /* 0     ced;
+                        * 1     nfed;
+                        * 2     fed;
+                        * 3     urd;
+                        * 4     apd;
+                        * 5     tp;
+                        * 6:15  reserved;
+                        */
+        uint32_t pxlcap; /* 0:3   sls;
+                          * 4:9   mlw;
+                          * 10:11 aspms;
+                          * 12:14 l0sel;
+                          * 15:17 l1el;
+                          * 18    cpm;
+                          * 19    sderc;
+                          * 20    dllla;
+                          * 21    lbnc;
+                          * 22:23 reserved;
+                          * 24:31 pn;
+                          */
+        uint16_t pxlc; /* 0:1   aspmc;
+                        * 2     reserved;
+                        * 3     rcb;
+                        * 4:5   reserved;
+                        * 6     ccc;
+                        * 7     es;
+                        * 8     ecpm;
+                        * 9     hawd;
+                        * 10:15 reserved;
+                        */
+        uint16_t pxls; /* 0:3   cls;
+                        * 4:9   nlw;
+                        * 10:11 reserved;
+                        * 12    slot_clk_config;
+                        * 13:15 reserved;
+                        */
+        uint8_t reserved[20];
+        uint32_t pxdcap2; /* 0:3   ctrs;
+                           * 4     ctds;
+                           * 5     arifs;
+                           * 6     aors;
+                           * 7     aocs32;
+                           * 8     aocs64;
+                           * 9     ccs128;
+                           * 10    nprpr;
+                           * 11    ltrs;
+                           * 12:13 tphcs;
+                           * 14:17 reserved;
+                           * 18:19 obffs;
+                           * 20    effs;
+                           * 21    eetps;
+                           * 22:23 meetp;
+                           * 24:31 reserved;
+                           */
+        uint32_t pxdc2; /* 0:3   ctv;
+                         * 4     ctd;
+                         * 5:9   reserved;
+                         * 10    ltrme;
+                         * 11:12 reserved;
+                         * 13:14 obffe;
+                         * 15:31 reserved;
+                         */
+    };
 };
 #endif // __PCIREG_H__
