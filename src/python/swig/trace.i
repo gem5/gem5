@@ -33,17 +33,25 @@
 %{
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "base/output.hh"
 
 inline void
 output(const char *filename)
 {
-    Trace::setOutput(filename);
+    std::ostream *file_stream = simout.find(filename);
+
+    if (!file_stream)
+        file_stream = simout.create(filename);
+
+    Trace::setDebugLogger(new Trace::OstreamLogger(*file_stream));
 }
 
 inline void
 ignore(const char *expr)
 {
-    Trace::ignore.setExpression(expr);
+    ObjectMatch ignore(expr);
+
+    Trace::getDebugLogger()->setIgnore(ignore);
 }
 
 using Trace::enabled;
