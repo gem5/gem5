@@ -57,15 +57,14 @@ BadAddrEvent::process(ThreadContext *tc)
 
     uint64_t a0 = tc->readIntReg(16);
 
-    AddrRangeIter iter;
     bool found = false;
 
     MasterPort &dataPort = tc->getCpuPtr()->getDataPort();
 
     // get the address ranges of the connected slave port
     AddrRangeList resp = dataPort.getAddrRanges();
-    for (iter = resp.begin(); iter != resp.end(); iter++) {
-        if (iter->contains(K0Seg2Phys(a0) & PAddrImplMask))
+    for (const auto &iter : resp) {
+        if (iter.contains(K0Seg2Phys(a0) & PAddrImplMask))
             found = true;
     }
 

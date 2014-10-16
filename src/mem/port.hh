@@ -50,21 +50,8 @@
 #ifndef __MEM_PORT_HH__
 #define __MEM_PORT_HH__
 
-#include <list>
-
 #include "base/addr_range.hh"
 #include "mem/packet.hh"
-
-/**
- * This typedef is used to clean up getAddrRanges(). It's declared
- * outside the Port object since it's also used by some mem objects.
- * Eventually we should move this typedef to wherever Addr is
- * defined.
- */
-
-typedef std::list<AddrRange> AddrRangeList;
-typedef std::list<AddrRange>::iterator AddrRangeIter;
-typedef std::list<AddrRange>::const_iterator AddrRangeConstIter;
 
 class MemObject;
 

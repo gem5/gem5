@@ -45,6 +45,7 @@
 #ifndef __BASE_ADDR_RANGE_HH__
 #define __BASE_ADDR_RANGE_HH__
 
+#include <list>
 #include <vector>
 
 #include "base/bitfield.hh"
@@ -292,6 +293,11 @@ class AddrRange
 
 #endif // SWIG
 };
+
+/**
+ * Convenience typedef for a collection of address ranges
+ */
+typedef std::list<AddrRange> AddrRangeList;
 
 inline AddrRange
 RangeEx(Addr start, Addr end)

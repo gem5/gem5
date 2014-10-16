@@ -526,8 +526,8 @@ RubyPort::PioSlavePort::getAddrRanges() const
         ranges.splice(ranges.begin(),
                 ruby_port->master_ports[i]->getAddrRanges());
     }
-    for (AddrRangeConstIter r = ranges.begin(); r != ranges.end(); ++r)
-        DPRINTF(RubyPort, "%s\n", r->to_string());
+    for (const auto M5_VAR_USED &r : ranges)
+        DPRINTF(RubyPort, "%s\n", r.to_string());
     return ranges;
 }
 
