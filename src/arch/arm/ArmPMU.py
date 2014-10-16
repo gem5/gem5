@@ -78,6 +78,59 @@ class ArmPMU(SimObject):
         for name in args:
             self._deferred_event_types.append((event_id, obj, name))
 
+    def addArchEvents(self,
+                      cpu=None,
+                      itb=None, dtb=None,
+                      icache=None, dcache=None,
+                      l2cache=None):
+        """Add architected events to the PMU.
+
+        This method can be called multiple times with only a subset of
+        the keyword arguments set. This enables event registration in
+        configuration scripts to happen closer to the instantiation of
+        the instrumented objects (e.g., the memory system) instead of
+        a central point.
+
+        CPU events should also be registered once per CPU that is
+        sharing the PMU (e.g., when switching between CPU models).
+        """
+
+        bpred = cpu.branchPred if cpu and not isNullPointer(cpu.branchPred) \
+            else None
+
+        # 0x01: L1I_CACHE_REFILL
+        self.addEventProbe(0x02, itb, "Refills")
+        # 0x03: L2D_CACHE_REFILL
+        # 0x04: L1D_CACHE
+        self.addEventProbe(0x05, dtb, "Refills")
+        self.addEventProbe(0x06, cpu, "RetiredLoads")
+        self.addEventProbe(0x07, cpu, "RetiredStores")
+        self.addEventProbe(0x08, cpu, "RetiredInsts")
+        # 0x09: EXC_TAKEN
+        # 0x0A: EXC_RETURN
+        # 0x0B: CID_WRITE_RETIRED
+        self.addEventProbe(0x0C, cpu, "RetiredBranches")
+        # 0x0D: BR_IMMED_RETIRED
+        # 0x0E: BR_RETURN_RETIRED
+        # 0x0F: UNALIGEND_LDST_RETIRED
+        self.addEventProbe(0x10, bpred, "Misses")
+        self.addEventProbe(0x11, cpu, "Cycles")
+        self.addEventProbe(0x12, bpred, "Branches")
+        self.addEventProbe(0x13, cpu, "RetiredLoads", "RetiredStores")
+        # 0x14: L1I_CACHE
+        # 0x15: L1D_CACHE_WB
+        # 0x16: L2D_CACHE
+        # 0x17: L2D_CACHE_REFILL
+        # 0x18: L2D_CACHE_WB
+        # 0x19: BUS_ACCESS
+        # 0x1A: MEMORY_ERROR
+        # 0x1B: INST_SPEC
+        # 0x1C: TTBR_WRITE_RETIRED
+        # 0x1D: BUS_CYCLES
+        # 0x1E: CHAIN
+        # 0x1F: L1D_CACHE_ALLOCATE
+        # 0x20: L2D_CACHE_ALLOCATE
+
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     eventCounters = Param.Int(31, "Number of supported PMU counters")
     pmuInterrupt = Param.Int(68, "PMU GIC interrupt number")
