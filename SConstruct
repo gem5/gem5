@@ -189,6 +189,8 @@ AddLocalOption('--without-python', dest='without_python',
 AddLocalOption('--without-tcmalloc', dest='without_tcmalloc',
                action='store_true',
                help='Disable linking against tcmalloc')
+AddLocalOption('--with-ubsan', dest='with_ubsan', action='store_true',
+               help='Build with Undefined Behavior Sanitizer if available')
 
 termcap = get_termcap(GetOption('use_colors'))
 
@@ -601,6 +603,15 @@ if main['GCC']:
                 '         If you encounter build problems, please update ' + \
                 'binutils to 2.23.' + \
                 termcap.Normal
+
+    # Make sure we warn if the user has requested to compile with the
+    # Undefined Benahvior Sanitizer and this version of gcc does not
+    # support it.
+    if GetOption('with_ubsan') and \
+            compareVersions(gcc_version, '4.9') < 0:
+        print termcap.Yellow + termcap.Bold + \
+            'Warning: UBSan is only supported using gcc 4.9 and later.' + \
+            termcap.Normal
 
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off. Note that these flags

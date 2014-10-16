@@ -953,6 +953,15 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         if compareVersions(env['GCC_VERSION'], '4.7') >= 0:
             new_env.Append(CXXFLAGS='-Wdelete-non-virtual-dtor')
             swig_env.Append(CCFLAGS='-Wno-maybe-uninitialized')
+
+        # Only gcc >= 4.9 supports UBSan, so check both the version
+        # and the command-line option before adding the compiler and
+        # linker flags.
+        if GetOption('with_ubsan') and \
+                compareVersions(env['GCC_VERSION'], '4.9') >= 0:
+            new_env.Append(CCFLAGS='-fsanitize=undefined')
+            new_env.Append(LINKFLAGS='-fsanitize=undefined')
+
     if env['CLANG']:
         # Always enable the warning for deletion of derived classes
         # with non-virtual destructors
@@ -965,6 +974,12 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
                 # SWIG-generated code.
                 '-Wno-deprecated-register',
                 ])
+
+        # All supported clang versions have support for UBSan, so if
+        # asked to use it, append the compiler and linker flags.
+        if GetOption('with_ubsan'):
+            new_env.Append(CCFLAGS='-fsanitize=undefined')
+            new_env.Append(LINKFLAGS='-fsanitize=undefined')
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
