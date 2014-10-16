@@ -37,11 +37,11 @@
  * Authors: Andreas Hansson
  */
 
-#ifndef __PHYSICAL_MEMORY_HH__
-#define __PHYSICAL_MEMORY_HH__
+#ifndef __MEM_PHYSICAL_HH__
+#define __MEM_PHYSICAL_HH__
 
 #include "base/addr_range_map.hh"
-#include "mem/port.hh"
+#include "mem/packet.hh"
 
 /**
  * Forward declaration to avoid header dependencies.
@@ -57,7 +57,7 @@ class AbstractMemory;
  * system backingstore used by the memories in the simulated guest
  * system. When the system is created, the physical memory allocates
  * the backing store based on the address ranges that are populated in
- * the system, and does so indepentent of how those map to actual
+ * the system, and does so independent of how those map to actual
  * memory controllers. Thus, the physical memory completely abstracts
  * the mapping of the backing store of the host system and the address
  * mapping in the guest system. This enables us to arbitrarily change
@@ -86,7 +86,7 @@ class PhysicalMemory : public Serializable
 
     // The physical memory used to provide the memory in the simulated
     // system
-    std::vector<std::pair<AddrRange, uint8_t*> > backingStore;
+    std::vector<std::pair<AddrRange, uint8_t*>> backingStore;
 
     // Prevent copying
     PhysicalMemory(const PhysicalMemory&);
@@ -162,7 +162,7 @@ class PhysicalMemory : public Serializable
      *
      * @return Pointers to the memory backing store
      */
-    std::vector<std::pair<AddrRange, uint8_t*> > getBackingStore() const
+    std::vector<std::pair<AddrRange, uint8_t*>> getBackingStore() const
     { return backingStore; }
 
     /**
@@ -218,4 +218,4 @@ class PhysicalMemory : public Serializable
 
 };
 
-#endif //__PHYSICAL_MEMORY_HH__
+#endif //__MEM_PHYSICAL_HH__

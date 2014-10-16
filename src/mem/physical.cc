@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -64,34 +64,37 @@ PhysicalMemory::PhysicalMemory(const string& _name,
 {
     // add the memories from the system to the address map as
     // appropriate
-    for (vector<AbstractMemory*>::const_iterator m = _memories.begin();
-         m != _memories.end(); ++m) {
+    for (const auto& m : _memories) {
         // only add the memory if it is part of the global address map
-        if ((*m)->isInAddrMap()) {
-            memories.push_back(*m);
+        if (m->isInAddrMap()) {
+            memories.push_back(m);
 
             // calculate the total size once and for all
-            size += (*m)->size();
+            size += m->size();
 
             // add the range to our interval tree and make sure it does not
             // intersect an existing range
-            if (addrMap.insert((*m)->getAddrRange(), *m) == addrMap.end())
-                fatal("Memory address range for %s is overlapping\n",
-                      (*m)->name());
+            fatal_if(addrMap.insert(m->getAddrRange(), m) == addrMap.end(),
+                     "Memory address range for %s is overlapping\n",
+                     m->name());
         } else {
-            DPRINTF(AddrRanges,
-                    "Skipping memory %s that is not in global address map\n",
-                    (*m)->name());
             // this type of memory is used e.g. as reference memory by
             // Ruby, and they also needs a backing store, but should
             // not be part of the global address map
+            DPRINTF(AddrRanges,
+                    "Skipping memory %s that is not in global address map\n",
+                    m->name());
+
+            // sanity check
+            fatal_if(m->getAddrRange().interleaved(),
+                     "Memory %s that is not in the global address map cannot "
+                     "be interleaved\n", m->name());
 
             // simply do it independently, also note that this kind of
             // memories are allowed to overlap in the logic address
             // map
-            vector<AbstractMemory*> unmapped_mems;
-            unmapped_mems.push_back(*m);
-            createBackingStore((*m)->getAddrRange(), unmapped_mems);
+            vector<AbstractMemory*> unmapped_mems{m};
+            createBackingStore(m->getAddrRange(), unmapped_mems);
         }
     }
 
@@ -100,29 +103,27 @@ PhysicalMemory::PhysicalMemory(const string& _name,
     // memories
     vector<AddrRange> intlv_ranges;
     vector<AbstractMemory*> curr_memories;
-    for (AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.begin();
-         r != addrMap.end(); ++r) {
+    for (const auto& r : addrMap) {
         // simply skip past all memories that are null and hence do
         // not need any backing store
-        if (!r->second->isNull()) {
+        if (!r.second->isNull()) {
             // if the range is interleaved then save it for now
-            if (r->first.interleaved()) {
+            if (r.first.interleaved()) {
                 // if we already got interleaved ranges that are not
                 // part of the same range, then first do a merge
                 // before we add the new one
                 if (!intlv_ranges.empty() &&
-                    !intlv_ranges.back().mergesWith(r->first)) {
+                    !intlv_ranges.back().mergesWith(r.first)) {
                     AddrRange merged_range(intlv_ranges);
                     createBackingStore(merged_range, curr_memories);
                     intlv_ranges.clear();
                     curr_memories.clear();
                 }
-                intlv_ranges.push_back(r->first);
-                curr_memories.push_back(r->second);
+                intlv_ranges.push_back(r.first);
+                curr_memories.push_back(r.second);
             } else {
-                vector<AbstractMemory*> single_memory;
-                single_memory.push_back(r->second);
-                createBackingStore(r->first, single_memory);
+                vector<AbstractMemory*> single_memory{r.second};
+                createBackingStore(r.first, single_memory);
             }
         }
     }
@@ -139,8 +140,8 @@ void
 PhysicalMemory::createBackingStore(AddrRange range,
                                    const vector<AbstractMemory*>& _memories)
 {
-    if (range.interleaved())
-        panic("Cannot create backing store for interleaved range %s\n",
+    panic_if(range.interleaved(),
+             "Cannot create backing store for interleaved range %s\n",
               range.to_string());
 
     // perform the actual mmap
@@ -162,20 +163,18 @@ PhysicalMemory::createBackingStore(AddrRange range,
     backingStore.push_back(make_pair(range, pmem));
 
     // point the memories to their backing store
-    for (vector<AbstractMemory*>::const_iterator m = _memories.begin();
-         m != _memories.end(); ++m) {
+    for (const auto& m : _memories) {
         DPRINTF(AddrRanges, "Mapping memory %s to backing store\n",
-                (*m)->name());
-        (*m)->setBackingStore(pmem);
+                m->name());
+        m->setBackingStore(pmem);
     }
 }
 
 PhysicalMemory::~PhysicalMemory()
 {
     // unmap the backing store
-    for (vector<pair<AddrRange, uint8_t*> >::iterator s = backingStore.begin();
-         s != backingStore.end(); ++s)
-        munmap((char*)s->second, s->first.size());
+    for (auto& s : backingStore)
+        munmap((char*)s.second, s.first.size());
 }
 
 bool
@@ -184,7 +183,7 @@ PhysicalMemory::isMemAddr(Addr addr) const
     // see if the address is within the last matched range
     if (!rangeCache.contains(addr)) {
         // lookup in the interval tree
-        AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.find(addr);
+        const auto& r = addrMap.find(addr);
         if (r == addrMap.end()) {
             // not in the cache, and not in the tree
             return false;
@@ -206,23 +205,22 @@ PhysicalMemory::getConfAddrRanges() const
     // be called more than once the iteration should not be a problem
     AddrRangeList ranges;
     vector<AddrRange> intlv_ranges;
-    for (AddrRangeMap<AbstractMemory*>::const_iterator r = addrMap.begin();
-         r != addrMap.end(); ++r) {
-        if (r->second->isConfReported()) {
+    for (const auto& r : addrMap) {
+        if (r.second->isConfReported()) {
             // if the range is interleaved then save it for now
-            if (r->first.interleaved()) {
+            if (r.first.interleaved()) {
                 // if we already got interleaved ranges that are not
                 // part of the same range, then first do a merge
                 // before we add the new one
                 if (!intlv_ranges.empty() &&
-                    !intlv_ranges.back().mergesWith(r->first)) {
+                    !intlv_ranges.back().mergesWith(r.first)) {
                     ranges.push_back(AddrRange(intlv_ranges));
                     intlv_ranges.clear();
                 }
-                intlv_ranges.push_back(r->first);
+                intlv_ranges.push_back(r.first);
             } else {
                 // keep the current range
-                ranges.push_back(r->first);
+                ranges.push_back(r.first);
             }
         }
     }
@@ -241,7 +239,7 @@ PhysicalMemory::access(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     Addr addr = pkt->getAddr();
-    AddrRangeMap<AbstractMemory*>::const_iterator m = addrMap.find(addr);
+    const auto& m = addrMap.find(addr);
     assert(m != addrMap.end());
     m->second->access(pkt);
 }
@@ -251,7 +249,7 @@ PhysicalMemory::functionalAccess(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     Addr addr = pkt->getAddr();
-    AddrRangeMap<AbstractMemory*>::const_iterator m = addrMap.find(addr);
+    const auto& m = addrMap.find(addr);
     assert(m != addrMap.end());
     m->second->functionalAccess(pkt);
 }
@@ -263,13 +261,11 @@ PhysicalMemory::serialize(ostream& os)
     vector<Addr> lal_addr;
     vector<int> lal_cid;
 
-    for (vector<AbstractMemory*>::iterator m = memories.begin();
-         m != memories.end(); ++m) {
-        const list<LockedAddr>& locked_addrs = (*m)->getLockedAddrList();
-        for (list<LockedAddr>::const_iterator l = locked_addrs.begin();
-             l != locked_addrs.end(); ++l) {
-            lal_addr.push_back(l->addr);
-            lal_cid.push_back(l->contextId);
+    for (auto& m : memories) {
+        const list<LockedAddr>& locked_addrs = m->getLockedAddrList();
+        for (const auto& l : locked_addrs) {
+            lal_addr.push_back(l.addr);
+            lal_cid.push_back(l.contextId);
         }
     }
 
@@ -282,10 +278,9 @@ PhysicalMemory::serialize(ostream& os)
 
     unsigned int store_id = 0;
     // store each backing store memory segment in a file
-    for (vector<pair<AddrRange, uint8_t*> >::iterator s = backingStore.begin();
-         s != backingStore.end(); ++s) {
+    for (auto& s : backingStore) {
         nameOut(os, csprintf("%s.store%d", name(), store_id));
-        serializeStore(os, store_id++, s->first, s->second);
+        serializeStore(os, store_id++, s.first, s.second);
     }
 }
 
@@ -345,8 +340,7 @@ PhysicalMemory::unserialize(Checkpoint* cp, const string& section)
     arrayParamIn(cp, section, "lal_addr", lal_addr);
     arrayParamIn(cp, section, "lal_cid", lal_cid);
     for(size_t i = 0; i < lal_addr.size(); ++i) {
-        AddrRangeMap<AbstractMemory*>::const_iterator m =
-            addrMap.find(lal_addr[i]);
+        const auto& m = addrMap.find(lal_addr[i]);
         m->second->addLockedAddr(LockedAddr(lal_addr[i], lal_cid[i]));
     }
 
