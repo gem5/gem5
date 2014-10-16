@@ -34,6 +34,7 @@
 #include <algorithm>
 
 #include "base/trace.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/printk.hh"
 #include "sim/arguments.hh"
 

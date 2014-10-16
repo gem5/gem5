@@ -32,8 +32,8 @@
 #define __SIM_ARGUMENTS_HH__
 
 #include <cassert>
+#include <memory>
 
-#include "base/refcnt.hh"
 #include "base/types.hh"
 #include "mem/fs_translating_port_proxy.hh"
 
@@ -47,7 +47,7 @@ class Arguments
     uint64_t getArg(uint16_t size = (uint16_t)(-1), bool fp = false);
 
   protected:
-    class Data : public RefCounted
+    class Data
     {
       public:
         Data(){}
@@ -60,12 +60,12 @@ class Arguments
         char *alloc(size_t size);
     };
 
-    RefCountingPtr<Data> data;
+    std::shared_ptr<Data> data;
 
   public:
     Arguments(ThreadContext *ctx, int n = 0)
-        : tc(ctx), number(n), data(NULL)
-        { assert(number >= 0); data = new Data;}
+        : tc(ctx), number(n), data(new Data())
+    { assert(number >= 0); }
     Arguments(const Arguments &args)
         : tc(args.tc), number(args.number), data(args.data) {}
     ~Arguments() {}
@@ -73,9 +73,11 @@ class Arguments
     ThreadContext *getThreadContext() const { return tc; }
 
     const Arguments &operator=(const Arguments &args) {
-        tc = args.tc;
-        number = args.number;
-        data = args.data;
+        if (this != &args) {
+            tc = args.tc;
+            number = args.number;
+            data = args.data;
+        }
         return *this;
     }
 
