@@ -43,6 +43,7 @@
 #ifndef __ARCH_ARM_ISA_HH__
 #define __ARCH_ARM_ISA_HH__
 
+#include "arch/arm/isa_device.hh"
 #include "arch/arm/registers.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
@@ -52,6 +53,7 @@
 #include "sim/sim_object.hh"
 
 struct ArmISAParams;
+struct DummyArmISADeviceParams;
 class ThreadContext;
 class Checkpoint;
 class EventManager;
@@ -130,6 +132,12 @@ namespace ArmISA
       protected:
         // Parent system
         ArmSystem *system;
+
+        /** Dummy device for to handle non-existing ISA devices */
+        DummyISADevice dummyDevice;
+
+        // PMU belonging to this ISA
+        BaseISADevice *pmu;
 
         // Cached copies of system-level properties
         bool haveSecurity;

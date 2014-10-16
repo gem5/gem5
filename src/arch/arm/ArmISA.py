@@ -40,12 +40,16 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
+from ArmPMU import ArmPMU
+
 class ArmISA(SimObject):
     type = 'ArmISA'
     cxx_class = 'ArmISA::ISA'
     cxx_header = "arch/arm/isa.hh"
 
     system = Param.System(Parent.any, "System this ISA object belongs to")
+
+    pmu = Param.ArmPMU(NULL, "Performance Monitoring Unit")
 
     midr = Param.UInt32(0x410fc0f0, "MIDR value")
 
