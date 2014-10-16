@@ -73,6 +73,21 @@ class ProbeManager;
 class ProbeListener;
 
 /**
+ * Name space containing shared probe point declarations.
+ *
+ * Probe types that are shared between multiple types of SimObjects
+ * should live in this name space. This makes it possible to use a
+ * common instrumentation interface for devices such as PMUs that have
+ * different implementations in different ISAs.
+ */
+namespace ProbePoints {
+/* Note: This is only here for documentation purposes, new probe
+ * points should normally be declared in their own header files. See
+ * for example pmu.hh.
+ */
+}
+
+/**
  * This class is a minimal wrapper around SimObject. It is used to declare
  * a python derived object that can be added as a ProbeListener to any other
  * SimObject.
