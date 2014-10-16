@@ -57,6 +57,7 @@
 #include <iosfwd>
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -66,7 +67,6 @@
 #include "base/cast.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
-#include "base/refcnt.hh"
 #include "base/str.hh"
 #include "base/types.hh"
 
@@ -2050,7 +2050,7 @@ class DistProxy
  * Base class for formula statistic node. These nodes are used to build a tree
  * that represents the formula.
  */
-class Node : public RefCounted
+class Node
 {
   public:
     /**
@@ -2075,8 +2075,8 @@ class Node : public RefCounted
     virtual std::string str() const = 0;
 };
 
-/** Reference counting pointer to a function Node. */
-typedef RefCountingPtr<Node> NodePtr;
+/** Shared pointer to a function Node. */
+typedef std::shared_ptr<Node> NodePtr;
 
 class ScalarStatNode : public Node
 {
@@ -2989,7 +2989,9 @@ class Temp
      * Copy the given pointer to this class.
      * @param n A pointer to a Node object to copy.
      */
-    Temp(NodePtr n) : node(n) { }
+    Temp(const NodePtr &n) : node(n) { }
+
+    Temp(NodePtr &&n) : node(std::move(n)) { }
 
     /**
      * Return the node pointer.
@@ -3155,51 +3157,51 @@ class Temp
 inline Temp
 operator+(Temp l, Temp r)
 {
-    return NodePtr(new BinaryNode<std::plus<Result> >(l, r));
+    return Temp(std::make_shared<BinaryNode<std::plus<Result> > >(l, r));
 }
 
 inline Temp
 operator-(Temp l, Temp r)
 {
-    return NodePtr(new BinaryNode<std::minus<Result> >(l, r));
+    return Temp(std::make_shared<BinaryNode<std::minus<Result> > >(l, r));
 }
 
 inline Temp
 operator*(Temp l, Temp r)
 {
-    return NodePtr(new BinaryNode<std::multiplies<Result> >(l, r));
+    return Temp(std::make_shared<BinaryNode<std::multiplies<Result> > >(l, r));
 }
 
 inline Temp
 operator/(Temp l, Temp r)
 {
-    return NodePtr(new BinaryNode<std::divides<Result> >(l, r));
+    return Temp(std::make_shared<BinaryNode<std::divides<Result> > >(l, r));
 }
 
 inline Temp
 operator-(Temp l)
 {
-    return NodePtr(new UnaryNode<std::negate<Result> >(l));
+    return Temp(std::make_shared<UnaryNode<std::negate<Result> > >(l));
 }
 
 template <typename T>
 inline Temp
 constant(T val)
 {
-    return NodePtr(new ConstNode<T>(val));
+    return Temp(std::make_shared<ConstNode<T> >(val));
 }
 
 template <typename T>
 inline Temp
 constantVector(T val)
 {
-    return NodePtr(new ConstVectorNode<T>(val));
+    return Temp(std::make_shared<ConstVectorNode<T> >(val));
 }
 
 inline Temp
 sum(Temp val)
 {
-    return NodePtr(new SumNode<std::plus<Result> >(val));
+    return Temp(std::make_shared<SumNode<std::plus<Result> > >(val));
 }
 
 /** Dump all statistics data to the registered outputs */
