@@ -37,60 +37,24 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_INSTS_MICROLDSTOP_HH__
-#define __ARCH_X86_INSTS_MICROLDSTOP_HH__
+#ifndef __ARCH_X86_LDSTFLAGS_HH__
+#define __ARCH_X86_LDSTFLAGS_HH__
 
-#include "arch/x86/insts/microop.hh"
-#include "arch/x86/ldstflags.hh"
-#include "mem/packet.hh"
+#include "base/bitfield.hh"
 #include "mem/request.hh"
-#include "sim/faults.hh"
 
+/**
+ * This is exposed globally, independent of the ISA.
+ */
 namespace X86ISA
 {
-    /**
-     * Base class for load and store ops
-     */
-    class LdStOp : public X86MicroopBase
-    {
-      protected:
-        const uint8_t scale;
-        const RegIndex index;
-        const RegIndex base;
-        const uint64_t disp;
-        const uint8_t segment;
-        const RegIndex data;
-        const uint8_t dataSize;
-        const uint8_t addressSize;
-        const Request::FlagsType memFlags;
-        RegIndex foldOBit, foldABit;
-
-        //Constructor
-        LdStOp(ExtMachInst _machInst,
-                const char * mnem, const char * _instMnem,
-                uint64_t setFlags,
-                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-                uint64_t _disp, InstRegIndex _segment,
-                InstRegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize,
-                Request::FlagsType _memFlags,
-                OpClass __opClass) :
-        X86MicroopBase(_machInst, mnem, _instMnem, setFlags, __opClass),
-                scale(_scale), index(_index.idx), base(_base.idx),
-                disp(_disp), segment(_segment.idx),
-                data(_data.idx),
-                dataSize(_dataSize), addressSize(_addressSize),
-                memFlags(_memFlags | _segment.idx)
-        {
-            assert(_segment.idx < NUM_SEGMENTREGS);
-            foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
-            foldABit =
-                (addressSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
-        }
-
-        std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const;
+    const Request::FlagsType M5_VAR_USED SegmentFlagMask = mask(4);
+    const int FlagShift = 4;
+    enum FlagBit {
+        CPL0FlagBit = 1,
+        AddrSizeFlagBit = 2,
+        StoreCheck = 4
     };
 }
 
-#endif //__ARCH_X86_INSTS_MICROLDSTOP_HH__
+#endif //__ARCH_X86_LDSTFLAGS_HH__

@@ -182,6 +182,7 @@ class RubyPort : public MemObject
     AbstractController* m_controller;
     MessageBuffer* m_mandatory_q_ptr;
     bool m_usingRubyTester;
+    System* system;
 
   private:
     void addToRetryList(MemSlavePort * port)
@@ -205,7 +206,6 @@ class RubyPort : public MemObject
     std::vector<PioMasterPort *> master_ports;
 
     DrainManager *drainManager;
-    System* system;
 
     //
     // Based on similar code in the M5 bus.  Stores pointers to those ports

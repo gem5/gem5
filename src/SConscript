@@ -379,8 +379,20 @@ def makeTheISA(source, target, env):
 
 ''')
 
+    # create defines for the preprocessing and compile-time determination
     for i,isa in enumerate(isas):
         code('#define $0 $1', define(isa), i + 1)
+    code()
+
+    # create an enum for any run-time determination of the ISA, we
+    # reuse the same name as the namespaces
+    code('enum class Arch {')
+    for i,isa in enumerate(isas):
+        if i + 1 == len(isas):
+            code('  $0 = $1', namespace(isa), define(isa))
+        else:
+            code('  $0 = $1,', namespace(isa), define(isa))
+    code('};')
 
     code('''
 

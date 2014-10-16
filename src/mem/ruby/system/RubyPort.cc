@@ -52,13 +52,14 @@
 RubyPort::RubyPort(const Params *p)
     : MemObject(p), m_version(p->version), m_controller(NULL),
       m_mandatory_q_ptr(NULL), m_usingRubyTester(p->using_ruby_tester),
+      system(p->system),
       pioMasterPort(csprintf("%s.pio-master-port", name()), this),
       pioSlavePort(csprintf("%s.pio-slave-port", name()), this),
       memMasterPort(csprintf("%s.mem-master-port", name()), this),
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
           p->ruby_system, p->access_phys_mem, -1),
       gotAddrRanges(p->port_master_connection_count), drainManager(NULL),
-      system(p->system), access_phys_mem(p->access_phys_mem)
+      access_phys_mem(p->access_phys_mem)
 {
     assert(m_version != -1);
 

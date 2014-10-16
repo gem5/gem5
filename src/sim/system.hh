@@ -271,6 +271,11 @@ class System : public MemObject
      */
     bool isMemAddr(Addr addr) const;
 
+    /**
+     * Get the architecture.
+     */
+    Arch getArch() const { return Arch::TheISA; }
+
      /**
      * Get the page bytes for the ISA.
      */

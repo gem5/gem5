@@ -26,12 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/x86/ldstflags.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
-#include "config/the_isa.hh"
-#if THE_ISA == X86_ISA
-#include "arch/x86/insts/microldstop.hh"
-#endif // X86_ISA
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
@@ -45,6 +42,7 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/packet.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -630,13 +628,13 @@ Sequencer::makeRequest(PacketPtr pkt)
             if (pkt->req->isInstFetch()) {
                 primary_type = secondary_type = RubyRequestType_IFETCH;
             } else {
-#if THE_ISA == X86_ISA
-                uint32_t flags = pkt->req->getFlags();
-                bool storeCheck = flags &
-                        (TheISA::StoreCheck << TheISA::FlagShift);
-#else
                 bool storeCheck = false;
-#endif // X86_ISA
+                // only X86 need the store check
+                if (system->getArch() == Arch::X86ISA) {
+                    uint32_t flags = pkt->req->getFlags();
+                    storeCheck = flags &
+                        (X86ISA::StoreCheck << X86ISA::FlagShift);
+                }
                 if (storeCheck) {
                     primary_type = RubyRequestType_RMW_Read;
                     secondary_type = RubyRequestType_ST;
