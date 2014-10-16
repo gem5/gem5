@@ -30,9 +30,11 @@
 #ifndef _FP80_H
 #define _FP80_H 1
 
-#include <math.h>
-#include <stdint.h>
+#include <math.h> /* FP_NAN et al. */
 #include <stdio.h>
+
+#include <fputils/fptypes.h>
+
 
 #ifdef  __cplusplus
 extern "C" {
@@ -44,15 +46,6 @@ extern "C" {
  *
  * @{
  */
-
-/** Internal representation of an 80-bit float. */
-typedef union  {
-    char bits[10];
-    struct {
-        uint64_t fi;
-        uint16_t se;
-    } repr;
-} fp80_t;
 
 /** Constant representing +inf */
 extern const fp80_t fp80_pinf;
@@ -190,6 +183,21 @@ int fp80_iszero(fp80_t fp80);
  */
 int fp80_issubnormal(fp80_t fp80);
 
+
+/**
+ * Convert an 80-bit float to a 64-bit double.
+ *
+ * Convenience wrapper around fp80_cvtfp64() that returns a double
+ * instead of the internal fp64_t representation.
+ *
+ * Note that this conversion is lossy, see fp80_cvtfp64() for details
+ * of the conversion.
+ *
+ * @param fp80 Source value to convert.
+ * @return value represented as double.
+ */
+double fp80_cvtd(fp80_t fp80);
+
 /**
  * Convert an 80-bit float to a 64-bit double.
  *
@@ -214,22 +222,34 @@ int fp80_issubnormal(fp80_t fp80);
  * @param fp80 Source value to convert.
  * @return 64-bit version of the float.
  */
-double fp80_cvtd(fp80_t fp80);
+fp64_t fp80_cvtfp64(fp80_t fp80);
 
 /**
- * Convert an 64-bit double to an 80-bit float.
+ * Convert a double to an 80-bit float.
  *
- * This function converts a standard 64-bit double into an 80-bit
- * float. This conversion is completely lossless since the 80-bit
- * float represents a superset of what a 64-bit double can
- * represent.
+ * This is a convenience wrapper around fp80_cvffp64() and provides a
+ * convenient way of using the native double type instead of the
+ * internal fp64_t representation.
+ *
+ * @param fpd Source value to convert.
+ * @return 80-bit version of the float.
+ */
+fp80_t fp80_cvfd(double fpd);
+
+/**
+ * Convert a 64-bit float to an 80-bit float.
+ *
+ * This function converts the internal representation of a 64-bit
+ * float into an 80-bit float. This conversion is completely lossless
+ * since the 80-bit float represents a superset of what a 64-bit
+ * float can represent.
  *
  * @note Denormals will be converted to normalized values.
  *
- * @param fpd Source value to convert.
- * @return 64-bit version of the float.
+ * @param fp64 64-bit float to convert.
+ * @return 80-bit version of the float.
  */
-fp80_t fp80_cvfd(double fpd);
+fp80_t fp80_cvffp64(fp64_t fp64);
 
 /**
  * Dump the components of an 80-bit float to a file.

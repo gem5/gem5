@@ -6,11 +6,17 @@ MOSTLYCLEANFILES=
 
 lib_LTLIBRARIES = libfputils.la
 
-include_HEADERS = include/fputils/fp80.h
+include_HEADERS = \
+	include/fputils/fp80.h \
+	include/fputils/fp64.h \
+	include/fputils/fptypes.h
 
 libfputils_la_SOURCES = \
 	include/fputils/fp80.h \
+	include/fputils/fp64.h \
+	include/fputils/fptypes.h \
 	fpbits.h \
+	fp64.c \
 	fp80.c
 
 

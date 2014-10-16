@@ -40,6 +40,7 @@ if fpenv['GCC']:
     fpenv.Append(CCFLAGS=['-std=c99'])
 
 fpenv.Library('fputils', [
+        fpenv.SharedObject('fp64.c'),
         fpenv.SharedObject('fp80.c'),
     ])
 

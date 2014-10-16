@@ -2,7 +2,7 @@ AC_INIT(libfputils, 1.0, andreas@sandberg.pp.se)
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+AM_INIT_AUTOMAKE([foreign -Wall])
 
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)

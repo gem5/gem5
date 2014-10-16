@@ -66,6 +66,14 @@
 #define BUILD_FP64(sign, frac, exp)                             \
     { .bits = BUILD_IFP64(sign, frac, exp) }
 
+static inline fp64_t
+build_fp64(int sign, uint64_t frac, int exp)
+{
+    const fp64_t f = BUILD_FP64(sign, frac, exp);
+
+    return f;
+}
+
 #define BUILD_FP80_SE(sign, exp)                                \
     ((sign) ? FP80_SIGN_BIT : 0) |                              \
     ((exp) & FP80_EXP_MASK)
@@ -80,6 +88,14 @@
         .repr.fi = BUILD_FP80_FI(frac, exp)                     \
     }
 
+static inline fp80_t
+build_fp80(int sign, uint64_t frac, int exp)
+{
+    const fp80_t f = BUILD_FP80(sign, frac, exp);
+
+    return f;
+}
+
 #define FP80_FRAC(fp80)                                         \
     (fp80.repr.fi & FP80_FRAC_MASK)
 
@@ -91,5 +107,6 @@
 
 #define FP64_EXP(fp80)                                          \
     ((fp64.bits & FP64_EXP_MASK) >> FP64_EXP_SHIFT)
+
 
 #endif
