@@ -627,6 +627,10 @@ def createSimObjectSwigWrapper(target, source, env):
     obj.swig_decl(code)
     code.write(target[0].abspath)
 
+# dummy target for generated code
+# we start out with all the Source files so they get copied to build/*/ also.
+SWIG = env.Dummy('swig', [s.tnode for s in Source.get()])
+
 # Generate all of the SimObject param C++ struct header files
 params_hh_files = []
 for name,simobj in sorted(sim_objects.iteritems()):
@@ -638,6 +642,7 @@ for name,simobj in sorted(sim_objects.iteritems()):
     env.Command(hh_file, Value(name),
                 MakeAction(createSimObjectParamStruct, Transform("SO PARAM")))
     env.Depends(hh_file, depends + extra_deps)
+    env.Depends(SWIG, hh_file)
 
 # Generate any needed param SWIG wrapper files
 params_i_files = []
@@ -647,6 +652,7 @@ for name,param in params_to_swig.iteritems():
     env.Command(i_file, Value(name),
                 MakeAction(createParamSwigWrapper, Transform("SW PARAM")))
     env.Depends(i_file, depends)
+    env.Depends(SWIG, i_file)
     SwigSource('m5.internal', i_file)
 
 # Generate all enum header files
@@ -658,17 +664,20 @@ for name,enum in sorted(all_enums.iteritems()):
     env.Command(cc_file, Value(name),
                 MakeAction(createEnumStrings, Transform("ENUM STR")))
     env.Depends(cc_file, depends + extra_deps)
+    env.Depends(SWIG, cc_file)
     Source(cc_file)
 
     hh_file = File('enums/%s.hh' % name)
     env.Command(hh_file, Value(name),
                 MakeAction(createEnumDecls, Transform("ENUMDECL")))
     env.Depends(hh_file, depends + extra_deps)
+    env.Depends(SWIG, hh_file)
 
     i_file = File('python/m5/internal/enum_%s.i' % name)
     env.Command(i_file, Value(name),
                 MakeAction(createEnumSwigWrapper, Transform("ENUMSWIG")))
     env.Depends(i_file, depends + extra_deps)
+    env.Depends(SWIG, i_file)
     SwigSource('m5.internal', i_file)
 
 # Generate SimObject SWIG wrapper files
@@ -706,6 +715,7 @@ for swig in SwigSource.all:
     init_file = '%s/%s_init.cc' % (dirname(cc_file), basename(cc_file))
     env.Command(init_file, Value(swig.module),
                 MakeAction(makeEmbeddedSwigInit, Transform("EMBED SW")))
+    env.Depends(SWIG, init_file)
     Source(init_file, **swig.guards)
 
 # Build all protocol buffers if we have got protoc and protobuf available
@@ -720,6 +730,7 @@ if env['HAVE_PROTOBUF']:
                                '--proto_path ${SOURCE.dir} $SOURCE',
                                Transform("PROTOC")))
 
+        env.Depends(SWIG, [proto.cc_file, proto.hh_file])
         # Add the C++ source file
         Source(proto.cc_file, **proto.guards)
 elif ProtoBuf.all:
@@ -816,10 +827,13 @@ for name,flag in sorted(debug_flags.iteritems()):
     n, compound, desc = flag
     assert n == name
 
-    env.Command('debug/%s.hh' % name, Value(flag),
+    hh_file = 'debug/%s.hh' % name
+    cc_file = 'debug/%s.cc' % name
+    env.Command(hh_file, Value(flag),
                 MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
-    env.Command('debug/%s.cc' % name, Value(flag),
+    env.Command(cc_file, Value(flag),
                 MakeAction(makeDebugFlagCC, Transform("TRACING", 0)))
+    env.Depends(SWIG, [hh_file, cc_file])
     Source('debug/%s.cc' % name)
 
 # Embed python files.  All .py files that have been indicated by a
@@ -878,6 +892,7 @@ EmbeddedPython embedded_${sym}(
 for source in PySource.all:
     env.Command(source.cpp, source.tnode,
                 MakeAction(embedPyFile, Transform("EMBED PY")))
+    env.Depends(SWIG, source.cpp)
     Source(source.cpp, skip_no_python=True)
 
 ########################################################################
