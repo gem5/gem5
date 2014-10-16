@@ -43,6 +43,7 @@
 #include <map>
 #include <vector>
 
+#include "base/bitunion.hh"
 #include "base/types.hh"
 
 class IniFile;
@@ -63,13 +64,36 @@ static const uint64_t gem5CheckpointVersion = 0x000000000000000d;
 template <class T>
 void paramOut(std::ostream &os, const std::string &name, const T &param);
 
+template <typename DataType, typename BitUnion>
+void paramOut(std::ostream &os, const std::string &name,
+              const BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+{
+    paramOut(os, name, p.__data);
+}
+
 template <class T>
 void paramIn(Checkpoint *cp, const std::string &section,
              const std::string &name, T &param);
 
+template <typename DataType, typename BitUnion>
+void paramIn(Checkpoint *cp, const std::string &section,
+             const std::string &name,
+             BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+{
+    paramIn(cp, section, name, p.__data);
+}
+
 template <class T>
 bool optParamIn(Checkpoint *cp, const std::string &section,
              const std::string &name, T &param);
+
+template <typename DataType, typename BitUnion>
+bool optParamIn(Checkpoint *cp, const std::string &section,
+                const std::string &name,
+                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+{
+    return optParamIn(cp, section, name, p.__data);
+}
 
 template <class T>
 void arrayParamOut(std::ostream &os, const std::string &name,
