@@ -53,6 +53,7 @@
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
 #include "sim/fault_fwd.hh"
+#include "sim/probe/pmu.hh"
 #include "sim/tlb.hh"
 
 class ThreadContext;
@@ -130,6 +131,9 @@ class TLB : public BaseTLB
     Stats::Formula hits;
     Stats::Formula misses;
     Stats::Formula accesses;
+
+    /** PMU probe for TLB refills */
+    ProbePoints::PMUUPtr ppRefills;
 
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
 
@@ -290,6 +294,8 @@ class TLB : public BaseTLB
     void unserialize(Checkpoint *cp, const std::string &section);
 
     void regStats();
+
+    void regProbePoints() M5_ATTR_OVERRIDE;
 
     /**
      * Get the table walker master port. This is used for migrating

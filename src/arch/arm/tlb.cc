@@ -197,6 +197,7 @@ TLB::insert(Addr addr, TlbEntry &entry)
     table[0] = entry;
 
     inserts++;
+    ppRefills->notify(1);
 }
 
 void
@@ -529,6 +530,12 @@ TLB::regStats()
     hits = readHits + writeHits + instHits;
     misses = readMisses + writeMisses + instMisses;
     accesses = readAccesses + writeAccesses + instAccesses;
+}
+
+void
+TLB::regProbePoints()
+{
+    ppRefills.reset(new ProbePoints::PMU(getProbeManager(), "Refills"));
 }
 
 Fault
