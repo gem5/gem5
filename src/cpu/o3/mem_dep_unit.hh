@@ -44,10 +44,10 @@
 #define __CPU_O3_MEM_DEP_UNIT_HH__
 
 #include <list>
+#include <memory>
 #include <set>
 
 #include "base/hashmap.hh"
-#include "base/refcnt.hh"
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
 #include "debug/MemDepUnit.hh"
@@ -164,13 +164,13 @@ class MemDepUnit
 
     class MemDepEntry;
 
-    typedef RefCountingPtr<MemDepEntry> MemDepEntryPtr;
+    typedef std::shared_ptr<MemDepEntry> MemDepEntryPtr;
 
     /** Memory dependence entries that track memory operations, marking
      *  when the instruction is ready to execute and what instructions depend
      *  upon it.
      */
-    class MemDepEntry : public RefCounted {
+    class MemDepEntry {
       public:
         /** Constructs a memory dependence entry. */
         MemDepEntry(DynInstPtr &new_inst)

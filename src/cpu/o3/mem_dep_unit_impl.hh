@@ -162,7 +162,7 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    MemDepEntryPtr inst_entry = new MemDepEntry(inst);
+    MemDepEntryPtr inst_entry = std::make_shared<MemDepEntry>(inst);
 
     // Add the MemDepEntry to the hash.
     memDepHash.insert(
@@ -259,7 +259,7 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    MemDepEntryPtr inst_entry = new MemDepEntry(inst);
+    MemDepEntryPtr inst_entry = std::make_shared<MemDepEntry>(inst);
 
     // Insert the MemDepEntry into the hash.
     memDepHash.insert(
@@ -310,7 +310,7 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
 
     ThreadID tid = barr_inst->threadNumber;
 
-    MemDepEntryPtr inst_entry = new MemDepEntry(barr_inst);
+    MemDepEntryPtr inst_entry = std::make_shared<MemDepEntry>(barr_inst);
 
     // Add the MemDepEntry to the hash.
     memDepHash.insert(
