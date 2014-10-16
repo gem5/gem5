@@ -30,6 +30,7 @@
 #define __MEM_RUBY_SYSTEM_DMASEQUENCER_HH__
 
 #include <ostream>
+#include <memory>
 
 #include "mem/protocol/DMASequencerRequestType.hh"
 #include "mem/ruby/common/DataBlock.hh"

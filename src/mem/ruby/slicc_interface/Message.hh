@@ -30,14 +30,14 @@
 #define __MEM_RUBY_SLICC_INTERFACE_MESSAGE_HH__
 
 #include <iostream>
+#include <memory>
 
-#include "base/refcnt.hh"
 #include "mem/packet.hh"
 
 class Message;
-typedef RefCountingPtr<Message> MsgPtr;
+typedef std::shared_ptr<Message> MsgPtr;
 
-class Message : public RefCounted
+class Message
 {
   public:
     Message(Tick curTime)
@@ -54,7 +54,7 @@ class Message : public RefCounted
 
     virtual ~Message() { }
 
-    virtual Message* clone() const = 0;
+    virtual MsgPtr clone() const = 0;
     virtual void print(std::ostream& out) const = 0;
     virtual void setIncomingLink(int) {}
     virtual void setVnet(int) {}

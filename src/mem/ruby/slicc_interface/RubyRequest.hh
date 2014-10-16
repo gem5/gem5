@@ -71,7 +71,8 @@ class RubyRequest : public Message
     }
 
     RubyRequest(Tick curTime) : Message(curTime) {}
-    RubyRequest* clone() const { return new RubyRequest(*this); }
+    MsgPtr clone() const
+    { return std::shared_ptr<Message>(new RubyRequest(*this)); }
 
     const Address& getLineAddress() const { return m_LineAddress; }
     const Address& getPhysicalAddress() const { return m_PhysicalAddress; }

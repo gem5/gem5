@@ -54,8 +54,8 @@ class EnqueueStatementAST(StatementAST):
         self.symtab.newSymbol(v)
 
         # Declare message
-        code("${{msg_type.ident}} *out_msg = "\
-             "new ${{msg_type.ident}}(clockEdge());")
+        code("std::shared_ptr<${{msg_type.ident}}> out_msg = "\
+             "std::make_shared<${{msg_type.ident}}>(clockEdge());")
 
         # The other statements
         t = self.statements.generate(code, None)

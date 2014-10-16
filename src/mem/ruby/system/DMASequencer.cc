@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <memory>
+
 #include "debug/RubyDma.hh"
 #include "debug/RubyStats.hh"
 #include "mem/protocol/SequencerMsg.hh"
@@ -69,7 +71,8 @@ DMASequencer::makeRequest(PacketPtr pkt)
     active_request.bytes_issued = 0;
     active_request.pkt = pkt;
 
-    SequencerMsg *msg = new SequencerMsg(clockEdge());
+    std::shared_ptr<SequencerMsg> msg =
+        std::make_shared<SequencerMsg>(clockEdge());
     msg->getPhysicalAddress() = Address(paddr);
     msg->getLineAddress() = line_address(msg->getPhysicalAddress());
     msg->getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
@@ -107,7 +110,8 @@ DMASequencer::issueNext()
         return;
     }
 
-    SequencerMsg *msg = new SequencerMsg(clockEdge());
+    std::shared_ptr<SequencerMsg> msg =
+        std::make_shared<SequencerMsg>(clockEdge());
     msg->getPhysicalAddress() = Address(active_request.start_paddr +
                                        active_request.bytes_completed);
 

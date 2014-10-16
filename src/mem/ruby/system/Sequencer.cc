@@ -679,11 +679,12 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
         pc = pkt->req->getPC();
     }
 
-    RubyRequest *msg = new RubyRequest(clockEdge(), pkt->getAddr(),
-                                       pkt->getPtr<uint8_t>(true),
-                                       pkt->getSize(), pc, secondary_type,
-                                       RubyAccessMode_Supervisor, pkt,
-                                       PrefetchBit_No, proc_id);
+    std::shared_ptr<RubyRequest> msg =
+        std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
+                                      pkt->getPtr<uint8_t>(true),
+                                      pkt->getSize(), pc, secondary_type,
+                                      RubyAccessMode_Supervisor, pkt,
+                                      PrefetchBit_No, proc_id);
 
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
             curTick(), m_version, "Seq", "Begin", "", "",

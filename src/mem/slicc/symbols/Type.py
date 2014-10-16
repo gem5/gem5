@@ -283,7 +283,16 @@ $klass ${{self.c_ident}}$parent
             code('}')
 
         # create a clone member
-        code('''
+        if self.isMessage:
+            code('''
+MsgPtr
+clone() const
+{
+     return std::shared_ptr<Message>(new ${{self.c_ident}}(*this));
+}
+''')
+        else:
+            code('''
 ${{self.c_ident}}*
 clone() const
 {
@@ -391,6 +400,7 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
  */
 
 #include <iostream>
+#include <memory>
 
 #include "mem/protocol/${{self.c_ident}}.hh"
 #include "mem/ruby/common/Global.hh"

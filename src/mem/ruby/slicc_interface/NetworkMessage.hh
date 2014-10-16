@@ -30,13 +30,14 @@
 #define __MEM_RUBY_SLICC_INTERFACE_NETWORKMESSAGE_HH__
 
 #include <iostream>
+#include <memory>
 
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
 class NetworkMessage;
-typedef RefCountingPtr<NetworkMessage> NetMsgPtr;
+typedef std::shared_ptr<NetworkMessage> NetMsgPtr;
 
 class NetworkMessage : public Message
 {
