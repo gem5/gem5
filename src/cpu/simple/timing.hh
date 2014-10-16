@@ -245,13 +245,15 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     };
 
+    void updateCycleCounts();
+
     IcachePort icachePort;
     DcachePort dcachePort;
 
     PacketPtr ifetch_pkt;
     PacketPtr dcache_pkt;
 
-    Tick previousCycle;
+    Cycles previousCycle;
 
   protected:
 

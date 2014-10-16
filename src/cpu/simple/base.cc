@@ -544,6 +544,9 @@ BaseSimpleCPU::postExecute()
         delete traceData;
         traceData = NULL;
     }
+
+    // Call CPU instruction commit probes
+    probeInstCommit(curStaticInst);
 }
 
 void

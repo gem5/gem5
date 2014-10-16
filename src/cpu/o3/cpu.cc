@@ -405,8 +405,11 @@ template <class Impl>
 void
 FullO3CPU<Impl>::regProbePoints()
 {
+    BaseCPU::regProbePoints();
+
     ppInstAccessComplete = new ProbePointArg<PacketPtr>(getProbeManager(), "InstAccessComplete");
     ppDataAccessComplete = new ProbePointArg<std::pair<DynInstPtr, PacketPtr> >(getProbeManager(), "DataAccessComplete");
+
     fetch.regProbePoints();
     iew.regProbePoints();
     commit.regProbePoints();
@@ -534,6 +537,7 @@ FullO3CPU<Impl>::tick()
     assert(getDrainState() != Drainable::Drained);
 
     ++numCycles;
+    ppCycles->notify(1);
 
 //    activity = false;
 
@@ -1444,6 +1448,8 @@ FullO3CPU<Impl>::instDone(ThreadID tid, DynInstPtr &inst)
     // Check for instruction-count-based events.
     comInstEventQueue[tid]->serviceEvents(thread[tid]->numInst);
     system->instEventQueue.serviceEvents(system->totalNumInsts);
+
+    probeInstCommit(inst->staticInst);
 }
 
 template <class Impl>
@@ -1622,10 +1628,12 @@ FullO3CPU<Impl>::wakeCPU()
 
     Cycles cycles(curCycle() - lastRunningCycle);
     // @todo: This is an oddity that is only here to match the stats
-    if (cycles != 0)
+    if (cycles > 1) {
         --cycles;
-    idleCycles += cycles;
-    numCycles += cycles;
+        idleCycles += cycles;
+        numCycles += cycles;
+        ppCycles->notify(cycles);
+    }
 
     schedule(tickEvent, clockEdge());
 }

@@ -283,6 +283,42 @@ BaseCPU::startup()
     }
 }
 
+ProbePoints::PMUUPtr
+BaseCPU::pmuProbePoint(const char *name)
+{
+    ProbePoints::PMUUPtr ptr;
+    ptr.reset(new ProbePoints::PMU(getProbeManager(), name));
+
+    return ptr;
+}
+
+void
+BaseCPU::regProbePoints()
+{
+    ppCycles = pmuProbePoint("Cycles");
+
+    ppRetiredInsts = pmuProbePoint("RetiredInsts");
+    ppRetiredLoads = pmuProbePoint("RetiredLoads");
+    ppRetiredStores = pmuProbePoint("RetiredStores");
+    ppRetiredBranches = pmuProbePoint("RetiredBranches");
+}
+
+void
+BaseCPU::probeInstCommit(const StaticInstPtr &inst)
+{
+    if (!inst->isMicroop() || inst->isLastMicroop())
+        ppRetiredInsts->notify(1);
+
+
+    if (inst->isLoad())
+        ppRetiredLoads->notify(1);
+
+    if (inst->isStore())
+        ppRetiredLoads->notify(1);
+
+    if (inst->isControl())
+        ppRetiredBranches->notify(1);
+}
 
 void
 BaseCPU::regStats()

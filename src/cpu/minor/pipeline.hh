@@ -126,6 +126,11 @@ class Pipeline : public Ticked
      *  stages and pipeline advance) */
     void evaluate();
 
+    void countCycles(Cycles delta) M5_ATTR_OVERRIDE
+    {
+        cpu.ppCycles->notify(delta);
+    }
+
     void minorTrace() const;
 
     /** Functions below here are BaseCPU operations passed on to pipeline

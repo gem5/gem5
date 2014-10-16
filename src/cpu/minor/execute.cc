@@ -853,6 +853,8 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)
         inst->traceData->setCPSeq(thread->numOp);
+
+    cpu.probeInstCommit(inst->staticInst);
 }
 
 bool

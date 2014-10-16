@@ -178,7 +178,7 @@ TimingSimpleCPU::switchOut()
     assert(!stayAtPC);
     assert(microPC() == 0);
 
-    numCycles += curCycle() - previousCycle;
+    updateCycleCounts();
 }
 
 
@@ -332,8 +332,7 @@ TimingSimpleCPU::translationFault(const Fault &fault)
 {
     // fault may be NoFault in cases where a fault is suppressed,
     // for instance prefetches.
-    numCycles += curCycle() - previousCycle;
-    previousCycle = curCycle();
+    updateCycleCounts();
 
     if (traceData) {
         // Since there was a fault, we shouldn't trace this instruction.
@@ -569,8 +568,7 @@ TimingSimpleCPU::fetch()
         _status = IcacheWaitResponse;
         completeIfetch(NULL);
 
-        numCycles += curCycle() - previousCycle;
-        previousCycle = curCycle();
+        updateCycleCounts();
     }
 }
 
@@ -603,8 +601,7 @@ TimingSimpleCPU::sendFetch(const Fault &fault, RequestPtr req,
         advanceInst(fault);
     }
 
-    numCycles += curCycle() - previousCycle;
-    previousCycle = curCycle();
+    updateCycleCounts();
 }
 
 
@@ -651,8 +648,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = BaseSimpleCPU::Running;
 
-    numCycles += curCycle() - previousCycle;
-    previousCycle = curCycle();
+    updateCycleCounts();
 
     if (pkt)
         pkt->req->setAccessLatency();
@@ -753,8 +749,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
     pkt->req->setAccessLatency();
-    numCycles += curCycle() - previousCycle;
-    previousCycle = curCycle();
+
+    updateCycleCounts();
 
     if (pkt->senderState) {
         SplitFragmentSenderState * send_state =
@@ -806,6 +802,17 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     postExecute();
 
     advanceInst(fault);
+}
+
+void
+TimingSimpleCPU::updateCycleCounts()
+{
+    const Cycles delta(curCycle() - previousCycle);
+
+    numCycles += delta;
+    ppCycles->notify(delta);
+
+    previousCycle = curCycle();
 }
 
 void

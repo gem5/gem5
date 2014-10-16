@@ -76,6 +76,7 @@ class Ticked
         {
             ++owner.tickCycles;
             ++owner.numCycles;
+            owner.countCycles(Cycles(1));
             owner.evaluate();
             if (owner.running) {
                 owner.object.schedule(this,
@@ -132,6 +133,7 @@ class Ticked
                 object.schedule(event, object.clockEdge(Cycles(1)));
             running = true;
             numCycles += cyclesSinceLastStopped();
+            countCycles(cyclesSinceLastStopped());
         }
     }
 
@@ -167,6 +169,19 @@ class Ticked
 
     /** Action to call on the clock tick */
     virtual void evaluate() = 0;
+
+    /**
+     * Callback to handle cycle statistics and probes.
+     *
+     * This callback is called at the beginning of a new cycle active
+     * cycle and when restarting the ticked object. The delta
+     * parameter indicates the number of cycles elapsed since the
+     * previous call is normally '1' unless the object has been
+     * stopped and restarted.
+     *
+     * @param delta Number of cycles since the previous call.
+     */
+    virtual void countCycles(Cycles delta) {}
 };
 
 /** TickedObject attaches Ticked to ClockedObject and can be used as

@@ -233,7 +233,9 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num)
     assert(!tickEvent.scheduled());
 
     notIdleFraction = 1;
-    numCycles += ticksToCycles(thread->lastActivate - thread->lastSuspend);
+    Cycles delta = ticksToCycles(thread->lastActivate - thread->lastSuspend);
+    numCycles += delta;
+    ppCycles->notify(delta);
 
     //Make sure ticks are still on multiples of cycles
     schedule(tickEvent, clockEdge(Cycles(0)));
@@ -501,6 +503,7 @@ AtomicSimpleCPU::tick()
 
     for (int i = 0; i < width || locked; ++i) {
         numCycles++;
+        ppCycles->notify(1);
 
         if (!curStaticInst || !curStaticInst->isDelayedCommit())
             checkForInterrupts();
@@ -614,6 +617,8 @@ AtomicSimpleCPU::tick()
 void
 AtomicSimpleCPU::regProbePoints()
 {
+    BaseCPU::regProbePoints();
+
     ppCommit = new ProbePointArg<pair<SimpleThread*, const StaticInstPtr>>
                                 (getProbeManager(), "Commit");
 }

@@ -62,6 +62,7 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/insttracer.hh"
+#include "sim/probe/pmu.hh"
 #include "sim/system.hh"
 
 struct BaseCPUParams;
@@ -280,6 +281,8 @@ class BaseCPU : public MemObject
     virtual void startup();
     virtual void regStats();
 
+    void regProbePoints() M5_ATTR_OVERRIDE;
+
     void registerThreadContexts();
 
     /**
@@ -436,6 +439,54 @@ class BaseCPU : public MemObject
      * @param cause Cause to signal in the exit event.
      */
     void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
+
+  public:
+    /**
+     * @{
+     * @name PMU Probe points.
+     */
+
+    /**
+     * Helper method to trigger PMU probes for a committed
+     * instruction.
+     *
+     * @param inst Instruction that just committed
+     */
+    virtual void probeInstCommit(const StaticInstPtr &inst);
+
+    /**
+     * Helper method to instantiate probe points belonging to this
+     * object.
+     *
+     * @param name Name of the probe point.
+     * @return A unique_ptr to the new probe point.
+     */
+    ProbePoints::PMUUPtr pmuProbePoint(const char *name);
+
+    /** CPU cycle counter */
+    ProbePoints::PMUUPtr ppCycles;
+
+    /**
+     * Instruction commit probe point.
+     *
+     * This probe point is triggered whenever one or more instructions
+     * are committed. It is normally triggered once for every
+     * instruction. However, CPU models committing bundles of
+     * instructions may call notify once for the entire bundle.
+     */
+    ProbePoints::PMUUPtr ppRetiredInsts;
+
+    /** Retired load instructions */
+    ProbePoints::PMUUPtr ppRetiredLoads;
+    /** Retired store instructions */
+    ProbePoints::PMUUPtr ppRetiredStores;
+
+    /** Retired branches (any type) */
+    ProbePoints::PMUUPtr ppRetiredBranches;
+
+    /** @} */
+
+
 
     // Function tracing
   private:
