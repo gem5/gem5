@@ -463,6 +463,7 @@ class DRAMCtrl : public AbstractMemory
      * The rowsPerBank is determined based on the capacity, number of
      * ranks and banks, the burst size, and the row buffer size.
      */
+    const uint32_t deviceSize;
     const uint32_t deviceBusWidth;
     const uint32_t burstLength;
     const uint32_t deviceRowBufferSize;

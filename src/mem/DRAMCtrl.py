@@ -96,6 +96,9 @@ class DRAMCtrl(AbstractMemory):
     max_accesses_per_row = Param.Unsigned(16, "Max accesses per row before "
                                           "closing");
 
+    # size of DRAM Chip in Bytes
+    device_size = Param.MemorySize("Size of DRAM chip")
+
     # pipeline latency of the controller and PHY, split into a
     # frontend part and a backend part, with reads and writes serviced
     # by the queues only seeing the frontend contribution, and reads
@@ -305,6 +308,9 @@ class DRAMCtrl(AbstractMemory):
 # timings based on a DDR3-1600 4 Gbit datasheet (Micron MT41J512M8) in
 # an 8x8 configuration.
 class DDR3_1600_x64(DRAMCtrl):
+    # size of device in bytes
+    device_size = '512MB'
+
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
 
@@ -397,6 +403,9 @@ class DDR3_2133_x64(DDR3_1600_x64):
 # timings based on a DDR4-2400 4 Gbit datasheet (Micron MT40A512M8)
 # in an 8x8 configuration.
 class DDR4_2400_x64(DRAMCtrl):
+    # size of device
+    device_size = '512MB'
+
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
 
@@ -488,6 +497,9 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     # No DLL in LPDDR2
     dll = False
 
+    # size of device
+    device_size = '512MB'
+
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
 
@@ -572,6 +584,9 @@ class WideIO_200_x128(DRAMCtrl):
     # No DLL for WideIO
     dll = False
 
+    # size of device
+    device_size = '1024MB'
+
     # 1x128 configuration, 1 device with a 128-bit interface
     device_bus_width = 128
 
@@ -637,6 +652,9 @@ class WideIO_200_x128(DRAMCtrl):
 class LPDDR3_1600_x32(DRAMCtrl):
     # No DLL for LPDDR3
     dll = False
+
+    # size of device
+    device_size = '512MB'
 
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
