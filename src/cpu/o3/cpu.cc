@@ -835,26 +835,22 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
     // Unbind Int Regs from Rename Map
     for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(ireg);
-
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }
 
     // Unbind Float Regs from Rename Map
-    int max_reg = TheISA::NumIntRegs + TheISA::NumFloatRegs;
-    for (int freg = TheISA::NumIntRegs; freg < max_reg; freg++) {
+    int max_reg = TheISA::FP_Reg_Base + TheISA::NumFloatRegs;
+    for (int freg = TheISA::FP_Reg_Base; freg < max_reg; freg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(freg);
-
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }
 
     // Unbind condition-code Regs from Rename Map
-    max_reg = TheISA::NumIntRegs + TheISA::NumFloatRegs + TheISA::NumCCRegs;
-    for (int creg = TheISA::NumIntRegs + TheISA::NumFloatRegs;
-         creg < max_reg; creg++) {
+    max_reg = TheISA::CC_Reg_Base + TheISA::NumCCRegs;
+    for (int creg = TheISA::CC_Reg_Base; creg < max_reg; creg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(creg);
-
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }
