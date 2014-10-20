@@ -917,35 +917,38 @@ DRAMCtrl::activateBank(Bank& bank, Tick act_tick, uint32_t row)
     }
 
     // next, we deal with tXAW, if the activation limit is disabled
-    // then we are done
-    if (actTicks[rank].empty())
-        return;
+    // then we directly schedule an activate power event
+    if (!actTicks[rank].empty()) {
+        // sanity check
+        if (actTicks[rank].back() &&
+           (act_tick - actTicks[rank].back()) < tXAW) {
+            panic("Got %d activates in window %d (%llu - %llu) which "
+                  "is smaller than %llu\n", activationLimit, act_tick -
+                  actTicks[rank].back(), act_tick, actTicks[rank].back(),
+                  tXAW);
+        }
 
-    // sanity check
-    if (actTicks[rank].back() && (act_tick - actTicks[rank].back()) < tXAW) {
-        panic("Got %d activates in window %d (%llu - %llu) which is smaller "
-              "than %llu\n", activationLimit, act_tick - actTicks[rank].back(),
-              act_tick, actTicks[rank].back(), tXAW);
-    }
+        // shift the times used for the book keeping, the last element
+        // (highest index) is the oldest one and hence the lowest value
+        actTicks[rank].pop_back();
 
-    // shift the times used for the book keeping, the last element
-    // (highest index) is the oldest one and hence the lowest value
-    actTicks[rank].pop_back();
+        // record an new activation (in the future)
+        actTicks[rank].push_front(act_tick);
 
-    // record an new activation (in the future)
-    actTicks[rank].push_front(act_tick);
-
-    // cannot activate more than X times in time window tXAW, push the
-    // next one (the X + 1'st activate) to be tXAW away from the
-    // oldest in our window of X
-    if (actTicks[rank].back() && (act_tick - actTicks[rank].back()) < tXAW) {
-        DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate no earlier "
-                "than %llu\n", activationLimit, actTicks[rank].back() + tXAW);
+        // cannot activate more than X times in time window tXAW, push the
+        // next one (the X + 1'st activate) to be tXAW away from the
+        // oldest in our window of X
+        if (actTicks[rank].back() &&
+           (act_tick - actTicks[rank].back()) < tXAW) {
+            DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate "
+                    "no earlier than %llu\n", activationLimit,
+                    actTicks[rank].back() + tXAW);
             for(int j = 0; j < banksPerRank; j++)
                 // next activate must not happen before end of window
                 banks[rank][j].actAllowedAt =
                     std::max(actTicks[rank].back() + tXAW,
                              banks[rank][j].actAllowedAt);
+        }
     }
 
     // at the point when this activate takes place, make sure we
