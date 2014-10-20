@@ -135,11 +135,17 @@ SyscallReturn
 exitGroupFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
               ThreadContext *tc)
 {
-    // really should just halt all thread contexts belonging to this
-    // process in case there's another process running...
-    int index = 0;
-    exitSimLoop("target called exit()",
-                process->getSyscallArg(tc, index) & 0xff);
+    // halt all threads belonging to this process
+    for (auto i: process->contextIds) {
+        process->system->getThreadContext(i)->halt();
+    }
+
+    if (!process->system->numRunningContexts()) {
+        // all threads belonged to this process... exit simulator
+        int index = 0;
+        exitSimLoop("target called exit()",
+                    process->getSyscallArg(tc, index) & 0xff);
+    }
 
     return 1;
 }
