@@ -457,7 +457,7 @@ system.cpu.fetch.Insts                          12484                       # Nu
 system.cpu.fetch.Branches                        2638                       # Number of branches that fetch encountered
 system.cpu.fetch.predictedBranches               1137                       # Number of branches that fetch has predicted taken
 system.cpu.fetch.Cycles                          4850                       # Number of cycles fetch has run and was not squashing or blocked
-system.cpu.fetch.SquashCycles                    1010                       # Number of cycles fetch has spent squashing
+system.cpu.fetch.SquashCycles                    1011                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.MiscStallCycles                    3                       # Number of cycles fetch has spent waiting on interrupts, or bad addresses, or out of MSHRs
 system.cpu.fetch.PendingTrapStallCycles           259                       # Number of stall cycles due to pending traps
 system.cpu.fetch.IcacheWaitRetryStallCycles           30                       # Number of stall cycles due to full MSHR
@@ -728,7 +728,7 @@ system.cpu.commit.op_class_0::total              5377                       # Cl
 system.cpu.commit.bw_lim_events                   117                       # number cycles where commit BW limit reached
 system.cpu.commit.bw_limited                        0                       # number of insts not committed due to BW limits
 system.cpu.rob.rob_reads                        22692                       # The number of ROB reads
-system.cpu.rob.rob_writes                       21719                       # The number of ROB writes
+system.cpu.rob.rob_writes                       21720                       # The number of ROB writes
 system.cpu.timesIdled                             209                       # Number of times that the entire CPU went into an idle state and unscheduled itself
 system.cpu.idleCycles                           19014                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.committedInsts                        4591                       # Number of Instructions Simulated
@@ -737,7 +737,7 @@ system.cpu.cpi                               7.067523                       # CP
 system.cpu.cpi_total                         7.067523                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               0.141492                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.141492                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads                     7944                       # number of integer regfile reads
+system.cpu.int_regfile_reads                     7945                       # number of integer regfile reads
 system.cpu.int_regfile_writes                    4420                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                        31                       # number of floating regfile reads
 system.cpu.cc_regfile_reads                     28734                       # number of cc regfile reads

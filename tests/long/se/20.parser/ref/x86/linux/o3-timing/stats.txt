@@ -332,7 +332,7 @@ system.cpu.fetch.Insts                     1278658073                       # Nu
 system.cpu.fetch.Branches                   231811700                       # Number of branches that fetch encountered
 system.cpu.fetch.predictedBranches          157369245                       # Number of branches that fetch has predicted taken
 system.cpu.fetch.Cycles                     706106364                       # Number of cycles fetch has run and was not squashing or blocked
-system.cpu.fetch.SquashCycles                20239876                       # Number of cycles fetch has spent squashing
+system.cpu.fetch.SquashCycles                20239877                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.TlbCycles                       1021                       # Number of cycles fetch has spent waiting for tlb
 system.cpu.fetch.MiscStallCycles                98431                       # Number of cycles fetch has spent waiting on interrupts, or bad addresses, or out of MSHRs
 system.cpu.fetch.PendingTrapStallCycles        825605                       # Number of stall cycles due to pending traps
@@ -539,11 +539,11 @@ system.cpu.iew.wb_penalized_rate                    0                       # fr
 system.cpu.commit.commitSquashedInsts       584047933                       # The number of squashed insts skipped by commit
 system.cpu.commit.commitNonSpecStalls             552                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu.commit.branchMispredicts           9837228                       # The number of times a branch was mispredicted
-system.cpu.commit.committed_per_cycle::samples    824173639                       # Number of insts commited each cycle
+system.cpu.commit.committed_per_cycle::samples    824173638                       # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::mean     1.855178                       # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::stdev     2.504108                       # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::underflows            0      0.00%      0.00% # Number of insts commited each cycle
-system.cpu.commit.committed_per_cycle::0    355774645     43.17%     43.17% # Number of insts commited each cycle
+system.cpu.commit.committed_per_cycle::0    355774644     43.17%     43.17% # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::1    174944190     21.23%     64.39% # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::2     57267566      6.95%     71.34% # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::3     86311577     10.47%     81.82% # Number of insts commited each cycle
@@ -555,7 +555,7 @@ system.cpu.commit.committed_per_cycle::8     76959576      9.34%    100.00% # Nu
 system.cpu.commit.committed_per_cycle::overflows            0      0.00%    100.00% # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::min_value            0                       # Number of insts commited each cycle
 system.cpu.commit.committed_per_cycle::max_value            8                       # Number of insts commited each cycle
-system.cpu.commit.committed_per_cycle::total    824173639                       # Number of insts commited each cycle
+system.cpu.commit.committed_per_cycle::total    824173638                       # Number of insts commited each cycle
 system.cpu.commit.committedInsts            826877109                       # Number of instructions committed
 system.cpu.commit.committedOps             1528988701                       # Number of ops (including micro ops) committed
 system.cpu.commit.swp_count                         0                       # Number of s/w prefetches committed
@@ -603,8 +603,8 @@ system.cpu.commit.op_class_0::InstPrefetch            0      0.00%    100.00% # 
 system.cpu.commit.op_class_0::total        1528988701                       # Class of committed instruction
 system.cpu.commit.bw_lim_events              76959576                       # number cycles where commit BW limit reached
 system.cpu.commit.bw_limited                        0                       # number of insts not committed due to BW limits
-system.cpu.rob.rob_reads                   2860250697                       # The number of ROB reads
-system.cpu.rob.rob_writes                  4305432555                       # The number of ROB writes
+system.cpu.rob.rob_reads                   2860250696                       # The number of ROB reads
+system.cpu.rob.rob_writes                  4305432556                       # The number of ROB writes
 system.cpu.timesIdled                            2603                       # Number of times that the entire CPU went into an idle state and unscheduled itself
 system.cpu.idleCycles                          181705                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.committedInsts                   826877109                       # Number of Instructions Simulated
@@ -613,7 +613,7 @@ system.cpu.cpi                               1.092700                       # CP
 system.cpu.cpi_total                         1.092700                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               0.915164                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.915164                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads               2763452160                       # number of integer regfile reads
+system.cpu.int_regfile_reads               2763452214                       # number of integer regfile reads
 system.cpu.int_regfile_writes              1467518123                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                      6756                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                      202                       # number of floating regfile writes

@@ -745,7 +745,7 @@ system.cpu.cpi_total                         3.619272                       # CP
 system.cpu.ipc::0                            0.138149                       # IPC: Instructions Per Cycle
 system.cpu.ipc::1                            0.138149                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.276299                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads                    26323                       # number of integer regfile reads
+system.cpu.int_regfile_reads                    26325                       # number of integer regfile reads
 system.cpu.int_regfile_writes                   14897                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                        16                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                        4                       # number of floating regfile writes

@@ -72,10 +72,10 @@ system.cpu.num_fp_register_writes                   0                       # nu
 system.cpu.num_mem_refs                          1401                       # number of memory refs
 system.cpu.num_load_insts                         723                       # Number of load instructions
 system.cpu.num_store_insts                        678                       # Number of store instructions
-system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_busy_cycles                      55600                       # Number of busy cycles
-system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.num_idle_cycles                   0.002000                       # Number of idle cycles
+system.cpu.num_busy_cycles               55599.998000                       # Number of busy cycles
+system.cpu.not_idle_fraction                 1.000000                       # Percentage of non-idle cycles
+system.cpu.idle_fraction                     0.000000                       # Percentage of idle cycles
 system.cpu.Branches                              1121                       # Number of branches fetched
 system.cpu.op_class::No_OpClass                   173      3.22%      3.22% # Class of executed instruction
 system.cpu.op_class::IntAlu                      3796     70.69%     73.91% # Class of executed instruction

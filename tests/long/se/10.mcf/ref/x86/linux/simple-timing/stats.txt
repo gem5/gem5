@@ -85,10 +85,10 @@ system.cpu.num_cc_register_writes            61764861                       # nu
 system.cpu.num_mem_refs                     122219137                       # number of memory refs
 system.cpu.num_load_insts                    90779385                       # Number of load instructions
 system.cpu.num_store_insts                   31439752                       # Number of store instructions
-system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_busy_cycles                  731978130                       # Number of busy cycles
-system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.num_idle_cycles                   0.002000                       # Number of idle cycles
+system.cpu.num_busy_cycles               731978129.998000                       # Number of busy cycles
+system.cpu.not_idle_fraction                 1.000000                       # Percentage of non-idle cycles
+system.cpu.idle_fraction                     0.000000                       # Percentage of idle cycles
 system.cpu.Branches                          29309705                       # Number of branches fetched
 system.cpu.op_class::No_OpClass                 16695      0.01%      0.01% # Class of executed instruction
 system.cpu.op_class::IntAlu                 155945354     56.06%     56.06% # Class of executed instruction
@@ -127,9 +127,9 @@ system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Cl
 system.cpu.op_class::total                  278192465                       # Class of executed instruction
 system.cpu.icache.tags.replacements                24                       # number of replacements
 system.cpu.icache.tags.tagsinuse           665.632508                       # Cycle average of tags in use
-system.cpu.icache.tags.total_refs           217695357                       # Total number of references to valid blocks.
+system.cpu.icache.tags.total_refs           217695356                       # Total number of references to valid blocks.
 system.cpu.icache.tags.sampled_refs               808                       # Sample count of references to valid blocks.
-system.cpu.icache.tags.avg_refs          269424.946782                       # Average number of references to valid blocks.
+system.cpu.icache.tags.avg_refs          269424.945545                       # Average number of references to valid blocks.
 system.cpu.icache.tags.warmup_cycle                 0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.tags.occ_blocks::cpu.inst   665.632508                       # Average occupied blocks per requestor
 system.cpu.icache.tags.occ_percent::cpu.inst     0.325016                       # Average percentage of cache occupancy
@@ -139,14 +139,14 @@ system.cpu.icache.tags.age_task_id_blocks_1024::0           46                  
 system.cpu.icache.tags.age_task_id_blocks_1024::3           23                       # Occupied blocks per task id
 system.cpu.icache.tags.age_task_id_blocks_1024::4          715                       # Occupied blocks per task id
 system.cpu.icache.tags.occ_task_id_percent::1024     0.382812                       # Percentage of cache occupancy per task id
-system.cpu.icache.tags.tag_accesses         435393138                       # Number of tag accesses
-system.cpu.icache.tags.data_accesses        435393138                       # Number of data accesses
-system.cpu.icache.ReadReq_hits::cpu.inst    217695357                       # number of ReadReq hits
-system.cpu.icache.ReadReq_hits::total       217695357                       # number of ReadReq hits
-system.cpu.icache.demand_hits::cpu.inst     217695357                       # number of demand (read+write) hits
-system.cpu.icache.demand_hits::total        217695357                       # number of demand (read+write) hits
-system.cpu.icache.overall_hits::cpu.inst    217695357                       # number of overall hits
-system.cpu.icache.overall_hits::total       217695357                       # number of overall hits
+system.cpu.icache.tags.tag_accesses         435393136                       # Number of tag accesses
+system.cpu.icache.tags.data_accesses        435393136                       # Number of data accesses
+system.cpu.icache.ReadReq_hits::cpu.inst    217695356                       # number of ReadReq hits
+system.cpu.icache.ReadReq_hits::total       217695356                       # number of ReadReq hits
+system.cpu.icache.demand_hits::cpu.inst     217695356                       # number of demand (read+write) hits
+system.cpu.icache.demand_hits::total        217695356                       # number of demand (read+write) hits
+system.cpu.icache.overall_hits::cpu.inst    217695356                       # number of overall hits
+system.cpu.icache.overall_hits::total       217695356                       # number of overall hits
 system.cpu.icache.ReadReq_misses::cpu.inst          808                       # number of ReadReq misses
 system.cpu.icache.ReadReq_misses::total           808                       # number of ReadReq misses
 system.cpu.icache.demand_misses::cpu.inst          808                       # number of demand (read+write) misses
@@ -159,12 +159,12 @@ system.cpu.icache.demand_miss_latency::cpu.inst     44230000                    
 system.cpu.icache.demand_miss_latency::total     44230000                       # number of demand (read+write) miss cycles
 system.cpu.icache.overall_miss_latency::cpu.inst     44230000                       # number of overall miss cycles
 system.cpu.icache.overall_miss_latency::total     44230000                       # number of overall miss cycles
-system.cpu.icache.ReadReq_accesses::cpu.inst    217696165                       # number of ReadReq accesses(hits+misses)
-system.cpu.icache.ReadReq_accesses::total    217696165                       # number of ReadReq accesses(hits+misses)
-system.cpu.icache.demand_accesses::cpu.inst    217696165                       # number of demand (read+write) accesses
-system.cpu.icache.demand_accesses::total    217696165                       # number of demand (read+write) accesses
-system.cpu.icache.overall_accesses::cpu.inst    217696165                       # number of overall (read+write) accesses
-system.cpu.icache.overall_accesses::total    217696165                       # number of overall (read+write) accesses
+system.cpu.icache.ReadReq_accesses::cpu.inst    217696164                       # number of ReadReq accesses(hits+misses)
+system.cpu.icache.ReadReq_accesses::total    217696164                       # number of ReadReq accesses(hits+misses)
+system.cpu.icache.demand_accesses::cpu.inst    217696164                       # number of demand (read+write) accesses
+system.cpu.icache.demand_accesses::total    217696164                       # number of demand (read+write) accesses
+system.cpu.icache.overall_accesses::cpu.inst    217696164                       # number of overall (read+write) accesses
+system.cpu.icache.overall_accesses::total    217696164                       # number of overall (read+write) accesses
 system.cpu.icache.ReadReq_miss_rate::cpu.inst     0.000004                       # miss rate for ReadReq accesses
 system.cpu.icache.ReadReq_miss_rate::total     0.000004                       # miss rate for ReadReq accesses
 system.cpu.icache.demand_miss_rate::cpu.inst     0.000004                       # miss rate for demand accesses
