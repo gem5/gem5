@@ -54,7 +54,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
-#include "kern/kernel_stats.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
@@ -62,6 +61,14 @@
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
+
+/**
+ * To avoid linking errors with LTO, only include the header if we
+ * actually have a definition.
+ */
+#if THE_ISA != NULL_ISA
+#include "kern/kernel_stats.hh"
+#endif
 
 using namespace std;
 using namespace TheISA;

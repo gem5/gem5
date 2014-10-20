@@ -59,7 +59,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('isa.cc')
     Source('linux/linux.cc')
     Source('linux/process.cc')
-    Source('linux/syscalls.cc')
     Source('linux/system.cc')
     Source('nativetrace.cc')
     Source('pagetable.cc')

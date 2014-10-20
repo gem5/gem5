@@ -56,14 +56,20 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
-#include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
-#include "kern/system_events.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
+
+/**
+ * To avoid linking errors with LTO, only include the header if we
+ * actually have the definition.
+ */
+#if THE_ISA != NULL_ISA
+#include "cpu/pc_event.hh"
+#endif
 
 class BaseCPU;
 class BaseRemoteGDB;
