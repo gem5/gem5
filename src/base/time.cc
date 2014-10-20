@@ -150,18 +150,7 @@ sleep(const Time &time)
 time_t
 mkutctime(struct tm *time)
 {
-    time_t ret;
-    char *tz;
-
-    tz = getenv("TZ");
-    setenv("TZ", "", 1);
-    tzset();
-    ret = mktime(time);
-    if (tz)
-        setenv("TZ", tz, 1);
-    else
-        unsetenv("TZ");
-    tzset();
-    return ret;
+    time_t local = mktime(time);
+    return mktime(gmtime(&local));
 }
 
