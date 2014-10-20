@@ -379,7 +379,7 @@ Formula::Formula()
 
 Formula::Formula(Temp r)
 {
-    root = r;
+    root = r.getNodePtr();
     setInit();
     assert(size());
 }
@@ -388,7 +388,7 @@ const Formula &
 Formula::operator=(Temp r)
 {
     assert(!root && "Can't change formulas");
-    root = r;
+    root = r.getNodePtr();
     setInit();
     assert(size());
     return *this;
@@ -400,7 +400,7 @@ Formula::operator+=(Temp r)
     if (root)
         root = NodePtr(new BinaryNode<std::plus<Result> >(root, r));
     else {
-        root = r;
+        root = r.getNodePtr();
         setInit();
     }
 

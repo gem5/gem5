@@ -2999,6 +2999,11 @@ class Temp
      */
     operator NodePtr&() { return node; }
 
+    /**
+     * Makde gcc < 4.6.3 happy and explicitly get the underlying node.
+     */
+    NodePtr getNodePtr() const { return node; }
+
   public:
     /**
      * Create a new ScalarStatNode.
