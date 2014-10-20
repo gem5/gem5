@@ -1256,10 +1256,8 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
             // whether we clobber them or not depends on whether the caller
             // specified MAP_FIXED
             if (flags & OS::TGT_MAP_FIXED) {
-                // MAP_FIXED specified: clobber existing mappings
-                warn("mmap: MAP_FIXED at 0x%x overwrites existing mappings\n",
-                     start);
-                clobber = true;
+                // MAP_FIXED specified: map attempt fails
+                return -EINVAL;
             } else {
                 // MAP_FIXED not specified: ignore suggested start address
                 warn("mmap: ignoring suggested map address 0x%x\n", start);
