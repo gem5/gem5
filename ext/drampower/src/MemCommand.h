@@ -159,6 +159,7 @@ class MemCommand {
       }
     }
     assert(false); // Unknown name.
+    return NOP;  // For clang compilation
   }
 
  private:

@@ -54,8 +54,7 @@ throw(std::runtime_error)
   T t;
 
   if (!(is >> f >> t)) {
-    throw std::runtime_error("Cannot convert '" + s + "' to " +
-                             typeid(t).name() + " using fromString");
+    throw std::runtime_error("fromString cannot convert " + s);
   }
 
   return t;
