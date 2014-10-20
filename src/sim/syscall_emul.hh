@@ -831,11 +831,12 @@ mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *
         provided_address = process->getSyscallArg(tc, index);
 
     if ((start % TheISA::PageBytes != 0) ||
-        (new_length % TheISA::PageBytes != 0) ||
         (provided_address % TheISA::PageBytes != 0)) {
         warn("mremap failing: arguments not page aligned");
         return -EINVAL;
     }
+
+    new_length = roundUp(new_length, TheISA::PageBytes);
 
     if (new_length > old_length) {
         if ((start + old_length) == process->mmap_end &&
@@ -1213,7 +1214,7 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     index++; // int prot = p->getSyscallArg(tc, index);
     int flags = p->getSyscallArg(tc, index);
     int tgt_fd = p->getSyscallArg(tc, index);
-    // int offset = p->getSyscallArg(tc, index);
+    int offset = p->getSyscallArg(tc, index);
 
     if (length > 0x100000000ULL)
         warn("mmap length argument %#x is unreasonably large.\n", length);
@@ -1234,11 +1235,13 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         }
     }
 
+    length = roundUp(length, TheISA::PageBytes);
+
     if ((start  % TheISA::PageBytes) != 0 ||
-        (length % TheISA::PageBytes) != 0) {
+        (offset % TheISA::PageBytes) != 0) {
         warn("mmap failing: arguments not page-aligned: "
-             "start 0x%x length 0x%x",
-             start, length);
+             "start 0x%x offset 0x%x",
+             start, offset);
         return -EINVAL;
     }
 
