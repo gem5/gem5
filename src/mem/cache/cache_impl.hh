@@ -345,7 +345,6 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 blk->status |= BlkSecure;
             }
         }
-        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
         if (pkt->cmd == MemCmd::Writeback) {
             blk->status |= BlkDirty;
             if (pkt->isSupplyExclusive()) {
@@ -354,11 +353,11 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
             // nothing else to do; writeback doesn't expect response
             assert(!pkt->needsResponse());
         } else if (pkt->cmd == MemCmd::WriteInvalidateReq) {
-            assert(blk->isReadable()); // implicitly checks for Valid bit also
-            blk->status |= (BlkDirty | BlkCanGoExclusive);
+            blk->status |= (BlkReadable | BlkDirty | BlkCanGoExclusive);
             blk->status &= ~BlkWritable;
             ++fastWrites;
         }
+        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
         return true;
@@ -1517,6 +1516,11 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         // there are cases (such as failed store conditionals or
         // compare-and-swaps) where we'll demand an exclusive copy but
         // end up not writing it.
+        // Caveat: if a Read takes a value from a WriteInvalidate MSHR,
+        // it will get marked Dirty even though it is Clean (once the
+        // WriteInvalidate completes). This is due to insufficient meta-
+        // data and overly presumptive interpretation of the inhibit flag.
+        // The result is an unnecessary extra writeback.
         if (pkt->memInhibitAsserted())
             blk->status |= BlkDirty;
     }

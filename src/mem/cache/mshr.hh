@@ -83,6 +83,9 @@ class MSHR : public Packet::SenderState, public Printable
     /** Will we have a dirty copy after this request? */
     bool pendingDirty;
 
+    /** Will we have a clean copy after this request?  (i.e. is writeback) */
+    bool pendingClean;
+
     /** Did we snoop an invalidate while waiting for data? */
     bool postInvalidate;
 
@@ -177,6 +180,10 @@ class MSHR : public Packet::SenderState, public Printable
 
     bool isPendingDirty() const {
         assert(inService); return pendingDirty;
+    }
+
+    bool isPendingClean() const {
+        return pendingClean;
     }
 
     bool hasPostInvalidate() const {
