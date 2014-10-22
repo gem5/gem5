@@ -75,10 +75,10 @@
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
-#include "mem/se_translating_port_proxy.hh"
 #include "sim/byteswap.hh"
 #include "sim/emul_driver.hh"
 #include "sim/process.hh"
+#include "sim/syscall_emul_buf.hh"
 #include "sim/syscallreturn.hh"
 #include "sim/system.hh"
 
@@ -116,73 +116,6 @@ class SyscallDesc {
     void doSyscall(int callnum, LiveProcess *proc, ThreadContext *tc);
 };
 
-
-class BaseBufferArg {
-
-  public:
-
-    BaseBufferArg(Addr _addr, int _size) : addr(_addr), size(_size)
-    {
-        bufPtr = new uint8_t[size];
-        // clear out buffer: in case we only partially populate this,
-        // and then do a copyOut(), we want to make sure we don't
-        // introduce any random junk into the simulated address space
-        memset(bufPtr, 0, size);
-    }
-
-    virtual ~BaseBufferArg() { delete [] bufPtr; }
-
-    //
-    // copy data into simulator space (read from target memory)
-    //
-    virtual bool copyIn(SETranslatingPortProxy &memproxy)
-    {
-        memproxy.readBlob(addr, bufPtr, size);
-        return true;    // no EFAULT detection for now
-    }
-
-    //
-    // copy data out of simulator space (write to target memory)
-    //
-    virtual bool copyOut(SETranslatingPortProxy &memproxy)
-    {
-        memproxy.writeBlob(addr, bufPtr, size);
-        return true;    // no EFAULT detection for now
-    }
-
-  protected:
-    Addr addr;
-    int size;
-    uint8_t *bufPtr;
-};
-
-
-class BufferArg : public BaseBufferArg
-{
-  public:
-    BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) { }
-    void *bufferPtr()   { return bufPtr; }
-};
-
-template <class T>
-class TypedBufferArg : public BaseBufferArg
-{
-  public:
-    // user can optionally specify a specific number of bytes to
-    // allocate to deal with those structs that have variable-size
-    // arrays at the end
-    TypedBufferArg(Addr _addr, int _size = sizeof(T))
-        : BaseBufferArg(_addr, _size)
-    { }
-
-    // type case
-    operator T*() { return (T *)bufPtr; }
-
-    // dereference operators
-    T &operator*()       { return *((T *)bufPtr); }
-    T* operator->()      { return (T *)bufPtr; }
-    T &operator[](int i) { return ((T *)bufPtr)[i]; }
-};
 
 //////////////////////////////////////////////////////////////////////
 //
