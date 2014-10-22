@@ -70,12 +70,12 @@ class BaseBufferArg {
         memset(bufPtr, 0, size);
     }
 
-    virtual ~BaseBufferArg() { delete [] bufPtr; }
+    ~BaseBufferArg() { delete [] bufPtr; }
 
     /**
      * copy data into simulator space (read from target memory)
      */
-    virtual bool copyIn(SETranslatingPortProxy &memproxy)
+    bool copyIn(SETranslatingPortProxy &memproxy)
     {
         memproxy.readBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
@@ -84,7 +84,7 @@ class BaseBufferArg {
     /**
      * copy data out of simulator space (write to target memory)
      */
-    virtual bool copyOut(SETranslatingPortProxy &memproxy)
+    bool copyOut(SETranslatingPortProxy &memproxy)
     {
         memproxy.writeBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
