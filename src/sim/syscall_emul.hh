@@ -439,14 +439,6 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 }
 
-/// Target getdents() handler.
-SyscallReturn getdentsFunc(SyscallDesc *desc, int num,
-                           LiveProcess *process, ThreadContext *tc);
-
-/// Target getdents64() handler.
-SyscallReturn getdents64Func(SyscallDesc *desc, int num,
-                             LiveProcess *process, ThreadContext *tc);
-
 
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register

@@ -31,7 +31,6 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/syscall.h>
 
 #include <cstdio>
 #include <iostream>
@@ -868,41 +867,6 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     }
 }
 
-SyscallReturn
-getdentsFunc(SyscallDesc *desc, int num, LiveProcess *p,
-             ThreadContext *tc)
-{
-    int index = 0;
-    int fd = p->sim_fd(p->getSyscallArg(tc, index));
-    Addr bufPtr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
-    BufferArg bufArg(bufPtr, nbytes);
-
-    int bytes_read = syscall(SYS_getdents, fd, bufArg.bufferPtr(), nbytes);
-
-    if (bytes_read != -1)
-        bufArg.copyOut(tc->getMemProxy());
-
-    return bytes_read;
-}
-
-SyscallReturn
-getdents64Func(SyscallDesc *desc, int num, LiveProcess *p,
-               ThreadContext *tc)
-{
-    int index = 0;
-    int fd = p->sim_fd(p->getSyscallArg(tc, index));
-    Addr bufPtr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
-    BufferArg bufArg(bufPtr, nbytes);
-
-    int bytes_read = syscall(SYS_getdents64, fd, bufArg.bufferPtr(), nbytes);
-
-    if (bytes_read != -1)
-        bufArg.copyOut(tc->getMemProxy());
-
-    return bytes_read;
-}
 SyscallReturn
 accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc,
         int index)
