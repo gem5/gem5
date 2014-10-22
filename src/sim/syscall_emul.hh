@@ -77,6 +77,7 @@
 #include "mem/page_table.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/byteswap.hh"
+#include "sim/emul_driver.hh"
 #include "sim/process.hh"
 #include "sim/syscallreturn.hh"
 #include "sim/system.hh"
@@ -604,9 +605,15 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
 
-    if (fd < 0 || process->sim_fd(fd) < 0) {
+    Process::FdMap *fdObj = process->sim_fd_obj(fd);
+
+    if (fdObj == NULL) {
         // doesn't map to any simulator fd: not a valid target fd
         return -EBADF;
+    }
+
+    if (fdObj->driver != NULL) {
+        return fdObj->driver->ioctl(process, tc, req);
     }
 
     if (OS::isTtyReq(req)) {
@@ -628,13 +635,6 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
-
-    if (path == "/dev/sysdev0") {
-        // This is a memory-mapped high-resolution timer device on Alpha.
-        // We don't support it, so just punt.
-        warn("Ignoring open(%s, ...)\n", path);
-        return -ENOENT;
-    }
 
     int tgtFlags = process->getSyscallArg(tc, index);
     int mode = process->getSyscallArg(tc, index);
@@ -660,6 +660,26 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     path = process->fullPath(path);
 
     DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
+
+    if (startswith(path, "/dev/")) {
+        std::string filename = path.substr(strlen("/dev/"));
+        if (filename == "sysdev0") {
+            // This is a memory-mapped high-resolution timer device on Alpha.
+            // We don't support it, so just punt.
+            warn("Ignoring open(%s, ...)\n", path);
+            return -ENOENT;
+        }
+
+        EmulatedDriver *drv = process->findDriver(filename);
+        if (drv != NULL) {
+            // the driver's open method will allocate a fd from the
+            // process if necessary.
+            return drv->open(process, tc, mode, hostFlags);
+        }
+
+        // fall through here for pass through to host devices, such as
+        // /dev/zero
+    }
 
     int fd;
     int local_errno;

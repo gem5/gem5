@@ -50,6 +50,7 @@ struct LiveProcessParams;
 class SyscallDesc;
 class System;
 class ThreadContext;
+class EmulatedDriver;
 
 template<class IntType>
 struct AuxVector
@@ -139,10 +140,11 @@ class Process : public SimObject
         bool isPipe;
         int readPipeSource;
         uint64_t fileOffset;
+        EmulatedDriver *driver;
 
         FdMap()
             : fd(-1), filename("NULL"), mode(0), flags(0),
-              isPipe(false), readPipeSource(0), fileOffset(0)
+              isPipe(false), readPipeSource(0), fileOffset(0), driver(NULL)
         { }
 
         void serialize(std::ostream &os);
@@ -256,6 +258,9 @@ class LiveProcess : public Process
     uint64_t __pid;
     uint64_t __ppid;
 
+    // Emulated drivers available to this process
+    std::vector<EmulatedDriver *> drivers;
+
   public:
 
     enum AuxiliaryVectorType {
@@ -324,6 +329,14 @@ class LiveProcess : public Process
             SyscallReturn return_value) = 0;
 
     virtual SyscallDesc *getDesc(int callnum) = 0;
+
+    /**
+     * Find an emulated device driver.
+     *
+     * @param filename Name of the device (under /dev)
+     * @return Pointer to driver object if found, else NULL
+     */
+    EmulatedDriver *findDriver(std::string filename);
 
     // this function is used to create the LiveProcess object, since
     // we can't tell which subclass of LiveProcess to use until we
