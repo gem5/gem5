@@ -566,17 +566,14 @@ Process::map(Addr vaddr, Addr paddr, int size)
 ////////////////////////////////////////////////////////////////////////
 
 
-LiveProcess::LiveProcess(LiveProcessParams * params, ObjectFile *_objFile)
+LiveProcess::LiveProcess(LiveProcessParams *params, ObjectFile *_objFile)
     : Process(params), objFile(_objFile),
       argv(params->cmd), envp(params->env), cwd(params->cwd),
+      __uid(params->uid), __euid(params->euid),
+      __gid(params->gid), __egid(params->egid),
+      __pid(params->pid), __ppid(params->ppid),
       drivers(params->drivers)
 {
-    __uid = params->uid;
-    __euid = params->euid;
-    __gid = params->gid;
-    __egid = params->egid;
-    __pid = params->pid;
-    __ppid = params->ppid;
 
     // load up symbols, if any... these may be used for debugging or
     // profiling.
