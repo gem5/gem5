@@ -415,6 +415,7 @@ InstructionQueue<Impl>::resetState()
     deferredMemInsts.clear();
     blockedMemInsts.clear();
     retryMemInsts.clear();
+    wbOutstanding = 0;
 }
 
 template <class Impl>
@@ -444,7 +445,9 @@ template <class Impl>
 bool
 InstructionQueue<Impl>::isDrained() const
 {
-    bool drained = dependGraph.empty() && instsToExecute.empty();
+    bool drained = dependGraph.empty() &&
+                   instsToExecute.empty() &&
+                   wbOutstanding == 0;
     for (ThreadID tid = 0; tid < numThreads; ++tid)
         drained = drained && memDepUnit[tid].isDrained();
 
@@ -723,6 +726,7 @@ InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
     assert(!cpu->switchedOut());
     // The CPU could have been sleeping until this op completed (*extremely*
     // long latency op).  Wake it if it was.  This may be overkill.
+   --wbOutstanding;
     iewStage->wakeCPU();
 
     if (fu_idx > -1)
@@ -823,6 +827,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             } else {
                 Cycles issue_latency = fuPool->getIssueLatency(op_class);
                 // Generate completion event for the FU
+                ++wbOutstanding;
                 FUCompletion *execution = new FUCompletion(issuing_inst,
                                                            idx, this);
 

@@ -437,6 +437,9 @@ class InstructionQueue
     /** The number of physical registers in the CPU. */
     unsigned numPhysRegs;
 
+    /** Number of instructions currently in flight to FUs */
+    int wbOutstanding;
+
     /** Delay between commit stage and the IQ.
      *  @todo: Make there be a distinction between the delays within IEW.
      */
