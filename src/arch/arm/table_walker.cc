@@ -388,7 +388,6 @@ TableWalker::processWalkWrapper()
     // if we've still got pending translations schedule more work
     nextWalk(tc);
     currState = NULL;
-    completeDrain();
 }
 
 Fault
@@ -1677,7 +1676,6 @@ TableWalker::doL1DescriptorWrapper()
     doL1Descriptor();
 
     stateQueues[L1].pop_front();
-    completeDrain();
     // Check if fault was generated
     if (currState->fault != NoFault) {
         currState->transState->finish(currState->fault, currState->req,
@@ -1745,7 +1743,6 @@ TableWalker::doL2DescriptorWrapper()
 
 
     stateQueues[L2].pop_front();
-    completeDrain();
     pending = false;
     nextWalk(currState->tc);
 
@@ -1844,6 +1841,8 @@ TableWalker::nextWalk(ThreadContext *tc)
 {
     if (pendingQueue.size())
         schedule(doProcessEvent, clockEdge(Cycles(1)));
+    else
+        completeDrain();
 }
 
 bool

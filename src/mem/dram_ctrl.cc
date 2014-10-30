@@ -737,6 +737,7 @@ DRAMCtrl::processRespondEvent()
         // if there is nothing left in any queue, signal a drain
         if (writeQueue.empty() && readQueue.empty() &&
             drainManager) {
+            DPRINTF(Drain, "DRAM controller done draining\n");
             drainManager->signalDrainDone();
             drainManager = NULL;
         }
@@ -1290,6 +1291,7 @@ DRAMCtrl::processNextReqEvent()
             } else {
                 // check if we are drained
                 if (respQueue.empty () && drainManager) {
+                    DPRINTF(Drain, "DRAM controller done draining\n");
                     drainManager->signalDrainDone();
                     drainManager = NULL;
                 }

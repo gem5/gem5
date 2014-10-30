@@ -44,6 +44,7 @@
 
 #include "base/random.hh"
 #include "mem/simple_mem.hh"
+#include "debug/Drain.hh"
 
 using namespace std;
 
@@ -200,6 +201,7 @@ SimpleMemory::dequeue()
             reschedule(dequeueEvent,
                        std::max(packetQueue.front().tick, curTick()), true);
         } else if (drainManager) {
+            DPRINTF(Drain, "Drainng of SimpleMemory complete\n");
             drainManager->signalDrainDone();
             drainManager = NULL;
         }
@@ -240,7 +242,8 @@ SimpleMemory::drain(DrainManager *dm)
     if (!packetQueue.empty()) {
         count += 1;
         drainManager = dm;
-    }
+        DPRINTF(Drain, "SimpleMemory Queue has requests, waiting to drain\n");
+     }
 
     if (count)
         setDrainState(Drainable::Draining);

@@ -45,7 +45,9 @@
  * Definition of MSHRQueue class functions.
  */
 
+#include "base/trace.hh"
 #include "mem/cache/mshr_queue.hh"
+#include "debug/Drain.hh"
 
 using namespace std;
 
@@ -191,6 +193,7 @@ MSHRQueue::deallocateOne(MSHR *mshr)
     if (drainManager && allocated == 0) {
         // Notify the drain manager that we have completed draining if
         // there are no other outstanding requests in this MSHR queue.
+        DPRINTF(Drain, "MSHRQueue now empty, signalling drained\n");
         drainManager->signalDrainDone();
         drainManager = NULL;
         setDrainState(Drainable::Drained);
