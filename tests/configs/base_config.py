@@ -58,7 +58,8 @@ class BaseSystem(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, mem_mode='timing', mem_class=SimpleMemory,
-                 cpu_class=TimingSimpleCPU, num_cpus=1, checker=False):
+                 cpu_class=TimingSimpleCPU, num_cpus=1, checker=False,
+                 mem_size=None):
         """Initialize a simple base system.
 
         Keyword Arguments:
@@ -67,6 +68,7 @@ class BaseSystem(object):
           cpu_class -- CPU class to use
           num_cpus -- Number of CPUs to instantiate
           checker -- Set to True to add checker CPUs
+          mem_size -- Override the default memory size
         """
         self.mem_mode = mem_mode
         self.mem_class = mem_class

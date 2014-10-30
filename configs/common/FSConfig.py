@@ -182,7 +182,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeArmSystem(mem_mode, machine_type, mdesc = None,
+def makeArmSystem(mem_mode, machine_type, num_cpus = 1, mdesc = None,
                   dtb_filename = None, bare_metal=False):
     assert machine_type
 
@@ -209,12 +209,17 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
         self.realview = RealViewPBX()
     elif machine_type == "RealView_EB":
         self.realview = RealViewEB()
-    elif machine_type == "VExpress_ELT":
-        self.realview = VExpress_ELT()
     elif machine_type == "VExpress_EMM":
         self.realview = VExpress_EMM()
+        if not dtb_filename:
+            dtb_filename = 'vexpress.aarch32.ll_20131205.0-gem5.%dcpu.dtb' % num_cpus
     elif machine_type == "VExpress_EMM64":
         self.realview = VExpress_EMM64()
+        if os.path.split(mdesc.disk())[-1] == 'linux-aarch32-ael.img':
+            print "Selected 64-bit ARM architecture, updating default disk image..."
+            mdesc.diskname = 'linaro-minimal-aarch64.img'
+        if not dtb_filename:
+            dtb_filename = 'vexpress.aarch64.20140821.dtb'
     else:
         print "Unknown Machine Type"
         sys.exit(1)
@@ -253,9 +258,9 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None,
         self.realview.uart.end_on_eot = True
     else:
         if machine_type == "VExpress_EMM64":
-            self.kernel = binary('vmlinux-3.16-aarch64-vexpress-emm64-pcie')
+            self.kernel = binary('vmlinux.aarch64.20140821')
         elif machine_type == "VExpress_EMM":
-            self.kernel = binary('vmlinux-3.3-arm-vexpress-emm-pcie')
+            self.kernel = binary('vmlinux.aarch32.ll_20131205.0-gem5')
         else:
             self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
 

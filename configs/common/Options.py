@@ -241,7 +241,7 @@ def addFSOptions(parser):
         parser.add_option("--bare-metal", action="store_true",
                    help="Provide the raw system without the linux specific bits")
         parser.add_option("--machine-type", action="store", type="choice",
-                choices=ArmMachineType.map.keys(), default="RealView_PBX")
+                choices=ArmMachineType.map.keys(), default="VExpress_EMM")
         parser.add_option("--dtb-filename", action="store", type="string",
               help="Specifies device tree blob file to use with device-tree-"\
               "enabled kernels")

@@ -44,6 +44,7 @@ import FSConfig
 from Caches import *
 from base_config import *
 from O3_ARM_v7a import *
+from Benchmarks import SysConfig
 
 class ArmSESystemUniprocessor(BaseSESystemUniprocessor):
     """Syscall-emulation builder for ARM uniprocessor systems.
@@ -70,16 +71,21 @@ class LinuxArmSystemBuilder(object):
     ARM-specific create_system method to a class deriving from one of
     the generic base systems.
     """
-    def __init__(self, machine_type):
+    def __init__(self, machine_type, **kwargs):
         """
         Arguments:
           machine_type -- String describing the platform to simulate
+          num_cpus -- integer number of CPUs in the system
         """
         self.machine_type = machine_type
+        self.num_cpus = kwargs.get('num_cpus', 1)
+        self.mem_size = kwargs.get('mem_size', '256MB')
 
     def create_system(self):
+        sc = SysConfig(None, self.mem_size, None)
         system = FSConfig.makeArmSystem(self.mem_mode,
-                                        self.machine_type, None, False)
+                                        self.machine_type, self.num_cpus,
+                                        sc, False)
 
         # We typically want the simulator to panic if the kernel
         # panics or oopses. This prevents the simulator from running
@@ -94,7 +100,7 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder,
                        BaseFSSystem):
     """Basic ARM full system builder."""
 
-    def __init__(self, machine_type='RealView_PBX', **kwargs):
+    def __init__(self, machine_type='VExpress_EMM', **kwargs):
         """Initialize an ARM system that supports full system simulation.
 
         Note: Keyword arguments that are not listed below will be
@@ -104,7 +110,7 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder,
           machine_type -- String describing the platform to simulate
         """
         BaseSystem.__init__(self, **kwargs)
-        LinuxArmSystemBuilder.__init__(self, machine_type)
+        LinuxArmSystemBuilder.__init__(self, machine_type, **kwargs)
 
     def create_caches_private(self, cpu):
         # Use the more representative cache configuration
@@ -121,13 +127,13 @@ class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
     test cases.
     """
 
-    def __init__(self, machine_type='RealView_PBX', **kwargs):
+    def __init__(self, machine_type='VExpress_EMM', **kwargs):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
-        LinuxArmSystemBuilder.__init__(self, machine_type)
+        LinuxArmSystemBuilder.__init__(self, machine_type, **kwargs)
 
 class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
     """Uniprocessor ARM system prepared for CPU switching"""
 
-    def __init__(self, machine_type='RealView_PBX', **kwargs):
+    def __init__(self, machine_type='VExpress_EMM', **kwargs):
         BaseFSSwitcheroo.__init__(self, **kwargs)
-        LinuxArmSystemBuilder.__init__(self, machine_type)
+        LinuxArmSystemBuilder.__init__(self, machine_type, **kwargs)

@@ -82,8 +82,8 @@ def build_test_system(np):
         test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0],
                 options.ruby)
     elif buildEnv['TARGET_ISA'] == "arm":
-        test_sys = makeArmSystem(test_mem_mode, options.machine_type, bm[0],
-                                 options.dtb_filename,
+        test_sys = makeArmSystem(test_mem_mode, options.machine_type,
+                                 options.num_cpus, bm[0], options.dtb_filename,
                                  bare_metal=options.bare_metal)
         if options.enable_context_switch_stats_dump:
             test_sys.enable_context_switch_stats_dump = True

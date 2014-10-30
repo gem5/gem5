@@ -332,7 +332,20 @@ if env['TARGET_ISA'] == 'arm':
                 'realview-switcheroo-atomic',
                 'realview-switcheroo-timing',
                 'realview-switcheroo-o3',
-                'realview-switcheroo-full']
+                'realview-switcheroo-full',
+                'realview64-simple-atomic',
+                'realview64-simple-atomic-dual',
+                'realview64-simple-timing',
+                'realview64-simple-timing-dual',
+                'realview64-o3',
+                'realview64-o3-checker',
+                'realview64-o3-dual',
+                'realview64-minor',
+                'realview64-minor-dual',
+                'realview64-switcheroo-atomic',
+                'realview64-switcheroo-timing',
+                'realview64-switcheroo-o3',
+                'realview64-switcheroo-full']
 if env['TARGET_ISA'] == 'x86':
     configs += ['pc-simple-atomic',
                 'pc-simple-timing',

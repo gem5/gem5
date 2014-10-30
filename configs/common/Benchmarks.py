@@ -56,7 +56,7 @@ class SysConfig:
         elif buildEnv['TARGET_ISA'] == 'x86':
             return env.get('LINUX_IMAGE', disk('x86root.img'))
         elif buildEnv['TARGET_ISA'] == 'arm':
-            return env.get('LINUX_IMAGE', disk('linux-arm-ael.img'))
+            return env.get('LINUX_IMAGE', disk('linux-aarch32-ael.img'))
         else:
             print "Don't know what default disk image to use for %s ISA" % \
                 buildEnv['TARGET_ISA']
