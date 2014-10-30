@@ -231,6 +231,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
     bool checked_flags = false;
     bool flags_match = true;
     Addr pAddr = 0x0;
+    static uint8_t zero_data[64] = {};
 
     int fullSize = size;
 
@@ -302,6 +303,15 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
    if (unverifiedReq) {
        extraData = unverifiedReq->extraDataValid() ?
                         unverifiedReq->getExtraData() : true;
+   }
+
+   // If the request is to ZERO a cache block, there is no data to check
+   // against, but it's all zero. We need something to compare to, so use a
+   // const set of zeros.
+   if (flags & Request::CACHE_BLOCK_ZERO) {
+       assert(!data);
+       assert(sizeof(zero_data) <= fullSize);
+       data = zero_data;
    }
 
    if (unverifiedReq && unverifiedMemData &&
