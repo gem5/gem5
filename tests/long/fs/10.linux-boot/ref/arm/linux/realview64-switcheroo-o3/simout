@@ -1,0 +1,11 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Oct 29 2014 15:46:15
+gem5 started Oct 29 2014 19:59:19
+gem5 executing on u200540-lin
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3 -re /work/gem5.latest/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3
+Selected 64-bit ARM architecture, updating default disk image...
+Global frequency set at 1000000000000 ticks per second
+      0: system.cpu0.isa: ISA system set to: 0x42b8b00 0x42b8b00
+      0: system.cpu1.isa: ISA system set to: 0x42b8b00 0x42b8b00
