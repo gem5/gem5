@@ -636,7 +636,20 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             pkt = pf;
         }
 
-        if (mshr) {
+        if (pkt && (pkt->cmd == MemCmd::WriteInvalidateReq)) {
+            // WriteInvalidates cannot coalesce with other requests, so
+            // we cannot use an existing MSHR.  If one exists, we mark it
+            // as 'obsolete' so they don't modify the cache.
+            if (mshr) {
+                // Everything up to this point is obsolete, meaning
+                // they should not modify the cache.
+                DPRINTF(Cache, "%s: marking MSHR obsolete in %s of %x\n",
+                        __func__, pkt->cmdString(), pkt->getAddr());
+
+                mshr->markObsolete();
+            }
+            allocateMissBuffer(pkt, time, true);
+        } else if (mshr) {
             /// MSHR hit
             /// @note writebacks will be checked in getNextMSHR()
             /// for any conflicting requests to the same block
@@ -1077,7 +1090,10 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     bool is_fill = !mshr->isForward &&
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
 
-    if (is_fill && !is_error) {
+    if (mshr->isObsolete()) {
+        DPRINTF(Cache, "%s: skipping cache fills; data for %s of %x "
+                "is obsolete\n", __func__, pkt->cmdString(), pkt->getAddr());
+    } else if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
 
@@ -1113,8 +1129,19 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
             }
 
             if (is_fill) {
-                satisfyCpuSideRequest(target->pkt, blk,
-                                      true, mshr->hasPostDowngrade());
+                // Presently the only situation leading to 'obsolete'
+                // data is when a WriteInvalidate blows away an already
+                // pending/in-progress read. We don't want to overwrite
+                // cache data in that case.
+                if (mshr->isObsolete()) {
+                    DPRINTF(Cache, "%s: skipping satisfyCpuSideRequest; "
+                            "data for %s of %x is obsolete\n",
+                            __func__, target->pkt->cmdString(),
+                            target->pkt->getAddr());
+                } else {
+                    satisfyCpuSideRequest(target->pkt, blk,
+                                          true, mshr->hasPostDowngrade());
+                }
                 // How many bytes past the first request is this one
                 int transfer_offset =
                     target->pkt->getOffset(blkSize) - initial_offset;

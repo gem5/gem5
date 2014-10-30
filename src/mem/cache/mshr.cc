@@ -62,8 +62,8 @@
 using namespace std;
 
 MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
-               pendingDirty(false), postInvalidate(false),
-               postDowngrade(false), queue(NULL), order(0), addr(0), size(0),
+               pendingDirty(false), postInvalidate(false), postDowngrade(false),
+               _isObsolete(false), queue(NULL), order(0), addr(0), size(0),
                isSecure(false), inService(false), isForward(false),
                threadNum(InvalidThreadID), data(NULL)
 {
@@ -214,6 +214,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target, Tick whenReady,
     _isUncacheable = target->req->isUncacheable();
     inService = false;
     downstreamPending = false;
+    _isObsolete = false;
     threadNum = 0;
     assert(targets.isReset());
     // Don't know of a case where we would allocate a new MSHR for a

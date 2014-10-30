@@ -89,6 +89,9 @@ class MSHR : public Packet::SenderState, public Printable
     /** Did we snoop a read while waiting for data? */
     bool postDowngrade;
 
+    /** Did we get WriteInvalidate'd (and therefore obsoleted)? */
+    bool _isObsolete;
+
   public:
 
     class Target {
@@ -214,6 +217,8 @@ class MSHR : public Packet::SenderState, public Printable
 
     bool isUncacheable() const { return _isUncacheable; }
 
+    bool isObsolete() const { return _isObsolete; }
+
     /**
      * Allocate a miss to this MSHR.
      * @param cmd The requesting command.
@@ -288,6 +293,12 @@ class MSHR : public Packet::SenderState, public Printable
     void handleFill(Packet *pkt, CacheBlk *blk);
 
     bool checkFunctional(PacketPtr pkt);
+
+    /** Mark this MSHR as tracking a transaction with obsoleted data. It still
+      * needs to complete its lifecycle, but should not modify the cache. */
+    void markObsolete() {
+        _isObsolete = true;
+    }
 
     /**
      * Prints the contents of this MSHR for debugging.
