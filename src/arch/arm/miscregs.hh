@@ -677,6 +677,8 @@ namespace ArmISA
 
     enum MiscRegInfo {
         MISCREG_IMPLEMENTED,
+        MISCREG_UNVERIFIABLE,   // Does the value change on every read (e.g. a
+                                // arch generic counter)
         MISCREG_WARN_NOT_FAIL,  // If MISCREG_IMPLEMENTED is deasserted, it
                                 // tells whether the instruction should raise a
                                 // warning or fail

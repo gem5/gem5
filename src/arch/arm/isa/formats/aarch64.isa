@@ -366,9 +366,12 @@ namespace Aarch64
                         if (miscReg == MISCREG_DC_ZVA_Xt && !read)
                             return new Dczva(machInst, rt, (IntRegIndex) miscReg, iss);
 
-                        if (read)
-                            return new Mrs64(machInst, rt, (IntRegIndex) miscReg, iss);
-                        else
+                        if (read) {
+                            StaticInstPtr si = new Mrs64(machInst, rt, (IntRegIndex) miscReg, iss);
+                            if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
+                                si->setFlag(StaticInst::IsUnverifiable);
+                            return si;
+                        } else
                             return new Msr64(machInst, (IntRegIndex) miscReg, rt, iss);
                     } else if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
                         std::string full_mnem = csprintf("%s %s",

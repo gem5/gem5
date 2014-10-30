@@ -273,8 +273,12 @@ let {{
             if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                 uint32_t iss = mcrrMrrcIssBuild(isRead, crm, rt, rt2, opc1);
 
-                if (isRead)
-                    return new Mrrc15(machInst, miscReg, rt2, rt, iss);
+                if (isRead) {
+                    StaticInstPtr si =  new Mrrc15(machInst, miscReg, rt2, rt, iss);
+                    if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
+                        si->setFlag(StaticInst::IsUnverifiable);
+                    return si;
+                }
                 return new Mcrr15(machInst, rt2, rt, miscReg, iss);
             } else {
                 return new FailUnimplemented(isRead ? "mrrc" : "mcrr", machInst,
