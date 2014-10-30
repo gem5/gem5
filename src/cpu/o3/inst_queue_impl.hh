@@ -441,6 +441,17 @@ InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 }
 
 template <class Impl>
+bool
+InstructionQueue<Impl>::isDrained() const
+{
+    bool drained = dependGraph.empty() && instsToExecute.empty();
+    for (ThreadID tid = 0; tid < numThreads; ++tid)
+        drained = drained && memDepUnit[tid].isDrained();
+
+    return drained;
+}
+
+template <class Impl>
 void
 InstructionQueue<Impl>::drainSanityCheck() const
 {

@@ -128,6 +128,19 @@ MemDepUnit<MemDepPred, Impl>::regStats()
 }
 
 template <class MemDepPred, class Impl>
+bool
+MemDepUnit<MemDepPred, Impl>::isDrained() const
+{
+    bool drained = instsToReplay.empty()
+                 && memDepHash.empty()
+                 && instsToReplay.empty();
+    for (int i = 0; i < Impl::MaxThreads; ++i)
+        drained = drained && instList[i].empty();
+
+    return drained;
+}
+
+template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::drainSanityCheck() const
 {

@@ -104,6 +104,9 @@ class MemDepUnit
     /** Registers statistics. */
     void regStats();
 
+    /** Determine if we are drained. */
+    bool isDrained() const;
+
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
 

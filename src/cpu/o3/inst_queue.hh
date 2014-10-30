@@ -145,6 +145,9 @@ class InstructionQueue
     /** Sets the global time buffer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
+    /** Determine if we are drained. */
+    bool isDrained() const;
+
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
 

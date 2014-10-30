@@ -381,7 +381,7 @@ template <class Impl>
 bool
 DefaultIEW<Impl>::isDrained() const
 {
-    bool drained(ldstQueue.isDrained());
+    bool drained = ldstQueue.isDrained() && instQueue.isDrained();
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         if (!insts[tid].empty()) {
