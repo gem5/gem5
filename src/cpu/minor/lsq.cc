@@ -1370,9 +1370,13 @@ LSQ::findResponse(MinorDynInstPtr inst)
         /* Same instruction and complete access or a store that's
          *  capable of being moved to the store buffer */
         if (request->inst->id == inst->id) {
-            if (request->isComplete() ||
-                (request->state == LSQRequest::StoreToStoreBuffer &&
-                storeBuffer.canInsert()))
+            bool complete = request->isComplete();
+            bool can_store = storeBuffer.canInsert();
+            bool to_store_buffer = request->state ==
+                LSQRequest::StoreToStoreBuffer;
+
+            if ((complete && !(request->isBarrier() && !can_store)) ||
+                (to_store_buffer && can_store))
             {
                 ret = request;
             }
