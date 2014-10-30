@@ -175,6 +175,10 @@ LinuxArmSystem::initState()
                  "to DTB file: %s\n", params()->dtb_filename);
         }
 
+        Addr ra = _dtb_file->findReleaseAddr();
+        if (ra)
+            bootReleaseAddr = ra & ~ULL(0x7F);
+
         dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
         dtb_file->loadSections(physProxy);
         delete dtb_file;

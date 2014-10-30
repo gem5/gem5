@@ -60,6 +60,13 @@ class DtbObject : public ObjectFile
           * @return returns true on success, false otherwise
           */
         bool addBootCmdLine(const char* _args, size_t len);
+
+        /** Parse the DTB file enough to find the provided release
+         * address and return it.
+         * @return release address for SMP boot
+         */
+        Addr findReleaseAddr();
+
         bool loadGlobalSymbols(SymbolTable *symtab,
             Addr addrMask = std::numeric_limits<Addr>::max());
         bool loadLocalSymbols(SymbolTable *symtab,

@@ -429,6 +429,14 @@ namespace ArmISA
 
         void startup(ThreadContext *tc) {}
 
+        /** Check if all CPUs have their caches enabled and if they do
+         * disable the bootAddrUncacheability flag because it's no longer
+         * needed.
+         * @s_idx the register number of the SCTLR that we are checking
+         * @tc Threadcontext to use to get access to the system and other cpus
+         */
+        void updateBootUncacheable(int sctlr_idx, ThreadContext *tc);
+
         /// Explicitly import the otherwise hidden startup
         using SimObject::startup;
 

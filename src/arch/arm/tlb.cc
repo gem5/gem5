@@ -1089,7 +1089,14 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             req->setFlags(Request::UNCACHEABLE);
         }
 
-        req->setPaddr(te->pAddr(vaddr));
+        Addr pa = te->pAddr(vaddr);
+        req->setPaddr(pa);
+
+        if (!bootUncacheability &&
+            ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(pa)) {
+            req->setFlags(Request::UNCACHEABLE);
+        }
+
         if (isSecure && !te->ns) {
             req->setFlags(Request::SECURE);
         }
