@@ -75,9 +75,10 @@
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
-#include "mem/se_translating_port_proxy.hh"
 #include "sim/byteswap.hh"
+#include "sim/emul_driver.hh"
 #include "sim/process.hh"
+#include "sim/syscall_emul_buf.hh"
 #include "sim/syscallreturn.hh"
 #include "sim/system.hh"
 
@@ -115,73 +116,6 @@ class SyscallDesc {
     void doSyscall(int callnum, LiveProcess *proc, ThreadContext *tc);
 };
 
-
-class BaseBufferArg {
-
-  public:
-
-    BaseBufferArg(Addr _addr, int _size) : addr(_addr), size(_size)
-    {
-        bufPtr = new uint8_t[size];
-        // clear out buffer: in case we only partially populate this,
-        // and then do a copyOut(), we want to make sure we don't
-        // introduce any random junk into the simulated address space
-        memset(bufPtr, 0, size);
-    }
-
-    virtual ~BaseBufferArg() { delete [] bufPtr; }
-
-    //
-    // copy data into simulator space (read from target memory)
-    //
-    virtual bool copyIn(SETranslatingPortProxy &memproxy)
-    {
-        memproxy.readBlob(addr, bufPtr, size);
-        return true;    // no EFAULT detection for now
-    }
-
-    //
-    // copy data out of simulator space (write to target memory)
-    //
-    virtual bool copyOut(SETranslatingPortProxy &memproxy)
-    {
-        memproxy.writeBlob(addr, bufPtr, size);
-        return true;    // no EFAULT detection for now
-    }
-
-  protected:
-    Addr addr;
-    int size;
-    uint8_t *bufPtr;
-};
-
-
-class BufferArg : public BaseBufferArg
-{
-  public:
-    BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) { }
-    void *bufferPtr()   { return bufPtr; }
-};
-
-template <class T>
-class TypedBufferArg : public BaseBufferArg
-{
-  public:
-    // user can optionally specify a specific number of bytes to
-    // allocate to deal with those structs that have variable-size
-    // arrays at the end
-    TypedBufferArg(Addr _addr, int _size = sizeof(T))
-        : BaseBufferArg(_addr, _size)
-    { }
-
-    // type case
-    operator T*() { return (T *)bufPtr; }
-
-    // dereference operators
-    T &operator*()       { return *((T *)bufPtr); }
-    T* operator->()      { return (T *)bufPtr; }
-    T &operator[](int i) { return ((T *)bufPtr)[i]; }
-};
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -439,14 +373,6 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 }
 
-/// Target getdents() handler.
-SyscallReturn getdentsFunc(SyscallDesc *desc, int num,
-                           LiveProcess *process, ThreadContext *tc);
-
-/// Target getdents64() handler.
-SyscallReturn getdents64Func(SyscallDesc *desc, int num,
-                             LiveProcess *process, ThreadContext *tc);
-
 
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register
@@ -612,9 +538,15 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
 
-    if (fd < 0 || process->sim_fd(fd) < 0) {
+    Process::FdMap *fdObj = process->sim_fd_obj(fd);
+
+    if (fdObj == NULL) {
         // doesn't map to any simulator fd: not a valid target fd
         return -EBADF;
+    }
+
+    if (fdObj->driver != NULL) {
+        return fdObj->driver->ioctl(process, tc, req);
     }
 
     if (OS::isTtyReq(req)) {
@@ -636,13 +568,6 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (!tc->getMemProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
-
-    if (path == "/dev/sysdev0") {
-        // This is a memory-mapped high-resolution timer device on Alpha.
-        // We don't support it, so just punt.
-        warn("Ignoring open(%s, ...)\n", path);
-        return -ENOENT;
-    }
 
     int tgtFlags = process->getSyscallArg(tc, index);
     int mode = process->getSyscallArg(tc, index);
@@ -668,6 +593,26 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     path = process->fullPath(path);
 
     DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
+
+    if (startswith(path, "/dev/")) {
+        std::string filename = path.substr(strlen("/dev/"));
+        if (filename == "sysdev0") {
+            // This is a memory-mapped high-resolution timer device on Alpha.
+            // We don't support it, so just punt.
+            warn("Ignoring open(%s, ...)\n", path);
+            return -ENOENT;
+        }
+
+        EmulatedDriver *drv = process->findDriver(filename);
+        if (drv != NULL) {
+            // the driver's open method will allocate a fd from the
+            // process if necessary.
+            return drv->open(process, tc, mode, hostFlags);
+        }
+
+        // fall through here for pass through to host devices, such as
+        // /dev/zero
+    }
 
     int fd;
     int local_errno;

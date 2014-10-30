@@ -46,6 +46,12 @@ class Process(SimObject):
     def export_methods(cls, code):
         code('bool map(Addr vaddr, Addr paddr, int size);')
 
+class EmulatedDriver(SimObject):
+    type = 'EmulatedDriver'
+    cxx_header = "sim/emul_driver.hh"
+    abstract = True
+    filename = Param.String("device file name (under /dev)")
+
 class LiveProcess(Process):
     type = 'LiveProcess'
     cxx_header = "sim/process.hh"
@@ -60,3 +66,5 @@ class LiveProcess(Process):
     pid = Param.Int(100, 'process id')
     ppid = Param.Int(99, 'parent process id')
     simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
+    drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
+

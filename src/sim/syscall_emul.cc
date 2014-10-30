@@ -31,7 +31,6 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/syscall.h>
 
 #include <cstdio>
 #include <iostream>
@@ -72,10 +71,15 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 
     SyscallReturn retval = (*funcPtr)(this, callnum, process, tc);
 
-    DPRINTFR(SyscallVerbose, "%d: %s: syscall %s returns %d\n",
-             curTick(), tc->getCpuPtr()->name(), name, retval.encodedValue());
+    if (retval.needsRetry()) {
+        DPRINTFS(SyscallVerbose, tc->getCpuPtr(), "syscall %s needs retry\n",
+                 name);
+    } else {
+        DPRINTFS(SyscallVerbose, tc->getCpuPtr(), "syscall %s returns %d\n",
+                 name, retval.encodedValue());
+    }
 
-    if (!(flags & SyscallDesc::SuppressReturnValue))
+    if (!(flags & SyscallDesc::SuppressReturnValue) && !retval.needsRetry())
         process->setSyscallReturn(tc, retval);
 }
 
@@ -868,41 +872,6 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     }
 }
 
-SyscallReturn
-getdentsFunc(SyscallDesc *desc, int num, LiveProcess *p,
-             ThreadContext *tc)
-{
-    int index = 0;
-    int fd = p->sim_fd(p->getSyscallArg(tc, index));
-    Addr bufPtr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
-    BufferArg bufArg(bufPtr, nbytes);
-
-    int bytes_read = syscall(SYS_getdents, fd, bufArg.bufferPtr(), nbytes);
-
-    if (bytes_read != -1)
-        bufArg.copyOut(tc->getMemProxy());
-
-    return bytes_read;
-}
-
-SyscallReturn
-getdents64Func(SyscallDesc *desc, int num, LiveProcess *p,
-               ThreadContext *tc)
-{
-    int index = 0;
-    int fd = p->sim_fd(p->getSyscallArg(tc, index));
-    Addr bufPtr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
-    BufferArg bufArg(bufPtr, nbytes);
-
-    int bytes_read = syscall(SYS_getdents64, fd, bufArg.bufferPtr(), nbytes);
-
-    if (bytes_read != -1)
-        bufArg.copyOut(tc->getMemProxy());
-
-    return bytes_read;
-}
 SyscallReturn
 accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc,
         int index)

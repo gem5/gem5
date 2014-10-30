@@ -278,7 +278,7 @@ Process::alloc_fd(int sim_fd, string filename, int flags, int mode, bool pipe)
     // find first free target fd
     for (int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
         Process::FdMap *fdo = &fd_map[free_fd];
-        if (fdo->fd == -1) {
+        if (fdo->fd == -1 && fdo->driver == NULL) {
             fdo->fd = sim_fd;
             fdo->filename = filename;
             fdo->mode = mode;
@@ -309,6 +309,7 @@ Process::free_fd(int tgt_fd)
     fdo->flags = 0;
     fdo->isPipe = false;
     fdo->readPipeSource = 0;
+    fdo->driver = NULL;
 }
 
 
@@ -565,16 +566,14 @@ Process::map(Addr vaddr, Addr paddr, int size)
 ////////////////////////////////////////////////////////////////////////
 
 
-LiveProcess::LiveProcess(LiveProcessParams * params, ObjectFile *_objFile)
+LiveProcess::LiveProcess(LiveProcessParams *params, ObjectFile *_objFile)
     : Process(params), objFile(_objFile),
-      argv(params->cmd), envp(params->env), cwd(params->cwd)
+      argv(params->cmd), envp(params->env), cwd(params->cwd),
+      __uid(params->uid), __euid(params->euid),
+      __gid(params->gid), __egid(params->egid),
+      __pid(params->pid), __ppid(params->ppid),
+      drivers(params->drivers)
 {
-    __uid = params->uid;
-    __euid = params->euid;
-    __gid = params->gid;
-    __egid = params->egid;
-    __pid = params->pid;
-    __ppid = params->ppid;
 
     // load up symbols, if any... these may be used for debugging or
     // profiling.
@@ -607,6 +606,19 @@ LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     return getSyscallArg(tc, i);
 }
+
+
+EmulatedDriver *
+LiveProcess::findDriver(std::string filename)
+{
+    for (EmulatedDriver *d : drivers) {
+        if (d->match(filename))
+            return d;
+    }
+
+    return NULL;
+}
+
 
 LiveProcess *
 LiveProcess::create(LiveProcessParams * params)

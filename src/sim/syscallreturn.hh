@@ -64,8 +64,16 @@ class SyscallReturn
     /// value is expected, e.g., as the return value from a system
     /// call emulation function ('return 0;' or 'return -EFAULT;').
     SyscallReturn(int64_t v)
-        : value(v)
+        : value(v), retryFlag(false)
     {}
+
+    /// Pseudo-constructor to create an instance with the retry flag set.
+    static SyscallReturn retry()
+    {
+        SyscallReturn s(0);
+        s.retryFlag = true;
+        return s;
+    }
 
     ~SyscallReturn() {}
 
@@ -74,6 +82,9 @@ class SyscallReturn
     {
         return (value >= 0 || value <= -4096);
     }
+
+    /// Does the syscall need to be retried?
+    bool needsRetry() const { return retryFlag; }
 
     /// The return value
     int64_t returnValue() const
@@ -98,6 +109,8 @@ class SyscallReturn
   private:
 
     int64_t value;
+
+    bool retryFlag;
 };
 
 #endif
