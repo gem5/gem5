@@ -4,11 +4,11 @@ sim_seconds                                  1.905068                       # Nu
 sim_ticks                                1905067807000                       # Number of ticks simulated
 final_tick                               1905067807000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 133407                       # Simulator instruction rate (inst/s)
-host_op_rate                                   133407                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             4441980470                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 322876                       # Number of bytes of host memory used
-host_seconds                                   428.88                       # Real time elapsed on the host
+host_inst_rate                                 163944                       # Simulator instruction rate (inst/s)
+host_op_rate                                   163944                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5458738398                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 318552                       # Number of bytes of host memory used
+host_seconds                                   348.99                       # Real time elapsed on the host
 sim_insts                                    57215334                       # Number of instructions simulated
 sim_ops                                      57215334                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -739,8 +739,6 @@ system.iocache.fast_writes                      41552                       # nu
 system.iocache.cache_copies                         0                       # number of cache copies performed
 system.iocache.ReadReq_mshr_misses::tsunami.ide          177                       # number of ReadReq MSHR misses
 system.iocache.ReadReq_mshr_misses::total          177                       # number of ReadReq MSHR misses
-system.iocache.WriteInvalidateReq_mshr_misses::tsunami.ide        41552                       # number of WriteInvalidateReq MSHR misses
-system.iocache.WriteInvalidateReq_mshr_misses::total        41552                       # number of WriteInvalidateReq MSHR misses
 system.iocache.demand_mshr_misses::tsunami.ide          177                       # number of demand (read+write) MSHR misses
 system.iocache.demand_mshr_misses::total          177                       # number of demand (read+write) MSHR misses
 system.iocache.overall_mshr_misses::tsunami.ide          177                       # number of overall MSHR misses
@@ -755,16 +753,14 @@ system.iocache.overall_mshr_miss_latency::tsunami.ide     12381383              
 system.iocache.overall_mshr_miss_latency::total     12381383                       # number of overall MSHR miss cycles
 system.iocache.ReadReq_mshr_miss_rate::tsunami.ide            1                       # mshr miss rate for ReadReq accesses
 system.iocache.ReadReq_mshr_miss_rate::total            1                       # mshr miss rate for ReadReq accesses
-system.iocache.WriteInvalidateReq_mshr_miss_rate::tsunami.ide     0.999952                       # mshr miss rate for WriteInvalidateReq accesses
-system.iocache.WriteInvalidateReq_mshr_miss_rate::total     0.999952                       # mshr miss rate for WriteInvalidateReq accesses
 system.iocache.demand_mshr_miss_rate::tsunami.ide            1                       # mshr miss rate for demand accesses
 system.iocache.demand_mshr_miss_rate::total            1                       # mshr miss rate for demand accesses
 system.iocache.overall_mshr_miss_rate::tsunami.ide            1                       # mshr miss rate for overall accesses
 system.iocache.overall_mshr_miss_rate::total            1                       # mshr miss rate for overall accesses
 system.iocache.ReadReq_avg_mshr_miss_latency::tsunami.ide 69951.316384                       # average ReadReq mshr miss latency
 system.iocache.ReadReq_avg_mshr_miss_latency::total 69951.316384                       # average ReadReq mshr miss latency
-system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::tsunami.ide 60474.936465                       # average WriteInvalidateReq mshr miss latency
-system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::total 60474.936465                       # average WriteInvalidateReq mshr miss latency
+system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::tsunami.ide          inf                       # average WriteInvalidateReq mshr miss latency
+system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::total          inf                       # average WriteInvalidateReq mshr miss latency
 system.iocache.demand_avg_mshr_miss_latency::tsunami.ide 69951.316384                       # average overall mshr miss latency
 system.iocache.demand_avg_mshr_miss_latency::total 69951.316384                       # average overall mshr miss latency
 system.iocache.overall_avg_mshr_miss_latency::tsunami.ide 69951.316384                       # average overall mshr miss latency

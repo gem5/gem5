@@ -1,17 +1,32 @@
-Redirecting stdout to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual/simout
-Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  7 2014 10:57:46
-gem5 started May  7 2014 12:48:24
-gem5 executing on cz3211bhr8
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual -re tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual
+gem5 compiled Oct 29 2014 09:18:22
+gem5 started Oct 29 2014 10:01:45
+gem5 executing on u200540-lin
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual -re /work/gem5.latest/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor-dual
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /arm/projectscratch/pd/sysrandd/dist/binaries/vmlinux.arm.smp.fb.2.6.38.8
-      0: system.cpu0.isa: ISA system set to: 0x15f94710 0x15f94710
-      0: system.cpu1.isa: ISA system set to: 0x15f94710 0x15f94710
-info: Using bootloader at address 0x80000000
-info: Using kernel entry physical address at 0x8000
+info: kernel located at: /dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
+      0: system.cpu0.isa: ISA system set to: 0x40cab00 0x40cab00
+      0: system.cpu1.isa: ISA system set to: 0x40cab00 0x40cab00
+info: Using bootloader at address 0x10
+info: Using kernel entry physical address at 0x80008000
+info: Loading DTB file: /dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.2cpu.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 1146870140500 because m5_exit instruction encountered
+info: Read CNTFREQ_EL0 frequency
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+Exiting @ tick 2843718094000 because m5_exit instruction encountered

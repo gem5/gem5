@@ -4,11 +4,11 @@ sim_seconds                                  5.194411                       # Nu
 sim_ticks                                5194410635000                       # Number of ticks simulated
 final_tick                               5194410635000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 693425                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1336696                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            28047460404                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 637768                       # Number of bytes of host memory used
-host_seconds                                   185.20                       # Real time elapsed on the host
+host_inst_rate                                1079720                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2081347                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            43672253601                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 589096                       # Number of bytes of host memory used
+host_seconds                                   118.94                       # Real time elapsed on the host
 sim_insts                                   128422722                       # Number of instructions simulated
 sim_ops                                     247557000                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -424,8 +424,6 @@ system.iocache.fast_writes                      46720                       # nu
 system.iocache.cache_copies                         0                       # number of cache copies performed
 system.iocache.ReadReq_mshr_misses::pc.south_bridge.ide          847                       # number of ReadReq MSHR misses
 system.iocache.ReadReq_mshr_misses::total          847                       # number of ReadReq MSHR misses
-system.iocache.WriteInvalidateReq_mshr_misses::pc.south_bridge.ide        46720                       # number of WriteInvalidateReq MSHR misses
-system.iocache.WriteInvalidateReq_mshr_misses::total        46720                       # number of WriteInvalidateReq MSHR misses
 system.iocache.demand_mshr_misses::pc.south_bridge.ide          847                       # number of demand (read+write) MSHR misses
 system.iocache.demand_mshr_misses::total          847                       # number of demand (read+write) MSHR misses
 system.iocache.overall_mshr_misses::pc.south_bridge.ide          847                       # number of overall MSHR misses
@@ -440,16 +438,14 @@ system.iocache.overall_mshr_miss_latency::pc.south_bridge.ide     97471186      
 system.iocache.overall_mshr_miss_latency::total     97471186                       # number of overall MSHR miss cycles
 system.iocache.ReadReq_mshr_miss_rate::pc.south_bridge.ide            1                       # mshr miss rate for ReadReq accesses
 system.iocache.ReadReq_mshr_miss_rate::total            1                       # mshr miss rate for ReadReq accesses
-system.iocache.WriteInvalidateReq_mshr_miss_rate::pc.south_bridge.ide     0.999979                       # mshr miss rate for WriteInvalidateReq accesses
-system.iocache.WriteInvalidateReq_mshr_miss_rate::total     0.999979                       # mshr miss rate for WriteInvalidateReq accesses
 system.iocache.demand_mshr_miss_rate::pc.south_bridge.ide            1                       # mshr miss rate for demand accesses
 system.iocache.demand_mshr_miss_rate::total            1                       # mshr miss rate for demand accesses
 system.iocache.overall_mshr_miss_rate::pc.south_bridge.ide            1                       # mshr miss rate for overall accesses
 system.iocache.overall_mshr_miss_rate::total            1                       # mshr miss rate for overall accesses
 system.iocache.ReadReq_avg_mshr_miss_latency::pc.south_bridge.ide 115078.141677                       # average ReadReq mshr miss latency
 system.iocache.ReadReq_avg_mshr_miss_latency::total 115078.141677                       # average ReadReq mshr miss latency
-system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::pc.south_bridge.ide 60522.456336                       # average WriteInvalidateReq mshr miss latency
-system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::total 60522.456336                       # average WriteInvalidateReq mshr miss latency
+system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::pc.south_bridge.ide          inf                       # average WriteInvalidateReq mshr miss latency
+system.iocache.WriteInvalidateReq_avg_mshr_miss_latency::total          inf                       # average WriteInvalidateReq mshr miss latency
 system.iocache.demand_avg_mshr_miss_latency::pc.south_bridge.ide 115078.141677                       # average overall mshr miss latency
 system.iocache.demand_avg_mshr_miss_latency::total 115078.141677                       # average overall mshr miss latency
 system.iocache.overall_avg_mshr_miss_latency::pc.south_bridge.ide 115078.141677                       # average overall mshr miss latency

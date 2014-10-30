@@ -1,15 +1,47 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 21 2014 11:22:42
-gem5 started Jun 21 2014 21:27:42
-gem5 executing on phenom
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-checker -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-checker
+gem5 compiled Oct 29 2014 09:18:22
+gem5 started Oct 29 2014 10:12:13
+gem5 executing on u200540-lin
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-checker -re /work/gem5.latest/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-checker
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /home/stever/m5/m5_system_2.0b3/binaries/vmlinux.arm.smp.fb.2.6.38.8
-      0: system.cpu.checker.isa: ISA system set to: 0x639d990 0x639d990
-      0: system.cpu.isa: ISA system set to: 0x639d990 0x639d990
-info: Using bootloader at address 0x80000000
-info: Using kernel entry physical address at 0x8000
+info: kernel located at: /dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
+      0: system.cpu.checker.isa: ISA system set to: 0x59c2b00 0x59c2b00
+      0: system.cpu.isa: ISA system set to: 0x59c2b00 0x59c2b00
+info: Using bootloader at address 0x10
+info: Using kernel entry physical address at 0x80008000
+info: Loading DTB file: /dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 2525888859000 because m5_exit instruction encountered
+info: Read CNTFREQ_EL0 frequency
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
+Exiting @ tick 2826845674500 because m5_exit instruction encountered

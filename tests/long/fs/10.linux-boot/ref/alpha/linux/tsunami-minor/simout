@@ -1,14 +1,12 @@
-Redirecting stdout to build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-minor/simout
-Redirecting stderr to build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-minor/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  7 2014 10:41:53
-gem5 started May  7 2014 10:52:34
-gem5 executing on cz3212c2d7
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-minor -re tests/run.py build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-minor
+gem5 compiled Oct 29 2014 09:12:51
+gem5 started Oct 29 2014 09:20:31
+gem5 executing on u200540-lin
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-minor -re /work/gem5.latest/tests/run.py build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-minor
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /arm/projectscratch/pd/sysrandd/dist/binaries/vmlinux
+info: kernel located at: /dist/binaries/vmlinux
       0: system.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 1885187323500 because m5_exit instruction encountered
+Exiting @ tick 1883224346500 because m5_exit instruction encountered

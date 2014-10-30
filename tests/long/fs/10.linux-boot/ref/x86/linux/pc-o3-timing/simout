@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 21 2014 11:13:07
-gem5 started Jun 21 2014 22:16:40
-gem5 executing on phenom
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing
+gem5 compiled Oct 29 2014 09:18:07
+gem5 started Oct 29 2014 09:27:02
+gem5 executing on u200540-lin
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing -re /work/gem5.latest/tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /home/stever/m5/m5_system_2.0b3/binaries/x86_64-vmlinux-2.6.22.9
+info: kernel located at: /dist/binaries/x86_64-vmlinux-2.6.22.9
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 5137926173000 because m5_exit instruction encountered
+Exiting @ tick 5125902116500 because m5_exit instruction encountered
