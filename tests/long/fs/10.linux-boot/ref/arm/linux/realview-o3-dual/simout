@@ -1,14 +1,14 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 29 2014 09:18:22
-gem5 started Oct 29 2014 10:14:43
+gem5 compiled Oct 31 2014 10:01:44
+gem5 started Oct 31 2014 11:38:41
 gem5 executing on u200540-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-dual -re /work/gem5.latest/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-dual
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-dual -re /work/gem5.ext/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3-dual
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
-      0: system.cpu0.isa: ISA system set to: 0x5555b00 0x5555b00
-      0: system.cpu1.isa: ISA system set to: 0x5555b00 0x5555b00
+      0: system.cpu0.isa: ISA system set to: 0x479a680 0x479a680
+      0: system.cpu1.isa: ISA system set to: 0x479a680 0x479a680
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80008000
 info: Loading DTB file: /dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.2cpu.dtb at address 0x88000000
@@ -29,4 +29,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2824356167500 because m5_exit instruction encountered
+Exiting @ tick 2824340874000 because m5_exit instruction encountered

@@ -1,13 +1,13 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 29 2014 15:46:15
-gem5 started Oct 29 2014 15:58:15
+gem5 compiled Oct 31 2014 10:01:44
+gem5 started Oct 31 2014 11:25:21
 gem5 executing on u200540-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /work/gem5.latest/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /work/gem5.ext/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
-      0: system.cpu.isa: ISA system set to: 0x56b5b00 0x56b5b00
+      0: system.cpu.isa: ISA system set to: 0x44d4680 0x44d4680
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80008000
 info: Loading DTB file: /dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
