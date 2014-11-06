@@ -38,8 +38,8 @@ class RubySystem(ClockedObject):
         "insert random delays on message enqueue times");
     block_size_bytes = Param.UInt32(64,
         "default cache block size; must be a power of two");
-    mem_size = Param.MemorySize("total memory size of the system");
-    no_mem_vec = Param.Bool(False, "do not allocate Ruby's mem vector");
+    memory_size_bits = Param.UInt32(64,
+        "number of bits that a memory address requires");
 
     # Profiler related configuration variables
     hot_lines = Param.Bool(False, "")

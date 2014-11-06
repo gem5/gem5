@@ -80,7 +80,6 @@ options.num_cpus = nb_cores
 # system simulated
 system = System(cpu = cpus,
                 funcmem = SimpleMemory(in_addr_map = False),
-                physmem = SimpleMemory(null = True),
                 funcbus = NoncoherentXBar())
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain()

@@ -28,14 +28,12 @@
 #          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
-from MemoryControl import MemoryControl
+from AbstractMemory import AbstractMemory
 
-class RubyMemoryControl(MemoryControl):
+class RubyMemoryControl(AbstractMemory):
     type = 'RubyMemoryControl'
     cxx_class = 'RubyMemoryControl'
     cxx_header = "mem/ruby/structures/RubyMemoryControl.hh"
-    version = Param.Int("");
 
     banks_per_rank = Param.Int(8, "");
     ranks_per_dimm = Param.Int(2, "");
@@ -53,3 +51,7 @@ class RubyMemoryControl(MemoryControl):
     tFaw = Param.Int(0, "");
     mem_random_arbitrate = Param.Int(0, "");
     mem_fixed_delay = Param.Cycles(0, "");
+
+    # single-ported on the system interface side, instantiate with a
+    # crossbar in front of the controller for multiple ports
+    port = SlavePort("Slave port")

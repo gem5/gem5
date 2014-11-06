@@ -225,11 +225,6 @@ if options.ruby:
         print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
         sys.exit(1)
 
-    # Use SimpleMemory with the null option since this memory is only used
-    # for determining which addresses are within the range of the memory.
-    # No space allocation is required.
-    system.physmem = SimpleMemory(range=AddrRange(options.mem_size),
-                              null = True)
     options.use_map = True
     Ruby.create_system(options, False, system)
     assert(options.num_cpus == len(system.ruby._cpu_ports))

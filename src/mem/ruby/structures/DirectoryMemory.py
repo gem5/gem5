@@ -37,8 +37,6 @@ class RubyDirectoryMemory(SimObject):
     cxx_header = "mem/ruby/structures/DirectoryMemory.hh"
     version = Param.Int(0, "")
     size = Param.MemorySize("1GB", "capacity in bytes")
-    use_map = Param.Bool(False, "enable sparse memory")
-    map_levels = Param.Int(4, "sparse memory map levels")
     # the default value of the numa high bit is specified in the command line
     # option and must be passed into the directory memory sim object
     numa_high_bit = Param.Int("numa high bit")

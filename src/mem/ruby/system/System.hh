@@ -39,8 +39,6 @@
 #include "base/output.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/ruby/structures/MemoryControl.hh"
-#include "mem/ruby/structures/MemoryVector.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "mem/packet.hh"
 #include "params/RubySystem.hh"
@@ -75,7 +73,6 @@ class RubySystem : public ClockedObject
     static int getRandomization() { return m_randomization; }
     static uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
     static uint32_t getBlockSizeBits() { return m_block_size_bits; }
-    static uint64_t getMemorySizeBytes() { return m_memory_size_bytes; }
     static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
 
     // Public Methods
@@ -84,13 +81,6 @@ class RubySystem : public ClockedObject
     {
         assert(m_profiler != NULL);
         return m_profiler;
-    }
-
-    MemoryVector*
-    getMemoryVector()
-    {
-        assert(m_mem_vec != NULL);
-        return m_mem_vec;
     }
 
     void regStats() { m_profiler->regStats(name()); }
@@ -106,7 +96,6 @@ class RubySystem : public ClockedObject
 
     void registerNetwork(Network*);
     void registerAbstractController(AbstractController*);
-    void registerMemController(MemoryControl *mc);
 
     bool eventQueueEmpty() { return eventq->empty(); }
     void enqueueRubyEvent(Tick tick)
@@ -132,16 +121,13 @@ class RubySystem : public ClockedObject
     static bool m_randomization;
     static uint32_t m_block_size_bytes;
     static uint32_t m_block_size_bits;
-    static uint64_t m_memory_size_bytes;
     static uint32_t m_memory_size_bits;
 
     Network* m_network;
-    std::vector<MemoryControl *> m_memory_controller_vec;
     std::vector<AbstractController *> m_abs_cntrl_vec;
 
   public:
     Profiler* m_profiler;
-    MemoryVector* m_mem_vec;
     bool m_warmup_enabled;
     bool m_cooldown_enabled;
     CacheRecorder* m_cache_recorder;

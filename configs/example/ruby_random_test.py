@@ -97,8 +97,7 @@ tester = RubyTester(check_flush = check_flush,
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(cpu = tester, physmem = SimpleMemory(),
-                mem_ranges = [AddrRange(options.mem_size)])
+system = System(cpu = tester, mem_ranges = [AddrRange(options.mem_size)])
 
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)

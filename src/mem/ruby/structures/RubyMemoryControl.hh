@@ -34,12 +34,12 @@
 #include <list>
 #include <string>
 
+#include "mem/abstract_mem.hh"
 #include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
-#include "mem/ruby/structures/MemoryControl.hh"
-#include "mem/ruby/structures/MemoryVector.hh"
+#include "mem/ruby/structures/MemoryNode.hh"
 #include "mem/ruby/system/System.hh"
 #include "params/RubyMemoryControl.hh"
 
@@ -49,7 +49,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
-class RubyMemoryControl : public MemoryControl
+class RubyMemoryControl : public AbstractMemory, public Consumer
 {
   public:
     typedef RubyMemoryControlParams Params;
@@ -59,22 +59,18 @@ class RubyMemoryControl : public MemoryControl
 
     ~RubyMemoryControl();
 
+    virtual BaseSlavePort& getSlavePort(const std::string& if_name,
+                                        PortID idx = InvalidPortID);
     unsigned int drain(DrainManager *dm);
-
     void wakeup();
 
-    void setConsumer(Consumer* consumer_ptr);
-    Consumer* getConsumer() { return m_consumer_ptr; };
     void setDescription(const std::string& name) { m_description = name; };
     std::string getDescription() { return m_description; };
 
     // Called from the directory:
-    void enqueue(const MsgPtr& message, Cycles latency);
+    bool recvTimingReq(PacketPtr pkt);
+    void recvFunctional(PacketPtr pkt);
     void enqueueMemRef(MemoryNode *memRef);
-    void dequeue();
-    const Message* peek();
-    MemoryNode *peekNode();
-    bool isReady();
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
     void print(std::ostream& out) const;
@@ -108,8 +104,34 @@ class RubyMemoryControl : public MemoryControl
     RubyMemoryControl (const RubyMemoryControl& obj);
     RubyMemoryControl& operator=(const RubyMemoryControl& obj);
 
+  private:
+    // For now, make use of a queued slave port to avoid dealing with
+    // flow control for the responses being sent back
+    class MemoryPort : public QueuedSlavePort
+    {
+        SlavePacketQueue queue;
+        RubyMemoryControl& memory;
+
+      public:
+        MemoryPort(const std::string& name, RubyMemoryControl& _memory);
+
+      protected:
+        Tick recvAtomic(PacketPtr pkt);
+
+        void recvFunctional(PacketPtr pkt);
+
+        bool recvTimingReq(PacketPtr);
+
+        virtual AddrRangeList getAddrRanges() const;
+    };
+
+    /**
+     * Our incoming port, for a multi-ported controller add a crossbar
+     * in front of it
+     */
+    MemoryPort port;
+
     // data members
-    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
     std::string m_description;
     int m_msg_counter;
 
@@ -163,8 +185,20 @@ class RubyMemoryControl : public MemoryControl
 
     MemCntrlProfiler* m_profiler_ptr;
 
-    // Actual physical memory.
-    MemoryVector* m_ram;
+    class MemCntrlEvent : public Event
+    {
+      public:
+        MemCntrlEvent(RubyMemoryControl* _mem_cntrl)
+        {
+            mem_cntrl = _mem_cntrl;
+        }
+      private:
+        void process() { mem_cntrl->wakeup(); }
+
+        RubyMemoryControl* mem_cntrl;
+    };
+
+    MemCntrlEvent m_event;
 };
 
 std::ostream& operator<<(std::ostream& out, const RubyMemoryControl& obj);

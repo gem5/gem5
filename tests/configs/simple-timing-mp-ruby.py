@@ -71,8 +71,7 @@ cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 options.num_cpus = nb_cores
 
 # system simulated
-system = System(cpu = cpus, physmem = SimpleMemory(),
-                clk_domain = SrcClockDomain(clock = '1GHz'))
+system = System(cpu = cpus, clk_domain = SrcClockDomain(clock = '1GHz'))
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency

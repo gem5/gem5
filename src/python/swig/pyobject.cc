@@ -106,7 +106,7 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     ac1 = dynamic_cast<AbstractController*>(o1);
     ac2 = dynamic_cast<AbstractController*>(o2);
 
-    if (ac1 || ac2) {
+    if ((ac1 || ac2) && name1 != "memory" && name2 != "memory") {
         MessageBuffer *b = new MessageBuffer();
 
         // set the message buffer associated with the provided names

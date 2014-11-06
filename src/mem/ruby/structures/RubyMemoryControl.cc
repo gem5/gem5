@@ -145,7 +145,8 @@ operator<<(ostream& out, const RubyMemoryControl& obj)
 
 // CONSTRUCTOR
 RubyMemoryControl::RubyMemoryControl(const Params *p)
-    : MemoryControl(p)
+    : AbstractMemory(p), Consumer(this), port(name() + ".port", *this),
+      m_event(this)
 {
     m_banks_per_rank = p->banks_per_rank;
     m_ranks_per_dimm = p->ranks_per_dimm;
@@ -173,9 +174,7 @@ RubyMemoryControl::RubyMemoryControl(const Params *p)
 void
 RubyMemoryControl::init()
 {
-    m_ram = g_system_ptr->getMemoryVector();
     m_msg_counter = 0;
-
     assert(m_tFaw <= 62); // must fit in a uint64 shift register
 
     m_total_banks = m_banks_per_rank * m_ranks_per_dimm * m_dimms_per_channel;
@@ -218,6 +217,16 @@ RubyMemoryControl::init()
     for (int i = 0; i < m_total_ranks; i++) {
         m_tfaw_shift[i] = 0;
         m_tfaw_count[i] = 0;
+    }
+}
+
+BaseSlavePort&
+RubyMemoryControl::getSlavePort(const string &if_name, PortID idx)
+{
+    if (if_name != "port") {
+        return MemObject::getSlavePort(if_name, idx);
+    } else {
+        return port;
     }
 }
 
@@ -275,30 +284,18 @@ RubyMemoryControl::~RubyMemoryControl()
 }
 
 // enqueue new request from directory
-void
-RubyMemoryControl::enqueue(const MsgPtr& message, Cycles latency)
+bool
+RubyMemoryControl::recvTimingReq(PacketPtr pkt)
 {
-    Cycles arrival_time = curCycle() + latency;
-    const MemoryMsg* memMess = safe_cast<const MemoryMsg*>(message.get());
-    physical_address_t addr = memMess->getAddr().getAddress();
-    MemoryRequestType type = memMess->getType();
-    bool is_mem_read = (type == MemoryRequestType_MEMORY_READ);
+    Cycles arrival_time = curCycle();
+    physical_address_t addr = pkt->getAddr();
+    bool is_mem_read = pkt->isRead();
 
-    if (is_mem_read) {
-        m_ram->read(memMess->getAddr(), const_cast<uint8_t *>(
-                    memMess->getDataBlk().getData(0,
-                        RubySystem::getBlockSizeBytes())),
-                    RubySystem::getBlockSizeBytes());
-    }  else {
-        m_ram->write(memMess->getAddr(), const_cast<uint8_t *>(
-                     memMess->getDataBlk().getData(0,
-                         RubySystem::getBlockSizeBytes())),
-                     RubySystem::getBlockSizeBytes());
-    }
-
-    MemoryNode *thisReq = new MemoryNode(arrival_time, message, addr,
+    access(pkt);
+    MemoryNode *thisReq = new MemoryNode(arrival_time, pkt, addr,
                                          is_mem_read, !is_mem_read);
     enqueueMemRef(thisReq);
+    return true;
 }
 
 // Alternate entry point used when we already have a MemoryNode
@@ -325,51 +322,6 @@ RubyMemoryControl::enqueueMemRef(MemoryNode *memRef)
     }
 }
 
-// dequeue, peek, and isReady are used to transfer completed requests
-// back to the directory
-void
-RubyMemoryControl::dequeue()
-{
-    assert(isReady());
-    MemoryNode *req = m_response_queue.front();
-    m_response_queue.pop_front();
-    delete req;
-}
-
-const Message*
-RubyMemoryControl::peek()
-{
-    MemoryNode *node = peekNode();
-    Message* msg_ptr = node->m_msgptr.get();
-    assert(msg_ptr != NULL);
-    return msg_ptr;
-}
-
-MemoryNode *
-RubyMemoryControl::peekNode()
-{
-    assert(isReady());
-    MemoryNode *req = m_response_queue.front();
-    DPRINTF(RubyMemory, "Peek: memory request%7d: %#08x %c sched %c\n",
-            req->m_msg_counter, req->m_addr, req->m_is_mem_read ? 'R':'W',
-            m_event.scheduled() ? 'Y':'N');
-
-    return req;
-}
-
-bool
-RubyMemoryControl::isReady()
-{
-    return ((!m_response_queue.empty()) &&
-            (m_response_queue.front()->m_time <= g_system_ptr->curCycle()));
-}
-
-void
-RubyMemoryControl::setConsumer(Consumer* consumer_ptr)
-{
-    m_consumer_ptr = consumer_ptr;
-}
-
 void
 RubyMemoryControl::print(ostream& out) const
 {
@@ -380,15 +332,17 @@ void
 RubyMemoryControl::enqueueToDirectory(MemoryNode *req, Cycles latency)
 {
     Tick arrival_time = clockEdge(latency);
-    Cycles ruby_arrival_time = g_system_ptr->ticksToCycles(arrival_time);
-    req->m_time = ruby_arrival_time;
-    m_response_queue.push_back(req);
+    PacketPtr pkt = req->pkt;
+
+    // access already turned the packet into a response
+    assert(pkt->isResponse());
+
+    // queue the packet in the response queue to be sent out after
+    // the static latency has passed
+    port.schedTimingResp(pkt, arrival_time);
 
     DPRINTF(RubyMemory, "Enqueueing msg %#08x %c back to directory at %15d\n",
             req->m_addr, req->m_is_mem_read ? 'R':'W', arrival_time);
-
-    // schedule the wake up
-    m_consumer_ptr->scheduleEventAbsolute(arrival_time);
 }
 
 // getBank returns an integer that is unique for each
@@ -560,9 +514,8 @@ RubyMemoryControl::issueRequest(int bank)
             req->m_is_mem_read? 'R':'W',
             bank, m_event.scheduled() ? 'Y':'N');
 
-    if (req->m_msgptr) {  // don't enqueue L3 writebacks
-        enqueueToDirectory(req, Cycles(m_mem_ctl_latency + m_mem_fixed_delay));
-    }
+    enqueueToDirectory(req, Cycles(m_mem_ctl_latency + m_mem_fixed_delay));
+
     m_oldRequest[bank] = 0;
     markTfaw(rank);
     m_bankBusyCounter[bank] = m_bank_busy_time;
@@ -724,16 +677,16 @@ RubyMemoryControl::functionalRead(Packet *pkt)
 {
     for (std::list<MemoryNode *>::iterator it = m_input_queue.begin();
          it != m_input_queue.end(); ++it) {
-        Message* msg_ptr = (*it)->m_msgptr.get();
-        if (msg_ptr->functionalRead(pkt)) {
+        PacketPtr msg = (*it)->pkt;
+        if (pkt->checkFunctional(msg)) {
             return true;
         }
     }
 
     for (std::list<MemoryNode *>::iterator it = m_response_queue.begin();
          it != m_response_queue.end(); ++it) {
-        Message* msg_ptr = (*it)->m_msgptr.get();
-        if (msg_ptr->functionalRead(pkt)) {
+        PacketPtr msg = (*it)->pkt;
+        if (pkt->checkFunctional(msg)) {
             return true;
         }
     }
@@ -741,16 +694,14 @@ RubyMemoryControl::functionalRead(Packet *pkt)
     for (uint32_t bank = 0; bank < m_total_banks; ++bank) {
         for (std::list<MemoryNode *>::iterator it = m_bankQueues[bank].begin();
              it != m_bankQueues[bank].end(); ++it) {
-            Message* msg_ptr = (*it)->m_msgptr.get();
-            if (msg_ptr->functionalRead(pkt)) {
+            PacketPtr msg = (*it)->pkt;
+            if (pkt->checkFunctional(msg)) {
                 return true;
             }
         }
     }
 
-    m_ram->read(Address(pkt->getAddr()), pkt->getPtr<uint8_t>(true),
-                pkt->getSize());
-
+    functionalAccess(pkt);
     return true;
 }
 
@@ -769,16 +720,16 @@ RubyMemoryControl::functionalWrite(Packet *pkt)
 
     for (std::list<MemoryNode *>::iterator it = m_input_queue.begin();
          it != m_input_queue.end(); ++it) {
-        Message* msg_ptr = (*it)->m_msgptr.get();
-        if (msg_ptr->functionalWrite(pkt)) {
+        PacketPtr msg = (*it)->pkt;
+        if (pkt->checkFunctional(msg)) {
             num_functional_writes++;
         }
     }
 
     for (std::list<MemoryNode *>::iterator it = m_response_queue.begin();
          it != m_response_queue.end(); ++it) {
-        Message* msg_ptr = (*it)->m_msgptr.get();
-        if (msg_ptr->functionalWrite(pkt)) {
+        PacketPtr msg = (*it)->pkt;
+        if (pkt->checkFunctional(msg)) {
             num_functional_writes++;
         }
     }
@@ -786,17 +737,15 @@ RubyMemoryControl::functionalWrite(Packet *pkt)
     for (uint32_t bank = 0; bank < m_total_banks; ++bank) {
         for (std::list<MemoryNode *>::iterator it = m_bankQueues[bank].begin();
              it != m_bankQueues[bank].end(); ++it) {
-            Message* msg_ptr = (*it)->m_msgptr.get();
-            if (msg_ptr->functionalWrite(pkt)) {
+            PacketPtr msg = (*it)->pkt;
+            if (pkt->checkFunctional(msg)) {
                 num_functional_writes++;
             }
         }
     }
 
-    m_ram->write(Address(pkt->getAddr()), pkt->getPtr<uint8_t>(true),
-                 pkt->getSize());
+    functionalAccess(pkt);
     num_functional_writes++;
-
     return num_functional_writes;
 }
 
@@ -804,10 +753,53 @@ void
 RubyMemoryControl::regStats()
 {
     m_profiler_ptr->regStats();
+    AbstractMemory::regStats();
 }
 
 RubyMemoryControl *
 RubyMemoryControlParams::create()
 {
     return new RubyMemoryControl(this);
+}
+
+RubyMemoryControl::MemoryPort::MemoryPort(const std::string& name,
+                                          RubyMemoryControl& _memory)
+    : QueuedSlavePort(name, &_memory, queue), queue(_memory, *this),
+      memory(_memory)
+{ }
+
+AddrRangeList
+RubyMemoryControl::MemoryPort::getAddrRanges() const
+{
+    AddrRangeList ranges;
+    ranges.push_back(memory.getAddrRange());
+    return ranges;
+}
+
+void
+RubyMemoryControl::MemoryPort::recvFunctional(PacketPtr pkt)
+{
+    pkt->pushLabel(memory.name());
+
+    if (!queue.checkFunctional(pkt)) {
+        // Default implementation of SimpleTimingPort::recvFunctional()
+        // calls recvAtomic() and throws away the latency; we can save a
+        // little here by just not calculating the latency.
+        memory.functionalWrite(pkt);
+    }
+
+    pkt->popLabel();
+}
+
+Tick
+RubyMemoryControl::MemoryPort::recvAtomic(PacketPtr pkt)
+{
+    panic("This controller does not support recv atomic!\n");
+}
+
+bool
+RubyMemoryControl::MemoryPort::recvTimingReq(PacketPtr pkt)
+{
+    // pass it to the memory controller
+    return memory.recvTimingReq(pkt);
 }

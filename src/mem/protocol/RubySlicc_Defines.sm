@@ -31,3 +31,19 @@
 NodeID version;
 MachineID machineID;
 NodeID clusterID;
+MessageBuffer responseFromMemory, ordered="false";
+
+// Functions implemented in the AbstractController class for
+// making timing access to the memory maintained by the
+// memory controllers.
+void queueMemoryRead(MachineID id, Address addr, Cycles latency);
+void queueMemoryWrite(MachineID id, Address addr, Cycles latency,
+                      DataBlock block);
+void queueMemoryWritePartial(MachineID id, Address addr, Cycles latency,
+                             DataBlock block, int size);
+
+// Functions implemented in the AbstractController class for
+// making functional access to the memory maintained by the
+// memory controllers.
+void functionalMemoryRead(Packet *pkt);
+bool functionalMemoryWrite(Packet *pkt);

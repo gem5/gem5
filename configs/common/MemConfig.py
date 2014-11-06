@@ -54,7 +54,8 @@ _mem_aliases_all = [
     ("lpddr2_s4_1066_x32", "LPDDR2_S4_1066_x32"),
     ("lpddr3_1600_x32", "LPDDR3_1600_x32"),
     ("wio_200_x128", "WideIO_200_x128"),
-    ("dramsim2", "DRAMSim2")
+    ("dramsim2", "DRAMSim2"),
+    ("ruby_memory", "RubyMemoryControl")
     ]
 
 # Filtered list of aliases. Only aliases for existing memory

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Mark D. Hill and David A. Wood
+ * Copyright (c) 2009-2014 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,12 +43,13 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "mem/packet.hh"
+#include "mem/qport.hh"
 #include "params/RubyController.hh"
-#include "sim/clocked_object.hh"
+#include "mem/mem_object.hh"
 
 class Network;
 
-class AbstractController : public ClockedObject, public Consumer
+class AbstractController : public MemObject, public Consumer
 {
   public:
     typedef RubyControllerParams Params;
@@ -79,10 +80,12 @@ class AbstractController : public ClockedObject, public Consumer
     //! These functions are used by ruby system to read/write the data blocks
     //! that exist with in the controller.
     virtual void functionalRead(const Address &addr, PacketPtr) = 0;
+    void functionalMemoryRead(PacketPtr);
     //! The return value indicates the number of messages written with the
     //! data from the packet.
-    virtual uint32_t functionalWriteBuffers(PacketPtr&) = 0;
+    virtual int functionalWriteBuffers(PacketPtr&) = 0;
     virtual int functionalWrite(const Address &addr, PacketPtr) = 0;
+    int functionalMemoryWrite(PacketPtr);
 
     //! Function for enqueuing a prefetch request
     virtual void enqueuePrefetch(const Address&, const RubyRequestType&)
@@ -96,6 +99,17 @@ class AbstractController : public ClockedObject, public Consumer
 
     //! Set the message buffer with given name.
     virtual void setNetQueue(const std::string& name, MessageBuffer *b) = 0;
+
+    /** A function used to return the port associated with this bus object. */
+    BaseMasterPort& getMasterPort(const std::string& if_name,
+                                  PortID idx = InvalidPortID);
+
+    void queueMemoryRead(const MachineID &id, Address addr, Cycles latency);
+    void queueMemoryWrite(const MachineID &id, Address addr, Cycles latency,
+                          const DataBlock &block);
+    void queueMemoryWritePartial(const MachineID &id, Address addr, Cycles latency,
+                                 const DataBlock &block, int size);
+    void recvTimingResp(PacketPtr pkt);
 
   public:
     MachineID getMachineID() const { return m_machineID; }
@@ -119,6 +133,9 @@ class AbstractController : public ClockedObject, public Consumer
     NodeID m_version;
     MachineID m_machineID;
     NodeID m_clusterID;
+
+    // MasterID used by some components of gem5.
+    MasterID m_masterId;
 
     Network* m_net_ptr;
     bool m_is_blocking;
@@ -155,6 +172,46 @@ class AbstractController : public ClockedObject, public Consumer
         virtual ~StatsCallback() {}
         StatsCallback(AbstractController *_ctr) : ctr(_ctr) {}
         void process() {ctr->collateStats();}
+    };
+
+    /**
+     * Port that forwards requests and receives responses from the
+     * memory controller.  It has a queue of packets not yet sent.
+     */
+    class MemoryPort : public QueuedMasterPort
+    {
+      private:
+        // Packet queue used to store outgoing requests and responses.
+        MasterPacketQueue _queue;
+
+        // Controller that operates this port.
+        AbstractController *controller;
+
+      public:
+        MemoryPort(const std::string &_name, AbstractController *_controller,
+                   const std::string &_label);
+
+        // Function for receiving a timing response from the peer port.
+        // Currently the pkt is handed to the coherence controller
+        // associated with this port.
+        bool recvTimingResp(PacketPtr pkt);
+    };
+
+    /* Master port to the memory controller. */
+    MemoryPort memoryPort;
+
+    // Message Buffer for storing the response received from the
+    // memory controller.
+    MessageBuffer *m_responseFromMemory_ptr;
+
+    // State that is stored in packets sent to the memory controller.
+    struct SenderState : public Packet::SenderState
+    {
+        // Id of the machine from which the request originated.
+        MachineID id;
+
+        SenderState(MachineID _id) : id(_id)
+        {}
     };
 };
 

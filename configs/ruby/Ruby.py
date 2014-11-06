@@ -45,6 +45,7 @@ from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath, fatal
 
+import MemConfig
 addToPath('../topologies')
 
 def define_options(parser):
@@ -75,21 +76,66 @@ def define_options(parser):
                       help="high order address bit to use for numa mapping. " \
                            "0 = highest bit, not specified = lowest bit")
 
-    # ruby sparse memory options
-    parser.add_option("--use-map", action="store_true", default=False)
-    parser.add_option("--map-levels", type="int", default=4)
-
     parser.add_option("--recycle-latency", type="int", default=10,
                       help="Recycle latency for ruby controller input buffers")
 
     parser.add_option("--random_seed", type="int", default=1234,
                       help="Used for seeding the random number generator")
 
-    parser.add_option("--ruby_stats", type="string", default="ruby.stats")
-
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
+
+def setup_memory_controllers(system, ruby, dir_cntrls, options):
+    ruby.block_size_bytes = options.cacheline_size
+    ruby.memory_size_bits = 48
+    block_size_bits = int(math.log(options.cacheline_size, 2))
+
+    if options.numa_high_bit:
+        numa_bit = options.numa_high_bit
+    else:
+        # if the numa_bit is not specified, set the directory bits as the
+        # lowest bits above the block offset bits, and the numa_bit as the
+        # highest of those directory bits
+        dir_bits = int(math.log(options.num_dirs, 2))
+        numa_bit = block_size_bits + dir_bits - 1
+
+    index = 0
+    mem_ctrls = []
+    crossbars = []
+
+    # Sets bits to be used for interleaving.  Creates memory controllers
+    # attached to a directory controller.  A separate controller is created
+    # for each address range as the abstract memory can handle only one
+    # contiguous address range as of now.
+    for dir_cntrl in dir_cntrls:
+        dir_cntrl.directory.numa_high_bit = numa_bit
+
+        crossbar = None
+        if len(system.mem_ranges) > 1:
+            crossbar = NoncoherentXBar()
+            crossbars.append(crossbar)
+            dir_cntrl.memory = crossbar.slave
+
+        for r in system.mem_ranges:
+            mem_ctrl = MemConfig.create_mem_ctrl(
+                MemConfig.get(options.mem_type), r, index, options.num_dirs,
+                int(math.log(options.num_dirs, 2)), options.cacheline_size)
+
+            mem_ctrls.append(mem_ctrl)
+
+            if crossbar != None:
+                mem_ctrl.port = crossbar.master
+            else:
+                mem_ctrl.port = dir_cntrl.memory
+
+        index += 1
+
+    system.mem_ctrls = mem_ctrls
+
+    if len(crossbars) > 0:
+        ruby.crossbars = crossbars
+
 
 def create_topology(controllers, options):
     """ Called from create_system in configs/ruby/<protocol>.py
@@ -103,7 +149,7 @@ def create_topology(controllers, options):
 
 def create_system(options, full_system, system, piobus = None, dma_ports = []):
 
-    system.ruby = RubySystem(no_mem_vec = options.use_map)
+    system.ruby = RubySystem()
     ruby = system.ruby
 
     # Set the network classes based on the command line options
@@ -169,33 +215,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
         network.enable_fault_model = True
         network.fault_model = FaultModel()
 
-    # Loop through the directory controlers.
-    # Determine the total memory size of the ruby system and verify it is equal
-    # to physmem.  However, if Ruby memory is using sparse memory in SE
-    # mode, then the system should not back-up the memory state with
-    # the Memory Vector and thus the memory size bytes should stay at 0.
-    # Also set the numa bits to the appropriate values.
-    total_mem_size = MemorySize('0B')
-
-    ruby.block_size_bytes = options.cacheline_size
-    block_size_bits = int(math.log(options.cacheline_size, 2))
-
-    if options.numa_high_bit:
-        numa_bit = options.numa_high_bit
-    else:
-        # if the numa_bit is not specified, set the directory bits as the
-        # lowest bits above the block offset bits, and the numa_bit as the
-        # highest of those directory bits
-        dir_bits = int(math.log(options.num_dirs, 2))
-        numa_bit = block_size_bits + dir_bits - 1
-
-    for dir_cntrl in dir_cntrls:
-        total_mem_size.value += dir_cntrl.directory.size.value
-        dir_cntrl.directory.numa_high_bit = numa_bit
-
-    phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
-    assert(total_mem_size.value == phys_mem_size)
-    ruby.mem_size = total_mem_size
+    setup_memory_controllers(system, ruby, dir_cntrls, options)
 
     # Connect the cpu sequencers and the piobus
     if piobus != None:

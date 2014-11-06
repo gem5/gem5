@@ -28,9 +28,10 @@
 #          Brad Beckmann
 
 from m5.params import *
-from ClockedObject import ClockedObject
+from m5.proxy import *
+from MemObject import MemObject
 
-class RubyController(ClockedObject):
+class RubyController(MemObject):
     type = 'RubyController'
     cxx_class = 'AbstractController'
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
@@ -46,4 +47,5 @@ class RubyController(ClockedObject):
     number_of_TBEs = Param.Int(256, "")
     ruby_system = Param.RubySystem("")
 
-    peer = Param.RubyController(NULL, "")
+    memory = MasterPort("Port for attaching a memory controller")
+    system = Param.System(Parent.any, "system object parameter")

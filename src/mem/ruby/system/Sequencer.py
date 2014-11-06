@@ -55,7 +55,7 @@ class RubyPort(MemObject):
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'
     cxx_header = "mem/ruby/system/RubyPortProxy.hh"
-    access_phys_mem = True
+    access_phys_mem = False
     
 class RubySequencer(RubyPort):
     type = 'RubySequencer'

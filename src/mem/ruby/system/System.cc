@@ -47,7 +47,6 @@ int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
-uint64_t RubySystem::m_memory_size_bytes;
 uint32_t RubySystem::m_memory_size_bits;
 
 RubySystem::RubySystem(const Params *p)
@@ -63,20 +62,7 @@ RubySystem::RubySystem(const Params *p)
     m_block_size_bytes = p->block_size_bytes;
     assert(isPowerOf2(m_block_size_bytes));
     m_block_size_bits = floorLog2(m_block_size_bytes);
-
-    m_memory_size_bytes = p->mem_size;
-    if (m_memory_size_bytes == 0) {
-        m_memory_size_bits = 0;
-    } else {
-        m_memory_size_bits = ceilLog2(m_memory_size_bytes);
-    }
-
-    if (p->no_mem_vec) {
-        m_mem_vec = NULL;
-    } else {
-        m_mem_vec = new MemoryVector;
-        m_mem_vec->resize(m_memory_size_bytes);
-    }
+    m_memory_size_bits = p->memory_size_bits;
 
     m_warmup_enabled = false;
     m_cooldown_enabled = false;
@@ -108,17 +94,10 @@ RubySystem::registerAbstractController(AbstractController* cntrl)
   g_abs_controls[id.getType()][id.getNum()] = cntrl;
 }
 
-void
-RubySystem::registerMemController(MemoryControl *mc) {
-    m_memory_controller_vec.push_back(mc);
-}
-
 RubySystem::~RubySystem()
 {
     delete m_network;
     delete m_profiler;
-    if (m_mem_vec)
-        delete m_mem_vec;
 }
 
 void
@@ -206,19 +185,8 @@ RubySystem::serialize(std::ostream &os)
     // Restore curTick
     setCurTick(curtick_original);
 
-    uint8_t *raw_data = NULL;
-    uint64 memory_trace_size = m_mem_vec->collatePages(raw_data);
-
-    string memory_trace_file = name() + ".memory.gz";
-    writeCompressedTrace(raw_data, memory_trace_file,
-                         memory_trace_size);
-
-    SERIALIZE_SCALAR(memory_trace_file);
-    SERIALIZE_SCALAR(memory_trace_size);
-
-
     // Aggergate the trace entries together into a single array
-    raw_data = new uint8_t[4096];
+    uint8_t *raw_data = new uint8_t[4096];
     uint64 cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
                                                                  4096);
     string cache_trace_file = name() + ".cache.gz";
@@ -271,22 +239,6 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     // checkpoint-system's block-size == current block-size.
     uint64 block_size_bytes = getBlockSizeBytes();
     UNSERIALIZE_OPT_SCALAR(block_size_bytes);
-
-    if (m_mem_vec != NULL) {
-        string memory_trace_file;
-        uint64 memory_trace_size = 0;
-
-        UNSERIALIZE_SCALAR(memory_trace_file);
-        UNSERIALIZE_SCALAR(memory_trace_size);
-        memory_trace_file = cp->cptDir + "/" + memory_trace_file;
-
-        readCompressedTrace(memory_trace_file, uncompressed_trace,
-                            memory_trace_size);
-        m_mem_vec->populatePages(uncompressed_trace);
-
-        delete [] uncompressed_trace;
-        uncompressed_trace = NULL;
-    }
 
     string cache_trace_file;
     uint64 cache_trace_size = 0;
@@ -354,12 +306,6 @@ RubySystem::startup()
         delete m_cache_recorder;
         m_cache_recorder = NULL;
         m_warmup_enabled = false;
-
-        // reset DRAM so that it's not waiting for events on the old event
-        // queue
-        for (int i = 0; i < m_memory_controller_vec.size(); ++i) {
-            m_memory_controller_vec[i]->reset();
-        }
 
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Mark D. Hill and David A. Wood
+ * Copyright (c) 2011-2014 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
+#include "sim/system.hh"
 
 AbstractController::AbstractController(const Params *p)
-    : ClockedObject(p), Consumer(this)
+    : MemObject(p), Consumer(this), m_version(p->version),
+      m_clusterID(p->cluster_id),
+      m_masterId(p->system->getMasterId(name())), m_is_blocking(false),
+      m_number_of_TBEs(p->number_of_TBEs),
+      m_transitions_per_cycle(p->transitions_per_cycle),
+      m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
+      memoryPort(csprintf("%s.memory", name()), this, ""),
+      m_responseFromMemory_ptr(new MessageBuffer())
 {
-    m_version = p->version;
-    m_clusterID = p->cluster_id;
-
-    m_transitions_per_cycle = p->transitions_per_cycle;
-    m_buffer_size = p->buffer_size;
-    m_recycle_latency = p->recycle_latency;
-    m_number_of_TBEs = p->number_of_TBEs;
-    m_is_blocking = false;
+    // Set the sender pointer of the response message buffer from the
+    // memory controller.
+    // This pointer is used for querying for the current time.
+    m_responseFromMemory_ptr->setSender(this);
+    m_responseFromMemory_ptr->setReceiver(this);
+    m_responseFromMemory_ptr->setOrdering(false);
 
     if (m_version == 0) {
         // Combine the statistics from all controllers
@@ -186,4 +193,141 @@ AbstractController::unblock(Address addr)
     if (m_block_map.size() == 0) {
        m_is_blocking = false;
     }
+}
+
+BaseMasterPort &
+AbstractController::getMasterPort(const std::string &if_name,
+                                  PortID idx)
+{
+    return memoryPort;
+}
+
+void
+AbstractController::queueMemoryRead(const MachineID &id, Address addr,
+                                    Cycles latency)
+{
+    RequestPtr req = new Request(addr.getAddress(),
+                                 RubySystem::getBlockSizeBytes(), 0,
+                                 m_masterId);
+
+    PacketPtr pkt = Packet::createRead(req);
+    uint8_t *newData = new uint8_t[RubySystem::getBlockSizeBytes()];
+    pkt->dataDynamic(newData);
+
+    SenderState *s = new SenderState(id);
+    pkt->pushSenderState(s);
+
+    memoryPort.schedTimingReq(pkt, clockEdge(latency));
+}
+
+void
+AbstractController::queueMemoryWrite(const MachineID &id, Address addr,
+                                     Cycles latency, const DataBlock &block)
+{
+    RequestPtr req = new Request(addr.getAddress(),
+                                 RubySystem::getBlockSizeBytes(), 0,
+                                 m_masterId);
+
+    PacketPtr pkt = Packet::createWrite(req);
+    uint8_t *newData = new uint8_t[RubySystem::getBlockSizeBytes()];
+    pkt->dataDynamic(newData);
+    memcpy(newData, block.getData(0, RubySystem::getBlockSizeBytes()),
+           RubySystem::getBlockSizeBytes());
+
+    SenderState *s = new SenderState(id);
+    pkt->pushSenderState(s);
+
+    // Create a block and copy data from the block.
+    memoryPort.schedTimingReq(pkt, clockEdge(latency));
+}
+
+void
+AbstractController::queueMemoryWritePartial(const MachineID &id, Address addr,
+                                            Cycles latency,
+                                            const DataBlock &block, int size)
+{
+    RequestPtr req = new Request(addr.getAddress(),
+                                 RubySystem::getBlockSizeBytes(), 0,
+                                 m_masterId);
+
+    PacketPtr pkt = Packet::createWrite(req);
+    uint8_t *newData = new uint8_t[size];
+    pkt->dataDynamic(newData);
+    memcpy(newData, block.getData(addr.getOffset(), size), size);
+
+    SenderState *s = new SenderState(id);
+    pkt->pushSenderState(s);
+
+    // Create a block and copy data from the block.
+    memoryPort.schedTimingReq(pkt, clockEdge(latency));
+}
+
+void
+AbstractController::functionalMemoryRead(PacketPtr pkt)
+{
+    memoryPort.sendFunctional(pkt);
+}
+
+int
+AbstractController::functionalMemoryWrite(PacketPtr pkt)
+{
+    int num_functional_writes = 0;
+
+    // Check the message buffer that runs from the memory to the controller.
+    num_functional_writes += m_responseFromMemory_ptr->functionalWrite(pkt);
+
+    // Check the buffer from the controller to the memory.
+    if (memoryPort.checkFunctional(pkt)) {
+        num_functional_writes++;
+    }
+
+    // Update memory itself.
+    memoryPort.sendFunctional(pkt);
+    return num_functional_writes + 1;
+}
+
+void
+AbstractController::recvTimingResp(PacketPtr pkt)
+{
+    assert(pkt->isResponse());
+
+    std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
+    (*msg).m_Addr.setAddress(pkt->getAddr());
+    (*msg).m_Sender = m_machineID;
+
+    SenderState *s = dynamic_cast<SenderState *>(pkt->senderState);
+    (*msg).m_OriginalRequestorMachId = s->id;
+    delete s;
+
+    if (pkt->isRead()) {
+        (*msg).m_Type = MemoryRequestType_MEMORY_READ;
+        (*msg).m_MessageSize = MessageSizeType_Response_Data;
+
+        // Copy data from the packet
+        (*msg).m_DataBlk.setData(pkt->getPtr<uint8_t>(), 0,
+                                 RubySystem::getBlockSizeBytes());
+    } else if (pkt->isWrite()) {
+        (*msg).m_Type = MemoryRequestType_MEMORY_WB;
+        (*msg).m_MessageSize = MessageSizeType_Writeback_Control;
+    } else {
+        panic("Incorrect packet type received from memory controller!");
+    }
+
+    m_responseFromMemory_ptr->enqueue(msg);
+    delete pkt;
+}
+
+bool
+AbstractController::MemoryPort::recvTimingResp(PacketPtr pkt)
+{
+    controller->recvTimingResp(pkt);
+    return true;
+}
+
+AbstractController::MemoryPort::MemoryPort(const std::string &_name,
+                                           AbstractController *_controller,
+                                           const std::string &_label)
+    : QueuedMasterPort(_name, _controller, _queue),
+      _queue(*_controller, *this, _label), controller(_controller)
+{
 }

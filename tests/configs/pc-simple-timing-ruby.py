@@ -91,8 +91,5 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.interrupts.int_master = system.ruby._cpu_ports[i].slave
     cpu.interrupts.int_slave = system.ruby._cpu_ports[i].master
 
-system.physmem = [SimpleMemory(range = r, null = True)
-                  for r in system.mem_ranges]
-
 root = Root(full_system = True, system = system)
 m5.ticks.setGlobalFrequency('1THz')

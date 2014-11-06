@@ -144,16 +144,16 @@ random_time()
 void
 MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 {
-    m_msg_counter++;
+    assert(m_ordering_set);
 
     // record current time incase we have a pop that also adjusts my size
     if (m_time_last_time_enqueue < m_sender->curCycle()) {
         m_msgs_this_cycle = 0;  // first msg this cycle
         m_time_last_time_enqueue = m_sender->curCycle();
     }
-    m_msgs_this_cycle++;
 
-    assert(m_ordering_set);
+    m_msg_counter++;
+    m_msgs_this_cycle++;
 
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.

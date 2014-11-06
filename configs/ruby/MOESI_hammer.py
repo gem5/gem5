@@ -170,15 +170,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                                           clk_divider=3)
 
     for i in xrange(options.num_dirs):
-        #
-        # Create the Ruby objects associated with the directory controller
-        #
-
-        mem_cntrl = RubyMemoryControl(
-                              clk_domain = ruby_system.memctrl_clk_domain,
-                              version = i,
-                              ruby_system = ruby_system)
-
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size
 
@@ -186,17 +177,9 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                          start_index_bit = pf_start_bit)
 
         dir_cntrl = Directory_Controller(version = i,
-                                         directory = \
-                                         RubyDirectoryMemory( \
-                                                    version = i,
-                                                    size = dir_size,
-                                                    use_map = options.use_map,
-                                                    map_levels = \
-                                                    options.map_levels,
-                                                    numa_high_bit = \
-                                                      options.numa_high_bit),
+                                         directory = RubyDirectoryMemory(
+                                            version = i, size = dir_size),
                                          probeFilter = pf,
-                                         memBuffer = mem_cntrl,
                                          probe_filter_enabled = options.pf_on,
                                          full_bit_dir_enabled = options.dir_on,
                                          transitions_per_cycle = options.ports,

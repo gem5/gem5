@@ -47,25 +47,23 @@ class MemoryNode
 {
   public:
     // old constructor
-    MemoryNode(const Cycles& time, int counter, const MsgPtr& msgptr,
+    MemoryNode(const Cycles& time, int counter, const PacketPtr p,
                const physical_address_t addr, const bool is_mem_read)
-        : m_time(time)
+        : m_time(time), pkt(p)
     {
         m_msg_counter = counter;
-        m_msgptr = msgptr;
         m_addr = addr;
         m_is_mem_read = is_mem_read;
         m_is_dirty_wb = !is_mem_read;
     }
 
     // new constructor
-    MemoryNode(const Cycles& time, const MsgPtr& msgptr,
+    MemoryNode(const Cycles& time, const PacketPtr p,
                const physical_address_t addr, const bool is_mem_read,
                const bool is_dirty_wb)
-        : m_time(time)
+        : m_time(time), pkt(p)
     {
         m_msg_counter = 0;
-        m_msgptr = msgptr;
         m_addr = addr;
         m_is_mem_read = is_mem_read;
         m_is_dirty_wb = is_dirty_wb;
@@ -75,7 +73,7 @@ class MemoryNode
 
     Cycles m_time;
     int m_msg_counter;
-    MsgPtr m_msgptr;
+    PacketPtr pkt;
     physical_address_t m_addr;
     bool m_is_mem_read;
     bool m_is_dirty_wb;

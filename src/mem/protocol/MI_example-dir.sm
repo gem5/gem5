@@ -29,8 +29,8 @@
 
 machine(Directory, "Directory protocol") 
     : DirectoryMemory * directory;
-      MemoryControl * memBuffer;
       Cycles directory_latency := 12;
+      Cycles to_memory_controller_latency := 1;
 
       MessageBuffer * forwardFromDir, network="To", virtual_network="3",
             ordered="false", vnet_type="forward";
@@ -178,17 +178,21 @@ machine(Directory, "Directory protocol")
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
-      memBuffer.functionalRead(pkt);
+      functionalMemoryRead(pkt);
     }
   }
 
   int functionalWrite(Address addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
-      testAndWrite(addr, tbe.DataBlk, pkt);
+      num_functional_writes := num_functional_writes +
+            testAndWrite(addr, tbe.DataBlk, pkt);
     }
 
-    return memBuffer.functionalWrite(pkt);
+    num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
+    return num_functional_writes;
   }
 
   // ** OUT_PORTS **
@@ -197,10 +201,7 @@ machine(Directory, "Directory protocol")
   out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests
   out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaResponseFromDir);
 
-//added by SS
-  out_port(memQueue_out, MemoryMsg, memBuffer);
   // ** IN_PORTS **
-
   in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir) {
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
@@ -239,7 +240,7 @@ machine(Directory, "Directory protocol")
 
 //added by SS
   // off-chip memory request/response is done
-  in_port(memQueue_in, MemoryMsg, memBuffer) {
+  in_port(memQueue_in, MemoryMsg, responseFromMemory) {
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         TBE tbe := TBEs[in_msg.Addr];
@@ -440,73 +441,36 @@ machine(Directory, "Directory protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, 1) {
-        out_msg.Addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_READ;
-        out_msg.Sender := machineID;
-        out_msg.OriginalRequestorMachId := in_msg.Requestor;
-        out_msg.MessageSize := in_msg.MessageSize;
-        DPRINTF(RubySlicc,"%s\n", out_msg);
-      }
+      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
     }
   }
 
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, 1) {
-        out_msg.Addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_READ;
-        out_msg.Sender := machineID;
-        //out_msg.OriginalRequestorMachId := machineID;
-        out_msg.MessageSize := in_msg.MessageSize;
-        DPRINTF(RubySlicc,"%s\n", out_msg);
-      }
+      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
     }
   }
 
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
-     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, 1) {
-        out_msg.Addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_WB;
-        out_msg.DataBlk.copyPartial(
-            in_msg.DataBlk, addressOffset(in_msg.PhysicalAddress), in_msg.Len);
-        out_msg.MessageSize := in_msg.MessageSize;
-        DPRINTF(RubySlicc,"%s\n", out_msg);
-      }
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      queueMemoryWritePartial(in_msg.Requestor, address,
+                              to_memory_controller_latency, in_msg.DataBlk,
+                              in_msg.Len);
     }
   }
 
   action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, 1) {
-        assert(is_valid(tbe));
-        out_msg.Addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_WB;
-        out_msg.OriginalRequestorMachId := in_msg.Requestor;
-
-        // get incoming data
-        out_msg.DataBlk.copyPartial(
-            tbe.DataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
-        out_msg.MessageSize := in_msg.MessageSize;
-        DPRINTF(RubySlicc,"%s\n", out_msg);
-      }
+      queueMemoryWritePartial(in_msg.Requestor, address,
+                              to_memory_controller_latency, tbe.DataBlk,
+                              tbe.Len);
     }
   }
 
-
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, 1) {
-        out_msg.Addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_WB;
-        out_msg.Sender := machineID;
-        out_msg.OriginalRequestorMachId := in_msg.Requestor;
-        out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.MessageSize := in_msg.MessageSize;
-
-        DPRINTF(RubySlicc,"%s\n", out_msg);
-      }
+      queueMemoryWrite(in_msg.Requestor, address, to_memory_controller_latency,
+                       in_msg.DataBlk);
     }
   }
 

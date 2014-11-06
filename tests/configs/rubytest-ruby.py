@@ -80,7 +80,7 @@ tester = RubyTester(check_flush = check_flush, checks_to_complete = 100,
 
 # We set the testers as cpu for ruby to find the correct clock domains
 # for the L1 Objects.
-system = System(cpu = tester, physmem = SimpleMemory(null = True))
+system = System(cpu = tester)
 
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)

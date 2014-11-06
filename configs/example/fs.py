@@ -137,8 +137,6 @@ def build_test_system(np):
 
         Ruby.create_system(options, True, test_sys, test_sys.iobus,
                            test_sys._dma_ports)
-        test_sys.physmem = [SimpleMemory(range = r, null = True)
-                          for r in test_sys.mem_ranges]
 
         # Create a seperate clock domain for Ruby
         test_sys.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,

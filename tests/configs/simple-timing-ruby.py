@@ -65,9 +65,9 @@ options.l3_assoc=2
 
 # this is a uniprocessor only test
 options.num_cpus = 1
-
 cpu = TimingSimpleCPU(cpu_id=0)
-system = System(cpu = cpu, physmem = SimpleMemory(null = True))
+system = System(cpu = cpu)
+
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
 system.clk_domain = SrcClockDomain(clock = '1GHz',
