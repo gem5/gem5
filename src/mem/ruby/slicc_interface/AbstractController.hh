@@ -76,11 +76,8 @@ class AbstractController : public ClockedObject, public Consumer
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getSequencer() const = 0;
 
-    //! These functions are used by ruby system to read/write the message
-    //! queues that exist with in the controller.
-    //! The boolean return value indicates if the read was performed
-    //! successfully.
-    virtual bool functionalReadBuffers(PacketPtr&) = 0;
+    //! These functions are used by ruby system to read/write the data blocks
+    //! that exist with in the controller.
     virtual void functionalRead(const Address &addr, PacketPtr) = 0;
     //! The return value indicates the number of messages written with the
     //! data from the packet.

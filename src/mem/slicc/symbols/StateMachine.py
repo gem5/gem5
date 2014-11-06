@@ -285,7 +285,6 @@ class $c_ident : public AbstractController
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
     Sequencer* getSequencer() const;
 
-    bool functionalReadBuffers(PacketPtr&);
     uint32_t functionalWriteBuffers(PacketPtr&);
 
     void countTransition(${ident}_State state, ${ident}_Event event);
@@ -987,29 +986,6 @@ $c_ident::${{action.ident}}(const Address& addr)
 ''')
         for func in self.functions:
             code(func.generateCode())
-
-        # Function for functional reads from messages buffered in the controller
-        code('''
-bool
-$c_ident::functionalReadBuffers(PacketPtr& pkt)
-{
-''')
-        for var in self.objects:
-            vtype = var.type
-            if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
-                code('if ($vid->functionalRead(pkt)) { return true; }')
-
-        for var in self.config_parameters:
-            vtype = var.type_ast.type
-            if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
-                code('if ($vid->functionalRead(pkt)) { return true; }')
-
-        code('''
-                return false;
-}
-''')
 
         # Function for functional writes to messages buffered in the controller
         code('''
