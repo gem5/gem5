@@ -1683,10 +1683,11 @@ Execute::drain()
     if (drainState == NotDraining) {
         cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
 
-        /* Go to DrainCurrentInst if we're not between operations
-         *  this should probably test the LSQ as well.  Or maybe
-         *  just always go to DrainCurrentInst anyway */
-        if (lastCommitWasEndOfMacroop)
+        /* Go to DrainCurrentInst if we're between microops
+         * or waiting on an unbufferable memory operation.
+         * Otherwise we can go straight to DrainHaltFetch
+         */
+        if (isInbetweenInsts())
             setDrainState(DrainHaltFetch);
         else
             setDrainState(DrainCurrentInst);
