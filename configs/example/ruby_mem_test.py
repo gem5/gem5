@@ -128,7 +128,7 @@ else:
 dma_ports = []
 for (i, dma) in enumerate(dmas):
     dma_ports.append(dma.test)
-Ruby.create_system(options, system, dma_ports = dma_ports)
+Ruby.create_system(options, False, system, dma_ports = dma_ports)
 
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
@@ -158,12 +158,6 @@ for (i, cpu) in enumerate(cpus):
     # threshold to 5 million cycles
     #
     system.ruby._cpu_ports[i].deadlock_threshold = 5000000
-
-    #
-    # Ruby doesn't need the backing image of memory when running with
-    # the tester.
-    #
-    system.ruby._cpu_ports[i].access_phys_mem = False
 
 for (i, dma) in enumerate(dmas):
     #

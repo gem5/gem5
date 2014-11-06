@@ -106,7 +106,7 @@ system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
 system.clk_domain = SrcClockDomain(clock = options.sys_clock,
                                    voltage_domain = system.voltage_domain)
 
-Ruby.create_system(options, system)
+Ruby.create_system(options, False, system)
 
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
@@ -136,12 +136,6 @@ for ruby_port in system.ruby._cpu_ports:
     # copies the subblock back to the checker
     #
     ruby_port.using_ruby_tester = True
-
-    #
-    # Ruby doesn't need the backing image of memory when running with
-    # the tester.
-    #
-    ruby_port.access_phys_mem = False
 
 # -----------------------
 # run simulation

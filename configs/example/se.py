@@ -231,7 +231,7 @@ if options.ruby:
     system.physmem = SimpleMemory(range=AddrRange(options.mem_size),
                               null = True)
     options.use_map = True
-    Ruby.create_system(options, system)
+    Ruby.create_system(options, False, system)
     assert(options.num_cpus == len(system.ruby._cpu_ports))
 
     system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,

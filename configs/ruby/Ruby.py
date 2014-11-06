@@ -101,7 +101,7 @@ def create_topology(controllers, options):
     topology = eval("Topo.%s(controllers)" % options.topology)
     return topology
 
-def create_system(options, system, piobus = None, dma_ports = []):
+def create_system(options, full_system, system, piobus = None, dma_ports = []):
 
     system.ruby = RubySystem(no_mem_vec = options.use_map)
     ruby = system.ruby
@@ -137,7 +137,8 @@ def create_system(options, system, piobus = None, dma_ports = []):
     exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, topology) = \
-             eval("%s.create_system(options, system, dma_ports, ruby)"
+             eval("%s.create_system(options, full_system, system, dma_ports,\
+                                    ruby)"
                   % protocol)
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol

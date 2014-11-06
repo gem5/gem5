@@ -73,12 +73,9 @@ class RubySequencer(RubyPort):
 class DMASequencer(MemObject):
     type = 'DMASequencer'
     cxx_header = "mem/ruby/system/DMASequencer.hh"
+
     version = Param.Int(0, "")
-
     slave = SlavePort("Device slave port")
-
     using_ruby_tester = Param.Bool(False, "")
-    access_phys_mem = Param.Bool(True,
-            "should the dma atomically update phys_mem")
     ruby_system = Param.RubySystem(Parent.any, "")
     system = Param.System(Parent.any, "system object")

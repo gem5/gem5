@@ -42,7 +42,7 @@ class Cache(RubyCache):
 def define_options(parser):
     return
 
-def create_system(options, system, dma_ports, ruby_system):
+def create_system(options, full_system, system, dma_ports, ruby_system):
     
     if buildEnv['PROTOCOL'] != 'Network_test':
         panic("This script requires the Network_test protocol to be built.")

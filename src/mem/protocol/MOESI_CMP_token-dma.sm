@@ -51,11 +51,6 @@ machine(DMA, "DMA Controller")
     Ack,          desc="DMA write to memory completed";
   }
 
-  structure(DMASequencer, external="yes") {
-    void ackCallback();
-    void dataCallback(DataBlock);
-  }
-
   MessageBuffer mandatoryQueue, ordered="false";
   State cur_state;
 

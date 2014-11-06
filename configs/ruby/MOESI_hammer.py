@@ -59,7 +59,7 @@ def define_options(parser):
     parser.add_option("--dir-on", action="store_true",
           help="Hammer: enable Full-bit Directory")
 
-def create_system(options, system, dma_ports, ruby_system):
+def create_system(options, full_system, system, dma_ports, ruby_system):
 
     if buildEnv['PROTOCOL'] != 'MOESI_hammer':
         panic("This script requires the MOESI_hammer protocol to be built.")
@@ -224,7 +224,8 @@ def create_system(options, system, dma_ports, ruby_system):
         # Create the Ruby objects associated with the dma controller
         #
         dma_seq = DMASequencer(version = i,
-                               ruby_system = ruby_system)
+                               ruby_system = ruby_system,
+                               slave = dma_port)
         
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq,
@@ -232,7 +233,6 @@ def create_system(options, system, dma_ports, ruby_system):
                                    ruby_system = ruby_system)
 
         exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
-        exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
 
         if options.recycle_latency:
@@ -242,7 +242,22 @@ def create_system(options, system, dma_ports, ruby_system):
         dma_cntrl.responseFromDir = ruby_system.network.master
         dma_cntrl.requestToDir = ruby_system.network.slave
 
-
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes + dma_cntrl_nodes
+
+    # Create the io controller and the sequencer
+    if full_system:
+        io_seq = DMASequencer(version=len(dma_ports), ruby_system=ruby_system)
+        ruby_system._io_port = io_seq
+        io_controller = DMA_Controller(version = len(dma_ports),
+                                       dma_sequencer = io_seq,
+                                       ruby_system = ruby_system)
+        ruby_system.io_controller = io_controller
+
+        # Connect the dma controller to the network
+        io_controller.responseFromDir = ruby_system.network.master
+        io_controller.requestToDir = ruby_system.network.slave
+
+        all_cntrls = all_cntrls + [io_controller]
+
     topology = create_topology(all_cntrls, options)
     return (cpu_sequencers, dir_cntrl_nodes, topology)

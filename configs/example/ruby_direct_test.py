@@ -109,7 +109,7 @@ system.cpu = RubyDirectedTester(requests_to_complete = \
                                    options.requests,
                                    generator = generator)
 
-Ruby.create_system(options, system)
+Ruby.create_system(options, False, system)
 
 # Since Ruby runs at an independent frequency, create a seperate clock
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,

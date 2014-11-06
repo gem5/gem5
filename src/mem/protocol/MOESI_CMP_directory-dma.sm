@@ -62,11 +62,6 @@ machine(DMA, "DMA Controller")
     DataBlock DataBlk, desc="Data";
   }
 
-  structure(DMASequencer, external = "yes") {
-    void ackCallback();
-    void dataCallback(DataBlock);
-  }
-
   structure(TBETable, external = "yes") {
     TBE lookup(Address);
     void allocate(Address);

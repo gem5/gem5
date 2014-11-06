@@ -40,9 +40,8 @@
 DMASequencer::DMASequencer(const Params *p)
     : MemObject(p), m_version(p->version), m_controller(NULL),
       m_mandatory_q_ptr(NULL), m_usingRubyTester(p->using_ruby_tester),
-      slave_port(csprintf("%s.slave", name()), this, access_phys_mem, 0),
-      drainManager(NULL), system(p->system), retry(false),
-      access_phys_mem(p->access_phys_mem)
+      slave_port(csprintf("%s.slave", name()), this, 0),
+      drainManager(NULL), system(p->system), retry(false)
 {
     assert(m_version != -1);
 }
@@ -56,6 +55,8 @@ DMASequencer::init()
     m_mandatory_q_ptr->setSender(this);
     m_is_busy = false;
     m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
+
+    slave_port.sendRangeChange();
 }
 
 BaseSlavePort &
@@ -72,9 +73,8 @@ DMASequencer::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 DMASequencer::MemSlavePort::MemSlavePort(const std::string &_name,
-    DMASequencer *_port, bool _access_phys_mem, PortID id)
-    : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this),
-      access_phys_mem(_access_phys_mem)
+    DMASequencer *_port, PortID id)
+    : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this)
 {
     DPRINTF(RubyDma, "Created slave memport on ruby sequencer %s\n", _name);
 }
@@ -202,28 +202,21 @@ void
 DMASequencer::MemSlavePort::hitCallback(PacketPtr pkt)
 {
     bool needsResponse = pkt->needsResponse();
-    bool accessPhysMem = access_phys_mem;
-
     assert(!pkt->isLLSC());
     assert(!pkt->isFlush());
 
     DPRINTF(RubyDma, "Hit callback needs response %d\n", needsResponse);
 
-    if (accessPhysMem) {
-        DMASequencer *seq = static_cast<DMASequencer *>(&owner);
-        seq->system->getPhysMem().access(pkt);
-    } else if (needsResponse) {
-        pkt->makeResponse();
-    }
-
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
+        pkt->makeResponse();
         DPRINTF(RubyDma, "Sending packet back over port\n");
         // send next cycle
         schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
     } else {
         delete pkt;
     }
+
     DPRINTF(RubyDma, "Hit callback done!\n");
 }
 

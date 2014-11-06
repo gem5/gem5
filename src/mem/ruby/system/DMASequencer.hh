@@ -66,11 +66,10 @@ class DMASequencer : public MemObject
     {
       private:
         SlavePacketQueue queue;
-        bool access_phys_mem;
 
       public:
         MemSlavePort(const std::string &_name, DMASequencer *_port,
-               bool _access_phys_mem, PortID id);
+                     PortID id);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
 
@@ -140,8 +139,6 @@ class DMASequencer : public MemObject
     System* system;
 
     bool retry;
-    bool access_phys_mem;
-
     bool m_is_busy;
     uint64_t m_data_block_mask;
     DMARequest active_request;

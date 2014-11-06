@@ -89,7 +89,7 @@ system.clk_domain = SrcClockDomain(clock = '1GHz',
 
 system.mem_ranges = AddrRange('256MB')
 
-Ruby.create_system(options, system)
+Ruby.create_system(options, False, system)
 
 # Create a separate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(clock = '1GHz',

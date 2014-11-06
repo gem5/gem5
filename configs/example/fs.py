@@ -135,7 +135,10 @@ def build_test_system(np):
             print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
             sys.exit(1)
 
-        Ruby.create_system(options, test_sys, test_sys.iobus, test_sys._dma_ports)
+        Ruby.create_system(options, True, test_sys, test_sys.iobus,
+                           test_sys._dma_ports)
+        test_sys.physmem = [SimpleMemory(range = r, null = True)
+                          for r in test_sys.mem_ranges]
 
         # Create a seperate clock domain for Ruby
         test_sys.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
@@ -160,13 +163,9 @@ def build_test_system(np):
                 cpu.interrupts.int_master = test_sys.ruby._cpu_ports[i].slave
                 cpu.interrupts.int_slave = test_sys.ruby._cpu_ports[i].master
 
-            test_sys.ruby._cpu_ports[i].access_phys_mem = True
-
-        # Create the appropriate memory controllers
-        # and connect them to the IO bus
-        test_sys.mem_ctrls = [TestMemClass(range = r) for r in test_sys.mem_ranges]
-        for i in xrange(len(test_sys.mem_ctrls)):
-            test_sys.mem_ctrls[i].port = test_sys.iobus.master
+            # Connect the ruby io port to the PIO bus,
+            # assuming that there is just one such port.
+            test_sys.iobus.master = test_sys.ruby._io_port.slave
 
     else:
         if options.caches or options.l2cache:
