@@ -76,8 +76,12 @@ machine(Directory, "Network_test Directory")
   void setAccessPermission(Address addr, State state) {
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    error("Network Test does not support get data block.");
+  void functionalRead(Address addr, Packet *pkt) {
+    error("Network test does not support functional read.");
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    error("Network test does not support functional write.");
   }
 
   // ** IN_PORTS **

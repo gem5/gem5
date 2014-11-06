@@ -89,9 +89,9 @@ class MemoryControl : public ClockedObject, public Consumer
 
     virtual void recordRequestType(MemoryControlRequestType requestType);
 
-    virtual bool functionalReadBuffers(Packet *pkt)
+    virtual bool functionalRead(Packet *pkt)
     { fatal("Functional read access not implemented!");}
-    virtual uint32_t functionalWriteBuffers(Packet *pkt)
+    virtual uint32_t functionalWrite(Packet *pkt)
     { fatal("Functional read access not implemented!");}
 
 protected:

@@ -427,10 +427,6 @@ RubySystem::functionalRead(PacketPtr pkt)
     }
     assert(num_rw <= 1);
 
-    uint8_t *data = pkt->getPtr<uint8_t>(true);
-    unsigned int size_in_bytes = pkt->getSize();
-    unsigned startByte = address.getAddress() - line_address.getAddress();
-
     // This if case is meant to capture what happens in a Broadcast/Snoop
     // protocol where the block does not exist in the cache hierarchy. You
     // only want to read from the Backing_Store memory if there is no copy in
@@ -439,20 +435,12 @@ RubySystem::functionalRead(PacketPtr pkt)
     // The reason is because the Backing_Store memory could easily be stale, if
     // there are copies floating around the cache hierarchy, so you want to read
     // it only if it's not in the cache hierarchy at all.
-    if (num_invalid == (num_controllers - 1) &&
-            num_backing_store == 1) {
+    if (num_invalid == (num_controllers - 1) && num_backing_store == 1) {
         DPRINTF(RubySystem, "only copy in Backing_Store memory, read from it\n");
         for (unsigned int i = 0; i < num_controllers; ++i) {
             access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_address);
             if (access_perm == AccessPermission_Backing_Store) {
-                DataBlock& block = m_abs_cntrl_vec[i]->
-                    getDataBlock(line_address);
-
-                DPRINTF(RubySystem, "reading from %s block %s\n",
-                        m_abs_cntrl_vec[i]->name(), block);
-                for (unsigned j = 0; j < size_in_bytes; ++j) {
-                    data[j] = block.getByte(j + startByte);
-                }
+                m_abs_cntrl_vec[i]->functionalRead(line_address, pkt);
                 return true;
             }
         }
@@ -470,14 +458,7 @@ RubySystem::functionalRead(PacketPtr pkt)
             access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_address);
             if (access_perm == AccessPermission_Read_Only ||
                 access_perm == AccessPermission_Read_Write) {
-                DataBlock& block = m_abs_cntrl_vec[i]->
-                    getDataBlock(line_address);
-
-                DPRINTF(RubySystem, "reading from %s block %s\n",
-                        m_abs_cntrl_vec[i]->name(), block);
-                for (unsigned j = 0; j < size_in_bytes; ++j) {
-                    data[j] = block.getByte(j + startByte);
-                }
+                m_abs_cntrl_vec[i]->functionalRead(line_address, pkt);
                 return true;
             }
         }
@@ -500,10 +481,6 @@ RubySystem::functionalWrite(PacketPtr pkt)
 
     DPRINTF(RubySystem, "Functional Write request for %s\n",addr);
 
-    uint8_t *data = pkt->getPtr<uint8_t>(true);
-    unsigned int size_in_bytes = pkt->getSize();
-    unsigned startByte = addr.getAddress() - line_addr.getAddress();
-
     uint32_t M5_VAR_USED num_functional_writes = 0;
 
     for (unsigned int i = 0; i < num_controllers;++i) {
@@ -513,21 +490,9 @@ RubySystem::functionalWrite(PacketPtr pkt)
         access_perm = m_abs_cntrl_vec[i]->getAccessPermission(line_addr);
         if (access_perm != AccessPermission_Invalid &&
             access_perm != AccessPermission_NotPresent) {
-
-            num_functional_writes++;
-
-            DataBlock& block = m_abs_cntrl_vec[i]->getDataBlock(line_addr);
-            DPRINTF(RubySystem, "%s\n",block);
-            for (unsigned j = 0; j < size_in_bytes; ++j) {
-              block.setByte(j + startByte, data[j]);
-            }
-            DPRINTF(RubySystem, "%s\n",block);
+            num_functional_writes +=
+                m_abs_cntrl_vec[i]->functionalWrite(line_addr, pkt);
         }
-    }
-
-    for (unsigned int i = 0; i < m_memory_controller_vec.size() ;++i) {
-        num_functional_writes +=
-            m_memory_controller_vec[i]->functionalWriteBuffers(pkt);
     }
 
     num_functional_writes += m_network->functionalWrite(pkt);

@@ -67,7 +67,6 @@ class AbstractController : public ClockedObject, public Consumer
 
     virtual MessageBuffer* getMandatoryQueue() const = 0;
     virtual AccessPermission getAccessPermission(const Address& addr) = 0;
-    virtual DataBlock& getDataBlock(const Address& addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
     virtual void wakeup() = 0;
@@ -82,9 +81,11 @@ class AbstractController : public ClockedObject, public Consumer
     //! The boolean return value indicates if the read was performed
     //! successfully.
     virtual bool functionalReadBuffers(PacketPtr&) = 0;
+    virtual void functionalRead(const Address &addr, PacketPtr) = 0;
     //! The return value indicates the number of messages written with the
     //! data from the packet.
     virtual uint32_t functionalWriteBuffers(PacketPtr&) = 0;
+    virtual int functionalWrite(const Address &addr, PacketPtr) = 0;
 
     //! Function for enqueuing a prefetch request
     virtual void enqueuePrefetch(const Address&, const RubyRequestType&)

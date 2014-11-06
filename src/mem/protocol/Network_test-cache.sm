@@ -114,8 +114,12 @@ machine(L1Cache, "Network_test L1 Cache")
     return OOD;
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    error("Network Test does not support get data block.");
+  void functionalRead(Address addr, Packet *pkt) {
+    error("Network test does not support functional read.");
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    error("Network test does not support functional write.");
   }
 
   // NETWORK PORTS

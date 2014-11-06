@@ -91,8 +91,12 @@ machine(DMA, "DMA Controller")
   void setAccessPermission(Address addr, State state) {
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-     error("DMA Controller does not support getDataBlock().\n");
+  void functionalRead(Address addr, Packet *pkt) {
+    error("DMA does not support functional read.");
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    error("DMA does not support functional write.");
   }
 
   out_port(reqToDirectory_out, RequestMsg, reqToDir, desc="...");

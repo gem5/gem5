@@ -173,6 +173,7 @@ RubyMemoryControl::RubyMemoryControl(const Params *p)
 void
 RubyMemoryControl::init()
 {
+    m_ram = g_system_ptr->getMemoryVector();
     m_msg_counter = 0;
 
     assert(m_tFaw <= 62); // must fit in a uint64 shift register
@@ -282,6 +283,19 @@ RubyMemoryControl::enqueue(const MsgPtr& message, Cycles latency)
     physical_address_t addr = memMess->getAddr().getAddress();
     MemoryRequestType type = memMess->getType();
     bool is_mem_read = (type == MemoryRequestType_MEMORY_READ);
+
+    if (is_mem_read) {
+        m_ram->read(memMess->getAddr(), const_cast<uint8_t *>(
+                    memMess->getDataBlk().getData(0,
+                        RubySystem::getBlockSizeBytes())),
+                    RubySystem::getBlockSizeBytes());
+    }  else {
+        m_ram->write(memMess->getAddr(), const_cast<uint8_t *>(
+                     memMess->getDataBlk().getData(0,
+                         RubySystem::getBlockSizeBytes())),
+                     RubySystem::getBlockSizeBytes());
+    }
+
     MemoryNode *thisReq = new MemoryNode(arrival_time, message, addr,
                                          is_mem_read, !is_mem_read);
     enqueueMemRef(thisReq);
@@ -706,7 +720,7 @@ RubyMemoryControl::wakeup()
  * being lists.
  */
 bool
-RubyMemoryControl::functionalReadBuffers(Packet *pkt)
+RubyMemoryControl::functionalRead(Packet *pkt)
 {
     for (std::list<MemoryNode *>::iterator it = m_input_queue.begin();
          it != m_input_queue.end(); ++it) {
@@ -734,7 +748,10 @@ RubyMemoryControl::functionalReadBuffers(Packet *pkt)
         }
     }
 
-    return false;
+    m_ram->read(Address(pkt->getAddr()), pkt->getPtr<uint8_t>(true),
+                pkt->getSize());
+
+    return true;
 }
 
 /**
@@ -746,7 +763,7 @@ RubyMemoryControl::functionalReadBuffers(Packet *pkt)
  * for debugging purposes.
  */
 uint32_t
-RubyMemoryControl::functionalWriteBuffers(Packet *pkt)
+RubyMemoryControl::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
@@ -775,6 +792,10 @@ RubyMemoryControl::functionalWriteBuffers(Packet *pkt)
             }
         }
     }
+
+    m_ram->write(Address(pkt->getAddr()), pkt->getPtr<uint8_t>(true),
+                 pkt->getSize());
+    num_functional_writes++;
 
     return num_functional_writes;
 }

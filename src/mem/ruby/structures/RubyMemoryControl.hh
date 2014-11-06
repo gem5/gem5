@@ -36,15 +36,12 @@
 
 #include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
-#include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/structures/MemoryControl.hh"
-#include "mem/ruby/structures/MemoryNode.hh"
+#include "mem/ruby/structures/MemoryVector.hh"
 #include "mem/ruby/system/System.hh"
 #include "params/RubyMemoryControl.hh"
-#include "sim/sim_object.hh"
 
 // This constant is part of the definition of tFAW; see
 // the comments in header to RubyMemoryControl.cc
@@ -95,8 +92,8 @@ class RubyMemoryControl : public MemoryControl
     int getRanksPerDimm() { return m_ranks_per_dimm; };
     int getDimmsPerChannel() { return m_dimms_per_channel; }
 
-    bool functionalReadBuffers(Packet *pkt);
-    uint32_t functionalWriteBuffers(Packet *pkt);
+    bool functionalRead(Packet *pkt);
+    uint32_t functionalWrite(Packet *pkt);
 
   private:
     void enqueueToDirectory(MemoryNode *req, Cycles latency);
@@ -165,6 +162,9 @@ class RubyMemoryControl : public MemoryControl
     int m_idleCount;          // watchdog timer for shutting down
 
     MemCntrlProfiler* m_profiler_ptr;
+
+    // Actual physical memory.
+    MemoryVector* m_ram;
 };
 
 std::ostream& operator<<(std::ostream& out, const RubyMemoryControl& obj);

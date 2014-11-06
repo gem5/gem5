@@ -157,8 +157,15 @@ machine(L2Cache, "Token protocol")
     return cache_entry;
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    return getCacheEntry(addr).DataBlk;
+  void functionalRead(Address addr, Packet *pkt) {
+    testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    int num_functional_writes := 0;
+    num_functional_writes := num_functional_writes +
+        testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
+    return num_functional_writes;
   }
 
   int getTokens(Entry cache_entry) {

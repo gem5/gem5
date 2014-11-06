@@ -35,6 +35,7 @@
 
 #include <iostream>
 
+#include "base/misc.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
@@ -49,6 +50,12 @@ class AbstractCacheEntry : public AbstractEntry
 
     // Get/Set permission of the entry
     void changePermission(AccessPermission new_perm);
+
+    // The methods below are those called by ruby runtime, add when it
+    // is absolutely necessary and should all be virtual function.
+    virtual DataBlock& getDataBlk()
+    { panic("getDataBlk() not implemented!"); }
+
 
     Address m_Address; // Address of this block, required by CacheMemory
     int m_locked; // Holds info whether the address is locked,

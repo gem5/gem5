@@ -73,7 +73,6 @@ machine(Directory, "MESI Two Level directory protocol")
   // DirectoryEntry
   structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
-    DataBlock DataBlk,             desc="data for the block";
     MachineID Owner;
   }
 
@@ -90,6 +89,8 @@ machine(Directory, "MESI Two Level directory protocol")
     void allocate(Address);
     void deallocate(Address);
     bool isPresent(Address);
+    bool functionalRead(Packet *pkt);
+    int functionalWrite(Packet *pkt);
   }
 
 
@@ -148,13 +149,22 @@ machine(Directory, "MESI Two Level directory protocol")
     return AccessPermission:NotPresent;
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+  void functionalRead(Address addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
-        return tbe.DataBlk;
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      memBuffer.functionalRead(pkt);
+    }
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      testAndWrite(addr, tbe.DataBlk, pkt);
     }
 
-    return getDirectoryEntry(addr).DataBlk;
+    return memBuffer.functionalWrite(pkt);
   }
 
   void setAccessPermission(Address addr, State state) {
@@ -297,7 +307,6 @@ machine(Directory, "MESI Two Level directory protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Prefetch := in_msg.Prefetch;
-        out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
 
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
@@ -320,13 +329,6 @@ machine(Directory, "MESI Two Level directory protocol")
     }
   }
 
-  action(m_writeDataToMemory, "m", desc="Write dirty writeback to memory") {
-    peek(responseNetwork_in, ResponseMsg) {
-      getDirectoryEntry(in_msg.Addr).DataBlk := in_msg.DataBlk;
-      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-              in_msg.Addr, in_msg.DataBlk);
-    }
-  }
 //added by SS for dma
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
@@ -336,7 +338,6 @@ machine(Directory, "MESI Two Level directory protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := machineID;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
@@ -358,25 +359,14 @@ machine(Directory, "MESI Two Level directory protocol")
     }
   }
 
-  action(dw_writeDMAData, "dw", desc="DMA Write data to memory") {
-    peek(requestNetwork_in, RequestMsg) {
-      getDirectoryEntry(address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Addr), in_msg.Len);
-    }
-  }
-
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
      peek(requestNetwork_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.Addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := machineID;
-        //out_msg.DataBlk := in_msg.DataBlk;
         out_msg.DataBlk.copyPartial(in_msg.DataBlk, addressOffset(address), in_msg.Len);
-
-
         out_msg.MessageSize := in_msg.MessageSize;
-        //out_msg.Prefetch := in_msg.Prefetch;
-
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
@@ -434,15 +424,6 @@ machine(Directory, "MESI Two Level directory protocol")
     }
   }
 
-  action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    assert(is_valid(tbe));
-    //getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, tbe.Offset, tbe.Len);
-    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
-
-
-  }
-
-
   action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
@@ -493,7 +474,6 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   transition(M, Data, MI) {
-    m_writeDataToMemory;
     qw_queueMemoryWBRequest;
     k_popIncomingResponseQueue;
   }
@@ -518,7 +498,6 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   transition(I, DMA_WRITE, ID_W) {
-    dw_writeDMAData;
     qw_queueMemoryWBRequest_partial;
     j_popIncomingRequestQueue;
   }
@@ -545,7 +524,6 @@ machine(Directory, "MESI Two Level directory protocol")
 
   transition(M_DRD, Data, M_DRDI) {
     drp_sendDMAData;
-    m_writeDataToMemory;
     qw_queueMemoryWBRequest;
     k_popIncomingResponseQueue;
   }
@@ -563,13 +541,11 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   transition(M_DWR, Data, M_DWRI) {
-    m_writeDataToMemory;
     qw_queueMemoryWBRequest_partialTBE;
     k_popIncomingResponseQueue;
   }
 
   transition(M_DWRI, Memory_Ack, I) {
-    dwt_writeDMADataFromTBE;
     aa_sendAck;
     da_sendDMAAck;
     w_deallocateTBE;

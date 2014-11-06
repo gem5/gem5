@@ -35,7 +35,6 @@
 #include "mem/protocol/DirectoryRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
-#include "mem/ruby/structures/MemoryVector.hh"
 #include "params/RubyDirectoryMemory.hh"
 #include "sim/sim_object.hh"
 
@@ -80,8 +79,6 @@ class DirectoryMemory : public SimObject
     static int m_num_directories_bits;
     static uint64_t m_total_size_bytes;
     static int m_numa_high_bit;
-
-    MemoryVector* m_ram;
 };
 
 inline std::ostream&

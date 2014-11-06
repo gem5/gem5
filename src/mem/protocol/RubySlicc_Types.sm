@@ -163,6 +163,8 @@ structure (WireBuffer, inport="yes", outport="yes", external = "yes") {
 
 structure (MemoryControl, inport="yes", outport="yes", external = "yes") {
   void recordRequestType(CacheRequestType);
+  void functionalRead(Packet *pkt);
+  int functionalWrite(Packet *pkt);
 }
 
 structure (DMASequencer, external = "yes") {

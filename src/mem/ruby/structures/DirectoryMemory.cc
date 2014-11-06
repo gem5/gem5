@@ -57,7 +57,6 @@ DirectoryMemory::init()
     m_entries = new AbstractEntry*[m_num_entries];
     for (int i = 0; i < m_num_entries; i++)
         m_entries[i] = NULL;
-    m_ram = g_system_ptr->getMemoryVector();
 
     m_num_directories++;
     m_num_directories_bits = ceilLog2(m_num_directories);
@@ -132,7 +131,6 @@ DirectoryMemory::allocate(const PhysAddress& address, AbstractEntry* entry)
 
     idx = mapAddressToLocalIdx(address);
     assert(idx < m_num_entries);
-    entry->getDataBlk().assign(m_ram->getBlockPtr(address));
     entry->changePermission(AccessPermission_Read_Only);
     m_entries[idx] = entry;
 

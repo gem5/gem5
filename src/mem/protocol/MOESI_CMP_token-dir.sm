@@ -121,7 +121,6 @@ machine(Directory, "Token protocol")
   // DirectoryEntry
   structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
-    DataBlock DataBlk,             desc="data for the block";
     int Tokens, default="max_tokens()", desc="Number of tokens for the line we're holding";
 
     // The following state is provided to allow for bandwidth
@@ -188,10 +187,6 @@ machine(Directory, "Token protocol")
     return dir_entry;
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
-    return getDirectoryEntry(addr).DataBlk;
-  }
-
   State getState(TBE tbe, Address addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
@@ -248,6 +243,24 @@ machine(Directory, "Token protocol")
 
   void markPersistentEntries(Address addr) {
     persistentTable.markEntries(addr);
+  }
+
+  void functionalRead(Address addr, Packet *pkt) {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      memBuffer.functionalRead(pkt);
+    }
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      testAndWrite(addr, tbe.DataBlk, pkt);
+    }
+
+    return memBuffer.functionalWrite(pkt);
   }
 
   // ** OUT_PORTS **
@@ -598,7 +611,7 @@ machine(Directory, "Token protocol")
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
         assert(getDirectoryEntry(address).Tokens > 0);
         out_msg.Tokens := getDirectoryEntry(in_msg.Addr).Tokens;
-        out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
+        out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
@@ -615,7 +628,7 @@ machine(Directory, "Token protocol")
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getDirectoryEntry(address).Tokens > 0);
         out_msg.Tokens := getDirectoryEntry(address).Tokens;
-        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
+        out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
@@ -646,7 +659,6 @@ machine(Directory, "Token protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
@@ -659,7 +671,6 @@ machine(Directory, "Token protocol")
       out_msg.Sender := machineID;
       out_msg.OriginalRequestorMachId := persistentTable.findSmallest(address);
       out_msg.MessageSize := MessageSizeType:Request_Control;
-      out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
@@ -672,18 +683,20 @@ machine(Directory, "Token protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
 
   action(lq_queueMemoryWbRequest, "lq", desc="Write data to memory") {
-    enqueue(memQueue_out, MemoryMsg, 1) {
-      out_msg.Addr := address;
-      out_msg.Type := MemoryRequestType:MEMORY_WB;
-      out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-      DPRINTF(RubySlicc, "%s\n", out_msg);
+    peek(responseNetwork_in, ResponseMsg) {
+      enqueue(memQueue_out, MemoryMsg, 1) {
+        out_msg.Addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.DataBlk := in_msg.DataBlk;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
     }
   }
 
@@ -694,7 +707,8 @@ machine(Directory, "Token protocol")
       // first, initialize the data blk to the current version of system memory
       out_msg.DataBlk := tbe.DataBlk;
       // then add the dma write data
-      out_msg.DataBlk.copyPartial(tbe.DmaDataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
+      out_msg.DataBlk.copyPartial(
+        tbe.DmaDataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
@@ -759,15 +773,6 @@ machine(Directory, "Token protocol")
     }
   }
 
-  action(cd_writeCleanDataToTbe, "cd", desc="Write clean memory data to TBE") {
-    tbe.DataBlk := getDirectoryEntry(address).DataBlk;
-  }
-
-  action(dwt_writeDmaDataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    getDirectoryEntry(address).DataBlk := tbe.DataBlk;
-    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DmaDataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
-  }
-
   action(f_incrementTokens, "f", desc="Increment the number of tokens we're tracking") {
     peek(responseNetwork_in, ResponseMsg) {
       assert(in_msg.Tokens >= 1);
@@ -809,20 +814,6 @@ machine(Directory, "Token protocol")
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
     memQueue_in.dequeue();
-  }
-
-  action(m_writeDataToMemory, "m", desc="Write dirty writeback to memory") {
-    peek(responseNetwork_in, ResponseMsg) {
-      getDirectoryEntry(in_msg.Addr).DataBlk := in_msg.DataBlk;
-      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-              in_msg.Addr, in_msg.DataBlk);
-    }
-  }
-
-  action(n_checkData, "n", desc="Check incoming clean data message") {
-    peek(responseNetwork_in, ResponseMsg) {
-      assert(getDirectoryEntry(in_msg.Addr).DataBlk == in_msg.DataBlk);
-    }
   }
 
   action(r_bounceResponse, "r", desc="Bounce response to starving processor") {
@@ -869,12 +860,6 @@ machine(Directory, "Token protocol")
       assert(in_msg.Dirty == false);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Control);
 
-      // NOTE: The following check would not be valid in a real
-      // implementation.  We include the data in the "dataless"
-      // message so we can assert the clean data matches the datablock
-      // in memory
-      assert(getDirectoryEntry(in_msg.Addr).DataBlk == in_msg.DataBlk);
-
       // Bounce the message, but "re-associate" the data and the owner
       // token.  In essence we're converting an ACK_OWNER message to a
       // DATA_OWNER message, keeping the number of tokens the same.
@@ -884,7 +869,6 @@ machine(Directory, "Token protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := in_msg.Tokens;
-        out_msg.DataBlk := getDirectoryEntry(in_msg.Addr).DataBlk;
         out_msg.Dirty := in_msg.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
@@ -948,7 +932,6 @@ machine(Directory, "Token protocol")
 
   transition(O, DMA_WRITE, O_DW) {
     vd_allocateDmaRequestInTBE;
-    cd_writeCleanDataToTbe;
     bw_broadcastWrite;
     st_scheduleTimeout;
     p_popDmaRequestQueue;
@@ -956,8 +939,6 @@ machine(Directory, "Token protocol")
 
   transition(O, DMA_WRITE_All_Tokens, O_DW_W) {
     vd_allocateDmaRequestInTBE;
-    cd_writeCleanDataToTbe;
-    dwt_writeDmaDataFromTBE;
     ld_queueMemoryDmaWriteFromTbe;
     p_popDmaRequestQueue;
   }
@@ -985,7 +966,6 @@ machine(Directory, "Token protocol")
   }
 
   transition(O, {Data_Owner, Data_All_Tokens}) {
-    n_checkData;
     f_incrementTokens;
     k_popIncomingResponseQueue;
   }
@@ -1026,7 +1006,6 @@ machine(Directory, "Token protocol")
 
   transition(O_DW, Ack_Owner) {
     f_incrementTokens;
-    cd_writeCleanDataToTbe;
     k_popIncomingResponseQueue;
   }
 
@@ -1038,7 +1017,6 @@ machine(Directory, "Token protocol")
   transition({NO_DW, O_DW}, Data_All_Tokens, O_DW_W) {
     f_incrementTokens;
     rd_recordDataInTbe;
-    dwt_writeDmaDataFromTBE;
     ld_queueMemoryDmaWriteFromTbe;
     ut_unsetReissueTimer;
     k_popIncomingResponseQueue;
@@ -1046,7 +1024,6 @@ machine(Directory, "Token protocol")
 
   transition(O_DW, Ack_All_Tokens, O_DW_W) {
     f_incrementTokens;
-    dwt_writeDmaDataFromTBE;
     ld_queueMemoryDmaWriteFromTbe;
     ut_unsetReissueTimer;
     k_popIncomingResponseQueue;
@@ -1054,8 +1031,6 @@ machine(Directory, "Token protocol")
 
   transition(O_DW, Ack_Owner_All_Tokens, O_DW_W) {
     f_incrementTokens;
-    cd_writeCleanDataToTbe;
-    dwt_writeDmaDataFromTBE;
     ld_queueMemoryDmaWriteFromTbe;
     ut_unsetReissueTimer;
     k_popIncomingResponseQueue;
@@ -1100,14 +1075,12 @@ machine(Directory, "Token protocol")
   }
 
   transition(NO, {Data_Owner, Data_All_Tokens}, O_W) {
-    m_writeDataToMemory;
     f_incrementTokens;
     lq_queueMemoryWbRequest;
     k_popIncomingResponseQueue;
   }
 
   transition(NO, {Ack_Owner, Ack_Owner_All_Tokens}, O) {
-    n_checkData;
     f_incrementTokens;
     k_popIncomingResponseQueue;
   }
@@ -1160,7 +1133,6 @@ machine(Directory, "Token protocol")
   }
 
   transition(NO_DR, {Data_Owner, Data_All_Tokens}, O_W) {
-    m_writeDataToMemory;
     f_incrementTokens;
     dd_sendDmaData;
     lr_queueMemoryDmaReadWriteback;
@@ -1195,8 +1167,14 @@ machine(Directory, "Token protocol")
     k_popIncomingResponseQueue;
   }
 
-  transition({DW_L, DR_L, L}, {Ack_Owner_All_Tokens, Ack_Owner}) {
+  transition({DW_L, DR_L}, {Ack_Owner_All_Tokens, Ack_Owner}) {
     bd_bounceDatalessOwnerToken;
+    k_popIncomingResponseQueue;
+  }
+
+  transition(L, {Ack_Owner_All_Tokens, Ack_Owner}, L_O_W) {
+    f_incrementTokens;
+    qp_queueMemoryForPersistent;
     k_popIncomingResponseQueue;
   }
 

@@ -205,13 +205,28 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     return AccessPermission:NotPresent;
   }
 
-  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+  void functionalRead(Address addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
-        return tbe.DataBlk;
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
+    }
+  }
+
+  int functionalWrite(Address addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+        testAndWrite(addr, tbe.DataBlk, pkt);
+      return num_functional_writes;
     }
 
-    return getCacheEntry(addr).DataBlk;
+    num_functional_writes := num_functional_writes +
+        testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
+    return num_functional_writes;
   }
 
   void setAccessPermission(Entry cache_entry, Address addr, State state) {
