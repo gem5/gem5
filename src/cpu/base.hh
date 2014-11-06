@@ -64,10 +64,25 @@
 #include "sim/insttracer.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/system.hh"
+#include "debug/Mwait.hh"
 
+class BaseCPU;
 struct BaseCPUParams;
 class CheckerCPU;
 class ThreadContext;
+
+struct AddressMonitor
+{
+    AddressMonitor();
+    bool doMonitor(PacketPtr pkt);
+
+    bool armed;
+    Addr vAddr;
+    Addr pAddr;
+    uint64_t val;
+    bool waiting;   // 0=normal, 1=mwaiting
+    bool gotWakeup;
+};
 
 class CPUProgressEvent : public Event
 {
@@ -536,6 +551,16 @@ class BaseCPU : public MemObject
     Stats::Scalar numCycles;
     Stats::Scalar numWorkItemsStarted;
     Stats::Scalar numWorkItemsCompleted;
+
+  private:
+    AddressMonitor addressMonitor;
+
+  public:
+    void armMonitor(Addr address);
+    bool mwait(PacketPtr pkt);
+    void mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb);
+    AddressMonitor *getCpuAddrMonitor() { return &addressMonitor; }
+    void atomicNotify(Addr address);
 };
 
 #endif // THE_ISA == NULL_ISA

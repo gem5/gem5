@@ -349,6 +349,13 @@ class CheckerCPU : public BaseCPU, public ExecContext
         this->dtb->demapPage(vaddr, asn);
     }
 
+    // monitor/mwait funtions
+    virtual void armMonitor(Addr address) { BaseCPU::armMonitor(address); }
+    bool mwait(PacketPtr pkt) { return BaseCPU::mwait(pkt); }
+    void mwaitAtomic(ThreadContext *tc)
+    { return BaseCPU::mwaitAtomic(tc, thread->dtb); }
+    AddressMonitor *getAddrMonitor() { return BaseCPU::getCpuAddrMonitor(); }
+
     void demapInstPage(Addr vaddr, uint64_t asn)
     {
         this->itb->demapPage(vaddr, asn);

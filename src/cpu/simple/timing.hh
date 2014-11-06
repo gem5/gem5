@@ -228,10 +228,15 @@ class TimingSimpleCPU : public BaseSimpleCPU
          * a wakeup event on a cpu that is monitoring an address
          */
         virtual void recvTimingSnoopReq(PacketPtr pkt);
+        virtual void recvFunctionalSnoop(PacketPtr pkt);
 
         virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual void recvRetry();
+
+        virtual bool isSnooping() const {
+            return true;
+        }
 
         struct DTickEvent : public TickEvent
         {

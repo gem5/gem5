@@ -117,6 +117,10 @@ template <class Impl>
 void
 FullO3CPU<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
+    // X86 ISA: Snooping an invalidation for monitor/mwait
+    if(cpu->getCpuAddrMonitor()->doMonitor(pkt)) {
+        cpu->wakeup();
+    }
     lsq->recvTimingSnoopReq(pkt);
 }
 

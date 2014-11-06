@@ -272,6 +272,12 @@ AtomicSimpleCPU::AtomicCPUDPort::recvAtomicSnoop(PacketPtr pkt)
     DPRINTF(SimpleCPU, "received snoop pkt for addr:%#x %s\n", pkt->getAddr(),
             pkt->cmdString());
 
+    // X86 ISA: Snooping an invalidation for monitor/mwait
+    AtomicSimpleCPU *cpu = (AtomicSimpleCPU *)(&owner);
+    if(cpu->getAddrMonitor()->doMonitor(pkt)) {
+        cpu->wakeup();
+    }
+
     // if snoop invalidates, release any associated locks
     if (pkt->isInvalidate()) {
         DPRINTF(SimpleCPU, "received invalidation for addr:%#x\n",
@@ -287,6 +293,12 @@ AtomicSimpleCPU::AtomicCPUDPort::recvFunctionalSnoop(PacketPtr pkt)
 {
     DPRINTF(SimpleCPU, "received snoop pkt for addr:%#x %s\n", pkt->getAddr(),
             pkt->cmdString());
+
+    // X86 ISA: Snooping an invalidation for monitor/mwait
+    AtomicSimpleCPU *cpu = (AtomicSimpleCPU *)(&owner);
+    if(cpu->getAddrMonitor()->doMonitor(pkt)) {
+        cpu->wakeup();
+    }
 
     // if snoop invalidates, release any associated locks
     if (pkt->isInvalidate()) {

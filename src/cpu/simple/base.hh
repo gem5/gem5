@@ -462,6 +462,14 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
 
   private:
     TheISA::PCState pred_pc;
+
+  public:
+    // monitor/mwait funtions
+    void armMonitor(Addr address) { BaseCPU::armMonitor(address); }
+    bool mwait(PacketPtr pkt) { return BaseCPU::mwait(pkt); }
+    void mwaitAtomic(ThreadContext *tc)
+    { return BaseCPU::mwaitAtomic(tc, thread->dtb); }
+    AddressMonitor *getAddrMonitor() { return BaseCPU::getCpuAddrMonitor(); }
 };
 
 #endif // __CPU_SIMPLE_BASE_HH__

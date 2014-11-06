@@ -233,6 +233,14 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
     ruby.num_of_sequencers = len(cpu_sequencers)
     ruby.random_seed    = options.random_seed
 
+def send_evicts(options):
+    # currently, 2 scenarios warrant forwarding evictions to the CPU:
+    # 1. The O3 model must keep the LSQ coherent with the caches
+    # 2. The x86 mwait instruction is built on top of coherence invalidations
+    if options.cpu_type == "detailed" or buildEnv['TARGET_ISA'] == 'x86':
+        return True
+    return False
+
     # Create a backing copy of physical memory in case required
     if options.access_backing_store:
         ruby.phys_mem = SimpleMemory(range=AddrRange(options.mem_size),

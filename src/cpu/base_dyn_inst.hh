@@ -853,6 +853,14 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Sets the number of consecutive store conditional failures. */
     void setStCondFailures(unsigned int sc_failures)
     { thread->storeCondFailures = sc_failures; }
+
+  public:
+    // monitor/mwait funtions
+    void armMonitor(Addr address) { cpu->armMonitor(address); }
+    bool mwait(PacketPtr pkt) { return cpu->mwait(pkt); }
+    void mwaitAtomic(ThreadContext *tc)
+    { return cpu->mwaitAtomic(tc, cpu->dtb); }
+    AddressMonitor *getAddrMonitor() { return cpu->getCpuAddrMonitor(); }
 };
 
 template<class Impl>

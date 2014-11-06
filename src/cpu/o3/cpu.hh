@@ -162,11 +162,13 @@ class FullO3CPU : public BaseO3CPU
 
         /** Pointer to LSQ. */
         LSQ<Impl> *lsq;
+        FullO3CPU<Impl> *cpu;
 
       public:
         /** Default constructor. */
         DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
-            : MasterPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq)
+            : MasterPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq),
+              cpu(_cpu)
         { }
 
       protected:

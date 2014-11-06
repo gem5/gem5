@@ -71,8 +71,20 @@
                     }
                     0x1: decode MODRM_MOD {
                         0x3: decode MODRM_RM {
-                            0x0: monitor();
-                            0x1: mwait();
+                            0x0: MonitorInst::monitor({{
+                               xc->armMonitor(Rax);
+                            }});
+                            0x1: MwaitInst::mwait({{
+                               uint64_t m = 0;          //mem
+                               unsigned s = 0x8;        //size
+                               unsigned f = 0;          //flags
+                               readMemAtomic(xc, traceData,
+                                             xc->getAddrMonitor()->vAddr,
+                                             m, s, f);
+                               xc->mwaitAtomic(xc->tcBase());
+                               MicroHalt hltObj(machInst, mnemonic, 0x0);
+                               hltObj.execute(xc, traceData);
+                            }});
                             default: Inst::UD2();
                         }
                         default: sidt_Ms();

@@ -32,6 +32,7 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from Ruby import create_topology
+from Ruby import send_evicts
 
 #
 # Note: the L1 Cache latency is only used by the sequencer on fast path hits
@@ -91,8 +92,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                                       L1Icache = l1i_cache,
                                       L1Dcache = l1d_cache,
                                       l2_select_num_bits = l2_bits,
-                                      send_evictions = (
-                                          options.cpu_type == "detailed"),
+                                      send_evictions = send_evicts(options),
                                       prefetcher = prefetcher,
                                       ruby_system = ruby_system,
                                       clk_domain=system.cpu[i].clk_domain,

@@ -1077,6 +1077,13 @@ class InOrderDynInst : public ExecContext, public RefCounted
     void demapPage(Addr vaddr, uint64_t asn) {
         panic("demapPage unimplemented");
     }
+
+  public:
+    // monitor/mwait funtions
+    void armMonitor(Addr address);
+    bool mwait(PacketPtr pkt);
+    void mwaitAtomic(ThreadContext *tc);
+    AddressMonitor *getAddrMonitor();
 };
 
 

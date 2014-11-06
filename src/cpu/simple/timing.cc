@@ -58,6 +58,8 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+#include "debug/Mwait.hh"
+
 using namespace std;
 using namespace TheISA;
 
@@ -818,9 +820,21 @@ TimingSimpleCPU::updateCycleCounts()
 void
 TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
+    // X86 ISA: Snooping an invalidation for monitor/mwait
+    if(cpu->getAddrMonitor()->doMonitor(pkt)) {
+        cpu->wakeup();
+    }
     TheISA::handleLockedSnoop(cpu->thread, pkt, cacheBlockMask);
 }
 
+void
+TimingSimpleCPU::DcachePort::recvFunctionalSnoop(PacketPtr pkt)
+{
+    // X86 ISA: Snooping an invalidation for monitor/mwait
+    if(cpu->getAddrMonitor()->doMonitor(pkt)) {
+        cpu->wakeup();
+    }
+}
 
 bool
 TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)

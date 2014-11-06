@@ -45,6 +45,9 @@
 //Include a format to generate a CPUID instruction.
 ##include "cpuid.isa"
 
+//Include a format to generate a monitor/mwait instructions.
+##include "monitor_mwait.isa"
+
 //Include the "unknown" format
 ##include "unknown.isa"
 

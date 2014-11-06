@@ -340,6 +340,15 @@ class ExecContext : public ::ExecContext
                 - TheISA::Misc_Reg_Base, val);
         }
     }
+
+  public:
+    // monitor/mwait funtions
+    void armMonitor(Addr address) { getCpuPtr()->armMonitor(address); }
+    bool mwait(PacketPtr pkt) { return getCpuPtr()->mwait(pkt); }
+    void mwaitAtomic(ThreadContext *tc)
+    { return getCpuPtr()->mwaitAtomic(tc, thread.dtb); }
+    AddressMonitor *getAddrMonitor()
+    { return getCpuPtr()->getCpuAddrMonitor(); }
 };
 
 }

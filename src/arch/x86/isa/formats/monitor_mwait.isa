@@ -1,0 +1,131 @@
+// Copyright (c) AMD
+// All rights reserved.
+//
+// Authors: Marc Orr
+
+// Monitor Instruction
+
+output header {{
+    class MonitorInst : public X86ISA::X86StaticInst
+    {
+      public:
+        static const RegIndex foldOBit = 0;
+        /// Constructor
+        MonitorInst(const char *_mnemonic, ExtMachInst _machInst,
+                OpClass __opClass) :
+            X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
+        { }
+
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+    };
+}};
+
+output decoder {{
+    std::string MonitorInst::generateDisassembly(Addr PC,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, mnemonic);
+        ccprintf(response, " ");
+        printReg(response, _srcRegIdx[0], machInst.opSize);
+        return response.str();
+    }
+}};
+
+def format MonitorInst(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'MonitorInst', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+
+// Mwait instruction
+
+// Declarations for execute() methods.
+def template MwaitExecDeclare {{
+    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *,
+                      Trace::InstRecord *) const;
+}};
+
+def template MwaitDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+        public:
+        // Constructor.
+        %(class_name)s(ExtMachInst machInst);
+        %(MwaitExecDeclare)s
+    };
+}};
+
+def template MwaitInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
+            Trace::InstRecord * traceData) const
+    {
+        uint64_t m = 0;          //mem
+        unsigned s = 0x8;        //size
+        unsigned f = 0;          //flags
+        readMemTiming(xc, traceData, xc->getAddrMonitor()->vAddr, m, s, f);
+        return NoFault;
+    }
+}};
+
+def template MwaitCompleteAcc {{
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
+            Trace::InstRecord *traceData) const
+    {
+        MicroHalt hltObj(machInst, mnemonic, 0x0);
+        if(xc->mwait(pkt)) {
+            hltObj.execute(xc, traceData);
+        }
+        return NoFault;
+    }
+}};
+
+output header {{
+    class MwaitInst : public X86ISA::X86StaticInst
+    {
+      public:
+        static const RegIndex foldOBit = 0;
+        /// Constructor
+        MwaitInst(const char *_mnemonic, ExtMachInst _machInst,
+                OpClass __opClass) :
+            X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
+        {
+            flags[IsMemRef] = 1;
+            flags[IsLoad] = 1;
+        }
+
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+    };
+}};
+
+output decoder {{
+    std::string MwaitInst::generateDisassembly(Addr PC,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, mnemonic);
+        ccprintf(response, " ");
+        printReg(response, _srcRegIdx[0], machInst.opSize);
+        return response.str();
+    }
+}};
+
+def format MwaitInst(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'MwaitInst', code, opt_flags)
+    header_output = MwaitDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+    exec_output += MwaitInitiateAcc.subst(iop)
+    exec_output += MwaitCompleteAcc.subst(iop)
+}};
+

@@ -47,6 +47,7 @@
 #include "arch/registers.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
 
@@ -243,6 +244,10 @@ class ExecContext {
      * Invalidate a page in the DTLB <i>and</i> ITLB.
      */
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
+    virtual void armMonitor(Addr address) = 0;
+    virtual bool mwait(PacketPtr pkt) = 0;
+    virtual void mwaitAtomic(ThreadContext *tc) = 0;
+    virtual AddressMonitor *getAddrMonitor() = 0;
 
     /** @} */
 

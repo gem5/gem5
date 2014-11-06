@@ -347,6 +347,8 @@ BaseSimpleCPU::dbg_vtophys(Addr addr)
 void
 BaseSimpleCPU::wakeup()
 {
+    getAddrMonitor()->gotWakeup = true;
+
     if (thread->status() != ThreadContext::Suspended)
         return;
 

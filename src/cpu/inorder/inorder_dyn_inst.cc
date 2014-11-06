@@ -602,3 +602,25 @@ InOrderDynInst::dump(std::string &outstring)
 
     outstring = s.str();
 }
+
+void
+InOrderDynInst::armMonitor(Addr address) {
+    cpu->armMonitor(address);
+}
+
+bool
+InOrderDynInst::mwait(PacketPtr pkt) {
+    return cpu->mwait(pkt);
+}
+
+void
+InOrderDynInst::mwaitAtomic(ThreadContext *tc)
+{
+    return cpu->mwaitAtomic(tc, cpu->getDTBPtr());
+}
+
+AddressMonitor *
+InOrderDynInst::getAddrMonitor()
+{
+    return cpu->getCpuAddrMonitor();
+}
