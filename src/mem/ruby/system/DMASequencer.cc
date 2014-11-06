@@ -28,24 +28,210 @@
 
 #include <memory>
 
+#include "debug/Config.hh"
+#include "debug/Drain.hh"
 #include "debug/RubyDma.hh"
 #include "debug/RubyStats.hh"
 #include "mem/protocol/SequencerMsg.hh"
-#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/DMASequencer.hh"
 #include "mem/ruby/system/System.hh"
+#include "sim/system.hh"
 
 DMASequencer::DMASequencer(const Params *p)
-    : RubyPort(p)
+    : MemObject(p), m_version(p->version), m_controller(NULL),
+      m_mandatory_q_ptr(NULL), m_usingRubyTester(p->using_ruby_tester),
+      slave_port(csprintf("%s.slave", name()), this, access_phys_mem, 0),
+      drainManager(NULL), system(p->system), retry(false),
+      access_phys_mem(p->access_phys_mem)
 {
+    assert(m_version != -1);
 }
 
 void
 DMASequencer::init()
 {
-    RubyPort::init();
+    MemObject::init();
+    assert(m_controller != NULL);
+    m_mandatory_q_ptr = m_controller->getMandatoryQueue();
+    m_mandatory_q_ptr->setSender(this);
     m_is_busy = false;
     m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
+}
+
+BaseSlavePort &
+DMASequencer::getSlavePort(const std::string &if_name, PortID idx)
+{
+    // used by the CPUs to connect the caches to the interconnect, and
+    // for the x86 case also the interrupt master
+    if (if_name != "slave") {
+        // pass it along to our super class
+        return MemObject::getSlavePort(if_name, idx);
+    } else {
+        return slave_port;
+    }
+}
+
+DMASequencer::MemSlavePort::MemSlavePort(const std::string &_name,
+    DMASequencer *_port, bool _access_phys_mem, PortID id)
+    : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this),
+      access_phys_mem(_access_phys_mem)
+{
+    DPRINTF(RubyDma, "Created slave memport on ruby sequencer %s\n", _name);
+}
+
+bool
+DMASequencer::MemSlavePort::recvTimingReq(PacketPtr pkt)
+{
+    DPRINTF(RubyDma, "Timing request for address %#x on port %d\n",
+            pkt->getAddr(), id);
+    DMASequencer *seq = static_cast<DMASequencer *>(&owner);
+
+    if (pkt->memInhibitAsserted())
+        panic("DMASequencer should never see an inhibited request\n");
+
+    assert(isPhysMemAddress(pkt->getAddr()));
+    assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
+           RubySystem::getBlockSizeBytes());
+
+    // Submit the ruby request
+    RequestStatus requestStatus = seq->makeRequest(pkt);
+
+    // If the request successfully issued then we should return true.
+    // Otherwise, we need to tell the port to retry at a later point
+    // and return false.
+    if (requestStatus == RequestStatus_Issued) {
+        DPRINTF(RubyDma, "Request %s 0x%x issued\n", pkt->cmdString(),
+                pkt->getAddr());
+        return true;
+    }
+
+    // Unless one is using the ruby tester, record the stalled M5 port for
+    // later retry when the sequencer becomes free.
+    if (!seq->m_usingRubyTester) {
+        seq->retry = true;
+    }
+
+    DPRINTF(RubyDma, "Request for address %#x did not issued because %s\n",
+            pkt->getAddr(), RequestStatus_to_string(requestStatus));
+
+    return false;
+}
+
+void
+DMASequencer::ruby_hit_callback(PacketPtr pkt)
+{
+    DPRINTF(RubyDma, "Hit callback for %s 0x%x\n", pkt->cmdString(),
+            pkt->getAddr());
+
+    // The packet was destined for memory and has not yet been turned
+    // into a response
+    assert(system->isMemAddr(pkt->getAddr()));
+    assert(pkt->isRequest());
+    slave_port.hitCallback(pkt);
+
+    // If we had to stall the slave ports, wake it up because
+    // the sequencer likely has free resources now.
+    if (retry) {
+        retry = false;
+        DPRINTF(RubyDma,"Sequencer may now be free.  SendRetry to port %s\n",
+                slave_port.name());
+        slave_port.sendRetry();
+    }
+
+    testDrainComplete();
+}
+
+void
+DMASequencer::testDrainComplete()
+{
+    //If we weren't able to drain before, we might be able to now.
+    if (drainManager != NULL) {
+        unsigned int drainCount = outstandingCount();
+        DPRINTF(Drain, "Drain count: %u\n", drainCount);
+        if (drainCount == 0) {
+            DPRINTF(Drain, "DMASequencer done draining, signaling drain done\n");
+            drainManager->signalDrainDone();
+            // Clear the drain manager once we're done with it.
+            drainManager = NULL;
+        }
+    }
+}
+
+unsigned int
+DMASequencer::getChildDrainCount(DrainManager *dm)
+{
+    int count = 0;
+    count += slave_port.drain(dm);
+    DPRINTF(Config, "count after slave port check %d\n", count);
+    return count;
+}
+
+unsigned int
+DMASequencer::drain(DrainManager *dm)
+{
+    if (isDeadlockEventScheduled()) {
+        descheduleDeadlockEvent();
+    }
+
+    // If the DMASequencer is not empty, then it needs to clear all outstanding
+    // requests before it should call drainManager->signalDrainDone()
+    DPRINTF(Config, "outstanding count %d\n", outstandingCount());
+    bool need_drain = outstandingCount() > 0;
+
+    //
+    // Also, get the number of child ports that will also need to clear
+    // their buffered requests before they call drainManager->signalDrainDone()
+    //
+    unsigned int child_drain_count = getChildDrainCount(dm);
+
+    // Set status
+    if (need_drain) {
+        drainManager = dm;
+
+        DPRINTF(Drain, "DMASequencer not drained\n");
+        setDrainState(Drainable::Draining);
+        return child_drain_count + 1;
+    }
+
+    drainManager = NULL;
+    setDrainState(Drainable::Drained);
+    return child_drain_count;
+}
+
+void
+DMASequencer::MemSlavePort::hitCallback(PacketPtr pkt)
+{
+    bool needsResponse = pkt->needsResponse();
+    bool accessPhysMem = access_phys_mem;
+
+    assert(!pkt->isLLSC());
+    assert(!pkt->isFlush());
+
+    DPRINTF(RubyDma, "Hit callback needs response %d\n", needsResponse);
+
+    if (accessPhysMem) {
+        DMASequencer *seq = static_cast<DMASequencer *>(&owner);
+        seq->system->getPhysMem().access(pkt);
+    } else if (needsResponse) {
+        pkt->makeResponse();
+    }
+
+    // turn packet around to go back to requester if response expected
+    if (needsResponse) {
+        DPRINTF(RubyDma, "Sending packet back over port\n");
+        // send next cycle
+        schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
+    } else {
+        delete pkt;
+    }
+    DPRINTF(RubyDma, "Hit callback done!\n");
+}
+
+bool
+DMASequencer::MemSlavePort::isPhysMemAddress(Addr addr) const
+{
+    DMASequencer *seq = static_cast<DMASequencer *>(&owner);
+    return seq->system->isMemAddr(addr);
 }
 
 RequestStatus
@@ -168,7 +354,8 @@ DMASequencer::ackCallback()
 }
 
 void
-DMASequencer::recordRequestType(DMASequencerRequestType requestType) {
+DMASequencer::recordRequestType(DMASequencerRequestType requestType)
+{
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DMASequencerRequestType_to_string(requestType));
 }

@@ -52,7 +52,6 @@ class RubyPort(MemObject):
     support_data_reqs = Param.Bool(True, "data cache requests supported")
     support_inst_reqs = Param.Bool(True, "inst cache requests supported")
 
-
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'
     cxx_header = "mem/ruby/system/RubyPortProxy.hh"
@@ -71,7 +70,15 @@ class RubySequencer(RubyPort):
         "max outstanding cycles for a request before deadlock/livelock declared")
     using_network_tester = Param.Bool(False, "")
 
-class DMASequencer(RubyPort):
+class DMASequencer(MemObject):
     type = 'DMASequencer'
     cxx_header = "mem/ruby/system/DMASequencer.hh"
-    access_phys_mem = True
+    version = Param.Int(0, "")
+
+    slave = SlavePort("Device slave port")
+
+    using_ruby_tester = Param.Bool(False, "")
+    access_phys_mem = Param.Bool(True,
+            "should the dma atomically update phys_mem")
+    ruby_system = Param.RubySystem(Parent.any, "")
+    system = Param.System(Parent.any, "system object")
