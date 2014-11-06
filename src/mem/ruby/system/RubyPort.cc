@@ -46,6 +46,7 @@
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "mem/simple_mem.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
@@ -57,16 +58,15 @@ RubyPort::RubyPort(const Params *p)
       pioSlavePort(csprintf("%s.pio-slave-port", name()), this),
       memMasterPort(csprintf("%s.mem-master-port", name()), this),
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
-          p->ruby_system, p->access_phys_mem, -1),
-      gotAddrRanges(p->port_master_connection_count), drainManager(NULL),
-      access_phys_mem(p->access_phys_mem)
+          p->ruby_system, p->access_backing_store, -1),
+      gotAddrRanges(p->port_master_connection_count), drainManager(NULL)
 {
     assert(m_version != -1);
 
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
         slave_ports.push_back(new MemSlavePort(csprintf("%s.slave%d", name(),
-            i), this, p->ruby_system, access_phys_mem, i));
+            i), this, p->ruby_system, p->access_backing_store, i));
     }
 
     // create the master ports based on the number of connected ports
@@ -155,9 +155,10 @@ RubyPort::MemMasterPort::MemMasterPort(const std::string &_name,
 }
 
 RubyPort::MemSlavePort::MemSlavePort(const std::string &_name, RubyPort *_port,
-                         RubySystem *_system, bool _access_phys_mem, PortID id)
+                                     RubySystem *_system,
+                                     bool _access_backing_store, PortID id)
     : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this),
-      ruby_system(_system), access_phys_mem(_access_phys_mem)
+      ruby_system(_system), access_backing_store(_access_backing_store)
 {
     DPRINTF(RubyPort, "Created slave memport on ruby sequencer %s\n", _name);
 }
@@ -281,11 +282,11 @@ void
 RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
 {
     DPRINTF(RubyPort, "Functional access for address: %#x\n", pkt->getAddr());
-    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
 
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
+        RubyPort *ruby_port M5_VAR_USED = static_cast<RubyPort *>(&owner);
         assert(ruby_port->memMasterPort.isConnected());
         DPRINTF(RubyPort, "Pio Request for address: 0x%#x\n", pkt->getAddr());
         panic("RubyPort::PioMasterPort::recvFunctional() not implemented!\n");
@@ -314,23 +315,19 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
               pkt->isWrite() ? "write" : "read", pkt->getAddr());
     }
 
-    if (access_phys_mem) {
+    if (access_backing_store) {
         // The attached physmem contains the official version of data.
         // The following command performs the real functional access.
         // This line should be removed once Ruby supplies the official version
         // of data.
-        ruby_port->system->getPhysMem().functionalAccess(pkt);
+        ruby_system->getPhysMem()->functionalAccess(pkt);
     }
 
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         pkt->setFunctionalResponseStatus(accessSucceeded);
-
-        // @todo There should not be a reverse call since the response is
-        // communicated through the packet pointer
-        // DPRINTF(RubyPort, "Sending packet back over port\n");
-        // sendFunctional(pkt);
     }
+
     DPRINTF(RubyPort, "Functional access %s!\n",
             accessSucceeded ? "successful":"failed");
 }
@@ -459,11 +456,9 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
 {
     bool needsResponse = pkt->needsResponse();
 
-    //
     // Unless specified at configuraiton, all responses except failed SC 
     // and Flush operations access M5 physical memory.
-    //
-    bool accessPhysMem = access_phys_mem;
+    bool accessPhysMem = access_backing_store;
 
     if (pkt->isLLSC()) {
         if (pkt->isWrite()) {
@@ -488,9 +483,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
         }
     }
 
-    //
     // Flush requests don't access physical memory
-    //
     if (pkt->isFlush()) {
         accessPhysMem = false;
     }
@@ -498,8 +491,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
-        RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
-        ruby_port->system->getPhysMem().access(pkt);
+        ruby_system->getPhysMem()->functionalAccess(pkt);
     } else if (needsResponse) {
         pkt->makeResponse();
     }
@@ -512,6 +504,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     } else {
         delete pkt;
     }
+
     DPRINTF(RubyPort, "Hit callback done!\n");
 }
 

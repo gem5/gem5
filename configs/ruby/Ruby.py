@@ -56,6 +56,9 @@ def define_options(parser):
                       default='2GHz',
                       help="Clock for blocks running at Ruby system's speed")
 
+    parser.add_option("--access-backing-store", action="store_true", default=False,
+                      help="Should ruby maintain a second copy of memory")
+
     # Options related to cache structure
     parser.add_option("--ports", action="store", type="int", default=4,
                       help="used of transitions per cycle which is a proxy \
@@ -229,3 +232,8 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
     ruby._cpu_ports = cpu_sequencers
     ruby.num_of_sequencers = len(cpu_sequencers)
     ruby.random_seed    = options.random_seed
+
+    # Create a backing copy of physical memory in case required
+    if options.access_backing_store:
+        ruby.phys_mem = SimpleMemory(range=AddrRange(options.mem_size),
+                                     in_addr_map=False)

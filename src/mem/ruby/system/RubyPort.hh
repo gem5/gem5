@@ -73,14 +73,13 @@ class RubyPort : public MemObject
     class MemSlavePort : public QueuedSlavePort
     {
       private:
-
         SlavePacketQueue queue;
         RubySystem* ruby_system;
-        bool access_phys_mem;
+        bool access_backing_store;
 
       public:
         MemSlavePort(const std::string &_name, RubyPort *_port,
-               RubySystem*_system, bool _access_phys_mem, PortID id);
+               RubySystem*_system, bool _access_backing_store, PortID id);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
 
@@ -212,8 +211,6 @@ class RubyPort : public MemObject
     // that should be called when the Sequencer becomes available after a stall.
     //
     std::vector<MemSlavePort *> retryList;
-
-    bool access_phys_mem;
 };
 
 #endif // __MEM_RUBY_SYSTEM_RUBYPORT_HH__

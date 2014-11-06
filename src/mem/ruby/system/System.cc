@@ -77,6 +77,7 @@ RubySystem::RubySystem(const Params *p)
     Stats::registerDumpCallback(new RubyStatsCallback(this));
     // Create the profiler
     m_profiler = new Profiler(p);
+    m_phys_mem = p->phys_mem;
 }
 
 void

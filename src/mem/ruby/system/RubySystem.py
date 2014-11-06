@@ -29,6 +29,7 @@
 
 from m5.params import *
 from ClockedObject import ClockedObject
+from SimpleMemory import *
 
 class RubySystem(ClockedObject):
     type = 'RubySystem'
@@ -45,3 +46,4 @@ class RubySystem(ClockedObject):
     hot_lines = Param.Bool(False, "")
     all_instructions = Param.Bool(False, "")
     num_of_sequencers = Param.Int("")
+    phys_mem = Param.SimpleMemory(NULL, "")
