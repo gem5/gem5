@@ -41,7 +41,6 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/structures/MemoryControl.hh"
 #include "mem/ruby/structures/MemoryVector.hh"
-#include "mem/ruby/structures/SparseMemory.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "mem/packet.hh"
 #include "params/RubySystem.hh"
@@ -107,7 +106,6 @@ class RubySystem : public ClockedObject
 
     void registerNetwork(Network*);
     void registerAbstractController(AbstractController*);
-    void registerSparseMemory(SparseMemory*);
     void registerMemController(MemoryControl *mc);
 
     bool eventQueueEmpty() { return eventq->empty(); }
@@ -147,7 +145,6 @@ class RubySystem : public ClockedObject
     bool m_warmup_enabled;
     bool m_cooldown_enabled;
     CacheRecorder* m_cache_recorder;
-    std::vector<SparseMemory*> m_sparse_memory_vector;
 };
 
 class RubyStatsCallback : public Callback

@@ -41,7 +41,6 @@ SimObject('RubyPrefetcher.py')
 SimObject('WireBuffer.py')
 
 Source('DirectoryMemory.cc')
-Source('SparseMemory.cc')
 Source('CacheMemory.cc')
 Source('MemoryControl.cc')
 Source('WireBuffer.cc')

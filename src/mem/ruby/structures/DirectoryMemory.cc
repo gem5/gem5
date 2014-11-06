@@ -47,8 +47,6 @@ DirectoryMemory::DirectoryMemory(const Params *p)
     m_size_bytes = p->size;
     m_size_bits = floorLog2(m_size_bytes);
     m_num_entries = 0;
-    m_use_map = p->use_map;
-    m_map_levels = p->map_levels;
     m_numa_high_bit = p->numa_high_bit;
 }
 
@@ -56,16 +54,10 @@ void
 DirectoryMemory::init()
 {
     m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
-
-    if (m_use_map) {
-        m_sparseMemory = new SparseMemory(m_map_levels);
-        g_system_ptr->registerSparseMemory(m_sparseMemory);
-    } else {
-        m_entries = new AbstractEntry*[m_num_entries];
-        for (int i = 0; i < m_num_entries; i++)
-            m_entries[i] = NULL;
-        m_ram = g_system_ptr->getMemoryVector();
-    }
+    m_entries = new AbstractEntry*[m_num_entries];
+    for (int i = 0; i < m_num_entries; i++)
+        m_entries[i] = NULL;
+    m_ram = g_system_ptr->getMemoryVector();
 
     m_num_directories++;
     m_num_directories_bits = ceilLog2(m_num_directories);
@@ -80,16 +72,12 @@ DirectoryMemory::init()
 DirectoryMemory::~DirectoryMemory()
 {
     // free up all the directory entries
-    if (m_entries != NULL) {
-        for (uint64 i = 0; i < m_num_entries; i++) {
-            if (m_entries[i] != NULL) {
-                delete m_entries[i];
-            }
+    for (uint64 i = 0; i < m_num_entries; i++) {
+        if (m_entries[i] != NULL) {
+            delete m_entries[i];
         }
-        delete [] m_entries;
-    } else if (m_use_map) {
-        delete m_sparseMemory;
     }
+    delete [] m_entries;
 }
 
 uint64
@@ -130,13 +118,9 @@ DirectoryMemory::lookup(PhysAddress address)
     assert(isPresent(address));
     DPRINTF(RubyCache, "Looking up address: %s\n", address);
 
-    if (m_use_map) {
-        return m_sparseMemory->lookup(address);
-    } else {
-        uint64_t idx = mapAddressToLocalIdx(address);
-        assert(idx < m_num_entries);
-        return m_entries[idx];
-    }
+    uint64_t idx = mapAddressToLocalIdx(address);
+    assert(idx < m_num_entries);
+    return m_entries[idx];
 }
 
 AbstractEntry*
@@ -146,57 +130,18 @@ DirectoryMemory::allocate(const PhysAddress& address, AbstractEntry* entry)
     uint64 idx;
     DPRINTF(RubyCache, "Looking up address: %s\n", address);
 
-    if (m_use_map) {
-        m_sparseMemory->add(address, entry);
-        entry->changePermission(AccessPermission_Read_Write);
-    } else {
-        idx = mapAddressToLocalIdx(address);
-        assert(idx < m_num_entries);
-        entry->getDataBlk().assign(m_ram->getBlockPtr(address));
-        entry->changePermission(AccessPermission_Read_Only);
-        m_entries[idx] = entry;
-    }
+    idx = mapAddressToLocalIdx(address);
+    assert(idx < m_num_entries);
+    entry->getDataBlk().assign(m_ram->getBlockPtr(address));
+    entry->changePermission(AccessPermission_Read_Only);
+    m_entries[idx] = entry;
 
     return entry;
 }
 
 void
-DirectoryMemory::invalidateBlock(PhysAddress address)
-{
-    if (m_use_map) {
-        assert(m_sparseMemory->exist(address));
-        m_sparseMemory->remove(address);
-    }
-#if 0
-    else {
-        assert(isPresent(address));
-
-        int64 index = address.memoryModuleIndex();
-
-        if (index < 0 || index > m_size) {
-            ERROR_MSG("Directory Memory Assertion: "
-                      "accessing memory out of range.");
-        }
-
-        if (m_entries[index] != NULL){
-            delete m_entries[index];
-            m_entries[index] = NULL;
-        }
-    }
-#endif
-}
-
-void
 DirectoryMemory::print(ostream& out) const
 {
-}
-
-void
-DirectoryMemory::regStats()
-{
-    if (m_use_map) {
-        m_sparseMemory->regStats(name());
-    }
 }
 
 void

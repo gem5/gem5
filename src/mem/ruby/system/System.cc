@@ -109,12 +109,6 @@ RubySystem::registerAbstractController(AbstractController* cntrl)
 }
 
 void
-RubySystem::registerSparseMemory(SparseMemory* s)
-{
-    m_sparse_memory_vector.push_back(s);
-}
-
-void
 RubySystem::registerMemController(MemoryControl *mc) {
     m_memory_controller_vec.push_back(mc);
 }
@@ -160,17 +154,13 @@ void
 RubySystem::serialize(std::ostream &os)
 {
     m_cooldown_enabled = true;
-
     vector<Sequencer*> sequencer_map;
     Sequencer* sequencer_ptr = NULL;
-    int cntrl_id = -1;
-
 
     for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
         sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
         if (sequencer_ptr == NULL) {
             sequencer_ptr = sequencer_map[cntrl];
-            cntrl_id = cntrl;
         }
     }
 
@@ -217,23 +207,15 @@ RubySystem::serialize(std::ostream &os)
     setCurTick(curtick_original);
 
     uint8_t *raw_data = NULL;
+    uint64 memory_trace_size = m_mem_vec->collatePages(raw_data);
 
-    if (m_mem_vec != NULL) {
-        uint64 memory_trace_size = m_mem_vec->collatePages(raw_data);
+    string memory_trace_file = name() + ".memory.gz";
+    writeCompressedTrace(raw_data, memory_trace_file,
+                         memory_trace_size);
 
-        string memory_trace_file = name() + ".memory.gz";
-        writeCompressedTrace(raw_data, memory_trace_file,
-                             memory_trace_size);
+    SERIALIZE_SCALAR(memory_trace_file);
+    SERIALIZE_SCALAR(memory_trace_size);
 
-        SERIALIZE_SCALAR(memory_trace_file);
-        SERIALIZE_SCALAR(memory_trace_size);
-
-    } else {
-        for (int i = 0; i < m_sparse_memory_vector.size(); ++i) {
-            m_sparse_memory_vector[i]->recordBlocks(cntrl_id,
-                                                    m_cache_recorder);
-        }
-    }
 
     // Aggergate the trace entries together into a single array
     raw_data = new uint8_t[4096];

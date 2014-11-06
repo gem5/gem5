@@ -36,7 +36,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "mem/ruby/structures/MemoryVector.hh"
-#include "mem/ruby/structures/SparseMemory.hh"
 #include "params/RubyDirectoryMemory.hh"
 #include "sim/sim_object.hh"
 
@@ -52,7 +51,6 @@ class DirectoryMemory : public SimObject
     uint64 mapAddressToLocalIdx(PhysAddress address);
     static uint64 mapAddressToDirectoryVersion(PhysAddress address);
 
-    bool isSparseImplementation() { return m_use_map; }
     uint64 getSize() { return m_size_bytes; }
 
     bool isPresent(PhysAddress address);
@@ -60,11 +58,7 @@ class DirectoryMemory : public SimObject
     AbstractEntry* allocate(const PhysAddress& address,
                             AbstractEntry* new_entry);
 
-    void invalidateBlock(PhysAddress address);
-
     void print(std::ostream& out) const;
-    void regStats();
-
     void recordRequestType(DirectoryRequestType requestType);
 
   private:
@@ -88,9 +82,6 @@ class DirectoryMemory : public SimObject
     static int m_numa_high_bit;
 
     MemoryVector* m_ram;
-    SparseMemory* m_sparseMemory;
-    bool m_use_map;
-    int m_map_levels;
 };
 
 inline std::ostream&
