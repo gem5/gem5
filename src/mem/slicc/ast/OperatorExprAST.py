@@ -69,6 +69,8 @@ class InfixOperatorExprAST(ExprAST):
                                   ("Cycles", "Cycles", "Cycles"),
                                   ("Cycles", "int", "Cycles"),
                                   ("Scalar", "int", "Scalar"),
+                                  ("int", "bool", "int"),
+                                  ("bool", "int", "int"),
                                   ("int", "Cycles", "Cycles")]
             else:
                 self.error("No operator matched with {0}!" .format(self.op))
