@@ -1289,7 +1289,9 @@ class SimObject(object):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
                     all[match_obj] = True
-        return all.keys(), True
+        # Also make sure to sort the keys based on the objects' path to
+        # ensure that the order is the same on all hosts
+        return sorted(all.keys(), key = lambda o: o.path()), True
 
     def unproxy(self, base):
         return self
@@ -1437,7 +1439,10 @@ class SimObject(object):
 
     def descendants(self):
         yield self
-        for child in self._children.itervalues():
+        # The order of the dict is implementation dependent, so sort
+        # it based on the key (name) to ensure the order is the same
+        # on all hosts
+        for (name, child) in sorted(self._children.iteritems()):
             for obj in child.descendants():
                 yield obj
 
@@ -1452,7 +1457,9 @@ class SimObject(object):
     # Create C++ port connections corresponding to the connections in
     # _port_refs
     def connectPorts(self):
-        for portRef in self._port_refs.itervalues():
+        # Sort the ports based on their attribute name to ensure the
+        # order is the same on all hosts
+        for (attr, portRef) in sorted(self._port_refs.iteritems()):
             portRef.ccConnect()
 
 # Function to provide to C++ so it can look up instances based on paths
