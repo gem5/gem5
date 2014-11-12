@@ -53,8 +53,7 @@ DumbTOD::DumbTOD(const Params *p)
     : BasicPioDevice(p, 0x08)
 {
     struct tm tm = p->time;
-    time_t local = mktime(&tm);
-    todTime = mktime(gmtime(&local));
+    todTime = mkutctime(&tm);
 
     DPRINTFN("Real-time clock set to %s\n", asctime(&tm));
     DPRINTFN("Real-time clock set to %d\n", todTime);

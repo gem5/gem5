@@ -150,7 +150,32 @@ sleep(const Time &time)
 time_t
 mkutctime(struct tm *time)
 {
-    time_t local = mktime(time);
-    return mktime(gmtime(&local));
+    // get the current timezone
+    char *tz = getenv("TZ");
+
+    // copy the string as the pointer gets invalidated when updating
+    // the environment
+    if (tz) {
+        tz = strdup(tz);
+        if (!tz) {
+            fatal("Failed to reserve memory for UTC time conversion\n");
+        }
+    }
+
+    // change to UTC and get the time
+    setenv("TZ", "", 1);
+    tzset();
+    time_t ret = mktime(time);
+
+    // restore the timezone again
+    if (tz) {
+        setenv("TZ", tz, 1);
+        free(tz);
+    } else {
+        unsetenv("TZ");
+    }
+    tzset();
+
+    return ret;
 }
 
