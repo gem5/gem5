@@ -74,7 +74,6 @@ class NetworkLink_d : public ClockedObject, public Consumer
     flitBuffer_d *linkBuffer;
     Consumer *link_consumer;
     flitBuffer_d *link_srcQueue;
-    int m_flit_width;
 
     // Statistical variables
     unsigned int m_link_utilized;
