@@ -243,6 +243,12 @@ bool
 TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
 {
     RequestPtr req = pkt->req;
+
+    // We're about the issues a locked load, so tell the monitor
+    // to start caring about this address
+    if (pkt->isRead() && pkt->req->isLLSC()) {
+        TheISA::handleLockedRead(thread, pkt->req);
+    }
     if (req->isMmappedIpr()) {
         Cycles delay = TheISA::handleIprRead(thread->getTC(), pkt);
         new IprEvent(pkt, this, clockEdge(delay));
@@ -790,12 +796,6 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
         // If there was a fault, we shouldn't trace this instruction.
         delete traceData;
         traceData = NULL;
-    }
-
-    // the locked flag may be cleared on the response packet, so check
-    // pkt->req and not pkt to see if it was a load-locked
-    if (pkt->isRead() && pkt->req->isLLSC()) {
-        TheISA::handleLockedRead(thread, pkt->req);
     }
 
     delete pkt->req;
