@@ -280,8 +280,9 @@ class LSQUnit {
       public:
         /** Default constructor. */
         LSQSenderState()
-            : mainPkt(NULL), pendingPacket(NULL), outstanding(1),
-              noWB(false), isSplit(false), pktToSend(false), cacheBlocked(false)
+            : mainPkt(NULL), pendingPacket(NULL), idx(0), outstanding(1),
+              isLoad(false), noWB(false), isSplit(false),
+              pktToSend(false), cacheBlocked(false)
           { }
 
         /** Instruction who initiated the access to memory. */

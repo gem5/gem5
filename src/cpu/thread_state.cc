@@ -43,8 +43,9 @@
 #include "sim/system.hh"
 
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
-    : numInst(0), numOp(0), numLoad(0), _status(ThreadContext::Halted),
-      baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
+    : numInst(0), numOp(0), numLoad(0), startNumLoad(0),
+      _status(ThreadContext::Halted), baseCpu(cpu),
+      _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), process(_process), physProxy(NULL), virtProxy(NULL),
       proxy(NULL), funcExeInst(0), storeCondFailures(0)

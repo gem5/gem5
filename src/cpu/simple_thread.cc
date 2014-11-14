@@ -63,7 +63,8 @@ using namespace std;
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            Process *_process, TheISA::TLB *_itb,
                            TheISA::TLB *_dtb, TheISA::ISA *_isa)
-    : ThreadState(_cpu, _thread_num, _process), isa(_isa), system(_sys),
+    : ThreadState(_cpu, _thread_num, _process), isa(_isa),
+      predicate(false), system(_sys),
       itb(_itb), dtb(_dtb)
 {
     clearArchRegs();

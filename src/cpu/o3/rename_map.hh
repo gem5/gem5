@@ -172,7 +172,7 @@ class UnifiedRenameMap
     typedef SimpleRenameMap::RenameInfo RenameInfo;
 
     /** Default constructor.  init() must be called prior to use. */
-    UnifiedRenameMap() {};
+    UnifiedRenameMap() : regFile(nullptr) {};
 
     /** Destructor. */
     ~UnifiedRenameMap() {};

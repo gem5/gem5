@@ -110,7 +110,8 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       drain_manager(NULL),
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
-      fastmem(p->fastmem)
+      fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
+      ppCommit(nullptr)
 {
     _status = Idle;
 }

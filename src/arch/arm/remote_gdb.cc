@@ -160,7 +160,7 @@ using namespace std;
 using namespace ArmISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, MAX_NUMREGS)
+    : BaseRemoteGDB(_system, tc, MAX_NUMREGS), notTakenBkpt(0), takenBkpt(0)
 {
 }
 

@@ -84,7 +84,8 @@ let {{
         diff += intWidth;
     }
     uint64_t topBits M5_VAR_USED = ~mask(diff+1);
-    uint64_t result = (Op164 >> imm1) | (Op164 << (intWidth - imm1));
+    uint64_t result = imm1 == 0 ? Op164 :
+                      (Op164 >> imm1) | (Op164 << (intWidth - imm1));
     result &= bitMask;
     '''
 

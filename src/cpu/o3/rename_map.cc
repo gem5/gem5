@@ -39,7 +39,7 @@ using namespace std;
 /**** SimpleRenameMap methods ****/
 
 SimpleRenameMap::SimpleRenameMap()
-    : freeList(NULL)
+    : freeList(NULL), zeroReg(0)
 {
 }
 

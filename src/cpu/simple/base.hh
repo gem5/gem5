@@ -262,17 +262,9 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     Stats::Scalar icacheStallCycles;
     Counter lastIcacheStall;
 
-    // number of cycles stalled for I-cache retries
-    Stats::Scalar icacheRetryCycles;
-    Counter lastIcacheRetry;
-
     // number of cycles stalled for D-cache responses
     Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
-
-    // number of cycles stalled for D-cache retries
-    Stats::Scalar dcacheRetryCycles;
-    Counter lastDcacheRetry;
 
     /// @{
     /// Total number of branches fetched

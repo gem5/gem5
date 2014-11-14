@@ -126,6 +126,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
       interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system),
+      functionTraceStream(nullptr), currentFunctionStart(0),
+      currentFunctionEnd(0), functionEntryTick(0),
       addressMonitor()
 {
     // if Python did not provide a valid ID, do it here

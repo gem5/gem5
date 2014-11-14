@@ -76,7 +76,8 @@ Fetch2::Fetch2(const std::string &name,
     lastStreamSeqNum(InstId::firstStreamSeqNum),
     fetchSeqNum(InstId::firstFetchSeqNum),
     expectedStreamSeqNum(InstId::firstStreamSeqNum),
-    predictionSeqNum(InstId::firstPredictionSeqNum)
+    predictionSeqNum(InstId::firstPredictionSeqNum),
+    blocked(false)
 {
     if (outputWidth < 1)
         fatal("%s: decodeInputWidth must be >= 1 (%d)\n", name, outputWidth);

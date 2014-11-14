@@ -59,7 +59,7 @@ using namespace std;
 using namespace TheISA;
 
 RealView::RealView(const Params *p)
-    : Platform(p), system(p->system)
+    : Platform(p), system(p->system), gic(nullptr)
 {}
 
 void

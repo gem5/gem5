@@ -108,7 +108,7 @@ Stage2MMU::readDataTimed(ThreadContext *tc, Addr descAddr,
 
 Stage2MMU::Stage2Translation::Stage2Translation(Stage2MMU &_parent,
         uint8_t *_data, Event *_event, Addr _oVAddr)
-    : data(_data), event(_event), parent(_parent), oVAddr(_oVAddr),
+    : data(_data), numBytes(0), event(_event), parent(_parent), oVAddr(_oVAddr),
     fault(NoFault)
 {
 }

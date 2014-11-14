@@ -61,9 +61,9 @@ using namespace ArmISA;
 using namespace Linux;
 
 LinuxArmSystem::LinuxArmSystem(Params *p)
-    : ArmSystem(p),
+    : ArmSystem(p), dumpStatsPCEvent(nullptr),
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
-      kernelPanicEvent(NULL), kernelOopsEvent(NULL),
+      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr),
       bootReleaseAddr(p->boot_release_addr)
 {
     if (p->panic_on_panic) {

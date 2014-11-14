@@ -106,7 +106,7 @@ class TableWalker : public MemObject
         bool _dirty;
 
         /** Default ctor */
-        L1Descriptor()
+        L1Descriptor() : data(0), _dirty(false)
         {
             lookupLevel = L1;
         }
@@ -250,12 +250,13 @@ class TableWalker : public MemObject
         bool _dirty;
 
         /** Default ctor */
-        L2Descriptor()
+        L2Descriptor() : data(0), l1Parent(nullptr), _dirty(false)
         {
             lookupLevel = L2;
         }
 
-        L2Descriptor(L1Descriptor &parent) : l1Parent(&parent)
+        L2Descriptor(L1Descriptor &parent) : data(0), l1Parent(&parent),
+                                             _dirty(false)
         {
             lookupLevel = L2;
         }

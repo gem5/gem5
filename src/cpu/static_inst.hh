@@ -247,7 +247,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// instruction.
     StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
         : _opClass(__opClass), _numSrcRegs(0), _numDestRegs(0),
-          _numFPDestRegs(0), _numIntDestRegs(0),
+          _numFPDestRegs(0), _numIntDestRegs(0), _numCCDestRegs(0),
           machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
     { }
 

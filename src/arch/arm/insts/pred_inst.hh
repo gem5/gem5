@@ -312,7 +312,7 @@ class PredMacroOp : public PredOp
     /// Constructor
     PredMacroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 PredOp(mnem, _machInst, __opClass),
-                numMicroops(0)
+                numMicroops(0), microOps(nullptr)
     {
         // We rely on the subclasses of this object to handle the
         // initialization of the micro-operations, since they are

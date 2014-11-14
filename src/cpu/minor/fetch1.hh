@@ -251,12 +251,6 @@ class Fetch1 : public Named
      *  prediction sequence numbers. */
     InstSeqNum predictionSeqNum;
 
-    /** The sequence number expected for the next returned cache line.  The
-     *  responses queue should be ordered and so, if the front of that queue
-     *  has a lower lineSeqNum than this, lines need to be discarded.  If it
-     *  has a higher lineSeqNum, our line hasn't appeared yet */
-    InstSeqNum expectedLineSeqNum;
-
     /** Blocked indication for report */
     bool blocked;
 

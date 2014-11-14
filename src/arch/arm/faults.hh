@@ -172,7 +172,8 @@ class ArmFault : public FaultBase
     };
 
     ArmFault(ExtMachInst _machInst = 0, uint32_t _iss = 0) :
-        machInst(_machInst), issRaw(_iss), from64(false), to64(false) {}
+        machInst(_machInst), issRaw(_iss), from64(false), to64(false),
+        fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED) {}
 
     // Returns the actual syndrome register to use based on the target
     // exception level
@@ -395,9 +396,11 @@ class AbortFault : public ArmFaultVals<T>
     ArmFault::TranMethod tranMethod;
 
   public:
-    AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain, uint8_t _source,
-               bool _stage2, ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran) :
-        faultAddr(_faultAddr), write(_write), domain(_domain), source(_source),
+    AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
+               uint8_t _source, bool _stage2,
+               ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran) :
+        faultAddr(_faultAddr), OVAddr(0), write(_write),
+        domain(_domain), source(_source), srcEncoded(0),
         stage2(_stage2), s1ptw(false), tranMethod(_tranMethod)
     {}
 

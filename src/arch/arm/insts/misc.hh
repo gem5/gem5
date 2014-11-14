@@ -294,7 +294,6 @@ class RegImmImmOp : public PredOp
 {
   protected:
     IntRegIndex dest;
-    IntRegIndex op1;
     uint64_t imm1;
     uint64_t imm2;
 

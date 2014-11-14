@@ -75,6 +75,8 @@ TLB::TLB(const ArmTLBParams *p)
       isStage2(p->is_stage2), stage2Req(false), _attr(0),
       directToStage2(false), tableWalker(p->walker), stage2Tlb(NULL),
       stage2Mmu(NULL), rangeMRU(1), bootUncacheability(false),
+      aarch64(false), aarch64EL(EL0), isPriv(false), isSecure(false),
+      isHyp(false), asid(0), vmid(0), dacr(0),
       miscRegValid(false), curTranType(NormalTran)
 {
     tableWalker->setTlb(this);

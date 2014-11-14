@@ -1281,7 +1281,10 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
                              RegIndex rm, uint8_t eSize, uint8_t dataSize,
                              uint8_t numStructElems, uint8_t index, bool wb,
                              bool replicate) :
-    PredMacroOp(mnem, machInst, __opClass)
+    PredMacroOp(mnem, machInst, __opClass),
+    eSize(0), dataSize(0), numStructElems(0), index(0),
+    wb(false), replicate(false)
+
 {
     RegIndex vx = NumFloatV8ArchRegs / 4;
     RegIndex rnsp = (RegIndex) makeSP((IntRegIndex) rn);
@@ -1352,7 +1355,9 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
                              RegIndex rm, uint8_t eSize, uint8_t dataSize,
                              uint8_t numStructElems, uint8_t index, bool wb,
                              bool replicate) :
-    PredMacroOp(mnem, machInst, __opClass)
+    PredMacroOp(mnem, machInst, __opClass),
+    eSize(0), dataSize(0), numStructElems(0), index(0),
+    wb(false), replicate(false)
 {
     RegIndex vx = NumFloatV8ArchRegs / 4;
     RegIndex rnsp = (RegIndex) makeSP((IntRegIndex) rn);

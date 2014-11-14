@@ -60,7 +60,8 @@ Decode::Decode(const std::string &name,
     inputBuffer(name + ".inputBuffer", "insts", params.decodeInputBufferSize),
     inputIndex(0),
     inMacroop(false),
-    execSeqNum(InstId::firstExecSeqNum)
+    execSeqNum(InstId::firstExecSeqNum),
+    blocked(false)
 {
     if (outputWidth < 1)
         fatal("%s: executeInputWidth must be >= 1 (%d)\n", name, outputWidth);

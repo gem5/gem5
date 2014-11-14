@@ -95,7 +95,7 @@ PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
     // Flag the event as available in the PMCEID register if it is an
     // architected event.
     if (id < 0x40)
-        reg_pmceid |= (1 << id);
+        reg_pmceid |= (ULL(1) << id);
 }
 
 void

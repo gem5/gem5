@@ -67,7 +67,6 @@ class ArmLiveProcess : public LiveProcess
 class ArmLiveProcess32 : public ArmLiveProcess
 {
   protected:
-    ObjectFile::Arch arch;
     ArmLiveProcess32(LiveProcessParams * params, ObjectFile *objFile,
                      ObjectFile::Arch _arch);
 
@@ -84,7 +83,6 @@ class ArmLiveProcess32 : public ArmLiveProcess
 class ArmLiveProcess64 : public ArmLiveProcess
 {
   protected:
-    ObjectFile::Arch arch;
     ArmLiveProcess64(LiveProcessParams * params, ObjectFile *objFile,
                      ObjectFile::Arch _arch);
 

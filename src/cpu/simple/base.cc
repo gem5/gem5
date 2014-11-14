@@ -88,7 +88,8 @@ using namespace TheISA;
 BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     : BaseCPU(p),
       branchPred(p->branchPred),
-      traceData(NULL), thread(NULL)
+      traceData(NULL), thread(NULL), _status(Idle), interval_stats(false),
+      inst()
 {
     if (FullSystem)
         thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb,
@@ -264,18 +265,6 @@ BaseSimpleCPU::regStats()
         .name(name() + ".dcache_stall_cycles")
         .desc("DCache total stall cycles")
         .prereq(dcacheStallCycles)
-        ;
-
-    icacheRetryCycles
-        .name(name() + ".icache_retry_cycles")
-        .desc("ICache total retry cycles")
-        .prereq(icacheRetryCycles)
-        ;
-
-    dcacheRetryCycles
-        .name(name() + ".dcache_retry_cycles")
-        .desc("DCache total retry cycles")
-        .prereq(dcacheRetryCycles)
         ;
 
     statExecutedInstType

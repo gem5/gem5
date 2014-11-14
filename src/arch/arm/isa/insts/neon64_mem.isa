@@ -185,7 +185,8 @@ let {{
         if name == 'deint_neon_uop':
 
             eCode = '''
-                VReg input[4];  // input data from scratch area
+                // input data from scratch area
+                VReg input[4] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
                 VReg output[2];  // output data to arch. SIMD regs
                 VReg temp;
                 temp.lo = 0;
@@ -270,7 +271,8 @@ let {{
         elif name == 'int_neon_uop':
 
             eCode = '''
-                VReg input[4];  // input data from arch. SIMD regs
+                // input data from arch. SIMD regs
+                VReg input[4] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
                 VReg output[2];  // output data to scratch area
             '''
 
@@ -332,7 +334,8 @@ let {{
         elif name == 'unpack_neon_uop':
 
             eCode = '''
-                VReg input[4];  //input data from scratch area
+                //input data from scratch area
+                VReg input[4] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
                 VReg output[2];  //output data to arch. SIMD regs
             '''
 
@@ -398,7 +401,8 @@ let {{
         elif name == 'pack_neon_uop':
 
             eCode = '''
-                VReg input[4];  // input data from arch. SIMD regs
+                // input data from arch. SIMD regs
+                VReg input[4] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
                 VReg output[2];  // output data to scratch area
             '''
 

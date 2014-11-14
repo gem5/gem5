@@ -90,7 +90,8 @@ struct O3ThreadState : public ThreadState {
 
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
         : ThreadState(_cpu, _thread_num, _process),
-          cpu(_cpu), noSquashFromTC(false), trapPending(false)
+          cpu(_cpu), noSquashFromTC(false), trapPending(false),
+          tc(nullptr)
     {
         if (!FullSystem)
             return;

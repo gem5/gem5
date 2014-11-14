@@ -47,8 +47,8 @@ class PCStateBase
     Addr _pc;
     Addr _npc;
 
-    PCStateBase() {}
-    PCStateBase(Addr val) { set(val); }
+    PCStateBase() : _pc(0), _npc(0) {}
+    PCStateBase(Addr val) : _pc(0), _npc(0) { set(val); }
 
   public:
     /**
@@ -206,8 +206,8 @@ class UPCState : public SimplePCState<MachInst>
         nupc(1);
     }
 
-    UPCState() {}
-    UPCState(Addr val) { set(val); }
+    UPCState() : _upc(0), _nupc(0) {}
+    UPCState(Addr val) : _upc(0), _nupc(0) { set(val); }
 
     bool
     branching() const

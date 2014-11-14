@@ -90,7 +90,15 @@ TableWalker::~TableWalker()
     ;
 }
 
-TableWalker::WalkerState::WalkerState() : stage2Tran(NULL), l2Desc(l1Desc)
+TableWalker::WalkerState::WalkerState() :
+    tc(nullptr), aarch64(false), el(EL0), physAddrRange(0), req(nullptr),
+    asid(0), vmid(0), isHyp(false), transState(nullptr),
+    vaddr(0), vaddr_tainted(0), isWrite(false), isFetch(false), isSecure(false),
+    secureLookup(false), rwTable(false), userTable(false), xnTable(false),
+    pxnTable(false), stage2Req(false), doingStage2(false),
+    stage2Tran(nullptr), timing(false), functional(false),
+    mode(BaseTLB::Read), tranType(TLB::NormalTran), l2Desc(l1Desc),
+    delayed(false), tableWalker(nullptr)
 {
 }
 

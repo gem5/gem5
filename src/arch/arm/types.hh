@@ -223,7 +223,8 @@ namespace ArmISA
         uint8_t _nextItstate;
         uint8_t _size;
       public:
-        PCState() : flags(0), nextFlags(0), _itstate(0), _nextItstate(0)
+        PCState() : flags(0), nextFlags(0), _itstate(0), _nextItstate(0),
+                    _size(0)
         {}
 
         void
@@ -233,7 +234,8 @@ namespace ArmISA
             npc(val + (thumb() ? 2 : 4));
         }
 
-        PCState(Addr val) : flags(0), nextFlags(0), _itstate(0), _nextItstate(0)
+        PCState(Addr val) : flags(0), nextFlags(0), _itstate(0),
+                            _nextItstate(0), _size(0)
         { set(val); }
 
         bool

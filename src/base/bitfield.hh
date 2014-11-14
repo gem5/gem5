@@ -92,7 +92,7 @@ mask(int first, int last)
  */
 template <int N>
 inline
-int64_t
+uint64_t
 sext(uint64_t val)
 {
     int sign_bit = bits(val, N-1, N-1);
