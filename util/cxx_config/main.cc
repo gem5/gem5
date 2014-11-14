@@ -88,7 +88,7 @@ usage(const std::string &prog_name)
         "    -s <dir> <ticks>             -- save checkpoint to dir after"
         " the given\n"
         "                                    number of ticks\n"
-        "    -r <dir>                     -- restore checkpoint to dir\n"
+        "    -r <dir>                     -- restore checkpoint from dir\n"
         "    -c <from> <to> <ticks>       -- switch from cpu 'from' to cpu"
         " 'to' after\n"
         "                                    the given number of ticks\n"
@@ -226,7 +226,6 @@ main(int argc, char **argv)
     GlobalSimLoopExitEvent *exit_event = NULL;
 
     if (checkpoint_save) {
-
         exit_event = simulate(pre_run_time);
 
         DrainManager drain_manager;
@@ -265,6 +264,7 @@ main(int argc, char **argv)
 
         Serializable::unserializeGlobals(checkpoint);
         config_manager->loadState(checkpoint);
+        config_manager->startup();
 
         config_manager->drainResume();
 
