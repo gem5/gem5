@@ -71,7 +71,10 @@ class DRAMCtrl(AbstractMemory):
     # bus in front of the controller for multiple ports
     port = SlavePort("Slave port")
 
-    # the basic configuration of the controller architecture
+    # the basic configuration of the controller architecture, note
+    # that each entry corresponds to a burst for the specific DRAM
+    # configuration (e.g. x32 with burst length 8 is 32 bytes) and not
+    # the cacheline size or request/packet size
     write_buffer_size = Param.Unsigned(64, "Number of write queue entries")
     read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
 
