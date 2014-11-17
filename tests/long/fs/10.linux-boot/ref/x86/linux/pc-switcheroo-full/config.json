@@ -2,7 +2,7 @@
     "name": null, 
     "sim_quantum": 0, 
     "system": {
-        "kernel": "/scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9", 
+        "kernel": "/usr/local/google/home/gabeblack/gem5/x86_system_files/binaries/x86_64-vmlinux-2.6.22.9", 
         "l2c": {
             "is_top_level": false, 
             "prefetcher": null, 
@@ -145,7 +145,7 @@
             "type": "Bridge"
         }, 
         "symbolfile": "", 
-        "readfile": "/scratch/nilay/GEM5/gem5/tests/halt.sh", 
+        "readfile": "/usr/local/google/home/gabeblack/gem5/hg/gem5/tests/halt.sh", 
         "intel_mp_table": {
             "oem_table_addr": 0, 
             "name": "intel_mp_table", 
@@ -1176,7 +1176,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks0.image.child", 
-                                    "image_file": "/scratch/nilay/GEM5/system/disks/linux-x86.img", 
+                                    "image_file": "/usr/local/google/home/gabeblack/gem5/x86_system_files/disks/linux-x86.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks0.image", 
@@ -1204,7 +1204,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks1.image.child", 
-                                    "image_file": "/scratch/nilay/GEM5/system/disks/linux-bigswap2.img", 
+                                    "image_file": "/usr/local/google/home/gabeblack/gem5/x86_system_files/disks/linux-bigswap2.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks1.image", 
@@ -1629,8 +1629,9 @@
                 "IDD3N": "0.057", 
                 "name": "physmem", 
                 "tXSDLL": 0, 
-                "tXAW": 30000, 
+                "device_size": 536870912, 
                 "dll": true, 
+                "tXAW": 30000, 
                 "write_low_thresh_perc": 50, 
                 "range": "0:134217727", 
                 "VDD2": "0.0", 
