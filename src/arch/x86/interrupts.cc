@@ -491,8 +491,6 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             }
             low = val;
             InterruptCommandRegHigh high = regs[APIC_INTERRUPT_COMMAND_HIGH];
-            // Record that an IPI is being sent.
-            low.deliveryStatus = 1;
             TriggerIntMessage message = 0;
             message.destination = high.destination;
             message.vector = low.vector;
@@ -500,9 +498,6 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             message.destMode = low.destMode;
             message.level = low.level;
             message.trigger = low.trigger;
-            bool timing(sys->isTimingMode());
-            // Be careful no updates of the delivery status bit get lost.
-            regs[APIC_INTERRUPT_COMMAND_LOW] = low;
             ApicList apics;
             int numContexts = sys->numContexts();
             switch (low.destShorthand) {
@@ -558,8 +553,13 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 }
                 break;
             }
-            pendingIPIs += apics.size();
-            intMasterPort.sendMessage(apics, message, timing);
+            // Record that an IPI is being sent if one actually is.
+            if (apics.size()) {
+                low.deliveryStatus = 1;
+                pendingIPIs += apics.size();
+            }
+            regs[APIC_INTERRUPT_COMMAND_LOW] = low;
+            intMasterPort.sendMessage(apics, message, sys->isTimingMode());
             newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
         }
         break;
