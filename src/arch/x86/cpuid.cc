@@ -131,7 +131,7 @@ namespace X86ISA {
                                      0x69746e65, 0x444d4163);
                 break;
               case LongModeAddressSize:
-                result = CpuidResult(0x0000ffff, 0x00000000,
+                result = CpuidResult(0x00003030, 0x00000000,
                                      0x00000000, 0x00000000);
                 break;
 /*            case SVMInfo:
