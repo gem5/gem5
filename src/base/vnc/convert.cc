@@ -52,8 +52,10 @@ VideoConvert::VideoConvert(Mode input_mode, Mode output_mode, int _width,
     : inputMode(input_mode), outputMode(output_mode), width(_width),
     height(_height)
 {
-    if (inputMode != bgr565 && inputMode != rgb565 && inputMode != bgr8888)
-        fatal("Only support converting from bgr565, rdb565, and bgr8888\n");
+    if (inputMode != bgr565 && inputMode != rgb565 &&
+        inputMode != bgr8888 && inputMode != bgr888)
+        fatal("Only support converting from bgr565, rdb565, "
+              "bgr8888 and bgr888\n");
 
     if (outputMode != rgb8888)
         fatal("Only support converting to rgb8888\n");
@@ -76,6 +78,8 @@ VideoConvert::convert(const uint8_t *fb) const
         return m565rgb8888(fb, false);
       case bgr8888:
         return bgr8888rgb8888(fb);
+      case bgr888:
+        return bgr888rgb8888(fb);
       default:
         panic("Unimplemented Mode\n");
     }
@@ -136,6 +140,29 @@ VideoConvert::bgr8888rgb8888(const uint8_t *fb) const
 
     return out;
 }
+
+uint8_t*
+VideoConvert::bgr888rgb8888(const uint8_t *fb) const
+{
+    uint8_t *out = new uint8_t[area() * sizeof(uint32_t)];
+    uint32_t *out32 = (uint32_t*)out;
+
+    typedef uint8_t In24[3];
+    const In24 *in24 = (In24 *)fb;
+    for (int x = 0; x < area(); x++) {
+        Rgb8888 outpx = 0;
+
+        outpx.blue = in24[x][0];
+        outpx.green = in24[x][1];
+        outpx.red = in24[x][2];
+        outpx.alpha = 0xFF;
+
+        out32[x] = outpx;
+    }
+
+    return out;
+}
+
 /*
 uint64_t
 VideoConvert::getHash(const uint8_t *fb) const

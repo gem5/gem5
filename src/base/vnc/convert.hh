@@ -134,6 +134,13 @@ class VideoConvert
     uint8_t* bgr8888rgb8888(const uint8_t *fb) const;
 
     /**
+     * Convert a bgr888 input to rgb8888.
+     * @param fb the data to convert
+     * @return converted data
+     */
+    uint8_t* bgr888rgb8888(const uint8_t *fb) const;
+
+    /**
      * Convert a bgr565 or rgb565 input to rgb8888.
      * @param fb the data to convert
      * @param bgr true if the input data is bgr565
