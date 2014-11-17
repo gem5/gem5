@@ -180,7 +180,7 @@ class Interrupts : public BasicPioDevice, IntDevice
     bool
     getRegArrayBit(ApicRegIndex base, uint8_t vector)
     {
-        return bits(regs[base + (vector / 32)], vector % 5);
+        return bits(regs[base + (vector / 32)], vector % 32);
     }
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
