@@ -162,11 +162,11 @@ def macroop JMP_FAR_REAL_I
     limm t3, dsz, dataSize=8
     slli t3, t3, 3, dataSize=8
     # Get the selector into t1.
-    sll t1, t2, t3, dataSize=8
+    srl t1, t2, t3, dataSize=8
     mov t1, t0, t1, dataSize=2
     # And get the offset into t2
     mov t2, t0, t2
-    slli t3, t3, 4, dataSize=8
+    slli t3, t1, 4, dataSize=8
     wrsel cs, t1, dataSize=2
     wrbase cs, t3
     wrip t0, t2, dataSize=asz
