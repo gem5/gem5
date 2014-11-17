@@ -145,7 +145,7 @@ def macroop JMP_FAR_REAL_M
     zexti t3, t1, 15, dataSize=8
     slli t3, t3, 4, dataSize=8
     wrsel cs, t1, dataSize=2
-    wrbase cs, t3
+    wrbase cs, t3, dataSize=8
     wrip t0, t2, dataSize=asz
 };
 
@@ -168,7 +168,7 @@ def macroop JMP_FAR_REAL_I
     mov t2, t0, t2
     slli t3, t1, 4, dataSize=8
     wrsel cs, t1, dataSize=2
-    wrbase cs, t3
+    wrbase cs, t3, dataSize=8
     wrip t0, t2, dataSize=asz
 };
 '''

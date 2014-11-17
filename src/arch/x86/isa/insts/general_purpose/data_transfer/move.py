@@ -215,7 +215,7 @@ def macroop MOV_REAL_S_R {
     zexti t2, regm, 15, dataSize=8
     slli t3, t2, 4, dataSize=8
     wrsel reg, regm
-    wrbase reg, t3
+    wrbase reg, t3, dataSize=8
 };
 
 def macroop MOV_REAL_S_M {
@@ -223,7 +223,7 @@ def macroop MOV_REAL_S_M {
     zexti t2, t1, 15, dataSize=8
     slli t3, t2, 4, dataSize=8
     wrsel reg, t1
-    wrbase reg, t3
+    wrbase reg, t3, dataSize=8
 };
 
 def macroop MOV_REAL_S_P {
