@@ -132,6 +132,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 void
 SimpleNetwork::regStats()
 {
+    Network::regStats();
+
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
         m_msg_counts[(unsigned int) type]

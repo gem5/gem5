@@ -112,6 +112,8 @@ Switch::getThrottle(LinkID link_number) const
 void
 Switch::regStats()
 {
+    BasicRouter::regStats();
+
     for (int link = 0; link < m_throttles.size(); link++) {
         m_throttles[link]->regStats(name());
     }

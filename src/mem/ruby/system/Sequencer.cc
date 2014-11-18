@@ -688,6 +688,8 @@ Sequencer::evictionCallback(Addr address)
 void
 Sequencer::regStats()
 {
+    RubyPort::regStats();
+
     m_store_waiting_on_load
         .name(name() + ".store_waiting_on_load")
         .desc("Number of times a store aliased with a pending load")
