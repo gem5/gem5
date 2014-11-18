@@ -200,10 +200,10 @@ class Pl111: public AmbaDmaDevice
     TimingReg3 lcdTiming3;
 
     /** Upper panel frame base address register */
-    int lcdUpbase;
+    uint32_t lcdUpbase;
 
     /** Lower panel frame base address register */
-    int lcdLpbase;
+    uint32_t lcdLpbase;
 
     /** Control register */
     ControlReg lcdControl;
@@ -219,27 +219,27 @@ class Pl111: public AmbaDmaDevice
 
     /** 256x16-bit color palette registers
      * 256 palette entries organized as 128 locations of two entries per word */
-    int lcdPalette[LcdPaletteSize];
+    uint32_t lcdPalette[LcdPaletteSize];
 
     /** Cursor image RAM register
      * 256-word wide values defining images overlaid by the hw cursor mechanism */
-    int cursorImage[CrsrImageSize];
+    uint32_t cursorImage[CrsrImageSize];
 
     /** Cursor control register */
-    int clcdCrsrCtrl;
+    uint32_t clcdCrsrCtrl;
 
     /** Cursor configuration register */
-    int clcdCrsrConfig;
+    uint32_t clcdCrsrConfig;
 
     /** Cursor palette registers */
-    int clcdCrsrPalette0;
-    int clcdCrsrPalette1;
+    uint32_t clcdCrsrPalette0;
+    uint32_t clcdCrsrPalette1;
 
     /** Cursor XY position register */
-    int clcdCrsrXY;
+    uint32_t clcdCrsrXY;
 
     /** Cursor clip position register */
-    int clcdCrsrClip;
+    uint32_t clcdCrsrClip;
 
     /** Cursor interrupt mask set/clear register */
     InterruptReg clcdCrsrImsc;
@@ -290,10 +290,10 @@ class Pl111: public AmbaDmaDevice
     Addr curAddr;
 
     /** DMA FIFO watermark */
-    int waterMark;
+    uint32_t waterMark;
 
     /** Number of pending dma reads */
-    int dmaPendingNum;
+    uint32_t dmaPendingNum;
 
     /** Send updated parameters to the vnc server */
     void updateVideoParams();
