@@ -225,7 +225,6 @@ if options.ruby:
         print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
         sys.exit(1)
 
-    options.use_map = True
     Ruby.create_system(options, False, system)
     assert(options.num_cpus == len(system.ruby._cpu_ports))
 

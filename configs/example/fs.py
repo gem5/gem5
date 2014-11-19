@@ -142,6 +142,10 @@ def build_test_system(np):
         test_sys.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
                                         voltage_domain = test_sys.voltage_domain)
 
+        # Connect the ruby io port to the PIO bus,
+        # assuming that there is just one such port.
+        test_sys.iobus.master = test_sys.ruby._io_port.slave
+
         for (i, cpu) in enumerate(test_sys.cpu):
             #
             # Tie the cpu ports to the correct ruby system ports
@@ -160,10 +164,6 @@ def build_test_system(np):
                 cpu.interrupts.pio = test_sys.ruby._cpu_ports[i].master
                 cpu.interrupts.int_master = test_sys.ruby._cpu_ports[i].slave
                 cpu.interrupts.int_slave = test_sys.ruby._cpu_ports[i].master
-
-            # Connect the ruby io port to the PIO bus,
-            # assuming that there is just one such port.
-            test_sys.iobus.master = test_sys.ruby._io_port.slave
 
     else:
         if options.caches or options.l2cache:
