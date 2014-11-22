@@ -49,8 +49,9 @@ class Pc(Platform):
 
     south_bridge = SouthBridge()
 
-    # "Non-existant" port used for timing purposes by the linux kernel
-    i_dont_exist = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)
+    # "Non-existant" ports used for timing purposes by the linux kernel
+    i_dont_exist1 = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)
+    i_dont_exist2 = IsaFake(pio_addr=x86IOAddress(0xed), pio_size=1)
 
     # Ports behind the pci config and data regsiters. These don't do anything,
     # but the linux kernel fiddles with them anway.
@@ -71,7 +72,8 @@ class Pc(Platform):
 
     def attachIO(self, bus, dma_ports = []):
         self.south_bridge.attachIO(bus, dma_ports)
-        self.i_dont_exist.pio = bus.master
+        self.i_dont_exist1.pio = bus.master
+        self.i_dont_exist2.pio = bus.master
         self.behind_pci.pio = bus.master
         self.com_1.pio = bus.master
         self.fake_com_2.pio = bus.master
