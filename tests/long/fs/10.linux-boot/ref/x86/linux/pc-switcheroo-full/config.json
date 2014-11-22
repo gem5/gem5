@@ -2,7 +2,7 @@
     "name": null, 
     "sim_quantum": 0, 
     "system": {
-        "kernel": "/usr/local/google/home/gabeblack/gem5/x86_system_files/binaries/x86_64-vmlinux-2.6.22.9", 
+        "kernel": "/usr/local/google/home/gabeblack/gem5/dist/m5/system/binaries/x86_64-vmlinux-2.6.22.9", 
         "l2c": {
             "is_top_level": false, 
             "prefetcher": null, 
@@ -106,7 +106,8 @@
                     "system.pc.south_bridge.pit.pio", 
                     "system.pc.south_bridge.speaker.pio", 
                     "system.pc.south_bridge.io_apic.pio", 
-                    "system.pc.i_dont_exist.pio", 
+                    "system.pc.i_dont_exist1.pio", 
+                    "system.pc.i_dont_exist2.pio", 
                     "system.pc.behind_pci.pio", 
                     "system.pc.com_1.pio", 
                     "system.pc.fake_com_2.pio", 
@@ -667,7 +668,7 @@
             "type": "BaseCache", 
             "sequential_access": false, 
             "cpu_side": {
-                "peer": "system.iobus.master[18]", 
+                "peer": "system.iobus.master[19]", 
                 "role": "SLAVE"
             }, 
             "two_queue": false
@@ -791,7 +792,7 @@
                 "name": "fake_com_4", 
                 "warn_access": "", 
                 "pio": {
-                    "peer": "system.iobus.master[16]", 
+                    "peer": "system.iobus.master[17]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
@@ -833,7 +834,7 @@
                 "name": "fake_com_2", 
                 "warn_access": "", 
                 "pio": {
-                    "peer": "system.iobus.master[14]", 
+                    "peer": "system.iobus.master[15]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
@@ -1176,7 +1177,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks0.image.child", 
-                                    "image_file": "/usr/local/google/home/gabeblack/gem5/x86_system_files/disks/linux-x86.img", 
+                                    "image_file": "/usr/local/google/home/gabeblack/gem5/dist/m5/system/disks/linux-x86.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks0.image", 
@@ -1204,7 +1205,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks1.image.child", 
-                                    "image_file": "/usr/local/google/home/gabeblack/gem5/x86_system_files/disks/linux-bigswap2.img", 
+                                    "image_file": "/usr/local/google/home/gabeblack/gem5/dist/m5/system/disks/linux-bigswap2.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks1.image", 
@@ -1323,7 +1324,7 @@
                 "name": "fake_floppy", 
                 "warn_access": "", 
                 "pio": {
-                    "peer": "system.iobus.master[17]", 
+                    "peer": "system.iobus.master[18]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
@@ -1341,12 +1342,60 @@
                 "type": "IsaFake", 
                 "ret_data16": 65535
             }, 
+            "i_dont_exist2": {
+                "system": "system", 
+                "ret_data8": 255, 
+                "name": "i_dont_exist2", 
+                "warn_access": "", 
+                "pio": {
+                    "peer": "system.iobus.master[12]", 
+                    "role": "SLAVE"
+                }, 
+                "ret_bad_addr": false, 
+                "pio_latency": 100000, 
+                "clk_domain": "system.clk_domain", 
+                "fake_mem": false, 
+                "pio_size": 1, 
+                "ret_data32": 4294967295, 
+                "eventq_index": 0, 
+                "update_data": false, 
+                "ret_data64": 18446744073709551615, 
+                "cxx_class": "IsaFake", 
+                "path": "system.pc.i_dont_exist2", 
+                "pio_addr": 9223372036854776045, 
+                "type": "IsaFake", 
+                "ret_data16": 65535
+            }, 
             "system": "system", 
+            "i_dont_exist1": {
+                "system": "system", 
+                "ret_data8": 255, 
+                "name": "i_dont_exist1", 
+                "warn_access": "", 
+                "pio": {
+                    "peer": "system.iobus.master[11]", 
+                    "role": "SLAVE"
+                }, 
+                "ret_bad_addr": false, 
+                "pio_latency": 100000, 
+                "clk_domain": "system.clk_domain", 
+                "fake_mem": false, 
+                "pio_size": 1, 
+                "ret_data32": 4294967295, 
+                "eventq_index": 0, 
+                "update_data": false, 
+                "ret_data64": 18446744073709551615, 
+                "cxx_class": "IsaFake", 
+                "path": "system.pc.i_dont_exist1", 
+                "pio_addr": 9223372036854775936, 
+                "type": "IsaFake", 
+                "ret_data16": 65535
+            }, 
             "intrctrl": "system.intrctrl", 
             "com_1": {
                 "name": "com_1", 
                 "pio": {
-                    "peer": "system.iobus.master[13]", 
+                    "peer": "system.iobus.master[14]", 
                     "role": "SLAVE"
                 }, 
                 "pio_latency": 100000, 
@@ -1379,7 +1428,7 @@
                 "name": "behind_pci", 
                 "warn_access": "", 
                 "pio": {
-                    "peer": "system.iobus.master[12]", 
+                    "peer": "system.iobus.master[13]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 
@@ -1398,37 +1447,13 @@
                 "ret_data16": 65535
             }, 
             "type": "Pc", 
-            "i_dont_exist": {
-                "system": "system", 
-                "ret_data8": 255, 
-                "name": "i_dont_exist", 
-                "warn_access": "", 
-                "pio": {
-                    "peer": "system.iobus.master[11]", 
-                    "role": "SLAVE"
-                }, 
-                "ret_bad_addr": false, 
-                "pio_latency": 100000, 
-                "clk_domain": "system.clk_domain", 
-                "fake_mem": false, 
-                "pio_size": 1, 
-                "ret_data32": 4294967295, 
-                "eventq_index": 0, 
-                "update_data": false, 
-                "ret_data64": 18446744073709551615, 
-                "cxx_class": "IsaFake", 
-                "path": "system.pc.i_dont_exist", 
-                "pio_addr": 9223372036854775936, 
-                "type": "IsaFake", 
-                "ret_data16": 65535
-            }, 
             "fake_com_3": {
                 "system": "system", 
                 "ret_data8": 255, 
                 "name": "fake_com_3", 
                 "warn_access": "", 
                 "pio": {
-                    "peer": "system.iobus.master[15]", 
+                    "peer": "system.iobus.master[16]", 
                     "role": "SLAVE"
                 }, 
                 "ret_bad_addr": false, 

@@ -4,11 +4,11 @@ sim_seconds                                  5.125902                       # Nu
 sim_ticks                                5125902116500                       # Number of ticks simulated
 final_tick                               5125902116500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 225212                       # Simulator instruction rate (inst/s)
-host_op_rate                                   445179                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2829401321                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 748772                       # Number of bytes of host memory used
-host_seconds                                  1811.66                       # Real time elapsed on the host
+host_inst_rate                                 226565                       # Simulator instruction rate (inst/s)
+host_op_rate                                   447853                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2846393388                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 748824                       # Number of bytes of host memory used
+host_seconds                                  1800.84                       # Real time elapsed on the host
 sim_insts                                   408006726                       # Number of instructions simulated
 sim_ops                                     806511598                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1342,7 +1342,7 @@ system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.pic2.pio    
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.speaker.pio       427356                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.io_apic.pio         1210                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.pc.i_dont_exist.pio          170                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.pc.i_dont_exist1.pio          170                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.com_1.pio        27696                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
@@ -1366,7 +1366,7 @@ system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.pic2.pio     
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.speaker.pio       213678                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.io_apic.pio         2420                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.pc.i_dont_exist.pio           85                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.pc.i_dont_exist1.pio           85                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.com_1.pio        13848                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
@@ -1404,22 +1404,22 @@ system.iobus.reqLayer10.occupancy             1014000                       # La
 system.iobus.reqLayer10.utilization               0.0                       # Layer utilization (%)
 system.iobus.reqLayer11.occupancy              170000                       # Layer occupancy (ticks)
 system.iobus.reqLayer11.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer12.occupancy                2000                       # Layer occupancy (ticks)
-system.iobus.reqLayer12.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer13.occupancy            20719000                       # Layer occupancy (ticks)
+system.iobus.reqLayer13.occupancy                2000                       # Layer occupancy (ticks)
 system.iobus.reqLayer13.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer14.occupancy                9000                       # Layer occupancy (ticks)
+system.iobus.reqLayer14.occupancy            20719000                       # Layer occupancy (ticks)
 system.iobus.reqLayer14.utilization               0.0                       # Layer utilization (%)
 system.iobus.reqLayer15.occupancy                9000                       # Layer occupancy (ticks)
 system.iobus.reqLayer15.utilization               0.0                       # Layer utilization (%)
 system.iobus.reqLayer16.occupancy                9000                       # Layer occupancy (ticks)
 system.iobus.reqLayer16.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer17.occupancy               10000                       # Layer occupancy (ticks)
+system.iobus.reqLayer17.occupancy                9000                       # Layer occupancy (ticks)
 system.iobus.reqLayer17.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer18.occupancy           422009356                       # Layer occupancy (ticks)
+system.iobus.reqLayer18.occupancy               10000                       # Layer occupancy (ticks)
 system.iobus.reqLayer18.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer19.occupancy             1064000                       # Layer occupancy (ticks)
+system.iobus.reqLayer19.occupancy           422009356                       # Layer occupancy (ticks)
 system.iobus.reqLayer19.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer20.occupancy             1064000                       # Layer occupancy (ticks)
+system.iobus.reqLayer20.utilization               0.0                       # Layer utilization (%)
 system.iobus.respLayer0.occupancy           460543000                       # Layer occupancy (ticks)
 system.iobus.respLayer0.utilization               0.0                       # Layer utilization (%)
 system.iobus.respLayer1.occupancy            52362257                       # Layer occupancy (ticks)

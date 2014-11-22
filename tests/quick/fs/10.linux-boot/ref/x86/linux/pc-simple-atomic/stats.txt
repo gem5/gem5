@@ -4,11 +4,11 @@ sim_seconds                                  5.112155                       # Nu
 sim_ticks                                5112155173500                       # Number of ticks simulated
 final_tick                               5112155173500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1971048                       # Simulator instruction rate (inst/s)
-host_op_rate                                  4035436                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            50372945560                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 594916                       # Number of bytes of host memory used
-host_seconds                                   101.49                       # Real time elapsed on the host
+host_inst_rate                                1977176                       # Simulator instruction rate (inst/s)
+host_op_rate                                  4047982                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            50529549296                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 594968                       # Number of bytes of host memory used
+host_seconds                                   101.17                       # Real time elapsed on the host
 sim_insts                                   200033988                       # Number of instructions simulated
 sim_ops                                     409540726                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -506,7 +506,7 @@ system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.pic2.pio    
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.speaker.pio     19999988                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.io_apic.pio         1098                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.pc.i_dont_exist.pio          170                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.pc.i_dont_exist1.pio          170                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.com_1.pio        27812                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
@@ -530,7 +530,7 @@ system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.pic2.pio     
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.speaker.pio      9999994                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.io_apic.pio         2196                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.pc.i_dont_exist.pio           85                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.pc.i_dont_exist1.pio           85                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.com_1.pio        13906                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)

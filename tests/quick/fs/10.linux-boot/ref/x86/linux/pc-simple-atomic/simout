@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 16 2014 23:19:52
-gem5 started Nov 16 2014 23:20:03
+gem5 compiled Nov 19 2014 14:40:22
+gem5 started Nov 19 2014 14:41:52
 gem5 executing on gabeblackz620.mtv.corp.google.com
 command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/fs/10.linux-boot/x86/linux/pc-simple-atomic -re /usr/local/google/home/gabeblack/gem5/hg/gem5/tests/run.py build/X86/tests/opt/quick/fs/10.linux-boot/x86/linux/pc-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /usr/local/google/home/gabeblack/gem5/x86_system_files/binaries/x86_64-vmlinux-2.6.22.9
+info: kernel located at: /usr/local/google/home/gabeblack/gem5/dist/m5/system/binaries/x86_64-vmlinux-2.6.22.9
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 5112155173500 because m5_exit instruction encountered
