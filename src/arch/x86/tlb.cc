@@ -232,14 +232,21 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
 {
     Addr paddr = req->getPaddr();
 
-    // Check for an access to the local APIC
-    if (FullSystem) {
+    AddrRange m5opRange(0xFFFF0000, 0xFFFFFFFF);
+
+    if (m5opRange.contains(paddr)) {
+        if (m5opRange.contains(paddr)) {
+            req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR);
+            req->setPaddr(GenericISA::iprAddressPseudoInst(
+                            (paddr >> 8) & 0xFF,
+                            paddr & 0xFF));
+        }
+    } else if (FullSystem) {
+        // Check for an access to the local APIC
         LocalApicBase localApicBase =
             tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
         AddrRange apicRange(localApicBase.base * PageBytes,
                             (localApicBase.base + 1) * PageBytes - 1);
-
-        AddrRange m5opRange(0xFFFF0000, 0xFFFFFFFF);
 
         if (apicRange.contains(paddr)) {
             // The Intel developer's manuals say the below restrictions apply,
@@ -257,11 +264,6 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
             req->setFlags(Request::UNCACHEABLE);
             req->setPaddr(x86LocalAPICAddress(tc->contextId(),
                                               paddr - apicRange.start()));
-        } else if (m5opRange.contains(paddr)) {
-            req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR);
-            req->setPaddr(GenericISA::iprAddressPseudoInst(
-                              (paddr >> 8) & 0xFF,
-                              paddr & 0xFF));
         }
     }
 

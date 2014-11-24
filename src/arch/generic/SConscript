@@ -33,3 +33,4 @@ if env['TARGET_ISA'] == 'null':
 
 Source('decode_cache.cc')
 Source('mmapped_ipr.cc')
+Source('pseudo_inst.cc')

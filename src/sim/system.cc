@@ -324,6 +324,16 @@ System::allocPhysPages(int npages)
 {
     Addr return_addr = pagePtr << PageShift;
     pagePtr += npages;
+
+    Addr next_return_addr = pagePtr << PageShift;
+
+    AddrRange m5opRange(0xffff0000, 0xffffffff);
+    if (m5opRange.contains(next_return_addr)) {
+        warn("Reached m5ops MMIO region\n");
+        return_addr = 0xffffffff;
+        pagePtr = 0xffffffff >> PageShift;
+    }
+
     if ((pagePtr << PageShift) > physmem.totalSize())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;

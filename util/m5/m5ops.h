@@ -59,8 +59,11 @@
 #define reserved4_func          0x58 // Reserved for user
 #define reserved5_func          0x59 // Reserved for user
 
-#define work_begin_func          0x5a
-#define work_end_func            0x5b
+#define work_begin_func         0x5a
+#define work_end_func           0x5b
+
+#define syscall_func            0x60 // Reserved for user
+#define pagefault_func          0x61 // Reserved for user
 
 // These operations are for critical path annotation
 #define annotate_func     0x55

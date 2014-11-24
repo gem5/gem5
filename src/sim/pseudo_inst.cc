@@ -52,6 +52,7 @@
 #include "arch/kernel_stats.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
+#include "arch/pseudo_inst.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
@@ -64,6 +65,7 @@
 #include "debug/WorkItems.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
@@ -196,6 +198,15 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
       case 0x58: // reserved4_func
       case 0x59: // reserved5_func
         warn("Unimplemented m5 op (0x%x)\n", func);
+        break;
+
+      /* SE mode functions */
+      case 0x60: // syscall_func
+        m5Syscall(tc);
+        break;
+
+      case 0x61: // pagefault_func
+        m5PageFault(tc);
         break;
 
       default:

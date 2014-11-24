@@ -64,6 +64,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('pagetable.cc')
     Source('pagetable_walker.cc')
     Source('process.cc')
+    Source('pseudo_inst.cc')
     Source('remote_gdb.cc')
     Source('stacktrace.cc')
     Source('system.cc')

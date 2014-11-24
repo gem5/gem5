@@ -85,8 +85,14 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
         panic("KVM: Failed to determine host page size (%i)\n",
               errno);
 
-    thread = new SimpleThread(this, 0, params->system,
-                              params->itb, params->dtb, params->isa[0]);
+    if (FullSystem)
+        thread = new SimpleThread(this, 0, params->system, params->itb, params->dtb,
+                                  params->isa[0]);
+    else
+        thread = new SimpleThread(this, /* thread_num */ 0, params->system,
+                                  params->workload[0], params->itb,
+                                  params->dtb, params->isa[0]);
+
     thread->setStatus(ThreadContext::Halted);
     tc = thread->getTC();
     threadContexts.push_back(tc);
@@ -458,7 +464,7 @@ BaseKvmCPU::suspendContext(ThreadID thread_num)
     if (_status == Idle)
         return;
 
-    assert(_status == Running);
+    assert(_status == Running || _status == RunningServiceCompletion);
 
     // The tick event may no be scheduled if the quest has requested
     // the monitor to wait for interrupts. The normal CPU models can
@@ -1011,6 +1017,7 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
         const Cycles ipr_delay(write ?
                              TheISA::handleIprWrite(tc, &pkt) :
                              TheISA::handleIprRead(tc, &pkt));
+        threadContextDirty = true;
         return clockPeriod() * ipr_delay;
     } else {
         // Temporarily lock and migrate to the event queue of the
