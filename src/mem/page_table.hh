@@ -93,7 +93,8 @@ class PageTableBase
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
-    virtual void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false) = 0;
+    virtual void map(Addr vaddr, Addr paddr, int64_t size,
+                     bool clobber = false) = 0;
     virtual void remap(Addr vaddr, int64_t size, Addr new_vaddr) = 0;
     virtual void unmap(Addr vaddr, int64_t size) = 0;
 

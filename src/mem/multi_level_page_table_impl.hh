@@ -49,7 +49,8 @@ using namespace std;
 using namespace TheISA;
 
 template <class ISAOps>
-MultiLevelPageTable<ISAOps>::MultiLevelPageTable(const std::string &__name, uint64_t _pid, System *_sys)
+MultiLevelPageTable<ISAOps>::MultiLevelPageTable(const std::string &__name,
+                                                 uint64_t _pid, System *_sys)
     : PageTableBase(__name, _pid), system(_sys),
     logLevelSize(PageTableLayout),
     numLevels(logLevelSize.size())
@@ -109,7 +110,8 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
             assert(log_req_size >= PageShift);
             uint64_t npages = 1 << (log_req_size - PageShift);
 
-            DPRINTF(MMU, "Allocating %d pages needed for entry in level %d\n", npages, i-1);
+            DPRINTF(MMU, "Allocating %d pages needed for entry in level %d\n",
+                    npages, i - 1);
 
             /* allocate new entry */
             Addr next_entry_paddr = system->allocPhysPages(npages);
@@ -121,7 +123,8 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
             p.write<PageTableEntry>(entry_addr, entry);
 
         }
-        DPRINTF(MMU, "Level %d base: %d offset: %d entry: %d\n", i, level_base, offsets[i], next_entry_pnum);
+        DPRINTF(MMU, "Level %d base: %d offset: %d entry: %d\n",
+                i, level_base, offsets[i], next_entry_pnum);
         level_base = next_entry_pnum;
 
     }
@@ -133,7 +136,8 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
 
 template <class ISAOps>
 void
-MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr, int64_t size, bool clobber)
+MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
+                                 int64_t size, bool clobber)
 {
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
@@ -153,7 +157,7 @@ MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr, int64_t size, bool clob
                 p.write<PageTableEntry>(PTE_addr, PTE);
                 DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
             } else {
-                fatal("address 0x%x already mapped to %x", vaddr, entry_paddr);
+                fatal("addr 0x%x already mapped to %x", vaddr, entry_paddr);
             }
 
             eraseCacheEntry(vaddr);
@@ -175,7 +179,9 @@ MultiLevelPageTable<ISAOps>::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 
     PortProxy &p = system->physProxy;
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize, new_vaddr += pageSize) {
+    for (; size > 0;
+         size -= pageSize, vaddr += pageSize, new_vaddr += pageSize)
+    {
         Addr PTE_addr;
         if (walk(vaddr, false, PTE_addr)) {
             PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
@@ -306,7 +312,8 @@ MultiLevelPageTable<ISAOps>::serialize(std::ostream &os)
 
 template <class ISAOps>
 void
-MultiLevelPageTable<ISAOps>::unserialize(Checkpoint *cp, const std::string &section)
+MultiLevelPageTable<ISAOps>::unserialize(Checkpoint *cp,
+                                         const std::string &section)
 {
     paramIn(cp, section, "ptable.pointer", basePtr);
 }

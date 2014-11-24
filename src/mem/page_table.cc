@@ -51,7 +51,8 @@
 using namespace std;
 using namespace TheISA;
 
-FuncPageTable::FuncPageTable(const std::string &__name, uint64_t _pid, Addr _pageSize)
+FuncPageTable::FuncPageTable(const std::string &__name,
+                             uint64_t _pid, Addr _pageSize)
         : PageTableBase(__name, _pid, _pageSize)
 {
 }
@@ -71,7 +72,7 @@ FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, bool clobber)
     for (; size > 0; size -= pageSize, vaddr += pageSize, paddr += pageSize) {
         if (!clobber && (pTable.find(vaddr) != pTable.end())) {
             // already mapped
-            fatal("FuncPageTable::allocate: address 0x%x already mapped", vaddr);
+            fatal("FuncPageTable::allocate: addr 0x%x already mapped", vaddr);
         }
 
         pTable[vaddr] = TheISA::TlbEntry(pid, vaddr, paddr);
@@ -89,7 +90,9 @@ FuncPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
     DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,
             new_vaddr, size);
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize, new_vaddr += pageSize) {
+    for (; size > 0;
+         size -= pageSize, vaddr += pageSize, new_vaddr += pageSize)
+    {
         assert(pTable.find(vaddr) != pTable.end());
 
         pTable[new_vaddr] = pTable[vaddr];

@@ -141,7 +141,8 @@ class MultiLevelPageTable : public PageTableBase
     bool walk(Addr vaddr, bool allocate, Addr &PTE_addr);
 
 public:
-    MultiLevelPageTable(const std::string &__name, uint64_t _pid, System *_sys);
+    MultiLevelPageTable(const std::string &__name, uint64_t _pid,
+                        System *_sys);
     ~MultiLevelPageTable();
 
     void initState(ThreadContext* tc);
