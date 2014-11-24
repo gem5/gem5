@@ -85,6 +85,20 @@ class PageTableBase
 
     virtual ~PageTableBase() {};
 
+    /* generic page table mapping flags
+     *              unset | set
+     * bit 0 - no-clobber | clobber
+     * bit 1 - present    | not-present
+     * bit 2 - cacheable  | uncacheable
+     * bit 3 - read-write | read-only
+     */
+    enum MappingFlags : uint32_t {
+        Clobber     = 1,
+        NotPresent  = 2,
+        Uncacheable = 4,
+        ReadOnly    = 8,
+    };
+
     virtual void initState(ThreadContext* tc) = 0;
 
     // for DPRINTF compatibility
@@ -93,8 +107,16 @@ class PageTableBase
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
+    /**
+     * Maps a virtual memory region to a physical memory region.
+     * @param vaddr The starting virtual address of the region.
+     * @param paddr The starting physical address where the region is mapped.
+     * @param size The length of the region.
+     * @param flags Generic mapping flags that can be set by or-ing values
+     *              from MappingFlags enum.
+     */
     virtual void map(Addr vaddr, Addr paddr, int64_t size,
-                     bool clobber = false) = 0;
+                     uint64_t flags = 0) = 0;
     virtual void remap(Addr vaddr, int64_t size, Addr new_vaddr) = 0;
     virtual void unmap(Addr vaddr, int64_t size) = 0;
 
@@ -197,7 +219,8 @@ class FuncPageTable : public PageTableBase
     {
     }
 
-    void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false);
+    void map(Addr vaddr, Addr paddr, int64_t size,
+             uint64_t flags = 0);
     void remap(Addr vaddr, int64_t size, Addr new_vaddr);
     void unmap(Addr vaddr, int64_t size);
 

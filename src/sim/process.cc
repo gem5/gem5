@@ -338,7 +338,7 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 {
     int npages = divCeil(size, (int64_t)PageBytes);
     Addr paddr = system->allocPhysPages(npages);
-    pTable->map(vaddr, paddr, size, clobber);
+    pTable->map(vaddr, paddr, size, clobber ? PageTableBase::Clobber : 0);
 }
 
 bool
@@ -553,9 +553,10 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
 
 
 bool
-Process::map(Addr vaddr, Addr paddr, int size)
+Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 {
-    pTable->map(vaddr, paddr, size);
+    pTable->map(vaddr, paddr, size,
+                cacheable ? 0 : PageTableBase::Uncacheable);
     return true;
 }
 

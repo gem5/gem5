@@ -147,7 +147,8 @@ public:
 
     void initState(ThreadContext* tc);
 
-    void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false);
+    void map(Addr vaddr, Addr paddr, int64_t size,
+             uint64_t flags = 0);
     void remap(Addr vaddr, int64_t size, Addr new_vaddr);
     void unmap(Addr vaddr, int64_t size);
     bool isUnmapped(Addr vaddr, int64_t size);

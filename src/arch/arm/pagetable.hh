@@ -147,18 +147,21 @@ struct TlbEntry
     bool pxn;               // Privileged Execute Never (LPAE only)
 
     //Construct an entry that maps to physical address addr for SE mode
-    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr) :
+    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr,
+             bool uncacheable, bool read_only) :
          pfn(_paddr >> PageShift), size(PageBytes - 1), vpn(_vaddr >> PageShift),
          attributes(0), lookupLevel(L1), asid(_asn), vmid(0), N(0),
-         innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
+         innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(true),
-         ns(true), nstid(true), el(0), nonCacheable(false), shareable(false),
-         outerShareable(false), xn(0), pxn(0)
+         ns(true), nstid(true), el(0), nonCacheable(uncacheable),
+         shareable(false), outerShareable(false), xn(0), pxn(0)
     {
         // no restrictions by default, hap = 0x3
 
         // @todo Check the memory type
+        if (read_only)
+            warn("ARM TlbEntry does not support read-only mappings\n");
     }
 
     TlbEntry() :

@@ -104,7 +104,8 @@ struct TlbEntry
 
 
     //Construct an entry that maps to physical address addr.
-    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr)
+    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr,
+             bool uncacheable, bool read_only)
     {
         VAddr vaddr(_vaddr);
         VAddr paddr(_paddr);
@@ -117,6 +118,9 @@ struct TlbEntry
         fonr = false;
         fonw = false;
         valid = true;
+        if (uncacheable || read_only)
+            warn("Alpha TlbEntry does not support uncacheable"
+                 " or read-only mappings\n");
     }
 
     TlbEntry()

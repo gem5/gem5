@@ -62,8 +62,9 @@ FuncPageTable::~FuncPageTable()
 }
 
 void
-FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, bool clobber)
+FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
 {
+    bool clobber = flags & Clobber;
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
@@ -75,7 +76,9 @@ FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, bool clobber)
             fatal("FuncPageTable::allocate: addr 0x%x already mapped", vaddr);
         }
 
-        pTable[vaddr] = TheISA::TlbEntry(pid, vaddr, paddr);
+        pTable[vaddr] = TheISA::TlbEntry(pid, vaddr, paddr,
+                                         flags & Uncacheable,
+                                         flags & ReadOnly);
         eraseCacheEntry(vaddr);
         updateCache(vaddr, pTable[vaddr]);
     }

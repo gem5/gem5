@@ -137,8 +137,9 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
 template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
-                                 int64_t size, bool clobber)
+                                 int64_t size, uint64_t flags)
 {
+    bool clobber = flags & Clobber;
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
@@ -155,12 +156,21 @@ MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
                 fatal("addr 0x%x already mapped to %x", vaddr, entry_paddr);
             }
             pTableISAOps.setPnum(PTE, paddr >> PageShift);
-            pTableISAOps.setPTEFields(PTE);
+            uint64_t PTE_flags = 0;
+            if (flags & NotPresent)
+                PTE_flags |= TheISA::PTE_NotPresent;
+            if (flags & Uncacheable)
+                PTE_flags |= TheISA::PTE_Uncacheable;
+            if (flags & ReadOnly)
+                PTE_flags |= TheISA::PTE_ReadOnly;
+            pTableISAOps.setPTEFields(PTE, PTE_flags);
             p.write<PageTableEntry>(PTE_addr, PTE);
             DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
 
             eraseCacheEntry(vaddr);
-            updateCache(vaddr, TlbEntry(pid, vaddr, paddr));
+            updateCache(vaddr, TlbEntry(pid, vaddr, paddr,
+                                        flags & Uncacheable,
+                                        flags & ReadOnly));
         }
 
     }
@@ -205,7 +215,9 @@ MultiLevelPageTable<ISAOps>::remap(Addr vaddr, int64_t size, Addr new_vaddr)
             }
 
             eraseCacheEntry(vaddr);
-            updateCache(new_vaddr, TlbEntry(pid, new_vaddr, paddr));
+            updateCache(new_vaddr, TlbEntry(pid, new_vaddr, paddr,
+                                            pTableISAOps.isUncacheable(PTE),
+                                            pTableISAOps.isReadOnly(PTE)));
         } else {
             fatal("Page fault while remapping");
         }
@@ -290,7 +302,9 @@ MultiLevelPageTable<ISAOps>::lookup(Addr vaddr, TlbEntry &entry)
         if (pnum == 0)
             return false;
 
-        entry = TlbEntry(pid, vaddr, pnum << PageShift);
+        entry = TlbEntry(pid, vaddr, pnum << PageShift,
+                         pTableISAOps.isUncacheable(PTE),
+                         pTableISAOps.isReadOnly(PTE));
         updateCache(page_addr, entry);
     } else {
         return false;

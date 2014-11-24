@@ -128,7 +128,8 @@ namespace X86ISA
 
         TlbEntryTrie::Handle trieHandle;
 
-        TlbEntry(Addr asn, Addr _vaddr, Addr _paddr);
+        TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
+                 bool uncacheable, bool read_only);
         TlbEntry() {}
 
         void
@@ -157,13 +158,12 @@ namespace X86ISA
      */
     const std::vector<uint8_t> PageTableLayout = {9, 9, 9, 9};
 
+    /* x86 specific PTE flags */
     enum PTEField{
-        PTE_NotPresent = 0,
-        PTE_Present,
-        PTE_ReadOnly = 0,
-        PTE_ReadWrite,
-        PTE_Supervisor = 0,
-        PTE_UserSupervisor,
+        PTE_NotPresent  = 1,
+        PTE_Supervisor  = 2,
+        PTE_ReadOnly    = 4,
+        PTE_Uncacheable = 8,
     };
 
     /** Page table operations specific to x86 ISA.
@@ -172,14 +172,12 @@ namespace X86ISA
     class PageTableOps
     {
       public:
-        void setPTEFields(PageTableEntry& PTE,
-                          uint64_t present = PTE_Present,
-                          uint64_t read_write = PTE_ReadWrite,
-                          uint64_t user_supervisor = PTE_UserSupervisor)
+        void setPTEFields(PageTableEntry& PTE, uint64_t flags = 0)
         {
-            PTE.p = present;
-            PTE.w = read_write;
-            PTE.u = user_supervisor;// both user and supervisor access allowed
+            PTE.p   = flags & PTE_NotPresent  ? 0 : 1;
+            PTE.pcd = flags & PTE_Uncacheable ? 1 : 0;
+            PTE.w   = flags & PTE_ReadOnly    ? 0 : 1;
+            PTE.u   = flags & PTE_Supervisor  ? 0 : 1;
         }
 
         /** returns the physical memory address of the page table */
@@ -194,6 +192,16 @@ namespace X86ISA
         Addr getPnum(PageTableEntry PTE)
         {
             return PTE.base;
+        }
+
+        bool isUncacheable(const PageTableEntry PTE)
+        {
+            return PTE.pcd;
+        }
+
+        bool isReadOnly(PageTableEntry PTE)
+        {
+            return !PTE.w;
         }
 
         /** sets the page number in a page table entry */

@@ -230,14 +230,18 @@ struct TlbEntry
     TlbEntry()
     {}
 
-    TlbEntry(Addr asn, Addr vaddr, Addr paddr)
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr,
+             bool uncacheable, bool read_only)
     {
         uint64_t entry = 0;
-        entry |= 1ULL << 1; // Writable
+        if (!read_only)
+            entry |= 1ULL << 1; // Writable
         entry |= 0ULL << 2; // Available in nonpriveleged mode
         entry |= 0ULL << 3; // No side effects
-        entry |= 1ULL << 4; // Virtually cachable
-        entry |= 1ULL << 5; // Physically cachable
+        if (!uncacheable) {
+            entry |= 1ULL << 4; // Virtually cachable
+            entry |= 1ULL << 5; // Physically cachable
+        }
         entry |= 0ULL << 6; // Not locked
         entry |= mbits(paddr, 39, 13); // Physical address
         entry |= 0ULL << 48; // size = 8k

@@ -45,7 +45,7 @@ class Process(SimObject):
 
     @classmethod
     def export_methods(cls, code):
-        code('bool map(Addr vaddr, Addr paddr, int size);')
+        code('bool map(Addr vaddr, Addr paddr, int size, bool cacheable=true);')
 
 class EmulatedDriver(SimObject):
     type = 'EmulatedDriver'

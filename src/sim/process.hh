@@ -219,19 +219,19 @@ class Process : public SimObject
     bool fixupStackFault(Addr vaddr);
 
     /**
-     * Map a contiguous range of virtual addresses in this process's
+     * Maps a contiguous range of virtual addresses in this process's
      * address space to a contiguous range of physical addresses.
-     * This function exists primarily to enable exposing the map
-     * operation to python, so that configuration scripts can set up
-     * mappings in SE mode.
+     * This function exists primarily to expose the map operation to
+     * python, so that configuration scripts can set up mappings in SE mode.
      *
      * @param vaddr The starting virtual address of the range.
      * @param paddr The starting physical address of the range.
      * @param size The length of the range in bytes.
+     * @param cacheable Specifies whether accesses are cacheable.
      * @return True if the map operation was successful.  (At this
      *           point in time, the map operation always succeeds.)
      */
-    bool map(Addr vaddr, Addr paddr, int size);
+    bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
