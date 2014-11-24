@@ -4,11 +4,11 @@ sim_seconds                                  5.300742                       # Nu
 sim_ticks                                5300741898500                       # Number of ticks simulated
 final_tick                               5300741898500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 150557                       # Simulator instruction rate (inst/s)
-host_op_rate                                   288657                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             7473061965                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 840444                       # Number of bytes of host memory used
-host_seconds                                   709.31                       # Real time elapsed on the host
+host_inst_rate                                 268181                       # Simulator instruction rate (inst/s)
+host_op_rate                                   514172                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            13311463323                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 800056                       # Number of bytes of host memory used
+host_seconds                                   398.21                       # Real time elapsed on the host
 sim_insts                                   106792132                       # Number of instructions simulated
 sim_ops                                     204747982                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -290,323 +290,7 @@ system.mem_ctrls.totalEnergy::0          3546444264855                       # T
 system.mem_ctrls.totalEnergy::1          3546550064145                       # Total energy per rank (pJ)
 system.mem_ctrls.averagePower::0           669.047128                       # Core power per rank (mW)
 system.mem_ctrls.averagePower::1           669.067087                       # Core power per rank (mW)
-system.ruby.clk_domain.clock                      500                       # Clock period in ticks
-system.ruby.delayHist::bucket_size                  4                       # delay histogram for all message
-system.ruby.delayHist::max_bucket                  39                       # delay histogram for all message
-system.ruby.delayHist::samples               10900696                       # delay histogram for all message
-system.ruby.delayHist::mean                  0.442840                       # delay histogram for all message
-system.ruby.delayHist::stdev                 1.830682                       # delay histogram for all message
-system.ruby.delayHist                    |    10297724     94.47%     94.47% |        1479      0.01%     94.48% |      601064      5.51%    100.00% |         150      0.00%    100.00% |         222      0.00%    100.00% |          14      0.00%    100.00% |          41      0.00%    100.00% |           2      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for all message
-system.ruby.delayHist::total                 10900696                       # delay histogram for all message
-system.ruby.outstanding_req_hist::bucket_size            1                      
-system.ruby.outstanding_req_hist::max_bucket            9                      
-system.ruby.outstanding_req_hist::samples    152128630                      
-system.ruby.outstanding_req_hist::mean       1.000112                      
-system.ruby.outstanding_req_hist::gmean      1.000078                      
-system.ruby.outstanding_req_hist::stdev      0.010605                      
-system.ruby.outstanding_req_hist         |           0      0.00%      0.00% |   152111520     99.99%     99.99% |       17110      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.outstanding_req_hist::total     152128630                      
-system.ruby.latency_hist::bucket_size             256                      
-system.ruby.latency_hist::max_bucket             2559                      
-system.ruby.latency_hist::samples           152128629                      
-system.ruby.latency_hist::mean               3.436815                      
-system.ruby.latency_hist::gmean              3.107877                      
-system.ruby.latency_hist::stdev              5.781267                      
-system.ruby.latency_hist                 |   152119575     99.99%     99.99% |        6193      0.00%    100.00% |        2797      0.00%    100.00% |          28      0.00%    100.00% |          34      0.00%    100.00% |           2      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.latency_hist::total             152128629                      
-system.ruby.hit_latency_hist::bucket_size            1                      
-system.ruby.hit_latency_hist::max_bucket            9                      
-system.ruby.hit_latency_hist::samples       149464039                      
-system.ruby.hit_latency_hist::mean                  3                      
-system.ruby.hit_latency_hist::gmean          3.000000                      
-system.ruby.hit_latency_hist             |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |   149464039    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.hit_latency_hist::total         149464039                      
-system.ruby.miss_latency_hist::bucket_size          256                      
-system.ruby.miss_latency_hist::max_bucket         2559                      
-system.ruby.miss_latency_hist::samples        2664590                      
-system.ruby.miss_latency_hist::mean         27.938944                      
-system.ruby.miss_latency_hist::gmean        22.546119                      
-system.ruby.miss_latency_hist::stdev        36.016044                      
-system.ruby.miss_latency_hist            |     2655536     99.66%     99.66% |        6193      0.23%     99.89% |        2797      0.10%    100.00% |          28      0.00%    100.00% |          34      0.00%    100.00% |           2      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.miss_latency_hist::total          2664590                      
-system.ruby.l1_cntrl0.L1Dcache.demand_hits     10684802                       # Number of cache demand hits
-system.ruby.l1_cntrl0.L1Dcache.demand_misses       518536                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Dcache.demand_accesses     11203338                       # Number of cache demand accesses
-system.ruby.l1_cntrl0.L1Icache.demand_hits     67461431                       # Number of cache demand hits
-system.ruby.l1_cntrl0.L1Icache.demand_misses       317291                       # Number of cache demand misses
-system.ruby.l1_cntrl0.L1Icache.demand_accesses     67778722                       # Number of cache demand accesses
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
-system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
-system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
-system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
-system.ruby.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
-system.ruby.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
-system.ruby.l1_cntrl0.prefetcher.hits               0                       # number of prefetched blocks accessed
-system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
-system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
-system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl0.fully_busy_cycles            12                       # cycles for which number of transistions == max transitions
-system.ruby.network.routers0.percent_links_utilized     0.029331                      
-system.ruby.network.routers0.msg_count.Control::0       835827                      
-system.ruby.network.routers0.msg_count.Request_Control::2        42905                      
-system.ruby.network.routers0.msg_count.Response_Data::1       863889                      
-system.ruby.network.routers0.msg_count.Response_Control::1       496114                      
-system.ruby.network.routers0.msg_count.Response_Control::2       492544                      
-system.ruby.network.routers0.msg_count.Writeback_Data::0       292440                      
-system.ruby.network.routers0.msg_count.Writeback_Data::1          167                      
-system.ruby.network.routers0.msg_count.Writeback_Control::0       162044                      
-system.ruby.network.routers0.msg_bytes.Control::0      6686616                      
-system.ruby.network.routers0.msg_bytes.Request_Control::2       343240                      
-system.ruby.network.routers0.msg_bytes.Response_Data::1     62200008                      
-system.ruby.network.routers0.msg_bytes.Response_Control::1      3968912                      
-system.ruby.network.routers0.msg_bytes.Response_Control::2      3940352                      
-system.ruby.network.routers0.msg_bytes.Writeback_Data::0     21055680                      
-system.ruby.network.routers0.msg_bytes.Writeback_Data::1        12024                      
-system.ruby.network.routers0.msg_bytes.Writeback_Control::0      1296352                      
-system.ruby.l1_cntrl1.L1Dcache.demand_hits     13058053                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Dcache.demand_misses      1328322                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Dcache.demand_accesses     14386375                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.L1Icache.demand_hits     58259753                       # Number of cache demand hits
-system.ruby.l1_cntrl1.L1Icache.demand_misses       500441                       # Number of cache demand misses
-system.ruby.l1_cntrl1.L1Icache.demand_accesses     58760194                       # Number of cache demand accesses
-system.ruby.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
-system.ruby.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
-system.ruby.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
-system.ruby.l1_cntrl1.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
-system.ruby.l1_cntrl1.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
-system.ruby.l1_cntrl1.prefetcher.hits               0                       # number of prefetched blocks accessed
-system.ruby.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
-system.ruby.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
-system.ruby.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
-system.ruby.l1_cntrl1.fully_busy_cycles            12                       # cycles for which number of transistions == max transitions
-system.ruby.network.routers1.percent_links_utilized     0.057975                      
-system.ruby.network.routers1.msg_count.Control::0      1828763                      
-system.ruby.network.routers1.msg_count.Request_Control::2        40586                      
-system.ruby.network.routers1.msg_count.Response_Data::1      1853208                      
-system.ruby.network.routers1.msg_count.Response_Control::1      1269894                      
-system.ruby.network.routers1.msg_count.Response_Control::2      1269686                      
-system.ruby.network.routers1.msg_count.Writeback_Data::0       282914                      
-system.ruby.network.routers1.msg_count.Writeback_Data::1          208                      
-system.ruby.network.routers1.msg_count.Writeback_Control::0       948886                      
-system.ruby.network.routers1.msg_bytes.Control::0     14630104                      
-system.ruby.network.routers1.msg_bytes.Request_Control::2       324688                      
-system.ruby.network.routers1.msg_bytes.Response_Data::1    133430976                      
-system.ruby.network.routers1.msg_bytes.Response_Control::1     10159152                      
-system.ruby.network.routers1.msg_bytes.Response_Control::2     10157488                      
-system.ruby.network.routers1.msg_bytes.Writeback_Data::0     20369808                      
-system.ruby.network.routers1.msg_bytes.Writeback_Data::1        14976                      
-system.ruby.network.routers1.msg_bytes.Writeback_Control::0      7591088                      
-system.ruby.l2_cntrl0.L2cache.demand_hits      2436707                       # Number of cache demand hits
-system.ruby.l2_cntrl0.L2cache.demand_misses       227883                       # Number of cache demand misses
-system.ruby.l2_cntrl0.L2cache.demand_accesses      2664590                       # Number of cache demand accesses
-system.ruby.network.routers2.percent_links_utilized     0.091680                      
-system.ruby.network.routers2.msg_count.Control::0      2843003                      
-system.ruby.network.routers2.msg_count.Request_Control::2        81677                      
-system.ruby.network.routers2.msg_count.Response_Data::1      2894271                      
-system.ruby.network.routers2.msg_count.Response_Control::1      1849723                      
-system.ruby.network.routers2.msg_count.Response_Control::2      1762230                      
-system.ruby.network.routers2.msg_count.Writeback_Data::0       575354                      
-system.ruby.network.routers2.msg_count.Writeback_Data::1          375                      
-system.ruby.network.routers2.msg_count.Writeback_Control::0      1110930                      
-system.ruby.network.routers2.msg_bytes.Control::0     22744024                      
-system.ruby.network.routers2.msg_bytes.Request_Control::2       653416                      
-system.ruby.network.routers2.msg_bytes.Response_Data::1    208387512                      
-system.ruby.network.routers2.msg_bytes.Response_Control::1     14797784                      
-system.ruby.network.routers2.msg_bytes.Response_Control::2     14097840                      
-system.ruby.network.routers2.msg_bytes.Writeback_Data::0     41425488                      
-system.ruby.network.routers2.msg_bytes.Writeback_Data::1        27000                      
-system.ruby.network.routers2.msg_bytes.Writeback_Control::0      8887440                      
-system.ruby.network.routers3.percent_links_utilized     0.006831                      
-system.ruby.network.routers3.msg_count.Control::0       178413                      
-system.ruby.network.routers3.msg_count.Response_Data::1       276928                      
-system.ruby.network.routers3.msg_count.Response_Control::1       131535                      
-system.ruby.network.routers3.msg_count.Writeback_Control::0        47550                      
-system.ruby.network.routers3.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers3.msg_bytes.Control::0      1427304                      
-system.ruby.network.routers3.msg_bytes.Response_Data::1     19938816                      
-system.ruby.network.routers3.msg_bytes.Response_Control::1      1052280                      
-system.ruby.network.routers3.msg_bytes.Writeback_Control::0       380400                      
-system.ruby.network.routers3.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.network.routers4.percent_links_utilized     0.000240                      
-system.ruby.network.routers4.msg_count.Response_Data::1          814                      
-system.ruby.network.routers4.msg_count.Writeback_Control::0        47550                      
-system.ruby.network.routers4.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers4.msg_bytes.Response_Data::1        58608                      
-system.ruby.network.routers4.msg_bytes.Writeback_Control::0       380400                      
-system.ruby.network.routers4.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.network.routers5.percent_links_utilized            0                      
-system.ruby.network.routers6.percent_links_utilized     0.031010                      
-system.ruby.network.routers6.msg_count.Control::0      2843003                      
-system.ruby.network.routers6.msg_count.Request_Control::2        83491                      
-system.ruby.network.routers6.msg_count.Response_Data::1      2944555                      
-system.ruby.network.routers6.msg_count.Response_Control::1      1873633                      
-system.ruby.network.routers6.msg_count.Response_Control::2      1762230                      
-system.ruby.network.routers6.msg_count.Writeback_Data::0       575354                      
-system.ruby.network.routers6.msg_count.Writeback_Data::1          375                      
-system.ruby.network.routers6.msg_count.Writeback_Control::0      1158480                      
-system.ruby.network.routers6.msg_count.Writeback_Control::1        46736                      
-system.ruby.network.routers6.msg_bytes.Control::0     22744024                      
-system.ruby.network.routers6.msg_bytes.Request_Control::2       667928                      
-system.ruby.network.routers6.msg_bytes.Response_Data::1    212007960                      
-system.ruby.network.routers6.msg_bytes.Response_Control::1     14989064                      
-system.ruby.network.routers6.msg_bytes.Response_Control::2     14097840                      
-system.ruby.network.routers6.msg_bytes.Writeback_Data::0     41425488                      
-system.ruby.network.routers6.msg_bytes.Writeback_Data::1        27000                      
-system.ruby.network.routers6.msg_bytes.Writeback_Control::0      9267840                      
-system.ruby.network.routers6.msg_bytes.Writeback_Control::1       373888                      
-system.ruby.network.msg_count.Control         8529009                      
-system.ruby.network.msg_count.Request_Control       248659                      
-system.ruby.network.msg_count.Response_Data      8833665                      
-system.ruby.network.msg_count.Response_Control     10907589                      
-system.ruby.network.msg_count.Writeback_Data      1727187                      
-system.ruby.network.msg_count.Writeback_Control      3615648                      
-system.ruby.network.msg_byte.Control         68232072                      
-system.ruby.network.msg_byte.Request_Control      1989272                      
-system.ruby.network.msg_byte.Response_Data    636023880                      
-system.ruby.network.msg_byte.Response_Control     87260712                      
-system.ruby.network.msg_byte.Writeback_Data    124357464                      
-system.ruby.network.msg_byte.Writeback_Control     28925184                      
-system.ruby.memctrl_clk_domain.clock             1500                       # Clock period in ticks
-system.pc.south_bridge.ide.disks0.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
-system.pc.south_bridge.ide.disks0.dma_read_bytes        32768                       # Number of bytes transfered via DMA reads (not PRD).
-system.pc.south_bridge.ide.disks0.dma_read_txs           30                       # Number of DMA read transactions (not PRD).
-system.pc.south_bridge.ide.disks0.dma_write_full_pages          693                       # Number of full page size DMA writes.
-system.pc.south_bridge.ide.disks0.dma_write_bytes      2987008                       # Number of bytes transfered via DMA writes.
-system.pc.south_bridge.ide.disks0.dma_write_txs          813                       # Number of DMA write transactions.
-system.pc.south_bridge.ide.disks1.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
-system.pc.south_bridge.ide.disks1.dma_read_bytes            0                       # Number of bytes transfered via DMA reads (not PRD).
-system.pc.south_bridge.ide.disks1.dma_read_txs            0                       # Number of DMA read transactions (not PRD).
-system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
-system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
-system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
-system.iobus.trans_dist::ReadReq               857926                       # Transaction distribution
-system.iobus.trans_dist::ReadResp              857926                       # Transaction distribution
-system.iobus.trans_dist::WriteReq               36569                       # Transaction distribution
-system.iobus.trans_dist::WriteResp              36569                       # Transaction distribution
-system.iobus.trans_dist::MessageReq              1919                       # Transaction distribution
-system.iobus.trans_dist::MessageResp             1919                       # Transaction distribution
-system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl0.sequencer.pio-slave-port         1700                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl1.sequencer.pio-slave-port         1642                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::total         3342                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio           36                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         4780                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf           88                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio         1048                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio           82                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio           42                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.speaker.pio       934582                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio          990                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.i_dont_exist.pio           90                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.com_1.pio        16892                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port       743276                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port          296                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.pciconfig.pio         2126                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::total      1704360                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio           16                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         6262                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf           92                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio          316                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pit.pio        31164                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio          364                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.i_dont_exist.pio        31252                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.com_1.pio        10236                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port          200                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port         5148                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::total        85126                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count::total                 1792828                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_size_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl0.sequencer.pio-slave-port         3400                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl1.sequencer.pio-slave-port         3284                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.pc.south_bridge.io_apic.int_master::total         6684                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio           18                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         2696                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf          149                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio          524                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio           41                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio           21                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.speaker.pio       467291                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio         1980                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.i_dont_exist.pio           45                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.com_1.pio         8446                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port      1486546                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port          592                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.pciconfig.pio         4252                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::total      1972617                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio            8                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         3964                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf           72                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio          158                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pit.pio        15582                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio          728                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.i_dont_exist.pio        15626                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.com_1.pio         5118                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port          400                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port        10293                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::total        51987                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size::total                  2031288                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.reqLayer0.occupancy                51000                       # Layer occupancy (ticks)
-system.iobus.reqLayer0.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer1.occupancy                 6500                       # Layer occupancy (ticks)
-system.iobus.reqLayer1.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer2.occupancy             10161500                       # Layer occupancy (ticks)
-system.iobus.reqLayer2.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer3.occupancy               144000                       # Layer occupancy (ticks)
-system.iobus.reqLayer3.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer4.occupancy              1080000                       # Layer occupancy (ticks)
-system.iobus.reqLayer4.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer5.occupancy                94000                       # Layer occupancy (ticks)
-system.iobus.reqLayer5.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer6.occupancy                59500                       # Layer occupancy (ticks)
-system.iobus.reqLayer6.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer7.occupancy             20808000                       # Layer occupancy (ticks)
-system.iobus.reqLayer7.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer8.occupancy            700937500                       # Layer occupancy (ticks)
-system.iobus.reqLayer8.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer9.occupancy              1385500                       # Layer occupancy (ticks)
-system.iobus.reqLayer9.utilization                0.0                       # Layer utilization (%)
-system.iobus.reqLayer10.occupancy            31365000                       # Layer occupancy (ticks)
-system.iobus.reqLayer10.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer11.occupancy                2500                       # Layer occupancy (ticks)
-system.iobus.reqLayer11.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer12.occupancy            23203000                       # Layer occupancy (ticks)
-system.iobus.reqLayer12.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer13.occupancy                9000                       # Layer occupancy (ticks)
-system.iobus.reqLayer13.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer14.occupancy                9000                       # Layer occupancy (ticks)
-system.iobus.reqLayer14.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer15.occupancy               12000                       # Layer occupancy (ticks)
-system.iobus.reqLayer15.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer16.occupancy               11000                       # Layer occupancy (ticks)
-system.iobus.reqLayer16.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer17.occupancy           469007612                       # Layer occupancy (ticks)
-system.iobus.reqLayer17.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer18.occupancy             8240496                       # Layer occupancy (ticks)
-system.iobus.reqLayer18.utilization               0.0                       # Layer utilization (%)
-system.iobus.reqLayer20.occupancy             1330000                       # Layer occupancy (ticks)
-system.iobus.reqLayer20.utilization               0.0                       # Layer utilization (%)
-system.iobus.respLayer0.occupancy             2404108                       # Layer occupancy (ticks)
-system.iobus.respLayer0.utilization               0.0                       # Layer utilization (%)
-system.iobus.respLayer2.occupancy          2025089500                       # Layer occupancy (ticks)
-system.iobus.respLayer2.utilization               0.0                       # Layer utilization (%)
-system.iobus.respLayer4.occupancy            59993000                       # Layer occupancy (ticks)
-system.iobus.respLayer4.utilization               0.0                       # Layer utilization (%)
 system.cpu0.apic_clk_domain.clock                8000                       # Clock period in ticks
 system.cpu0.numCycles                     10600620667                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
@@ -733,6 +417,322 @@ system.cpu1.op_class::InstPrefetch                  0      0.00%    100.00% # Cl
 system.cpu1.op_class::total                  92540389                       # Class of executed instruction
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
+system.iobus.trans_dist::ReadReq               857926                       # Transaction distribution
+system.iobus.trans_dist::ReadResp              857926                       # Transaction distribution
+system.iobus.trans_dist::WriteReq               36569                       # Transaction distribution
+system.iobus.trans_dist::WriteResp              36569                       # Transaction distribution
+system.iobus.trans_dist::MessageReq              1919                       # Transaction distribution
+system.iobus.trans_dist::MessageResp             1919                       # Transaction distribution
+system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl0.sequencer.pio-slave-port         1700                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl1.sequencer.pio-slave-port         1642                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.pc.south_bridge.io_apic.int_master::total         3342                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio           36                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         4780                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf           88                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio         1048                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio           82                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio           42                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pit.pio           30                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.speaker.pio       934582                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio          990                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.i_dont_exist1.pio           90                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.behind_pci.pio            2                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.com_1.pio        16892                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port       743276                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port          296                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.pciconfig.pio         2126                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl0.sequencer.mem-master-port::total      1704360                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio           16                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         6262                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf           92                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio          316                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pit.pio        31164                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio          364                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.i_dont_exist1.pio        31252                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.com_1.pio        10236                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_2.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port          200                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port         5148                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.ruby.l1_cntrl1.sequencer.mem-master-port::total        85126                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count::total                 1792828                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_size_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl0.sequencer.pio-slave-port         3400                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.pc.south_bridge.io_apic.int_master::system.ruby.l1_cntrl1.sequencer.pio-slave-port         3284                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.pc.south_bridge.io_apic.int_master::total         6684                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio           18                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         2696                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf          149                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio          524                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio           41                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio           21                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.pit.pio           15                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.speaker.pio       467291                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio         1980                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.i_dont_exist1.pio           45                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.behind_pci.pio            1                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.com_1.pio         8446                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port      1486546                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port          592                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::system.pc.pciconfig.pio         4252                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl0.sequencer.mem-master-port::total      1972617                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.cmos.pio            8                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide.pio         3964                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.ide-pciconf           72                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.keyboard.pio          158                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic1.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pic2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.pit.pio        15582                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.south_bridge.io_apic.pio          728                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.i_dont_exist1.pio        15626                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.com_1.pio         5118                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_2.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl0.sequencer.pio-slave-port          400                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::system.ruby.l1_cntrl1.sequencer.pio-slave-port        10293                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.ruby.l1_cntrl1.sequencer.mem-master-port::total        51987                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size::total                  2031288                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.reqLayer0.occupancy                51000                       # Layer occupancy (ticks)
+system.iobus.reqLayer0.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer1.occupancy                 6500                       # Layer occupancy (ticks)
+system.iobus.reqLayer1.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer2.occupancy             10161500                       # Layer occupancy (ticks)
+system.iobus.reqLayer2.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer3.occupancy               144000                       # Layer occupancy (ticks)
+system.iobus.reqLayer3.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer4.occupancy              1080000                       # Layer occupancy (ticks)
+system.iobus.reqLayer4.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer5.occupancy                94000                       # Layer occupancy (ticks)
+system.iobus.reqLayer5.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer6.occupancy                59500                       # Layer occupancy (ticks)
+system.iobus.reqLayer6.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer7.occupancy             20808000                       # Layer occupancy (ticks)
+system.iobus.reqLayer7.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer8.occupancy            700937500                       # Layer occupancy (ticks)
+system.iobus.reqLayer8.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer9.occupancy              1385500                       # Layer occupancy (ticks)
+system.iobus.reqLayer9.utilization                0.0                       # Layer utilization (%)
+system.iobus.reqLayer10.occupancy            31365000                       # Layer occupancy (ticks)
+system.iobus.reqLayer10.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer12.occupancy                2500                       # Layer occupancy (ticks)
+system.iobus.reqLayer12.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer13.occupancy            23203000                       # Layer occupancy (ticks)
+system.iobus.reqLayer13.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer14.occupancy                9000                       # Layer occupancy (ticks)
+system.iobus.reqLayer14.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer15.occupancy                9000                       # Layer occupancy (ticks)
+system.iobus.reqLayer15.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer16.occupancy               12000                       # Layer occupancy (ticks)
+system.iobus.reqLayer16.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer17.occupancy               11000                       # Layer occupancy (ticks)
+system.iobus.reqLayer17.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer18.occupancy           469007612                       # Layer occupancy (ticks)
+system.iobus.reqLayer18.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer19.occupancy             8240496                       # Layer occupancy (ticks)
+system.iobus.reqLayer19.utilization               0.0                       # Layer utilization (%)
+system.iobus.reqLayer21.occupancy             1330000                       # Layer occupancy (ticks)
+system.iobus.reqLayer21.utilization               0.0                       # Layer utilization (%)
+system.iobus.respLayer0.occupancy             2404108                       # Layer occupancy (ticks)
+system.iobus.respLayer0.utilization               0.0                       # Layer utilization (%)
+system.iobus.respLayer2.occupancy          2025089500                       # Layer occupancy (ticks)
+system.iobus.respLayer2.utilization               0.0                       # Layer utilization (%)
+system.iobus.respLayer4.occupancy            59993000                       # Layer occupancy (ticks)
+system.iobus.respLayer4.utilization               0.0                       # Layer utilization (%)
+system.pc.south_bridge.ide.disks0.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
+system.pc.south_bridge.ide.disks0.dma_read_bytes        32768                       # Number of bytes transfered via DMA reads (not PRD).
+system.pc.south_bridge.ide.disks0.dma_read_txs           30                       # Number of DMA read transactions (not PRD).
+system.pc.south_bridge.ide.disks0.dma_write_full_pages          693                       # Number of full page size DMA writes.
+system.pc.south_bridge.ide.disks0.dma_write_bytes      2987008                       # Number of bytes transfered via DMA writes.
+system.pc.south_bridge.ide.disks0.dma_write_txs          813                       # Number of DMA write transactions.
+system.pc.south_bridge.ide.disks1.dma_read_full_pages            0                       # Number of full page size DMA reads (not PRD).
+system.pc.south_bridge.ide.disks1.dma_read_bytes            0                       # Number of bytes transfered via DMA reads (not PRD).
+system.pc.south_bridge.ide.disks1.dma_read_txs            0                       # Number of DMA read transactions (not PRD).
+system.pc.south_bridge.ide.disks1.dma_write_full_pages            1                       # Number of full page size DMA writes.
+system.pc.south_bridge.ide.disks1.dma_write_bytes         4096                       # Number of bytes transfered via DMA writes.
+system.pc.south_bridge.ide.disks1.dma_write_txs            1                       # Number of DMA write transactions.
+system.ruby.clk_domain.clock                      500                       # Clock period in ticks
+system.ruby.delayHist::bucket_size                  4                       # delay histogram for all message
+system.ruby.delayHist::max_bucket                  39                       # delay histogram for all message
+system.ruby.delayHist::samples               10900696                       # delay histogram for all message
+system.ruby.delayHist::mean                  0.442840                       # delay histogram for all message
+system.ruby.delayHist::stdev                 1.830682                       # delay histogram for all message
+system.ruby.delayHist                    |    10297724     94.47%     94.47% |        1479      0.01%     94.48% |      601064      5.51%    100.00% |         150      0.00%    100.00% |         222      0.00%    100.00% |          14      0.00%    100.00% |          41      0.00%    100.00% |           2      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for all message
+system.ruby.delayHist::total                 10900696                       # delay histogram for all message
+system.ruby.outstanding_req_hist::bucket_size            1                      
+system.ruby.outstanding_req_hist::max_bucket            9                      
+system.ruby.outstanding_req_hist::samples    152128630                      
+system.ruby.outstanding_req_hist::mean       1.000112                      
+system.ruby.outstanding_req_hist::gmean      1.000078                      
+system.ruby.outstanding_req_hist::stdev      0.010605                      
+system.ruby.outstanding_req_hist         |           0      0.00%      0.00% |   152111520     99.99%     99.99% |       17110      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.outstanding_req_hist::total     152128630                      
+system.ruby.latency_hist::bucket_size             256                      
+system.ruby.latency_hist::max_bucket             2559                      
+system.ruby.latency_hist::samples           152128629                      
+system.ruby.latency_hist::mean               3.436815                      
+system.ruby.latency_hist::gmean              3.107877                      
+system.ruby.latency_hist::stdev              5.781267                      
+system.ruby.latency_hist                 |   152119575     99.99%     99.99% |        6193      0.00%    100.00% |        2797      0.00%    100.00% |          28      0.00%    100.00% |          34      0.00%    100.00% |           2      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.latency_hist::total             152128629                      
+system.ruby.hit_latency_hist::bucket_size            1                      
+system.ruby.hit_latency_hist::max_bucket            9                      
+system.ruby.hit_latency_hist::samples       149464039                      
+system.ruby.hit_latency_hist::mean                  3                      
+system.ruby.hit_latency_hist::gmean          3.000000                      
+system.ruby.hit_latency_hist             |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |   149464039    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.hit_latency_hist::total         149464039                      
+system.ruby.miss_latency_hist::bucket_size          256                      
+system.ruby.miss_latency_hist::max_bucket         2559                      
+system.ruby.miss_latency_hist::samples        2664590                      
+system.ruby.miss_latency_hist::mean         27.938944                      
+system.ruby.miss_latency_hist::gmean        22.546119                      
+system.ruby.miss_latency_hist::stdev        36.016044                      
+system.ruby.miss_latency_hist            |     2655536     99.66%     99.66% |        6193      0.23%     99.89% |        2797      0.10%    100.00% |          28      0.00%    100.00% |          34      0.00%    100.00% |           2      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.miss_latency_hist::total          2664590                      
+system.ruby.l1_cntrl0.L1Dcache.demand_hits     10684802                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Dcache.demand_misses       518536                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Dcache.demand_accesses     11203338                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.L1Icache.demand_hits     67461431                       # Number of cache demand hits
+system.ruby.l1_cntrl0.L1Icache.demand_misses       317291                       # Number of cache demand misses
+system.ruby.l1_cntrl0.L1Icache.demand_accesses     67778722                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.prefetcher.miss_observed            0                       # number of misses observed
+system.ruby.l1_cntrl0.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.ruby.l1_cntrl0.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.ruby.l1_cntrl0.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.ruby.l1_cntrl0.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.ruby.l1_cntrl0.prefetcher.hits               0                       # number of prefetched blocks accessed
+system.ruby.l1_cntrl0.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.ruby.l1_cntrl0.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.ruby.l1_cntrl0.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
+system.ruby.l1_cntrl0.fully_busy_cycles            12                       # cycles for which number of transistions == max transitions
+system.ruby.l1_cntrl1.L1Dcache.demand_hits     13058053                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Dcache.demand_misses      1328322                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Dcache.demand_accesses     14386375                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.L1Icache.demand_hits     58259753                       # Number of cache demand hits
+system.ruby.l1_cntrl1.L1Icache.demand_misses       500441                       # Number of cache demand misses
+system.ruby.l1_cntrl1.L1Icache.demand_accesses     58760194                       # Number of cache demand accesses
+system.ruby.l1_cntrl1.prefetcher.miss_observed            0                       # number of misses observed
+system.ruby.l1_cntrl1.prefetcher.allocated_streams            0                       # number of streams allocated for prefetching
+system.ruby.l1_cntrl1.prefetcher.prefetches_requested            0                       # number of prefetch requests made
+system.ruby.l1_cntrl1.prefetcher.prefetches_accepted            0                       # number of prefetch requests accepted
+system.ruby.l1_cntrl1.prefetcher.dropped_prefetches            0                       # number of prefetch requests dropped
+system.ruby.l1_cntrl1.prefetcher.hits               0                       # number of prefetched blocks accessed
+system.ruby.l1_cntrl1.prefetcher.partial_hits            0                       # number of misses observed for a block being prefetched
+system.ruby.l1_cntrl1.prefetcher.pages_crossed            0                       # number of prefetches across pages
+system.ruby.l1_cntrl1.prefetcher.misses_on_prefetched_blocks            0                       # number of misses for blocks that were prefetched, yet missed
+system.ruby.l1_cntrl1.fully_busy_cycles            12                       # cycles for which number of transistions == max transitions
+system.ruby.l2_cntrl0.L2cache.demand_hits      2436707                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses       227883                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses      2664590                       # Number of cache demand accesses
+system.ruby.memctrl_clk_domain.clock             1500                       # Clock period in ticks
+system.ruby.network.routers0.percent_links_utilized     0.029331                      
+system.ruby.network.routers0.msg_count.Control::0       835827                      
+system.ruby.network.routers0.msg_count.Request_Control::2        42905                      
+system.ruby.network.routers0.msg_count.Response_Data::1       863889                      
+system.ruby.network.routers0.msg_count.Response_Control::1       496114                      
+system.ruby.network.routers0.msg_count.Response_Control::2       492544                      
+system.ruby.network.routers0.msg_count.Writeback_Data::0       292440                      
+system.ruby.network.routers0.msg_count.Writeback_Data::1          167                      
+system.ruby.network.routers0.msg_count.Writeback_Control::0       162044                      
+system.ruby.network.routers0.msg_bytes.Control::0      6686616                      
+system.ruby.network.routers0.msg_bytes.Request_Control::2       343240                      
+system.ruby.network.routers0.msg_bytes.Response_Data::1     62200008                      
+system.ruby.network.routers0.msg_bytes.Response_Control::1      3968912                      
+system.ruby.network.routers0.msg_bytes.Response_Control::2      3940352                      
+system.ruby.network.routers0.msg_bytes.Writeback_Data::0     21055680                      
+system.ruby.network.routers0.msg_bytes.Writeback_Data::1        12024                      
+system.ruby.network.routers0.msg_bytes.Writeback_Control::0      1296352                      
+system.ruby.network.routers1.percent_links_utilized     0.057975                      
+system.ruby.network.routers1.msg_count.Control::0      1828763                      
+system.ruby.network.routers1.msg_count.Request_Control::2        40586                      
+system.ruby.network.routers1.msg_count.Response_Data::1      1853208                      
+system.ruby.network.routers1.msg_count.Response_Control::1      1269894                      
+system.ruby.network.routers1.msg_count.Response_Control::2      1269686                      
+system.ruby.network.routers1.msg_count.Writeback_Data::0       282914                      
+system.ruby.network.routers1.msg_count.Writeback_Data::1          208                      
+system.ruby.network.routers1.msg_count.Writeback_Control::0       948886                      
+system.ruby.network.routers1.msg_bytes.Control::0     14630104                      
+system.ruby.network.routers1.msg_bytes.Request_Control::2       324688                      
+system.ruby.network.routers1.msg_bytes.Response_Data::1    133430976                      
+system.ruby.network.routers1.msg_bytes.Response_Control::1     10159152                      
+system.ruby.network.routers1.msg_bytes.Response_Control::2     10157488                      
+system.ruby.network.routers1.msg_bytes.Writeback_Data::0     20369808                      
+system.ruby.network.routers1.msg_bytes.Writeback_Data::1        14976                      
+system.ruby.network.routers1.msg_bytes.Writeback_Control::0      7591088                      
+system.ruby.network.routers2.percent_links_utilized     0.091680                      
+system.ruby.network.routers2.msg_count.Control::0      2843003                      
+system.ruby.network.routers2.msg_count.Request_Control::2        81677                      
+system.ruby.network.routers2.msg_count.Response_Data::1      2894271                      
+system.ruby.network.routers2.msg_count.Response_Control::1      1849723                      
+system.ruby.network.routers2.msg_count.Response_Control::2      1762230                      
+system.ruby.network.routers2.msg_count.Writeback_Data::0       575354                      
+system.ruby.network.routers2.msg_count.Writeback_Data::1          375                      
+system.ruby.network.routers2.msg_count.Writeback_Control::0      1110930                      
+system.ruby.network.routers2.msg_bytes.Control::0     22744024                      
+system.ruby.network.routers2.msg_bytes.Request_Control::2       653416                      
+system.ruby.network.routers2.msg_bytes.Response_Data::1    208387512                      
+system.ruby.network.routers2.msg_bytes.Response_Control::1     14797784                      
+system.ruby.network.routers2.msg_bytes.Response_Control::2     14097840                      
+system.ruby.network.routers2.msg_bytes.Writeback_Data::0     41425488                      
+system.ruby.network.routers2.msg_bytes.Writeback_Data::1        27000                      
+system.ruby.network.routers2.msg_bytes.Writeback_Control::0      8887440                      
+system.ruby.network.routers3.percent_links_utilized     0.006831                      
+system.ruby.network.routers3.msg_count.Control::0       178413                      
+system.ruby.network.routers3.msg_count.Response_Data::1       276928                      
+system.ruby.network.routers3.msg_count.Response_Control::1       131535                      
+system.ruby.network.routers3.msg_count.Writeback_Control::0        47550                      
+system.ruby.network.routers3.msg_count.Writeback_Control::1        46736                      
+system.ruby.network.routers3.msg_bytes.Control::0      1427304                      
+system.ruby.network.routers3.msg_bytes.Response_Data::1     19938816                      
+system.ruby.network.routers3.msg_bytes.Response_Control::1      1052280                      
+system.ruby.network.routers3.msg_bytes.Writeback_Control::0       380400                      
+system.ruby.network.routers3.msg_bytes.Writeback_Control::1       373888                      
+system.ruby.network.routers4.percent_links_utilized     0.000240                      
+system.ruby.network.routers4.msg_count.Response_Data::1          814                      
+system.ruby.network.routers4.msg_count.Writeback_Control::0        47550                      
+system.ruby.network.routers4.msg_count.Writeback_Control::1        46736                      
+system.ruby.network.routers4.msg_bytes.Response_Data::1        58608                      
+system.ruby.network.routers4.msg_bytes.Writeback_Control::0       380400                      
+system.ruby.network.routers4.msg_bytes.Writeback_Control::1       373888                      
+system.ruby.network.routers5.percent_links_utilized            0                      
+system.ruby.network.routers6.percent_links_utilized     0.031010                      
+system.ruby.network.routers6.msg_count.Control::0      2843003                      
+system.ruby.network.routers6.msg_count.Request_Control::2        83491                      
+system.ruby.network.routers6.msg_count.Response_Data::1      2944555                      
+system.ruby.network.routers6.msg_count.Response_Control::1      1873633                      
+system.ruby.network.routers6.msg_count.Response_Control::2      1762230                      
+system.ruby.network.routers6.msg_count.Writeback_Data::0       575354                      
+system.ruby.network.routers6.msg_count.Writeback_Data::1          375                      
+system.ruby.network.routers6.msg_count.Writeback_Control::0      1158480                      
+system.ruby.network.routers6.msg_count.Writeback_Control::1        46736                      
+system.ruby.network.routers6.msg_bytes.Control::0     22744024                      
+system.ruby.network.routers6.msg_bytes.Request_Control::2       667928                      
+system.ruby.network.routers6.msg_bytes.Response_Data::1    212007960                      
+system.ruby.network.routers6.msg_bytes.Response_Control::1     14989064                      
+system.ruby.network.routers6.msg_bytes.Response_Control::2     14097840                      
+system.ruby.network.routers6.msg_bytes.Writeback_Data::0     41425488                      
+system.ruby.network.routers6.msg_bytes.Writeback_Data::1        27000                      
+system.ruby.network.routers6.msg_bytes.Writeback_Control::0      9267840                      
+system.ruby.network.routers6.msg_bytes.Writeback_Control::1       373888                      
+system.ruby.network.msg_count.Control         8529009                      
+system.ruby.network.msg_count.Request_Control       248659                      
+system.ruby.network.msg_count.Response_Data      8833665                      
+system.ruby.network.msg_count.Response_Control     10907589                      
+system.ruby.network.msg_count.Writeback_Data      1727187                      
+system.ruby.network.msg_count.Writeback_Control      3615648                      
+system.ruby.network.msg_byte.Control         68232072                      
+system.ruby.network.msg_byte.Request_Control      1989272                      
+system.ruby.network.msg_byte.Response_Data    636023880                      
+system.ruby.network.msg_byte.Response_Control     87260712                      
+system.ruby.network.msg_byte.Writeback_Data    124357464                      
+system.ruby.network.msg_byte.Writeback_Control     28925184                      
 system.ruby.network.routers0.throttle0.link_utilization     0.037422                      
 system.ruby.network.routers0.throttle0.msg_count.Request_Control::2        42905                      
 system.ruby.network.routers0.throttle0.msg_count.Response_Data::1       823544                      
@@ -1021,6 +1021,44 @@ system.ruby.Locked_RMW_Write.hit_latency_hist::mean            3
 system.ruby.Locked_RMW_Write.hit_latency_hist::gmean     3.000000                      
 system.ruby.Locked_RMW_Write.hit_latency_hist |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |      339542    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.Locked_RMW_Write.hit_latency_hist::total       339542                      
+system.ruby.Directory_Controller.Fetch         178413      0.00%      0.00%
+system.ruby.Directory_Controller.Data           97701      0.00%      0.00%
+system.ruby.Directory_Controller.Memory_Data       178865      0.00%      0.00%
+system.ruby.Directory_Controller.Memory_Ack       142859      0.00%      0.00%
+system.ruby.Directory_Controller.DMA_READ          814      0.00%      0.00%
+system.ruby.Directory_Controller.DMA_WRITE        46736      0.00%      0.00%
+system.ruby.Directory_Controller.CleanReplacement        15947      0.00%      0.00%
+system.ruby.Directory_Controller.I.Fetch       178413      0.00%      0.00%
+system.ruby.Directory_Controller.I.DMA_READ          452      0.00%      0.00%
+system.ruby.Directory_Controller.I.DMA_WRITE        45158      0.00%      0.00%
+system.ruby.Directory_Controller.ID.Memory_Data          452      0.00%      0.00%
+system.ruby.Directory_Controller.ID_W.Memory_Ack        45158      0.00%      0.00%
+system.ruby.Directory_Controller.M.Data         95761      0.00%      0.00%
+system.ruby.Directory_Controller.M.DMA_READ          362      0.00%      0.00%
+system.ruby.Directory_Controller.M.DMA_WRITE         1578      0.00%      0.00%
+system.ruby.Directory_Controller.M.CleanReplacement        15947      0.00%      0.00%
+system.ruby.Directory_Controller.IM.Memory_Data       178413      0.00%      0.00%
+system.ruby.Directory_Controller.MI.Memory_Ack        95761      0.00%      0.00%
+system.ruby.Directory_Controller.M_DRD.Data          362      0.00%      0.00%
+system.ruby.Directory_Controller.M_DRDI.Memory_Ack          362      0.00%      0.00%
+system.ruby.Directory_Controller.M_DWR.Data         1578      0.00%      0.00%
+system.ruby.Directory_Controller.M_DWRI.Memory_Ack         1578      0.00%      0.00%
+system.ruby.DMA_Controller.ReadRequest   |         814    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.ReadRequest::total          814                      
+system.ruby.DMA_Controller.WriteRequest  |       46736    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.WriteRequest::total        46736                      
+system.ruby.DMA_Controller.Data          |         814    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.Data::total            814                      
+system.ruby.DMA_Controller.Ack           |       46736    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.Ack::total           46736                      
+system.ruby.DMA_Controller.READY.ReadRequest |         814    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.READY.ReadRequest::total          814                      
+system.ruby.DMA_Controller.READY.WriteRequest |       46736    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.READY.WriteRequest::total        46736                      
+system.ruby.DMA_Controller.BUSY_RD.Data  |         814    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.BUSY_RD.Data::total          814                      
+system.ruby.DMA_Controller.BUSY_WR.Ack   |       46736    100.00%    100.00% |           0      0.00%    100.00%
+system.ruby.DMA_Controller.BUSY_WR.Ack::total        46736                      
 system.ruby.L1Cache_Controller.Load      |     6037097     40.47%     40.47% |     8881067     59.53%    100.00%
 system.ruby.L1Cache_Controller.Load::total     14918164                      
 system.ruby.L1Cache_Controller.Ifetch    |    67778726     53.56%     53.56% |    58760197     46.44%    100.00%
@@ -1185,43 +1223,5 @@ system.ruby.L2Cache_Controller.MT_IIB.WB_Data_clean         2231      0.00%     
 system.ruby.L2Cache_Controller.MT_IIB.Unblock            5      0.00%      0.00%
 system.ruby.L2Cache_Controller.MT_IB.WB_Data            5      0.00%      0.00%
 system.ruby.L2Cache_Controller.MT_SB.Unblock        25200      0.00%      0.00%
-system.ruby.DMA_Controller.ReadRequest   |         814    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.ReadRequest::total          814                      
-system.ruby.DMA_Controller.WriteRequest  |       46736    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.WriteRequest::total        46736                      
-system.ruby.DMA_Controller.Data          |         814    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.Data::total            814                      
-system.ruby.DMA_Controller.Ack           |       46736    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.Ack::total           46736                      
-system.ruby.DMA_Controller.READY.ReadRequest |         814    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.READY.ReadRequest::total          814                      
-system.ruby.DMA_Controller.READY.WriteRequest |       46736    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.READY.WriteRequest::total        46736                      
-system.ruby.DMA_Controller.BUSY_RD.Data  |         814    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.BUSY_RD.Data::total          814                      
-system.ruby.DMA_Controller.BUSY_WR.Ack   |       46736    100.00%    100.00% |           0      0.00%    100.00%
-system.ruby.DMA_Controller.BUSY_WR.Ack::total        46736                      
-system.ruby.Directory_Controller.Fetch         178413      0.00%      0.00%
-system.ruby.Directory_Controller.Data           97701      0.00%      0.00%
-system.ruby.Directory_Controller.Memory_Data       178865      0.00%      0.00%
-system.ruby.Directory_Controller.Memory_Ack       142859      0.00%      0.00%
-system.ruby.Directory_Controller.DMA_READ          814      0.00%      0.00%
-system.ruby.Directory_Controller.DMA_WRITE        46736      0.00%      0.00%
-system.ruby.Directory_Controller.CleanReplacement        15947      0.00%      0.00%
-system.ruby.Directory_Controller.I.Fetch       178413      0.00%      0.00%
-system.ruby.Directory_Controller.I.DMA_READ          452      0.00%      0.00%
-system.ruby.Directory_Controller.I.DMA_WRITE        45158      0.00%      0.00%
-system.ruby.Directory_Controller.ID.Memory_Data          452      0.00%      0.00%
-system.ruby.Directory_Controller.ID_W.Memory_Ack        45158      0.00%      0.00%
-system.ruby.Directory_Controller.M.Data         95761      0.00%      0.00%
-system.ruby.Directory_Controller.M.DMA_READ          362      0.00%      0.00%
-system.ruby.Directory_Controller.M.DMA_WRITE         1578      0.00%      0.00%
-system.ruby.Directory_Controller.M.CleanReplacement        15947      0.00%      0.00%
-system.ruby.Directory_Controller.IM.Memory_Data       178413      0.00%      0.00%
-system.ruby.Directory_Controller.MI.Memory_Ack        95761      0.00%      0.00%
-system.ruby.Directory_Controller.M_DRD.Data          362      0.00%      0.00%
-system.ruby.Directory_Controller.M_DRDI.Memory_Ack          362      0.00%      0.00%
-system.ruby.Directory_Controller.M_DWR.Data         1578      0.00%      0.00%
-system.ruby.Directory_Controller.M_DWRI.Memory_Ack         1578      0.00%      0.00%
 
 ---------- End Simulation Statistics   ----------
