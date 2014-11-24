@@ -107,6 +107,7 @@ Process::Process(ProcessParams * params)
       max_stack_size(params->max_stack_size),
       M5_pid(system->allocatePID()),
       useArchPT(params->useArchPT),
+      kvmInSE(params->kvmInSE),
       pTable(useArchPT ?
         static_cast<PageTableBase *>(new ArchPageTable(name(), M5_pid, system)) :
         static_cast<PageTableBase *>(new FuncPageTable(name(), M5_pid)) ),

@@ -128,6 +128,9 @@ class Process : public SimObject
 
     // flag for using architecture specific page table
     bool useArchPT;
+    // running KvmCPU in SE mode requires special initialization
+    bool kvmInSE;
+
     PageTableBase* pTable;
 
     class FdMap

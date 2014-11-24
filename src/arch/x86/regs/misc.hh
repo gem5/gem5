@@ -613,6 +613,9 @@ namespace X86ISA
     EndBitUnion(CR3)
 
     BitUnion64(CR4)
+        Bitfield<18> osxsave; // Enable XSAVE and Proc Extended States
+        Bitfield<16> fsgsbase; // Enable RDFSBASE, RDGSBASE, WRFSBASE,
+                               // WRGSBASE instructions
         Bitfield<10> osxmmexcpt; // Operating System Unmasked
                                  // Exception Support
         Bitfield<9> osfxsr; // Operating System FXSave/FSRSTOR Support
@@ -885,6 +888,44 @@ namespace X86ISA
         EndSubBitUnion(type)
     EndBitUnion(SegDescriptor)
 
+    /**
+     * TSS Descriptor (long mode - 128 bits)
+     * the lower 64 bits
+     */
+    BitUnion64(TSSlow)
+        Bitfield<63, 56> baseHigh;
+        Bitfield<39, 16> baseLow;
+        Bitfield<55> g; // Granularity
+        Bitfield<52> avl; // Available To Software
+        Bitfield<51, 48> limitHigh;
+        Bitfield<15, 0> limitLow;
+        Bitfield<47> p; // Present
+        Bitfield<46, 45> dpl; // Descriptor Privilege-Level
+        SubBitUnion(type, 43, 40)
+            // Specifies whether this descriptor is for code or data.
+            Bitfield<43> codeOrData;
+
+            // These bit fields are for code segments
+            Bitfield<42> c; // Conforming
+            Bitfield<41> r; // Readable
+
+            // These bit fields are for data segments
+            Bitfield<42> e; // Expand-Down
+            Bitfield<41> w; // Writable
+
+            // This is used for both code and data segments.
+            Bitfield<40> a; // Accessed
+        EndSubBitUnion(type)
+    EndBitUnion(TSSlow)
+
+    /**
+     * TSS Descriptor (long mode - 128 bits)
+     * the upper 64 bits
+     */
+    BitUnion64(TSShigh)
+        Bitfield<31, 0> base;
+    EndBitUnion(TSShigh)
+
     BitUnion64(SegAttr)
         Bitfield<1, 0> dpl;
         Bitfield<2> unusable;
@@ -909,6 +950,23 @@ namespace X86ISA
         Bitfield<43, 40> type;
         Bitfield<36, 32> count; // Parameter Count
     EndBitUnion(GateDescriptor)
+
+    /**
+     * Long Mode Gate Descriptor
+     */
+    BitUnion64(GateDescriptorLow)
+        Bitfield<63, 48> offsetHigh; // Target Code-Segment Offset
+        Bitfield<47> p; // Present
+        Bitfield<46, 45> dpl; // Descriptor Privilege-Level
+        Bitfield<43, 40> type;
+        Bitfield<35, 32> IST; // IST pointer to TSS -- new stack for exception handling
+        Bitfield<31, 16> selector; // Target Code-Segment Selector
+        Bitfield<15, 0> offsetLow; // Target Code-Segment Offset
+    EndBitUnion(GateDescriptorLow)
+
+    BitUnion64(GateDescriptorHigh)
+        Bitfield<31, 0> offset; // Target Code-Segment Offset
+    EndBitUnion(GateDescriptorHigh)
 
     /**
      * Descriptor-Table Registers

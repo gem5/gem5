@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/x86/regs/misc.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
@@ -62,6 +63,9 @@ namespace X86ISA
         class ConfigTable;
     }
 
+    void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
+                        SegDescriptor desc, bool longmode);
+
     /* memory mappings for KVMCpu in SE mode */
     const uint64_t syscallCodeVirtAddr = 0xffff800000000000;
     const uint64_t syscallCodePhysAddr = 0x60000;
@@ -73,6 +77,10 @@ namespace X86ISA
     const uint64_t TSSPhysAddr = 0x63000;
     const uint64_t ISTVirtAddr = 0xffff800000004000;
     const uint64_t ISTPhysAddr = 0x64000;
+    const uint64_t PFHandlerVirtAddr = 0xffff800000005000;
+    const uint64_t PFHandlerPhysAddr = 0x65000;
+    const uint64_t MMIORegionVirtAddr = 0xffffc90000000000;
+    const uint64_t MMIORegionPhysAddr = 0xffff0000;
 
     const uint64_t pageTablePhysAddr = 0x70000;
 }

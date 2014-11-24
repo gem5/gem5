@@ -40,6 +40,7 @@ class Process(SimObject):
     system = Param.System(Parent.any, "system process will run on")
     useArchPT = Param.Bool('false', 'maintain an in-memory version of the page\
                             table in an architecture-specific format')
+    kvmInSE = Param.Bool('false', 'initialize the process for KvmCPU in SE')
     max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
 
     @classmethod

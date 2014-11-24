@@ -63,8 +63,8 @@ X86System::X86System(Params *p) :
 {
 }
 
-static void
-installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
+void
+X86ISA::installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
         SegDescriptor desc, bool longmode)
 {
     uint64_t base = desc.baseLow + (desc.baseHigh << 24);
@@ -151,19 +151,25 @@ X86System::initState()
                         (uint8_t *)(&nullDescriptor), 8);
     numGDTEntries++;
 
+    SegDescriptor initDesc = 0;
+    initDesc.type.codeOrData = 0; // code or data type
+    initDesc.type.c = 0;          // conforming
+    initDesc.type.r = 1;          // readable
+    initDesc.dpl = 0;             // privilege
+    initDesc.p = 1;               // present
+    initDesc.l = 1;               // longmode - 64 bit
+    initDesc.d = 0;               // operand size
+    initDesc.g = 1;               // granularity
+    initDesc.s = 1;               // system segment
+    initDesc.limitHigh = 0xFFFF;
+    initDesc.limitLow = 0xF;
+    initDesc.baseHigh = 0x0;
+    initDesc.baseLow = 0x0;
+
     //64 bit code segment
-    SegDescriptor csDesc = 0;
+    SegDescriptor csDesc = initDesc;
     csDesc.type.codeOrData = 1;
-    csDesc.type.c = 0; // Not conforming
-    csDesc.type.r = 1; // Readable
-    csDesc.dpl = 0; // Privelege level 0
-    csDesc.p = 1; // Present
-    csDesc.l = 1; // 64 bit
-    csDesc.d = 0; // default operand size
-    csDesc.g = 1; // Page granularity
-    csDesc.s = 1; // Not a system segment
-    csDesc.limitHigh = 0xF;
-    csDesc.limitLow = 0xFFFF;
+    csDesc.dpl = 0;
     //Because we're dealing with a pointer and I don't think it's
     //guaranteed that there isn't anything in a nonvirtual class between
     //it's beginning in memory and it's actual data, we'll use an
@@ -180,17 +186,7 @@ X86System::initState()
     tc->setMiscReg(MISCREG_CS, (MiscReg)cs);
 
     //32 bit data segment
-    SegDescriptor dsDesc = 0;
-    dsDesc.type.codeOrData = 0;
-    dsDesc.type.e = 0; // Not expand down
-    dsDesc.type.w = 1; // Writable
-    dsDesc.dpl = 0; // Privelege level 0
-    dsDesc.p = 1; // Present
-    dsDesc.d = 1; // default operand size
-    dsDesc.g = 1; // Page granularity
-    dsDesc.s = 1; // Not a system segment
-    dsDesc.limitHigh = 0xF;
-    dsDesc.limitLow = 0xFFFF;
+    SegDescriptor dsDesc = initDesc;
     uint64_t dsDescVal = dsDesc;
     physProxy.writeBlob(GDTBase + numGDTEntries * 8,
                         (uint8_t *)(&dsDescVal), 8);
@@ -210,15 +206,7 @@ X86System::initState()
     tc->setMiscReg(MISCREG_TSG_BASE, GDTBase);
     tc->setMiscReg(MISCREG_TSG_LIMIT, 8 * numGDTEntries - 1);
 
-    SegDescriptor tssDesc = 0;
-    tssDesc.type = 0xB;
-    tssDesc.dpl = 0; // Privelege level 0
-    tssDesc.p = 1; // Present
-    tssDesc.d = 1; // default operand size
-    tssDesc.g = 1; // Page granularity
-    tssDesc.s = 0;
-    tssDesc.limitHigh = 0xF;
-    tssDesc.limitLow = 0xFFFF;
+    SegDescriptor tssDesc = initDesc;
     uint64_t tssDescVal = tssDesc;
     physProxy.writeBlob(GDTBase + numGDTEntries * 8,
                         (uint8_t *)(&tssDescVal), 8);
