@@ -62,6 +62,13 @@ import MemConfig
 from Caches import *
 from cpu2000 import *
 
+# Check if KVM support has been enabled, we might need to do VM
+# configuration if that's the case.
+have_kvm_support = 'BaseKvmCPU' in globals()
+def is_kvm_cpu(cpu_class):
+    return have_kvm_support and cpu_class != None and \
+        issubclass(cpu_class, BaseKvmCPU)
+
 def get_processes(options):
     """Interprets provided options and returns a list of processes"""
 
@@ -186,6 +193,15 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
 # frequency.
 for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
+
+if is_kvm_cpu(CPUClass) or is_kvm_cpu(FutureClass):
+    if buildEnv['TARGET_ISA'] == 'x86':
+        system.vm = KvmVM()
+        for process in multiprocesses:
+            process.useArchPT = True
+            process.kvmInSE = True
+    else:
+        fatal("KvmCPU can only be used in SE mode with x86")
 
 # Sanity check
 if options.fastmem:
