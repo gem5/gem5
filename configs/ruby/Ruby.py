@@ -39,7 +39,6 @@
 #
 # Authors: Brad Beckmann
 
-import importlib
 import math
 import m5
 from m5.objects import *
@@ -183,15 +182,15 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
             routers = [], ext_links = [], int_links = [], netifs = [])
     ruby.network = network
 
-    protocol_name = buildEnv['PROTOCOL']
-    protocol = importlib.import_module(protocol_name)
+    protocol = buildEnv['PROTOCOL']
+    exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, topology) = \
-             protocol.create_system(options, full_system, system, dma_ports,
-                                    ruby)
+             eval("%s.create_system(options, full_system, system, dma_ports,\
+                                    ruby)"
+                  % protocol)
     except:
-        print "Error: could not create sytem for ruby protocol %s" % \
-            protocol_name
+        print "Error: could not create sytem for ruby protocol %s" % protocol
         raise
 
     # Create a port proxy for connecting the system port. This is
