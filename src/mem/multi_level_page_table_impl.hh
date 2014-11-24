@@ -151,14 +151,13 @@ MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
         if (walk(vaddr, true, PTE_addr)) {
             PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
             Addr entry_paddr = pTableISAOps.getPnum(PTE);
-            if (!clobber && entry_paddr == 0) {
-                pTableISAOps.setPnum(PTE, paddr >> PageShift);
-                pTableISAOps.setPTEFields(PTE);
-                p.write<PageTableEntry>(PTE_addr, PTE);
-                DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
-            } else {
+            if (!clobber && entry_paddr != 0) {
                 fatal("addr 0x%x already mapped to %x", vaddr, entry_paddr);
             }
+            pTableISAOps.setPnum(PTE, paddr >> PageShift);
+            pTableISAOps.setPTEFields(PTE);
+            p.write<PageTableEntry>(PTE_addr, PTE);
+            DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
 
             eraseCacheEntry(vaddr);
             updateCache(vaddr, TlbEntry(pid, vaddr, paddr));
