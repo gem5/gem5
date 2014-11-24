@@ -291,7 +291,7 @@ VirtIO9PProxy::writeAll(const uint8_t *data, size_t len)
 
 VirtIO9PDiod::VirtIO9PDiod(Params *params)
     : VirtIO9PProxy(params),
-      fd_to_diod(-1), fd_from_diod(-1)
+      fd_to_diod(-1), fd_from_diod(-1), diod_pid(-1)
 {
 }
 

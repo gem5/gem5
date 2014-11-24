@@ -658,12 +658,13 @@ BaseRemoteGDB::trap(int type)
      * After the debugger is "active" (connected) it will be
      * waiting for a "signaled" message from us.
      */
-    if (!active)
+    if (!active) {
         active = true;
-    else
+    } else {
         // Tell remote host that an exception has occurred.
         snprintf((char *)buffer, bufferSize, "S%02x", type);
         send(buffer);
+    }
 
     // Stick frame regs into our reg cache.
     getregs();

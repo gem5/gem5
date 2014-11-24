@@ -43,7 +43,8 @@
 
 VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, VirtQueue &_queue,
                                Index descIndex)
-    : memProxy(&_memProxy), queue(&_queue), _index(descIndex)
+    : memProxy(&_memProxy), queue(&_queue), _index(descIndex),
+      desc{0, 0, 0, 0}
 {
 }
 

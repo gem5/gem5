@@ -228,6 +228,7 @@ readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
     int fd = p->sim_fd(p->getSyscallArg(tc, index));
+    assert(fd >= 0);
     Addr bufPtr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
     BufferArg bufArg(bufPtr, nbytes);
@@ -264,6 +265,7 @@ lseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
     int fd = p->sim_fd(p->getSyscallArg(tc, index));
+    assert(fd >= 0);
     uint64_t offs = p->getSyscallArg(tc, index);
     int whence = p->getSyscallArg(tc, index);
 
@@ -278,6 +280,7 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
     int fd = p->sim_fd(p->getSyscallArg(tc, index));
+    assert(fd >= 0);
     uint64_t offset_high = p->getSyscallArg(tc, index);
     uint32_t offset_low = p->getSyscallArg(tc, index);
     Addr result_ptr = p->getSyscallArg(tc, index);
@@ -301,9 +304,6 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         result_buf.copyOut(tc->getMemProxy());
         return 0;
     }
-
-
-    return (result == (off_t)-1) ? -errno : result;
 }
 
 

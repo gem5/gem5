@@ -39,13 +39,10 @@
 struct m5_twin64_t {
     uint64_t a;
     uint64_t b;
-    m5_twin64_t()
+    m5_twin64_t() : a(0), b(0)
     {}
-    m5_twin64_t(const uint64_t x)
-    {
-        a = x;
-        b = x;
-    }
+    m5_twin64_t(const uint64_t x) : a(x), b(x)
+    {}
     inline m5_twin64_t& operator=(const uint64_t x)
     {
         a = x;

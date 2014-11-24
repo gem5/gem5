@@ -479,7 +479,7 @@ public:
         } M5_ATTR_PACKED;
 
         VirtRing<T>(PortProxy &proxy, uint16_t size)
-            : ring(size), _proxy(proxy), _base(0) {}
+        : header{0, 0}, ring(size), _proxy(proxy), _base(0) {}
 
         /**
          * Set the base address of the VirtIO ring buffer.

@@ -73,7 +73,7 @@ class StubSlavePort : public ExternalSlave::Port
     StubSlavePort(const std::string &name_,
         ExternalSlave &owner_) :
         ExternalSlave::Port(name_, owner_),
-        responseEvent(*this), responsePacket(NULL)
+        responseEvent(*this), responsePacket(NULL), mustRetry(false)
     { }
 
     Tick recvAtomic(PacketPtr packet);

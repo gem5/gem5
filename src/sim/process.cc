@@ -104,7 +104,9 @@ template struct AuxVector<uint64_t>;
 
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system),
+      brk_point(0), stack_base(0), stack_size(0), stack_min(0),
       max_stack_size(params->max_stack_size),
+      next_thread_stack_base(0),
       M5_pid(system->allocatePID()),
       useArchPT(params->useArchPT),
       kvmInSE(params->kvmInSE),
