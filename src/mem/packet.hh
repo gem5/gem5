@@ -544,15 +544,13 @@ class Packet : public Printable
     bool hadBadAddress() const { return cmd == MemCmd::BadAddressError; }
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
-    bool isSrcValid() const { return src != InvalidPortID; }
     /// Accessor function to get the source index of the packet.
-    PortID getSrc() const { assert(isSrcValid()); return src; }
+    PortID getSrc() const { return src; }
     /// Accessor function to set the source index of the packet.
     void setSrc(PortID _src) { src = _src; }
 
-    bool isDestValid() const { return dest != InvalidPortID; }
     /// Accessor function for the destination index of the packet.
-    PortID getDest() const { assert(isDestValid()); return dest; }
+    PortID getDest() const { return dest; }
     /// Accessor function to set the destination index of the packet.
     void setDest(PortID _dest) { dest = _dest; }
     /// Reset destination field, e.g. to turn a response into a request again.

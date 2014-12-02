@@ -171,6 +171,8 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // determine the destination based on what is stored in the packet
     PortID slave_port_id = pkt->getDest();
+    assert(slave_port_id != InvalidPortID);
+    assert(slave_port_id < respLayers.size());
 
     // test if the layer should be considered occupied for the current
     // port

@@ -272,6 +272,8 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 
     // determine the destination based on what is stored in the packet
     PortID slave_port_id = pkt->getDest();
+    assert(slave_port_id != InvalidPortID);
+    assert(slave_port_id < respLayers.size());
 
     // test if the crossbar should be considered occupied for the
     // current port
@@ -369,6 +371,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 
     // get the destination from the packet
     PortID dest_port_id = pkt->getDest();
+    assert(dest_port_id != InvalidPortID);
 
     // determine if the response is from a snoop request we
     // created as the result of a normal request (in which case it
@@ -382,6 +385,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // is being passed on as a normal response since this is occupying
     // the response layer rather than the snoop response layer
     if (forwardAsSnoop) {
+        assert(dest_port_id < snoopLayers.size());
         if (!snoopLayers[dest_port_id]->tryTiming(src_port)) {
             DPRINTF(CoherentXBar, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                     src_port->name(), pkt->cmdString(), pkt->getAddr());
@@ -390,6 +394,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     } else {
         // get the master port that mirrors this slave port internally
         MasterPort* snoop_port = snoopRespPorts[slave_port_id];
+        assert(dest_port_id < respLayers.size());
         if (!respLayers[dest_port_id]->tryTiming(snoop_port)) {
             DPRINTF(CoherentXBar, "recvTimingSnoopResp: src %s %s 0x%x BUSY\n",
                     snoop_port->name(), pkt->cmdString(), pkt->getAddr());

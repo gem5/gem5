@@ -242,9 +242,8 @@ Bridge::BridgeSlavePort::schedTimingResp(PacketPtr pkt, Tick when)
     pkt->setDest(req_state->origSrc);
     delete req_state;
 
-    // the bridge assumes that at least one crossbar has set the
-    // destination field of the packet
-    assert(pkt->isDestValid());
+    // the bridge sets the destination irrespective of it is valid or
+    // not, as it is checked in the crossbar
     DPRINTF(Bridge, "response, new dest %d\n", pkt->getDest());
 
     // If we're about to put this packet at the head of the queue, we
