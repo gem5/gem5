@@ -66,9 +66,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
         return;
 
     Addr locked_addr = xc->readMiscReg(MISCREG_LLADDR) & cacheBlockMask;
-    Addr snoop_addr = pkt->getAddr();
-
-    assert((cacheBlockMask & snoop_addr) == snoop_addr);
+    Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
 
     if (locked_addr == snoop_addr)
         xc->setMiscReg(MISCREG_LLFLAG, false);
