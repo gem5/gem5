@@ -115,6 +115,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
         for (int b = 0; b < banksPerRank; b++) {
             banks[r][b].rank = r;
             banks[r][b].bank = b;
+            // GDDR addressing of banks to BG is linear.
+            // Here we assume that all DRAM generations address bank groups as
+            // follows:
             if (bankGroupArch) {
                 // Simply assign lower bits to bank group in order to
                 // rotate across bank groups as banks are incremented
@@ -224,7 +227,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
                   tCCD_L, tBURST, bankGroupsPerRank);
         }
         // tRRD_L is greater than minimal, same bank group ACT-to-ACT delay
-        if (tRRD_L <= tRRD) {
+        // some datasheets might specify it equal to tRRD
+        if (tRRD_L < tRRD) {
             fatal("tRRD_L (%d) should be larger than tRRD (%d) when "
                   "bank groups per rank (%d) is greater than 1\n",
                   tRRD_L, tRRD, bankGroupsPerRank);

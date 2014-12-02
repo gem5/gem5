@@ -736,3 +736,88 @@ class LPDDR3_1600_x32(DRAMCtrl):
     IDD52 = '150mA'
     VDD = '1.8V'
     VDD2 = '1.2V'
+
+# A single GDDR5 x64 interface, with
+# default timings based on a GDDR5-4000 1 Gbit part (SK Hynix
+# H5GQ1H24AFR) in a 2x32 configuration.
+class GDDR5_4000_x64(DRAMCtrl):
+    # size of device
+    device_size = '128MB'
+
+    # 2x32 configuration, 1 device with a 32-bit interface
+    device_bus_width = 32
+
+    # GDDR5 is a BL8 device
+    burst_length = 8
+
+    # Each device has a page (row buffer) size of 2Kbits (256Bytes)
+    device_rowbuffer_size = '256B'
+
+    # 2x32 configuration, so 2 devices
+    devices_per_rank = 2
+
+    # assume single rank
+    ranks_per_channel = 1
+
+    # GDDR5 has 4 bank groups
+    bank_groups_per_rank = 4
+
+    # GDDR5 has 16 banks with 4 bank groups
+    banks_per_rank = 16
+
+    # 1000 MHz
+    tCK = '1ns'
+
+    # 8 beats across an x64 interface translates to 2 clocks @ 1000 MHz
+    # Data bus runs @2000 Mhz => DDR ( data runs at 4000 MHz )
+    # 8 beats at 4000 MHz = 2 beats at 1000 MHz
+    # tBURST is equivalent to the CAS-to-CAS delay (tCCD)
+    # With bank group architectures, tBURST represents the CAS-to-CAS
+    # delay for bursts to different bank groups (tCCD_S)
+    tBURST = '2ns'
+
+    # @1000MHz data rate, tCCD_L is 3 CK
+    # CAS-to-CAS delay for bursts to the same bank group
+    # tBURST is equivalent to tCCD_S; no explicit parameter required
+    # for CAS-to-CAS delay for bursts to different bank groups
+    tCCD_L = '3ns';
+
+    tRCD = '12ns'
+
+    # tCL is not directly found in datasheet and assumed equal tRCD
+    tCL = '12ns'
+
+    tRP = '12ns'
+    tRAS = '28ns'
+
+    # RRD_S (different bank group)
+    # RRD_S is 5.5 ns in datasheet.
+    # rounded to the next multiple of tCK
+    tRRD = '6ns'
+
+    # RRD_L (same bank group)
+    # RRD_L is 5.5 ns in datasheet.
+    # rounded to the next multiple of tCK
+    tRRD_L = '6ns'
+
+    tXAW = '23ns'
+
+    # tXAW < 4 x tRRD.
+    # Therefore, activation limit is set to 0
+    activation_limit = 0
+
+    tRFC = '65ns'
+    tWR = '12ns'
+
+    # Here using the average of WTR_S and WTR_L
+    tWTR = '5ns'
+
+    # Read-to-Precharge 2 CK
+    tRTP = '2ns'
+
+    # Assume 2 cycles
+    tRTW = '2ns'
+
+    # Default different rank bus delay to 2 CK, @1000 MHz = 2 ns
+    tCS = '2ns'
+    tREFI = '3.9us'
