@@ -174,7 +174,7 @@ MemCmd::commandInfo[] =
 
 bool
 Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
-                        uint8_t *data)
+                        uint8_t *_data)
 {
     Addr func_start = getAddr();
     Addr func_end   = getAddr() + getSize() - 1;
@@ -189,12 +189,14 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
     // check print first since it doesn't require data
     if (isPrint()) {
+        assert(!_data);
         safe_cast<PrintReqState*>(senderState)->printObj(obj);
         return false;
     }
 
-    // if there's no data, there's no need to look further
-    if (!data) {
+    // we allow the caller to pass NULL to signify the other packet
+    // has no data
+    if (!_data) {
         return false;
     }
 
@@ -204,7 +206,9 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
     if (isRead()) {
         if (func_start >= val_start && func_end <= val_end) {
-            memcpy(getPtr<uint8_t>(), data + offset, getSize());
+            memcpy(getPtr<uint8_t>(), _data + offset, getSize());
+            // complete overlap, and as the current packet is a read
+            // we are done
             return true;
         } else {
             // Offsets and sizes to copy in case of partial overlap
@@ -271,7 +275,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
                     // copy the first half
                     uint8_t *dest = getPtr<uint8_t>() + func_offset;
-                    uint8_t *src = data + val_offset;
+                    uint8_t *src = _data + val_offset;
                     memcpy(dest, src, (bytesValidStart - func_offset));
 
                     // re-calc the offsets and indices to do the copy
@@ -293,7 +297,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
             // copy partial data into the packet's data array
             uint8_t *dest = getPtr<uint8_t>() + func_offset;
-            uint8_t *src = data + val_offset;
+            uint8_t *src = _data + val_offset;
             memcpy(dest, src, overlap_size);
 
             // check if we're done filling the functional access
@@ -302,11 +306,11 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
         }
     } else if (isWrite()) {
         if (offset >= 0) {
-            memcpy(data + offset, getConstPtr<uint8_t>(),
+            memcpy(_data + offset, getConstPtr<uint8_t>(),
                    (min(func_end, val_end) - func_start) + 1);
         } else {
             // val_start > func_start
-            memcpy(data, getConstPtr<uint8_t>() - offset,
+            memcpy(_data, getConstPtr<uint8_t>() - offset,
                    (min(func_end, val_end) - val_start) + 1);
         }
     } else {

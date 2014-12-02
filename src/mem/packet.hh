@@ -185,6 +185,12 @@ class MemCmd
     bool needsExclusive() const { return testCmdAttrib(NeedsExclusive); }
     bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
+
+    /**
+     * Check if this particular packet type carries payload data. Note
+     * that this does not reflect if the data pointer of the packet is
+     * valid or not.
+     */
     bool hasData() const        { return testCmdAttrib(HasData); }
     bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
     bool isSWPrefetch() const   { return testCmdAttrib(IsSWPrefetch); }
@@ -918,26 +924,35 @@ class Packet : public Printable
     }
 
     /**
-     * Check a functional request against a memory value represented
-     * by a base/size pair and an associated data array.  If the
-     * functional request is a read, it may be satisfied by the memory
-     * value.  If the functional request is a write, it may update the
-     * memory value.
-     */
-    bool checkFunctional(Printable *obj, Addr base, bool is_secure, int size,
-                         uint8_t *data);
-
-    /**
      * Check a functional request against a memory value stored in
-     * another packet (i.e. an in-transit request or response).
+     * another packet (i.e. an in-transit request or
+     * response). Returns true if the current packet is a read, and
+     * the other packet provides the data, which is then copied to the
+     * current packet. If the current packet is a write, and the other
+     * packet intersects this one, then we update the data
+     * accordingly.
      */
     bool
-    checkFunctional(PacketPtr other) 
+    checkFunctional(PacketPtr other)
     {
-        uint8_t *data = other->hasData() ? other->getPtr<uint8_t>() : NULL;
+        // all packets that are carrying a payload should have a valid
+        // data pointer
         return checkFunctional(other, other->getAddr(), other->isSecure(),
-                               other->getSize(), data);
+                               other->getSize(),
+                               other->hasData() ?
+                               other->getPtr<uint8_t>() : NULL);
     }
+
+    /**
+     * Check a functional request against a memory value represented
+     * by a base/size pair and an associated data array. If the
+     * current packet is a read, it may be satisfied by the memory
+     * value. If the current packet is a write, it may update the
+     * memory value.
+     */
+    bool
+    checkFunctional(Printable *obj, Addr base, bool is_secure, int size,
+                    uint8_t *_data);
 
     /**
      * Push label for PrintReq (safe to call unconditionally).

@@ -1481,6 +1481,10 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     if (blk == NULL) {
         // better have read new data...
         assert(pkt->hasData());
+
+        // only read reaponses have data
+        assert(pkt->isRead());
+
         // need to do a replacement
         blk = allocateBlock(addr, is_secure, writebacks);
         if (blk == NULL) {
@@ -1538,8 +1542,10 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     DPRINTF(Cache, "Block addr %x (%s) moving from state %x to %s\n",
             addr, is_secure ? "s" : "ns", old_state, blk->print());
 
-    // if we got new data, copy it in
+    // if we got new data, copy it in (checking for a read response
+    // and a response that has data is the same in the end)
     if (pkt->isRead()) {
+        assert(pkt->hasData());
         std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
     }
 
