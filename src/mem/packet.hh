@@ -846,9 +846,9 @@ class Packet : public Printable
      */
     template <typename T>
     T*
-    getPtr(bool null_ok = false)
+    getPtr()
     {
-        assert(null_ok || flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
         return (T*)data;
     }
 

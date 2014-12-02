@@ -110,6 +110,11 @@ Check::initiatePrefetch()
     req->setThreadContext(index, 0);
 
     PacketPtr pkt = new Packet(req, cmd);
+    // despite the oddity of the 0 size (questionable if this should
+    // even be allowed), a prefetch is still a read and as such needs
+    // a place to store the result
+    uint8_t *data = new uint8_t;
+    pkt->dataDynamic(data);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return

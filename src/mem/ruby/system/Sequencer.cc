@@ -524,28 +524,23 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
              llscSuccess ? "Done" : "SC_Failed", "", "",
              request_address, total_latency);
 
-    // update the data
+    // update the data unless it is a non-data-carrying flush
     if (g_system_ptr->m_warmup_enabled) {
-        assert(pkt->getPtr<uint8_t>(false) != NULL);
-        data.setData(pkt->getPtr<uint8_t>(false),
+        data.setData(pkt->getPtr<uint8_t>(),
                      request_address.getOffset(), pkt->getSize());
-    } else if (pkt->getPtr<uint8_t>(true) != NULL) {
+    } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
             (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked)) {
-            memcpy(pkt->getPtr<uint8_t>(true),
+            memcpy(pkt->getPtr<uint8_t>(),
                    data.getData(request_address.getOffset(), pkt->getSize()),
                    pkt->getSize());
         } else {
-            data.setData(pkt->getPtr<uint8_t>(true),
+            data.setData(pkt->getPtr<uint8_t>(),
                          request_address.getOffset(), pkt->getSize());
         }
-    } else {
-        DPRINTF(MemoryAccess,
-                "WARNING.  Data not transfered from Ruby to M5 for type %s\n",
-                RubyRequestType_to_string(type));
     }
 
     // If using the RubyTester, update the RubyTester sender state's
@@ -679,9 +674,12 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
         pc = pkt->req->getPC();
     }
 
+    // check if the packet has data as for example prefetch and flush
+    // requests do not
     std::shared_ptr<RubyRequest> msg =
         std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                                      pkt->getPtr<uint8_t>(true),
+                                      pkt->isFlush() ?
+                                      nullptr : pkt->getPtr<uint8_t>(),
                                       pkt->getSize(), pc, secondary_type,
                                       RubyAccessMode_Supervisor, pkt,
                                       PrefetchBit_No, proc_id);
