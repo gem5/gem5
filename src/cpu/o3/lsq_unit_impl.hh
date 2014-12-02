@@ -105,15 +105,11 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
         DPRINTF(IEW, "[sn:%lli]: Response from first half of earlier "
                 "blocked split load recieved. Ignoring.\n", inst->seqNum);
         delete state;
-        delete pkt->req;
-        delete pkt;
         return;
     }
 
     // If this is a split access, wait until all packets are received.
     if (TheISA::HasUnalignedMemAcc && !state->complete()) {
-        delete pkt->req;
-        delete pkt;
         return;
     }
 
@@ -142,8 +138,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     cpu->ppDataAccessComplete->notify(std::make_pair(inst, pkt));
 
     delete state;
-    delete pkt->req;
-    delete pkt;
 }
 
 template <class Impl>

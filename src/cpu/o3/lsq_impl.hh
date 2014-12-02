@@ -347,6 +347,8 @@ LSQ<Impl>::recvTimingResp(PacketPtr pkt)
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
     thread[pkt->req->threadId()].completeDataAccess(pkt);
+    delete pkt->req;
+    delete pkt;
     return true;
 }
 
