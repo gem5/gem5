@@ -562,7 +562,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
                 // Otherwise, mark the load has a possible load violation
                 // and if we see a snoop before it's commited, we need to squash
                 ld_inst->possibleLoadViolation(true);
-                DPRINTF(LSQUnit, "Found possible load violaiton at addr: %#x"
+                DPRINTF(LSQUnit, "Found possible load violation at addr: %#x"
                         " between instructions [sn:%lli] and [sn:%lli]\n",
                         inst_eff_addr1, inst->seqNum, ld_inst->seqNum);
             } else {
@@ -1124,8 +1124,20 @@ LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
     if (!inst->isExecuted()) {
         inst->setExecuted();
 
-        // Complete access to copy data to proper place.
-        inst->completeAcc(pkt);
+        if (inst->fault == NoFault) {
+            // Complete access to copy data to proper place.
+            inst->completeAcc(pkt);
+        } else {
+            // If the instruction has an outstanding fault, we cannot complete
+            // the access as this discards the current fault.
+
+            // If we have an outstanding fault, the fault should only be of
+            // type ReExec.
+            assert(dynamic_cast<ReExec*>(inst->fault.get()) != nullptr);
+
+            DPRINTF(LSQUnit, "Not completing instruction [sn:%lli] access "
+                    "due to pending fault.\n", inst->seqNum);
+        }
     }
 
     // Need to insert instruction into queue to commit

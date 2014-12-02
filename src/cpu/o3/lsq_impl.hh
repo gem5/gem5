@@ -346,7 +346,29 @@ LSQ<Impl>::recvTimingResp(PacketPtr pkt)
     if (pkt->isError())
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
+
     thread[pkt->req->threadId()].completeDataAccess(pkt);
+
+    if (pkt->isInvalidate()) {
+        // This response also contains an invalidate; e.g. this can be the case
+        // if cmd is ReadRespWithInvalidate.
+        //
+        // The calling order between completeDataAccess and checkSnoop matters.
+        // By calling checkSnoop after completeDataAccess, we ensure that the
+        // fault set by checkSnoop is not lost. Calling writeback (more
+        // specifically inst->completeAcc) in completeDataAccess overwrites
+        // fault, and in case this instruction requires squashing (as
+        // determined by checkSnoop), the ReExec fault set by checkSnoop would
+        // be lost otherwise.
+
+        DPRINTF(LSQ, "received invalidation with response for addr:%#x\n",
+                pkt->getAddr());
+
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            thread[tid].checkSnoop(pkt);
+        }
+    }
+
     delete pkt->req;
     delete pkt;
     return true;
