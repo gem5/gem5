@@ -504,7 +504,12 @@ class Packet : public Printable
     bool isFlush() const        { return cmd.isFlush(); }
 
     // Snoop flags
-    void assertMemInhibit()         { flags.set(MEM_INHIBIT); }
+    void assertMemInhibit()
+    {
+        assert(isRequest());
+        assert(!flags.isSet(MEM_INHIBIT));
+        flags.set(MEM_INHIBIT);
+    }
     bool memInhibitAsserted() const { return flags.isSet(MEM_INHIBIT); }
     void assertShared()             { flags.set(SHARED); }
     bool sharedAsserted() const     { return flags.isSet(SHARED); }

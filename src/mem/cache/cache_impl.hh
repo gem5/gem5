@@ -1693,7 +1693,12 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     }
 
     if (respond) {
-        assert(!pkt->memInhibitAsserted());
+        // prevent anyone else from responding, cache as well as
+        // memory, and also prevent any memory from even seeing the
+        // request (with current inhibited semantics), note that this
+        // applies both to reads and writes and that for writes it
+        // works thanks to the fact that we still have dirty data and
+        // will write it back at a later point
         pkt->assertMemInhibit();
         if (have_exclusive) {
             pkt->setSupplyExclusive();
