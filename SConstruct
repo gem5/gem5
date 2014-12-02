@@ -216,7 +216,7 @@ use_prefixes = [
     ]
 
 use_env = {}
-for key,val in os.environ.iteritems():
+for key,val in sorted(os.environ.iteritems()):
     if key in use_vars or \
             any([key.startswith(prefix) for prefix in use_prefixes]):
         use_env[key] = val

@@ -691,8 +691,8 @@ class MetaSimObject(type):
         # The 'local' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
-        # here).
-        params = cls._params.local.values()
+        # here). Sort the params based on their key
+        params = map(lambda (k, v): v, sorted(cls._params.local.items()))
         ports = cls._ports.local
 
         code('%module(package="m5.internal") param_$cls')
@@ -772,8 +772,8 @@ using std::ptrdiff_t;
         # The 'local' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
-        # here).
-        params = cls._params.local.values()
+        # here). Sort the params based on their key
+        params = map(lambda (k, v): v, sorted(cls._params.local.items()))
         ports = cls._ports.local
         try:
             ptypes = [p.ptype for p in params]

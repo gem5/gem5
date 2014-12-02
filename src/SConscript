@@ -528,6 +528,7 @@ for name,obj in sorted(sim_objects.iteritems()):
 #
 module_depends = ["m5", "m5.SimObject", "m5.params"]
 depends = [ PySource.modules[dep].snode for dep in module_depends ]
+depends.sort(key = lambda x: x.name)
 
 ########################################################################
 #
@@ -717,7 +718,7 @@ if GetOption('with_cxx_config'):
     env.Command(cxx_config_init_cc_file, Value(name),
         MakeAction(createCxxConfigInitCC, Transform("CXXCINIT")))
     cxx_param_hh_files = ["cxx_config/%s.hh" % simobj
-        for simobj in sorted(sim_objects.itervalues())
+        for name,simobj in sorted(sim_objects.iteritems())
         if not hasattr(simobj, 'abstract') or not simobj.abstract]
     Depends(cxx_config_init_cc_file, cxx_param_hh_files +
             [File('sim/cxx_config.hh')])
@@ -725,7 +726,7 @@ if GetOption('with_cxx_config'):
 
 # Generate any needed param SWIG wrapper files
 params_i_files = []
-for name,param in params_to_swig.iteritems():
+for name,param in sorted(params_to_swig.iteritems()):
     i_file = File('python/m5/internal/%s.i' % (param.swig_module_name()))
     params_i_files.append(i_file)
     env.Command(i_file, Value(name),
@@ -760,10 +761,9 @@ for name,enum in sorted(all_enums.iteritems()):
     SwigSource('m5.internal', i_file)
 
 # Generate SimObject SWIG wrapper files
-for name,simobj in sim_objects.iteritems():
+for name,simobj in sorted(sim_objects.iteritems()):
     py_source = PySource.modules[simobj.__module__]
     extra_deps = [ py_source.tnode ]
-
     i_file = File('python/m5/internal/param_%s.i' % name)
     env.Command(i_file, Value(name),
                 MakeAction(createSimObjectSwigWrapper, Transform("SO SWIG")))
