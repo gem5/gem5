@@ -671,7 +671,7 @@ Execute::issue(bool only_issue_microops)
                                 timing->extraAssumedLat;
                         }
 
-                        bool issued_mem_ref = inst->isMemRef();
+                        issued_mem_ref = inst->isMemRef();
 
                         QueuedInst fu_inst(inst);
 
