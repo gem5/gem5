@@ -344,12 +344,22 @@ TableWalker::processWalkWrapper()
         // We've got a valid request, lets process it
         pending = true;
         pendingQueue.pop_front();
+        // Keep currState in case one of the processWalk... calls NULLs it
+        WalkerState *curr_state_copy = currState;
+        Fault f;
         if (currState->aarch64)
-            processWalkAArch64();
+            f = processWalkAArch64();
         else if ((_haveLPAE && currState->ttbcr.eae) || currState->isHyp || isStage2)
-            processWalkLPAE();
+            f = processWalkLPAE();
         else
-            processWalk();
+            f = processWalk();
+
+        if (f != NoFault) {
+            curr_state_copy->transState->finish(f, curr_state_copy->req,
+                    curr_state_copy->tc, curr_state_copy->mode);
+
+            delete curr_state_copy;
+        }
         return;
     }
 
