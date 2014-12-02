@@ -66,4 +66,5 @@ gem5.$(VARIANT).sc: main.o stats.o \
 
 clean:
 	$(RM) $(ALL)
+	$(RM) *.o
 	$(RM) -r m5out

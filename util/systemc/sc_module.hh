@@ -99,6 +99,10 @@ class Module : public sc_core::sc_module
     /** Expected exit time of last eventLoop sleep */
     Tick wait_exit_time;
 
+    /** Are we in Module::simulate?  Used to mask events when not inside
+     *  the simulate loop */
+    bool in_simulate;
+
     /** Placeholder base class for a variant event queue if this becomes
      *  useful */
     class SCEventQueue : public EventQueue
@@ -131,9 +135,17 @@ class Module : public sc_core::sc_module
      *  are created */
     static void setupEventQueues(Module &module);
 
+    /** Catch gem5 time up with SystemC */
+    void catchup();
+
     /** Notify an externalSchedulingEvent at the given time from the
      *  current SystemC time */
     void notify(sc_core::sc_time time_from_now = sc_core::SC_ZERO_TIME);
+
+    /** Process an event triggered by externalSchedulingEvent and also
+     *  call eventLoop (to try and mop up any events at this time) if there
+     *  are any scheduled events */
+    void serviceExternalEvent();
 
     /** Process gem5 events up until an exit event or there are no events
      *  left. */

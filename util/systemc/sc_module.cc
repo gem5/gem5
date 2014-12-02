@@ -76,10 +76,14 @@ setTickFrequency()
     ::setClockFrequency(1000000000000);
 }
 
-Module::Module(sc_core::sc_module_name name) : sc_core::sc_module(name)
+Module::Module(sc_core::sc_module_name name) : sc_core::sc_module(name),
+    in_simulate(false)
 {
     SC_METHOD(eventLoop);
     sensitive << eventLoopEnterEvent;
+    dont_initialize();
+
+    SC_METHOD(serviceExternalEvent);
     sensitive << externalSchedulingEvent;
     dont_initialize();
 }
@@ -95,9 +99,35 @@ Module::SCEventQueue::wakeup(Tick when)
 void
 Module::setupEventQueues(Module &module)
 {
+    fatal_if(mainEventQueue.size() != 0,
+        "Gem5SystemC::Module::setupEventQueues must be called"
+        " before any gem5 event queues are set up");
+
     numMainEventQueues = 1;
     mainEventQueue.push_back(new SCEventQueue("events", module));
     curEventQueue(getEventQueue(0));
+}
+
+void
+Module::catchup()
+{
+    EventQueue *eventq = getEventQueue(0);
+    Tick systemc_time = sc_core::sc_time_stamp().value();
+    Tick gem5_time = curTick();
+
+    /* gem5 time *must* lag SystemC as SystemC is the master */
+    fatal_if(gem5_time > systemc_time, "gem5 time must lag SystemC time"
+        " gem5: %d SystemC: %d", gem5_time, systemc_time);
+
+    eventq->setCurTick(systemc_time);
+
+    if (!eventq->empty()) {
+        Tick next_event_time M5_VAR_USED = eventq->nextTick();
+
+        fatal_if(gem5_time > next_event_time,
+            "Missed an event at time %d gem5: %d, SystemC: %d",
+            next_event_time, gem5_time, systemc_time);
+    }
 }
 
 void
@@ -109,7 +139,16 @@ Module::notify(sc_core::sc_time time_from_now)
 void
 Module::serviceAsyncEvent()
 {
+    EventQueue *eventq = getEventQueue(0);
+
     assert(async_event);
+
+    /* Catch up gem5 time with SystemC time so that any event here won't
+     * be in the past relative to the current time */
+    Tick systemc_time = sc_core::sc_time_stamp().value();
+
+    /* Move time on to match SystemC */
+    catchup();
 
     async_event = false;
     if (async_statdump || async_statreset) {
@@ -133,22 +172,37 @@ Module::serviceAsyncEvent()
 }
 
 void
+Module::serviceExternalEvent()
+{
+    EventQueue *eventq = getEventQueue(0);
+
+    if (!in_simulate && !async_event)
+        warn("Gem5SystemC external event received while not in simulate");
+
+    if (async_event)
+        serviceAsyncEvent();
+
+    if (in_simulate && !eventq->empty())
+        eventLoop();
+}
+
+void
 Module::eventLoop()
 {
     EventQueue *eventq = getEventQueue(0);
+
+    fatal_if(!in_simulate, "Gem5SystemC event loop entered while"
+        " outside Gem5SystemC::Module::simulate");
 
     if (async_event)
         serviceAsyncEvent();
 
     while (!eventq->empty()) {
         Tick next_event_time = eventq->nextTick();
-        Tick systemc_time = sc_core::sc_time_stamp().value();
-
-        /* gem5 time *must* lag SystemC as SystemC is the master */
-        assert(curTick() <= systemc_time);
 
         /* Move time on to match SystemC */
-        eventq->setCurTick(systemc_time);
+        catchup();
+
         Tick gem5_time = curTick();
 
         /* Woken up early */
@@ -171,6 +225,8 @@ Module::eventLoop()
 
             return;
         } else if (gem5_time > next_event_time) {
+            Tick systemc_time = sc_core::sc_time_stamp().value();
+
             /* Missed event, for some reason the above test didn't work
              *  or an event was scheduled in the past */
             fatal("Missed an event at time %d gem5: %d, SystemC: %d",
@@ -180,7 +236,7 @@ Module::eventLoop()
             exitEvent = eventq->serviceOne();
 
             if (exitEvent) {
-                eventLoopExitEvent.notify();
+                eventLoopExitEvent.notify(sc_core::SC_ZERO_TIME);
                 return;
             }
         }
@@ -192,7 +248,7 @@ Module::eventLoop()
 GlobalSimLoopExitEvent *
 Module::simulate(Tick num_cycles)
 {
-    inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
+    inform("Entering event queue @ %d.  Starting simulation...", curTick());
 
     if (num_cycles < MaxTick - curTick())
         num_cycles = curTick() + num_cycles;
@@ -204,6 +260,11 @@ Module::simulate(Tick num_cycles)
 
     exitEvent = NULL;
 
+    /* Cancel any outstanding events */
+    eventLoopExitEvent.cancel();
+    externalSchedulingEvent.cancel();
+
+    in_simulate = true;
     eventLoopEnterEvent.notify(sc_core::SC_ZERO_TIME);
 
     /* Wait for event queue to exit, guarded by exitEvent just incase
@@ -211,6 +272,10 @@ Module::simulate(Tick num_cycles)
      *  on notify semantics */
     if (!exitEvent)
         wait(eventLoopExitEvent);
+
+    /* Cancel any outstanding event loop entries */
+    eventLoopEnterEvent.cancel();
+    in_simulate = false;
 
     /* Locate the global exit event */
     BaseGlobalEvent *global_event = exitEvent->globalEvent();

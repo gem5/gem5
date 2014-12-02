@@ -87,10 +87,10 @@ void CuttingStreambuf::outputLine()
 /** This is pretty much the least efficient way of doing this, but it has the
  *  advantage of having very few corners to get wrong.
  *
- *  A newly allocated streambuf will have no buffer to serve to its [oi]stream.
- *  It will, therefore, call overflow for every character it wants to insert
- *  into the output stream.  Those characters are captured one by one here and
- *  added to this->line. */
+ *  A newly allocated streambuf will have no buffer to serve to its
+ *  [oi]stream.  It will, therefore, call overflow for every character it
+ *  wants to insert into the output stream.  Those characters are captured one
+ *  by one here and added to this->line. */
 int
 CuttingStreambuf::overflow(int chr)
 {

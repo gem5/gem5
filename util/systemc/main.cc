@@ -120,8 +120,6 @@ class SimControl : public Gem5SystemC::Module
 
     SimControl(sc_core::sc_module_name name, int argc_, char **argv_);
 
-    void before_end_of_elaboration();
-
     void run();
 };
 
@@ -141,14 +139,26 @@ SimControl::SimControl(sc_core::sc_module_name name,
 
     cxxConfigInit();
 
+    /* Pass DPRINTF messages to SystemC */
     Trace::setDebugLogger(&logger);
 
+    /* @todo need this as an option */
     Gem5SystemC::setTickFrequency();
-    sc_core::sc_set_time_resolution(1, sc_core::SC_PS);
 
+    /* Make a SystemC-synchronising event queue and install it as the
+     *  sole top level gem5 EventQueue */
     Gem5SystemC::Module::setupEventQueues(*this);
+
+    if (sc_core::sc_get_time_resolution() !=
+        sc_core::sc_time(1, sc_core::SC_PS))
+    {
+        fatal("Time resolution must be set to 1 ps for gem5 to work");
+    }
+
+    /* Enable keyboard interrupt, async I/O etc. */
     initSignals();
 
+    /* Enable stats */
     Stats::initSimStats();
     Stats::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
 
@@ -168,10 +178,9 @@ SimControl::SimControl(sc_core::sc_module_name name,
 
     CxxConfigFileBase *conf = new CxxIniFile();
 
-    if (!conf->load(config_file.c_str())) {
-        std::cerr << "Can't open config file: " << config_file << '\n';
-        std::exit(EXIT_FAILURE);
-    }
+    if (!conf->load(config_file.c_str()))
+        fatal("Can't open config file: %s", config_file);
+
     arg_ptr++;
 
     config_manager = new CxxConfigManager(*conf);
@@ -231,8 +240,7 @@ SimControl::SimControl(sc_core::sc_module_name name,
             }
         }
     } catch (CxxConfigManager::Exception &e) {
-        std::cerr << e.name << ": " << e.message << "\n";
-        std::exit(EXIT_FAILURE);
+        fatal("Config problem in sim object %s: %s", e.name, e.message);
     }
 
     CxxConfig::statsEnable();
@@ -241,31 +249,51 @@ SimControl::SimControl(sc_core::sc_module_name name,
     try {
         config_manager->instantiate();
     } catch (CxxConfigManager::Exception &e) {
-        std::cerr << "Config problem in sim object " << e.name
-            << ": " << e.message << "\n";
-
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-void SimControl::before_end_of_elaboration()
-{
-    if (!checkpoint_restore) {
-        try {
-            config_manager->initState();
-            config_manager->startup();
-        } catch (CxxConfigManager::Exception &e) {
-            std::cerr << "Config problem in sim object " << e.name
-                << ": " << e.message << "\n";
-
-            std::exit(EXIT_FAILURE);
-        }
+        fatal("Config problem in sim object %s: %s", e.name, e.message);
     }
 }
 
 void SimControl::run()
 {
+    EventQueue *eventq = getEventQueue(0);
     GlobalSimLoopExitEvent *exit_event = NULL;
+
+    /* There *must* be no scheduled events yet */
+    fatal_if(!eventq->empty(), "There must be no posted events"
+        " before SimControl::run");
+
+    try {
+        if (checkpoint_restore) {
+            std::cerr << "Restoring checkpoint\n";
+
+            Checkpoint *checkpoint = new Checkpoint(checkpoint_dir,
+                config_manager->getSimObjectResolver());
+
+            /* Catch SystemC up with gem5 after checkpoint restore.
+             *  Note that gem5 leading SystemC is always a violation of the
+             *  required relationship between the two, hence this careful
+             *  catchup */
+            Tick systemc_time = sc_core::sc_time_stamp().value();
+            if (curTick() > systemc_time) {
+                Tick wait_period = curTick() - systemc_time;
+
+                std::cerr << "Waiting for " << wait_period << "ps for"
+                    " SystemC to catch up to gem5\n";
+                wait(sc_core::sc_time(wait_period, sc_core::SC_PS));
+            }
+
+            config_manager->loadState(checkpoint);
+            config_manager->startup();
+            config_manager->drainResume();
+        } else {
+            config_manager->initState();
+            config_manager->startup();
+        }
+    } catch (CxxConfigManager::Exception &e) {
+        fatal("Config problem in sim object %s: %s", e.name, e.message);
+    }
+
+    fatal_if(eventq->empty(), "No events to process after system startup");
 
     if (checkpoint_save) {
         exit_event = simulate(pre_run_time);
@@ -299,32 +327,6 @@ void SimControl::run()
         config_manager->drainResume();
     }
 
-    if (checkpoint_restore) {
-        std::cerr << "Restoring checkpoint\n";
-
-        Checkpoint *checkpoint = new Checkpoint(checkpoint_dir,
-            config_manager->getSimObjectResolver());
-
-        Serializable::unserializeGlobals(checkpoint);
-
-        /* gem5 time can have changed, so lets wait until SystemC
-         *  catches up */
-        Tick systemc_time = sc_core::sc_time_stamp().value();
-        if (curTick() > systemc_time) {
-            Tick wait_period = curTick() - systemc_time;
-
-            std::cerr << "Waiting for " << wait_period << "ps for"
-                " SystemC to catch up to gem5\n";
-            wait(sc_core::sc_time(wait_period, sc_core::SC_PS));
-        }
-
-        config_manager->loadState(checkpoint);
-
-        config_manager->drainResume();
-
-        std::cerr << "Restored from checkpoint\n";
-    }
-
     if (switch_cpus) {
         exit_event = simulate(pre_switch_time);
 
@@ -350,6 +352,7 @@ void SimControl::run()
 
         old_cpu.switchOut();
         system.setMemoryMode(Enums::timing);
+
         new_cpu.takeOverFrom(&old_cpu);
         config_manager->drainResume();
 

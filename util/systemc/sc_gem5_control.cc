@@ -228,8 +228,11 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
      *  sole top level gem5 EventQueue */
     Gem5SystemC::Module::setupEventQueues(*this);
 
-    if (sc_core::sc_get_time_resolution() != sc_core::sc_time(1, sc_core::SC_PS))
+    if (sc_core::sc_get_time_resolution() !=
+        sc_core::sc_time(1, sc_core::SC_PS))
+    {
         fatal("Time resolution must be set to 1 ps for gem5 to work");
+    }
 
     /* Enable keyboard interrupt, async I/O etc. */
     initSignals();
