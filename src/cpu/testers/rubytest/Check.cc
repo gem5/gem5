@@ -113,7 +113,7 @@ Check::initiatePrefetch()
     // despite the oddity of the 0 size (questionable if this should
     // even be allowed), a prefetch is still a read and as such needs
     // a place to store the result
-    uint8_t *data = new uint8_t;
+    uint8_t *data = new uint8_t[1];
     pkt->dataDynamic(data);
 
     // push the subblock onto the sender state.  The sequencer will
@@ -192,7 +192,7 @@ Check::initiateAction()
     // }
 
     PacketPtr pkt = new Packet(req, cmd);
-    uint8_t *writeData = new uint8_t;
+    uint8_t *writeData = new uint8_t[1];
     *writeData = m_value + m_store_count;
     pkt->dataDynamic(writeData);
 
@@ -246,7 +246,7 @@ Check::initiateCheck()
     req->setThreadContext(index, 0);
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     uint8_t *dataArray = new uint8_t[CHECK_SIZE];
-    pkt->dataDynamicArray(dataArray);
+    pkt->dataDynamic(dataArray);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return

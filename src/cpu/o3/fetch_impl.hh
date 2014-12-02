@@ -669,7 +669,7 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
 
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req, MemCmd::ReadReq);
-        data_pkt->dataDynamicArray(new uint8_t[fetchBufferSize]);
+        data_pkt->dataDynamic(new uint8_t[fetchBufferSize]);
 
         fetchBufferPC[tid] = fetchBufferBlockPC;
         fetchBufferValid[tid] = false;

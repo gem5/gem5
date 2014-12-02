@@ -327,7 +327,7 @@ MemTest::tick()
                 blockAddr(req->getPaddr()), *result);
 
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-        pkt->dataDynamicArray(new uint8_t[req->getSize()]);
+        pkt->dataDynamic(new uint8_t[req->getSize()]);
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
 
@@ -349,7 +349,7 @@ MemTest::tick()
 
         PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
         uint8_t *pkt_data = new uint8_t[req->getSize()];
-        pkt->dataDynamicArray(pkt_data);
+        pkt->dataDynamic(pkt_data);
         memcpy(pkt_data, &data, req->getSize());
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;

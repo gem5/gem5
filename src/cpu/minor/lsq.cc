@@ -1558,7 +1558,7 @@ makePacketForRequest(Request &request, bool isLoad,
     if (isLoad)
         ret->allocate();
     else
-        ret->dataDynamicArray(data);
+        ret->dataDynamic(data);
 
     return ret;
 }

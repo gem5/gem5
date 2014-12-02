@@ -62,7 +62,7 @@ BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
     PacketPtr pkt = new Packet(req, cmd);
 
     uint8_t* pkt_data = new uint8_t[req->getSize()];
-    pkt->dataDynamicArray(pkt_data);
+    pkt->dataDynamic(pkt_data);
 
     if (cmd.isWrite()) {
         memset(pkt_data, 0xA, req->getSize());

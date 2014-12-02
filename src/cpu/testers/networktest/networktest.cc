@@ -261,7 +261,7 @@ NetworkTest::generatePkt()
             destination, req->getPaddr());
 
     PacketPtr pkt = new Packet(req, requestType);
-    pkt->dataDynamicArray(new uint8_t[req->getSize()]);
+    pkt->dataDynamic(new uint8_t[req->getSize()]);
     pkt->senderState = NULL;
 
     sendPkt(pkt);

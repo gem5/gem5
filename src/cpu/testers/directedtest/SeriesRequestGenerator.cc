@@ -69,9 +69,7 @@ SeriesRequestGenerator::initiate()
     }
 
     PacketPtr pkt = new Packet(req, cmd);
-    uint8_t* dummyData = new uint8_t;
-    *dummyData = 0;
-    pkt->dataDynamic(dummyData);
+    pkt->allocate();
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(DirectedTest, "initiating request - successful\n");

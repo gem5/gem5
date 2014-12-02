@@ -76,9 +76,7 @@ InvalidateGenerator::initiate()
     } else {
         panic("initiate was unexpectedly called\n");
     }
-    uint8_t* dummyData = new uint8_t;
-    *dummyData = 0;
-    pkt->dataDynamic(dummyData);
+    pkt->allocate();
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(DirectedTest, "initiating request - successful\n");

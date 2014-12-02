@@ -271,7 +271,7 @@ TimingSimpleCPU::sendData(RequestPtr req, uint8_t *data, uint64_t *res,
 {
     PacketPtr pkt;
     buildPacket(pkt, req, read);
-    pkt->dataDynamicArray<uint8_t>(data);
+    pkt->dataDynamic<uint8_t>(data);
     if (req->getFlags().isSet(Request::NO_ACCESS)) {
         assert(!dcache_pkt);
         pkt->makeResponse();
@@ -379,7 +379,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     req->setPhys(req1->getPaddr(), req->getSize(), req1->getFlags(), dataMasterId());
     PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand());
 
-    pkt->dataDynamicArray<uint8_t>(data);
+    pkt->dataDynamic<uint8_t>(data);
     pkt1->dataStatic<uint8_t>(data);
     pkt2->dataStatic<uint8_t>(data + req1->getSize());
 

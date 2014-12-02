@@ -247,11 +247,9 @@ class Packet : public Printable
     /// when the packet is destroyed?
     static const FlagsType STATIC_DATA            = 0x00001000;
     /// The data pointer points to a value that should be freed when
-    /// the packet is destroyed.
+    /// the packet is destroyed. The pointer is assumed to be pointing
+    /// to an array, and delete [] is consequently called
     static const FlagsType DYNAMIC_DATA           = 0x00002000;
-    /// the data pointer points to an array (thus delete []) needs to
-    /// be called on it rather than simply delete.
-    static const FlagsType ARRAY_DATA             = 0x00004000;
     /// suppress the error if this packet encounters a functional
     /// access failure.
     static const FlagsType SUPPRESS_FUNC_ERROR    = 0x00008000;
@@ -813,7 +811,7 @@ class Packet : public Printable
     void
     dataStatic(T *p)
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
         data = (PacketDataPtr)p;
         flags.set(STATIC_DATA);
     }
@@ -830,7 +828,7 @@ class Packet : public Printable
     void
     dataStaticConst(const T *p)
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
         data = const_cast<PacketDataPtr>(p);
         flags.set(STATIC_DATA);
     }
@@ -841,22 +839,9 @@ class Packet : public Printable
      */
     template <typename T>
     void
-    dataDynamicArray(T *p)
-    {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
-        data = (PacketDataPtr)p;
-        flags.set(DYNAMIC_DATA|ARRAY_DATA);
-    }
-
-    /**
-     * set the data pointer to a value that should have delete called
-     * on it.
-     */
-    template <typename T>
-    void
     dataDynamic(T *p)
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
         data = (PacketDataPtr)p;
         flags.set(DYNAMIC_DATA);
     }
@@ -938,12 +923,10 @@ class Packet : public Printable
     void
     deleteData()
     {
-        if (flags.isSet(ARRAY_DATA))
+        if (flags.isSet(DYNAMIC_DATA))
             delete [] data;
-        else if (flags.isSet(DYNAMIC_DATA))
-            delete data;
 
-        flags.clear(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA);
+        flags.clear(STATIC_DATA|DYNAMIC_DATA);
         data = NULL;
     }
 
@@ -952,7 +935,7 @@ class Packet : public Printable
     allocate()
     {
         assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
-        flags.set(DYNAMIC_DATA|ARRAY_DATA);
+        flags.set(DYNAMIC_DATA);
         data = new uint8_t[getSize()];
     }
 
