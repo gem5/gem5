@@ -83,17 +83,11 @@ class MSHR : public Packet::SenderState, public Printable
     /** Will we have a dirty copy after this request? */
     bool pendingDirty;
 
-    /** Will we have a clean copy after this request?  (i.e. is writeback) */
-    bool pendingClean;
-
     /** Did we snoop an invalidate while waiting for data? */
     bool postInvalidate;
 
     /** Did we snoop a read while waiting for data? */
     bool postDowngrade;
-
-    /** Did we get WriteInvalidate'd (and therefore obsoleted)? */
-    bool _isObsolete;
 
   public:
 
@@ -182,10 +176,6 @@ class MSHR : public Packet::SenderState, public Printable
         assert(inService); return pendingDirty;
     }
 
-    bool isPendingClean() const {
-        return pendingClean;
-    }
-
     bool hasPostInvalidate() const {
         assert(inService); return postInvalidate;
     }
@@ -223,8 +213,6 @@ class MSHR : public Packet::SenderState, public Printable
   public:
 
     bool isUncacheable() const { return _isUncacheable; }
-
-    bool isObsolete() const { return _isObsolete; }
 
     /**
      * Allocate a miss to this MSHR.
@@ -300,12 +288,6 @@ class MSHR : public Packet::SenderState, public Printable
     void handleFill(Packet *pkt, CacheBlk *blk);
 
     bool checkFunctional(PacketPtr pkt);
-
-    /** Mark this MSHR as tracking a transaction with obsoleted data. It still
-      * needs to complete its lifecycle, but should not modify the cache. */
-    void markObsolete() {
-        _isObsolete = true;
-    }
 
     /**
      * Prints the contents of this MSHR for debugging.

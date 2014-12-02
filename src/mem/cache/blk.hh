@@ -73,9 +73,6 @@ enum CacheBlkStatusBits {
     BlkHWPrefetched =   0x20,
     /** block holds data from the secure memory space */
     BlkSecure =         0x40,
-    /** can the block transition to E? (hasn't been shared with another cache)
-      * used to close a timing gap when handling WriteInvalidate packets */
-    BlkCanGoExclusive = 0x80
 };
 
 /**

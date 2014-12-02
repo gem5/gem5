@@ -94,7 +94,6 @@ class BaseCache : public MemObject
         Blocked_NoMSHRs = MSHRQueue_MSHRs,
         Blocked_NoWBBuffers = MSHRQueue_WriteBuffer,
         Blocked_NoTargets,
-        Blocked_PendingWriteInvalidate,
         NUM_BLOCKED_CAUSES
     };
 

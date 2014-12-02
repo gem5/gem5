@@ -62,9 +62,9 @@
 using namespace std;
 
 MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
-               pendingDirty(false), pendingClean(false),
+               pendingDirty(false),
                postInvalidate(false), postDowngrade(false),
-               _isObsolete(false), queue(NULL), order(0), addr(0),
+               queue(NULL), order(0), addr(0),
                size(0), isSecure(false), inService(false),
                isForward(false), threadNum(InvalidThreadID), data(NULL)
 {
@@ -214,9 +214,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target, Tick whenReady,
     isForward = false;
     _isUncacheable = target->req->isUncacheable();
     inService = false;
-    pendingClean = (target->cmd == MemCmd::WriteInvalidateReq);
     downstreamPending = false;
-    _isObsolete = false;
     threadNum = 0;
     assert(targets.isReset());
     // Don't know of a case where we would allocate a new MSHR for a
@@ -253,9 +251,8 @@ MSHR::markInService(PacketPtr pkt)
 
     assert(pkt != NULL);
     inService = true;
-    pendingDirty = ((targets.needsExclusive &&
-                     (pkt->cmd != MemCmd::WriteInvalidateReq)) ||
-                    (!pkt->sharedAsserted() && pkt->memInhibitAsserted()));
+    pendingDirty = targets.needsExclusive ||
+                   (!pkt->sharedAsserted() && pkt->memInhibitAsserted());
     postInvalidate = postDowngrade = false;
 
     if (!downstreamPending) {
@@ -374,12 +371,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
                      downstreamPending && targets.needsExclusive);
 
-        // WriteInvalidates must writeback and should not be inhibited on
-        // account of its snoops discovering MSHRs wanting exclusive access
-        // to what it wrote.  We don't want to push this check higher,
-        // however, because we want to be sure to add an invalidating
-        // Target::FromSnoop, above.
-        if (isPendingDirty() && (pkt->cmd != MemCmd::WriteInvalidateReq)) {
+        if (isPendingDirty()) {
             pkt->assertMemInhibit();
             pkt->setSupplyExclusive();
         }
@@ -387,13 +379,6 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         if (pkt->needsExclusive()) {
             // This transaction will take away our pending copy
             postInvalidate = true;
-
-            // Do not defer (i.e. return true) the snoop if the block is
-            // going to be clean once the MSHR completes, as the data is
-            // ready now.
-            if (isPendingClean()) {
-                return false;
-            }
         }
     }
 
