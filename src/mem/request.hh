@@ -410,13 +410,13 @@ class Request
      * Accessor for paddr.
      */
     bool
-    hasPaddr()
+    hasPaddr() const
     {
         return privateFlags.isSet(VALID_PADDR);
     }
 
     Addr
-    getPaddr()
+    getPaddr() const
     {
         assert(privateFlags.isSet(VALID_PADDR));
         return _paddr;
@@ -437,19 +437,19 @@ class Request
      * Level of the cache hierachy where this request was responded to
      * (e.g. 0 = L1; 1 = L2).
      */
-    int depth;
+    mutable int depth;
 
     /**
      *  Accessor for size.
      */
     bool
-    hasSize()
+    hasSize() const
     {
         return privateFlags.isSet(VALID_SIZE);
     }
 
     int
-    getSize()
+    getSize() const
     {
         assert(privateFlags.isSet(VALID_SIZE));
         return _size;
@@ -512,7 +512,7 @@ class Request
 
     /** Accesssor for the requestor id. */
     MasterID
-    masterId()
+    masterId() const
     {
         return _masterId;
     }
@@ -530,7 +530,7 @@ class Request
 
     /** Accessor function for asid.*/
     int
-    getAsid()
+    getAsid() const
     {
         assert(privateFlags.isSet(VALID_VADDR));
         return _asid;
@@ -545,7 +545,7 @@ class Request
 
     /** Accessor function for architecture-specific flags.*/
     ArchFlagsType
-    getArchFlags()
+    getArchFlags() const
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         return _flags & ARCH_BITS;
@@ -553,7 +553,7 @@ class Request
 
     /** Accessor function to check if sc result is valid. */
     bool
-    extraDataValid()
+    extraDataValid() const
     {
         return privateFlags.isSet(VALID_EXTRA_DATA);
     }
@@ -621,7 +621,7 @@ class Request
      * Increment/Get the depth at which this request is responded to.
      * This currently happens when the request misses in any cache level.
      */
-    void incAccessDepth() { depth++; }
+    void incAccessDepth() const { depth++; }
     int getAccessDepth() const { return depth; }
 
     /**
