@@ -265,7 +265,7 @@ class Packet : public Printable
     MemCmd cmd;
 
     /// A pointer to the original request.
-    RequestPtr req;
+    const RequestPtr req;
 
   private:
    /**
@@ -600,7 +600,7 @@ class Packet : public Printable
      * first, but the Requests's physical address and size fields need
      * not be valid. The command must be supplied.
      */
-    Packet(Request *_req, MemCmd _cmd)
+    Packet(const RequestPtr _req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            size(0), src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
@@ -623,7 +623,7 @@ class Packet : public Printable
      * a request that is for a whole block, not the address from the
      * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(Request *_req, MemCmd _cmd, int _blkSize)
+    Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
@@ -646,7 +646,7 @@ class Packet : public Printable
      * less than that of the original packet.  In this case the new
      * packet should allocate its own data.
      */
-    Packet(Packet *pkt, bool clearFlags = false)
+    Packet(PacketPtr pkt, bool clearFlags = false)
         :  cmd(pkt->cmd), req(pkt->req),
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
@@ -696,7 +696,7 @@ class Packet : public Printable
      * vanilla read or write.
      */
     static PacketPtr
-    createRead(Request *req)
+    createRead(const RequestPtr req)
     {
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
         pkt->refineCommand();
@@ -704,7 +704,7 @@ class Packet : public Printable
     }
 
     static PacketPtr
-    createWrite(Request *req)
+    createWrite(const RequestPtr req)
     {
         PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
         pkt->refineCommand();
@@ -721,33 +721,6 @@ class Packet : public Printable
         // never get the chance.
         if (req && isRequest() && !needsResponse())
             delete req;
-        deleteData();
-    }
-
-    /**
-     * Reinitialize packet address and size from the associated
-     * Request object, and reset other fields that may have been
-     * modified by a previous transaction.  Typically called when a
-     * statically allocated Request/Packet pair is reused for multiple
-     * transactions.
-     */
-    void
-    reinitFromRequest()
-    {
-        assert(req->hasPaddr());
-        flags = 0;
-        addr = req->getPaddr();
-        _isSecure = req->isSecure();
-        size = req->getSize();
-
-        src = InvalidPortID;
-        dest = InvalidPortID;
-        bytesValidStart = 0;
-        bytesValidEnd = 0;
-        firstWordDelay = 0;
-        lastWordDelay = 0;
-
-        flags.set(VALID_ADDR|VALID_SIZE);
         deleteData();
     }
 

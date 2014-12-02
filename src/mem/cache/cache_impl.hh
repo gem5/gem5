@@ -611,18 +611,21 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             assert(pkt->req->hasPaddr());
 
             // There's no reason to add a prefetch as an additional target
-            // to an existing MSHR.  If an outstanding request is already
+            // to an existing MSHR. If an outstanding request is already
             // in progress, there is nothing for the prefetch to do.
             // If this is the case, we don't even create a request at all.
-            PacketPtr pf = mshr ? NULL : new Packet(pkt);
+            PacketPtr pf = nullptr;
 
-            if (pf) {
-                pf->req = new Request(pkt->req->getPaddr(),
-                                      pkt->req->getSize(),
-                                      pkt->req->getFlags(),
-                                      pkt->req->masterId());
-                // The core will clean up prior senderState; we need our own.
-                pf->senderState = NULL;
+            if (!mshr) {
+                // copy the request and create a new SoftPFReq packet
+                RequestPtr req = new Request(pkt->req->getPaddr(),
+                                             pkt->req->getSize(),
+                                             pkt->req->getFlags(),
+                                             pkt->req->masterId());
+                pf = new Packet(req, pkt->cmd);
+                pf->allocate();
+                assert(pf->getAddr() == pkt->getAddr());
+                assert(pf->getSize() == pkt->getSize());
             }
 
             pkt->makeTimingResponse();
@@ -632,6 +635,8 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
             cpuSidePort->schedTimingResp(pkt, clockEdge(lat));
 
+            // If an outstanding request is in progress (we found an
+            // MSHR) this is set to null
             pkt = pf;
         }
 
