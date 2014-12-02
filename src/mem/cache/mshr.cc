@@ -366,7 +366,11 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         
         // Actual target device (typ. a memory) will delete the
         // packet on reception, so we need to save a copy here.
-        PacketPtr cp_pkt = new Packet(pkt, true);
+
+        // Clear flags and also allocate new data as the original
+        // packet data storage may have been deleted by the time we
+        // get to send this packet.
+        PacketPtr cp_pkt = new Packet(pkt, true, true);
         targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
                      downstreamPending && targets.needsExclusive);
 

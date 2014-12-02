@@ -487,17 +487,24 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         // that have shared copies.  Not necessary if we know that
         // supplier had exclusive copy to begin with.
         if (pkt->needsExclusive() && !pkt->isSupplyExclusive()) {
-            Packet *snoopPkt = new Packet(pkt, true);  // clear flags
+            // create a downstream express snoop with cleared packet
+            // flags, there is no need to allocate any data as the
+            // packet is merely used to co-ordinate state transitions
+            Packet *snoop_pkt = new Packet(pkt, true, false);
+
             // also reset the bus time that the original packet has
             // not yet paid for
-            snoopPkt->firstWordDelay = snoopPkt->lastWordDelay = 0;
-            snoopPkt->setExpressSnoop();
-            snoopPkt->assertMemInhibit();
-            bool M5_VAR_USED success = memSidePort->sendTimingReq(snoopPkt);
-            // the packet is marked inhibited and will thus bypass any
-            // flow control
+            snoop_pkt->firstWordDelay = snoop_pkt->lastWordDelay = 0;
+
+            // make this an instantaneous express snoop, and let the
+            // other caches in the system know that the packet is
+            // inhibited
+            snoop_pkt->setExpressSnoop();
+            snoop_pkt->assertMemInhibit();
+            bool M5_VAR_USED success = memSidePort->sendTimingReq(snoop_pkt);
+            // express snoops always succeed
             assert(success);
-            // main memory will delete snoopPkt
+            // main memory will delete the packet
         }
         // since we're the official target but we aren't responding,
         // delete the packet now.
@@ -1570,12 +1577,19 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
 {
     // sanity check
     assert(req_pkt->isRequest());
+    assert(req_pkt->needsResponse());
 
     DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
             req_pkt->cmdString(), req_pkt->getAddr(), req_pkt->getSize());
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
-    PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt);
+    PacketPtr pkt = req_pkt;
+    if (!already_copied)
+        // do not clear flags, and allocate space for data if the
+        // packet needs it (the only packets that carry data are read
+        // responses)
+        pkt = new Packet(req_pkt, false, req_pkt->isRead());
+
     assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
     pkt->makeTimingResponse();
     // @todo Make someone pay for this
@@ -1624,7 +1638,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         // rewritten to be relative to cpu-side bus (if any)
         bool alreadyResponded = pkt->memInhibitAsserted();
         if (is_timing) {
-            Packet snoopPkt(pkt, true);  // clear flags
+            Packet snoopPkt(pkt, true, false);  // clear flags, no allocation
             snoopPkt.setExpressSnoop();
             snoopPkt.pushSenderState(new ForwardResponseRecord(pkt->getSrc()));
             // the snoop packet does not need to wait any additional
@@ -1996,7 +2010,7 @@ Cache<TagStore>::getTimingPacket()
             // at the moment. Without this check we could get a stale
             // copy from memory that might get used in place of the
             // dirty one.
-            Packet snoop_pkt(tgt_pkt, true);
+            Packet snoop_pkt(tgt_pkt, true, false);
             snoop_pkt.setExpressSnoop();
             snoop_pkt.senderState = mshr;
             cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
@@ -2032,7 +2046,7 @@ Cache<TagStore>::getTimingPacket()
             // not a cache block request, but a response is expected
             // make copy of current packet to forward, keep current
             // copy for response handling
-            pkt = new Packet(tgt_pkt);
+            pkt = new Packet(tgt_pkt, false, true);
             if (pkt->isWrite()) {
                 pkt->setData(tgt_pkt->getConstPtr<uint8_t>());
             }

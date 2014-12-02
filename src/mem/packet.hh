@@ -652,9 +652,9 @@ class Packet : public Printable
      * less than that of the original packet.  In this case the new
      * packet should allocate its own data.
      */
-    Packet(PacketPtr pkt, bool clearFlags = false)
+    Packet(PacketPtr pkt, bool clear_flags, bool alloc_data)
         :  cmd(pkt->cmd), req(pkt->req),
-           data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
+           data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
            src(pkt->src), dest(pkt->dest),
            bytesValidStart(pkt->bytesValidStart),
@@ -663,16 +663,26 @@ class Packet : public Printable
            lastWordDelay(pkt->lastWordDelay),
            senderState(pkt->senderState)
     {
-        if (!clearFlags)
+        if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
 
         flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE));
-        flags.set(pkt->flags & STATIC_DATA);
 
-        // if we did not copy the static data pointer, allocate data
-        // dynamically instead
-        if (!data)
-            allocate();
+        // should we allocate space for data, or not, the express
+        // snoops do not need to carry any data as they only serve to
+        // co-ordinate state changes
+        if (alloc_data) {
+            // even if asked to allocate data, if the original packet
+            // holds static data, then the sender will not be doing
+            // any memcpy on receiving the response, thus we simply
+            // carry the pointer forward
+            if (pkt->flags.isSet(STATIC_DATA)) {
+                data = pkt->data;
+                flags.set(STATIC_DATA);
+            } else {
+                allocate();
+            }
+        }
     }
 
     /**
@@ -789,7 +799,14 @@ class Packet : public Printable
 
     /**
      * Set the data pointer to the following value that should not be
-     * freed.
+     * freed. Static data allows us to do a single memcpy even if
+     * multiple packets are required to get from source to destination
+     * and back. In essence the pointer is set calling dataStatic on
+     * the original packet, and whenever this packet is copied and
+     * forwarded the same pointer is passed on. When a packet
+     * eventually reaches the destination holding the data, it is
+     * copied once into the location originally set. On the way back
+     * to the source, no copies are necessary.
      */
     template <typename T>
     void
@@ -819,7 +836,15 @@ class Packet : public Printable
 
     /**
      * Set the data pointer to a value that should have delete []
-     * called on it.
+     * called on it. Dynamic data is local to this packet, and as the
+     * packet travels from source to destination, forwarded packets
+     * will allocate their own data. When a packet reaches the final
+     * destination it will populate the dynamic data of that specific
+     * packet, and on the way back towards the source, memcpy will be
+     * invoked in every step where a new packet was created e.g. in
+     * the caches. Ultimately when the response reaches the source a
+     * final memcpy is needed to extract the data from the packet
+     * before it is deallocated.
      */
     template <typename T>
     void
@@ -867,7 +892,14 @@ class Packet : public Printable
     void
     setData(const uint8_t *p)
     {
+        // we should never be copying data onto itself, which means we
+        // must idenfity packets with static data, as they carry the
+        // same pointer from source to destination and back
+        assert(p != getPtr<uint8_t>() || flags.isSet(STATIC_DATA));
+
         if (p != getPtr<uint8_t>())
+            // for packet with allocated dynamic data, we copy data from
+            // one to the other, e.g. a forwarded response to a response
             std::memcpy(getPtr<uint8_t>(), p, getSize());
     }
 
