@@ -526,7 +526,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
 
     // update the data unless it is a non-data-carrying flush
     if (g_system_ptr->m_warmup_enabled) {
-        data.setData(pkt->getPtr<uint8_t>(),
+        data.setData(pkt->getConstPtr<uint8_t>(),
                      request_address.getOffset(), pkt->getSize());
     } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
@@ -538,7 +538,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                    data.getData(request_address.getOffset(), pkt->getSize()),
                    pkt->getSize());
         } else {
-            data.setData(pkt->getPtr<uint8_t>(),
+            data.setData(pkt->getConstPtr<uint8_t>(),
                          request_address.getOffset(), pkt->getSize());
         }
     }

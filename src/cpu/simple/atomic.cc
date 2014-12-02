@@ -469,7 +469,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
                 if (req->isSwap()) {
                     assert(res);
-                    memcpy(res, pkt.getPtr<uint8_t>(), fullSize);
+                    memcpy(res, pkt.getConstPtr<uint8_t>(), fullSize);
                 }
             }
 

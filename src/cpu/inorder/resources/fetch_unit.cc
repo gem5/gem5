@@ -503,7 +503,7 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
 
     // Copy Data to pendingFetch queue...
     (*pend_it)->block = new uint8_t[cacheBlkSize];
-    memcpy((*pend_it)->block, cache_pkt->getPtr<uint8_t>(), cacheBlkSize);
+    memcpy((*pend_it)->block, cache_pkt->getConstPtr<uint8_t>(), cacheBlkSize);
     (*pend_it)->valid = true;
 
     cache_req->setMemAccPending(false);

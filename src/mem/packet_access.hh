@@ -45,7 +45,7 @@
 /** return the value of what is pointed to in the packet. */
 template <typename T>
 inline T
-Packet::get()
+Packet::get() const
 {
     assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
     assert(sizeof(T) <= size);

@@ -287,7 +287,7 @@ class Cache : public BaseCache
                                bool pending_downgrade = false);
     bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
 
-    void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
+    void doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
                                 bool already_copied, bool pending_inval);
 
     /**

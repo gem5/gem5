@@ -78,7 +78,7 @@ DataBlock::getData(int offset, int len) const
 }
 
 void
-DataBlock::setData(uint8_t *data, int offset, int len)
+DataBlock::setData(const uint8_t *data, int offset, int len)
 {
     assert(offset + len <= RubySystem::getBlockSizeBytes());
     memcpy(&m_data[offset], data, len);

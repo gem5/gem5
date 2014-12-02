@@ -309,7 +309,7 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
                     A, system()->getMasterName(pkt->req->masterId()),          \
                     pkt->getSize(), pkt->getAddr(),                            \
                     pkt->req->isUncacheable() ? 'U' : 'C');                    \
-            DDUMP(MemoryAccess, pkt->getPtr<uint8_t>(), pkt->getSize());       \
+            DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());  \
         }                                                                      \
     } while (0)
 
@@ -344,7 +344,8 @@ AbstractMemory::access(PacketPtr pkt)
         bool overwrite_mem = true;
         // keep a copy of our possible write value, and copy what is at the
         // memory address into the packet
-        std::memcpy(&overwrite_val[0], pkt->getPtr<uint8_t>(), pkt->getSize());
+        std::memcpy(&overwrite_val[0], pkt->getConstPtr<uint8_t>(),
+                    pkt->getSize());
         std::memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
 
         if (pkt->req->isCondSwap()) {
@@ -381,7 +382,7 @@ AbstractMemory::access(PacketPtr pkt)
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr) {
-                memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+                memcpy(hostAddr, pkt->getConstPtr<uint8_t>(), pkt->getSize());
                 DPRINTF(MemoryAccess, "%s wrote %x bytes to address %x\n",
                         __func__, pkt->getSize(), pkt->getAddr());
             }
@@ -416,7 +417,7 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         pkt->makeResponse();
     } else if (pkt->isWrite()) {
         if (pmemAddr)
-            memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+            memcpy(hostAddr, pkt->getConstPtr<uint8_t>(), pkt->getSize());
         TRACE_PACKET("Write");
         pkt->makeResponse();
     } else if (pkt->isPrint()) {

@@ -357,7 +357,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
             blk->status &= ~BlkWritable;
             ++fastWrites;
         }
-        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+        std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
         return true;
@@ -1211,7 +1211,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 completion_time = clockEdge(responseLatency) +
                     pkt->lastWordDelay;
                 if (pkt->isRead() && !is_error) {
-                    target->pkt->setData(pkt->getPtr<uint8_t>());
+                    target->pkt->setData(pkt->getConstPtr<uint8_t>());
                 }
             }
             target->pkt->makeTimingResponse();
@@ -1535,7 +1535,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 
     // if we got new data, copy it in
     if (pkt->isRead()) {
-        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+        std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
     }
 
     blk->whenReady = clockEdge() + responseLatency * clockPeriod() +
@@ -1554,7 +1554,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 template<class TagStore>
 void
 Cache<TagStore>::
-doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
+doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
                        bool already_copied, bool pending_inval)
 {
     // sanity check
@@ -1810,7 +1810,7 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
                 // the packet's invalidate flag is set...
                 assert(pkt->isInvalidate());
             }
-            doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>(),
+            doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
                                    false, false);
 
             if (pkt->isInvalidate()) {
@@ -2020,7 +2020,7 @@ Cache<TagStore>::getTimingPacket()
             pkt = new Packet(tgt_pkt);
             pkt->allocate();
             if (pkt->isWrite()) {
-                pkt->setData(tgt_pkt->getPtr<uint8_t>());
+                pkt->setData(tgt_pkt->getConstPtr<uint8_t>());
             }
         }
     }

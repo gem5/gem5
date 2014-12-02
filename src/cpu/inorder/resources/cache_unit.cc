@@ -68,7 +68,7 @@ using namespace ThePipeline;
 
 #if TRACING_ON
 static std::string
-printMemData(uint8_t *data, unsigned size)
+printMemData(const uint8_t *data, unsigned size)
 {
     std::stringstream dataStr;
     for (unsigned pos = 0; pos < size; pos++) {
@@ -855,7 +855,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
          DPRINTF(InOrderCachePort,
                  "[tid:%u]: [sn:%i]: Storing data: %s\n",
                  tid, inst->seqNum,
-                 printMemData(cache_req->dataPkt->getPtr<uint8_t>(),
+                 printMemData(cache_req->dataPkt->getConstPtr<uint8_t>(),
                               cache_req->dataPkt->getSize()));
 
         if (mem_req->isCondSwap()) {
@@ -1061,9 +1061,9 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i]: Bytes loaded were: %s\n",
                 tid, inst->seqNum,
-                (split_pkt) ? printMemData(split_pkt->getPtr<uint8_t>(),
+                (split_pkt) ? printMemData(split_pkt->getConstPtr<uint8_t>(),
                                            split_pkt->getSize()) :
-                              printMemData(cache_pkt->getPtr<uint8_t>(),
+                              printMemData(cache_pkt->getConstPtr<uint8_t>(),
                                            cache_pkt->getSize()));
     } else if(inst->isStore()) {
         assert(cache_pkt->isWrite());
@@ -1071,9 +1071,9 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i]: Bytes stored were: %s\n",
                 tid, inst->seqNum,
-                (split_pkt) ? printMemData(split_pkt->getPtr<uint8_t>(),
+                (split_pkt) ? printMemData(split_pkt->getConstPtr<uint8_t>(),
                                            split_pkt->getSize()) :
-                              printMemData(cache_pkt->getPtr<uint8_t>(),
+                              printMemData(cache_pkt->getConstPtr<uint8_t>(),
                                            cache_pkt->getSize()));
     }
 

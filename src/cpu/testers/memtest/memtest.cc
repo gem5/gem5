@@ -173,6 +173,7 @@ MemTest::completeRequest(PacketPtr pkt)
         safe_cast<MemTestSenderState *>(pkt->senderState);
 
     uint8_t *data = state->data;
+    // @todo: This should really be a const pointer
     uint8_t *pkt_data = pkt->getPtr<uint8_t>();
 
     //Remove the address from the list of outstanding

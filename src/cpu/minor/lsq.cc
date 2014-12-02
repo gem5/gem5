@@ -560,7 +560,7 @@ LSQ::SplitDataRequest::retireResponse(PacketPtr response)
              *  by the response fragment */
             std::memcpy(
                 data + (response->req->getVaddr() - request.getVaddr()),
-                response->getPtr<uint8_t>(),
+                response->getConstPtr<uint8_t>(),
                 response->req->getSize());
         }
     }

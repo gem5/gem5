@@ -186,7 +186,6 @@ class MemCmd
     bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
-    bool isReadWrite() const    { return isRead() && isWrite(); }
     bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
     bool isSWPrefetch() const   { return testCmdAttrib(IsSWPrefetch); }
     bool isHWPrefetch() const   { return testCmdAttrib(IsHWPrefetch); }
@@ -501,7 +500,6 @@ class Packet : public Printable
     bool needsResponse() const  { return cmd.needsResponse(); }
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
-    bool isReadWrite() const    { return cmd.isReadWrite(); }
     bool isLLSC() const         { return cmd.isLLSC(); }
     bool isError() const        { return cmd.isError(); }
     bool isPrint() const        { return cmd.isPrint(); }
@@ -852,11 +850,19 @@ class Packet : public Printable
         return (T*)data;
     }
 
+    template <typename T>
+    const T*
+    getConstPtr() const
+    {
+        assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+        return (const T*)data;
+    }
+
     /**
      * return the value of what is pointed to in the packet.
      */
     template <typename T>
-    T get();
+    T get() const;
 
     /**
      * set the value in the data pointer to v.
@@ -868,7 +874,7 @@ class Packet : public Printable
      * Copy data into the packet from the provided pointer.
      */
     void
-    setData(uint8_t *p)
+    setData(const uint8_t *p)
     {
         if (p != getPtr<uint8_t>())
             std::memcpy(getPtr<uint8_t>(), p, getSize());
@@ -879,7 +885,7 @@ class Packet : public Printable
      * which is aligned to the given block size.
      */
     void
-    setDataFromBlock(uint8_t *blk_data, int blkSize)
+    setDataFromBlock(const uint8_t *blk_data, int blkSize)
     {
         setData(blk_data + getOffset(blkSize));
     }
@@ -889,16 +895,16 @@ class Packet : public Printable
      * is aligned to the given block size.
      */
     void
-    writeData(uint8_t *p)
+    writeData(uint8_t *p) const
     {
-        std::memcpy(p, getPtr<uint8_t>(), getSize());
+        std::memcpy(p, getConstPtr<uint8_t>(), getSize());
     }
 
     /**
      * Copy data from the packet to the memory at the provided pointer.
      */
     void
-    writeDataToBlock(uint8_t *blk_data, int blkSize)
+    writeDataToBlock(uint8_t *blk_data, int blkSize) const
     {
         writeData(blk_data + getOffset(blkSize));
     }

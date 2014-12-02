@@ -303,11 +303,11 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
         }
     } else if (isWrite()) {
         if (offset >= 0) {
-            memcpy(data + offset, getPtr<uint8_t>(),
+            memcpy(data + offset, getConstPtr<uint8_t>(),
                    (min(func_end, val_end) - func_start) + 1);
         } else {
             // val_start > func_start
-            memcpy(data, getPtr<uint8_t>() - offset,
+            memcpy(data, getConstPtr<uint8_t>() - offset,
                    (min(func_end, val_end) - val_start) + 1);
         }
     } else {

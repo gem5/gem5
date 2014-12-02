@@ -197,7 +197,7 @@ Check::initiateAction()
     pkt->dataDynamic(writeData);
 
     DPRINTF(RubyTest, "data 0x%x check 0x%x\n",
-            *(pkt->getPtr<uint8_t>()), *writeData);
+            *(pkt->getConstPtr<uint8_t>()), *writeData);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return

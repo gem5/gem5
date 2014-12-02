@@ -108,7 +108,7 @@ StubSlavePort::recvAtomic(PacketPtr packet)
 
         DPRINTF(ExternalPort, "StubSlavePort: recvAtomic a: 0x%x size: %d"
             " data: ...\n", packet->getAddr(), size);
-        DDUMP(ExternalPort, packet->getPtr<uint8_t>(), size);
+        DDUMP(ExternalPort, packet->getConstPtr<uint8_t>(), size);
     }
 
     return 0;

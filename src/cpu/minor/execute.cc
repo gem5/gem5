@@ -355,7 +355,7 @@ Execute::handleMemResponse(MinorDynInstPtr inst,
 
         if (is_load && packet->getSize() > 0) {
             DPRINTF(MinorMem, "Memory data[0]: 0x%x\n",
-                static_cast<unsigned int>(packet->getPtr<uint8_t>()[0]));
+                static_cast<unsigned int>(packet->getConstPtr<uint8_t>()[0]));
         }
 
         /* Complete the memory access instruction */

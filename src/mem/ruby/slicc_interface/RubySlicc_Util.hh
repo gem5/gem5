@@ -135,7 +135,7 @@ testAndWrite(Address addr, DataBlock& blk, Packet *pkt)
     lineAddr.makeLineAddress();
 
     if (pktLineAddr == lineAddr) {
-        uint8_t *data = pkt->getPtr<uint8_t>();
+        const uint8_t *data = pkt->getConstPtr<uint8_t>();
         unsigned int size_in_bytes = pkt->getSize();
         unsigned startByte = pkt->getAddr() - lineAddr.getAddress();
 

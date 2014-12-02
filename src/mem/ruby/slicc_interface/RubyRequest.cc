@@ -72,7 +72,7 @@ RubyRequest::functionalWrite(Packet *pkt)
     Addr mBase = m_PhysicalAddress.getAddress();
     Addr mTail = mBase + m_Size;
 
-    uint8_t * pktData = pkt->getPtr<uint8_t>();
+    const uint8_t * pktData = pkt->getConstPtr<uint8_t>();
 
     Addr cBase = std::max(wBase, mBase);
     Addr cTail = std::min(wTail, mTail);

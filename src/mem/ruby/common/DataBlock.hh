@@ -59,7 +59,7 @@ class DataBlock
     uint8_t getByte(int whichByte) const;
     const uint8_t *getData(int offset, int len) const;
     void setByte(int whichByte, uint8_t data);
-    void setData(uint8_t *data, int offset, int len);
+    void setData(const uint8_t *data, int offset, int len);
     void copyPartial(const DataBlock & dblk, int offset, int len);
     bool equal(const DataBlock& obj) const;
     void print(std::ostream& out) const;

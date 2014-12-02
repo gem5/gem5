@@ -388,7 +388,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         return;
     }
 
-    memcpy(fetchBuffer[tid], pkt->getPtr<uint8_t>(), fetchBufferSize);
+    memcpy(fetchBuffer[tid], pkt->getConstPtr<uint8_t>(), fetchBufferSize);
     fetchBufferValid[tid] = true;
 
     // Wake up the CPU (if it went to sleep and was waiting on
