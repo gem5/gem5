@@ -91,8 +91,6 @@ class PortProxy
     /** Granularity of any transactions issued through this proxy. */
     const unsigned int _cacheLineSize;
 
-    void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const;
-
   public:
     PortProxy(MasterPort &port, unsigned int cacheLineSize) :
         _port(port), _cacheLineSize(cacheLineSize) { }
@@ -101,14 +99,12 @@ class PortProxy
     /**
      * Read size bytes memory at address and store in p.
      */
-    virtual void readBlob(Addr addr, uint8_t* p, int size) const
-    { blobHelper(addr, p, size, MemCmd::ReadReq); }
+    virtual void readBlob(Addr addr, uint8_t* p, int size) const;
 
     /**
      * Write size bytes from p to address.
      */
-    virtual void writeBlob(Addr addr, uint8_t* p, int size) const
-    { blobHelper(addr, p, size, MemCmd::WriteReq); }
+    virtual void writeBlob(Addr addr, const uint8_t* p, int size) const;
 
     /**
      * Fill size bytes starting at addr with byte value val.

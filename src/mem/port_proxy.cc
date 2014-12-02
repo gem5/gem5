@@ -41,15 +41,30 @@
 #include "mem/port_proxy.hh"
 
 void
-PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const
+PortProxy::readBlob(Addr addr, uint8_t *p, int size) const
 {
     Request req;
 
-    for (ChunkGenerator gen(addr, size, _cacheLineSize);
-         !gen.done(); gen.next()) {
+    for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
+         gen.next()) {
         req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
-        Packet pkt(&req, cmd);
+        Packet pkt(&req, MemCmd::ReadReq);
         pkt.dataStatic(p);
+        _port.sendFunctional(&pkt);
+        p += gen.size();
+    }
+}
+
+void
+PortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
+{
+    Request req;
+
+    for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
+         gen.next()) {
+        req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
+        Packet pkt(&req, MemCmd::WriteReq);
+        pkt.dataStaticConst(p);
         _port.sendFunctional(&pkt);
         p += gen.size();
     }
@@ -62,7 +77,7 @@ PortProxy::memsetBlob(Addr addr, uint8_t v, int size) const
     uint8_t *buf = new uint8_t[size];
 
     std::memset(buf, v, size);
-    blobHelper(addr, buf, size, MemCmd::WriteReq);
+    PortProxy::writeBlob(addr, buf, size);
 
     delete [] buf;
 }

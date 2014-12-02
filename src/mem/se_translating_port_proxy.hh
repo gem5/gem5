@@ -84,13 +84,13 @@ class SETranslatingPortProxy : public PortProxy
     virtual ~SETranslatingPortProxy();
 
     bool tryReadBlob(Addr addr, uint8_t *p, int size) const;
-    bool tryWriteBlob(Addr addr, uint8_t *p, int size) const;
+    bool tryWriteBlob(Addr addr, const uint8_t *p, int size) const;
     bool tryMemsetBlob(Addr addr, uint8_t val, int size) const;
     bool tryWriteString(Addr addr, const char *str) const;
     bool tryReadString(std::string &str, Addr addr) const;
 
     virtual void readBlob(Addr addr, uint8_t *p, int size) const;
-    virtual void writeBlob(Addr addr, uint8_t *p, int size) const;
+    virtual void writeBlob(Addr addr, const uint8_t *p, int size) const;
     virtual void memsetBlob(Addr addr, uint8_t val, int size) const;
 
     void writeString(Addr addr, const char *str) const;

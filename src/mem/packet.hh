@@ -814,6 +814,23 @@ class Packet : public Printable
     }
 
     /**
+     * Set the data pointer to the following value that should not be
+     * freed. This version of the function allows the pointer passed
+     * to us to be const. To avoid issues down the line we cast the
+     * constness away, the alternative would be to keep both a const
+     * and non-const data pointer and cleverly choose between
+     * them. Note that this is only allowed for static data.
+     */
+    template <typename T>
+    void
+    dataStaticConst(const T *p)
+    {
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        data = const_cast<PacketDataPtr>(p);
+        flags.set(STATIC_DATA);
+    }
+
+    /**
      * Set the data pointer to a value that should have delete []
      * called on it.
      */

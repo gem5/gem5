@@ -89,7 +89,7 @@ FSTranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size) const
 }
 
 void
-FSTranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size) const
+FSTranslatingPortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
@@ -129,7 +129,7 @@ CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
 }
 
 void
-CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
+CopyIn(ThreadContext *tc, Addr dest, const void *source, size_t cplen)
 {
     uint8_t *src = (uint8_t *)source;
     tc->getVirtProxy().writeBlob(dest, src, cplen);
@@ -154,7 +154,7 @@ CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 }
 
 void
-CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
+CopyStringIn(ThreadContext *tc, const char *src, Addr vaddr)
 {
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
     for (ChunkGenerator gen(vaddr, strlen(src), TheISA::PageBytes); !gen.done();

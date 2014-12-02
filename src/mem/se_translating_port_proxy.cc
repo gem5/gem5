@@ -90,7 +90,8 @@ SETranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size) const
 
 
 bool
-SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size) const
+SETranslatingPortProxy::tryWriteBlob(Addr addr, const uint8_t *p,
+                                     int size) const
 {
     int prevSize = 0;
 
@@ -121,7 +122,7 @@ SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size) const
 
 
 void
-SETranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size) const
+SETranslatingPortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
 {
     if (!tryWriteBlob(addr, p, size))
         fatal("writeBlob(0x%x, ...) failed", addr);

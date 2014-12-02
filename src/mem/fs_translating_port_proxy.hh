@@ -89,7 +89,7 @@ class FSTranslatingPortProxy : public PortProxy
 
     /** Version of writeBlob that translates virt->phys and deals
       * with page boundries. */
-    virtual void writeBlob(Addr addr, uint8_t *p, int size) const;
+    virtual void writeBlob(Addr addr, const uint8_t *p, int size) const;
 
     /**
      * Fill size bytes starting at addr with byte value val.
@@ -98,8 +98,8 @@ class FSTranslatingPortProxy : public PortProxy
 };
 
 void CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen);
-void CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen);
+void CopyIn(ThreadContext *tc, Addr dest, const void *source, size_t cplen);
 void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
-void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
+void CopyStringIn(ThreadContext *tc, const char *src, Addr vaddr);
 
 #endif //__MEM_FS_PORT_PROXY_HH__
