@@ -129,6 +129,9 @@ class Gem5Control
     /** Private SystemC module containing top level simulation control */
     Gem5TopLevelModule *module;
 
+    /** One-time-settable version string */
+    std::string version;
+
   public:
     Gem5Control(const std::string &config_filename);
 
@@ -138,10 +141,21 @@ class Gem5Control
     virtual void setDebugFlag(const char *flag);
     virtual void clearDebugFlag(const char *flag);
 
+    /** Choose a base port number for GDB to connect to the model
+     *  (0 disables connections) */
+    virtual void setRemoteGDBPort(unsigned int port);
+
+    /* Register an action to happen at the end of elaboration */
+    virtual void registerEndOfElaboration(void (*func)());
+
     /** Make a System from the config file description for system
      *  system_name and call it instance_name in gem5 */
     virtual Gem5System *makeSystem(const std::string &system_name,
         const std::string &top_instance);
+
+    /** set/get version string */
+    virtual const std::string &getVersion() const;
+    virtual void setVersion(const std::string &new_version);
 };
 
 }

@@ -39,10 +39,12 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <list>
 
 #include "base/statistics.hh"
 #include "sim/cxx_config_ini.hh"
 #include "sim/cxx_manager.hh"
+#include "sim/debug.hh"
 #include "sim/init_signals.hh"
 #include "sim/stat_control.hh"
 #include "sc_gem5_control.hh"
@@ -63,6 +65,9 @@ class Gem5TopLevelModule : public Gem5SystemC::Module
     CxxConfigManager *root_manager;
     Gem5SystemC::Logger logger;
 
+    /** Things to do at end_of_elaborate */
+    std::list<void (*)()> endOfElaborationFuncs;
+
   public:
     SC_HAS_PROCESS(Gem5TopLevelModule);
 
@@ -73,6 +78,15 @@ class Gem5TopLevelModule : public Gem5SystemC::Module
     /** gem5 simulate.  @todo for more interesting simulation control,
      *  this needs to be more complicated */
     void run();
+
+    /* Register an action to happen at the end of elaboration */
+    void registerEndOfElaboration(void (*func)())
+    {
+        endOfElaborationFuncs.push_back(func);
+    }
+
+    /** SystemC startup */
+    void end_of_elaboration();
 };
 
 Gem5System::Gem5System(CxxConfigManager *manager_,
@@ -90,14 +104,16 @@ Gem5System::~Gem5System()
     delete manager;
 }
 
-void Gem5System::setParam(const std::string &object,
+void
+Gem5System::setParam(const std::string &object,
     const std::string &param_name, const std::string &param_value)
 {
     manager->setParam(systemName + (object != "" ? "." + object : ""),
         param_name, param_value);
 }
 
-void Gem5System::setParamVector(const std::string &object,
+void
+Gem5System::setParamVector(const std::string &object,
     const std::string &param_name,
     const std::vector<std::string> &param_values)
 {
@@ -105,7 +121,8 @@ void Gem5System::setParamVector(const std::string &object,
         (object != "" ? "." + object : ""), param_name, param_values);
 }
 
-void Gem5System::instantiate()
+void
+Gem5System::instantiate()
 {
     try {
         /* Make a new System */
@@ -142,6 +159,12 @@ Gem5Control::~Gem5Control()
 { }
 
 void
+Gem5Control::registerEndOfElaboration(void (*func)())
+{
+    module->registerEndOfElaboration(func);
+}
+
+void
 Gem5Control::setDebugFlag(const char *flag)
 {
     ::setDebugFlag(flag);
@@ -153,6 +176,12 @@ Gem5Control::clearDebugFlag(const char *flag)
     ::clearDebugFlag(flag);
 }
 
+void
+Gem5Control::setRemoteGDBPort(unsigned int port)
+{
+    ::setRemoteGDBPort(port);
+}
+
 Gem5System *
 Gem5Control::makeSystem(const std::string &system_name,
     const std::string &instance_name)
@@ -162,6 +191,21 @@ Gem5Control::makeSystem(const std::string &system_name,
         system_name, instance_name);
 
     return ret;
+}
+
+const std::string &
+Gem5Control::getVersion() const
+{
+    return version;
+}
+
+void
+Gem5Control::setVersion(const std::string &new_version)
+{
+    if (version != "")
+        fatal("Gem5Control::setVersion called for a second time");
+
+    version = new_version;
 }
 
 Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
@@ -179,11 +223,13 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
 
     /* @todo need this as an option */
     Gem5SystemC::setTickFrequency();
-    sc_core::sc_set_time_resolution(1, sc_core::SC_PS);
 
     /* Make a SystemC-synchronising event queue and install it as the
      *  sole top level gem5 EventQueue */
     Gem5SystemC::Module::setupEventQueues(*this);
+
+    if (sc_core::sc_get_time_resolution() != sc_core::sc_time(1, sc_core::SC_PS))
+        fatal("Time resolution must be set to 1 ps for gem5 to work");
 
     /* Enable keyboard interrupt, async I/O etc. */
     initSignals();
@@ -227,7 +273,8 @@ Gem5TopLevelModule::~Gem5TopLevelModule()
     delete root_manager;
 }
 
-void Gem5TopLevelModule::run()
+void
+Gem5TopLevelModule::run()
 {
     GlobalSimLoopExitEvent *exit_event = NULL;
 
@@ -239,9 +286,20 @@ void Gem5TopLevelModule::run()
     getEventQueue(0)->dump();
 }
 
+void
+Gem5TopLevelModule::end_of_elaboration()
+{
+    for (auto i = endOfElaborationFuncs.begin();
+         i != endOfElaborationFuncs.end(); ++i)
+    {
+        (*i)();
+    }
 }
 
-Gem5SystemC::Gem5Control *makeGem5Control(const std::string &config_filename)
+}
+
+Gem5SystemC::Gem5Control *
+makeGem5Control(const std::string &config_filename)
 {
     return new Gem5SystemC::Gem5Control(config_filename);
 }
