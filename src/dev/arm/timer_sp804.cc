@@ -66,7 +66,6 @@ Sp804::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
     DPRINTF(Timer, "Reading from DualTimer at offset: %#x\n", daddr);
 
     if (daddr < Timer::Size)
@@ -121,7 +120,6 @@ Sp804::write(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
     DPRINTF(Timer, "Writing to DualTimer at offset: %#x\n", daddr);
 
     if (daddr < Timer::Size)

@@ -104,8 +104,6 @@ HDLcd::read(PacketPtr pkt)
             pkt->getAddr() < pioAddr + pioSize &&
             pkt->getSize() == 4);
 
-    pkt->allocate();
-
     switch (daddr) {
       case Version:
         data = version;

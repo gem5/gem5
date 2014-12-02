@@ -225,8 +225,6 @@ Device::read(PacketPtr pkt)
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
-    pkt->allocate();
-
     if (!regValid(raddr))
         panic("invalid register: cpu=%d vnic=%d da=%#x pa=%#x size=%d",
               cpu, index, daddr, pkt->getAddr(), pkt->getSize());

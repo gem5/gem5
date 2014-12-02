@@ -83,7 +83,6 @@ TsunamiCChip::read(PacketPtr pkt)
     Addr regnum = (pkt->getAddr() - pioAddr) >> 6;
     Addr daddr = (pkt->getAddr() - pioAddr);
 
-    pkt->allocate();
     switch (pkt->getSize()) {
 
       case sizeof(uint64_t):

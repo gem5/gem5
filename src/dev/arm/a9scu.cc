@@ -55,7 +55,6 @@ A9SCU::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
 
     switch(daddr) {
       case Control:

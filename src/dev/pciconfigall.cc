@@ -55,9 +55,6 @@ PciConfigAll::PciConfigAll(const Params *p)
 Tick
 PciConfigAll::read(PacketPtr pkt)
 {
-
-    pkt->allocate();
-
     DPRINTF(PciConfigAll, "read  va=%#x size=%d\n", pkt->getAddr(),
             pkt->getSize());
 

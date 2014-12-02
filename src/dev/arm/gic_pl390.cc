@@ -150,7 +150,6 @@ Tick
 Pl390::readDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
-    pkt->allocate();
 
     int ctx_id = pkt->req->contextId();
 
@@ -284,7 +283,6 @@ Tick
 Pl390::readCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - cpuAddr;
-    pkt->allocate();
 
     assert(pkt->req->hasContextId());
     int ctx_id = pkt->req->contextId();
@@ -369,7 +367,6 @@ Tick
 Pl390::readMsix(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - msixRegAddr;
-    pkt->allocate();
 
     DPRINTF(GIC, "Gic MSIX read register %#x\n", daddr);
 
@@ -390,7 +387,6 @@ Tick
 Pl390::writeDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
-    pkt->allocate();
 
     assert(pkt->req->hasContextId());
     int ctx_id = pkt->req->contextId();
@@ -531,7 +527,6 @@ Tick
 Pl390::writeCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - cpuAddr;
-    pkt->allocate();
 
     assert(pkt->req->hasContextId());
     int ctx_id = pkt->req->contextId();
@@ -586,7 +581,6 @@ Tick
 Pl390::writeMsix(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - msixRegAddr;
-    pkt->allocate();
 
     DPRINTF(GIC, "Gic MSI-X write register %#x data %d\n",
                  daddr, pkt->get<uint32_t>());

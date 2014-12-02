@@ -113,7 +113,6 @@ Uart8250::read(PacketPtr pkt)
     assert(pkt->getSize() == 1);
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
 
     DPRINTF(Uart, " read register %#x\n", daddr);
 

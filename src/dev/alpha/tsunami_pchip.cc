@@ -72,7 +72,6 @@ TsunamiPChip::read(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-    pkt->allocate();
     Addr daddr = (pkt->getAddr() - pioAddr) >> 6;;
     assert(pkt->getSize() == sizeof(uint64_t));
 

@@ -182,8 +182,6 @@ CopyEngine::read(PacketPtr pkt)
 
     DPRINTF(DMACopyEngine, "Read device register %#X size: %d\n", daddr, size);
 
-    pkt->allocate();
-
     ///
     /// Handle read of register here
     ///

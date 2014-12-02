@@ -76,8 +76,6 @@ AmbaDevice::readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr)
     if (daddr < AMBA_PER_ID0 || daddr > AMBA_CEL_ID3)
         return false;
 
-    pkt->allocate();
-
     int byte = (daddr - AMBA_PER_ID0) << 1;
     // Too noisy right now
     DPRINTF(AMBA, "Returning %#x for offset %#x(%d)\n",

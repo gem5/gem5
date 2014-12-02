@@ -69,8 +69,6 @@ Pl050::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
-
 
     uint32_t data = 0;
 

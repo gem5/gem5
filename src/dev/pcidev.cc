@@ -294,10 +294,6 @@ PciDevice::readConfig(PacketPtr pkt)
         panic("Out-of-range access to PCI config space!\n");
     }
 
-
-
-    pkt->allocate();
-
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
         pkt->set<uint8_t>(config.data[offset]);

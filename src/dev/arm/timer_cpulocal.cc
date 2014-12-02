@@ -75,7 +75,6 @@ CpuLocalTimer::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
     int cpu_id = pkt->req->contextId();
     DPRINTF(Timer, "Reading from CpuLocalTimer at offset: %#x\n", daddr);
     assert(cpu_id >= 0);
@@ -154,7 +153,6 @@ CpuLocalTimer::write(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
     int cpu_id = pkt->req->contextId();
     DPRINTF(Timer, "Writing to CpuLocalTimer at offset: %#x\n", daddr);
     assert(cpu_id >= 0);

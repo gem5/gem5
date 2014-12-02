@@ -57,7 +57,6 @@ AmbaFake::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
 
     DPRINTF(AMBA, " read register %#x\n", daddr);
 
@@ -74,7 +73,6 @@ AmbaFake::write(PacketPtr pkt)
 {
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
 
     if (!params()->ignore_access)
         panic("Tried to write AmbaFake at offset %#x that doesn't exist\n", daddr);

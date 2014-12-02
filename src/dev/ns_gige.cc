@@ -186,8 +186,6 @@ NSGigE::read(PacketPtr pkt)
 {
     assert(ioEnable);
 
-    pkt->allocate();
-
     //The mask is to give you only the offset into the device register file
     Addr daddr = pkt->getAddr() & 0xfff;
     DPRINTF(EthernetPIO, "read  da=%#x pa=%#x size=%d\n",

@@ -64,7 +64,6 @@ EnergyCtrl::read(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 4);
-    pkt->allocate();
 
     Addr daddr = pkt->getAddr() - pioAddr;
     assert((daddr & 3) == 0);

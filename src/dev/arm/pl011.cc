@@ -64,7 +64,6 @@ Pl011::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
 
     DPRINTF(Uart, " read register %#x size=%d\n", daddr, pkt->getSize());
 

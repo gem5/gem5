@@ -659,6 +659,11 @@ class Packet : public Printable
 
         flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE));
         flags.set(pkt->flags & STATIC_DATA);
+
+        // if we did not copy the static data pointer, allocate data
+        // dynamically instead
+        if (!data)
+            allocate();
     }
 
     /**
@@ -942,15 +947,10 @@ class Packet : public Printable
         data = NULL;
     }
 
-    /** If there isn't data in the packet, allocate some. */
+    /** Allocate memory for the packet. */
     void
     allocate()
     {
-        if (data) {
-            assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
-            return;
-        }
-
         assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
         flags.set(DYNAMIC_DATA|ARRAY_DATA);
         data = new uint8_t[getSize()];

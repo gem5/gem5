@@ -1566,7 +1566,6 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     // already made a copy...
     PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt);
     assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
-    pkt->allocate();
     pkt->makeTimingResponse();
     // @todo Make someone pay for this
     pkt->firstWordDelay = pkt->lastWordDelay = 0;
@@ -2018,7 +2017,6 @@ Cache<TagStore>::getTimingPacket()
             // make copy of current packet to forward, keep current
             // copy for response handling
             pkt = new Packet(tgt_pkt);
-            pkt->allocate();
             if (pkt->isWrite()) {
                 pkt->setData(tgt_pkt->getConstPtr<uint8_t>());
             }

@@ -111,7 +111,6 @@ AlphaBackdoor::read(PacketPtr pkt)
 
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    pkt->allocate();
     pkt->makeAtomicResponse();
 
     switch (pkt->getSize())

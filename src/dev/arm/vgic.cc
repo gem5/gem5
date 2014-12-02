@@ -92,7 +92,6 @@ Tick
 VGic::readVCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - vcpuAddr;
-    pkt->allocate();
 
     int ctx_id = pkt->req->contextId();
     assert(ctx_id < VGIC_CPU_MAX);
@@ -137,7 +136,6 @@ Tick
 VGic::readCtrl(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - hvAddr;
-    pkt->allocate();
 
     int ctx_id = pkt->req->contextId();
 
@@ -232,7 +230,6 @@ Tick
 VGic::writeVCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - vcpuAddr;
-    pkt->allocate();
 
     int ctx_id = pkt->req->contextId();
     assert(ctx_id < VGIC_CPU_MAX);
@@ -280,7 +277,6 @@ Tick
 VGic::writeCtrl(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - hvAddr;
-    pkt->allocate();
 
     int ctx_id = pkt->req->contextId();
 

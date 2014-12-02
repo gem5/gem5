@@ -183,8 +183,6 @@ IGbE::read(PacketPtr pkt)
 
     DPRINTF(Ethernet, "Read device register %#X\n", daddr);
 
-    pkt->allocate();
-
     //
     // Handle read of register here
     //

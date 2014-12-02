@@ -172,8 +172,6 @@ IdeController::readConfig(PacketPtr pkt)
         return PciDevice::readConfig(pkt);
     }
 
-    pkt->allocate();
-
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
         switch (offset) {
@@ -462,7 +460,6 @@ IdeController::Channel::accessBMI(Addr offset,
 void
 IdeController::dispatchAccess(PacketPtr pkt, bool read)
 {
-    pkt->allocate();
     if (pkt->getSize() != 1 && pkt->getSize() != 2 && pkt->getSize() !=4)
          panic("Bad IDE read size: %d\n", pkt->getSize());
 

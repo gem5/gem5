@@ -204,7 +204,6 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
     if (isRead()) {
         if (func_start >= val_start && func_end <= val_end) {
-            allocate();
             memcpy(getPtr<uint8_t>(), data + offset, getSize());
             return true;
         } else {

@@ -104,7 +104,6 @@ Pl111::read(PacketPtr pkt)
            pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
-    pkt->allocate();
 
     DPRINTF(PL111, " read register %#x size=%d\n", daddr, pkt->getSize());
 

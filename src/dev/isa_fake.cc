@@ -53,7 +53,6 @@ IsaFake::IsaFake(Params *p)
 Tick
 IsaFake::read(PacketPtr pkt)
 {
-    pkt->allocate();
     pkt->makeAtomicResponse();
 
     if (params()->warn_access != "")
