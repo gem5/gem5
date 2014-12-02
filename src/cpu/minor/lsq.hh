@@ -514,6 +514,11 @@ class LSQ : public Named
          *  completely issued to the memory system */
         unsigned int numUnissuedStores() { return numUnissuedAccesses; }
 
+        /** Count a store being issued to memory by decrementing
+         *  numUnissuedAccesses.  Does not count barrier requests as they
+         *  will be handles as barriers are cleared from the buffer */
+        void countIssuedStore(LSQRequestPtr request);
+
         /** Drained if there is absolutely nothing left in the buffer */
         bool isDrained() const { return slots.empty(); }
 

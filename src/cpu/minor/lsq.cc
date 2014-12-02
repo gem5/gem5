@@ -730,6 +730,15 @@ LSQ::StoreBuffer::forwardStoreData(LSQRequestPtr load,
 }
 
 void
+LSQ::StoreBuffer::countIssuedStore(LSQRequestPtr request)
+{
+    /* Barriers are accounted for as they are cleared from
+     *  the queue, not after their transfers are complete */
+    if (!request->isBarrier())
+        numUnissuedAccesses--;
+}
+
+void
 LSQ::StoreBuffer::step()
 {
     DPRINTF(MinorMem, "StoreBuffer step numUnissuedAccesses: %d\n",
@@ -785,10 +794,7 @@ LSQ::StoreBuffer::step()
                     " system\n", *(request->inst));
 
                 if (lsq.tryToSend(request)) {
-                    /* Barrier are accounted for as they are cleared from
-                     *  the queue, not after their transfers are complete */
-                    if (!request->isBarrier())
-                        numUnissuedAccesses--;
+                    countIssuedStore(request);
                     issue_count++;
                 } else {
                     /* Don't step on to the next store buffer entry if this
@@ -1198,7 +1204,7 @@ LSQ::recvTimingResp(PacketPtr response)
         /* Response to a request from the store buffer */
         request->retireResponse(response);
 
-        /* Remove completed requests unless they are barrier (which will
+        /* Remove completed requests unless they are barriers (which will
          *  need to be removed in order */
         if (request->isComplete()) {
             if (!request->isBarrier()) {
@@ -1265,7 +1271,7 @@ LSQ::recvRetry()
             break;
           case LSQRequest::StoreBufferIssuing:
             /* In the store buffer */
-            storeBuffer.numUnissuedAccesses--;
+            storeBuffer.countIssuedStore(retryRequest);
             break;
           default:
             assert(false);
