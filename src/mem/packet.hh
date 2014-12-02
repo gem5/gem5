@@ -177,14 +177,16 @@ class MemCmd
 
   public:
 
-    bool isRead() const         { return testCmdAttrib(IsRead); }
-    bool isWrite() const        { return testCmdAttrib(IsWrite); }
-    bool isUpgrade() const      { return testCmdAttrib(IsUpgrade); }
-    bool isRequest() const      { return testCmdAttrib(IsRequest); }
-    bool isResponse() const     { return testCmdAttrib(IsResponse); }
-    bool needsExclusive() const { return testCmdAttrib(NeedsExclusive); }
-    bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
-    bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
+    bool isRead() const            { return testCmdAttrib(IsRead); }
+    bool isWrite() const           { return testCmdAttrib(IsWrite); }
+    bool isUpgrade() const         { return testCmdAttrib(IsUpgrade); }
+    bool isRequest() const         { return testCmdAttrib(IsRequest); }
+    bool isResponse() const        { return testCmdAttrib(IsResponse); }
+    bool needsExclusive() const    { return testCmdAttrib(NeedsExclusive); }
+    bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
+    bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
+    bool isWriteInvalidate() const { return testCmdAttrib(IsWrite) &&
+                                            testCmdAttrib(IsInvalidate); }
 
     /**
      * Check if this particular packet type carries payload data. Note
@@ -495,19 +497,20 @@ class Packet : public Printable
     /// Return the index of this command.
     inline int cmdToIndex() const { return cmd.toInt(); }
 
-    bool isRead() const         { return cmd.isRead(); }
-    bool isWrite() const        { return cmd.isWrite(); }
-    bool isUpgrade()  const     { return cmd.isUpgrade(); }
-    bool isRequest() const      { return cmd.isRequest(); }
-    bool isResponse() const     { return cmd.isResponse(); }
-    bool needsExclusive() const { return cmd.needsExclusive(); }
-    bool needsResponse() const  { return cmd.needsResponse(); }
-    bool isInvalidate() const   { return cmd.isInvalidate(); }
-    bool hasData() const        { return cmd.hasData(); }
-    bool isLLSC() const         { return cmd.isLLSC(); }
-    bool isError() const        { return cmd.isError(); }
-    bool isPrint() const        { return cmd.isPrint(); }
-    bool isFlush() const        { return cmd.isFlush(); }
+    bool isRead() const              { return cmd.isRead(); }
+    bool isWrite() const             { return cmd.isWrite(); }
+    bool isUpgrade()  const          { return cmd.isUpgrade(); }
+    bool isRequest() const           { return cmd.isRequest(); }
+    bool isResponse() const          { return cmd.isResponse(); }
+    bool needsExclusive() const      { return cmd.needsExclusive(); }
+    bool needsResponse() const       { return cmd.needsResponse(); }
+    bool isInvalidate() const        { return cmd.isInvalidate(); }
+    bool isWriteInvalidate() const   { return cmd.isWriteInvalidate(); }
+    bool hasData() const             { return cmd.hasData(); }
+    bool isLLSC() const              { return cmd.isLLSC(); }
+    bool isError() const             { return cmd.isError(); }
+    bool isPrint() const             { return cmd.isPrint(); }
+    bool isFlush() const             { return cmd.isFlush(); }
 
     // Snoop flags
     void assertMemInhibit()

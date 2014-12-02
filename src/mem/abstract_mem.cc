@@ -379,6 +379,13 @@ AbstractMemory::access(PacketPtr pkt)
         bytesRead[pkt->req->masterId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
             bytesInstRead[pkt->req->masterId()] += pkt->getSize();
+    } else if (pkt->isInvalidate()) {
+        // no need to do anything
+        // this clause is intentionally before the write clause: the only
+        // transaction that is both a write and an invalidate is
+        // WriteInvalidate, and for the sake of consistency, it does not
+        // write to memory.  in a cacheless system, there are no WriteInv's
+        // because the Write -> WriteInvalidate rewrite happens in the cache.
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr) {
@@ -391,8 +398,6 @@ AbstractMemory::access(PacketPtr pkt)
             numWrites[pkt->req->masterId()]++;
             bytesWritten[pkt->req->masterId()] += pkt->getSize();
         }
-    } else if (pkt->isInvalidate()) {
-        // no need to do anything
     } else {
         panic("unimplemented");
     }

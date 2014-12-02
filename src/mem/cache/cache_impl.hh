@@ -70,7 +70,7 @@ Cache<TagStore>::Cache(const Params *p)
     : BaseCache(p),
       tags(dynamic_cast<TagStore*>(p->tags)),
       prefetcher(p->prefetcher),
-      doFastWrites(false),
+      doFastWrites(true),
       prefetchOnAccess(p->prefetch_on_access)
 {
     tempBlock = new BlkType();
@@ -167,7 +167,10 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
     // isWrite() will be true for them
     if (pkt->cmd == MemCmd::SwapReq) {
         cmpAndSwap(blk, pkt);
-    } else if (pkt->isWrite()) {
+    } else if (pkt->isWrite() &&
+               (!pkt->isWriteInvalidate() || isTopLevel)) {
+        assert(blk->isWritable());
+        // Write or WriteInvalidate at the first cache with block in Exclusive
         if (blk->checkWrite(pkt)) {
             pkt->writeDataToBlock(blk->data, blkSize);
         }
@@ -176,6 +179,8 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
         // appended themselves to this cache before knowing the store
         // will fail.
         blk->status |= BlkDirty;
+        DPRINTF(Cache, "%s for %s address %x size %d (write)\n", __func__,
+                pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
             blk->trackLoadLocked(pkt);
@@ -229,13 +234,15 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
             }
         }
     } else {
-        // Not a read or write... must be an upgrade.  it's OK
-        // to just ack those as long as we have an exclusive
-        // copy at this level.
-        assert(pkt->isUpgrade());
+        // Upgrade or WriteInvalidate at a different cache than received it.
+        // Since we have it Exclusively (E or M), we ack then invalidate.
+        assert(pkt->isUpgrade() ||
+               (pkt->isWriteInvalidate() && !isTopLevel));
         assert(blk != tempBlock);
         tags->invalidate(blk);
         blk->invalidate();
+        DPRINTF(Cache, "%s for %s address %x size %d (invalidation)\n",
+                __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     }
 }
 
@@ -742,6 +749,8 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
         // where the determination the StoreCond fails is delayed due to
         // all caches not being on the same local bus.
         cmd = MemCmd::SCUpgradeFailReq;
+    } else if (cpu_pkt->isWriteInvalidate()) {
+        cmd = cpu_pkt->cmd;
     } else {
         // block is invalid
         cmd = needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
@@ -843,6 +852,14 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
                 if (bus_pkt->isError()) {
                     pkt->makeAtomicResponse();
                     pkt->copyError(bus_pkt);
+                } else if (pkt->isWriteInvalidate()) {
+                    // note the use of pkt, not bus_pkt here.
+                    if (isTopLevel) {
+                        blk = handleFill(pkt, blk, writebacks);
+                        satisfyCpuSideRequest(pkt, blk);
+                    } else if (blk) {
+                        satisfyCpuSideRequest(pkt, blk);
+                    }
                 } else if (bus_pkt->isRead() ||
                            bus_pkt->cmd == MemCmd::UpgradeResp) {
                     // we're updating cache state to allow us to
@@ -1048,6 +1065,23 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 break; // skip response
             }
 
+            // unlike the other packet flows, where data is found in other
+            // caches or memory and brought back, write invalidates always
+            // have the data right away, so the above check for "is fill?"
+            // cannot actually be determined until examining the stored MSHR
+            // state. We "catch up" with that logic here, which is duplicated
+            // from above.
+            if (target->pkt->isWriteInvalidate() && isTopLevel) {
+                assert(!is_error);
+
+                // NB: we use the original packet here and not the response!
+                mshr->handleFill(target->pkt, blk);
+                blk = handleFill(target->pkt, blk, writebacks);
+                assert(blk != NULL);
+
+                is_fill = true;
+            }
+
             if (is_fill) {
                 satisfyCpuSideRequest(target->pkt, blk,
                                       true, mshr->hasPostDowngrade());
@@ -1138,7 +1172,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     }
 
     if (blk && blk->isValid()) {
-        if (pkt->isInvalidate() || mshr->hasPostInvalidate()) {
+        if ((pkt->isInvalidate() || mshr->hasPostInvalidate()) &&
+            (!pkt->isWriteInvalidate() || !isTopLevel)) {
             assert(blk != tempBlock);
             tags->invalidate(blk);
             blk->invalidate();
@@ -1344,7 +1379,7 @@ typename Cache<TagStore>::BlkType*
 Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
                             PacketList &writebacks)
 {
-    assert(pkt->isResponse());
+    assert(pkt->isResponse() || pkt->isWriteInvalidate());
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
 #if TRACING_ON
@@ -1355,8 +1390,10 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         // better have read new data...
         assert(pkt->hasData());
 
-        // only read reaponses have data
-        assert(pkt->isRead());
+        // only read responses and (original) write invalidate req's have data;
+        // note that we don't write the data here for write invalidate - that
+        // happens in the subsequent satisfyCpuSideRequest.
+        assert(pkt->isRead() || pkt->isWriteInvalidate());
 
         // need to do a replacement
         blk = allocateBlock(addr, is_secure, writebacks);
@@ -1539,8 +1576,13 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
 
     // we may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
-    // and then do it later.
-    bool respond = blk->isDirty() && pkt->needsResponse();
+    // and then do it later.  If we find dirty data while snooping for a
+    // WriteInvalidate, we don't care, since no merging needs to take place.
+    // We need the eviction to happen as normal, but the data needn't be
+    // sent anywhere. nor should the writeback be inhibited at the memory
+    // controller for any reason.
+    bool respond = blk->isDirty() && pkt->needsResponse()
+                                  && !pkt->isWriteInvalidate();
     bool have_exclusive = blk->isWritable();
 
     // Invalidate any prefetch's from below that would strip write permissions
