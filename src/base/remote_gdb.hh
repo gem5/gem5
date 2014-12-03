@@ -192,6 +192,8 @@ class BaseRemoteGDB
     PCEventQueue *getPcEventQueue();
 
   protected:
+    virtual bool checkBpLen(size_t len);
+
     class HardBreakpoint : public PCEvent
     {
       private:

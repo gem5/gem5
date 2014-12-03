@@ -520,6 +520,12 @@ PCEventQueue *BaseRemoteGDB::getPcEventQueue()
     return &system->pcEventQueue;
 }
 
+bool
+BaseRemoteGDB::checkBpLen(size_t len)
+{
+    return len == sizeof(MachInst);
+}
+
 BaseRemoteGDB::HardBreakpoint::HardBreakpoint(BaseRemoteGDB *_gdb, Addr pc)
     : PCEvent(_gdb->getPcEventQueue(), "HardBreakpoint Event", pc),
       gdb(_gdb), refcount(0)
@@ -539,7 +545,7 @@ BaseRemoteGDB::HardBreakpoint::process(ThreadContext *tc)
 bool
 BaseRemoteGDB::insertSoftBreak(Addr addr, size_t len)
 {
-    if (len != sizeof(TheISA::MachInst))
+    if (!checkBpLen(len))
         panic("invalid length\n");
 
     return insertHardBreak(addr, len);
@@ -548,7 +554,7 @@ BaseRemoteGDB::insertSoftBreak(Addr addr, size_t len)
 bool
 BaseRemoteGDB::removeSoftBreak(Addr addr, size_t len)
 {
-    if (len != sizeof(MachInst))
+    if (!checkBpLen(len))
         panic("invalid length\n");
 
     return removeHardBreak(addr, len);
@@ -557,7 +563,7 @@ BaseRemoteGDB::removeSoftBreak(Addr addr, size_t len)
 bool
 BaseRemoteGDB::insertHardBreak(Addr addr, size_t len)
 {
-    if (len != sizeof(MachInst))
+    if (!checkBpLen(len))
         panic("invalid length\n");
 
     DPRINTF(GDBMisc, "inserting hardware breakpoint at %#x\n", addr);
@@ -574,7 +580,7 @@ BaseRemoteGDB::insertHardBreak(Addr addr, size_t len)
 bool
 BaseRemoteGDB::removeHardBreak(Addr addr, size_t len)
 {
-    if (len != sizeof(MachInst))
+    if (!checkBpLen(len))
         panic("invalid length\n");
 
     DPRINTF(GDBMisc, "removing hardware breakpoint at %#x\n", addr);
