@@ -645,6 +645,7 @@ IdeDisk::startCommand()
       case WDSF_SEEK:
       case SET_FEATURES:
       case WDCC_SETMULTI:
+      case WDCC_IDLE:
         devState = Command_Execution;
         action = ACT_CMD_COMPLETE;
         break;
