@@ -285,11 +285,11 @@ X86_64LiveProcess::initState()
         TSSDescLow.g = 1; // Page granularity
         TSSDescLow.limitHigh = 0xF;
         TSSDescLow.limitLow = 0xFFFF;
-        TSSDescLow.baseLow = (((uint32_t)TSSVirtAddr) << 8) >> 8;
-        TSSDescLow.baseHigh = (uint8_t)(((uint32_t)TSSVirtAddr) >> 24);
+        TSSDescLow.baseLow = bits(TSSVirtAddr, 23, 0);
+        TSSDescLow.baseHigh = bits(TSSVirtAddr, 31, 24);
 
         TSShigh TSSDescHigh = 0;
-        TSSDescHigh.base = (uint32_t)(TSSVirtAddr >> 32);
+        TSSDescHigh.base = bits(TSSVirtAddr, 63, 32);
 
         struct TSSDesc {
             uint64_t low;
@@ -304,7 +304,9 @@ X86_64LiveProcess::initState()
         SegSelector tssSel = 0;
         tssSel.si = numGDTEntries - 1;
 
-        uint64_t tss_base_addr = (TSSDescHigh.base << 32) | ((TSSDescLow.baseHigh << 24) | TSSDescLow.baseLow);
+        uint64_t tss_base_addr = (TSSDescHigh.base << 32) |
+                                 (TSSDescLow.baseHigh << 24) |
+                                  TSSDescLow.baseLow;
         uint64_t tss_limit = TSSDescLow.limitLow | (TSSDescLow.limitHigh << 16);
 
         SegAttr tss_attr = 0;
@@ -318,12 +320,12 @@ X86_64LiveProcess::initState()
         for (int i = 0; i < contextIds.size(); i++) {
             ThreadContext * tc = system->getThreadContext(contextIds[i]);
 
-            tc->setMiscReg(MISCREG_CS, (MiscReg)cs);
-            tc->setMiscReg(MISCREG_DS, (MiscReg)ds);
-            tc->setMiscReg(MISCREG_ES, (MiscReg)ds);
-            tc->setMiscReg(MISCREG_FS, (MiscReg)ds);
-            tc->setMiscReg(MISCREG_GS, (MiscReg)ds);
-            tc->setMiscReg(MISCREG_SS, (MiscReg)ds);
+            tc->setMiscReg(MISCREG_CS, cs);
+            tc->setMiscReg(MISCREG_DS, ds);
+            tc->setMiscReg(MISCREG_ES, ds);
+            tc->setMiscReg(MISCREG_FS, ds);
+            tc->setMiscReg(MISCREG_GS, ds);
+            tc->setMiscReg(MISCREG_SS, ds);
 
             // LDT
             tc->setMiscReg(MISCREG_TSL, 0);
@@ -335,11 +337,11 @@ X86_64LiveProcess::initState()
             tc->setMiscReg(MISCREG_TSG_BASE, GDTVirtAddr);
             tc->setMiscReg(MISCREG_TSG_LIMIT, 8 * numGDTEntries - 1);
 
-            tc->setMiscReg(MISCREG_TR, (MiscReg)tssSel);
-            tc->setMiscReg(MISCREG_SEG_BASE(SYS_SEGMENT_REG_TR), tss_base_addr);
-            tc->setMiscReg(MISCREG_SEG_EFF_BASE(SYS_SEGMENT_REG_TR), 0);
-            tc->setMiscReg(MISCREG_SEG_LIMIT(SYS_SEGMENT_REG_TR), tss_limit);
-            tc->setMiscReg(MISCREG_SEG_ATTR(SYS_SEGMENT_REG_TR), (MiscReg)tss_attr);
+            tc->setMiscReg(MISCREG_TR, tssSel);
+            tc->setMiscReg(MISCREG_TR_BASE, tss_base_addr);
+            tc->setMiscReg(MISCREG_TR_EFF_BASE, 0);
+            tc->setMiscReg(MISCREG_TR_LIMIT, tss_limit);
+            tc->setMiscReg(MISCREG_TR_ATTR, tss_attr);
 
             //Start using longmode segments.
             installSegDesc(tc, SEGMENT_REG_CS, csDesc, true);
@@ -409,25 +411,22 @@ X86_64LiveProcess::initState()
 
             tc->setMiscReg(MISCREG_APIC_BASE, 0xfee00900);
 
-            tc->setMiscReg(MISCREG_SEG_BASE(MISCREG_TSG - MISCREG_SEG_SEL_BASE), GDTVirtAddr);
-            tc->setMiscReg(MISCREG_SEG_LIMIT(MISCREG_TSG - MISCREG_SEG_SEL_BASE), 0xffff);
+            tc->setMiscReg(MISCREG_TSG_BASE, GDTVirtAddr);
+            tc->setMiscReg(MISCREG_TSG_LIMIT, 0xffff);
 
-            tc->setMiscReg(MISCREG_SEG_BASE(MISCREG_IDTR - MISCREG_SEG_SEL_BASE), IDTVirtAddr);
-            tc->setMiscReg(MISCREG_SEG_LIMIT(MISCREG_IDTR - MISCREG_SEG_SEL_BASE), 0xffff);
+            tc->setMiscReg(MISCREG_IDTR_BASE, IDTVirtAddr);
+            tc->setMiscReg(MISCREG_IDTR_LIMIT, 0xffff);
 
             /* enabling syscall and sysret */
             MiscReg star = ((MiscReg)sret << 48) | ((MiscReg)scall << 32);
             tc->setMiscReg(MISCREG_STAR, star);
-            MiscReg lstar = (MiscReg) syscallCodeVirtAddr;
+            MiscReg lstar = (MiscReg)syscallCodeVirtAddr;
             tc->setMiscReg(MISCREG_LSTAR, lstar);
-            MiscReg sfmask = (1<<8) | (1<<10); // TF | DF
+            MiscReg sfmask = (1 << 8) | (1 << 10); // TF | DF
             tc->setMiscReg(MISCREG_SF_MASK, sfmask);
         }
 
-        /*
-         * Setting up the content of the TSS
-         * and writting it to physical memory
-         */
+        /* Set up the content of the TSS and write it to physical memory. */
 
         struct {
             uint32_t reserved0;        // +00h
@@ -461,8 +460,8 @@ X86_64LiveProcess::initState()
 
         /** setting Interrupt Stack Table */
         uint64_t IST_start = ISTVirtAddr + PageBytes;
-        tss.IST1_low  = (uint32_t)IST_start;
-        tss.IST1_high = (uint32_t)(IST_start >> 32);
+        tss.IST1_low  = IST_start;
+        tss.IST1_high = IST_start >> 32;
         tss.RSP0_low  = tss.IST1_low;
         tss.RSP0_high = tss.IST1_high;
         tss.RSP1_low  = tss.IST1_low;
@@ -473,16 +472,16 @@ X86_64LiveProcess::initState()
 
         /* Setting IDT gates */
         GateDescriptorLow PFGateLow = 0;
-        PFGateLow.offsetHigh = (uint16_t)((uint32_t)PFHandlerVirtAddr >> 16);
-        PFGateLow.offsetLow = (uint16_t)PFHandlerVirtAddr;
-        PFGateLow.selector = (MiscReg)csLowPL;
+        PFGateLow.offsetHigh = bits(PFHandlerVirtAddr, 31, 16);
+        PFGateLow.offsetLow = bits(PFHandlerVirtAddr, 15, 0);
+        PFGateLow.selector = csLowPL;
         PFGateLow.p = 1;
         PFGateLow.dpl = 0;
         PFGateLow.type = 0xe;      // gate interrupt type
         PFGateLow.IST = 0;         // setting IST to 0 and using RSP0
 
         GateDescriptorHigh PFGateHigh = 0;
-        PFGateHigh.offset = (uint32_t)(PFHandlerVirtAddr >> 32);
+        PFGateHigh.offset = bits(PFHandlerVirtAddr, 63, 32);
 
         struct {
             uint64_t low;
@@ -492,11 +491,13 @@ X86_64LiveProcess::initState()
         physProxy.writeBlob(IDTPhysAddr + 0xE0,
                             (uint8_t *)(&PFGate), sizeof(PFGate));
 
-        /** System call handler */
+        /* System call handler */
         uint8_t syscallBlob[] = {
-            0x48,0xa3,0x00,0x60,0x00,
-            0x00,0x00,0xc9,0xff,0xff, // mov    %rax, (0xffffc90000005600)
-            0x48,0x0f,0x07,           // sysret
+            // mov    %rax, (0xffffc90000005600)
+            0x48, 0xa3, 0x00, 0x60, 0x00,
+            0x00, 0x00, 0xc9, 0xff, 0xff,
+            // sysret
+            0x48, 0x0f, 0x07
         };
 
         physProxy.writeBlob(syscallCodePhysAddr,
@@ -504,10 +505,13 @@ X86_64LiveProcess::initState()
 
         /** Page fault handler */
         uint8_t faultBlob[] = {
-            0x48,0xa3,0x00,0x61,0x00,
-            0x00,0x00,0xc9,0xff,0xff, // mov    %rax, (0xffffc90000005700)
-            0x48,0x83,0xc4,0x08,      // add    $0x8,%rsp # skip error
-            0x48,0xcf,                // iretq
+            // mov    %rax, (0xffffc90000005700)
+            0x48, 0xa3, 0x00, 0x61, 0x00,
+            0x00, 0x00, 0xc9, 0xff, 0xff,
+            // add    $0x8, %rsp # skip error
+            0x48, 0x83, 0xc4, 0x08,
+            // iretq
+            0x48, 0xcf
         };
 
         physProxy.writeBlob(PFHandlerPhysAddr, faultBlob, sizeof(faultBlob));
@@ -781,11 +785,10 @@ X86LiveProcess::argsInit(int pageSize,
         X86_IA64Processor = 1 << 30
     };
 
-    //Setup the auxilliary vectors. These will already have endian conversion.
-    //Auxilliary vectors are loaded only for elf formatted executables.
+    // Setup the auxilliary vectors. These will already have endian conversion.
+    // Auxilliary vectors are loaded only for elf formatted executables.
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
-    if(elfObject)
-    {
+    if (elfObject) {
         uint64_t features =
             X86_OnboardFPU |
             X86_VirtualModeExtensions |
@@ -873,13 +876,11 @@ X86LiveProcess::argsInit(int pageSize,
     aux_data_size += platform.size() + 1;
 
     int env_data_size = 0;
-    for (int i = 0; i < envp.size(); ++i) {
+    for (int i = 0; i < envp.size(); ++i)
         env_data_size += envp[i].size() + 1;
-    }
     int arg_data_size = 0;
-    for (int i = 0; i < argv.size(); ++i) {
+    for (int i = 0; i < argv.size(); ++i)
         arg_data_size += argv[i].size() + 1;
-    }
 
     //The info_block needs to be padded so it's size is a multiple of the
     //alignment mask. Also, it appears that there needs to be at least some
@@ -974,8 +975,7 @@ X86LiveProcess::argsInit(int pageSize,
     auxv[auxv.size() - 1].a_val = aux_data_base + numRandomBytes;
 
     //Copy the aux stuff
-    for(int x = 0; x < auxv.size(); x++)
-    {
+    for (int x = 0; x < auxv.size(); x++) {
         initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
         initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
