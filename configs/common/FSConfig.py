@@ -55,7 +55,7 @@ class MemBus(CoherentXBar):
     default = Self.badaddr_responder.pio
 
 
-def makeLinuxAlphaSystem(mem_mode, mdesc = None, ruby = False):
+def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False):
 
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
@@ -117,7 +117,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None, ruby = False):
 
     return self
 
-def makeSparcSystem(mem_mode, mdesc = None):
+def makeSparcSystem(mem_mode, mdesc=None):
     # Constants from iob.cc and uart8250.cc
     iob_man_addr = 0x9800000000
     uart_pio_size = 8
@@ -182,8 +182,8 @@ def makeSparcSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeArmSystem(mem_mode, machine_type, num_cpus = 1, mdesc = None,
-                  dtb_filename = None, bare_metal=False):
+def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
+                  dtb_filename=None, bare_metal=False):
     assert machine_type
 
     if bare_metal:
@@ -290,7 +290,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus = 1, mdesc = None,
     return self
 
 
-def makeLinuxMipsSystem(mem_mode, mdesc = None):
+def makeLinuxMipsSystem(mem_mode, mdesc=None):
     class BaseMalta(Malta):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
@@ -390,8 +390,7 @@ def connectX86RubySystem(x86_sys):
     x86_sys.pc.attachIO(x86_sys.iobus, x86_sys._dma_ports)
 
 
-def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,
-                  Ruby = False):
+def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     if self == None:
         self = X86System()
 
@@ -502,8 +501,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None,
     self.intel_mp_table.base_entries = base_entries
     self.intel_mp_table.ext_entries = ext_entries
 
-def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None,
-                       Ruby = False):
+def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False):
     self = LinuxX86System()
 
     # Build up the x86 system and then specialize it for Linux
