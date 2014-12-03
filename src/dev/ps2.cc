@@ -174,6 +174,13 @@ keySymToPs2(uint32_t key, bool down, bool &cur_shift,
                 extended = true;
                 keys.push_back(0x14);
                 break;
+             case XK_Alt_L:
+                keys.push_back(0x11);
+                break;
+             case XK_Alt_R:
+                extended = true;
+                keys.push_back(0x11);
+                break;
              default:
                warn("Unknown extended key %#x\n", key);
                return;
