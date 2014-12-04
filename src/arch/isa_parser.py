@@ -1988,53 +1988,60 @@ StaticInstPtr
             error(t, 'instruction format "%s" not defined.' % t[1])
 
     # Nested decode block: if the value of the current field matches
-    # the specified constant, do a nested decode on some other field.
+    # the specified constant(s), do a nested decode on some other field.
     def p_decode_stmt_decode(self, t):
-        'decode_stmt : case_label COLON decode_block'
-        label = t[1]
+        'decode_stmt : case_list COLON decode_block'
+        case_list = t[1]
         codeObj = t[3]
         # just wrap the decoding code from the block as a case in the
         # outer switch statement.
-        codeObj.wrap_decode_block('\n%s:\n' % label)
-        codeObj.has_decode_default = (label == 'default')
+        codeObj.wrap_decode_block('\n%s\n' % ''.join(case_list))
+        codeObj.has_decode_default = (case_list == ['default:'])
         t[0] = codeObj
 
     # Instruction definition (finally!).
     def p_decode_stmt_inst(self, t):
-        'decode_stmt : case_label COLON inst SEMI'
-        label = t[1]
+        'decode_stmt : case_list COLON inst SEMI'
+        case_list = t[1]
         codeObj = t[3]
-        codeObj.wrap_decode_block('\n%s:' % label, 'break;\n')
-        codeObj.has_decode_default = (label == 'default')
+        codeObj.wrap_decode_block('\n%s' % ''.join(case_list), 'break;\n')
+        codeObj.has_decode_default = (case_list == ['default:'])
         t[0] = codeObj
 
-    # The case label is either a list of one or more constants or
-    # 'default'
-    def p_case_label_0(self, t):
-        'case_label : intlit_list'
-        def make_case(intlit):
-            if intlit >= 2**32:
-                return 'case ULL(%#x)' % intlit
-            else:
-                return 'case %#x' % intlit
-        t[0] = ': '.join(map(make_case, t[1]))
+    # The constant list for a decode case label must be non-empty, and must
+    # either be the keyword 'default', or made up of one or more
+    # comma-separated integer literals or strings which evaluate to
+    # constants when compiled as C++.
+    def p_case_list_0(self, t):
+        'case_list : DEFAULT'
+        t[0] = ['default:']
 
-    def p_case_label_1(self, t):
-        'case_label : DEFAULT'
-        t[0] = 'default'
+    def prep_int_lit_case_label(self, lit):
+        if lit >= 2**32:
+            return 'case ULL(%#x): ' % lit
+        else:
+            return 'case %#x: ' % lit
 
-    #
-    # The constant list for a decode case label must be non-empty, but
-    # may have one or more comma-separated integer literals in it.
-    #
-    def p_intlit_list_0(self, t):
-        'intlit_list : INTLIT'
-        t[0] = [t[1]]
+    def prep_str_lit_case_label(self, lit):
+        return 'case %s: ' % lit
 
-    def p_intlit_list_1(self, t):
-        'intlit_list : intlit_list COMMA INTLIT'
+    def p_case_list_1(self, t):
+        'case_list : INTLIT'
+        t[0] = [self.prep_int_lit_case_label(t[1])]
+
+    def p_case_list_2(self, t):
+        'case_list : STRLIT'
+        t[0] = [self.prep_str_lit_case_label(t[1])]
+
+    def p_case_list_3(self, t):
+        'case_list : case_list COMMA INTLIT'
         t[0] = t[1]
-        t[0].append(t[3])
+        t[0].append(self.prep_int_lit_case_label(t[3]))
+
+    def p_case_list_4(self, t):
+        'case_list : case_list COMMA STRLIT'
+        t[0] = t[1]
+        t[0].append(self.prep_str_lit_case_label(t[3]))
 
     # Define an instruction using the current instruction format
     # (specified by an enclosing format block).
