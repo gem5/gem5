@@ -154,8 +154,8 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         dma_cntrl_nodes.append(dma_cntrl)
 
         # Connect the directory controllers and the network
-        dma_cntrl.requestToDir = ruby_system.network.master
-        dma_cntrl.responseFromDir = ruby_system.network.slave
+        dma_cntrl.requestToDir = ruby_system.network.slave
+        dma_cntrl.responseFromDir = ruby_system.network.master
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes + dma_cntrl_nodes
 
