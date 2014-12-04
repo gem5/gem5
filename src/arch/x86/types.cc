@@ -43,9 +43,7 @@ paramOut(ostream &os, const string &name, ExtMachInst const &machInst)
     paramOut(os, name + ".rex", (uint8_t)machInst.rex);
 
     // Opcode
-    paramOut(os, name + ".opcode.num", machInst.opcode.num);
-    paramOut(os, name + ".opcode.prefixA", machInst.opcode.prefixA);
-    paramOut(os, name + ".opcode.prefixB", machInst.opcode.prefixB);
+    paramOut(os, name + ".opcode.type", (uint8_t)machInst.opcode.type);
     paramOut(os, name + ".opcode.op", (uint8_t)machInst.opcode.op);
 
     // Modifier bytes
@@ -79,9 +77,8 @@ paramIn(Checkpoint *cp, const string &section,
     machInst.rex = temp8;
 
     // Opcode
-    paramIn(cp, section, name + ".opcode.num", machInst.opcode.num);
-    paramIn(cp, section, name + ".opcode.prefixA", machInst.opcode.prefixA);
-    paramIn(cp, section, name + ".opcode.prefixB", machInst.opcode.prefixB);
+    paramIn(cp, section, name + ".opcode.type", temp8);
+    machInst.opcode.type = (OpcodeType)temp8;
     paramIn(cp, section, name + ".opcode.op", temp8);
     machInst.opcode.op = temp8;
 

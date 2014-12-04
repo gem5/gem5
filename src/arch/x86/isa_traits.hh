@@ -71,7 +71,7 @@ namespace X86ISA
     const ExtMachInst NoopMachInst = {
         0x0,                            // No legacy prefixes.
         0x0,                            // No rex prefix.
-        { 1, 0x0, 0x0, 0x90 },          // One opcode byte, 0x90.
+        { OneByteOpcode, 0x90 },          // One opcode byte, 0x90.
         0x0, 0x0,                       // No modrm or sib.
         0, 0,                           // No immediate or displacement.
         8, 8, 8,                        // All sizes are 8.

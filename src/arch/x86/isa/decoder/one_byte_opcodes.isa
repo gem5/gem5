@@ -40,7 +40,7 @@
 // Decode the one byte opcodes
 //
 
-0x1: decode OPCODE_OP_TOP5 {
+'X86ISA::OneByteOpcode': decode OPCODE_OP_TOP5 {
     format Inst {
         0x00: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {

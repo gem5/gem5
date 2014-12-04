@@ -1,14 +1,5 @@
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2008 The Regents of The University of Michigan
 // All rights reserved.
-//
-// The license below extends only to copyright in the software and shall
-// not be construed as granting a license to any other intellectual
-// property including but not limited to intellectual property relating
-// to a hardware implementation of the functionality of the software
-// licensed hereunder.  You may use the software subject to the license
-// terms below provided that you ensure that this notice is replicated
-// unmodified and in its entirety in all distributions of the software,
-// modified or unmodified, in source code or in binary form.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -37,19 +28,38 @@
 
 ////////////////////////////////////////////////////////////////////
 //
-// The actual decoder specification
+// Decode the three byte opcodes with the 0f3a prefix.
 //
-
-decode LEGACY_LOCK default Unknown::unknown()
-{
-    //No lock prefix
-    0x0: decode OPCODE_TYPE default Unknown::unknown()
-    {
-        ##include "one_byte_opcodes.isa"
-        ##include "two_byte_opcodes.isa"
-        ##include "three_byte_0f38_opcodes.isa"
-        ##include "three_byte_0f3a_opcodes.isa"
+format WarnUnimpl {
+    'X86ISA::ThreeByte0F3AOpcode': decode LEGACY_OP {
+        1: decode OPCODE_OP {
+            0x08: roundps_Vdq_Wdq_Ib();
+            0x09: roundpd_Vdq_Wdq_Ib();
+            0x0A: roundss_Vss_Wss_Ib();
+            0x0B: roundsd_Vsd_Wsd_Ib();
+            0x0C: blendps_Vdq_Wdq_Ib();
+            0x0D: blendpd_Vdq_Wdq_Ib();
+            0x0E: pblendw_Vdq_Wdq_Ib();
+            0x0F: palignr_Vdq_Wdq_Ib();
+            0x14: pextrb_Rd_or_Mb_Vdq_Ib();
+            0x15: decode MODRM_MOD {
+                0x3: Inst::PEXTRW(Rd,Vdq,Ib);
+                default: pextrw_Mw_Vdq_Ib();
+            }
+            0x16: pextrd_pextrq_Ed_or_Eq_Vdq_Ib();
+            0x17: extractps_Ed_Vdq_Ib();
+            0x20: pinsrb_Vdq_Rd_or_Rq_or_Mb_Ib();
+            0x21: insertps_Vdq_Udq_or_Md_Ib();
+            0x22: pinsrd_pinsrq_Vdq_Ed_or_Eq_Ib();
+            0x40: dpps_Vdq_Wdq_Ib();
+            0x41: dppd_Vdq_Wdq_Ib();
+            0x42: pcmpistrm_Vdq_Wdq_Ib();
+            0x43: pcmpistri_Vdq_Wdq_Ib();
+            default: Inst::UD2();
+        }
+        default: decode OPCODE_OP {
+            0x0F: palignr_Pq_Qq_Ib();
+            default: Inst::UD2();
+        }
     }
-    //Lock prefix
-    ##include "locked_opcodes.isa"
 }

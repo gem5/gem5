@@ -38,8 +38,8 @@
 0x1: decode MODRM_MOD {
     format Inst {
         0x3: UD2();
-        default: decode OPCODE_NUM {
-            0x1: decode OPCODE_OP_TOP5 {
+        default: decode OPCODE_TYPE {
+            'X86ISA::OneByteOpcode': decode OPCODE_OP_TOP5 {
                 0x00: decode OPCODE_OP_BOTTOM3 {
                     default: MultiInst::ADD_LOCKED(OPCODE_OP_BOTTOM3,
                                             [Mb,Gb], [Mv,Gv]);
@@ -137,40 +137,36 @@
                     }
                 }
             }
-            0x2: decode OPCODE_PREFIXA {
-                0x0F: decode OPCODE_OP_TOP5 {
-                    0x04: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::mov_Rd_CR8D();
-                        0x2: WarnUnimpl::mov_CR8D_Rd();
+            'X86ISA::TwoByteOpcode': decode OPCODE_OP_TOP5 {
+                0x04: decode OPCODE_OP_BOTTOM3 {
+                    0x0: WarnUnimpl::mov_Rd_CR8D();
+                    0x2: WarnUnimpl::mov_CR8D_Rd();
+                }
+                0x15: decode OPCODE_OP_BOTTOM3 {
+                    0x3: BTS_LOCKED(Mv,Gv);
+                }
+                0x16: decode OPCODE_OP_BOTTOM3 {
+                    0x0: CMPXCHG_LOCKED(Mb,Gb);
+                    0x1: CMPXCHG_LOCKED(Mv,Gv);
+                    0x3: BTR_LOCKED(Mv,Gv);
+                }
+                0x17: decode OPCODE_OP_BOTTOM3 {
+                    0x2: decode MODRM_REG {
+                        0x5: BTS_LOCKED(Mv,Ib);
+                        0x6: BTR_LOCKED(Mv,Ib);
+                        0x7: BTC_LOCKED(Mv,Ib);
                     }
-                    0x15: decode OPCODE_OP_BOTTOM3 {
-                        0x3: BTS_LOCKED(Mv,Gv);
-                    }
-                    0x16: decode OPCODE_OP_BOTTOM3 {
-                        0x0: CMPXCHG_LOCKED(Mb,Gb);
-                        0x1: CMPXCHG_LOCKED(Mv,Gv);
-                        0x3: BTR_LOCKED(Mv,Gv);
-                    }
-                    0x17: decode OPCODE_OP_BOTTOM3 {
-                        0x2: decode MODRM_REG {
-                            0x5: BTS_LOCKED(Mv,Ib);
-                            0x6: BTR_LOCKED(Mv,Ib);
-                            0x7: BTC_LOCKED(Mv,Ib);
-                        }
-                        0x3: BTC_LOCKED(Mv,Gv);
-                    }
-                    0x18: decode OPCODE_OP_BOTTOM3 {
-                        0x0: XADD_LOCKED(Mb,Gb);
-                        0x1: XADD_LOCKED(Mv,Gv);
-                        //0x7: group9();
-                        0x7: decode MODRM_REG {
-                            //Also CMPXCHG16B
-                            0x1: CMPXCHG8B_LOCKED(Mdp);
-                        }
+                    0x3: BTC_LOCKED(Mv,Gv);
+                }
+                0x18: decode OPCODE_OP_BOTTOM3 {
+                    0x0: XADD_LOCKED(Mb,Gb);
+                    0x1: XADD_LOCKED(Mv,Gv);
+                    //0x7: group9();
+                    0x7: decode MODRM_REG {
+                        //Also CMPXCHG16B
+                        0x1: CMPXCHG8B_LOCKED(Mdp);
                     }
                 }
-                default: M5InternalError::error(
-                    {{"Unexpected first opcode byte in two byte opcode!"}});
             }
         }
     }

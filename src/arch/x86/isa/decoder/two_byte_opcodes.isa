@@ -42,1029 +42,1025 @@
 //
 // Decode the two byte opcodes
 //
-0x2: decode OPCODE_PREFIXA {
-    0x0F: decode OPCODE_OP_TOP5 {
-        format WarnUnimpl {
-            0x00: decode OPCODE_OP_BOTTOM3 {
-                //0x00: group6();
-                0x00: decode MODRM_REG {
-                    0x0: sldt_Mw_or_Rv();
-                    0x1: str_Mw_or_Rv();
-                    0x2: Inst::LLDT(Ew);
-                    0x3: Inst::LTR(Ew);
-                    0x4: verr_Mw_or_Rv();
-                    0x5: verw_Mw_or_Rv();
-                    //0x6: jmpe_Ev(); // IA-64
-                    default: Inst::UD2();
-                }
-                //0x01: group7(); // Ugly, ugly, ugly...
-                0x01: decode MODRM_REG {
-                    0x0: decode MODRM_MOD {
-                        0x3: decode MODRM_RM {
-                            0x1: vmcall();
-                            0x2: vmlaunch();
-                            0x3: vmresume();
-                            0x4: vmxoff();
-                            default: Inst::UD2();
-                        }
-                        default: sgdt_Ms();
-                    }
-                    0x1: decode MODRM_MOD {
-                        0x3: decode MODRM_RM {
-                            0x0: MonitorInst::monitor({{
-                               xc->armMonitor(Rax);
-                            }});
-                            0x1: MwaitInst::mwait({{
-                               uint64_t m = 0;          //mem
-                               unsigned s = 0x8;        //size
-                               unsigned f = 0;          //flags
-                               readMemAtomic(xc, traceData,
-                                             xc->getAddrMonitor()->vAddr,
-                                             m, s, f);
-                               xc->mwaitAtomic(xc->tcBase());
-                               MicroHalt hltObj(machInst, mnemonic, 0x0);
-                               hltObj.execute(xc, traceData);
-                            }});
-                            default: Inst::UD2();
-                        }
-                        default: sidt_Ms();
-                    }
-                    0x2: decode MODRM_MOD {
-                        0x3: decode MODRM_RM {
-                            0x0: xgetbv();
-                            0x1: xsetbv();
-                        }
-                        default: decode MODE_SUBMODE {
-                            0x0: Inst::LGDT(M);
-                            default: decode OPSIZE {
-                                // 16 bit operand sizes are special, but only
-                                // in legacy and compatability modes.
-                                0x2: Inst::LGDT_16(M);
-                                default: Inst::LGDT(M);
-                            }
-                        }
-                    }
-                    0x3: decode MODRM_MOD {
-                        0x3: decode MODRM_RM {
-                            0x0: vmrun();
-                            0x1: vmmcall();
-                            0x2: vmload();
-                            0x3: vmsave();
-                            0x4: stgi();
-                            0x5: clgi();
-                            0x6: skinit();
-                            0x7: invlpga();
-                        }
-                        default: decode MODE_SUBMODE {
-                            0x0: Inst::LIDT(M);
-                            default: decode OPSIZE {
-                                // 16 bit operand sizes are special, but only
-                                // in legacy and compatability modes.
-                                0x2: Inst::LIDT_16(M);
-                                default: Inst::LIDT(M);
-                            }
-                        }
-                    }
-                    0x4: decode MODRM_MOD {
-                        0x3: Inst::SMSW(Rv);
-                        default: Inst::SMSW(Mw);
-                    }
-                    0x6: Inst::LMSW(Ew);
-                    0x7: decode MODRM_MOD {
-                        0x3: decode MODRM_RM {
-                            0x0: Inst::SWAPGS();
-                            0x1: rdtscp();
-                            default: Inst::UD2();
-                        }
-                        default: Inst::INVLPG(M);
-                    }
-                }
-                0x02: lar_Gv_Ew();
-                0x03: lsl_Gv_Ew();
-                // sandpile.org doesn't seem to know what this is...? We'll
-                // use it for pseudo instructions. We've got 16 bits of space
-                // to play with so there can be quite a few pseudo
-                // instructions.
-                //0x04: loadall_or_reset_or_hang();
-                0x4: decode IMMEDIATE {
-                    format BasicOperate {
-                        0x00: m5arm({{
-                            PseudoInst::arm(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x01: m5quiesce({{
-                            PseudoInst::quiesce(xc->tcBase());
-                        }}, IsNonSpeculative, IsQuiesce);
-                        0x02: m5quiesceNs({{
-                            PseudoInst::quiesceNs(xc->tcBase(), Rdi);
-                        }}, IsNonSpeculative, IsQuiesce);
-                        0x03: m5quiesceCycle({{
-                            PseudoInst::quiesceCycles(xc->tcBase(), Rdi);
-                        }}, IsNonSpeculative, IsQuiesce);
-                        0x04: m5quiesceTime({{
-                            Rax = PseudoInst::quiesceTime(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x07: m5rpns({{
-                            Rax = PseudoInst::rpns(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x21: m5exit({{
-                            PseudoInst::m5exit(xc->tcBase(), Rdi);
-                        }}, IsNonSpeculative);
-                        0x22: m5fail({{
-                            PseudoInst::m5fail(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x30: m5initparam({{
-                            Rax = PseudoInst::initParam(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x31: m5loadsymbol({{
-                            PseudoInst::loadsymbol(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x40: m5resetstats({{
-                            PseudoInst::resetstats(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x41: m5dumpstats({{
-                            PseudoInst::dumpstats(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x42: m5dumpresetstats({{
-                            PseudoInst::dumpresetstats(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x43: m5checkpoint({{
-                            PseudoInst::m5checkpoint(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x50: m5readfile({{
-                            Rax = PseudoInst::readfile(
-                                xc->tcBase(), Rdi, Rsi, Rdx);
-                        }}, IsNonSpeculative);
-                        0x51: m5debugbreak({{
-                            PseudoInst::debugbreak(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x52: m5switchcpu({{
-                            PseudoInst::switchcpu(xc->tcBase());
-                        }}, IsNonSpeculative);
-                        0x53: m5addsymbol({{
-                            PseudoInst::addsymbol(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x54: m5panic({{
-                            panic("M5 panic instruction called at pc = %#x.\n",
-                                  RIP);
-                        }}, IsNonSpeculative);
-                        0x55: m5reserved1({{
-                            warn("M5 reserved opcode 1 ignored.\n");
-                        }}, IsNonSpeculative);
-                        0x56: m5reserved2({{
-                            warn("M5 reserved opcode 2 ignored.\n");
-                        }}, IsNonSpeculative);
-                        0x57: m5reserved3({{
-                            warn("M5 reserved opcode 3 ignored.\n");
-                        }}, IsNonSpeculative);
-                        0x58: m5reserved4({{
-                            warn("M5 reserved opcode 4 ignored.\n");
-                        }}, IsNonSpeculative);
-                        0x59: m5reserved5({{
-                            warn("M5 reserved opcode 5 ignored.\n");
-                        }}, IsNonSpeculative);
-                        0x5a: m5_work_begin({{
-                            PseudoInst::workbegin(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        0x5b: m5_work_end({{
-                            PseudoInst::workend(xc->tcBase(), Rdi, Rsi);
-                        }}, IsNonSpeculative);
-                        default: Inst::UD2();
-                    }
-                }
-                0x05: decode FullSystemInt {
-                    0: SyscallInst::syscall('xc->syscall(Rax)',
-                            IsSyscall, IsNonSpeculative, IsSerializeAfter);
-                    default: decode MODE_MODE {
-                        0x0: decode MODE_SUBMODE {
-                            0x0: Inst::SYSCALL_64();
-                            0x1: Inst::SYSCALL_COMPAT();
-                        }
-                        0x1: Inst::SYSCALL_LEGACY();
-                    }
-                }
-                0x06: Inst::CLTS();
-                0x07: decode MODE_SUBMODE {
-                    0x0: decode OPSIZE {
-                        // Return to 64 bit mode.
-                        0x8: Inst::SYSRET_TO_64();
-                        // Return to compatibility mode.
-                        default: Inst::SYSRET_TO_COMPAT();
-                    }
-                    default: Inst::SYSRET_NON_64();
-                }
-            }
-            0x01: decode OPCODE_OP_BOTTOM3 {
-                0x0: invd();
-                0x1: wbinvd();
-                0x2: Inst::UD2();
-                0x3: Inst::UD2();
-                0x4: Inst::UD2();
-                0x5: Inst::PREFETCH(Mb);
-                0x6: FailUnimpl::femms();
-                0x7: decode IMMEDIATE {
-                    0x0C: pi2fw_Pq_Qq();
-                    0x0D: pi2fd_Pq_Qq();
-                    0x1C: pf2iw_Pq_Qq();
-                    0x1D: pf2id_Pq_Qq();
-                    0x8A: pfnacc_Pq_Qq();
-                    0x8E: pfpnacc_Pq_Qq();
-                    0x90: pfcmpge_Pq_Qq();
-                    0x94: pfmin_Pq_Qq();
-                    0x96: pfrcp_Pq_Qq();
-                    0x97: pfrsqrt_Pq_Qq();
-                    0x9A: Inst::PFSUB(Pq,Qq);
-                    0x9E: pfadd_Pq_Qq();
-                    0xA0: pfcmpgt_Pq_Qq();
-                    0xA4: pfmax_Pq_Qq();
-                    0xA6: pfrcpit1_Pq_Qq();
-                    0xA7: pfrsqit1_Pq_Qq();
-                    0xAA: Inst::PFSUBR(Pq,Qq);
-                    0xAE: pfacc_Pq_Qq();
-                    0xB0: pfcmpeq_Pq_Qq();
-                    0xB4: Inst::PFMUL(Pq,Qq);
-                    0xB6: pfrcpit2_Pq_Qq();
-                    0xB7: Inst::PMULHRW(Pq,Qq);
-                    0xBB: pswapd_Pq_Qq();
-                    0xBF: pavgusb_Pq_Qq();
-                    default: Inst::UD2();
-                }
-            }
-            format Inst{
-                0x02: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVUPS(Vo,Wo);
-                        0x1: MOVUPS(Wo,Vo);
-                        0x2: decode MODRM_MOD {
-                            0x3: MOVHLPS(Vps,VRq);
-                            default: MOVLPS(Vps,Mq);
-                        }
-                        0x3: MOVLPS(Mq,Vps);
-                        0x4: UNPCKLPS(Vps,Wq);
-                        0x5: UNPCKHPS(Vps,Wq);
-                        0x6: decode MODRM_MOD {
-                            0x3: MOVLHPS(Vps,VRq);
-                            default: MOVHPS(Vps,Mq);
-                        }
-                        0x7: MOVHPS(Mq,Vq);
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVSS(Vd,Wd);
-                        0x1: MOVSS(Wd,Vd);
-                        0x2: WarnUnimpl::movsldup_Vo_Wo();
-                        0x6: WarnUnimpl::movshdup_Vo_Wo();
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVUPD(Vo,Wo);
-                        0x1: MOVUPD(Wo,Vo);
-                        0x2: MOVLPD(Vq,Mq);
-                        0x3: MOVLPD(Mq,Vq);
-                        0x4: UNPCKLPD(Vo,Wq);
-                        0x5: UNPCKHPD(Vo,Wo);
-                        0x6: MOVHPD(Vq,Mq);
-                        0x7: MOVHPD(Mq,Vq);
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVSD(Vq,Wq);
-                        0x1: MOVSD(Wq,Vq);
-                        0x2: MOVDDUP(Vo,Wq);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x03: decode OPCODE_OP_BOTTOM3 {
-                    //group16();
-                    0x0: decode MODRM_REG {
-                        0x0: WarnUnimpl::prefetch_nta();
-                        0x1: PREFETCH_T0(Mb);
-                        0x2: WarnUnimpl::prefetch_t1();
-                        0x3: WarnUnimpl::prefetch_t2();
-                        default: HINT_NOP();
-                    }
-                    0x1: HINT_NOP();
-                    0x2: HINT_NOP();
-                    0x3: HINT_NOP();
-                    0x4: HINT_NOP();
-                    0x5: HINT_NOP();
-                    0x6: HINT_NOP();
-                    0x7: HINT_NOP();
-                }
-                0x04: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOV(Rd,Cd);
-                        0x1: MOV(Rd,Dd);
-                        0x2: MOV(Cd,Rd);
-                        0x3: MOV(Dd,Rd);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x05: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        //These moves should really use size o (octword), but
-                        //because they are split in two, they use q (quadword).
-                        0x0: MOVAPS(Vq,Wq);
-                        0x1: MOVAPS(Wq,Vq);
-                        0x2: CVTPI2PS(Vq,Qq);
-                        0x3: WarnUnimpl::movntps_Mo_Vo();
-                        0x4: CVTTPS2PI(Pq,Wq);
-                        0x5: CVTPS2PI(Pq,Wq);
-                        0x6: UCOMISS(Vd,Wd);
-                        0x7: COMISS(Vd,Wd);
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x2: CVTSI2SS(Vd,Ed);
-                        0x4: CVTTSS2SI(Gd,Wd);
-                        0x5: CVTSS2SI(Gd,Wd);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVAPD(Vo,Wo);
-                        0x1: MOVAPD(Wo,Vo);
-                        0x2: CVTPI2PD(Vo,Qq);
-                        0x3: WarnUnimpl::movntpd_Mo_Vo();
-                        0x4: CVTTPD2PI(Pq,Wo);
-                        0x5: CVTPD2PI(Pq,Wo);
-                        0x6: UCOMISD(Vq,Wq);
-                        0x7: COMISD(Vq,Wq);
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        // The size of the V operand should be q, not dp
-                        0x2: CVTSI2SD(Vdp,Edp);
-                        // The size of the W operand should be q, not dp
-                        0x4: CVTTSD2SI(Gdp,Wdp);
-                        0x5: CVTSD2SI(Gd,Wq);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-            }
-            0x06: decode OPCODE_OP_BOTTOM3 {
-                0x0: Inst::WRMSR();
-                0x1: Inst::RDTSC();
-                0x2: Inst::RDMSR();
-                0x3: rdpmc();
-                0x4: decode FullSystemInt {
-                    0: SyscallInst::sysenter('xc->syscall(Rax)',
-                            IsSyscall, IsNonSpeculative, IsSerializeAfter);
-                    default: sysenter();
-                }
-                0x5: sysexit();
-                0x6: Inst::UD2();
-                0x7: getsec();
-            }
-            0x07: decode OPCODE_OP_BOTTOM3 {
-                0x0: M5InternalError::error(
-                    {{"Three byte opcode shouldn't be handled by "
-                      "two_byte_opcodes.isa!"}});
-                0x2: M5InternalError::error(
-                    {{"Three byte opcode shouldn't be handled by "
-                      "two_byte_opcodes.isa!"}});
-                default: UD2();
-            }
-            format Inst {
-                0x08: decode OPCODE_OP_BOTTOM3 {
-                    0x0: CMOVO(Gv,Ev);
-                    0x1: CMOVNO(Gv,Ev);
-                    0x2: CMOVB(Gv,Ev);
-                    0x3: CMOVNB(Gv,Ev);
-                    0x4: CMOVZ(Gv,Ev);
-                    0x5: CMOVNZ(Gv,Ev);
-                    0x6: CMOVBE(Gv,Ev);
-                    0x7: CMOVNBE(Gv,Ev);
-                }
-                0x09: decode OPCODE_OP_BOTTOM3 {
-                    0x0: CMOVS(Gv,Ev);
-                    0x1: CMOVNS(Gv,Ev);
-                    0x2: CMOVP(Gv,Ev);
-                    0x3: CMOVNP(Gv,Ev);
-                    0x4: CMOVL(Gv,Ev);
-                    0x5: CMOVNL(Gv,Ev);
-                    0x6: CMOVLE(Gv,Ev);
-                    0x7: CMOVNLE(Gv,Ev);
-                }
-                0x0A: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVMSKPS(Gd,VRo);
-                        0x1: SQRTPS(Vo,Wo);
-                        0x2: WarnUnimpl::rqsrtps_Vo_Wo();
-                        0x3: WarnUnimpl::rcpps_Vo_Wo();
-                        0x4: ANDPS(Vo,Wo);
-                        0x5: ANDNPS(Vo,Wo);
-                        0x6: ORPS(Vo,Wo);
-                        0x7: XORPS(Vo,Wo);
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x1: SQRTSS(Vd,Wd);
-                        0x2: WarnUnimpl::rsqrtss_Vd_Wd();
-                        0x3: WarnUnimpl::rcpss_Vd_Wd();
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: MOVMSKPD(Gd,VRo);
-                        0x1: SQRTPD(Vo,Wo);
-                        0x4: ANDPD(Vo,Wo);
-                        0x5: ANDNPD(Vo,Wo);
-                        0x6: ORPD(Vo,Wo);
-                        0x7: XORPD(Vo,Wo);
-                        default: UD2();
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x1: SQRTSD(Vq,Wq);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x0B: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: ADDPS(Vo,Wo);
-                        0x1: MULPS(Vo,Wo);
-                        0x2: CVTPS2PD(Vo,Wq);
-                        0x3: CVTDQ2PS(Vo,Wo);
-                        0x4: SUBPS(Vo,Wo);
-                        0x5: MINPS(Vo,Wo);
-                        0x6: DIVPS(Vo,Wo);
-                        0x7: MAXPS(Vo,Wo);
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x0: ADDSS(Vd,Wd);
-                        0x1: MULSS(Vd,Wd);
-                        0x2: CVTSS2SD(Vq,Wd);
-                        0x3: CVTTPS2DQ(Vo,Wo);
-                        0x4: SUBSS(Vd,Wd);
-                        0x5: MINSS(Vd,Wd);
-                        0x6: DIVSS(Vd,Wd);
-                        0x7: MAXSS(Vd,Wd);
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: ADDPD(Vo,Wo);
-                        0x1: MULPD(Vo,Wo);
-                        0x2: CVTPD2PS(Vo,Wo);
-                        0x3: CVTPS2DQ(Vo,Wo);
-                        0x4: SUBPD(Vo,Wo);
-                        0x5: MINPD(Vo,Wo);
-                        0x6: DIVPD(Vo,Wo);
-                        0x7: MAXPD(Vo,Wo);
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x0: ADDSD(Vq,Wq);
-                        0x1: MULSD(Vq,Wq);
-                        0x2: CVTSD2SS(Vd,Wq);
-                        0x4: SUBSD(Vq,Wq);
-                        0x5: MINSD(Vq,Wq);
-                        0x6: DIVSD(Vq,Wq);
-                        0x7: MAXSD(Vq,Wq);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x0C: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PUNPCKLBW(Pq,Qd);
-                        0x1: PUNPCKLWD(Pq,Qd);
-                        0x2: PUNPCKLDQ(Pq,Qd);
-                        0x3: PACKSSWB(Pq,Qq);
-                        0x4: PCMPGTB(Pq,Qq);
-                        0x5: PCMPGTW(Pq,Qq);
-                        0x6: PCMPGTD(Pq,Qq);
-                        0x7: PACKUSWB(Pq,Qq);
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PUNPCKLBW(Vo,Wq);
-                        0x1: PUNPCKLWD(Vo,Wq);
-                        0x2: PUNPCKLDQ(Vo,Wq);
-                        0x3: PACKSSWB(Vo,Wo);
-                        0x4: PCMPGTB(Vo,Wo);
-                        0x5: PCMPGTW(Vo,Wo);
-                        0x6: PCMPGTD(Vo,Wo);
-                        0x7: PACKUSWB(Vo,Wo);
-                    }
-                    default: UD2();
-                }
-                0x0D: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PUNPCKHBW(Pq,Qq);
-                        0x1: PUNPCKHWD(Pq,Qq);
-                        0x2: PUNPCKHDQ(Pq,Qq);
-                        0x3: PACKSSDW(Pq,Qq);
-                        0x6: MOVD(Pq,Edp);
-                        0x7: MOVQ(Pq,Qq);
-                        default: UD2();
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x7: MOVDQU(Vo,Wo);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PUNPCKHBW(Vo,Wo);
-                        0x1: PUNPCKHWD(Vo,Wo);
-                        0x2: PUNPCKHDQ(Vo,Wo);
-                        0x3: PACKSSDW(Vo,Wo);
-                        0x4: PUNPCKLQDQ(Vo,Wq);
-                        0x5: PUNPCKHQDQ(Vo,Wq);
-                        0x6: MOVD(Vo,Edp);
-                        0x7: MOVDQA(Vo,Wo);
-                    }
-                    default: UD2();
-                }
-                0x0E: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSHUFW(Pq,Qq,Ib);
-                        //0x1: group12_pshimw();
-                        0x1: decode MODRM_REG {
-                            0x2: PSRLW(PRq,Ib);
-                            0x4: PSRAW(PRq,Ib);
-                            0x6: PSLLW(PRq,Ib);
-                            default: UD2();
-                        }
-                        //0x2: group13_pshimd();
-                        0x2: decode MODRM_REG {
-                            0x2: PSRLD(PRq,Ib);
-                            0x4: PSRAD(PRq,Ib);
-                            0x6: PSLLD(PRq,Ib);
-                            default: UD2();
-                        }
-                        //0x3: group14_pshimq();
-                        0x3: decode MODRM_REG {
-                            0x2: PSRLQ(PRq,Ib);
-                            0x6: PSLLQ(PRq,Ib);
-                            default: Inst::UD2();
-                        }
-                        0x4: Inst::PCMPEQB(Pq,Qq);
-                        0x5: Inst::PCMPEQW(Pq,Qq);
-                        0x6: Inst::PCMPEQD(Pq,Qq);
-                        0x7: Inst::EMMS();
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSHUFHW(Vo,Wo,Ib);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSHUFD(Vo,Wo,Ib);
-                        //0x1: group12_pshimw();
-                        0x1: decode MODRM_REG {
-                            0x2: PSRLW(VRo,Ib);
-                            0x4: PSRAW(VRo,Ib);
-                            0x6: PSLLW(VRo,Ib);
-                        }
-                        //0x2: group13_pshimd();
-                        0x2: decode MODRM_REG {
-                            0x2: PSRLD(VRo,Ib);
-                            0x4: PSRAD(VRo,Ib);
-                            0x6: PSLLD(VRo,Ib);
-                            default: UD2();
-                        }
-                        //0x3: group14_pshimq();
-                        0x3: decode MODRM_REG {
-                            0x2: PSRLQ(VRo,Ib);
-                            0x3: PSRLDQ(VRo,Ib);
-                            0x6: PSLLQ(VRo,Ib);
-                            0x7: PSLLDQ(VRo,Ib);
-                            default: UD2();
-                        }
-                        0x4: PCMPEQB(Vo,Wo);
-                        0x5: PCMPEQW(Vo,Wo);
-                        0x6: PCMPEQD(Vo,Wo);
-                        default: UD2();
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSHUFLW(Vo,Wo,Ib);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x0F: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::vmread_Edp_Gdp();
-                        0x1: WarnUnimpl::vmwrite_Gdp_Edp();
-                        0x6: MOVD(Edp,Pdp);
-                        0x7: MOVQ(Qq,Pq);
-                        default: UD2();
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x6: MOVQ(Vq,Wq);
-                        0x7: MOVDQU(Wo,Vo);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x4: HADDPD(Vo,Wo);
-                        0x5: WarnUnimpl::hsubpd_Vo_Wo();
-                        0x6: MOVD(Edp,Vd);
-                        0x7: MOVDQA(Wo,Vo);
-                        default: UD2();
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x4: HADDPS(Vo,Wo);
-                        0x5: WarnUnimpl::hsubps_Vo_Wo();
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x10: decode OPCODE_OP_BOTTOM3 {
-                    0x0: JO(Jz);
-                    0x1: JNO(Jz);
-                    0x2: JB(Jz);
-                    0x3: JNB(Jz);
-                    0x4: JZ(Jz);
-                    0x5: JNZ(Jz);
-                    0x6: JBE(Jz);
-                    0x7: JNBE(Jz);
-                }
-                0x11: decode OPCODE_OP_BOTTOM3 {
-                    0x0: JS(Jz);
-                    0x1: JNS(Jz);
-                    0x2: JP(Jz);
-                    0x3: JNP(Jz);
-                    0x4: JL(Jz);
-                    0x5: JNL(Jz);
-                    0x6: JLE(Jz);
-                    0x7: JNLE(Jz);
-                }
-                0x12: decode OPCODE_OP_BOTTOM3 {
-                    0x0: SETO(Eb);
-                    0x1: SETNO(Eb);
-                    0x2: SETB(Eb);
-                    0x3: SETNB(Eb);
-                    0x4: SETZ(Eb);
-                    0x5: SETNZ(Eb);
-                    0x6: SETBE(Eb);
-                    0x7: SETNBE(Eb);
-                }
-                0x13: decode OPCODE_OP_BOTTOM3 {
-                    0x0: SETS(Eb);
-                    0x1: SETNS(Eb);
-                    0x2: SETP(Eb);
-                    0x3: SETNP(Eb);
-                    0x4: SETL(Eb);
-                    0x5: SETNL(Eb);
-                    0x6: SETLE(Eb);
-                    0x7: SETNLE(Eb);
-                }
-            }
-            0x14: decode OPCODE_OP_BOTTOM3 {
-                0x0: push_fs();
-                0x1: pop_fs();
-                0x2: CPUIDInst::CPUID({{
-                    CpuidResult result;
-                    bool success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
-                        bits(Rcx, 31, 0), result);
-                    if (success) {
-                        Rax = result.rax;
-                        Rbx = result.rbx;
-                        Rcx = result.rcx;
-                        Rdx = result.rdx;
-                    } else {
-                        Rax = Rax;
-                        Rbx = Rbx;
-                        Rcx = Rcx;
-                        Rdx = Rdx;
-                    }
-                    }});
-                0x3: Inst::BT(Ev,Gv);
-                0x4: Inst::SHLD(Ev,Gv,Ib);
-                0x5: Inst::SHLD(Ev,Gv);
+'X86ISA::TwoByteOpcode': decode OPCODE_OP_TOP5 {
+    format WarnUnimpl {
+        0x00: decode OPCODE_OP_BOTTOM3 {
+            //0x00: group6();
+            0x00: decode MODRM_REG {
+                0x0: sldt_Mw_or_Rv();
+                0x1: str_Mw_or_Rv();
+                0x2: Inst::LLDT(Ew);
+                0x3: Inst::LTR(Ew);
+                0x4: verr_Mw_or_Rv();
+                0x5: verw_Mw_or_Rv();
+                //0x6: jmpe_Ev(); // IA-64
                 default: Inst::UD2();
             }
-            0x15: decode OPCODE_OP_BOTTOM3 {
-                0x0: push_gs();
-                0x1: pop_gs();
-                0x2: rsm_smm();
-                0x3: Inst::BTS(Ev,Gv);
-                0x4: Inst::SHRD(Ev,Gv,Ib);
-                0x5: Inst::SHRD(Ev,Gv);
-                //0x6: group15();
-                0x6: decode MODRM_MOD {
-                    0x3: decode MODRM_REG {
-                        0x5: BasicOperate::LFENCE(
-                                     {{/*Nothing*/}}, IsReadBarrier);
-                        0x6: BasicOperate::MFENCE(
-                                     {{/*Nothing*/}}, IsMemBarrier);
-                        0x7: BasicOperate::SFENCE(
-                                     {{/*Nothing*/}}, IsWriteBarrier);
+            //0x01: group7(); // Ugly, ugly, ugly...
+            0x01: decode MODRM_REG {
+                0x0: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x1: vmcall();
+                        0x2: vmlaunch();
+                        0x3: vmresume();
+                        0x4: vmxoff();
                         default: Inst::UD2();
                     }
-                    default: decode MODRM_REG {
-                        0x0: decode OPSIZE {
-                            4: Inst::FXSAVE(M);
-                            8: Inst::FXSAVE64(M);
-                            default: fxsave();
+                    default: sgdt_Ms();
+                }
+                0x1: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x0: MonitorInst::monitor({{
+                           xc->armMonitor(Rax);
+                        }});
+                        0x1: MwaitInst::mwait({{
+                           uint64_t m = 0;          //mem
+                           unsigned s = 0x8;        //size
+                           unsigned f = 0;          //flags
+                           readMemAtomic(xc, traceData,
+                                         xc->getAddrMonitor()->vAddr,
+                                         m, s, f);
+                           xc->mwaitAtomic(xc->tcBase());
+                           MicroHalt hltObj(machInst, mnemonic, 0x0);
+                           hltObj.execute(xc, traceData);
+                        }});
+                        default: Inst::UD2();
+                    }
+                    default: sidt_Ms();
+                }
+                0x2: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x0: xgetbv();
+                        0x1: xsetbv();
+                    }
+                    default: decode MODE_SUBMODE {
+                        0x0: Inst::LGDT(M);
+                        default: decode OPSIZE {
+                            // 16 bit operand sizes are special, but only
+                            // in legacy and compatability modes.
+                            0x2: Inst::LGDT_16(M);
+                            default: Inst::LGDT(M);
                         }
-                        0x1: decode OPSIZE {
-                            4: Inst::FXRSTOR(M);
-                            8: Inst::FXRSTOR64(M);
-                            default: fxrstor();
+                    }
+                }
+                0x3: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x0: vmrun();
+                        0x1: vmmcall();
+                        0x2: vmload();
+                        0x3: vmsave();
+                        0x4: stgi();
+                        0x5: clgi();
+                        0x6: skinit();
+                        0x7: invlpga();
+                    }
+                    default: decode MODE_SUBMODE {
+                        0x0: Inst::LIDT(M);
+                        default: decode OPSIZE {
+                            // 16 bit operand sizes are special, but only
+                            // in legacy and compatability modes.
+                            0x2: Inst::LIDT_16(M);
+                            default: Inst::LIDT(M);
                         }
-                        0x2: Inst::LDMXCSR(Md);
-                        0x3: Inst::STMXCSR(Md);
-                        0x4: xsave();
-                        0x5: xrstor();
-                        0x6: Inst::UD2();
-                        0x7: clflush();
                     }
                 }
-                0x7: Inst::IMUL(Gv,Ev);
-            }
-            format Inst {
-                0x16: decode OPCODE_OP_BOTTOM3 {
-                    0x0: CMPXCHG(Eb,Gb);
-                    0x1: CMPXCHG(Ev,Gv);
-                    0x2: WarnUnimpl::lss_Gz_Mp();
-                    0x3: BTR(Ev,Gv);
-                    0x4: WarnUnimpl::lfs_Gz_Mp();
-                    0x5: WarnUnimpl::lgs_Gz_Mp();
-                    //The size of the second operand in these instructions
-                    //should really be "b" or "w", but it's set to v in order
-                    //to have a consistent register size. This shouldn't
-                    //affect behavior.
-                    0x6: MOVZX_B(Gv,Ev);
-                    0x7: MOVZX_W(Gv,Ev);
+                0x4: decode MODRM_MOD {
+                    0x3: Inst::SMSW(Rv);
+                    default: Inst::SMSW(Mw);
                 }
-                0x17: decode OPCODE_OP_BOTTOM3 {
-                    0x0: decode LEGACY_REP {
-                        0x0: WarnUnimpl::jmpe_Jz();
-                        0x1: WarnUnimpl::popcnt_Gv_Ev();
+                0x6: Inst::LMSW(Ew);
+                0x7: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x0: Inst::SWAPGS();
+                        0x1: rdtscp();
+                        default: Inst::UD2();
                     }
-                    //0x1: group10_UD2();
-                    0x1: UD2();
-                    //0x2: group8_Ev_Ib();
-                    0x2: decode MODRM_REG {
-                        0x4: BT(Ev,Ib);
-                        0x5: BTS(Ev,Ib);
-                        0x6: BTR(Ev,Ib);
-                        0x7: BTC(Ev,Ib);
-                        default: UD2();
-                    }
-                    0x3: BTC(Ev,Gv);
-                    0x4: BSF(Gv,Ev);
-                    0x5: BSR(Gv,Ev);
-                    //The size of the second operand in these instructions
-                    //should really be "b" or "w", but it's set to v in order
-                    //to have a consistent register size. This shouldn't
-                    //affect behavior.
-                    0x6: MOVSX_B(Gv,Ev);
-                    0x7: MOVSX_W(Gv,Ev);
-                }
-                0x18: decode OPCODE_OP_BOTTOM3 {
-                    0x0: XADD(Eb,Gb);
-                    0x1: XADD(Ev,Gv);
-                    //0x7: group9();
-                    0x7: decode MODRM_REG {
-                        //Also CMPXCHG16B
-                        0x1: CMPXCHG8B(Mdp);
-                        0x6: decode LEGACY_OP {
-                            0x1: WarnUnimpl::vmclear_Mq();
-                            default: decode LEGACY_REP {
-                                0x1: WarnUnimpl::vmxon_Mq();
-                                0x0: WarnUnimpl::vmptrld_Mq();
-                            }
-                        }
-                        0x7: WarnUnimpl::vmptrst_Mq();
-                        default: UD2();
-                    }
-                    default: decode LEGACY_DECODEVAL {
-                        // no prefix
-                        0x0: decode OPCODE_OP_BOTTOM3 {
-                            0x2: CMPPS(Vo,Wo,Ib);
-                            0x3: MOVNTI(Mdp,Gdp);
-                            0x4: PINSRW(Pq,Ew,Ib);
-                            0x5: PEXTRW(Gd,PRq,Ib);
-                            0x6: SHUFPS(Vps,Wps,Ib);
-                        }
-                        // repe (0xF3)
-                        0x4: decode OPCODE_OP_BOTTOM3 {
-                            0x2: CMPSS(Vd,Wd,Ib);
-                            default: UD2();
-                        }
-                        // operand size (0x66)
-                        0x1: decode OPCODE_OP_BOTTOM3 {
-                            0x2: CMPPD(Vo,Wo,Ib);
-                            0x4: PINSRW(Vdw,Ew,Ib);
-                            0x5: PEXTRW(Gd,VRdq,Ib);
-                            0x6: SHUFPD(Vpd,Wpd,Ib);
-                            default: UD2();
-                        }
-                        // repne (0xF2)
-                        0x8: decode OPCODE_OP_BOTTOM3 {
-                            0x2: CMPSD(Vq,Wq,Ib);
-                            default: UD2();
-                        }
-                        default: UD2();
-                    }
-                }
-                0x19: decode OPSIZE {
-                    4: BSWAP_D(Bd);
-                    8: BSWAP_Q(Bq);
-                    default: UD2();
-                }
-                0x1A: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x1: PSRLW(Pq,Qq);
-                        0x2: PSRLD(Pq,Qq);
-                        0x3: PSRLQ(Pq,Qq);
-                        0x4: PADDQ(Pq,Qq);
-                        0x5: PMULLW(Pq,Qq);
-                        0x7: PMOVMSKB(Gd,PRq);
-                        default: UD2();
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x6: MOVQ2DQ(Vo,PRq);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::addsubpd_Vo_Wo();
-                        0x1: PSRLW(Vo,Wo);
-                        0x2: PSRLD(Vo,Wo);
-                        0x3: PSRLQ(Vo,Wo);
-                        0x4: PADDQ(Vo,Wo);
-                        0x5: PMULLW(Vo,Wo);
-                        0x6: MOVQ(Wq,Vq);
-                        0x7: PMOVMSKB(Gd,VRo);
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::addsubps_Vo_Wo();
-                        0x6: MOVDQ2Q(Pq,VRq);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x1B: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSUBUSB(Pq,Qq);
-                        0x1: PSUBUSW(Pq,Qq);
-                        0x2: PMINUB(Pq,Qq);
-                        0x3: PAND(Pq,Qq);
-                        0x4: PADDUSB(Pq,Qq);
-                        0x5: PADDUSW(Pq,Qq);
-                        0x6: PMAXUB(Pq,Qq);
-                        0x7: PANDN(Pq,Qq);
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSUBUSB(Vo,Wo);
-                        0x1: PSUBUSW(Vo,Wo);
-                        0x2: PMINUB(Vo,Wo);
-                        0x3: PAND(Vo,Wo);
-                        0x4: PADDUSB(Vo,Wo);
-                        0x5: PADDUSW(Vo,Wo);
-                        0x6: PMAXUB(Vo,Wo);
-                        0x7: PANDN(Vo,Wo);
-                    }
-                    default: UD2();
-                }
-                0x1C: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PAVGB(Pq,Qq);
-                        0x1: PSRAW(Pq,Qq);
-                        0x2: PSRAD(Pq,Qq);
-                        0x3: PAVGW(Pq,Qq);
-                        0x4: PMULHUW(Pq,Qq);
-                        0x5: PMULHW(Pq,Qq);
-                        0x7: WarnUnimpl::movntq_Mq_Pq();
-                        default: UD2();
-                    }
-                    // repe (0xF3)
-                    0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x6: CVTDQ2PD(Vo,Wq);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PAVGB(Vo,Wo);
-                        0x1: PSRAW(Vo,Wo);
-                        0x2: PSRAD(Vo,Wo);
-                        0x3: PAVGW(Vo,Wo);
-                        0x4: PMULHUW(Vo,Wo);
-                        0x5: PMULHW(Vo,Wo);
-                        0x6: CVTTPD2DQ(Vo,Wo);
-                        0x7: WarnUnimpl::movntdq_Mo_Vo();
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x6: CVTPD2DQ(Vo,Wo);
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x1D: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSUBSB(Pq,Qq);
-                        0x1: PSUBSW(Pq,Qq);
-                        0x2: PMINSW(Pq,Qq);
-                        0x3: POR(Pq,Qq);
-                        0x4: PADDSB(Pq,Qq);
-                        0x5: PADDSW(Pq,Qq);
-                        0x6: PMAXSW(Pq,Qq);
-                        0x7: PXOR(Pq,Qq);
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSUBSB(Vo,Wo);
-                        0x1: PSUBSW(Vo,Wo);
-                        0x2: PMINSW(Vo,Wo);
-                        0x3: POR(Vo,Wo);
-                        0x4: PADDSB(Vo,Wo);
-                        0x5: PADDSW(Vo,Wo);
-                        0x6: PMAXSW(Vo,Wo);
-                        0x7: PXOR(Vo,Wo);
-                    }
-                    default: UD2();
-                }
-                0x1E: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x1: PSLLW(Pq,Qq);
-                        0x2: PSLLD(Pq,Qq);
-                        0x3: PSLLQ(Pq,Qq);
-                        0x4: PMULUDQ(Pq,Qq);
-                        0x5: PMADDWD(Pq,Qq);
-                        0x6: PSADBW(Pq,Qq);
-                        0x7: MASKMOVQ(Pq,PRq);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x1: PSLLW(Vo,Wo);
-                        0x2: PSLLD(Vo,Wo);
-                        0x3: PSLLQ(Vo,Wo);
-                        0x4: PMULUDQ(Vo,Wo);
-                        0x5: PMADDWD(Vo,Wo);
-                        0x6: PSADBW(Vo,Wo);
-                        0x7: MASKMOVDQU(Vo,VRo);
-                        default: UD2();
-                    }
-                    // repne (0xF2)
-                    0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::lddqu_Vo_Mo();
-                        default: UD2();
-                    }
-                    default: UD2();
-                }
-                0x1F: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSUBB(Pq,Qq);
-                        0x1: PSUBW(Pq,Qq);
-                        0x2: PSUBD(Pq,Qq);
-                        0x3: PSUBQ(Pq,Qq);
-                        0x4: PADDB(Pq,Qq);
-                        0x5: PADDW(Pq,Qq);
-                        0x6: PADDD(Pq,Qq);
-                        0x7: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: PSUBB(Vo,Wo);
-                        0x1: PSUBW(Vo,Wo);
-                        0x2: PSUBD(Vo,Wo);
-                        0x3: PSUBQ(Vo,Wo);
-                        0x4: PADDB(Vo,Wo);
-                        0x5: PADDW(Vo,Wo);
-                        0x6: PADDD(Vo,Wo);
-                        0x7: UD2();
-                    }
-                    default: UD2();
+                    default: Inst::INVLPG(M);
                 }
             }
-            default: FailUnimpl::twoByteOps();
+            0x02: lar_Gv_Ew();
+            0x03: lsl_Gv_Ew();
+            // sandpile.org doesn't seem to know what this is...? We'll
+            // use it for pseudo instructions. We've got 16 bits of space
+            // to play with so there can be quite a few pseudo
+            // instructions.
+            //0x04: loadall_or_reset_or_hang();
+            0x4: decode IMMEDIATE {
+                format BasicOperate {
+                    0x00: m5arm({{
+                        PseudoInst::arm(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x01: m5quiesce({{
+                        PseudoInst::quiesce(xc->tcBase());
+                    }}, IsNonSpeculative, IsQuiesce);
+                    0x02: m5quiesceNs({{
+                        PseudoInst::quiesceNs(xc->tcBase(), Rdi);
+                    }}, IsNonSpeculative, IsQuiesce);
+                    0x03: m5quiesceCycle({{
+                        PseudoInst::quiesceCycles(xc->tcBase(), Rdi);
+                    }}, IsNonSpeculative, IsQuiesce);
+                    0x04: m5quiesceTime({{
+                        Rax = PseudoInst::quiesceTime(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x07: m5rpns({{
+                        Rax = PseudoInst::rpns(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x21: m5exit({{
+                        PseudoInst::m5exit(xc->tcBase(), Rdi);
+                    }}, IsNonSpeculative);
+                    0x22: m5fail({{
+                        PseudoInst::m5fail(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x30: m5initparam({{
+                        Rax = PseudoInst::initParam(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x31: m5loadsymbol({{
+                        PseudoInst::loadsymbol(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x40: m5resetstats({{
+                        PseudoInst::resetstats(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x41: m5dumpstats({{
+                        PseudoInst::dumpstats(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x42: m5dumpresetstats({{
+                        PseudoInst::dumpresetstats(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x43: m5checkpoint({{
+                        PseudoInst::m5checkpoint(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x50: m5readfile({{
+                        Rax = PseudoInst::readfile(
+                            xc->tcBase(), Rdi, Rsi, Rdx);
+                    }}, IsNonSpeculative);
+                    0x51: m5debugbreak({{
+                        PseudoInst::debugbreak(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x52: m5switchcpu({{
+                        PseudoInst::switchcpu(xc->tcBase());
+                    }}, IsNonSpeculative);
+                    0x53: m5addsymbol({{
+                        PseudoInst::addsymbol(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x54: m5panic({{
+                        panic("M5 panic instruction called at pc = %#x.\n",
+                              RIP);
+                    }}, IsNonSpeculative);
+                    0x55: m5reserved1({{
+                        warn("M5 reserved opcode 1 ignored.\n");
+                    }}, IsNonSpeculative);
+                    0x56: m5reserved2({{
+                        warn("M5 reserved opcode 2 ignored.\n");
+                    }}, IsNonSpeculative);
+                    0x57: m5reserved3({{
+                        warn("M5 reserved opcode 3 ignored.\n");
+                    }}, IsNonSpeculative);
+                    0x58: m5reserved4({{
+                        warn("M5 reserved opcode 4 ignored.\n");
+                    }}, IsNonSpeculative);
+                    0x59: m5reserved5({{
+                        warn("M5 reserved opcode 5 ignored.\n");
+                    }}, IsNonSpeculative);
+                    0x5a: m5_work_begin({{
+                        PseudoInst::workbegin(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    0x5b: m5_work_end({{
+                        PseudoInst::workend(xc->tcBase(), Rdi, Rsi);
+                    }}, IsNonSpeculative);
+                    default: Inst::UD2();
+                }
+            }
+            0x05: decode FullSystemInt {
+                0: SyscallInst::syscall('xc->syscall(Rax)',
+                        IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                default: decode MODE_MODE {
+                    0x0: decode MODE_SUBMODE {
+                        0x0: Inst::SYSCALL_64();
+                        0x1: Inst::SYSCALL_COMPAT();
+                    }
+                    0x1: Inst::SYSCALL_LEGACY();
+                }
+            }
+            0x06: Inst::CLTS();
+            0x07: decode MODE_SUBMODE {
+                0x0: decode OPSIZE {
+                    // Return to 64 bit mode.
+                    0x8: Inst::SYSRET_TO_64();
+                    // Return to compatibility mode.
+                    default: Inst::SYSRET_TO_COMPAT();
+                }
+                default: Inst::SYSRET_NON_64();
+            }
         }
+        0x01: decode OPCODE_OP_BOTTOM3 {
+            0x0: invd();
+            0x1: wbinvd();
+            0x2: Inst::UD2();
+            0x3: Inst::UD2();
+            0x4: Inst::UD2();
+            0x5: Inst::PREFETCH(Mb);
+            0x6: FailUnimpl::femms();
+            0x7: decode IMMEDIATE {
+                0x0C: pi2fw_Pq_Qq();
+                0x0D: pi2fd_Pq_Qq();
+                0x1C: pf2iw_Pq_Qq();
+                0x1D: pf2id_Pq_Qq();
+                0x8A: pfnacc_Pq_Qq();
+                0x8E: pfpnacc_Pq_Qq();
+                0x90: pfcmpge_Pq_Qq();
+                0x94: pfmin_Pq_Qq();
+                0x96: pfrcp_Pq_Qq();
+                0x97: pfrsqrt_Pq_Qq();
+                0x9A: Inst::PFSUB(Pq,Qq);
+                0x9E: pfadd_Pq_Qq();
+                0xA0: pfcmpgt_Pq_Qq();
+                0xA4: pfmax_Pq_Qq();
+                0xA6: pfrcpit1_Pq_Qq();
+                0xA7: pfrsqit1_Pq_Qq();
+                0xAA: Inst::PFSUBR(Pq,Qq);
+                0xAE: pfacc_Pq_Qq();
+                0xB0: pfcmpeq_Pq_Qq();
+                0xB4: Inst::PFMUL(Pq,Qq);
+                0xB6: pfrcpit2_Pq_Qq();
+                0xB7: Inst::PMULHRW(Pq,Qq);
+                0xBB: pswapd_Pq_Qq();
+                0xBF: pavgusb_Pq_Qq();
+                default: Inst::UD2();
+            }
+        }
+        format Inst{
+            0x02: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVUPS(Vo,Wo);
+                    0x1: MOVUPS(Wo,Vo);
+                    0x2: decode MODRM_MOD {
+                        0x3: MOVHLPS(Vps,VRq);
+                        default: MOVLPS(Vps,Mq);
+                    }
+                    0x3: MOVLPS(Mq,Vps);
+                    0x4: UNPCKLPS(Vps,Wq);
+                    0x5: UNPCKHPS(Vps,Wq);
+                    0x6: decode MODRM_MOD {
+                        0x3: MOVLHPS(Vps,VRq);
+                        default: MOVHPS(Vps,Mq);
+                    }
+                    0x7: MOVHPS(Mq,Vq);
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVSS(Vd,Wd);
+                    0x1: MOVSS(Wd,Vd);
+                    0x2: WarnUnimpl::movsldup_Vo_Wo();
+                    0x6: WarnUnimpl::movshdup_Vo_Wo();
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVUPD(Vo,Wo);
+                    0x1: MOVUPD(Wo,Vo);
+                    0x2: MOVLPD(Vq,Mq);
+                    0x3: MOVLPD(Mq,Vq);
+                    0x4: UNPCKLPD(Vo,Wq);
+                    0x5: UNPCKHPD(Vo,Wo);
+                    0x6: MOVHPD(Vq,Mq);
+                    0x7: MOVHPD(Mq,Vq);
+            }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVSD(Vq,Wq);
+                    0x1: MOVSD(Wq,Vq);
+                    0x2: MOVDDUP(Vo,Wq);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x03: decode OPCODE_OP_BOTTOM3 {
+                //group16();
+                0x0: decode MODRM_REG {
+                    0x0: WarnUnimpl::prefetch_nta();
+                    0x1: PREFETCH_T0(Mb);
+                    0x2: WarnUnimpl::prefetch_t1();
+                    0x3: WarnUnimpl::prefetch_t2();
+                    default: HINT_NOP();
+                }
+                0x1: HINT_NOP();
+                0x2: HINT_NOP();
+                0x3: HINT_NOP();
+                0x4: HINT_NOP();
+                0x5: HINT_NOP();
+                0x6: HINT_NOP();
+                0x7: HINT_NOP();
+            }
+            0x04: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOV(Rd,Cd);
+                    0x1: MOV(Rd,Dd);
+                    0x2: MOV(Cd,Rd);
+                    0x3: MOV(Dd,Rd);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x05: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    //These moves should really use size o (octword), but
+                    //because they are split in two, they use q (quadword).
+                    0x0: MOVAPS(Vq,Wq);
+                    0x1: MOVAPS(Wq,Vq);
+                    0x2: CVTPI2PS(Vq,Qq);
+                    0x3: WarnUnimpl::movntps_Mo_Vo();
+                    0x4: CVTTPS2PI(Pq,Wq);
+                    0x5: CVTPS2PI(Pq,Wq);
+                    0x6: UCOMISS(Vd,Wd);
+                    0x7: COMISS(Vd,Wd);
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x2: CVTSI2SS(Vd,Ed);
+                    0x4: CVTTSS2SI(Gd,Wd);
+                    0x5: CVTSS2SI(Gd,Wd);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVAPD(Vo,Wo);
+                    0x1: MOVAPD(Wo,Vo);
+                    0x2: CVTPI2PD(Vo,Qq);
+                    0x3: WarnUnimpl::movntpd_Mo_Vo();
+                    0x4: CVTTPD2PI(Pq,Wo);
+                    0x5: CVTPD2PI(Pq,Wo);
+                    0x6: UCOMISD(Vq,Wq);
+                    0x7: COMISD(Vq,Wq);
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    // The size of the V operand should be q, not dp
+                    0x2: CVTSI2SD(Vdp,Edp);
+                    // The size of the W operand should be q, not dp
+                    0x4: CVTTSD2SI(Gdp,Wdp);
+                    0x5: CVTSD2SI(Gd,Wq);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+        }
+        0x06: decode OPCODE_OP_BOTTOM3 {
+            0x0: Inst::WRMSR();
+            0x1: Inst::RDTSC();
+            0x2: Inst::RDMSR();
+            0x3: rdpmc();
+            0x4: decode FullSystemInt {
+                0: SyscallInst::sysenter('xc->syscall(Rax)',
+                        IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                default: sysenter();
+            }
+            0x5: sysexit();
+            0x6: Inst::UD2();
+            0x7: getsec();
+        }
+        0x07: decode OPCODE_OP_BOTTOM3 {
+            0x0: M5InternalError::error(
+                {{"Three byte opcode shouldn't be handled by "
+                  "two_byte_opcodes.isa!"}});
+            0x2: M5InternalError::error(
+                {{"Three byte opcode shouldn't be handled by "
+                  "two_byte_opcodes.isa!"}});
+            default: UD2();
+        }
+        format Inst {
+            0x08: decode OPCODE_OP_BOTTOM3 {
+                0x0: CMOVO(Gv,Ev);
+                0x1: CMOVNO(Gv,Ev);
+                0x2: CMOVB(Gv,Ev);
+                0x3: CMOVNB(Gv,Ev);
+                0x4: CMOVZ(Gv,Ev);
+                0x5: CMOVNZ(Gv,Ev);
+                0x6: CMOVBE(Gv,Ev);
+                0x7: CMOVNBE(Gv,Ev);
+            }
+            0x09: decode OPCODE_OP_BOTTOM3 {
+                0x0: CMOVS(Gv,Ev);
+                0x1: CMOVNS(Gv,Ev);
+                0x2: CMOVP(Gv,Ev);
+                0x3: CMOVNP(Gv,Ev);
+                0x4: CMOVL(Gv,Ev);
+                0x5: CMOVNL(Gv,Ev);
+                0x6: CMOVLE(Gv,Ev);
+                0x7: CMOVNLE(Gv,Ev);
+            }
+            0x0A: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVMSKPS(Gd,VRo);
+                    0x1: SQRTPS(Vo,Wo);
+                    0x2: WarnUnimpl::rqsrtps_Vo_Wo();
+                    0x3: WarnUnimpl::rcpps_Vo_Wo();
+                    0x4: ANDPS(Vo,Wo);
+                    0x5: ANDNPS(Vo,Wo);
+                    0x6: ORPS(Vo,Wo);
+                    0x7: XORPS(Vo,Wo);
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x1: SQRTSS(Vd,Wd);
+                    0x2: WarnUnimpl::rsqrtss_Vd_Wd();
+                    0x3: WarnUnimpl::rcpss_Vd_Wd();
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: MOVMSKPD(Gd,VRo);
+                    0x1: SQRTPD(Vo,Wo);
+                    0x4: ANDPD(Vo,Wo);
+                    0x5: ANDNPD(Vo,Wo);
+                    0x6: ORPD(Vo,Wo);
+                    0x7: XORPD(Vo,Wo);
+                    default: UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x1: SQRTSD(Vq,Wq);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x0B: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: ADDPS(Vo,Wo);
+                    0x1: MULPS(Vo,Wo);
+                    0x2: CVTPS2PD(Vo,Wq);
+                    0x3: CVTDQ2PS(Vo,Wo);
+                    0x4: SUBPS(Vo,Wo);
+                    0x5: MINPS(Vo,Wo);
+                    0x6: DIVPS(Vo,Wo);
+                    0x7: MAXPS(Vo,Wo);
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x0: ADDSS(Vd,Wd);
+                    0x1: MULSS(Vd,Wd);
+                    0x2: CVTSS2SD(Vq,Wd);
+                    0x3: CVTTPS2DQ(Vo,Wo);
+                    0x4: SUBSS(Vd,Wd);
+                    0x5: MINSS(Vd,Wd);
+                    0x6: DIVSS(Vd,Wd);
+                    0x7: MAXSS(Vd,Wd);
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: ADDPD(Vo,Wo);
+                    0x1: MULPD(Vo,Wo);
+                    0x2: CVTPD2PS(Vo,Wo);
+                    0x3: CVTPS2DQ(Vo,Wo);
+                    0x4: SUBPD(Vo,Wo);
+                    0x5: MINPD(Vo,Wo);
+                    0x6: DIVPD(Vo,Wo);
+                    0x7: MAXPD(Vo,Wo);
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: ADDSD(Vq,Wq);
+                    0x1: MULSD(Vq,Wq);
+                    0x2: CVTSD2SS(Vd,Wq);
+                    0x4: SUBSD(Vq,Wq);
+                    0x5: MINSD(Vq,Wq);
+                    0x6: DIVSD(Vq,Wq);
+                    0x7: MAXSD(Vq,Wq);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x0C: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PUNPCKLBW(Pq,Qd);
+                    0x1: PUNPCKLWD(Pq,Qd);
+                    0x2: PUNPCKLDQ(Pq,Qd);
+                    0x3: PACKSSWB(Pq,Qq);
+                    0x4: PCMPGTB(Pq,Qq);
+                    0x5: PCMPGTW(Pq,Qq);
+                    0x6: PCMPGTD(Pq,Qq);
+                    0x7: PACKUSWB(Pq,Qq);
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PUNPCKLBW(Vo,Wq);
+                    0x1: PUNPCKLWD(Vo,Wq);
+                    0x2: PUNPCKLDQ(Vo,Wq);
+                    0x3: PACKSSWB(Vo,Wo);
+                    0x4: PCMPGTB(Vo,Wo);
+                    0x5: PCMPGTW(Vo,Wo);
+                    0x6: PCMPGTD(Vo,Wo);
+                    0x7: PACKUSWB(Vo,Wo);
+                }
+                default: UD2();
+            }
+            0x0D: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PUNPCKHBW(Pq,Qq);
+                    0x1: PUNPCKHWD(Pq,Qq);
+                    0x2: PUNPCKHDQ(Pq,Qq);
+                    0x3: PACKSSDW(Pq,Qq);
+                    0x6: MOVD(Pq,Edp);
+                    0x7: MOVQ(Pq,Qq);
+                    default: UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x7: MOVDQU(Vo,Wo);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PUNPCKHBW(Vo,Wo);
+                    0x1: PUNPCKHWD(Vo,Wo);
+                    0x2: PUNPCKHDQ(Vo,Wo);
+                    0x3: PACKSSDW(Vo,Wo);
+                    0x4: PUNPCKLQDQ(Vo,Wq);
+                    0x5: PUNPCKHQDQ(Vo,Wq);
+                    0x6: MOVD(Vo,Edp);
+                    0x7: MOVDQA(Vo,Wo);
+                }
+                default: UD2();
+            }
+            0x0E: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSHUFW(Pq,Qq,Ib);
+                    //0x1: group12_pshimw();
+                    0x1: decode MODRM_REG {
+                        0x2: PSRLW(PRq,Ib);
+                        0x4: PSRAW(PRq,Ib);
+                        0x6: PSLLW(PRq,Ib);
+                        default: UD2();
+                    }
+                    //0x2: group13_pshimd();
+                    0x2: decode MODRM_REG {
+                        0x2: PSRLD(PRq,Ib);
+                        0x4: PSRAD(PRq,Ib);
+                        0x6: PSLLD(PRq,Ib);
+                        default: UD2();
+                    }
+                    //0x3: group14_pshimq();
+                    0x3: decode MODRM_REG {
+                        0x2: PSRLQ(PRq,Ib);
+                        0x6: PSLLQ(PRq,Ib);
+                        default: Inst::UD2();
+                    }
+                    0x4: Inst::PCMPEQB(Pq,Qq);
+                    0x5: Inst::PCMPEQW(Pq,Qq);
+                    0x6: Inst::PCMPEQD(Pq,Qq);
+                    0x7: Inst::EMMS();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSHUFHW(Vo,Wo,Ib);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSHUFD(Vo,Wo,Ib);
+                    //0x1: group12_pshimw();
+                    0x1: decode MODRM_REG {
+                        0x2: PSRLW(VRo,Ib);
+                        0x4: PSRAW(VRo,Ib);
+                        0x6: PSLLW(VRo,Ib);
+                    }
+                    //0x2: group13_pshimd();
+                    0x2: decode MODRM_REG {
+                        0x2: PSRLD(VRo,Ib);
+                        0x4: PSRAD(VRo,Ib);
+                        0x6: PSLLD(VRo,Ib);
+                        default: UD2();
+                    }
+                    //0x3: group14_pshimq();
+                    0x3: decode MODRM_REG {
+                        0x2: PSRLQ(VRo,Ib);
+                        0x3: PSRLDQ(VRo,Ib);
+                        0x6: PSLLQ(VRo,Ib);
+                        0x7: PSLLDQ(VRo,Ib);
+                        default: UD2();
+                    }
+                    0x4: PCMPEQB(Vo,Wo);
+                    0x5: PCMPEQW(Vo,Wo);
+                    0x6: PCMPEQD(Vo,Wo);
+                    default: UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSHUFLW(Vo,Wo,Ib);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x0F: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: WarnUnimpl::vmread_Edp_Gdp();
+                    0x1: WarnUnimpl::vmwrite_Gdp_Edp();
+                    0x6: MOVD(Edp,Pdp);
+                    0x7: MOVQ(Qq,Pq);
+                    default: UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x6: MOVQ(Vq,Wq);
+                    0x7: MOVDQU(Wo,Vo);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x4: HADDPD(Vo,Wo);
+                    0x5: WarnUnimpl::hsubpd_Vo_Wo();
+                    0x6: MOVD(Edp,Vd);
+                    0x7: MOVDQA(Wo,Vo);
+                    default: UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x4: HADDPS(Vo,Wo);
+                    0x5: WarnUnimpl::hsubps_Vo_Wo();
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x10: decode OPCODE_OP_BOTTOM3 {
+                0x0: JO(Jz);
+                0x1: JNO(Jz);
+                0x2: JB(Jz);
+                0x3: JNB(Jz);
+                0x4: JZ(Jz);
+                0x5: JNZ(Jz);
+                0x6: JBE(Jz);
+                0x7: JNBE(Jz);
+            }
+            0x11: decode OPCODE_OP_BOTTOM3 {
+                0x0: JS(Jz);
+                0x1: JNS(Jz);
+                0x2: JP(Jz);
+                0x3: JNP(Jz);
+                0x4: JL(Jz);
+                0x5: JNL(Jz);
+                0x6: JLE(Jz);
+                0x7: JNLE(Jz);
+            }
+            0x12: decode OPCODE_OP_BOTTOM3 {
+                0x0: SETO(Eb);
+                0x1: SETNO(Eb);
+                0x2: SETB(Eb);
+                0x3: SETNB(Eb);
+                0x4: SETZ(Eb);
+                0x5: SETNZ(Eb);
+                0x6: SETBE(Eb);
+                0x7: SETNBE(Eb);
+            }
+            0x13: decode OPCODE_OP_BOTTOM3 {
+                0x0: SETS(Eb);
+                0x1: SETNS(Eb);
+                0x2: SETP(Eb);
+                0x3: SETNP(Eb);
+                0x4: SETL(Eb);
+                0x5: SETNL(Eb);
+                0x6: SETLE(Eb);
+                0x7: SETNLE(Eb);
+            }
+        }
+        0x14: decode OPCODE_OP_BOTTOM3 {
+            0x0: push_fs();
+            0x1: pop_fs();
+            0x2: CPUIDInst::CPUID({{
+                CpuidResult result;
+                bool success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
+                    bits(Rcx, 31, 0), result);
+                if (success) {
+                    Rax = result.rax;
+                    Rbx = result.rbx;
+                    Rcx = result.rcx;
+                    Rdx = result.rdx;
+                } else {
+                    Rax = Rax;
+                    Rbx = Rbx;
+                    Rcx = Rcx;
+                    Rdx = Rdx;
+                }
+                }});
+            0x3: Inst::BT(Ev,Gv);
+            0x4: Inst::SHLD(Ev,Gv,Ib);
+            0x5: Inst::SHLD(Ev,Gv);
+            default: Inst::UD2();
+        }
+        0x15: decode OPCODE_OP_BOTTOM3 {
+            0x0: push_gs();
+            0x1: pop_gs();
+            0x2: rsm_smm();
+            0x3: Inst::BTS(Ev,Gv);
+            0x4: Inst::SHRD(Ev,Gv,Ib);
+            0x5: Inst::SHRD(Ev,Gv);
+            //0x6: group15();
+            0x6: decode MODRM_MOD {
+                0x3: decode MODRM_REG {
+                    0x5: BasicOperate::LFENCE(
+                                 {{/*Nothing*/}}, IsReadBarrier);
+                    0x6: BasicOperate::MFENCE(
+                                 {{/*Nothing*/}}, IsMemBarrier);
+                    0x7: BasicOperate::SFENCE(
+                                 {{/*Nothing*/}}, IsWriteBarrier);
+                    default: Inst::UD2();
+                }
+                default: decode MODRM_REG {
+                    0x0: decode OPSIZE {
+                        4: Inst::FXSAVE(M);
+                        8: Inst::FXSAVE64(M);
+                        default: fxsave();
+                    }
+                    0x1: decode OPSIZE {
+                        4: Inst::FXRSTOR(M);
+                        8: Inst::FXRSTOR64(M);
+                        default: fxrstor();
+                    }
+                    0x2: Inst::LDMXCSR(Md);
+                    0x3: Inst::STMXCSR(Md);
+                    0x4: xsave();
+                    0x5: xrstor();
+                    0x6: Inst::UD2();
+                    0x7: clflush();
+                }
+            }
+            0x7: Inst::IMUL(Gv,Ev);
+        }
+        format Inst {
+            0x16: decode OPCODE_OP_BOTTOM3 {
+                0x0: CMPXCHG(Eb,Gb);
+                0x1: CMPXCHG(Ev,Gv);
+                0x2: WarnUnimpl::lss_Gz_Mp();
+                0x3: BTR(Ev,Gv);
+                0x4: WarnUnimpl::lfs_Gz_Mp();
+                0x5: WarnUnimpl::lgs_Gz_Mp();
+                //The size of the second operand in these instructions
+                //should really be "b" or "w", but it's set to v in order
+                //to have a consistent register size. This shouldn't
+                //affect behavior.
+                0x6: MOVZX_B(Gv,Ev);
+                0x7: MOVZX_W(Gv,Ev);
+            }
+            0x17: decode OPCODE_OP_BOTTOM3 {
+                0x0: decode LEGACY_REP {
+                    0x0: WarnUnimpl::jmpe_Jz();
+                    0x1: WarnUnimpl::popcnt_Gv_Ev();
+                }
+                //0x1: group10_UD2();
+                0x1: UD2();
+                //0x2: group8_Ev_Ib();
+                0x2: decode MODRM_REG {
+                    0x4: BT(Ev,Ib);
+                    0x5: BTS(Ev,Ib);
+                    0x6: BTR(Ev,Ib);
+                    0x7: BTC(Ev,Ib);
+                    default: UD2();
+                }
+                0x3: BTC(Ev,Gv);
+                0x4: BSF(Gv,Ev);
+                0x5: BSR(Gv,Ev);
+                //The size of the second operand in these instructions
+                //should really be "b" or "w", but it's set to v in order
+                //to have a consistent register size. This shouldn't
+                //affect behavior.
+                0x6: MOVSX_B(Gv,Ev);
+                0x7: MOVSX_W(Gv,Ev);
+            }
+            0x18: decode OPCODE_OP_BOTTOM3 {
+                0x0: XADD(Eb,Gb);
+                0x1: XADD(Ev,Gv);
+                //0x7: group9();
+                0x7: decode MODRM_REG {
+                    //Also CMPXCHG16B
+                    0x1: CMPXCHG8B(Mdp);
+                    0x6: decode LEGACY_OP {
+                        0x1: WarnUnimpl::vmclear_Mq();
+                        default: decode LEGACY_REP {
+                            0x1: WarnUnimpl::vmxon_Mq();
+                            0x0: WarnUnimpl::vmptrld_Mq();
+                        }
+                    }
+                    0x7: WarnUnimpl::vmptrst_Mq();
+                    default: UD2();
+                }
+                default: decode LEGACY_DECODEVAL {
+                    // no prefix
+                    0x0: decode OPCODE_OP_BOTTOM3 {
+                        0x2: CMPPS(Vo,Wo,Ib);
+                        0x3: MOVNTI(Mdp,Gdp);
+                        0x4: PINSRW(Pq,Ew,Ib);
+                        0x5: PEXTRW(Gd,PRq,Ib);
+                        0x6: SHUFPS(Vps,Wps,Ib);
+                    }
+                    // repe (0xF3)
+                    0x4: decode OPCODE_OP_BOTTOM3 {
+                        0x2: CMPSS(Vd,Wd,Ib);
+                        default: UD2();
+                    }
+                    // operand size (0x66)
+                    0x1: decode OPCODE_OP_BOTTOM3 {
+                        0x2: CMPPD(Vo,Wo,Ib);
+                        0x4: PINSRW(Vdw,Ew,Ib);
+                        0x5: PEXTRW(Gd,VRdq,Ib);
+                        0x6: SHUFPD(Vpd,Wpd,Ib);
+                        default: UD2();
+                    }
+                    // repne (0xF2)
+                    0x8: decode OPCODE_OP_BOTTOM3 {
+                        0x2: CMPSD(Vq,Wq,Ib);
+                        default: UD2();
+                    }
+                    default: UD2();
+                }
+            }
+            0x19: decode OPSIZE {
+                4: BSWAP_D(Bd);
+                8: BSWAP_Q(Bq);
+                default: UD2();
+            }
+            0x1A: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x1: PSRLW(Pq,Qq);
+                    0x2: PSRLD(Pq,Qq);
+                    0x3: PSRLQ(Pq,Qq);
+                    0x4: PADDQ(Pq,Qq);
+                    0x5: PMULLW(Pq,Qq);
+                    0x7: PMOVMSKB(Gd,PRq);
+                    default: UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x6: MOVQ2DQ(Vo,PRq);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: WarnUnimpl::addsubpd_Vo_Wo();
+                    0x1: PSRLW(Vo,Wo);
+                    0x2: PSRLD(Vo,Wo);
+                    0x3: PSRLQ(Vo,Wo);
+                    0x4: PADDQ(Vo,Wo);
+                    0x5: PMULLW(Vo,Wo);
+                    0x6: MOVQ(Wq,Vq);
+                    0x7: PMOVMSKB(Gd,VRo);
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: WarnUnimpl::addsubps_Vo_Wo();
+                    0x6: MOVDQ2Q(Pq,VRq);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x1B: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSUBUSB(Pq,Qq);
+                    0x1: PSUBUSW(Pq,Qq);
+                    0x2: PMINUB(Pq,Qq);
+                    0x3: PAND(Pq,Qq);
+                    0x4: PADDUSB(Pq,Qq);
+                    0x5: PADDUSW(Pq,Qq);
+                    0x6: PMAXUB(Pq,Qq);
+                    0x7: PANDN(Pq,Qq);
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSUBUSB(Vo,Wo);
+                    0x1: PSUBUSW(Vo,Wo);
+                    0x2: PMINUB(Vo,Wo);
+                    0x3: PAND(Vo,Wo);
+                    0x4: PADDUSB(Vo,Wo);
+                    0x5: PADDUSW(Vo,Wo);
+                    0x6: PMAXUB(Vo,Wo);
+                    0x7: PANDN(Vo,Wo);
+                }
+                default: UD2();
+            }
+            0x1C: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PAVGB(Pq,Qq);
+                    0x1: PSRAW(Pq,Qq);
+                    0x2: PSRAD(Pq,Qq);
+                    0x3: PAVGW(Pq,Qq);
+                    0x4: PMULHUW(Pq,Qq);
+                    0x5: PMULHW(Pq,Qq);
+                    0x7: WarnUnimpl::movntq_Mq_Pq();
+                    default: UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x6: CVTDQ2PD(Vo,Wq);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PAVGB(Vo,Wo);
+                    0x1: PSRAW(Vo,Wo);
+                    0x2: PSRAD(Vo,Wo);
+                    0x3: PAVGW(Vo,Wo);
+                    0x4: PMULHUW(Vo,Wo);
+                    0x5: PMULHW(Vo,Wo);
+                    0x6: CVTTPD2DQ(Vo,Wo);
+                    0x7: WarnUnimpl::movntdq_Mo_Vo();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x6: CVTPD2DQ(Vo,Wo);
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x1D: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSUBSB(Pq,Qq);
+                    0x1: PSUBSW(Pq,Qq);
+                    0x2: PMINSW(Pq,Qq);
+                    0x3: POR(Pq,Qq);
+                    0x4: PADDSB(Pq,Qq);
+                    0x5: PADDSW(Pq,Qq);
+                    0x6: PMAXSW(Pq,Qq);
+                    0x7: PXOR(Pq,Qq);
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSUBSB(Vo,Wo);
+                    0x1: PSUBSW(Vo,Wo);
+                    0x2: PMINSW(Vo,Wo);
+                    0x3: POR(Vo,Wo);
+                    0x4: PADDSB(Vo,Wo);
+                    0x5: PADDSW(Vo,Wo);
+                    0x6: PMAXSW(Vo,Wo);
+                    0x7: PXOR(Vo,Wo);
+                }
+                default: UD2();
+            }
+            0x1E: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x1: PSLLW(Pq,Qq);
+                    0x2: PSLLD(Pq,Qq);
+                    0x3: PSLLQ(Pq,Qq);
+                    0x4: PMULUDQ(Pq,Qq);
+                    0x5: PMADDWD(Pq,Qq);
+                    0x6: PSADBW(Pq,Qq);
+                    0x7: MASKMOVQ(Pq,PRq);
+                    default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x1: PSLLW(Vo,Wo);
+                    0x2: PSLLD(Vo,Wo);
+                    0x3: PSLLQ(Vo,Wo);
+                    0x4: PMULUDQ(Vo,Wo);
+                    0x5: PMADDWD(Vo,Wo);
+                    0x6: PSADBW(Vo,Wo);
+                    0x7: MASKMOVDQU(Vo,VRo);
+                    default: UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: WarnUnimpl::lddqu_Vo_Mo();
+                    default: UD2();
+                }
+                default: UD2();
+            }
+            0x1F: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSUBB(Pq,Qq);
+                    0x1: PSUBW(Pq,Qq);
+                    0x2: PSUBD(Pq,Qq);
+                    0x3: PSUBQ(Pq,Qq);
+                    0x4: PADDB(Pq,Qq);
+                    0x5: PADDW(Pq,Qq);
+                    0x6: PADDD(Pq,Qq);
+                    0x7: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: PSUBB(Vo,Wo);
+                    0x1: PSUBW(Vo,Wo);
+                    0x2: PSUBD(Vo,Wo);
+                    0x3: PSUBQ(Vo,Wo);
+                    0x4: PADDB(Vo,Wo);
+                    0x5: PADDW(Vo,Wo);
+                    0x6: PADDD(Vo,Wo);
+                    0x7: UD2();
+                }
+                default: UD2();
+            }
+        }
+        default: FailUnimpl::twoByteOps();
     }
-    default: M5InternalError::error(
-        {{"Unexpected first opcode byte in two byte opcode!"}});
 }
