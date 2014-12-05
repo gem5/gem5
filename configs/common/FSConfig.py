@@ -55,7 +55,13 @@ class MemBus(CoherentXBar):
     default = Self.badaddr_responder.pio
 
 
-def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False):
+def fillInCmdline(mdesc, template, **kwargs):
+    kwargs.setdefault('disk', mdesc.disk())
+    kwargs.setdefault('mem', mdesc.mem())
+    kwargs.setdefault('script', mdesc.script())
+    return template % kwargs
+
+def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
 
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
@@ -113,7 +119,9 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False):
     self.kernel = binary('vmlinux')
     self.pal = binary('ts_osfpal')
     self.console = binary('console')
-    self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
+    if not cmdline:
+        cmdline = 'root=/dev/hda1 console=ttyS0'
+    self.boot_osflags = fillInCmdline(mdesc, cmdline)
 
     return self
 
@@ -183,7 +191,7 @@ def makeSparcSystem(mem_mode, mdesc=None):
     return self
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
-                  dtb_filename=None, bare_metal=False):
+                  dtb_filename=None, bare_metal=False, cmdline=None):
     assert machine_type
 
     if bare_metal:
@@ -268,9 +276,10 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             self.dtb_filename = binary(dtb_filename)
         self.machine_type = machine_type
         # Ensure that writes to the UART actually go out early in the boot
-        boot_flags = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
-                     'lpj=19988480 norandmaps rw loglevel=8 ' + \
-                     'mem=%s root=/dev/sda1' % mdesc.mem()
+        if not cmdline:
+            cmdline = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
+                      'lpj=19988480 norandmaps rw loglevel=8 ' + \
+                      'mem=%(mem)s root=/dev/sda1'
 
         self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
@@ -278,7 +287,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
         if mdesc.disk().lower().count('android'):
             boot_flags += " init=/init "
-        self.boot_osflags = boot_flags
+        self.boot_osflags = fillInCmdline(mdesc, cmdline)
     self.realview.attachOnChipIO(self.membus, self.bridge)
     self.realview.attachIO(self.iobus)
     self.intrctrl = IntrControl()
@@ -290,7 +299,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     return self
 
 
-def makeLinuxMipsSystem(mem_mode, mdesc=None):
+def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     class BaseMalta(Malta):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
@@ -326,7 +335,9 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None):
     self.terminal = Terminal()
     self.kernel = binary('mips/vmlinux')
     self.console = binary('mips/console')
-    self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
+    if not cmdline:
+        cmdline = 'root=/dev/hda1 console=ttyS0'
+    self.boot_osflags = fillInCmdline(mdesc, cmdline)
 
     self.system_port = self.membus.slave
 
@@ -501,7 +512,8 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     self.intel_mp_table.base_entries = base_entries
     self.intel_mp_table.ext_entries = ext_entries
 
-def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False):
+def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
+                       cmdline=None):
     self = LinuxX86System()
 
     # Build up the x86 system and then specialize it for Linux
@@ -546,8 +558,9 @@ def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False):
     self.e820_table.entries = entries
 
     # Command line
-    self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 ' + \
-                        'root=/dev/hda1'
+    if not cmdline:
+        cmdline = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1'
+    self.boot_osflags = fillInCmdline(mdesc, cmdline)
     self.kernel = binary('x86_64-vmlinux-2.6.22.9')
     return self
 

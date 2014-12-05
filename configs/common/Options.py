@@ -265,3 +265,11 @@ def addFSOptions(parser):
     # Disk Image Options
     parser.add_option("--disk-image", action="store", type="string", default=None,
                       help="Path to the disk image to use.")
+
+    # Command line options
+    parser.add_option("--command-line", action="store", type="string",
+                      default=None,
+                      help="Template for the kernel command line.")
+    parser.add_option("--command-line-file", action="store",
+                      default=None, type="string",
+                      help="File with a template for the kernel command line")

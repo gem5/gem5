@@ -71,20 +71,34 @@ def is_kvm_cpu(cpu_class):
     return have_kvm_support and cpu_class != None and \
         issubclass(cpu_class, BaseKvmCPU)
 
+def cmd_line_template():
+    if options.command_line and options.command_line_file:
+        print "Error: --command-line and --command-line-file are " \
+              "mutually exclusive"
+        sys.exit(1)
+    if options.command_line:
+        return options.command_line
+    if options.command_line_file:
+        return open(options.command_line_file).read().strip()
+    return None
+
 def build_test_system(np):
+    cmdline = cmd_line_template()
     if buildEnv['TARGET_ISA'] == "alpha":
-        test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0], options.ruby)
+        test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0], options.ruby,
+                                        cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "mips":
-        test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0])
+        test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "sparc":
-        test_sys = makeSparcSystem(test_mem_mode, bm[0])
+        test_sys = makeSparcSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "x86":
         test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0],
-                options.ruby)
+                options.ruby, cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == "arm":
         test_sys = makeArmSystem(test_mem_mode, options.machine_type,
                                  options.num_cpus, bm[0], options.dtb_filename,
-                                 bare_metal=options.bare_metal)
+                                 bare_metal=options.bare_metal,
+                                 cmdline=cmdline)
         if options.enable_context_switch_stats_dump:
             test_sys.enable_context_switch_stats_dump = True
     else:
@@ -202,16 +216,19 @@ def build_drive_system(np):
     drive_mem_mode = 'atomic'
     DriveMemClass = SimpleMemory
 
+    cmdline = cmd_line_template()
     if buildEnv['TARGET_ISA'] == 'alpha':
-        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
+        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'mips':
-        drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1])
+        drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'sparc':
-        drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
+        drive_sys = makeSparcSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'x86':
-        drive_sys = makeLinuxX86System(drive_mem_mode, np, bm[1])
+        drive_sys = makeLinuxX86System(drive_mem_mode, np, bm[1],
+                                       cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'arm':
-        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1])
+        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1],
+                                  cmdline=cmdline)
 
     # Create a top-level voltage domain
     drive_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
