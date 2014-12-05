@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -36,6 +37,7 @@
 #include <map>
 
 #include "arch/types.hh"
+#include "base/intmath.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "cpu/pc_event.hh"
@@ -136,16 +138,25 @@ class BaseRemoteGDB
     class GdbRegCache
     {
       public:
-        GdbRegCache(size_t newSize) : regs(new uint64_t[newSize]), size(newSize)
+        GdbRegCache(size_t newSize) :
+            regs64(new uint64_t[divCeil(newSize, sizeof(uint64_t))]),
+            size(newSize)
         {}
         ~GdbRegCache()
         {
-            delete [] regs;
+            delete [] regs64;
         }
 
-        uint64_t * regs;
+        union {
+            uint64_t *regs64;
+            uint32_t *regs32;
+            uint16_t *regs16;
+            uint8_t *regs8;
+            void *regs;
+        };
+        // Size of cache in bytes.
         size_t size;
-        size_t bytes() { return size * sizeof(uint64_t); }
+        size_t bytes() { return size; }
     };
 
     GdbRegCache gdbregs;

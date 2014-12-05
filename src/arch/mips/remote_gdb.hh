@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -42,11 +43,10 @@ namespace MipsISA
 {
 
     // The number of special regs depends on gdb.
-    // Two 32-bit regs are packed into one 64-bit reg.
-    const int GdbIntArchRegs = NumIntArchRegs / 2;
-    const int GdbIntSpecialRegs = 6 / 2;
-    const int GdbFloatArchRegs = NumFloatArchRegs / 2;
-    const int GdbFloatSpecialRegs = 2 / 2;
+    const int GdbIntArchRegs = NumIntArchRegs;
+    const int GdbIntSpecialRegs = 6;
+    const int GdbFloatArchRegs = NumFloatArchRegs;
+    const int GdbFloatSpecialRegs = 2;
 
     const int GdbIntRegs = GdbIntArchRegs + GdbIntSpecialRegs;
     const int GdbFloatRegs = GdbFloatArchRegs + GdbFloatSpecialRegs;
@@ -69,23 +69,6 @@ namespace MipsISA
 
         void clearSingleStep();
         void setSingleStep();
-
-      private:
-        uint64_t
-        pack(uint32_t lo, uint32_t hi)
-        {
-            return static_cast<uint64_t>(hi) << 32 | lo;
-        }
-        uint32_t
-        unpackLo(uint64_t val)
-        {
-            return bits(val, 31, 0);
-        }
-        uint32_t
-        unpackHi(uint64_t val)
-        {
-            return bits(val, 63, 32);
-        }
     };
 }
 

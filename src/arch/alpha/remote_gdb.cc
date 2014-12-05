@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -145,7 +146,7 @@ using namespace std;
 using namespace AlphaISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, KGDB_NUMREGS)
+    : BaseRemoteGDB(_system, tc, KGDB_NUMREGS * sizeof(uint64_t))
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());
 }
@@ -211,23 +212,20 @@ RemoteGDB::getregs()
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());
 
-    gdbregs.regs[KGDB_REG_PC] = context->pcState().pc();
+    gdbregs.regs64[KGDB_REG_PC] = context->pcState().pc();
 
     // @todo: Currently this is very Alpha specific.
-    if (PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < NumIntArchRegs; ++i) {
-            gdbregs.regs[i] = context->readIntReg(reg_redir[i]);
-        }
+    if (PcPAL(gdbregs.regs64[KGDB_REG_PC])) {
+        for (int i = 0; i < NumIntArchRegs; ++i)
+            gdbregs.regs64[i] = context->readIntReg(reg_redir[i]);
     } else {
-        for (int i = 0; i < NumIntArchRegs; ++i) {
-            gdbregs.regs[i] = context->readIntReg(i);
-        }
+        for (int i = 0; i < NumIntArchRegs; ++i)
+            gdbregs.regs64[i] = context->readIntReg(i);
     }
 
 #ifdef KGDB_FP_REGS
-    for (int i = 0; i < NumFloatArchRegs; ++i) {
-        gdbregs.regs[i + KGDB_REG_F0] = context->readFloatRegBits(i);
-    }
+    for (int i = 0; i < NumFloatArchRegs; ++i)
+        gdbregs.regs64[i + KGDB_REG_F0] = context->readFloatRegBits(i);
 #endif
 }
 
@@ -239,22 +237,22 @@ void
 RemoteGDB::setregs()
 {
     // @todo: Currently this is very Alpha specific.
-    if (PcPAL(gdbregs.regs[KGDB_REG_PC])) {
+    if (PcPAL(gdbregs.regs64[KGDB_REG_PC])) {
         for (int i = 0; i < NumIntArchRegs; ++i) {
-            context->setIntReg(reg_redir[i], gdbregs.regs[i]);
+            context->setIntReg(reg_redir[i], gdbregs.regs64[i]);
         }
     } else {
         for (int i = 0; i < NumIntArchRegs; ++i) {
-            context->setIntReg(i, gdbregs.regs[i]);
+            context->setIntReg(i, gdbregs.regs64[i]);
         }
     }
 
 #ifdef KGDB_FP_REGS
     for (int i = 0; i < NumFloatArchRegs; ++i) {
-        context->setFloatRegBits(i, gdbregs.regs[i + KGDB_REG_F0]);
+        context->setFloatRegBits(i, gdbregs.regs64[i + KGDB_REG_F0]);
     }
 #endif
-    context->pcState(gdbregs.regs[KGDB_REG_PC]);
+    context->pcState(gdbregs.regs64[KGDB_REG_PC]);
 }
 
 void

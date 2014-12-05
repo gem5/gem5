@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2013 ARM Limited
  * All rights reserved
  *
@@ -45,6 +46,8 @@
 #ifndef __ARCH_ARM_REMOTE_GDB_HH__
 #define __ARCH_ARM_REMOTE_GDB_HH__
 
+#include <algorithm>
+
 #include "base/remote_gdb.hh"
 
 class System;
@@ -54,21 +57,26 @@ namespace ArmISA
 {
 
 // AArch32 registers with vfpv3/neon
-const int NUMREGS   = 41;  /* r0-r15, cpsr, d0-d31, fpscr */
-const int REG_R0 = 0;
-const int REG_F0 = 8;
-const int REG_CPSR  = 8;   /* bit 512 to bit 543  */
-const int REG_FPSCR = 40;  /* bit 2592 to bit 2623 */
+enum {
+    GDB32_R0 = 0,
+    GDB32_CPSR = 16,
+    GDB32_F0 = 17,
+    GDB32_FPSCR = 81,
+    GDB32_NUMREGS = 82
+};
 
 // AArch64 registers
-const int NUMREGS_64 = 98;  // x0-x31, pc, cpsr (64-bit GPRs)
-                            // v0-v31 (128-bit FPRs)
-const int REG_X0 = 0;
-const int REG_PC_64 = 32;
-const int REG_CPSR_64 = 33;
-const int REG_V0 = 34;
+enum {
+    GDB64_X0 = 0,
+    GDB64_PC = 32,
+    GDB64_CPSR = 33,
+    GDB64_V0 = 34,
+    GDB64_V0_32 = 2 * GDB64_V0,
+    GDB64_NUMREGS = 98
+};
 
-const int MAX_NUMREGS = NUMREGS_64;
+const int GDB_REG_BYTES = std::max(GDB64_NUMREGS * sizeof(uint64_t),
+                                   GDB32_NUMREGS * sizeof(uint32_t));
 
 class RemoteGDB : public BaseRemoteGDB
 {

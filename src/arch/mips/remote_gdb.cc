@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2010 ARM Limited
  * All rights reserved
  *
@@ -148,7 +149,7 @@ using namespace std;
 using namespace MipsISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, GdbNumRegs)
+    : BaseRemoteGDB(_system, tc, GdbNumRegs * sizeof(uint32_t))
 {
 }
 
@@ -181,31 +182,26 @@ RemoteGDB::getregs()
     // two MIPS registers are packed into one gdb register (little endian)
 
     // INTREG: R0~R31
-    for (int i = 0; i < GdbIntArchRegs; i++) {
-        gdbregs.regs[i] = pack(
-                context->readIntReg(i * 2),
-                context->readIntReg(i * 2 + 1));
-    }
+    for (int i = 0; i < GdbIntArchRegs; i++)
+        gdbregs.regs32[i] = context->readIntReg(i);
     // SR, LO, HI, BADVADDR, CAUSE, PC
-    gdbregs.regs[GdbIntArchRegs + 0] = pack(
-                context->readMiscRegNoEffect(MISCREG_STATUS),
-                context->readIntReg(INTREG_LO));
-    gdbregs.regs[GdbIntArchRegs + 1] = pack(
-                context->readIntReg(INTREG_HI),
-                context->readMiscRegNoEffect(MISCREG_BADVADDR));
-    gdbregs.regs[GdbIntArchRegs + 2] = pack(
-                context->readMiscRegNoEffect(MISCREG_CAUSE),
-                context->pcState().pc());
+    gdbregs.regs32[GdbIntArchRegs + 0] =
+        context->readMiscRegNoEffect(MISCREG_STATUS);
+    gdbregs.regs32[GdbIntArchRegs + 1] = context->readIntReg(INTREG_LO);
+    gdbregs.regs32[GdbIntArchRegs + 2] = context->readIntReg(INTREG_HI);
+    gdbregs.regs32[GdbIntArchRegs + 3] =
+        context->readMiscRegNoEffect(MISCREG_BADVADDR);
+    gdbregs.regs32[GdbIntArchRegs + 4] =
+        context->readMiscRegNoEffect(MISCREG_CAUSE);
+    gdbregs.regs32[GdbIntArchRegs + 5] = context->pcState().pc();
     // FLOATREG: F0~F31
-    for (int i = 0; i < GdbFloatArchRegs; i++) {
-        gdbregs.regs[GdbIntRegs + i] = pack(
-                context->readFloatRegBits(i * 2),
-                context->readFloatRegBits(i * 2 + 1));
-    }
+    for (int i = 0; i < GdbFloatArchRegs; i++)
+        gdbregs.regs32[GdbIntRegs + i] = context->readFloatRegBits(i);
     // FCR, FIR
-    gdbregs.regs[GdbIntRegs + GdbFloatArchRegs + 0] = pack(
-                context->readFloatRegBits(FLOATREG_FCCR),
-                context->readFloatRegBits(FLOATREG_FIR));
+    gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 0] =
+        context->readFloatRegBits(FLOATREG_FCCR);
+    gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 1] =
+        context->readFloatRegBits(FLOATREG_FIR);
 }
 
 /*
@@ -217,41 +213,27 @@ RemoteGDB::setregs()
 {
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
 
-    // MIPS registers are 32 bits wide, gdb registers are 64 bits wide
-    // two MIPS registers are packed into one gdb register (little endian)
-
     // INTREG: R0~R31
-    for (int i = 0; i < GdbIntArchRegs; i++) {
-        if (i) context->setIntReg(i * 2,
-                unpackLo(gdbregs.regs[i]));
-        context->setIntReg(i * 2 + 1,
-                unpackHi(gdbregs.regs[i]));
-    }
+    for (int i = 1; i < GdbIntArchRegs; i++)
+        context->setIntReg(i, gdbregs.regs32[i]);
     // SR, LO, HI, BADVADDR, CAUSE, PC
     context->setMiscRegNoEffect(MISCREG_STATUS,
-                unpackLo(gdbregs.regs[GdbIntArchRegs + 0]));
-    context->setIntReg(INTREG_LO,
-                unpackHi(gdbregs.regs[GdbIntArchRegs + 0]));
-    context->setIntReg(INTREG_HI,
-                unpackLo(gdbregs.regs[GdbIntArchRegs + 1]));
+        gdbregs.regs32[GdbIntArchRegs + 0]);
+    context->setIntReg(INTREG_LO, gdbregs.regs32[GdbIntArchRegs + 1]);
+    context->setIntReg(INTREG_HI, gdbregs.regs32[GdbIntArchRegs + 2]);
     context->setMiscRegNoEffect(MISCREG_BADVADDR,
-                unpackHi(gdbregs.regs[GdbIntArchRegs + 1]));
+        gdbregs.regs32[GdbIntArchRegs + 3]);
     context->setMiscRegNoEffect(MISCREG_CAUSE,
-                unpackLo(gdbregs.regs[GdbIntArchRegs + 2]));
-    context->pcState(
-                unpackHi(gdbregs.regs[GdbIntArchRegs + 2]));
+        gdbregs.regs32[GdbIntArchRegs + 4]);
+    context->pcState(gdbregs.regs32[GdbIntArchRegs + 5]);
     // FLOATREG: F0~F31
-    for (int i = 0; i < GdbFloatArchRegs; i++) {
-        context->setFloatRegBits(i * 2,
-                unpackLo(gdbregs.regs[GdbIntRegs + i]));
-        context->setFloatRegBits(i * 2 + 1,
-                unpackHi(gdbregs.regs[GdbIntRegs + i]));
-    }
+    for (int i = 0; i < GdbFloatArchRegs; i++)
+        context->setFloatRegBits(i, gdbregs.regs32[GdbIntRegs + i]);
     // FCR, FIR
     context->setFloatRegBits(FLOATREG_FCCR,
-                unpackLo(gdbregs.regs[GdbIntRegs + GdbFloatArchRegs + 0]));
+        gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 0]);
     context->setFloatRegBits(FLOATREG_FIR,
-                unpackHi(gdbregs.regs[GdbIntRegs + GdbFloatArchRegs + 0]));
+        gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 1]);
 }
 
 void
