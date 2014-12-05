@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2010-2014 ARM Limited
  * All rights reserved
  *
@@ -1105,20 +1106,27 @@ DefaultCommit<Impl>::commitInsts()
                     }
                 }
 
-                int count = 0;
-                Addr oldpc;
-                // Debug statement.  Checks to make sure we're not
-                // currently updating state while handling PC events.
-                assert(!thread[tid]->noSquashFromTC && !thread[tid]->trapPending);
-                do {
-                    oldpc = pc[tid].instAddr();
-                    cpu->system->pcEventQueue.service(thread[tid]->getTC());
-                    count++;
-                } while (oldpc != pc[tid].instAddr());
-                if (count > 1) {
-                    DPRINTF(Commit,
-                            "PC skip function event, stopping commit\n");
-                    break;
+                bool onInstBoundary = !head_inst->isMicroop() ||
+                                      head_inst->isLastMicroop() ||
+                                      !head_inst->isDelayedCommit();
+
+                if (onInstBoundary) {
+                    int count = 0;
+                    Addr oldpc;
+                    // Make sure we're not currently updating state while
+                    // handling PC events.
+                    assert(!thread[tid]->noSquashFromTC &&
+                           !thread[tid]->trapPending);
+                    do {
+                        oldpc = pc[tid].instAddr();
+                        cpu->system->pcEventQueue.service(thread[tid]->getTC());
+                        count++;
+                    } while (oldpc != pc[tid].instAddr());
+                    if (count > 1) {
+                        DPRINTF(Commit,
+                                "PC skip function event, stopping commit\n");
+                        break;
+                    }
                 }
 
                 // Check if an instruction just enabled interrupts and we've
@@ -1128,9 +1136,8 @@ DefaultCommit<Impl>::commitInsts()
                 // case squash now to make sure the interrupt is handled.
                 //
                 // If we don't do this, we might end up in a live lock situation
-                if (!interrupt  && avoidQuiesceLiveLock &&
-                   (!head_inst->isMicroop() || head_inst->isLastMicroop()) &&
-                   cpu->checkInterrupts(cpu->tcBase(0)))
+                if (!interrupt && avoidQuiesceLiveLock &&
+                    onInstBoundary && cpu->checkInterrupts(cpu->tcBase(0)))
                     squashAfter(tid, head_inst);
             } else {
                 DPRINTF(Commit, "Unable to commit head instruction PC:%s "

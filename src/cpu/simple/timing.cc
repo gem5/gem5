@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2010-2013 ARM Limited
  * All rights reserved
  *
@@ -551,10 +552,10 @@ TimingSimpleCPU::fetch()
 {
     DPRINTF(SimpleCPU, "Fetch\n");
 
-    if (!curStaticInst || !curStaticInst->isDelayedCommit())
+    if (!curStaticInst || !curStaticInst->isDelayedCommit()) {
         checkForInterrupts();
-
-    checkPcEventQueue();
+        checkPcEventQueue();
+    }
 
     // We must have just got suspended by a PC event
     if (_status == Idle)

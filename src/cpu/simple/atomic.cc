@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2012-2013 ARM Limited
  * All rights reserved.
  *
@@ -518,10 +519,11 @@ AtomicSimpleCPU::tick()
         numCycles++;
         ppCycles->notify(1);
 
-        if (!curStaticInst || !curStaticInst->isDelayedCommit())
+        if (!curStaticInst || !curStaticInst->isDelayedCommit()) {
             checkForInterrupts();
+            checkPcEventQueue();
+        }
 
-        checkPcEventQueue();
         // We must have just got suspended by a PC event
         if (_status == Idle) {
             tryCompleteDrain();
