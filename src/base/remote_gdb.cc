@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -129,6 +130,7 @@
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/GDBAll.hh"
@@ -246,14 +248,28 @@ BaseRemoteGDB::Event::Event(BaseRemoteGDB *g, int fd, int e)
 void
 BaseRemoteGDB::Event::process(int revent)
 {
-    if (revent & POLLIN)
-        gdb->trap(SIGILL);
-    else if (revent & POLLNVAL)
+    BaseCPU *cpu = gdb->context->getCpuPtr();
+    EventQueue *eq = cpu->comInstEventQueue[gdb->context->threadId()];
+    if (revent & POLLIN) {
+        gdb->trapEvent.type(SIGILL);
+        // Here "ticks" aren't simulator ticks which measure time, they're
+        // instructions committed by the CPU.
+        eq->schedule(&gdb->trapEvent, eq->getCurTick());
+    } else if (revent & POLLNVAL) {
+        if (gdb->trapEvent.scheduled())
+            eq->deschedule(&gdb->trapEvent);
         gdb->detach();
+    }
+}
+
+void
+BaseRemoteGDB::TrapEvent::process()
+{
+    gdb->trap(_type);
 }
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize)
-    : event(NULL), listener(NULL), number(-1), fd(-1),
+    : event(NULL), trapEvent(this), listener(NULL), number(-1), fd(-1),
       active(false), attached(false),
       system(_system), context(c),
       gdbregs(cacheSize)

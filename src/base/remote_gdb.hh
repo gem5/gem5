@@ -115,8 +115,23 @@ class BaseRemoteGDB
         void process(int revent);
     };
 
+    class TrapEvent : public ::Event
+    {
+      protected:
+        int _type;
+        BaseRemoteGDB *gdb;
+
+      public:
+        TrapEvent(BaseRemoteGDB *g) : gdb(g)
+        {}
+
+        void type(int t) { _type = t; }
+        void process();
+    };
+
     friend class Event;
     Event *event;
+    TrapEvent trapEvent;
     GDBListener *listener;
     int number;
 
