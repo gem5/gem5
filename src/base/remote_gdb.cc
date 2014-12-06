@@ -166,18 +166,18 @@ debugger()
 //
 //
 
-GDBListener::Event::Event(GDBListener *l, int fd, int e)
+GDBListener::InputEvent::InputEvent(GDBListener *l, int fd, int e)
     : PollEvent(fd, e), listener(l)
 {}
 
 void
-GDBListener::Event::process(int revent)
+GDBListener::InputEvent::process(int revent)
 {
     listener->accept();
 }
 
 GDBListener::GDBListener(BaseRemoteGDB *g, int p)
-    : event(NULL), gdb(g), port(p)
+    : inputEvent(NULL), gdb(g), port(p)
 {
     assert(!gdb->listener);
     gdb->listener = this;
@@ -185,8 +185,8 @@ GDBListener::GDBListener(BaseRemoteGDB *g, int p)
 
 GDBListener::~GDBListener()
 {
-    if (event)
-        delete event;
+    if (inputEvent)
+        delete inputEvent;
 }
 
 string
@@ -208,8 +208,8 @@ GDBListener::listen()
         port++;
     }
 
-    event = new Event(this, listener.getfd(), POLLIN);
-    pollQueue.schedule(event);
+    inputEvent = new InputEvent(this, listener.getfd(), POLLIN);
+    pollQueue.schedule(inputEvent);
 
 #ifndef NDEBUG
     gdb->number = debuggers.size();
@@ -241,12 +241,12 @@ GDBListener::accept()
     }
 }
 
-BaseRemoteGDB::Event::Event(BaseRemoteGDB *g, int fd, int e)
+BaseRemoteGDB::InputEvent::InputEvent(BaseRemoteGDB *g, int fd, int e)
     : PollEvent(fd, e), gdb(g)
 {}
 
 void
-BaseRemoteGDB::Event::process(int revent)
+BaseRemoteGDB::InputEvent::process(int revent)
 {
     BaseCPU *cpu = gdb->context->getCpuPtr();
     EventQueue *eq = cpu->comInstEventQueue[gdb->context->threadId()];
@@ -269,7 +269,7 @@ BaseRemoteGDB::TrapEvent::process()
 }
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize)
-    : event(NULL), trapEvent(this), listener(NULL), number(-1), fd(-1),
+    : inputEvent(NULL), trapEvent(this), listener(NULL), number(-1), fd(-1),
       active(false), attached(false),
       system(_system), context(c),
       gdbregs(cacheSize)
@@ -279,8 +279,8 @@ BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize
 
 BaseRemoteGDB::~BaseRemoteGDB()
 {
-    if (event)
-        delete event;
+    if (inputEvent)
+        delete inputEvent;
 }
 
 string
@@ -298,8 +298,8 @@ BaseRemoteGDB::attach(int f)
 {
     fd = f;
 
-    event = new Event(this, fd, POLLIN);
-    pollQueue.schedule(event);
+    inputEvent = new InputEvent(this, fd, POLLIN);
+    pollQueue.schedule(inputEvent);
 
     attached = true;
     DPRINTFN("remote gdb attached\n");
@@ -312,7 +312,7 @@ BaseRemoteGDB::detach()
     close(fd);
     fd = -1;
 
-    pollQueue.remove(event);
+    pollQueue.remove(inputEvent);
     DPRINTFN("remote gdb detached\n");
 }
 

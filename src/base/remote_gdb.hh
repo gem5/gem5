@@ -105,17 +105,17 @@ class BaseRemoteGDB
     virtual const char * gdb_command(char cmd);
 
   protected:
-    class Event : public PollEvent
+    class InputEvent : public PollEvent
     {
       protected:
         BaseRemoteGDB *gdb;
 
       public:
-        Event(BaseRemoteGDB *g, int fd, int e);
+        InputEvent(BaseRemoteGDB *g, int fd, int e);
         void process(int revent);
     };
 
-    class TrapEvent : public ::Event
+    class TrapEvent : public Event
     {
       protected:
         int _type;
@@ -129,8 +129,8 @@ class BaseRemoteGDB
         void process();
     };
 
-    friend class Event;
-    Event *event;
+    friend class InputEvent;
+    InputEvent *inputEvent;
     TrapEvent trapEvent;
     GDBListener *listener;
     int number;
@@ -270,18 +270,18 @@ BaseRemoteGDB::write(Addr addr, T data)
 class GDBListener
 {
   protected:
-    class Event : public PollEvent
+    class InputEvent : public PollEvent
     {
       protected:
         GDBListener *listener;
 
       public:
-        Event(GDBListener *l, int fd, int e);
+        InputEvent(GDBListener *l, int fd, int e);
         void process(int revent);
     };
 
-    friend class Event;
-    Event *event;
+    friend class InputEvent;
+    InputEvent *inputEvent;
 
   protected:
     ListenSocket listener;
