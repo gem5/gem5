@@ -54,10 +54,6 @@ namespace MipsISA
 
     class RemoteGDB : public BaseRemoteGDB
     {
-      protected:
-        Addr notTakenBkpt;
-        Addr takenBkpt;
-
       public:
         RemoteGDB(System *_system, ThreadContext *tc);
 
@@ -66,9 +62,6 @@ namespace MipsISA
 
         void getregs();
         void setregs();
-
-        void clearSingleStep();
-        void setSingleStep();
     };
 }
 

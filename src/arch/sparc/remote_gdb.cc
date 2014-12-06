@@ -144,7 +144,7 @@ using namespace std;
 using namespace SparcISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, NumGDBRegs * sizeof(uint64_t)), nextBkpt(0)
+    : BaseRemoteGDB(_system, c, NumGDBRegs * sizeof(uint64_t))
 {}
 
 ///////////////////////////////////////////////////////////
@@ -240,18 +240,4 @@ RemoteGDB::setregs()
     for (int x = RegG0; x <= RegI0 + 7; x++)
         context->setIntReg(x - RegG0, gdbregs.regs64[x]);
     // Only the integer registers, pc and npc are set in netbsd
-}
-
-void
-RemoteGDB::clearSingleStep()
-{
-   if (nextBkpt)
-       clearTempBreakpoint(nextBkpt);
-}
-
-void
-RemoteGDB::setSingleStep()
-{
-    nextBkpt = context->pcState().npc();
-    setTempBreakpoint(nextBkpt);
 }

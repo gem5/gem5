@@ -262,11 +262,18 @@ BaseRemoteGDB::TrapEvent::process()
     gdb->trap(_type);
 }
 
-BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize)
-    : inputEvent(NULL), trapEvent(this), listener(NULL), number(-1), fd(-1),
-      active(false), attached(false),
-      system(_system), context(c),
-      gdbregs(cacheSize)
+void
+BaseRemoteGDB::SingleStepEvent::process()
+{
+    if (!gdb->singleStepEvent.scheduled())
+        gdb->scheduleInstCommitEvent(&gdb->singleStepEvent, 1);
+    gdb->trap(SIGTRAP);
+}
+
+BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c,
+        size_t cacheSize) : inputEvent(NULL), trapEvent(this), listener(NULL),
+        number(-1), fd(-1), active(false), attached(false), system(_system),
+        context(c), gdbregs(cacheSize), singleStepEvent(this)
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());
 }
@@ -523,6 +530,19 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
     }
 
     return true;
+}
+
+void
+BaseRemoteGDB::clearSingleStep()
+{
+    descheduleInstCommitEvent(&singleStepEvent);
+}
+
+void
+BaseRemoteGDB::setSingleStep()
+{
+    if (!singleStepEvent.scheduled())
+        scheduleInstCommitEvent(&singleStepEvent, 1);
 }
 
 PCEventQueue *BaseRemoteGDB::getPcEventQueue()

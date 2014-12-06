@@ -80,23 +80,15 @@ const int GDB_REG_BYTES = std::max(GDB64_NUMREGS * sizeof(uint64_t),
 
 class RemoteGDB : public BaseRemoteGDB
 {
+  protected:
+    bool acc(Addr addr, size_t len);
+    bool write(Addr addr, size_t size, const char *data);
 
-protected:
-  Addr notTakenBkpt;
-  Addr takenBkpt;
+    void getregs();
+    void setregs();
 
-protected:
-  bool acc(Addr addr, size_t len);
-  bool write(Addr addr, size_t size, const char *data);
-
-  void getregs();
-  void setregs();
-
-  void clearSingleStep();
-  void setSingleStep();
-
-public:
-  RemoteGDB(System *_system, ThreadContext *tc);
+  public:
+    RemoteGDB(System *_system, ThreadContext *tc);
 };
 } // namespace ArmISA
 

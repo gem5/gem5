@@ -209,11 +209,25 @@ class BaseRemoteGDB
     }
 
   protected:
+    class SingleStepEvent : public Event
+    {
+      protected:
+        BaseRemoteGDB *gdb;
+
+      public:
+        SingleStepEvent(BaseRemoteGDB *g) : gdb(g)
+        {}
+
+        void process();
+    };
+
+    SingleStepEvent singleStepEvent;
+
     virtual void getregs() = 0;
     virtual void setregs() = 0;
 
-    virtual void clearSingleStep() = 0;
-    virtual void setSingleStep() = 0;
+    void clearSingleStep();
+    void setSingleStep();
 
     PCEventQueue *getPcEventQueue();
     EventQueue *getComInstEventQueue();

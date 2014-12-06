@@ -66,11 +66,6 @@ class RemoteGDB : public BaseRemoteGDB
   protected:
     void getregs();
     void setregs();
-
-    void clearSingleStep();
-    void setSingleStep();
-
-    Addr nextBkpt;
 };
 
 }

@@ -61,7 +61,7 @@ using namespace std;
 using namespace X86ISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c) :
-    BaseRemoteGDB(_system, c, GDB_REG_BYTES), singleStepEvent(this)
+    BaseRemoteGDB(_system, c, GDB_REG_BYTES)
 {}
 
 bool
@@ -86,14 +86,6 @@ RemoteGDB::acc(Addr va, size_t len)
         TlbEntry entry;
         return context->getProcessPtr()->pTable->lookup(va, entry);
     }
-}
-
-void
-RemoteGDB::SingleStepEvent::process()
-{
-    if (!gdb->singleStepEvent.scheduled())
-        gdb->scheduleInstCommitEvent(&gdb->singleStepEvent, 1);
-    gdb->trap(SIGTRAP);
 }
 
 void
@@ -230,17 +222,4 @@ RemoteGDB::setregs()
             warn("Remote gdb: Ignoring update to GS.\n");
         }
     }
-}
-
-void
-RemoteGDB::clearSingleStep()
-{
-    descheduleInstCommitEvent(&singleStepEvent);
-}
-
-void
-RemoteGDB::setSingleStep()
-{
-    if (!singleStepEvent.scheduled())
-        scheduleInstCommitEvent(&singleStepEvent, 1);
 }

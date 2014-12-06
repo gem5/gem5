@@ -65,18 +65,6 @@ class RemoteGDB : public BaseRemoteGDB
     {
         panic("setregs not implemented for POWER!");
     }
-
-    void
-    clearSingleStep()
-    {
-        panic("clearSingleStep not implemented for POWER!");
-    }
-
-    void
-    setSingleStep()
-    {
-        panic("setSingleStep not implemented for POWER!");
-    }
 };
 
 } // namespace PowerISA

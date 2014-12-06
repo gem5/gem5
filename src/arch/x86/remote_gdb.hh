@@ -116,25 +116,8 @@ class RemoteGDB : public BaseRemoteGDB
     bool acc(Addr addr, size_t len);
 
   protected:
-    class SingleStepEvent : public Event
-    {
-      protected:
-        RemoteGDB *gdb;
-
-      public:
-        SingleStepEvent(RemoteGDB *g) : gdb(g)
-        {}
-
-        void process();
-    };
-
-    SingleStepEvent singleStepEvent;
-
     void getregs();
     void setregs();
-
-    void clearSingleStep();
-    void setSingleStep();
 
     bool checkBpLen(size_t len) { return len == 1; }
 };

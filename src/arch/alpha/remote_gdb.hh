@@ -48,21 +48,14 @@ namespace AlphaISA {
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
-    Addr notTakenBkpt;
-    Addr takenBkpt;
-
-  protected:
     void getregs();
     void setregs();
-
-    void clearSingleStep();
-    void setSingleStep();
 
     // Machine memory
     bool acc(Addr addr, size_t len);
     bool write(Addr addr, size_t size, const char *data);
 
-    virtual bool insertHardBreak(Addr addr, size_t len);
+    bool insertHardBreak(Addr addr, size_t len);
 
   public:
     RemoteGDB(System *system, ThreadContext *context);
