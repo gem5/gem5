@@ -141,7 +141,6 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace Debug;
 using namespace TheISA;
 
 #ifndef NDEBUG
@@ -248,16 +247,11 @@ BaseRemoteGDB::InputEvent::InputEvent(BaseRemoteGDB *g, int fd, int e)
 void
 BaseRemoteGDB::InputEvent::process(int revent)
 {
-    BaseCPU *cpu = gdb->context->getCpuPtr();
-    EventQueue *eq = cpu->comInstEventQueue[gdb->context->threadId()];
     if (revent & POLLIN) {
         gdb->trapEvent.type(SIGILL);
-        // Here "ticks" aren't simulator ticks which measure time, they're
-        // instructions committed by the CPU.
-        eq->schedule(&gdb->trapEvent, eq->getCurTick());
+        gdb->scheduleInstCommitEvent(&gdb->trapEvent, 0);
     } else if (revent & POLLNVAL) {
-        if (gdb->trapEvent.scheduled())
-            eq->deschedule(&gdb->trapEvent);
+        gdb->descheduleInstCommitEvent(&gdb->trapEvent);
         gdb->detach();
     }
 }
@@ -534,6 +528,29 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
 PCEventQueue *BaseRemoteGDB::getPcEventQueue()
 {
     return &system->pcEventQueue;
+}
+
+EventQueue *
+BaseRemoteGDB::getComInstEventQueue()
+{
+    BaseCPU *cpu = context->getCpuPtr();
+    return cpu->comInstEventQueue[context->threadId()];
+}
+
+void
+BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
+{
+    EventQueue *eq = getComInstEventQueue();
+    // Here "ticks" aren't simulator ticks which measure time, they're
+    // instructions committed by the CPU.
+    eq->schedule(ev, eq->getCurTick() + delta);
+}
+
+void
+BaseRemoteGDB::descheduleInstCommitEvent(Event *ev)
+{
+    if (ev->scheduled())
+        getComInstEventQueue()->deschedule(ev);
 }
 
 bool

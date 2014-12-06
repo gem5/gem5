@@ -216,6 +216,12 @@ class BaseRemoteGDB
     virtual void setSingleStep() = 0;
 
     PCEventQueue *getPcEventQueue();
+    EventQueue *getComInstEventQueue();
+
+    /// Schedule an event which will be triggered "delta" instructions later.
+    void scheduleInstCommitEvent(Event *ev, int delta);
+    /// Deschedule an instruction count based event.
+    void descheduleInstCommitEvent(Event *ev);
 
   protected:
     virtual bool checkBpLen(size_t len);
