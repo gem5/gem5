@@ -426,6 +426,7 @@ VirtIODeviceBase::readConfigBlob(PacketPtr pkt, Addr cfgOffset, const uint8_t *c
     if (cfgOffset + size > configSize)
         panic("Config read out of bounds.\n");
 
+    pkt->makeResponse();
     pkt->setData(const_cast<uint8_t *>(cfg) + cfgOffset);
 }
 
@@ -437,6 +438,7 @@ VirtIODeviceBase::writeConfigBlob(PacketPtr pkt, Addr cfgOffset, uint8_t *cfg)
     if (cfgOffset + size > configSize)
         panic("Config write out of bounds.\n");
 
+    pkt->makeResponse();
     pkt->writeData((uint8_t *)cfg + cfgOffset);
 }
 

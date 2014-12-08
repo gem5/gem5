@@ -75,6 +75,8 @@ PciVirtIO::read(PacketPtr pkt)
         return 0;
     }
 
+    pkt->makeResponse();
+
     switch(offset) {
       case OFF_DEVICE_FEATURES:
         DPRINTF(VIOPci, "   DEVICE_FEATURES request\n");
@@ -150,6 +152,8 @@ PciVirtIO::write(PacketPtr pkt)
         vio.writeConfig(pkt, offset - OFF_VIO_DEVICE);
         return 0;
     }
+
+    pkt->makeResponse();
 
     switch(offset) {
       case OFF_DEVICE_FEATURES:
