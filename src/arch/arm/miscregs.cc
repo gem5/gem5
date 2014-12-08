@@ -3177,7 +3177,7 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                       case 0:
                         return MISCREG_PMCCNTR_EL0;
                       case 1:
-                        return MISCREG_PMCCFILTR_EL0;
+                        return MISCREG_PMXEVTYPER_EL0;
                       case 2:
                         return MISCREG_PMXEVCNTR_EL0;
                     }
@@ -3434,6 +3434,11 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_PMEVTYPER5_EL0;
                     }
                     break;
+                  case 15:
+                    switch (op2) {
+                      case 7:
+                        return MISCREG_PMCCFILTR_EL0;
+                    }
                 }
                 break;
               case 4:
