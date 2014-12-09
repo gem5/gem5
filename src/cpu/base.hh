@@ -279,10 +279,11 @@ class BaseCPU : public MemObject
     Trace::InstTracer * getTracer() { return tracer; }
 
     /// Notify the CPU that the indicated context is now active.
-    virtual void activateContext(ThreadID thread_num) {}
+    virtual void activateContext(ThreadID thread_num);
 
     /// Notify the CPU that the indicated context is now suspended.
-    virtual void suspendContext(ThreadID thread_num) {}
+    /// Check if possible to enter a lower power state
+    virtual void suspendContext(ThreadID thread_num);
 
     /// Notify the CPU that the indicated context is now halted.
     virtual void haltContext(ThreadID thread_num) {}

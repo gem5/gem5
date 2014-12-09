@@ -287,6 +287,8 @@ MinorCPU::activateContext(ThreadID thread_id)
     threads[thread_id]->activate();
     wakeupOnEvent(Minor::Pipeline::CPUStageId);
     pipeline->wakeupFetch();
+
+    BaseCPU::activateContext(thread_id);
 }
 
 void
@@ -295,6 +297,8 @@ MinorCPU::suspendContext(ThreadID thread_id)
     DPRINTF(MinorCPU, "SuspendContext %d\n", thread_id);
 
     threads[thread_id]->suspend();
+
+    BaseCPU::suspendContext(thread_id);
 }
 
 void
