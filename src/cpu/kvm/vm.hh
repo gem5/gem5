@@ -1,4 +1,5 @@
 /*
+ * Copyright 2014 Google, Inc.
  * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
@@ -108,6 +109,12 @@ class Kvm
      * MMIO buffer is stored. 0 if unsupported.
      */
     int capCoalescedMMIO() const;
+
+    /**
+     * Attempt to determine how many memory slots are available. If it can't
+     * be determined, this function returns 0.
+     */
+    int capNumMemSlots() const;
 
     /**
      * Support for reading and writing single registers.
@@ -331,6 +338,42 @@ class KvmVM : public SimObject
     bool hasKernelIRQChip() const { return _hasKernelIRQChip; }
     /** @} */
 
+    struct MemSlot
+    {
+        MemSlot(uint32_t _num) : num(_num)
+        {}
+        MemSlot() : num(-1)
+        {}
+
+        int32_t num;
+    };
+
+    /**
+     *  Allocate a memory slot within the VM.
+     */
+    const MemSlot allocMemSlot(uint64_t size);
+
+    /**
+     * Setup a region of physical memory in the guest
+     *
+     * @param slot KVM memory slot ID returned by allocMemSlot
+     * @param host_addr Memory allocation backing the memory
+     * @param guest_addr Address in the guest
+     * @param flags Flags (see the KVM API documentation)
+     */
+    void setupMemSlot(const MemSlot slot, void *host_addr, Addr guest_addr,
+                      uint32_t flags);
+
+    /**
+     * Disable a memory slot.
+     */
+    void disableMemSlot(const MemSlot slot);
+
+    /**
+     *  Free a previously allocated memory slot.
+     */
+    void freeMemSlot(const MemSlot slot);
+
     /** Global KVM interface */
     Kvm kvm;
 
@@ -366,16 +409,12 @@ class KvmVM : public SimObject
      * @param slot KVM memory slot ID (must be unique)
      * @param host_addr Memory allocation backing the memory
      * @param guest_addr Address in the guest
-     * @param guest_range Address range used by guest.
      * @param len Size of the allocation in bytes
      * @param flags Flags (see the KVM API documentation)
      */
     void setUserMemoryRegion(uint32_t slot,
                              void *host_addr, Addr guest_addr,
                              uint64_t len, uint32_t flags);
-    void setUserMemoryRegion(uint32_t slot,
-                             void *host_addr, AddrRange guest_range,
-                             uint32_t flags);
     /** @} */
 
     /**
@@ -437,6 +476,19 @@ class KvmVM : public SimObject
 
     /** Next unallocated vCPU ID */
     long nextVCPUID;
+
+    /**
+     *  Structures tracking memory slots.
+     */
+    class MemorySlot
+    {
+      public:
+        uint64_t size;
+        uint32_t slot;
+        bool active;
+    };
+    std::vector<MemorySlot> memorySlots;
+    uint32_t maxMemorySlot;
 };
 
 #endif
