@@ -1197,6 +1197,15 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         if (wasFull && !mq->isFull()) {
             clearBlocked((BlockedCause)mq->index);
         }
+
+        // Request the bus for a prefetch if this deallocation freed enough
+        // MSHRs for a prefetch to take place
+        if (prefetcher && mq == &mshrQueue && mshrQueue.canPrefetch()) {
+            Tick next_pf_time = std::max(prefetcher->nextPrefetchReadyTime(),
+                                         curTick());
+            if (next_pf_time != MaxTick)
+                requestMemSideBus(Request_PF, next_pf_time);
+        }
     }
 
     // copy writebacks to write buffer
@@ -1955,7 +1964,9 @@ Cache<TagStore>::nextMSHRReadyTime() const
     Tick nextReady = std::min(mshrQueue.nextMSHRReadyTime(),
                               writeBuffer.nextMSHRReadyTime());
 
-    if (prefetcher) {
+    // Don't signal prefetch ready time if no MSHRs available
+    // Will signal once enoguh MSHRs are deallocated
+    if (prefetcher && mshrQueue.canPrefetch()) {
         nextReady = std::min(nextReady,
                              prefetcher->nextPrefetchReadyTime());
     }
