@@ -1477,7 +1477,13 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
     // Offset by tRCD to correlate with ACT timing variables
     Tick min_cmd_at = busBusyUntil - tCL - tRCD;
 
-    // Prioritize same rank accesses that can issue B2B
+    // if we have multiple ranks and all
+    // waiting packets are accessing a rank which was previously active
+    // then bank_mask_same_rank will be set to a value while bank_mask will
+    // remain 0. In this case, the function should return the value of
+    // bank_mask_same_rank.
+    // else if waiting packets access a rank which was previously active and
+    // other ranks, prioritize same rank accesses that can issue B2B
     // Only optimize for same ranks when the command type
     // does not change; do not want to unnecessarily incur tWTR
     //
@@ -1485,8 +1491,8 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
     // 1) Commands that access the same rank as previous burst
     //    and can prep the bank seamlessly.
     // 2) Commands (any rank) with earliest bank prep
-    if (!switched_cmd_type && same_rank_match &&
-        min_act_at_same_rank <= min_cmd_at) {
+    if ((bank_mask == 0) || (!switched_cmd_type && same_rank_match &&
+        min_act_at_same_rank <= min_cmd_at)) {
         bank_mask = bank_mask_same_rank;
     }
 
