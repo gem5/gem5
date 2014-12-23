@@ -83,7 +83,8 @@ BasePrefetcher::observeAccess(const PacketPtr &pkt) const
 {
     Addr addr = pkt->getAddr();
     bool fetch = pkt->req->isInstFetch();
-    bool read= pkt->isRead();
+    bool read = pkt->isRead();
+    bool inv = pkt->isInvalidate();
     bool is_secure = pkt->isSecure();
 
     if (pkt->req->isUncacheable()) return false;
@@ -91,6 +92,7 @@ BasePrefetcher::observeAccess(const PacketPtr &pkt) const
     if (!fetch && !onData) return false;
     if (!fetch && read && !onRead) return false;
     if (!fetch && !read && !onWrite) return false;
+    if (!fetch && !read && inv) return false;
 
     if (onMiss) {
         return !inCache(addr, is_secure) &&
