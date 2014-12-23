@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,6 +37,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Ron Dreslinski
+#          Mitch Hayenga
 
 from ClockedObject import ClockedObject
 from m5.params import *
@@ -46,39 +47,46 @@ class BasePrefetcher(ClockedObject):
     type = 'BasePrefetcher'
     abstract = True
     cxx_header = "mem/cache/prefetch/base.hh"
-    size = Param.Int(100,
-         "Number of entries in the hardware prefetch queue")
-    cross_pages = Param.Bool(False,
-         "Allow prefetches to cross virtual page boundaries")
-    serial_squash = Param.Bool(False,
-         "Squash prefetches with a later time on a subsequent miss")
-    degree = Param.Int(1,
-         "Degree of the prefetch depth")
-    latency = Param.Cycles('1', "Latency of the prefetcher")
-    use_master_id = Param.Bool(True,
-         "Use the master id to separate calculations of prefetches")
-    data_accesses_only = Param.Bool(False,
-         "Only prefetch on data not on instruction accesses")
-    on_miss_only = Param.Bool(False,
-         "Only prefetch on miss (as opposed to always)")
-    on_read_only = Param.Bool(False,
-         "Only prefetch on read requests (write requests ignored)")
-    on_prefetch = Param.Bool(True,
-         "Let lower cache prefetcher train on prefetch requests")
-    inst_tagged = Param.Bool(True,
-         "Perform a tagged prefetch for instruction fetches always")
     sys = Param.System(Parent.any, "System this prefetcher belongs to")
 
-class StridePrefetcher(BasePrefetcher):
+    on_miss = Param.Bool(False, "Only notify prefetcher on misses")
+    on_read = Param.Bool(True, "Notify prefetcher on reads")
+    on_write = Param.Bool(True, "Notify prefetcher on writes")
+    on_data  = Param.Bool(True, "Notify prefetcher on data accesses")
+    on_inst  = Param.Bool(True, "Notify prefetcher on instruction accesses")
+
+class QueuedPrefetcher(BasePrefetcher):
+    type = "QueuedPrefetcher"
+    abstract = True
+    cxx_class = "QueuedPrefetcher"
+    cxx_header = "mem/cache/prefetch/queued.hh"
+    latency = Param.Int(1, "Latency for generated prefetches")
+    queue_size = Param.Int(32, "Maximum number of queued prefetches")
+    queue_squash = Param.Bool(True, "Squash queued prefetch on demand access")
+    queue_filter = Param.Bool(True, "Don't queue redundant prefetches")
+    cache_snoop = Param.Bool(False, "Snoop cache to eliminate redundant request")
+
+    tag_prefetch = Param.Bool(True, "Tag prefetch with PC of generating access")
+
+class StridePrefetcher(QueuedPrefetcher):
     type = 'StridePrefetcher'
     cxx_class = 'StridePrefetcher'
     cxx_header = "mem/cache/prefetch/stride.hh"
 
-class TaggedPrefetcher(BasePrefetcher):
+    max_conf = Param.Int(7, "Maximum confidence level")
+    thresh_conf = Param.Int(4, "Threshold confidence level")
+    min_conf = Param.Int(0, "Minimum confidence level")
+    start_conf = Param.Int(4, "Starting confidence for new entries")
+
+    table_sets = Param.Int(16, "Number of sets in PC lookup table")
+    table_assoc = Param.Int(4, "Associativity of PC lookup table")
+    use_master_id = Param.Bool(True, "Use master id based history")
+
+    degree = Param.Int(4, "Number of prefetches to generate")
+
+class TaggedPrefetcher(QueuedPrefetcher):
     type = 'TaggedPrefetcher'
     cxx_class = 'TaggedPrefetcher'
     cxx_header = "mem/cache/prefetch/tagged.hh"
 
-
-
-
+    degree = Param.Int(2, "Number of prefetches to generate")

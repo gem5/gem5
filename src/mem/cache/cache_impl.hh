@@ -535,7 +535,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     bool satisfied = access(pkt, blk, lat, writebacks);
 
     // track time of availability of next prefetch, if any
-    Tick next_pf_time = 0;
+    Tick next_pf_time = MaxTick;
 
     bool needsResponse = pkt->needsResponse();
 
@@ -548,7 +548,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
             // Don't notify on SWPrefetch
             if (!pkt->cmd.isSWPrefetch())
-                next_pf_time = prefetcher->notify(pkt, time);
+                next_pf_time = prefetcher->notify(pkt);
         }
 
         if (needsResponse) {
@@ -648,7 +648,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 if (prefetcher) {
                     // Don't notify on SWPrefetch
                     if (!pkt->cmd.isSWPrefetch())
-                        next_pf_time = prefetcher->notify(pkt, time);
+                        next_pf_time = prefetcher->notify(pkt);
                 }
             }
         } else {
@@ -688,12 +688,12 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             if (prefetcher) {
                 // Don't notify on SWPrefetch
                 if (!pkt->cmd.isSWPrefetch())
-                    next_pf_time = prefetcher->notify(pkt, time);
+                    next_pf_time = prefetcher->notify(pkt);
             }
         }
     }
 
-    if (next_pf_time != 0)
+    if (next_pf_time != MaxTick)
         requestMemSideBus(Request_PF, std::max(time, next_pf_time));
 
     // copy writebacks to write buffer

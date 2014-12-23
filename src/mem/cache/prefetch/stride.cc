@@ -46,133 +46,162 @@
  * Stride Prefetcher template instantiations.
  */
 
-#include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/stride.hh"
 
+StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
+    : QueuedPrefetcher(p),
+      maxConf(p->max_conf),
+      threshConf(p->thresh_conf),
+      minConf(p->min_conf),
+      startConf(p->start_conf),
+      pcTableAssoc(p->table_assoc),
+      pcTableSets(p->table_sets),
+      useMasterId(p->use_master_id),
+      degree(p->degree)
+{
+    // Don't consult stride prefetcher on instruction accesses
+    onInst = false;
+
+    assert(isPowerOf2(pcTableSets));
+
+    for (int c = 0; c < maxContexts; c++) {
+        pcTable[c] = new StrideEntry*[pcTableSets];
+        for (int s = 0; s < pcTableSets; s++) {
+            pcTable[c][s] = new StrideEntry[pcTableAssoc];
+        }
+    }
+}
+
+StridePrefetcher::~StridePrefetcher()
+{
+    for (int c = 0; c < maxContexts; c++) {
+        for (int s = 0; s < pcTableSets; s++) {
+            delete[] pcTable[c][s];
+        }
+    }
+}
+
 void
-StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                                    std::list<Cycles> &delays)
+StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
+                                    std::vector<Addr> &addresses)
 {
     if (!pkt->req->hasPC()) {
-        DPRINTF(HWPrefetch, "ignoring request with no PC");
+        DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
         return;
     }
 
-    Addr data_addr = pkt->getAddr();
+    // Get required packet info
+    Addr pkt_addr = pkt->getAddr();
+    Addr pc = pkt->req->getPC();
     bool is_secure = pkt->isSecure();
     MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
-    Addr pc = pkt->req->getPC();
-    assert(master_id < Max_Contexts);
-    std::list<StrideEntry*> &tab = table[master_id];
 
-    // Revert to simple N-block ahead prefetch for instruction fetches
-    if (instTagged && pkt->req->isInstFetch()) {
-        for (int d = 1; d <= degree; d++) {
-            Addr new_addr = data_addr + d * blkSize;
-            if (pageStop && !samePage(data_addr, new_addr)) {
-                // Spanned the page, so now stop
-                pfSpanPage += degree - d + 1;
-                return;
-            }
-            DPRINTF(HWPrefetch, "queuing prefetch to %x @ %d\n",
-                    new_addr, latency);
-            addresses.push_back(new_addr);
-            delays.push_back(latency);
-        }
-        return;
-    }
+    assert(master_id < maxContexts);
 
-    /* Scan Table for instAddr Match */
-    std::list<StrideEntry*>::iterator iter;
-    for (iter = tab.begin(); iter != tab.end(); iter++) {
-        // Entries have to match on the security state as well
-        if ((*iter)->instAddr == pc && (*iter)->isSecure == is_secure)
-            break;
-    }
+    // Lookup pc-based information
+    StrideEntry *entry;
 
-    if (iter != tab.end()) {
+    if(pcTableHit(pc, is_secure, master_id, entry)) {
         // Hit in table
+        int new_stride = pkt_addr - entry->lastAddr;
+        bool stride_match = (new_stride == entry->stride);
 
-        int new_stride = data_addr - (*iter)->missAddr;
-        bool stride_match = (new_stride == (*iter)->stride);
-
+        // Adjust confidence for stride entry
         if (stride_match && new_stride != 0) {
-            (*iter)->tolerance = true;
-            if ((*iter)->confidence < Max_Conf)
-                (*iter)->confidence++;
+            if (entry->confidence < maxConf)
+                entry->confidence++;
         } else {
-            if (!((*iter)->tolerance)) {
-                (*iter)->stride = new_stride;
-                if ((*iter)->confidence > Min_Conf)
-                    (*iter)->confidence = 0;
-            } else {
-                (*iter)->tolerance = false;
-            }
+            if (entry->confidence > minConf)
+                entry->confidence--;
+            // If confidence has dropped below the threshold, train new stride
+            if (entry->confidence < threshConf)
+                entry->stride = new_stride;
         }
 
-        DPRINTF(HWPrefetch, "hit: PC %x data_addr %x (%s) stride %d (%s), "
-                "conf %d\n", pc, data_addr, is_secure ? "s" : "ns", new_stride,
+        DPRINTF(HWPrefetch, "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
+                "conf %d\n", pc, pkt_addr, is_secure ? "s" : "ns", new_stride,
                 stride_match ? "match" : "change",
-                (*iter)->confidence);
+                entry->confidence);
 
-        (*iter)->missAddr = data_addr;
-        (*iter)->isSecure = is_secure;
+        entry->lastAddr = pkt_addr;
 
-        if ((*iter)->confidence <= 0)
+        // Abort prefetch generation if below confidence threshold
+        if (entry->confidence < threshConf)
             return;
 
+        // Generate up to degree prefetches
         for (int d = 1; d <= degree; d++) {
-            Addr new_addr = data_addr + d * (*iter)->stride;
-            if (pageStop && !samePage(data_addr, new_addr)) {
-                // Spanned the page, so now stop
-                pfSpanPage += degree - d + 1;
-                return;
-            } else {
-                DPRINTF(HWPrefetch, "  queuing prefetch to %x (%s) @ %d\n",
-                        new_addr, is_secure ? "s" : "ns", latency);
+            // Round strides up to atleast 1 cacheline
+            int prefetch_stride = new_stride;
+            if (abs(new_stride) < blkSize) {
+                prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
+            }
+
+            Addr new_addr = pkt_addr + d * prefetch_stride;
+            if (samePage(pkt_addr, new_addr)) {
+                DPRINTF(HWPrefetch, "Queuing prefetch to %#x.\n", new_addr);
                 addresses.push_back(new_addr);
-                delays.push_back(latency);
+            } else {
+                // Record the number of page crossing prefetches generated
+                pfSpanPage += degree - d + 1;
+                DPRINTF(HWPrefetch, "Ignoring page crossing prefetch.\n");
+                return;
             }
         }
     } else {
         // Miss in table
-        // Find lowest confidence and replace
-
-        DPRINTF(HWPrefetch, "miss: PC %x data_addr %x (%s)\n", pc, data_addr,
+        DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pkt_addr,
                 is_secure ? "s" : "ns");
 
-        if (tab.size() >= 256) { //set default table size is 256
-            std::list<StrideEntry*>::iterator min_pos = tab.begin();
-            int min_conf = (*min_pos)->confidence;
-            for (iter = min_pos, ++iter; iter != tab.end(); ++iter) {
-                if ((*iter)->confidence < min_conf){
-                    min_pos = iter;
-                    min_conf = (*iter)->confidence;
-                }
-            }
-            DPRINTF(HWPrefetch, "  replacing PC %x (%s)\n",
-                    (*min_pos)->instAddr, (*min_pos)->isSecure ? "s" : "ns");
-
-            // free entry and delete it
-            delete *min_pos;
-            tab.erase(min_pos);
-        }
-
-        StrideEntry *new_entry = new StrideEntry;
-        new_entry->instAddr = pc;
-        new_entry->missAddr = data_addr;
-        new_entry->isSecure = is_secure;
-        new_entry->stride = 0;
-        new_entry->confidence = 0;
-        new_entry->tolerance = false;
-        tab.push_back(new_entry);
+        StrideEntry* entry = pcTableVictim(pc, master_id);
+        entry->instAddr = pc;
+        entry->lastAddr = pkt_addr;
+        entry->isSecure= is_secure;
+        entry->stride = 0;
+        entry->confidence = startConf;
     }
 }
 
+inline Addr
+StridePrefetcher::pcHash(Addr pc) const
+{
+    Addr hash1 = pc >> 1;
+    Addr hash2 = hash1 >> floorLog2(pcTableSets);
+    return (hash1 ^ hash2) & (Addr)(pcTableSets - 1);
+}
+
+inline StridePrefetcher::StrideEntry*
+StridePrefetcher::pcTableVictim(Addr pc, int master_id)
+{
+    // Rand replacement for now
+    int set = pcHash(pc);
+    int way = rand() % pcTableAssoc;
+
+    DPRINTF(HWPrefetch, "Victimizing lookup table[%d][%d].\n", set, way);
+    return &pcTable[master_id][set][way];
+}
+
+inline bool
+StridePrefetcher::pcTableHit(Addr pc, bool is_secure, int master_id,
+                             StrideEntry* &entry)
+{
+    int set = pcHash(pc);
+    StrideEntry* set_entries = pcTable[master_id][set];
+    for (int way = 0; way < pcTableAssoc; way++) {
+        // Search ways for match
+        if (set_entries[way].instAddr == pc &&
+            set_entries[way].isSecure == is_secure) {
+            DPRINTF(HWPrefetch, "Lookup hit table[%d][%d].\n", set, way);
+            entry = &set_entries[way];
+            return true;
+        }
+    }
+    return false;
+}
 
 StridePrefetcher*
 StridePrefetcherParams::create()
 {
-   return new StridePrefetcher(this);
+    return new StridePrefetcher(this);
 }

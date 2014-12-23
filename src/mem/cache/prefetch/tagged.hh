@@ -33,23 +33,24 @@
  * Describes a tagged prefetcher.
  */
 
-#ifndef __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
-#define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#ifndef __MEM_CACHE_PREFETCH_TAGGED_HH__
+#define __MEM_CACHE_PREFETCH_TAGGED_HH__
 
-#include "mem/cache/prefetch/base.hh"
+#include "mem/cache/prefetch/queued.hh"
 #include "params/TaggedPrefetcher.hh"
 
 
-class TaggedPrefetcher : public BasePrefetcher
+class TaggedPrefetcher : public QueuedPrefetcher
 {
-  public:
+  protected:
+      int degree;
 
-    TaggedPrefetcher(const Params *p);
+  public:
+    TaggedPrefetcher(const TaggedPrefetcherParams *p);
 
     ~TaggedPrefetcher() {}
 
-    void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                           std::list<Cycles> &delays);
+    void calculatePrefetch(const PacketPtr &pkt, std::vector<Addr> &addresses);
 };
 
-#endif // __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#endif // __MEM_CACHE_PREFETCH_TAGGED_HH__

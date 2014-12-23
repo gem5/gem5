@@ -35,31 +35,29 @@
 
 #include "mem/cache/prefetch/tagged.hh"
 
-TaggedPrefetcher::TaggedPrefetcher(const Params *p)
-    : BasePrefetcher(p)
+TaggedPrefetcher::TaggedPrefetcher(const TaggedPrefetcherParams *p)
+    : QueuedPrefetcher(p), degree(p->degree)
 {
+
 }
 
 void
-TaggedPrefetcher::
-calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                  std::list<Cycles> &delays)
+TaggedPrefetcher::calculatePrefetch(const PacketPtr &pkt,
+        std::vector<Addr> &addresses)
 {
     Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
 
     for (int d = 1; d <= degree; d++) {
         Addr newAddr = blkAddr + d*(blkSize);
-        if (pageStop &&  !samePage(blkAddr, newAddr)) {
-            // Spanned the page, so now stop
+        if (!samePage(blkAddr, newAddr)) {
+            // Count number of unissued prefetches due to page crossing
             pfSpanPage += degree - d + 1;
             return;
         } else {
             addresses.push_back(newAddr);
-            delays.push_back(latency);
         }
     }
 }
-
 
 TaggedPrefetcher*
 TaggedPrefetcherParams::create()

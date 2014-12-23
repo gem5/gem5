@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
- * All rights reserved.
+ * Copyright (c) 2014 ARM Limited
+ * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,91 +34,75 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
- *          Mitch Hayenga
+ * Authors: Mitch Hayenga
  */
 
-/**
- * @file
- * Hardware Prefetcher Definition.
- */
+#ifndef __MEM_CACHE_PREFETCH_QUEUED_HH__
+#define __MEM_CACHE_PREFETCH_QUEUED_HH__
 
 #include <list>
 
 #include "mem/cache/prefetch/base.hh"
-#include "mem/cache/base.hh"
-#include "sim/system.hh"
+#include "params/QueuedPrefetcher.hh"
 
-BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
-    : ClockedObject(p), cache(nullptr), blkSize(0), system(p->sys),
-      onMiss(p->on_miss), onRead(p->on_read),
-      onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
-      masterId(system->getMasterId(name())),
-      pageBytes(system->getPageBytes())
+class QueuedPrefetcher : public BasePrefetcher
 {
-}
+  protected:
+    struct DeferredPacket {
+        Tick tick;
+        PacketPtr pkt;
+        DeferredPacket(Tick t, PacketPtr p) : tick(t), pkt(p) {}
+    };
 
-void
-BasePrefetcher::setCache(BaseCache *_cache)
-{
-    assert(!cache);
-    cache = _cache;
-    blkSize = cache->getBlockSize();
-}
+    std::list<DeferredPacket> pfq;
 
-void
-BasePrefetcher::regStats()
-{
-    pfIssued
-        .name(name() + ".num_hwpf_issued")
-        .desc("number of hwpf issued")
-        ;
-}
+    // PARAMETERS
 
-bool
-BasePrefetcher::observeAccess(const PacketPtr &pkt) const
-{
-    Addr addr = pkt->getAddr();
-    bool fetch = pkt->req->isInstFetch();
-    bool read= pkt->isRead();
-    bool is_secure = pkt->isSecure();
+    /** Maximum size of the prefetch queue */
+    const unsigned queueSize;
 
-    if (pkt->req->isUncacheable()) return false;
-    if (fetch && !onInst) return false;
-    if (!fetch && !onData) return false;
-    if (!fetch && read && !onRead) return false;
-    if (!fetch && !read && !onWrite) return false;
+    /** Cycles after generation when a prefetch can first be issued */
+    const Cycles latency;
 
-    if (onMiss) {
-        return !inCache(addr, is_secure) &&
-               !inMissQueue(addr, is_secure);
+    /** Squash queued prefetch if demand access observed */
+    const bool queueSquash;
+
+    /** Filter prefetches if already queued */
+    const bool queueFilter;
+
+    /** Snoop the cache before generating prefetch (cheating basically) */
+    const bool cacheSnoop;
+
+    /** Tag prefetch with PC of generating access? */
+    const bool tagPrefetch;
+
+    bool inPrefetch(Addr address, bool is_secure) const;
+
+    // STATS
+    Stats::Scalar pfIdentified;
+    Stats::Scalar pfBufferHit;
+    Stats::Scalar pfInCache;
+    Stats::Scalar pfRemovedFull;
+    Stats::Scalar pfSpanPage;
+
+  public:
+    QueuedPrefetcher(const QueuedPrefetcherParams *p);
+    virtual ~QueuedPrefetcher();
+
+    Tick notify(const PacketPtr &pkt);
+
+    // Note: This should really be pure virtual, but doesnt go well with params
+    virtual void calculatePrefetch(const PacketPtr &pkt,
+                                   std::vector<Addr> &addresses) = 0;
+    PacketPtr getPacket();
+
+    Tick nextPrefetchReadyTime() const
+    {
+        return pfq.empty() ? MaxTick : pfq.front().tick;
     }
 
-    return true;
-}
+    void regStats();
+};
 
-bool
-BasePrefetcher::inCache(Addr addr, bool is_secure) const
-{
-    if (cache->inCache(addr, is_secure)) {
-        return true;
-    }
-    return false;
-}
-
-bool
-BasePrefetcher::inMissQueue(Addr addr, bool is_secure) const
-{
-    if (cache->inMissQueue(addr, is_secure)) {
-        return true;
-    }
-    return false;
-}
-
-bool
-BasePrefetcher::samePage(Addr a, Addr b) const
-{
-    return roundDown(a, pageBytes) == roundDown(b, pageBytes);
-}
-
+#endif //__MEM_CACHE_PREFETCH_QUEUED_HH__
 
