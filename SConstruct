@@ -1135,7 +1135,7 @@ sticky_vars.AddVariables(
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'CP_ANNOTATE',
-                'USE_POSIX_CLOCK', 'PROTOCOL', 'HAVE_PROTOBUF',
+                'USE_POSIX_CLOCK', 'USE_KVM', 'PROTOCOL', 'HAVE_PROTOBUF',
                 'HAVE_PERF_ATTR_EXCLUDE_HOST']
 
 ###################################################
