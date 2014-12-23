@@ -44,6 +44,7 @@
 #include "base/statistics.hh"
 #include "base/time.hh"
 #include "mem/mem_object.hh"
+#include "mem/stack_dist_calc.hh"
 #include "params/CommMonitor.hh"
 #include "proto/protoio.hh"
 #include "sim/system.hh"
@@ -268,8 +269,6 @@ class CommMonitor : public MemObject
 
     void recvRangeChange();
 
-    void periodicTraceDump();
-
     /** Stats declarations, all in a struct for convenience. */
     struct MonitorStats
     {
@@ -416,6 +415,9 @@ class CommMonitor : public MemObject
 
     /** Instantiate stats */
     MonitorStats stats;
+
+    /** Optional stack distance calculator */
+    StackDistCalc* stackDistCalc;
 
     /** Output stream for a potential trace. */
     ProtoOutputStream* traceStream;

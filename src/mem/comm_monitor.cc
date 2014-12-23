@@ -55,6 +55,7 @@ CommMonitor::CommMonitor(Params* params)
       readAddrMask(params->read_addr_mask),
       writeAddrMask(params->write_addr_mask),
       stats(params),
+      stackDistCalc(params->stack_dist_calc),
       traceStream(NULL),
       system(params->system)
 {
@@ -137,6 +138,7 @@ CommMonitor::init()
         if (!system->isTimingMode())
             warn("%s: Not in timing mode. No trace will be recorded.", name());
     }
+
 }
 
 BaseMasterPort&
@@ -174,6 +176,10 @@ CommMonitor::recvFunctionalSnoop(PacketPtr pkt)
 Tick
 CommMonitor::recvAtomic(PacketPtr pkt)
 {
+    // allow stack distance calculations for atomic if enabled
+    if (stackDistCalc)
+        stackDistCalc->update(pkt->cmd, pkt->getAddr());
+
     return masterPort.sendAtomic(pkt);
 }
 
@@ -193,7 +199,8 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     // or even deleted when sendTiming() is called.
     bool is_read = pkt->isRead();
     bool is_write = pkt->isWrite();
-    int cmd = pkt->cmdToIndex();
+    MemCmd cmd = pkt->cmd;
+    int cmd_idx = pkt->cmdToIndex();
     Request::FlagsType req_flags = pkt->req->getFlags();
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
@@ -216,13 +223,18 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         delete pkt->popSenderState();
     }
 
+    // If successful and we are calculating stack distances, update
+    // the calculator
+    if (successful && stackDistCalc)
+        stackDistCalc->update(cmd, addr);
+
     if (successful && traceStream != NULL) {
         // Create a protobuf message representing the
         // packet. Currently we do not preserve the flags in the
         // trace.
         ProtoMessage::Packet pkt_msg;
         pkt_msg.set_tick(curTick());
-        pkt_msg.set_cmd(cmd);
+        pkt_msg.set_cmd(cmd_idx);
         pkt_msg.set_flags(req_flags);
         pkt_msg.set_addr(addr);
         pkt_msg.set_size(size);
