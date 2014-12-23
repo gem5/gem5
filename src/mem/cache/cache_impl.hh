@@ -1892,12 +1892,6 @@ Cache<TagStore>::getTimingPacket()
         BlkType *blk = tags->findBlock(mshr->addr, mshr->isSecure);
 
         if (tgt_pkt->cmd == MemCmd::HardPFReq) {
-            // It might be possible for a writeback to arrive between
-            // the time the prefetch is placed in the MSHRs and when
-            // it's selected to send... if so, this assert will catch
-            // that, and then we'll have to figure out what to do.
-            assert(blk == NULL);
-
             // We need to check the caches above us to verify that
             // they don't have a copy of this block in the dirty state
             // at the moment. Without this check we could get a stale
@@ -1909,8 +1903,10 @@ Cache<TagStore>::getTimingPacket()
             cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
 
             // Check to see if the prefetch was squashed by an upper cache
-            if (snoop_pkt.prefetchSquashed()) {
-                DPRINTF(Cache, "Prefetch squashed by upper cache.  "
+            // Or if a writeback arrived between the time the prefetch was
+            // placed in the MSHRs and when it was selected to send.
+            if (snoop_pkt.prefetchSquashed() || blk != NULL) {
+                DPRINTF(Cache, "Prefetch squashed by cache.  "
                                "Deallocating mshr target %#x.\n", mshr->addr);
 
                 // Deallocate the mshr target
