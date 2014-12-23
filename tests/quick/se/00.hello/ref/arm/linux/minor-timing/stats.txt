@@ -4,11 +4,11 @@ sim_seconds                                  0.000028                       # Nu
 sim_ticks                                    27981000                       # Number of ticks simulated
 final_tick                                   27981000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  65720                       # Simulator instruction rate (inst/s)
-host_op_rate                                    76928                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              399296424                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 250660                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
+host_inst_rate                                  95550                       # Simulator instruction rate (inst/s)
+host_op_rate                                   111835                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              580422337                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 309164                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                        4604                       # Number of instructions simulated
 sim_ops                                          5390                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -217,29 +217,34 @@ system.physmem.readRowHitRate                   83.14                       # Ro
 system.physmem.writeRowHitRate                    nan                       # Row buffer hit rate for writes
 system.physmem.avgGap                        66260.10                       # Average gap between requests
 system.physmem.pageHitRate                      83.14                       # Row buffer hit rate, read and write combined
-system.physmem.memoryStateTime::IDLE            12000                       # Time in different power states
-system.physmem.memoryStateTime::REF            780000                       # Time in different power states
-system.physmem.memoryStateTime::PRE_PDN             0                       # Time in different power states
-system.physmem.memoryStateTime::ACT          22840500                       # Time in different power states
-system.physmem.memoryStateTime::ACT_PDN             0                       # Time in different power states
-system.physmem.actEnergy::0                    294840                       # Energy for activate commands per rank (pJ)
-system.physmem.actEnergy::1                    136080                       # Energy for activate commands per rank (pJ)
-system.physmem.preEnergy::0                    160875                       # Energy for precharge commands per rank (pJ)
-system.physmem.preEnergy::1                     74250                       # Energy for precharge commands per rank (pJ)
-system.physmem.readEnergy::0                  2090400                       # Energy for read commands per rank (pJ)
-system.physmem.readEnergy::1                   702000                       # Energy for read commands per rank (pJ)
-system.physmem.writeEnergy::0                       0                       # Energy for write commands per rank (pJ)
-system.physmem.writeEnergy::1                       0                       # Energy for write commands per rank (pJ)
-system.physmem.refreshEnergy::0               1525680                       # Energy for refresh commands per rank (pJ)
-system.physmem.refreshEnergy::1               1525680                       # Energy for refresh commands per rank (pJ)
-system.physmem.actBackEnergy::0              16099650                       # Energy for active background per rank (pJ)
-system.physmem.actBackEnergy::1              15972255                       # Energy for active background per rank (pJ)
-system.physmem.preBackEnergy::0                 48750                       # Energy for precharge background per rank (pJ)
-system.physmem.preBackEnergy::1                160500                       # Energy for precharge background per rank (pJ)
-system.physmem.totalEnergy::0                20220195                       # Total energy per rank (pJ)
-system.physmem.totalEnergy::1                18570765                       # Total energy per rank (pJ)
-system.physmem.averagePower::0             856.107753                       # Core power per rank (mW)
-system.physmem.averagePower::1             786.272135                       # Core power per rank (mW)
+system.physmem_0.actEnergy                     294840                       # Energy for activate commands per rank (pJ)
+system.physmem_0.preEnergy                     160875                       # Energy for precharge commands per rank (pJ)
+system.physmem_0.readEnergy                   2090400                       # Energy for read commands per rank (pJ)
+system.physmem_0.writeEnergy                        0                       # Energy for write commands per rank (pJ)
+system.physmem_0.refreshEnergy                1525680                       # Energy for refresh commands per rank (pJ)
+system.physmem_0.actBackEnergy               16099650                       # Energy for active background per rank (pJ)
+system.physmem_0.preBackEnergy                  48750                       # Energy for precharge background per rank (pJ)
+system.physmem_0.totalEnergy                 20220195                       # Total energy per rank (pJ)
+system.physmem_0.averagePower              856.107753                       # Core power per rank (mW)
+system.physmem_0.memoryStateTime::IDLE          12000                       # Time in different power states
+system.physmem_0.memoryStateTime::REF          780000                       # Time in different power states
+system.physmem_0.memoryStateTime::PRE_PDN            0                       # Time in different power states
+system.physmem_0.memoryStateTime::ACT        22840500                       # Time in different power states
+system.physmem_0.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.physmem_1.actEnergy                     136080                       # Energy for activate commands per rank (pJ)
+system.physmem_1.preEnergy                      74250                       # Energy for precharge commands per rank (pJ)
+system.physmem_1.readEnergy                    702000                       # Energy for read commands per rank (pJ)
+system.physmem_1.writeEnergy                        0                       # Energy for write commands per rank (pJ)
+system.physmem_1.refreshEnergy                1525680                       # Energy for refresh commands per rank (pJ)
+system.physmem_1.actBackEnergy               15972255                       # Energy for active background per rank (pJ)
+system.physmem_1.preBackEnergy                 160500                       # Energy for precharge background per rank (pJ)
+system.physmem_1.totalEnergy                 18570765                       # Total energy per rank (pJ)
+system.physmem_1.averagePower              786.272135                       # Core power per rank (mW)
+system.physmem_1.memoryStateTime::IDLE        1588250                       # Time in different power states
+system.physmem_1.memoryStateTime::REF          780000                       # Time in different power states
+system.physmem_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
+system.physmem_1.memoryStateTime::ACT        22654750                       # Time in different power states
+system.physmem_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
 system.cpu.branchPred.lookups                    1926                       # Number of BP lookups
 system.cpu.branchPred.condPredicted              1154                       # Number of conditional branches predicted
 system.cpu.branchPred.condIncorrect               341                       # Number of conditional branches incorrect
@@ -250,6 +255,14 @@ system.cpu.branchPred.BTBHitPct             20.426065                       # BT
 system.cpu.branchPred.usedRAS                     222                       # Number of times the RAS was used to get a target.
 system.cpu.branchPred.RASInCorrect                 16                       # Number of incorrect RAS predictions.
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
+system.cpu.dstage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin::total            0                       # Table walker requests started/completed, data/inst
 system.cpu.dstage2_mmu.stage2_tlb.inst_hits            0                       # ITB inst hits
 system.cpu.dstage2_mmu.stage2_tlb.inst_misses            0                       # ITB inst misses
 system.cpu.dstage2_mmu.stage2_tlb.read_hits            0                       # DTB read hits
@@ -271,6 +284,14 @@ system.cpu.dstage2_mmu.stage2_tlb.inst_accesses            0                    
 system.cpu.dstage2_mmu.stage2_tlb.hits              0                       # DTB hits
 system.cpu.dstage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu.dstage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu.dtb.walker.walks                         0                       # Table walker walks requested
+system.cpu.dtb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Requested::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Completed::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin::total            0                       # Table walker requests started/completed, data/inst
 system.cpu.dtb.inst_hits                            0                       # ITB inst hits
 system.cpu.dtb.inst_misses                          0                       # ITB inst misses
 system.cpu.dtb.read_hits                            0                       # DTB read hits
@@ -292,6 +313,14 @@ system.cpu.dtb.inst_accesses                        0                       # IT
 system.cpu.dtb.hits                                 0                       # DTB hits
 system.cpu.dtb.misses                               0                       # DTB misses
 system.cpu.dtb.accesses                             0                       # DTB accesses
+system.cpu.istage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin::total            0                       # Table walker requests started/completed, data/inst
 system.cpu.istage2_mmu.stage2_tlb.inst_hits            0                       # ITB inst hits
 system.cpu.istage2_mmu.stage2_tlb.inst_misses            0                       # ITB inst misses
 system.cpu.istage2_mmu.stage2_tlb.read_hits            0                       # DTB read hits
@@ -313,6 +342,14 @@ system.cpu.istage2_mmu.stage2_tlb.inst_accesses            0                    
 system.cpu.istage2_mmu.stage2_tlb.hits              0                       # DTB hits
 system.cpu.istage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu.istage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu.itb.walker.walks                         0                       # Table walker walks requested
+system.cpu.itb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Requested::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Completed::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin::total            0                       # Table walker requests started/completed, data/inst
 system.cpu.itb.inst_hits                            0                       # ITB inst hits
 system.cpu.itb.inst_misses                          0                       # ITB inst misses
 system.cpu.itb.read_hits                            0                       # DTB read hits

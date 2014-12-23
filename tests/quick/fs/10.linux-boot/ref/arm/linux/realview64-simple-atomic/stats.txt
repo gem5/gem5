@@ -4,11 +4,11 @@ sim_seconds                                 51.111151                       # Nu
 sim_ticks                                51111150553500                       # Number of ticks simulated
 final_tick                               51111150553500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1176583                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1382679                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            61065327647                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 656288                       # Number of bytes of host memory used
-host_seconds                                   836.99                       # Real time elapsed on the host
+host_inst_rate                                1336104                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1570142                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            69344550867                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 712616                       # Number of bytes of host memory used
+host_seconds                                   737.06                       # Real time elapsed on the host
 sim_insts                                   984789519                       # Number of instructions simulated
 sim_ops                                    1157289961                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -74,6 +74,14 @@ system.cf0.dma_write_full_pages                  1666                       # Nu
 system.cf0.dma_write_bytes                    6826496                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                         1669                       # Number of DMA write transactions.
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
+system.cpu.dstage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin::total            0                       # Table walker requests started/completed, data/inst
 system.cpu.dstage2_mmu.stage2_tlb.inst_hits            0                       # ITB inst hits
 system.cpu.dstage2_mmu.stage2_tlb.inst_misses            0                       # ITB inst misses
 system.cpu.dstage2_mmu.stage2_tlb.read_hits            0                       # DTB read hits
@@ -95,6 +103,24 @@ system.cpu.dstage2_mmu.stage2_tlb.inst_accesses            0                    
 system.cpu.dstage2_mmu.stage2_tlb.hits              0                       # DTB hits
 system.cpu.dstage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu.dstage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu.dtb.walker.walks                    265618                       # Table walker walks requested
+system.cpu.dtb.walker.walksLong                265618                       # Table walker walks initiated with long descriptors
+system.cpu.dtb.walker.walkWaitTime::samples       265618                       # Table walker wait (enqueue to first request) latency
+system.cpu.dtb.walker.walkWaitTime::0          265618    100.00%    100.00% # Table walker wait (enqueue to first request) latency
+system.cpu.dtb.walker.walkWaitTime::total       265618                       # Table walker wait (enqueue to first request) latency
+system.cpu.dtb.walker.walksPending::samples     22846000                       # Table walker pending requests distribution
+system.cpu.dtb.walker.walksPending::0        22846000    100.00%    100.00% # Table walker pending requests distribution
+system.cpu.dtb.walker.walksPending::total     22846000                       # Table walker pending requests distribution
+system.cpu.dtb.walker.walkPageSizes::4K        204344     89.54%     89.54% # Table walker page sizes translated
+system.cpu.dtb.walker.walkPageSizes::2M         23878     10.46%    100.00% # Table walker page sizes translated
+system.cpu.dtb.walker.walkPageSizes::total       228222                       # Table walker page sizes translated
+system.cpu.dtb.walker.walkRequestOrigin_Requested::Data       265618                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Requested::total       265618                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Completed::Data       228222                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin_Completed::total       228222                       # Table walker requests started/completed, data/inst
+system.cpu.dtb.walker.walkRequestOrigin::total       493840                       # Table walker requests started/completed, data/inst
 system.cpu.dtb.inst_hits                            0                       # ITB inst hits
 system.cpu.dtb.inst_misses                          0                       # ITB inst misses
 system.cpu.dtb.read_hits                    184057973                       # DTB read hits
@@ -116,6 +142,14 @@ system.cpu.dtb.inst_accesses                        0                       # IT
 system.cpu.dtb.hits                         352334273                       # DTB hits
 system.cpu.dtb.misses                          265618                       # DTB misses
 system.cpu.dtb.accesses                     352599891                       # DTB accesses
+system.cpu.istage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::Inst            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Completed::total            0                       # Table walker requests started/completed, data/inst
+system.cpu.istage2_mmu.stage2_tlb.walker.walkRequestOrigin::total            0                       # Table walker requests started/completed, data/inst
 system.cpu.istage2_mmu.stage2_tlb.inst_hits            0                       # ITB inst hits
 system.cpu.istage2_mmu.stage2_tlb.inst_misses            0                       # ITB inst misses
 system.cpu.istage2_mmu.stage2_tlb.read_hits            0                       # DTB read hits
@@ -137,6 +171,24 @@ system.cpu.istage2_mmu.stage2_tlb.inst_accesses            0                    
 system.cpu.istage2_mmu.stage2_tlb.hits              0                       # DTB hits
 system.cpu.istage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu.istage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu.itb.walker.walks                    126829                       # Table walker walks requested
+system.cpu.itb.walker.walksLong                126829                       # Table walker walks initiated with long descriptors
+system.cpu.itb.walker.walkWaitTime::samples       126829                       # Table walker wait (enqueue to first request) latency
+system.cpu.itb.walker.walkWaitTime::0          126829    100.00%    100.00% # Table walker wait (enqueue to first request) latency
+system.cpu.itb.walker.walkWaitTime::total       126829                       # Table walker wait (enqueue to first request) latency
+system.cpu.itb.walker.walksPending::samples     22844500                       # Table walker pending requests distribution
+system.cpu.itb.walker.walksPending::0        22844500    100.00%    100.00% # Table walker pending requests distribution
+system.cpu.itb.walker.walksPending::total     22844500                       # Table walker pending requests distribution
+system.cpu.itb.walker.walkPageSizes::4K        113566     99.02%     99.02% # Table walker page sizes translated
+system.cpu.itb.walker.walkPageSizes::2M          1125      0.98%    100.00% # Table walker page sizes translated
+system.cpu.itb.walker.walkPageSizes::total       114691                       # Table walker page sizes translated
+system.cpu.itb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Requested::Inst       126829                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Requested::total       126829                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Completed::Data            0                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Completed::Inst       114691                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin_Completed::total       114691                       # Table walker requests started/completed, data/inst
+system.cpu.itb.walker.walkRequestOrigin::total       241520                       # Table walker requests started/completed, data/inst
 system.cpu.itb.inst_hits                    985266544                       # ITB inst hits
 system.cpu.itb.inst_misses                     126829                       # ITB inst misses
 system.cpu.itb.read_hits                            0                       # DTB read hits

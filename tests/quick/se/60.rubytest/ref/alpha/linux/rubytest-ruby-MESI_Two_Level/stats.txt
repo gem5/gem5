@@ -4,9 +4,9 @@ sim_seconds                                  0.000323                       # Nu
 sim_ticks                                      322881                       # Number of ticks simulated
 final_tick                                     322881                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                1612482                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 434296                       # Number of bytes of host memory used
-host_seconds                                     0.20                       # Real time elapsed on the host
+host_tick_rate                                2952595                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 447776                       # Number of bytes of host memory used
+host_seconds                                     0.11                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
 system.mem_ctrls.bytes_read::ruby.dir_cntrl0        54144                       # Number of bytes read from this memory
@@ -235,29 +235,34 @@ system.mem_ctrls.readRowHitRate                 79.08                       # Ro
 system.mem_ctrls.writeRowHitRate                95.59                       # Row buffer hit rate for writes
 system.mem_ctrls.avgGap                        201.77                       # Average gap between requests
 system.mem_ctrls.pageHitRate                    86.97                       # Row buffer hit rate, read and write combined
-system.mem_ctrls.memoryStateTime::IDLE           7291                       # Time in different power states
-system.mem_ctrls.memoryStateTime::REF           10660                       # Time in different power states
-system.mem_ctrls.memoryStateTime::PRE_PDN            0                       # Time in different power states
-system.mem_ctrls.memoryStateTime::ACT          301549                       # Time in different power states
-system.mem_ctrls.memoryStateTime::ACT_PDN            0                       # Time in different power states
-system.mem_ctrls.actEnergy::0                 1171800                       # Energy for activate commands per rank (pJ)
-system.mem_ctrls.actEnergy::1                       0                       # Energy for activate commands per rank (pJ)
-system.mem_ctrls.preEnergy::0                  651000                       # Energy for precharge commands per rank (pJ)
-system.mem_ctrls.preEnergy::1                       0                       # Energy for precharge commands per rank (pJ)
-system.mem_ctrls.readEnergy::0                8835840                       # Energy for read commands per rank (pJ)
-system.mem_ctrls.readEnergy::1                      0                       # Energy for read commands per rank (pJ)
-system.mem_ctrls.writeEnergy::0               6407424                       # Energy for write commands per rank (pJ)
-system.mem_ctrls.writeEnergy::1                     0                       # Energy for write commands per rank (pJ)
-system.mem_ctrls.refreshEnergy::0            20850960                       # Energy for refresh commands per rank (pJ)
-system.mem_ctrls.refreshEnergy::1            20850960                       # Energy for refresh commands per rank (pJ)
-system.mem_ctrls.actBackEnergy::0           212765724                       # Energy for active background per rank (pJ)
-system.mem_ctrls.actBackEnergy::1             6898824                       # Energy for active background per rank (pJ)
-system.mem_ctrls.preBackEnergy::0             5055000                       # Energy for precharge background per rank (pJ)
-system.mem_ctrls.preBackEnergy::1           185640000                       # Energy for precharge background per rank (pJ)
-system.mem_ctrls.totalEnergy::0             255737748                       # Total energy per rank (pJ)
-system.mem_ctrls.totalEnergy::1             213389784                       # Total energy per rank (pJ)
-system.mem_ctrls.averagePower::0           800.466211                       # Core power per rank (mW)
-system.mem_ctrls.averagePower::1           667.915915                       # Core power per rank (mW)
+system.mem_ctrls_0.actEnergy                  1171800                       # Energy for activate commands per rank (pJ)
+system.mem_ctrls_0.preEnergy                   651000                       # Energy for precharge commands per rank (pJ)
+system.mem_ctrls_0.readEnergy                 8835840                       # Energy for read commands per rank (pJ)
+system.mem_ctrls_0.writeEnergy                6407424                       # Energy for write commands per rank (pJ)
+system.mem_ctrls_0.refreshEnergy             20850960                       # Energy for refresh commands per rank (pJ)
+system.mem_ctrls_0.actBackEnergy            212765724                       # Energy for active background per rank (pJ)
+system.mem_ctrls_0.preBackEnergy              5055000                       # Energy for precharge background per rank (pJ)
+system.mem_ctrls_0.totalEnergy              255737748                       # Total energy per rank (pJ)
+system.mem_ctrls_0.averagePower            800.466211                       # Core power per rank (mW)
+system.mem_ctrls_0.memoryStateTime::IDLE         7291                       # Time in different power states
+system.mem_ctrls_0.memoryStateTime::REF         10660                       # Time in different power states
+system.mem_ctrls_0.memoryStateTime::PRE_PDN            0                       # Time in different power states
+system.mem_ctrls_0.memoryStateTime::ACT        301549                       # Time in different power states
+system.mem_ctrls_0.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.mem_ctrls_1.actEnergy                        0                       # Energy for activate commands per rank (pJ)
+system.mem_ctrls_1.preEnergy                        0                       # Energy for precharge commands per rank (pJ)
+system.mem_ctrls_1.readEnergy                       0                       # Energy for read commands per rank (pJ)
+system.mem_ctrls_1.writeEnergy                      0                       # Energy for write commands per rank (pJ)
+system.mem_ctrls_1.refreshEnergy             20850960                       # Energy for refresh commands per rank (pJ)
+system.mem_ctrls_1.actBackEnergy              6898824                       # Energy for active background per rank (pJ)
+system.mem_ctrls_1.preBackEnergy            185631600                       # Energy for precharge background per rank (pJ)
+system.mem_ctrls_1.totalEnergy              213381384                       # Total energy per rank (pJ)
+system.mem_ctrls_1.averagePower            667.918891                       # Core power per rank (mW)
+system.mem_ctrls_1.memoryStateTime::IDLE       308826                       # Time in different power states
+system.mem_ctrls_1.memoryStateTime::REF         10660                       # Time in different power states
+system.mem_ctrls_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
+system.mem_ctrls_1.memoryStateTime::ACT             0                       # Time in different power states
+system.mem_ctrls_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
 system.ruby.delayHist::bucket_size                512                       # delay histogram for all message
 system.ruby.delayHist::max_bucket                5119                       # delay histogram for all message
@@ -317,6 +322,10 @@ system.ruby.l1_cntrl0.sequencer.store_waiting_on_load            4              
 system.ruby.l1_cntrl0.sequencer.store_waiting_on_store           77                       # Number of times a store aliased with a pending store
 system.ruby.l1_cntrl0.sequencer.load_waiting_on_store           11                       # Number of times a load aliased with a pending store
 system.ruby.l1_cntrl0.sequencer.load_waiting_on_load            1                       # Number of times a load aliased with a pending load
+system.ruby.l2_cntrl0.L2cache.demand_hits           29                       # Number of cache demand hits
+system.ruby.l2_cntrl0.L2cache.demand_misses          846                       # Number of cache demand misses
+system.ruby.l2_cntrl0.L2cache.demand_accesses          875                       # Number of cache demand accesses
+system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.network.routers0.percent_links_utilized     1.655176                      
 system.ruby.network.routers0.msg_count.Control::0          876                      
 system.ruby.network.routers0.msg_count.Request_Control::2          528                      
@@ -334,9 +343,6 @@ system.ruby.network.routers0.msg_bytes.Response_Control::2         6576
 system.ruby.network.routers0.msg_bytes.Writeback_Data::0        49680                      
 system.ruby.network.routers0.msg_bytes.Writeback_Data::1        34056                      
 system.ruby.network.routers0.msg_bytes.Writeback_Control::0          272                      
-system.ruby.l2_cntrl0.L2cache.demand_hits           29                       # Number of cache demand hits
-system.ruby.l2_cntrl0.L2cache.demand_misses          846                       # Number of cache demand misses
-system.ruby.l2_cntrl0.L2cache.demand_accesses          875                       # Number of cache demand accesses
 system.ruby.network.routers1.percent_links_utilized     2.907186                      
 system.ruby.network.routers1.msg_count.Control::0         1722                      
 system.ruby.network.routers1.msg_count.Request_Control::2          528                      
@@ -390,7 +396,6 @@ system.ruby.network.msg_byte.Response_Data       534312
 system.ruby.network.msg_byte.Response_Control        60720                      
 system.ruby.network.msg_byte.Writeback_Data       251208                      
 system.ruby.network.msg_byte.Writeback_Control          816                      
-system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
 system.ruby.network.routers0.throttle0.link_utilization     1.412750                      
 system.ruby.network.routers0.throttle0.msg_count.Request_Control::2          528                      
 system.ruby.network.routers0.throttle0.msg_count.Response_Data::1          875                      
@@ -559,6 +564,16 @@ system.ruby.IFETCH.miss_latency_hist::gmean   799.675557
 system.ruby.IFETCH.miss_latency_hist::stdev   325.423919                      
 system.ruby.IFETCH.miss_latency_hist     |           1      1.96%      1.96% |           5      9.80%     11.76% |          17     33.33%     45.10% |          17     33.33%     78.43% |           4      7.84%     86.27% |           5      9.80%     96.08% |           2      3.92%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.miss_latency_hist::total           51                      
+system.ruby.Directory_Controller.Fetch            846      0.00%      0.00%
+system.ruby.Directory_Controller.Data             752      0.00%      0.00%
+system.ruby.Directory_Controller.Memory_Data          846      0.00%      0.00%
+system.ruby.Directory_Controller.Memory_Ack          752      0.00%      0.00%
+system.ruby.Directory_Controller.CleanReplacement           89      0.00%      0.00%
+system.ruby.Directory_Controller.I.Fetch          846      0.00%      0.00%
+system.ruby.Directory_Controller.M.Data           752      0.00%      0.00%
+system.ruby.Directory_Controller.M.CleanReplacement           89      0.00%      0.00%
+system.ruby.Directory_Controller.IM.Memory_Data          846      0.00%      0.00%
+system.ruby.Directory_Controller.MI.Memory_Ack          752      0.00%      0.00%
 system.ruby.L1Cache_Controller.Load                49      0.00%      0.00%
 system.ruby.L1Cache_Controller.Ifetch              58      0.00%      0.00%
 system.ruby.L1Cache_Controller.Store              841      0.00%      0.00%
@@ -633,15 +648,5 @@ system.ruby.L2Cache_Controller.MT_MB.L1_PUTX           15      0.00%      0.00%
 system.ruby.L2Cache_Controller.MT_MB.L1_PUTX_old          143      0.00%      0.00%
 system.ruby.L2Cache_Controller.MT_MB.L2_Replacement_clean          331      0.00%      0.00%
 system.ruby.L2Cache_Controller.MT_MB.Exclusive_Unblock          817      0.00%      0.00%
-system.ruby.Directory_Controller.Fetch            846      0.00%      0.00%
-system.ruby.Directory_Controller.Data             752      0.00%      0.00%
-system.ruby.Directory_Controller.Memory_Data          846      0.00%      0.00%
-system.ruby.Directory_Controller.Memory_Ack          752      0.00%      0.00%
-system.ruby.Directory_Controller.CleanReplacement           89      0.00%      0.00%
-system.ruby.Directory_Controller.I.Fetch          846      0.00%      0.00%
-system.ruby.Directory_Controller.M.Data           752      0.00%      0.00%
-system.ruby.Directory_Controller.M.CleanReplacement           89      0.00%      0.00%
-system.ruby.Directory_Controller.IM.Memory_Data          846      0.00%      0.00%
-system.ruby.Directory_Controller.MI.Memory_Ack          752      0.00%      0.00%
 
 ---------- End Simulation Statistics   ----------
