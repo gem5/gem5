@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013-2014 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -70,99 +70,128 @@ class Decoder
     int fpscrLen;
     int fpscrStride;
 
-  public:
-    void reset()
-    {
-        bigThumb = false;
-        offset = 0;
-        emi = 0;
-        instDone = false;
-        outOfBytes = true;
-        foundIt = false;
-    }
-
-    Decoder() : data(0), fpscrLen(0), fpscrStride(0)
-    {
-        reset();
-    }
-
-    void process();
-
-    //Use this to give data to the decoder. This should be used
-    //when there is control flow.
-    void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
-
-    //Use this to give data to the decoder. This should be used
-    //when instructions are executed in order.
-    void moreBytes(MachInst machInst)
-    {
-        moreBytes(0, 0, machInst);
-    }
-
-    inline void consumeBytes(int numBytes)
-    {
-        offset += numBytes;
-        assert(offset <= sizeof(MachInst));
-        if (offset == sizeof(MachInst))
-            outOfBytes = true;
-    }
-
-    bool needMoreBytes() const
-    {
-        return outOfBytes;
-    }
-
-    bool instReady() const
-    {
-        return instDone;
-    }
-
-    int getInstSize() const
-    {
-        return (!emi.thumb || emi.bigThumb) ? 4 : 2;
-    }
-
-    void setContext(FPSCR fpscr)
-    {
-        fpscrLen = fpscr.len;
-        fpscrStride = fpscr.stride;
-    }
-
-    void takeOverFrom(Decoder *old) {}
-
-  protected:
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache defaultCache;
 
-  public:
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
+    /**
+     * Pre-decode an instruction from the current state of the
+     * decoder.
+     */
+    void process();
 
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr
-    decode(ExtMachInst mach_inst, Addr addr)
+    /**
+     * Consume bytes by moving the offset into the data word and
+     * sanity check the results.
+     */
+    void consumeBytes(int numBytes);
+
+  public: // Decoder API
+    Decoder();
+
+    /** Reset the decoders internal state. */
+    void reset();
+
+    /**
+     * Can the decoder accept more data?
+     *
+     * A CPU model uses this method to determine if the decoder can
+     * accept more data. Note that an instruction can be ready (see
+     * instReady() even if this method returns true.
+     */
+    bool needMoreBytes() const { return outOfBytes; }
+
+    /**
+     * Is an instruction ready to be decoded?
+     *
+     * CPU models call this method to determine if decode() will
+     * return a new instruction on the next call. It typically only
+     * returns false if the decoder hasn't received enough data to
+     * decode a full instruction.
+     */
+    bool instReady() const { return instDone; }
+
+    /**
+     * Feed data to the decoder.
+     *
+     * A CPU model uses this interface to load instruction data into
+     * the decoder. Once enough data has been loaded (check with
+     * instReady()), a decoded instruction can be retrieved using
+     * decode(ArmISA::PCState).
+     *
+     * This method is intended to support both fixed-length and
+     * variable-length instructions. Instruction data is fetch in
+     * MachInst blocks (which correspond to the size of a typical
+     * insturction). The method might need to be called multiple times
+     * if the instruction spans multiple blocks, in that case
+     * needMoreBytes() will return true and instReady() will return
+     * false.
+     *
+     * The fetchPC parameter is used to indicate where in memory the
+     * instruction was fetched from. This is should be the same
+     * address as the pc. If fetching multiple blocks, it indicates
+     * where subsequent blocks are fetched from (pc + n *
+     * sizeof(MachInst)).
+     *
+     * @param pc Instruction pointer that we are decoding.
+     * @param fetchPC The address this chunk was fetched from.
+     * @param inst Raw instruction data.
+     */
+    void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
+
+    /**
+     * Decode an instruction or fetch it from the code cache.
+     *
+     * This method decodes the currently pending pre-decoded
+     * instruction. Data must be fed to the decoder using moreBytes()
+     * until instReady() is true before calling this method.
+     *
+     * @param pc Instruction pointer that we are decoding.
+     * @return A pointer to a static instruction or NULL if the
+     * decoder isn't ready (see instReady()).
+     */
+    StaticInstPtr decode(ArmISA::PCState &pc);
+
+    /**
+     * Decode a pre-decoded machine instruction.
+     *
+     * @warn This method takes a pre-decoded instruction as its
+     * argument. It should typically not be called directly.
+     *
+     * @param mach_inst A pre-decoded instruction
+     * @retval A pointer to the corresponding StaticInst object.
+     */
+    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr)
     {
         return defaultCache.decode(this, mach_inst, addr);
     }
 
-    StaticInstPtr
-    decode(ArmISA::PCState &nextPC)
-    {
-        if (!instDone)
-            return NULL;
+    /**
+     * Decode a machine instruction without calling the cache.
+     *
+     * @note The implementation of this method is generated by the ISA
+     * parser script.
+     *
+     * @warn This method takes a pre-decoded instruction as its
+     * argument. It should typically not be called directly.
+     *
+     * @param mach_inst The binary instruction to decode.
+     * @retval A pointer to the corresponding StaticInst object.
+     */
+    StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
-        assert(instDone);
-        ExtMachInst thisEmi = emi;
-        nextPC.npc(nextPC.pc() + getInstSize());
-        if (foundIt)
-            nextPC.nextItstate(itBits);
-        thisEmi.itstate = nextPC.itstate();
-        nextPC.size(getInstSize());
-        emi = 0;
-        instDone = false;
-        foundIt = false;
-        return decode(thisEmi, nextPC.instAddr());
+    /**
+     * Take over the state from an old decoder when switching CPUs.
+     *
+     * @param old Decoder used in old CPU
+     */
+    void takeOverFrom(Decoder *old) {}
+
+
+  public: // ARM-specific decoder state manipulation
+    void setContext(FPSCR fpscr)
+    {
+        fpscrLen = fpscr.len;
+        fpscrStride = fpscr.stride;
     }
 };
 
