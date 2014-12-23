@@ -92,6 +92,11 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     busBusyUntil(0), prevArrival(0),
     nextReqTime(0), activeRank(0), timeStampOffset(0)
 {
+    // sanity check the ranks since we rely on bit slicing for the
+    // address decoding
+    fatal_if(!isPowerOf2(ranksPerChannel), "DRAM rank count of %d is not "
+             "allowed, must be a power of two\n", ranksPerChannel);
+
     for (int i = 0; i < ranksPerChannel; i++) {
         Rank* rank = new Rank(*this, p);
         ranks.push_back(rank);

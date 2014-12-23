@@ -197,9 +197,15 @@ def config_mem(options, system):
     # address mapping in the case of a DRAM
     for r in system.mem_ranges:
         for i in xrange(nbr_mem_ctrls):
-            mem_ctrls.append(create_mem_ctrl(cls, r, i, nbr_mem_ctrls,
-                                             intlv_bits,
-                                             system.cache_line_size.value))
+            mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,
+                                       system.cache_line_size.value)
+            # Set the number of ranks based on the command-line
+            # options if it was explicitly set
+            if issubclass(cls, m5.objects.DRAMCtrl) and \
+                    options.mem_ranks:
+                mem_ctrl.ranks_per_channel = options.mem_ranks
+
+            mem_ctrls.append(mem_ctrl)
 
     system.mem_ctrls = mem_ctrls
 
