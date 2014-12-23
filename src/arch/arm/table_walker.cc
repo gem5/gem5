@@ -60,6 +60,8 @@ TableWalker::TableWalker(const Params *p)
       stage2Mmu(NULL), isStage2(p->is_stage2), tlb(NULL),
       currState(NULL), pending(false), masterId(p->sys->getMasterId(name())),
       numSquashable(p->num_squash_per_cycle),
+      pendingReqs(0),
+      pendingChangeTick(curTick()),
       doL1DescEvent(this), doL2DescEvent(this),
       doL0LongDescEvent(this), doL1LongDescEvent(this), doL2LongDescEvent(this),
       doL3LongDescEvent(this),
@@ -151,6 +153,7 @@ TableWalker::drainResume()
     if (params()->sys->isTimingMode() && currState) {
         delete currState;
         currState = NULL;
+        pendingChange();
     }
 }
 
@@ -170,6 +173,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
                   bool secure, TLB::ArmTranslationType tranType)
 {
     assert(!(_functional && _timing));
+    ++statWalks;
+
     WalkerState *savedCurrState = NULL;
 
     if (!currState && !_functional) {
@@ -196,10 +201,13 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
         // this fault to re-execute the faulting instruction which should clean
         // up everything.
         if (currState->vaddr_tainted == _req->getVaddr()) {
+            ++statSquashedBefore;
             return std::make_shared<ReExec>();
         }
     }
+    pendingChange();
 
+    currState->startTime = curTick();
     currState->tc = _tc;
     currState->aarch64 = opModeIs64(currOpMode(_tc));
     currState->el = currEL(_tc);
@@ -261,6 +269,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     currState->isFetch = (currState->mode == TLB::Execute);
     currState->isWrite = (currState->mode == TLB::Write);
 
+    statRequestOrigin[REQUESTED][currState->isFetch]++;
+
     // We only do a second stage of translation if we're not secure, or in
     // hyp mode, the second stage MMU is enabled, and this table walker
     // instance is the first stage.
@@ -280,6 +290,10 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
         currState->userTable = true;
         currState->xnTable = false;
         currState->pxnTable = false;
+
+        ++statWalksLongDescriptor;
+    } else {
+        ++statWalksShortDescriptor;
     }
 
     if (!currState->timing) {
@@ -303,8 +317,10 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     if (pending || pendingQueue.size()) {
         pendingQueue.push_back(currState);
         currState = NULL;
+        pendingChange();
     } else {
         pending = true;
+        pendingChange();
         if (currState->aarch64)
             return processWalkAArch64();
         else if (long_desc_format)
@@ -321,6 +337,7 @@ TableWalker::processWalkWrapper()
 {
     assert(!currState);
     assert(pendingQueue.size());
+    pendingChange();
     currState = pendingQueue.front();
 
     ExceptionLevel target_el = EL0;
@@ -372,6 +389,7 @@ TableWalker::processWalkWrapper()
            (currState->transState->squashed() || te)) {
         pendingQueue.pop_front();
         num_squashed++;
+        statSquashedBefore++;
 
         DPRINTF(TLB, "Squashing table walk for address %#x\n",
                       currState->vaddr_tainted);
@@ -383,6 +401,7 @@ TableWalker::processWalkWrapper()
                 currState->req, currState->tc, currState->mode);
         } else {
             // translate the request now that we know it will work
+            statWalkServiceTime.sample(curTick() - currState->startTime);
             tlb->translateTiming(currState->req, currState->tc,
                         currState->transState, currState->mode);
 
@@ -402,8 +421,9 @@ TableWalker::processWalkWrapper()
             currState = NULL;
         }
     }
+    pendingChange();
 
-    // if we've still got pending translations schedule more work
+    // if we still have pending translations, schedule more work
     nextWalk(tc);
     currState = NULL;
 }
@@ -419,6 +439,8 @@ TableWalker::processWalk()
     DPRINTF(TLB, "Beginning table walk for address %#x, TTBCR: %#x, bits:%#x\n",
             currState->vaddr_tainted, currState->ttbcr, mbits(currState->vaddr, 31,
                                                       32 - currState->ttbcr.n));
+
+    statWalkWaitTime.sample(curTick() - currState->startTime);
 
     if (currState->ttbcr.n == 0 || !mbits(currState->vaddr, 31,
                                           32 - currState->ttbcr.n)) {
@@ -510,6 +532,8 @@ TableWalker::processWalkLPAE()
 
     DPRINTF(TLB, "Beginning table walk for address %#x, TTBCR: %#x\n",
             currState->vaddr_tainted, currState->ttbcr);
+
+    statWalkWaitTime.sample(curTick() - currState->startTime);
 
     Request::Flags flag = 0;
     if (currState->isSecure)
@@ -699,6 +723,8 @@ TableWalker::processWalkAArch64()
       { Grain4KB, Grain64KB, Grain16KB, ReservedGrain };
     static const GrainSize GrainMap_EL1_tg1[] =
       { ReservedGrain, Grain16KB, Grain4KB, Grain64KB };
+
+    statWalkWaitTime.sample(curTick() - currState->startTime);
 
     // Determine TTBR, table size, granule size and phys. address range
     Addr ttbr = 0;
@@ -920,8 +946,8 @@ TableWalker::processWalkAArch64()
             panic("Invalid table lookup level");
             break;
         }
-        port.dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t), event,
-                       (uint8_t*) &currState->longDesc.data,
+        port.dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
+                       event, (uint8_t*) &currState->longDesc.data,
                        currState->tc->getCpuPtr()->clockPeriod(), flag);
         DPRINTF(TLBVerbose,
                 "Adding to walker fifo: queue size before adding: %d\n",
@@ -1698,6 +1724,7 @@ TableWalker::doL1DescriptorWrapper()
     if (currState->fault != NoFault) {
         currState->transState->finish(currState->fault, currState->req,
                                       currState->tc, currState->mode);
+        statWalksShortTerminatedAtLevel[0]++;
 
         pending = false;
         nextWalk(currState->tc);
@@ -1711,9 +1738,11 @@ TableWalker::doL1DescriptorWrapper()
         // delay is not set so there is no L2 to do
         // Don't finish the translation if a stage 2 look up is underway
         if (!currState->doingStage2) {
+            statWalkServiceTime.sample(curTick() - currState->startTime);
             DPRINTF(TLBVerbose, "calling translateTiming again\n");
             currState->fault = tlb->translateTiming(currState->req, currState->tc,
                 currState->transState, currState->mode);
+            statWalksShortTerminatedAtLevel[0]++;
         }
 
         pending = false;
@@ -1749,13 +1778,16 @@ TableWalker::doL2DescriptorWrapper()
     if (currState->fault != NoFault) {
         currState->transState->finish(currState->fault, currState->req,
                                       currState->tc, currState->mode);
+        statWalksShortTerminatedAtLevel[1]++;
     }
     else {
         // Don't finish the translation if a stage 2 look up is underway
         if (!currState->doingStage2) {
+            statWalkServiceTime.sample(curTick() - currState->startTime);
             DPRINTF(TLBVerbose, "calling translateTiming again\n");
             currState->fault = tlb->translateTiming(currState->req,
                 currState->tc, currState->transState, currState->mode);
+            statWalksShortTerminatedAtLevel[1]++;
         }
     }
 
@@ -1832,9 +1864,11 @@ TableWalker::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
         // Don't finish the translation if a stage 2 look up is underway
         if (!currState->doingStage2) {
             DPRINTF(TLBVerbose, "calling translateTiming again\n");
+            statWalkServiceTime.sample(curTick() - currState->startTime);
             currState->fault = tlb->translateTiming(currState->req, currState->tc,
                                                     currState->transState,
                                                     currState->mode);
+            statWalksLongTerminatedAtLevel[(unsigned) curr_lookup_level]++;
         }
 
         pending = false;
@@ -1906,7 +1940,7 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
     } else {
         if (isTiming) {
             port.dmaAction(MemCmd::ReadReq, descAddr, numBytes, event, data,
-                           currState->tc->getCpuPtr()->clockPeriod(), flags);
+                           currState->tc->getCpuPtr()->clockPeriod(),flags);
             if (queueIndex >= 0) {
                 DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
                         stateQueues[queueIndex].size());
@@ -1955,6 +1989,9 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
         te.el         = currState->el;
     else
         te.el         = 1;
+
+    statPageSizes[pageSizeNtoStatBin(te.N)]++;
+    statRequestOrigin[COMPLETED][currState->isFetch]++;
 
     // ASID has no meaning for stage 2 TLB entries, so mark all stage 2 entries
     // as global
@@ -2023,4 +2060,145 @@ TableWalker::toLookupLevel(uint8_t lookup_level_as_int)
       default:
         panic("Invalid lookup level conversion");
     }
+}
+
+/* this method keeps track of the table walker queue's residency, so
+ * needs to be called whenever requests start and complete. */
+void
+TableWalker::pendingChange()
+{
+    unsigned n = pendingQueue.size();
+    if ((currState != NULL) && (currState != pendingQueue.front())) {
+        ++n;
+    }
+
+    if (n != pendingReqs) {
+        Tick now = curTick();
+        statPendingWalks.sample(pendingReqs, now - pendingChangeTick);
+        pendingReqs = n;
+        pendingChangeTick = now;
+    }
+}
+
+uint8_t
+TableWalker::pageSizeNtoStatBin(uint8_t N)
+{
+    /* for statPageSizes */
+    switch(N) {
+        case 12: return 0; // 4K
+        case 14: return 1; // 16K (using 16K granule in v8-64)
+        case 16: return 2; // 64K
+        case 20: return 3; // 1M
+        case 21: return 4; // 2M-LPAE
+        case 24: return 5; // 16M
+        case 25: return 6; // 32M (using 16K granule in v8-64)
+        case 29: return 7; // 512M (using 64K granule in v8-64)
+        case 30: return 8; // 1G-LPAE
+        default:
+            panic("unknown page size");
+            return 255;
+    }
+}
+
+void
+TableWalker::regStats()
+{
+    statWalks
+        .name(name() + ".walks")
+        .desc("Table walker walks requested")
+        ;
+
+    statWalksShortDescriptor
+        .name(name() + ".walksShort")
+        .desc("Table walker walks initiated with short descriptors")
+        .flags(Stats::nozero)
+        ;
+
+    statWalksLongDescriptor
+        .name(name() + ".walksLong")
+        .desc("Table walker walks initiated with long descriptors")
+        .flags(Stats::nozero)
+        ;
+
+    statWalksShortTerminatedAtLevel
+        .init(2)
+        .name(name() + ".walksShortTerminationLevel")
+        .desc("Level at which table walker walks "
+              "with short descriptors terminate")
+        .flags(Stats::nozero)
+        ;
+    statWalksShortTerminatedAtLevel.subname(0, "Level1");
+    statWalksShortTerminatedAtLevel.subname(1, "Level2");
+
+    statWalksLongTerminatedAtLevel
+        .init(4)
+        .name(name() + ".walksLongTerminationLevel")
+        .desc("Level at which table walker walks "
+              "with long descriptors terminate")
+        .flags(Stats::nozero)
+        ;
+    statWalksLongTerminatedAtLevel.subname(0, "Level0");
+    statWalksLongTerminatedAtLevel.subname(1, "Level1");
+    statWalksLongTerminatedAtLevel.subname(2, "Level2");
+    statWalksLongTerminatedAtLevel.subname(3, "Level3");
+
+    statSquashedBefore
+        .name(name() + ".walksSquashedBefore")
+        .desc("Table walks squashed before starting")
+        .flags(Stats::nozero)
+        ;
+
+    statSquashedAfter
+        .name(name() + ".walksSquashedAfter")
+        .desc("Table walks squashed after completion")
+        .flags(Stats::nozero)
+        ;
+
+    statWalkWaitTime
+        .init(16)
+        .name(name() + ".walkWaitTime")
+        .desc("Table walker wait (enqueue to first request) latency")
+        .flags(Stats::pdf | Stats::nozero | Stats::nonan)
+        ;
+
+    statWalkServiceTime
+        .init(16)
+        .name(name() + ".walkCompletionTime")
+        .desc("Table walker service (enqueue to completion) latency")
+        .flags(Stats::pdf | Stats::nozero | Stats::nonan)
+        ;
+
+    statPendingWalks
+        .init(16)
+        .name(name() + ".walksPending")
+        .desc("Table walker pending requests distribution")
+        .flags(Stats::pdf | Stats::dist | Stats::nozero | Stats::nonan)
+        ;
+
+    statPageSizes // see DDI 0487A D4-1661
+        .init(9)
+        .name(name() + ".walkPageSizes")
+        .desc("Table walker page sizes translated")
+        .flags(Stats::total | Stats::pdf | Stats::dist | Stats::nozero)
+        ;
+    statPageSizes.subname(0, "4K");
+    statPageSizes.subname(1, "16K");
+    statPageSizes.subname(2, "64K");
+    statPageSizes.subname(3, "1M");
+    statPageSizes.subname(4, "2M");
+    statPageSizes.subname(5, "16M");
+    statPageSizes.subname(6, "32M");
+    statPageSizes.subname(7, "512M");
+    statPageSizes.subname(8, "1G");
+
+    statRequestOrigin
+        .init(2,2) // Instruction/Data, requests/completed
+        .name(name() + ".walkRequestOrigin")
+        .desc("Table walker requests started/completed, data/inst")
+        .flags(Stats::total)
+        ;
+    statRequestOrigin.subname(0,"Requested");
+    statRequestOrigin.subname(1,"Completed");
+    statRequestOrigin.ysubname(0,"Data");
+    statRequestOrigin.ysubname(1,"Inst");
 }

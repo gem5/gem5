@@ -152,7 +152,7 @@ DmaPort::recvRetry()
     trySendTimingReq();
 }
 
-void
+RequestPtr
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag)
 {
@@ -161,11 +161,17 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     // i.e. cache line size
     DmaReqState *reqState = new DmaReqState(event, size, delay);
 
+    // (functionality added for Table Walker statistics)
+    // We're only interested in this when there will only be one request.
+    // For simplicity, we return the last request, which would also be
+    // the only request in that case.
+    RequestPtr req = NULL;
+
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
             event ? event->scheduled() : -1);
     for (ChunkGenerator gen(addr, size, sys->cacheLineSize());
          !gen.done(); gen.next()) {
-        Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
+        req = new Request(gen.addr(), gen.size(), flag, masterId);
         req->taskId(ContextSwitchTaskId::DMA);
         PacketPtr pkt = new Packet(req, cmd);
 
@@ -184,6 +190,8 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     // just created, for atomic this involves actually completing all
     // the requests
     sendDma();
+
+    return req;
 }
 
 void

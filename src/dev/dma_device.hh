@@ -142,8 +142,8 @@ class DmaPort : public MasterPort
 
     DmaPort(MemObject *dev, System *s);
 
-    void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data, Tick delay, Request::Flags flag = 0);
+    RequestPtr dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+                         uint8_t *data, Tick delay, Request::Flags flag = 0);
 
     bool dmaPending() const { return pendingCount > 0; }
 

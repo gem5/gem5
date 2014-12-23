@@ -794,6 +794,12 @@ class TableWalker : public MemObject
 
         TableWalker *tableWalker;
 
+        /** Timestamp for calculating elapsed time in service (for stats) */
+        Tick startTime;
+
+        /** Page entries walked during service (for stats) */
+        unsigned levels;
+
         void doL1Descriptor();
         void doL2Descriptor();
 
@@ -883,6 +889,26 @@ class TableWalker : public MemObject
     bool _haveLargeAsid64;
     ArmSystem *armSys;
 
+    /** Statistics */
+    Stats::Scalar statWalks;
+    Stats::Scalar statWalksShortDescriptor;
+    Stats::Scalar statWalksLongDescriptor;
+    Stats::Vector statWalksShortTerminatedAtLevel;
+    Stats::Vector statWalksLongTerminatedAtLevel;
+    Stats::Scalar statSquashedBefore;
+    Stats::Scalar statSquashedAfter;
+    Stats::Histogram statWalkWaitTime;
+    Stats::Histogram statWalkServiceTime;
+    Stats::Histogram statPendingWalks; // essentially "L" of queueing theory
+    Stats::Vector statPageSizes;
+    Stats::Vector2d statRequestOrigin;
+
+    mutable unsigned pendingReqs;
+    mutable Tick pendingChangeTick;
+
+    static const unsigned REQUESTED = 0;
+    static const unsigned COMPLETED = 1;
+
   public:
    typedef ArmTableWalkerParams Params;
     TableWalker(const Params *p);
@@ -903,6 +929,7 @@ class TableWalker : public MemObject
     virtual void drainResume();
     virtual BaseMasterPort& getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);
+    void regStats();
 
     /**
      * Allow the MMU (overseeing both stage 1 and stage 2 TLBs) to
@@ -976,6 +1003,10 @@ class TableWalker : public MemObject
     EventWrapper<TableWalker, &TableWalker::processWalkWrapper> doProcessEvent;
 
     void nextWalk(ThreadContext *tc);
+
+    void pendingChange();
+
+    static uint8_t pageSizeNtoStatBin(uint8_t N);
 };
 
 } // namespace ArmISA
