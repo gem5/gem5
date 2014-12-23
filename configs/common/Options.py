@@ -97,6 +97,8 @@ def addCommonOptions(parser):
     parser.add_option("-l", "--lpae", action="store_true")
     parser.add_option("-V", "--virtualisation", action="store_true")
 
+    parser.add_option("--memchecker", action="store_true")
+
     # Cache Options
     parser.add_option("--caches", action="store_true")
     parser.add_option("--l2cache", action="store_true")

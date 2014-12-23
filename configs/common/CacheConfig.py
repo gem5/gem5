@@ -76,12 +76,30 @@ def config_cache(options, system):
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
 
+    if options.memchecker:
+        system.memchecker = MemChecker()
+
     for i in xrange(options.num_cpus):
         if options.caches:
             icache = icache_class(size=options.l1i_size,
                                   assoc=options.l1i_assoc)
             dcache = dcache_class(size=options.l1d_size,
                                   assoc=options.l1d_assoc)
+
+            if options.memchecker:
+                dcache_mon = MemCheckerMonitor(warn_only=True)
+                dcache_real = dcache
+
+                # Do not pass the memchecker into the constructor of
+                # MemCheckerMonitor, as it would create a copy; we require
+                # exactly one MemChecker instance.
+                dcache_mon.memchecker = system.memchecker
+
+                # Connect monitor
+                dcache_mon.mem_side = dcache.cpu_side
+
+                # Let CPU connect to monitors
+                dcache = dcache_mon
 
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
@@ -91,6 +109,13 @@ def config_cache(options, system):
                                                       PageTableWalkerCache())
             else:
                 system.cpu[i].addPrivateSplitL1Caches(icache, dcache)
+
+            if options.memchecker:
+                # The mem_side ports of the caches haven't been connected yet.
+                # Make sure connectAllPorts connects the right objects.
+                system.cpu[i].dcache = dcache_real
+                system.cpu[i].dcache_mon = dcache_mon
+
         system.cpu[i].createInterruptController()
         if options.l2cache:
             system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
