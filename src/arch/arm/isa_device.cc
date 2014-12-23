@@ -44,6 +44,19 @@
 namespace ArmISA
 {
 
+BaseISADevice::BaseISADevice()
+    : isa(nullptr)
+{
+}
+
+void
+BaseISADevice::setISA(ISA *_isa)
+{
+    assert(_isa);
+
+    isa = _isa;
+}
+
 void
 DummyISADevice::setMiscReg(int misc_reg, MiscReg val)
 {

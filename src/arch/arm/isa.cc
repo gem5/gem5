@@ -139,6 +139,9 @@ ISA::ISA(Params *p)
     if (!pmu)
         pmu = &dummyDevice;
 
+    // Give all ISA devices a pointer to this ISA
+    pmu->setISA(this);
+
     system = dynamic_cast<ArmSystem *>(p->system);
     DPRINTFN("ISA system set to: %p %p\n", system, p->system);
 

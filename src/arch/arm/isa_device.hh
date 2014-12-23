@@ -46,6 +46,8 @@
 namespace ArmISA
 {
 
+class ISA;
+
 /**
  * Base class for devices that use the MiscReg interfaces.
  *
@@ -56,8 +58,10 @@ namespace ArmISA
 class BaseISADevice
 {
   public:
-    BaseISADevice() {}
+    BaseISADevice();
     virtual ~BaseISADevice() {}
+
+    virtual void setISA(ISA *isa);
 
     /**
      * Write to a system register belonging to this device.
@@ -74,6 +78,9 @@ class BaseISADevice
      * @return Register value.
      */
     virtual MiscReg readMiscReg(int misc_reg) = 0;
+
+  protected:
+    ISA *isa;
 };
 
 /**

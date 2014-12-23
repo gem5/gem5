@@ -41,6 +41,8 @@
 
 #include "arch/arm/pmu.hh"
 
+#include "arch/arm/isa.hh"
+#include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
@@ -350,11 +352,43 @@ PMU::updateAllCounters()
     }
 }
 
+bool
+PMU::isFiltered(const CounterState &ctr) const
+{
+    assert(isa);
+
+    const PMEVTYPER_t filter(ctr.filter);
+    const SCR scr(isa->readMiscRegNoEffect(MISCREG_SCR));
+    const CPSR cpsr(isa->readMiscRegNoEffect(MISCREG_CPSR));
+    const ExceptionLevel el(opModeToEL((OperatingMode)(uint8_t)cpsr.mode));
+    const bool secure(inSecureState(scr, cpsr));
+
+    switch (el) {
+      case EL0:
+        return secure ? filter.u : (filter.u != filter.nsu);
+
+      case EL1:
+        return secure ? filter.p : (filter.p != filter.nsk);
+
+      case EL2:
+        return !filter.nsh;
+
+      case EL3:
+        return filter.p != filter.m;
+
+      default:
+        panic("Unexpected execution level in PMU::isFiltered.\n");
+    }
+}
+
 void
 PMU::handleEvent(CounterId id, uint64_t delta)
 {
     CounterState &ctr(getCounter(id));
     const bool overflowed(reg_pmovsr & (1 << id));
+
+    if (isFiltered(ctr))
+        return;
 
     // Handle the "count every 64 cycles" mode
     if (id == PMCCNTR && reg_pmcr.d) {
@@ -434,9 +468,8 @@ PMU::getCounterTypeRegister(CounterId id) const
         return 0;
 
     const CounterState &cs(getCounter(id));
-    PMEVTYPER_t type(0);
+    PMEVTYPER_t type(cs.filter);
 
-    // TODO: Re-create filtering settings from counter state
     type.evtCount = cs.eventId;
 
     return type;
@@ -453,12 +486,14 @@ PMU::setCounterTypeRegister(CounterId id, PMEVTYPER_t val)
     }
 
     CounterState &ctr(getCounter(id));
-    // TODO: Handle filtering (both for general purpose counters and
-    // the cycle counter)
+    const EventTypeId old_event_id(ctr.eventId);
 
-    // If PMCCNTR Register, do not change event type. PMCCNTR can count
-    // processor cycles only.
-    if (id != PMCCNTR) {
+    ctr.filter = val;
+
+    // If PMCCNTR Register, do not change event type. PMCCNTR can
+    // count processor cycles only. If we change the event type, we
+    // need to update the probes the counter is using.
+    if (id != PMCCNTR && old_event_id != val.evtCount) {
         ctr.eventId = val.evtCount;
         updateCounter(reg_pmselr.sel, ctr);
     }

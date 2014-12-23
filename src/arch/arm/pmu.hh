@@ -323,7 +323,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     /** State of a counter within the PMU. */
     struct CounterState {
         CounterState()
-            : eventId(0), value(0), enabled(false),
+            : eventId(0), filter(0), value(0), enabled(false),
               overflow64(false) {
 
             listeners.reserve(4);
@@ -343,6 +343,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
       public: /* Serializable state */
         /** Counter event ID */
         EventTypeId eventId;
+
+        /** Filtering settings (evtCount is unused) */
+        PMEVTYPER_t filter;
 
         /** Current value of the counter */
         uint64_t value;
@@ -420,6 +423,14 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
      * @param ctr Reference to the counter's state
      */
     void updateCounter(CounterId id, CounterState &ctr);
+
+    /**
+     * Check if a counter's settings allow it to be counted.
+     *
+     * @param ctr Counter state instance representing this counter.
+     * @return false if the counter is active, true otherwise.
+     */
+    bool isFiltered(const CounterState &ctr) const;
 
     /**
      * Call updateCounter() for each counter in the PMU if the
