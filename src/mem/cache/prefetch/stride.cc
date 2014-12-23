@@ -46,6 +46,7 @@
  * Stride Prefetcher template instantiations.
  */
 
+#include "base/random.hh"
 #include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/stride.hh"
 
@@ -176,7 +177,7 @@ StridePrefetcher::pcTableVictim(Addr pc, int master_id)
 {
     // Rand replacement for now
     int set = pcHash(pc);
-    int way = rand() % pcTableAssoc;
+    int way = random_mt.random<int>(0, pcTableAssoc - 1);
 
     DPRINTF(HWPrefetch, "Victimizing lookup table[%d][%d].\n", set, way);
     return &pcTable[master_id][set][way];
