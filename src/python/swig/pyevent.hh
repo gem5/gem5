@@ -37,9 +37,10 @@
 class PythonEvent : public Event
 {
   private:
-    PyObject *object;
-
+    PyObject *eventCode; // PyObject to call to perform event
   public:
+    PyObject *object;    // PyObject wrapping this PythonEvent
+
     PythonEvent(PyObject *obj, Event::Priority priority);
     ~PythonEvent();
 

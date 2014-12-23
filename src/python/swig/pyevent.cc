@@ -34,10 +34,10 @@
 #include "sim/async.hh"
 #include "sim/eventq.hh"
 
-PythonEvent::PythonEvent(PyObject *obj, Priority priority)
-    : Event(priority), object(obj)
+PythonEvent::PythonEvent(PyObject *code, Priority priority)
+    : Event(priority), eventCode(code)
 {
-    if (object == NULL)
+    if (code == NULL)
         panic("Passed in invalid object");
 }
 
@@ -49,7 +49,7 @@ void
 PythonEvent::process()
 {
     PyObject *args = PyTuple_New(0);
-    PyObject *result = PyObject_Call(object, args, NULL);
+    PyObject *result = PyObject_Call(eventCode, args, NULL);
     Py_DECREF(args);
 
     if (result) {
