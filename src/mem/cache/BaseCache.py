@@ -54,6 +54,7 @@ class BaseCache(MemObject):
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
+    demand_mshr_reserve = Param.Int(1, "mshrs to reserve for demand access")
     size = Param.MemorySize("capacity in bytes")
     forward_snoops = Param.Bool(True,
         "forward snoops from mem side to cpu side")

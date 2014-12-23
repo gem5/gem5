@@ -52,10 +52,12 @@
 using namespace std;
 
 MSHRQueue::MSHRQueue(const std::string &_label,
-                     int num_entries, int reserve, int _index)
+                     int num_entries, int reserve, int demand_reserve,
+                     int _index)
     : label(_label), numEntries(num_entries + reserve - 1),
-      numReserve(reserve), registers(numEntries),
-      drainManager(NULL), allocated(0), inServiceEntries(0), index(_index)
+      numReserve(reserve), demandReserve(demand_reserve),
+      registers(numEntries), drainManager(NULL), allocated(0),
+      inServiceEntries(0), index(_index)
 {
     for (int i = 0; i < numEntries; ++i) {
         registers[i].queue = this;

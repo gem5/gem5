@@ -77,6 +77,12 @@ class MSHRQueue : public Drainable
      */
     const int numReserve;
 
+    /**
+     * The number of entries to reserve for future demand accesses.
+     * Prevent prefetcher from taking all mshr entries
+     */
+    const int demandReserve;
+
     /**  MSHR storage. */
     std::vector<MSHR> registers;
     /** Holds pointers to all allocated entries. */
@@ -106,9 +112,11 @@ class MSHRQueue : public Drainable
      * @param num_entrys The number of entries in this queue.
      * @param reserve The minimum number of entries needed to satisfy
      * any access.
+     * @param demand_reserve The minimum number of entries needed to satisfy
+     * demand accesses.
      */
     MSHRQueue(const std::string &_label, int num_entries, int reserve,
-              int index);
+              int demand_reserve, int index);
 
     /**
      * Find the first MSHR that matches the provided address.
@@ -215,6 +223,15 @@ class MSHRQueue : public Drainable
     bool isFull() const
     {
         return (allocated > numEntries - numReserve);
+    }
+
+    /**
+     * Returns true if sufficient mshrs for prefetch.
+     * @return True if sufficient mshrs for prefetch.
+     */
+    bool canPrefetch() const
+    {
+        return (allocated < numEntries - (numReserve + demandReserve));
     }
 
     /**
