@@ -79,6 +79,10 @@ if env['HAVE_DRAMSIM']:
     Source('dramsim2_wrapper.cc')
     Source('dramsim2.cc')
 
+SimObject('MemChecker.py')
+Source('mem_checker.cc')
+Source('mem_checker_monitor.cc')
+
 DebugFlag('AddrRanges')
 DebugFlag('BaseXBar')
 DebugFlag('CoherentXBar')
@@ -99,3 +103,6 @@ DebugFlag('MemoryAccess')
 DebugFlag('PacketQueue')
 
 DebugFlag("DRAMSim2")
+
+DebugFlag("MemChecker")
+DebugFlag("MemCheckerMonitor")
