@@ -121,6 +121,11 @@ class DRAMCtrl : public AbstractMemory
     MemoryPort port;
 
     /**
+     * Remeber if the memory system is in timing mode
+     */
+    bool isTimingMode;
+
+    /**
      * Remember if we have to retry a request when available.
      */
     bool retryRdReq;
@@ -338,6 +343,11 @@ class DRAMCtrl : public AbstractMemory
          * @param ref_tick Tick for first refresh
          */
         void startup(Tick ref_tick);
+
+        /**
+         * Stop the refresh events.
+         */
+        void suspend();
 
         /**
          * Check if the current rank is available for scheduling.
@@ -855,8 +865,9 @@ class DRAMCtrl : public AbstractMemory
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);
 
-    virtual void init();
-    virtual void startup();
+    virtual void init() M5_ATTR_OVERRIDE;
+    virtual void startup() M5_ATTR_OVERRIDE;
+    virtual void drainResume() M5_ATTR_OVERRIDE;
 
   protected:
 

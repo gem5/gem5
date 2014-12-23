@@ -57,7 +57,7 @@ using namespace Data;
 
 DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     AbstractMemory(p),
-    port(name() + ".port", *this),
+    port(name() + ".port", *this), isTimingMode(false),
     retryRdReq(false), retryWrReq(false),
     busState(READ),
     nextReqEvent(this), respondEvent(this),
@@ -239,20 +239,25 @@ DRAMCtrl::init()
 void
 DRAMCtrl::startup()
 {
-    // timestamp offset should be in clock cycles for DRAMPower
-    timeStampOffset = divCeil(curTick(), tCK);
+    // remember the memory system mode of operation
+    isTimingMode = system()->isTimingMode();
 
-    // update the start tick for the precharge accounting to the
-    // current tick
-    for (auto r : ranks) {
-        r->startup(curTick() + tREFI - tRP);
+    if (isTimingMode) {
+        // timestamp offset should be in clock cycles for DRAMPower
+        timeStampOffset = divCeil(curTick(), tCK);
+
+        // update the start tick for the precharge accounting to the
+        // current tick
+        for (auto r : ranks) {
+            r->startup(curTick() + tREFI - tRP);
+        }
+
+        // shift the bus busy time sufficiently far ahead that we never
+        // have to worry about negative values when computing the time for
+        // the next request, this will add an insignificant bubble at the
+        // start of simulation
+        busBusyUntil = curTick() + tRP + tRCD + tCL;
     }
-
-    // shift the bus busy time sufficiently far ahead that we never
-    // have to worry about negative values when computing the time for
-    // the next request, this will add an insignificant bubble at the
-    // start of simulation
-    busBusyUntil = curTick() + tRP + tRCD + tCL;
 }
 
 Tick
@@ -1555,6 +1560,12 @@ DRAMCtrl::Rank::startup(Tick ref_tick)
 }
 
 void
+DRAMCtrl::Rank::suspend()
+{
+    deschedule(refreshEvent);
+}
+
+void
 DRAMCtrl::Rank::checkDrainDone()
 {
     // if this rank was waiting to drain it is now able to proceed to
@@ -2195,6 +2206,25 @@ DRAMCtrl::drain(DrainManager *dm)
     else
         setDrainState(Drainable::Drained);
     return count;
+}
+
+void
+DRAMCtrl::drainResume()
+{
+    if (!isTimingMode && system()->isTimingMode()) {
+        // if we switched to timing mode, kick things into action,
+        // and behave as if we restored from a checkpoint
+        startup();
+    } else if (isTimingMode && !system()->isTimingMode()) {
+        // if we switch from timing mode, stop the refresh events to
+        // not cause issues with KVM
+        for (auto r : ranks) {
+            r->suspend();
+        }
+    }
+
+    // update the mode
+    isTimingMode = system()->isTimingMode();
 }
 
 DRAMCtrl::MemoryPort::MemoryPort(const std::string& name, DRAMCtrl& _memory)
