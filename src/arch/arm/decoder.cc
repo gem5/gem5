@@ -139,7 +139,7 @@ void
 Decoder::consumeBytes(int numBytes)
 {
     offset += numBytes;
-    assert(offset <= sizeof(MachInst));
+    assert(offset <= sizeof(MachInst) || emi.decoderFault);
     if (offset == sizeof(MachInst))
         outOfBytes = true;
 }
@@ -153,6 +153,10 @@ Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     emi.aarch64 = pc.aarch64();
     emi.fpscrLen = fpscrLen;
     emi.fpscrStride = fpscrStride;
+
+    const Addr alignment(pc.thumb() ? 0x1 : 0x3);
+    emi.decoderFault = static_cast<uint8_t>(
+        pc.instAddr() & alignment ? DecoderFault::UNALIGNED : DecoderFault::OK);
 
     outOfBytes = false;
     process();

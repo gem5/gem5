@@ -40,13 +40,15 @@
 //
 // Authors: Gabe Black
 
-decode THUMB default Unknown::unknown() {
-0: decode AARCH64 {
-    0:
-    ##include "arm.isa"
-    1:
-    ##include "aarch64.isa"
-}
-1:
-##include "thumb.isa"
+decode DECODERFAULT default DecoderFault::decoderFault() {
+    0: decode THUMB default Unknown::unknown() {
+        0: decode AARCH64 {
+            0:
+            ##include "arm.isa"
+            1:
+            ##include "aarch64.isa"
+        }
+        1:
+        ##include "thumb.isa"
+    }
 }

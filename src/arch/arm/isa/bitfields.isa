@@ -46,6 +46,8 @@
 //
 
 // Opcode fields
+def bitfield DECODERFAULT  decoderFault;
+
 def bitfield ENCODING      encoding;
 def bitfield OPCODE        opcode;
 def bitfield MEDIA_OPCODE  mediaOpcode;

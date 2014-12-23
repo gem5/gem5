@@ -68,8 +68,10 @@ namespace ArmISA
         Bitfield<1, 0> bottom2;
     EndBitUnion(ITSTATE)
 
-
     BitUnion64(ExtMachInst)
+        // Decoder state
+        Bitfield<63, 62> decoderFault; // See DecoderFault
+
         // ITSTATE bits
         Bitfield<55, 48> itstate;
         Bitfield<55, 52> itstateCond;
@@ -624,6 +626,16 @@ namespace ArmISA
         EC_FP_EXCEPTION            = 0x28,
         EC_FP_EXCEPTION_64         = 0x2C,
         EC_SERROR                  = 0x2F
+    };
+
+    /**
+     * Instruction decoder fault codes in ExtMachInst.
+     */
+    enum DecoderFault : std::uint8_t {
+        OK = 0x0, ///< No fault
+        UNALIGNED = 0x1, ///< Unaligned instruction fault
+
+        PANIC = 0x3, ///< Internal gem5 error
     };
 
     BitUnion8(OperatingMode64)

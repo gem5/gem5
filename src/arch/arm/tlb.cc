@@ -982,11 +982,6 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
                  "flags %#x tranType 0x%x\n", vaddr_tainted, mode, isStage2,
                  scr, sctlr, flags, tranType);
 
-    // Generate an alignment fault for unaligned PC
-    if (aarch64 && is_fetch && (req->getPC() & mask(2))) {
-        return std::make_shared<PCAlignmentFault>(req->getPC());
-    }
-
     // If this is a clrex instruction, provide a PA of 0 with no fault
     // This will force the monitor to set the tracked address to 0
     // a bit of a hack but this effectively clrears this processors monitor
