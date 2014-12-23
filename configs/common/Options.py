@@ -150,6 +150,11 @@ def addCommonOptions(parser):
                       help="Enable basic block profiling for SimPoints")
     parser.add_option("--simpoint-interval", type="int", default=10000000,
                       help="SimPoint interval in num of instructions")
+    parser.add_option("--take-simpoint-checkpoints", action="store", type="string",
+        help="<simpoint file,weight file,interval-length,warmup-length>")
+    parser.add_option("--restore-simpoint-checkpoint", action="store_true",
+        help="restore from a simpoint checkpoint taken with " +
+             "--take-simpoint-checkpoints")
 
     # Checkpointing options
     ###Note that performing checkpointing via python script files will override
