@@ -1138,7 +1138,7 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    return 0;
+    return result;
 }
 
 
