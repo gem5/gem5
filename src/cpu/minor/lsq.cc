@@ -1503,7 +1503,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
 
     request->request.setThreadContext(cpu.cpuId(), /* thread id */ 0);
     request->request.setVirt(0 /* asid */,
-        addr, size, flags, cpu.instMasterId(),
+        addr, size, flags, cpu.dataMasterId(),
         /* I've no idea why we need the PC, but give it */
         inst->pc.instAddr());
 
