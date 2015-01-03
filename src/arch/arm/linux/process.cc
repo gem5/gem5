@@ -523,7 +523,7 @@ static SyscallDesc syscallDescs64[] = {
     /*   32 */ SyscallDesc("flock", unimplementedFunc),
     /*   33 */ SyscallDesc("mknodat", unimplementedFunc),
     /*   34 */ SyscallDesc("mkdirat", unimplementedFunc),
-    /*   35 */ SyscallDesc("unlinkat", unimplementedFunc),
+    /*   35 */ SyscallDesc("unlinkat", unlinkatFunc<ArmLinux64>),
     /*   36 */ SyscallDesc("symlinkat", unimplementedFunc),
     /*   37 */ SyscallDesc("linkat", unimplementedFunc),
     /*   38 */ SyscallDesc("renameat", unimplementedFunc),

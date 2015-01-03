@@ -195,6 +195,9 @@ SyscallReturn readlinkFunc(SyscallDesc *desc, int num,
                            LiveProcess *p, ThreadContext *tc);
 
 /// Target unlink() handler.
+SyscallReturn unlinkHelper(SyscallDesc *desc, int num,
+                           LiveProcess *p, ThreadContext *tc,
+                           int index);
 SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
 
@@ -653,6 +656,20 @@ openatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("openat: first argument not AT_FDCWD; unlikely to work");
     return openFunc<OS>(desc, callnum, process, tc, 1);
+}
+
+/// Target unlinkat() handler.
+template <class OS>
+SyscallReturn
+unlinkatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+             ThreadContext *tc)
+{
+    int index = 0;
+    int dirfd = process->getSyscallArg(tc, index);
+    if (dirfd != OS::TGT_AT_FDCWD)
+        warn("unlinkat: first argument not AT_FDCWD; unlikely to work");
+
+    return unlinkHelper(desc, callnum, process, tc, 1);
 }
 
 /// Target facessat() handler

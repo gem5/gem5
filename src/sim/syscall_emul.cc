@@ -400,9 +400,15 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
 SyscallReturn
 unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
+    return unlinkHelper(desc, num, p, tc, 0);
+}
+
+SyscallReturn
+unlinkHelper(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
+           int index)
+{
     string path;
 
-    int index = 0;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
