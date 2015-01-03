@@ -151,6 +151,11 @@ class TsunamiIO : public BasicPioDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    /**
+     * Start running.
+     */
+    virtual void startup();
+
 };
 
 #endif // __DEV_TSUNAMI_IO_HH__

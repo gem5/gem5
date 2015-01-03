@@ -284,6 +284,12 @@ TsunamiIO::unserialize(Checkpoint *cp, const string &section)
     rtc.unserialize("rtc", cp, section);
 }
 
+void
+TsunamiIO::startup()
+{
+    rtc.startup();
+}
+
 TsunamiIO *
 TsunamiIOParams::create()
 {

@@ -82,6 +82,7 @@ class Cmos : public BasicPioDevice
 
     Tick write(PacketPtr pkt);
 
+    virtual void startup();
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 

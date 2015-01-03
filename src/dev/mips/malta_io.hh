@@ -143,6 +143,11 @@ class MaltaIO : public BasicPioDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    /**
+     * Start running.
+     */
+    virtual void startup();
+
 };
 
 #endif // __DEV_MALTA_IO_HH__

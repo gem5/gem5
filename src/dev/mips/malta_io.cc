@@ -142,6 +142,12 @@ MaltaIO::unserialize(Checkpoint *cp, const string &section)
     rtc.unserialize("rtc", cp, section);
 }
 
+void
+MaltaIO::startup()
+{
+    rtc.startup();
+}
+
 MaltaIO *
 MaltaIOParams::create()
 {

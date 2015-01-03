@@ -51,6 +51,7 @@ class MC146818 : public EventManager
     {
         MC146818 * parent;
         Tick interval;
+        Tick offset;
 
         RTCEvent(MC146818 * _parent, Tick i);
 
@@ -68,11 +69,11 @@ class MC146818 : public EventManager
     struct RTCTickEvent : public Event
     {
         MC146818 * parent;
+        Tick offset;
 
-        RTCTickEvent(MC146818 * _parent) : parent(_parent)
-        {
-            parent->schedule(this, curTick() + SimClock::Int::s);
-        }
+        RTCTickEvent(MC146818 * _parent) :
+            parent(_parent), offset(SimClock::Int::s)
+        {}
 
         /** Event process to occur at interrupt*/
         void process();
@@ -152,6 +153,9 @@ class MC146818 : public EventManager
     MC146818(EventManager *em, const std::string &name, const struct tm time,
             bool bcd, Tick frequency);
     virtual ~MC146818();
+
+    /** Start ticking */
+    virtual void startup();
 
     /** RTC write data */
     void writeData(const uint8_t addr, const uint8_t data);

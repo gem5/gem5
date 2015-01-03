@@ -123,6 +123,15 @@ MC146818::rega_dv_disabled(const RtcRegA &reg)
 }
 
 void
+MC146818::startup()
+{
+    assert(!event.scheduled());
+    assert(!tickEvent.scheduled());
+    schedule(event, curTick() + event.offset);
+    schedule(tickEvent, curTick() + tickEvent.offset);
+}
+
+void
 MC146818::writeData(const uint8_t addr, const uint8_t data)
 {
     bool panic_unsupported(false);
@@ -291,17 +300,16 @@ MC146818::unserialize(const string &base, Checkpoint *cp,
     //
     Tick rtcTimerInterruptTickOffset;
     UNSERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
-    reschedule(event, curTick() + rtcTimerInterruptTickOffset);
+    event.offset = rtcTimerInterruptTickOffset;
     Tick rtcClockTickOffset;
     UNSERIALIZE_SCALAR(rtcClockTickOffset);
-    reschedule(tickEvent, curTick() + rtcClockTickOffset);
+    tickEvent.offset = rtcClockTickOffset;
 }
 
 MC146818::RTCEvent::RTCEvent(MC146818 * _parent, Tick i)
-    : parent(_parent), interval(i)
+    : parent(_parent), interval(i), offset(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
-    parent->schedule(this, curTick() + interval);
 }
 
 void

@@ -44,7 +44,6 @@
 #include "debug/Timer.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/rtc_pl031.hh"
-#include "dev/mc146818.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 

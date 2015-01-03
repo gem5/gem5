@@ -113,6 +113,12 @@ X86ISA::Cmos::writeRegister(uint8_t reg, uint8_t val)
 }
 
 void
+X86ISA::Cmos::startup()
+{
+    rtc.startup();
+}
+
+void
 X86ISA::Cmos::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(address);
