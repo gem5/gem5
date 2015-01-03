@@ -903,7 +903,7 @@
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: WarnUnimpl::addsubpd_Vo_Wo();
+                    0x0: ADDSUBPD(Vo,Wo);
                     0x1: PSRLW(Vo,Wo);
                     0x2: PSRLD(Vo,Wo);
                     0x3: PSRLQ(Vo,Wo);
