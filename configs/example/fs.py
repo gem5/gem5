@@ -236,8 +236,8 @@ def build_drive_system(np):
         drive_sys = makeLinuxX86System(drive_mem_mode, np, bm[1],
                                        cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'arm':
-        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1],
-                                  cmdline=cmdline)
+        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, np,
+                                  bm[1], options.dtb_filename, cmdline=cmdline)
 
     # Create a top-level voltage domain
     drive_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
