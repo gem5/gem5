@@ -341,10 +341,10 @@ system.physmem_0.preEnergy                   73012500                       # En
 system.physmem_0.readEnergy                 369306600                       # Energy for read commands per rank (pJ)
 system.physmem_0.writeEnergy                291126960                       # Energy for write commands per rank (pJ)
 system.physmem_0.refreshEnergy           178872248880                       # Energy for refresh commands per rank (pJ)
-system.physmem_0.actBackEnergy            68915344410                       # Energy for active background per rank (pJ)
+system.physmem_0.actBackEnergy            68919855390                       # Energy for active background per rank (pJ)
 system.physmem_0.preBackEnergy           1612195386000                       # Energy for precharge background per rank (pJ)
-system.physmem_0.totalEnergy             1860850713630                       # Total energy per rank (pJ)
-system.physmem_0.averagePower              667.510917                       # Core power per rank (mW)
+system.physmem_0.totalEnergy             1860855224610                       # Total energy per rank (pJ)
+system.physmem_0.averagePower              667.510956                       # Core power per rank (mW)
 system.physmem_0.memoryStateTime::IDLE   2632883157750                       # Time in different power states
 system.physmem_0.memoryStateTime::REF     91447980000                       # Time in different power states
 system.physmem_0.memoryStateTime::PRE_PDN            0                       # Time in different power states
