@@ -102,6 +102,8 @@ class Intel8254Timer : public EventManager
             void setTo(int clocks);
 
             int clocksLeft();
+
+            Tick getInterval();
         };
 
       private:
@@ -112,6 +114,9 @@ class Intel8254Timer : public EventManager
 
         CounterEvent event;
 
+        /** True after startup is called. */
+        bool running;
+
         /** Initial count value */
         uint16_t initial_count;
 
@@ -120,6 +125,9 @@ class Intel8254Timer : public EventManager
 
         /** Interrupt period */
         uint16_t period;
+
+        /** When to start ticking */
+        Tick offset;
 
         /** Current mode of operation */
         uint8_t mode;
@@ -181,6 +189,9 @@ class Intel8254Timer : public EventManager
          */
         void unserialize(const std::string &base, Checkpoint *cp,
                          const std::string &section);
+
+        /** Start ticking */
+        void startup();
     };
 
   protected:
@@ -246,6 +257,9 @@ class Intel8254Timer : public EventManager
      */
     void unserialize(const std::string &base, Checkpoint *cp,
                      const std::string &section);
+
+    /** Start ticking */
+    void startup();
 };
 
 #endif // __DEV_8254_HH__

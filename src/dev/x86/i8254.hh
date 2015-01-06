@@ -111,6 +111,7 @@ class I8254 : public BasicPioDevice
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+    virtual void startup();
 
 };
 

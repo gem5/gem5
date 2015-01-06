@@ -288,6 +288,7 @@ void
 TsunamiIO::startup()
 {
     rtc.startup();
+    pitimer.startup();
 }
 
 TsunamiIO *

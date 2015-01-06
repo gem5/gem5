@@ -89,13 +89,22 @@ Intel8254Timer::unserialize(const string &base, Checkpoint *cp,
     counter[2]->unserialize(base + ".counter2", cp, section);
 }
 
+void
+Intel8254Timer::startup()
+{
+    counter[0]->startup();
+    counter[1]->startup();
+    counter[2]->startup();
+}
+
 Intel8254Timer::Counter::Counter(Intel8254Timer *p,
         const string &name, unsigned int _num)
-    : _name(name), num(_num), event(this), initial_count(0),
-      latched_count(0), period(0), mode(0), output_high(false),
-      latch_on(false), read_byte(LSB), write_byte(LSB), parent(p)
+    : _name(name), num(_num), event(this), running(false),
+      initial_count(0), latched_count(0), period(0), mode(0),
+      output_high(false), latch_on(false), read_byte(LSB),
+      write_byte(LSB), parent(p)
 {
-
+    offset = period * event.getInterval();
 }
 
 void
@@ -179,7 +188,9 @@ Intel8254Timer::Counter::write(const uint8_t data)
         else
             period = initial_count;
 
-        if (period > 0)
+        offset = period * event.getInterval();
+
+        if (running && (period > 0))
             event.setTo(period);
 
         write_byte = LSB;
@@ -229,10 +240,10 @@ Intel8254Timer::Counter::serialize(const string &base, ostream &os)
     paramOut(os, base + ".read_byte", read_byte);
     paramOut(os, base + ".write_byte", write_byte);
 
-    Tick event_tick = 0;
+    Tick event_tick_offset = 0;
     if (event.scheduled())
-        event_tick = event.when();
-    paramOut(os, base + ".event_tick", event_tick);
+        event_tick_offset = event.when() - curTick();
+    paramOut(os, base + ".event_tick_offset", event_tick_offset);
 }
 
 void
@@ -248,12 +259,20 @@ Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
     paramIn(cp, section, base + ".read_byte", read_byte);
     paramIn(cp, section, base + ".write_byte", write_byte);
 
-    Tick event_tick = 0;
-    if (event.scheduled())
-        parent->deschedule(event);
-    paramIn(cp, section, base + ".event_tick", event_tick);
-    if (event_tick)
-        parent->schedule(event, event_tick);
+    Tick event_tick_offset = 0;
+    assert(!event.scheduled());
+    paramIn(cp, section, base + ".event_tick_offset", event_tick_offset);
+    offset = event_tick_offset;
+}
+
+void
+Intel8254Timer::Counter::startup()
+{
+    running = true;
+    if ((period > 0) && (offset > 0))
+    {
+        parent->schedule(event, curTick() + offset);
+    }
 }
 
 Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
@@ -302,3 +321,10 @@ Intel8254Timer::Counter::CounterEvent::description() const
 {
     return "Intel 8254 Interval timer";
 }
+
+Tick
+Intel8254Timer::Counter::CounterEvent::getInterval()
+{
+    return interval;
+}
+

@@ -146,6 +146,7 @@ void
 MaltaIO::startup()
 {
     rtc.startup();
+    pitimer.startup();
 }
 
 MaltaIO *
