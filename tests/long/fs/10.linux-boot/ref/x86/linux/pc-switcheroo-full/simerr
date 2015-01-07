@@ -3,8 +3,83 @@ warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
 warn: Reading current count from inactive timer.
 warn: Don't know what interrupt to clear for console.
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: x86 cpuid: unknown family 0x8086
 warn: x86 cpuid: unknown family 0x8086
+warn: x86 cpuid: unknown family 0x8086
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 10068, Bank: 3
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 11067, Bank: 2
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6494, Bank: 3
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6532, Bank: 6
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6448, Bank: 5
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6448, Bank: 2
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 11102, Bank: 3
+WARNING: Bank is already active!
+Command: 0, Timestamp: 7271, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 8628, Bank: 5
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: Tried to clear PCI interrupt 14
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: Unknown mouse command 0xe1.
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: instruction 'wbinvd' unimplemented
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0

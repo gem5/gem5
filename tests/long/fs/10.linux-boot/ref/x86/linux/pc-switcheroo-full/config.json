@@ -34,6 +34,7 @@
             "mshrs": 20, 
             "forward_snoops": true, 
             "hit_latency": 20, 
+            "demand_mshr_reserve": 1, 
             "tgts_per_mshr": 12, 
             "addr_ranges": [
                 "0:18446744073709551615"
@@ -657,6 +658,7 @@
             "mshrs": 20, 
             "forward_snoops": false, 
             "hit_latency": 50, 
+            "demand_mshr_reserve": 1, 
             "tgts_per_mshr": 12, 
             "addr_ranges": [
                 "0:134217727"
@@ -1810,6 +1812,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -1919,6 +1922,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"

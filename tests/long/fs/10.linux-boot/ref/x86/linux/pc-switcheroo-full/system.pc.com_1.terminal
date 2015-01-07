@@ -40,12 +40,13 @@ Calibrating delay loop (skipped)... 3999.96 BogoMIPS preset
 Mount-cache hash table entries: 256
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
 CPU: L2 Cache: 1024K (64 bytes/line)
+using mwait in idle threads.
 CPU: Fake M5 x86_64 CPU stepping 01
 ACPI: Core revision 20070126
 ACPI Exception (tbxface-0618): AE_NO_ACPI_TABLES, While loading namespace from ACPI tables [20070126]
 ACPI: Unable to load the System Description Tables
 Using local APIC timer interrupts.
-result 7812527
+result 7812526
 Detected 7.812 MHz APIC timer.
 NET: Registered protocol family 16
 PCI: Using configuration type 1
