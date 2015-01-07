@@ -96,15 +96,8 @@ namespace X86ISA {
                         stringToRegister(vendorString + 8));
                 break;
               case FamilyModelSteppingBrandFeatures:
-                /** Features Enabling
-                 * rdx, enabling most of the features except:
-                 * FXSR, FFXSR, Page1GB in EDX
-                 *
-                 * rcx, disabling most of the features except:
-                 * SSE4A, XOP, FMA4 in ECX
-                 */
                 result = CpuidResult(0x00020f51, 0x00000405,
-                                     0xe3d3fbff, 0x00010840);
+                                     0xe3d3fbff, 0x00000001);
                 break;
               case NameString1:
               case NameString2:
@@ -160,15 +153,8 @@ namespace X86ISA {
                         stringToRegister(vendorString + 8));
                 break;
               case FamilyModelStepping:
-                /** Features Enabling
-                 * rdx, enabling most of the features except:
-                 * HTT in EDX
-                 *
-                 * rcx, disabling most of the features except:
-                 * SSE3, SSSE3, FMA, SSE41, XSAVE, AVX in ECX
-                 */
                 result = CpuidResult(0x00020f51, 0x00000805,
-                                     0xe7dbfbff, 0x14081201);
+                                     0xe7dbfbff, 0x00000001);
                 break;
               default:
                 warn("x86 cpuid: unimplemented function %u", funcNum);
