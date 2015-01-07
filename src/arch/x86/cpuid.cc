@@ -154,7 +154,7 @@ namespace X86ISA {
                 break;
               case FamilyModelStepping:
                 result = CpuidResult(0x00020f51, 0x00000805,
-                                     0xe7dbfbff, 0x00000001);
+                                     0xe7dbfbff, 0x04000209);
                 break;
               default:
                 warn("x86 cpuid: unimplemented function %u", funcNum);
