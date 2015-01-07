@@ -32,6 +32,7 @@ Import('*')
 
 Source('unittest.cc')
 
+UnitTest('bituniontest', 'bituniontest.cc')
 UnitTest('bitvectest', 'bitvectest.cc')
 UnitTest('circletest', 'circletest.cc')
 UnitTest('cprintftest', 'cprintftest.cc')
