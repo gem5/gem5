@@ -376,7 +376,7 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst)
         ppRetiredLoads->notify(1);
 
     if (inst->isStore())
-        ppRetiredLoads->notify(1);
+        ppRetiredStores->notify(1);
 
     if (inst->isControl())
         ppRetiredBranches->notify(1);
