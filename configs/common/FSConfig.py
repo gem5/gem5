@@ -57,6 +57,7 @@ class MemBus(CoherentXBar):
 
 def fillInCmdline(mdesc, template, **kwargs):
     kwargs.setdefault('disk', mdesc.disk())
+    kwargs.setdefault('rootdev', mdesc.rootdev())
     kwargs.setdefault('mem', mdesc.mem())
     kwargs.setdefault('script', mdesc.script())
     return template % kwargs
@@ -279,7 +280,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         if not cmdline:
             cmdline = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
                       'lpj=19988480 norandmaps rw loglevel=8 ' + \
-                      'mem=%(mem)s root=/dev/sda1'
+                      'mem=%(mem)s root=%(rootdev)s'
 
         self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr

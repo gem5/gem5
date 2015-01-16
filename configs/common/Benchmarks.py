@@ -31,10 +31,11 @@ from os import environ as env
 from m5.defines import buildEnv
 
 class SysConfig:
-    def __init__(self, script=None, mem=None, disk=None):
+    def __init__(self, script=None, mem=None, disk=None, rootdev=None):
         self.scriptname = script
         self.diskname = disk
         self.memsize = mem
+        self.root = rootdev
 
     def script(self):
         if self.scriptname:
@@ -61,6 +62,12 @@ class SysConfig:
             print "Don't know what default disk image to use for %s ISA" % \
                 buildEnv['TARGET_ISA']
             exit(1)
+
+    def rootdev(self):
+        if self.root:
+            return self.root
+        else:
+            return '/dev/sda1'
 
 # Benchmarks are defined as a key in a dict which is a list of SysConfigs
 # The first defined machine is the test system, the others are driving systems
