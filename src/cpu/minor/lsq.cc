@@ -1277,9 +1277,9 @@ LSQ::recvRetry()
             assert(false);
             break;
         }
-    }
 
-    retryRequest = NULL;
+        retryRequest = NULL;
+    }
 }
 
 LSQ::LSQ(std::string name_, std::string dcache_port_name_,
