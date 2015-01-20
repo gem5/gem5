@@ -216,6 +216,10 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
 
+        # Connect the dma controller to the network
+        dma_cntrl.responseFromDir = ruby_system.network.master
+        dma_cntrl.requestToDir = ruby_system.network.slave
+
     all_cntrls = l0_cntrl_nodes + \
                  l1_cntrl_nodes + \
                  l2_cntrl_nodes + \
