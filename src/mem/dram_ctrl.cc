@@ -69,7 +69,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     burstSize((devicesPerRank * burstLength * deviceBusWidth) / 8),
     rowBufferSize(devicesPerRank * deviceRowBufferSize),
     columnsPerRowBuffer(rowBufferSize / burstSize),
-    columnsPerStripe(range.granularity() / burstSize),
+    columnsPerStripe(range.interleaved() ? range.granularity() / burstSize : 1),
     ranksPerChannel(p->ranks_per_channel),
     bankGroupsPerRank(p->bank_groups_per_rank),
     bankGroupArch(p->bank_groups_per_rank > 0),
@@ -153,45 +153,6 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
 
     rowsPerBank = capacity / (rowBufferSize * banksPerRank * ranksPerChannel);
 
-    // a bit of sanity checks on the interleaving
-    if (range.interleaved()) {
-        if (channels != range.stripes())
-            fatal("%s has %d interleaved address stripes but %d channel(s)\n",
-                  name(), range.stripes(), channels);
-
-        if (addrMapping == Enums::RoRaBaChCo) {
-            if (rowBufferSize != range.granularity()) {
-                fatal("Channel interleaving of %s doesn't match RoRaBaChCo "
-                      "address map\n", name());
-            }
-        } else if (addrMapping == Enums::RoRaBaCoCh ||
-                   addrMapping == Enums::RoCoRaBaCh) {
-            // for the interleavings with channel bits in the bottom,
-            // if the system uses a channel striping granularity that
-            // is larger than the DRAM burst size, then map the
-            // sequential accesses within a stripe to a number of
-            // columns in the DRAM, effectively placing some of the
-            // lower-order column bits as the least-significant bits
-            // of the address (above the ones denoting the burst size)
-            assert(columnsPerStripe >= 1);
-
-            // channel striping has to be done at a granularity that
-            // is equal or larger to a cache line
-            if (system()->cacheLineSize() > range.granularity()) {
-                fatal("Channel interleaving of %s must be at least as large "
-                      "as the cache line size\n", name());
-            }
-
-            // ...and equal or smaller than the row-buffer size
-            if (rowBufferSize < range.granularity()) {
-                fatal("Channel interleaving of %s must be at most as large "
-                      "as the row-buffer size\n", name());
-            }
-            // this is essentially the check above, so just to be sure
-            assert(columnsPerStripe <= columnsPerRowBuffer);
-        }
-    }
-
     // some basic sanity checks
     if (tREFI <= tRP || tREFI <= tRFC) {
         fatal("tREFI (%d) must be larger than tRP (%d) and tRFC (%d)\n",
@@ -238,6 +199,46 @@ DRAMCtrl::init()
         fatal("DRAMCtrl %s is unconnected!\n", name());
     } else {
         port.sendRangeChange();
+    }
+
+    // a bit of sanity checks on the interleaving, save it for here to
+    // ensure that the system pointer is initialised
+    if (range.interleaved()) {
+        if (channels != range.stripes())
+            fatal("%s has %d interleaved address stripes but %d channel(s)\n",
+                  name(), range.stripes(), channels);
+
+        if (addrMapping == Enums::RoRaBaChCo) {
+            if (rowBufferSize != range.granularity()) {
+                fatal("Channel interleaving of %s doesn't match RoRaBaChCo "
+                      "address map\n", name());
+            }
+        } else if (addrMapping == Enums::RoRaBaCoCh ||
+                   addrMapping == Enums::RoCoRaBaCh) {
+            // for the interleavings with channel bits in the bottom,
+            // if the system uses a channel striping granularity that
+            // is larger than the DRAM burst size, then map the
+            // sequential accesses within a stripe to a number of
+            // columns in the DRAM, effectively placing some of the
+            // lower-order column bits as the least-significant bits
+            // of the address (above the ones denoting the burst size)
+            assert(columnsPerStripe >= 1);
+
+            // channel striping has to be done at a granularity that
+            // is equal or larger to a cache line
+            if (system()->cacheLineSize() > range.granularity()) {
+                fatal("Channel interleaving of %s must be at least as large "
+                      "as the cache line size\n", name());
+            }
+
+            // ...and equal or smaller than the row-buffer size
+            if (rowBufferSize < range.granularity()) {
+                fatal("Channel interleaving of %s must be at most as large "
+                      "as the row-buffer size\n", name());
+            }
+            // this is essentially the check above, so just to be sure
+            assert(columnsPerStripe <= columnsPerRowBuffer);
+        }
     }
 }
 
