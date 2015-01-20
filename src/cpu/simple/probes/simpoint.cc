@@ -79,6 +79,9 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
     SimpleThread* thread = p.first;
     const StaticInstPtr &inst = p.second;
 
+    if (inst->isMicroop() && !inst->isLastMicroop())
+        return;
+
     if (!currentBBVInstCount)
         currentBBV.first = thread->pcState().instAddr();
 

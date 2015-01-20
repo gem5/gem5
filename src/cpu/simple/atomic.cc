@@ -580,10 +580,7 @@ AtomicSimpleCPU::tick()
                 // keep an instruction count
                 if (fault == NoFault) {
                     countInst();
-                    if (!curStaticInst->isMicroop() ||
-                         curStaticInst->isLastMicroop()) {
-                        ppCommit->notify(std::make_pair(thread, curStaticInst));
-                    }
+                    ppCommit->notify(std::make_pair(thread, curStaticInst));
                 }
                 else if (traceData && !DTRACE(ExecFaulting)) {
                     delete traceData;
