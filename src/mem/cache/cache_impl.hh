@@ -2029,11 +2029,14 @@ Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 
     bool success = false;
 
-    // always let inhibited requests through, even if blocked
+    // always let inhibited requests through, even if blocked,
+    // ultimately we should check if this is an express snoop, but at
+    // the moment that flag is only set in the cache itself
     if (pkt->memInhibitAsserted()) {
-        // this should always succeed
-        success = cache->recvTimingReq(pkt);
-        assert(success);
+        // do not change the current retry state
+        bool M5_VAR_USED bypass_success = cache->recvTimingReq(pkt);
+        assert(bypass_success);
+        return true;
     } else if (blocked || mustSendRetry) {
         // either already committed to send a retry, or blocked
         success = false;
