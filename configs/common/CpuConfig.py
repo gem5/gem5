@@ -50,7 +50,6 @@ _cpu_classes = {}
 _cpu_aliases_all = [
     ("timing", "TimingSimpleCPU"),
     ("atomic", "AtomicSimpleCPU"),
-    ("inorder", "InOrderCPU"),
     ("minor", "MinorCPU"),
     ("detailed", "DerivO3CPU"),
     ("kvm", ("ArmKvmCPU", "X86KvmCPU")),

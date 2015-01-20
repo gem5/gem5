@@ -110,7 +110,7 @@ def get_processes(options):
         idx += 1
 
     if options.smt:
-        assert(options.cpu_type == "detailed" or options.cpu_type == "inorder")
+        assert(options.cpu_type == "detailed")
         return multiprocesses, idx
     else:
         return multiprocesses, 1
