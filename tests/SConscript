@@ -354,7 +354,6 @@ if env['TARGET_ISA'] == 'x86':
 
 configs += ['simple-atomic', 'simple-atomic-mp',
             'simple-timing', 'simple-timing-mp',
-            'inorder-timing',
             'minor-timing', 'minor-timing-mp',
             'o3-timing', 'o3-timing-mp',
             'rubytest', 'memtest', 'memtest-filter',
