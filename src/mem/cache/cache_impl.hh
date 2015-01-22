@@ -385,10 +385,7 @@ class ForwardResponseRecord : public Packet::SenderState
 {
   public:
 
-    PortID prevSrc;
-
-    ForwardResponseRecord(PortID prev_src) : prevSrc(prev_src)
-    {}
+    ForwardResponseRecord() {}
 };
 
 template<class TagStore>
@@ -407,6 +404,9 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
     assert(!system->bypassCaches());
 
     if (rec == NULL) {
+        // @todo What guarantee do we have that this HardPFResp is
+        // actually for this cache, and not a cache closer to the
+        // memory?
         assert(pkt->cmd == MemCmd::HardPFResp);
         // Check if it's a prefetch response and handle it. We shouldn't
         // get any other kinds of responses without FRRs.
@@ -417,7 +417,6 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
     }
 
     pkt->popSenderState();
-    pkt->setDest(rec->prevSrc);
     delete rec;
     // @todo someone should pay for this
     pkt->firstWordDelay = pkt->lastWordDelay = 0;
@@ -1542,7 +1541,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         if (is_timing) {
             Packet snoopPkt(pkt, true, false);  // clear flags, no allocation
             snoopPkt.setExpressSnoop();
-            snoopPkt.pushSenderState(new ForwardResponseRecord(pkt->getSrc()));
+            snoopPkt.pushSenderState(new ForwardResponseRecord());
             // the snoop packet does not need to wait any additional
             // time
             snoopPkt.firstWordDelay = snoopPkt.lastWordDelay = 0;
