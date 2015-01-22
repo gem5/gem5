@@ -43,11 +43,9 @@
 void
 PortProxy::readBlob(Addr addr, uint8_t *p, int size) const
 {
-    Request req;
-
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
-        req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
+        Request req(gen.addr(), gen.size(), 0, Request::funcMasterId);
         Packet pkt(&req, MemCmd::ReadReq);
         pkt.dataStatic(p);
         _port.sendFunctional(&pkt);
@@ -58,11 +56,9 @@ PortProxy::readBlob(Addr addr, uint8_t *p, int size) const
 void
 PortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
 {
-    Request req;
-
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
-        req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
+        Request req(gen.addr(), gen.size(), 0, Request::funcMasterId);
         Packet pkt(&req, MemCmd::WriteReq);
         pkt.dataStaticConst(p);
         _port.sendFunctional(&pkt);

@@ -574,9 +574,6 @@ class BaseKvmCPU : public BaseCPU
     /** Unused dummy port for the instruction interface */
     KVMCpuPort instPort;
 
-    /** Pre-allocated MMIO memory request */
-    Request mmio_req;
-
     /**
      * Is the gem5 context dirty? Set to true to force an update of
      * the KVM vCPU state upon the next call to kvmRun().

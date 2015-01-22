@@ -109,21 +109,21 @@ CacheRecorder::enqueueNextFetchRequest()
 
         for (int rec_bytes_read = 0; rec_bytes_read < m_block_size_bytes;
                 rec_bytes_read += RubySystem::getBlockSizeBytes()) {
-            Request* req = new Request();
+            Request* req = nullptr;
             MemCmd::Command requestType;
 
             if (traceRecord->m_type == RubyRequestType_LD) {
                 requestType = MemCmd::ReadReq;
-                req->setPhys(traceRecord->m_data_address + rec_bytes_read,
+                req = new Request(traceRecord->m_data_address + rec_bytes_read,
                     RubySystem::getBlockSizeBytes(), 0, Request::funcMasterId);
             }   else if (traceRecord->m_type == RubyRequestType_IFETCH) {
                 requestType = MemCmd::ReadReq;
-                req->setPhys(traceRecord->m_data_address + rec_bytes_read,
+                req = new Request(traceRecord->m_data_address + rec_bytes_read,
                         RubySystem::getBlockSizeBytes(),
                         Request::INST_FETCH, Request::funcMasterId);
             }   else {
                 requestType = MemCmd::WriteReq;
-                req->setPhys(traceRecord->m_data_address + rec_bytes_read,
+                req = new Request(traceRecord->m_data_address + rec_bytes_read,
                     RubySystem::getBlockSizeBytes(), 0, Request::funcMasterId);
             }
 

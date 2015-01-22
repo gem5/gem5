@@ -300,16 +300,16 @@ MemTest::tick()
 
     bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
         !uncacheable;
-    Request *req = new Request();
+    Request *req = nullptr;
     uint8_t *result = new uint8_t[8];
 
     if (issueDmas) {
         paddr &= ~((1 << dma_access_size) - 1);
-        req->setPhys(paddr, 1 << dma_access_size, flags, masterId);
+        req = new Request(paddr, 1 << dma_access_size, flags, masterId);
         req->setThreadContext(id,0);
     } else {
         paddr &= ~((1 << access_size) - 1);
-        req->setPhys(paddr, 1 << access_size, flags, masterId);
+        req = new Request(paddr, 1 << access_size, flags, masterId);
         req->setThreadContext(id,0);
     }
     assert(req->getSize() == 1);

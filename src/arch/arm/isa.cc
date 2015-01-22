@@ -1490,7 +1490,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_ATS1HR:
           case MISCREG_ATS1HW:
             {
-              RequestPtr req = new Request;
               unsigned flags = 0;
               BaseTLB::Mode mode = BaseTLB::Read;
               TLB::ArmTranslationType tranType = TLB::NormalTran;
@@ -1562,16 +1561,16 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
               // can't be an atomic translation because that causes problems
               // with unexpected atomic snoop requests.
               warn("Translating via MISCREG(%d) in functional mode! Fix Me!\n", misc_reg);
-              req->setVirt(0, val, 1, flags,  Request::funcMasterId,
-                           tc->pcState().pc());
-              req->setThreadContext(tc->contextId(), tc->threadId());
-              fault = tc->getDTBPtr()->translateFunctional(req, tc, mode, tranType);
+              Request req(0, val, 1, flags,  Request::funcMasterId,
+                          tc->pcState().pc(), tc->contextId(),
+                          tc->threadId());
+              fault = tc->getDTBPtr()->translateFunctional(&req, tc, mode, tranType);
               TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
               HCR   hcr   = readMiscRegNoEffect(MISCREG_HCR);
 
               MiscReg newVal;
               if (fault == NoFault) {
-                  Addr paddr = req->getPaddr();
+                  Addr paddr = req.getPaddr();
                   if (haveLPAE && (ttbcr.eae || tranType & TLB::HypMode ||
                      ((tranType & TLB::S1S2NsTran) && hcr.vm) )) {
                       newVal = (paddr & mask(39, 12)) |
@@ -1605,7 +1604,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                           "MISCREG: Translated addr 0x%08x fault fsr %#x: PAR: 0x%08x\n",
                           val, fsr, newVal);
               }
-              delete req;
               setMiscRegNoEffect(MISCREG_PAR, newVal);
               return;
             }

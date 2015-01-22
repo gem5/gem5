@@ -554,8 +554,6 @@ X86KvmCPU::startup()
 
     updateCPUID();
 
-    io_req.setThreadContext(tc->contextId(), 0);
-
     // TODO: Do we need to create an identity mapped TSS area? We
     // should call kvm.vm.setTSSAddress() here in that case. It should
     // only be needed for old versions of the virtualization
@@ -1346,8 +1344,9 @@ X86KvmCPU::handleKvmExitIO()
         pAddr = X86ISA::x86IOAddress(port);
     }
 
-    io_req.setPhys(pAddr, kvm_run.io.size, Request::UNCACHEABLE,
+    Request io_req(pAddr, kvm_run.io.size, Request::UNCACHEABLE,
                    dataMasterId());
+    io_req.setThreadContext(tc->contextId(), 0);
 
     const MemCmd cmd(isWrite ? MemCmd::WriteReq : MemCmd::ReadReq);
     // Temporarily lock and migrate to the event queue of the

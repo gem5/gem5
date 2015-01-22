@@ -270,8 +270,7 @@ void
 TimingSimpleCPU::sendData(RequestPtr req, uint8_t *data, uint64_t *res,
                           bool read)
 {
-    PacketPtr pkt;
-    buildPacket(pkt, req, read);
+    PacketPtr pkt = buildPacket(req, read);
     pkt->dataDynamic<uint8_t>(data);
     if (req->getFlags().isSet(Request::NO_ACCESS)) {
         assert(!dcache_pkt);
@@ -354,10 +353,10 @@ TimingSimpleCPU::translationFault(const Fault &fault)
     advanceInst(fault);
 }
 
-void
-TimingSimpleCPU::buildPacket(PacketPtr &pkt, RequestPtr req, bool read)
+PacketPtr
+TimingSimpleCPU::buildPacket(RequestPtr req, bool read)
 {
-    pkt = read ? Packet::createRead(req) : Packet::createWrite(req);
+    return read ? Packet::createRead(req) : Packet::createWrite(req);
 }
 
 void
@@ -370,14 +369,13 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     assert(!req1->isMmappedIpr() && !req2->isMmappedIpr());
 
     if (req->getFlags().isSet(Request::NO_ACCESS)) {
-        buildPacket(pkt1, req, read);
+        pkt1 = buildPacket(req, read);
         return;
     }
 
-    buildPacket(pkt1, req1, read);
-    buildPacket(pkt2, req2, read);
+    pkt1 = buildPacket(req1, read);
+    pkt2 = buildPacket(req2, read);
 
-    req->setPhys(req1->getPaddr(), req->getSize(), req1->getFlags(), dataMasterId());
     PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand());
 
     pkt->dataDynamic<uint8_t>(data);

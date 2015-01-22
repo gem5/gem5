@@ -118,8 +118,6 @@ BaseKvmCPU::init()
     // initialize CPU, including PC
     if (FullSystem && !switchedOut())
         TheISA::initCPU(tc, tc->contextId());
-
-    mmio_req.setThreadContext(tc->contextId(), 0);
 }
 
 void
@@ -995,7 +993,8 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     ThreadContext *tc(thread->getTC());
     syncThreadContext();
 
-    mmio_req.setPhys(paddr, size, Request::UNCACHEABLE, dataMasterId());
+    Request mmio_req(paddr, size, Request::UNCACHEABLE, dataMasterId());
+    mmio_req.setThreadContext(tc->contextId(), 0);
     // Some architectures do need to massage physical addresses a bit
     // before they are inserted into the memory system. This enables
     // APIC accesses on x86 and m5ops where supported through a MMIO

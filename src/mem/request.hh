@@ -198,6 +198,28 @@ class Request
         VALID_CONTEXT_ID | VALID_THREAD_ID;
 
   private:
+
+    /**
+     * Set up a physical (e.g. device) request in a previously
+     * allocated Request object.
+     */
+    void
+    setPhys(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
+    {
+        assert(size >= 0);
+        _paddr = paddr;
+        _size = size;
+        _time = time;
+        _masterId = mid;
+        _flags.clear(~STICKY_FLAGS);
+        _flags.set(flags);
+        privateFlags.clear(~STICKY_PRIVATE_FLAGS);
+        privateFlags.set(VALID_PADDR|VALID_SIZE);
+        depth = 0;
+        accessDelta = 0;
+        //translateDelta = 0;
+    }
+
     /**
      * The physical address of the request. Valid only if validPaddr
      * is set.
@@ -209,7 +231,7 @@ class Request
      * paddr is written via setVirt() or setPhys(), so it is always
      * valid as long as one of the address fields is valid.
      */
-    int _size;
+    unsigned _size;
 
     /** The requestor ID which is unique in the system for all ports
      * that are capable of issuing a transaction
@@ -254,9 +276,11 @@ class Request
     Addr _pc;
 
   public:
-    /** Minimal constructor.  No fields are initialized. 
-     *  (Note that _flags and privateFlags are cleared by Flags
-     *  default constructor.)
+
+    /**
+     * Minimal constructor. No fields are initialized. (Note that
+     *  _flags and privateFlags are cleared by Flags default
+     *  constructor.)
      */
     Request()
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
@@ -268,18 +292,18 @@ class Request
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
      * just physical address, size, flags, and timestamp (to curTick()).
-     * These fields are adequate to perform a request. 
+     * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, int size, Flags flags, MasterID mid)
+    Request(Addr paddr, unsigned size, Flags flags, MasterID mid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
           translateDelta(0), accessDelta(0), depth(0)
     {
-        setPhys(paddr, size, flags, mid);
+        setPhys(paddr, size, flags, mid, curTick());
     }
 
-    Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time)
+    Request(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
@@ -288,7 +312,8 @@ class Request
         setPhys(paddr, size, flags, mid, time);
     }
 
-    Request(Addr paddr, int size, Flags flags, MasterID mid, Tick time, Addr pc)
+    Request(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time,
+            Addr pc)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
@@ -299,7 +324,8 @@ class Request
         _pc = pc;
     }
 
-    Request(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc,
+    Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
+            Addr pc,
             int cid, ThreadID tid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
@@ -324,38 +350,12 @@ class Request
     }
 
     /**
-     * Set up a physical (e.g. device) request in a previously
-     * allocated Request object.
-     */
-    void
-    setPhys(Addr paddr, int size, Flags flags, MasterID mid, Tick time)
-    {
-        assert(size >= 0);
-        _paddr = paddr;
-        _size = size;
-        _time = time;
-        _masterId = mid;
-        _flags.clear(~STICKY_FLAGS);
-        _flags.set(flags);
-        privateFlags.clear(~STICKY_PRIVATE_FLAGS);
-        privateFlags.set(VALID_PADDR|VALID_SIZE);
-        depth = 0;
-        accessDelta = 0;
-        //translateDelta = 0;
-    }
-
-    void
-    setPhys(Addr paddr, int size, Flags flags, MasterID mid)
-    {
-        setPhys(paddr, size, flags, mid, curTick());
-    }
-
-    /**
      * Set up a virtual (e.g., CPU) request in a previously
      * allocated Request object.
      */
     void
-    setVirt(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc)
+    setVirt(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
+            Addr pc)
     {
         assert(size >= 0);
         _asid = asid;
@@ -397,10 +397,8 @@ class Request
         assert(privateFlags.isSet(VALID_VADDR));
         assert(privateFlags.noneSet(VALID_PADDR));
         assert(split_addr > _vaddr && split_addr < _vaddr + _size);
-        req1 = new Request;
-        *req1 = *this;
-        req2 = new Request;
-        *req2 = *this;
+        req1 = new Request(*this);
+        req2 = new Request(*this);
         req1->_size = split_addr - _vaddr;
         req2->_vaddr = split_addr;
         req2->_size = _size - req1->_size;

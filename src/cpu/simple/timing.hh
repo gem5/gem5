@@ -137,7 +137,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     void translationFault(const Fault &fault);
 
-    void buildPacket(PacketPtr &pkt, RequestPtr req, bool read);
+    PacketPtr buildPacket(RequestPtr req, bool read);
     void buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
             RequestPtr req1, RequestPtr req2, RequestPtr req,
             uint8_t *data, bool read);

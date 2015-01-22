@@ -234,9 +234,6 @@ class X86KvmCPU : public BaseKvmCPU
      */
     void handleIOMiscReg32(int miscreg);
 
-    /** Reusable IO request */
-    Request io_req;
-
     /** Cached intersection of supported MSRs */
     mutable Kvm::MSRIndexVector cachedMsrIntersection;
 
