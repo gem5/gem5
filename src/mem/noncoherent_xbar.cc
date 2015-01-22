@@ -127,11 +127,13 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
-    // set the source port for routing of the response
-    pkt->setSrc(slave_port_id);
-
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->lastWordDelay + curTick();
+
+    // before forwarding the packet (and possibly altering it),
+    // remember if we are expecting a response
+    const bool expect_response = pkt->needsResponse() &&
+        !pkt->memInhibitAsserted();
 
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
@@ -153,6 +155,12 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         return false;
     }
 
+    // remember where to route the response to
+    if (expect_response) {
+        assert(routeTo.find(pkt->req) == routeTo.end());
+        routeTo[pkt->req] = slave_port_id;
+    }
+
     reqLayers[master_port_id]->succeededTiming(packetFinishTime);
 
     // stats updates
@@ -169,8 +177,10 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // determine the source port based on the id
     MasterPort *src_port = masterPorts[master_port_id];
 
-    // determine the destination based on what is stored in the packet
-    PortID slave_port_id = pkt->getDest();
+    // determine the destination
+    const auto route_lookup = routeTo.find(pkt->req);
+    assert(route_lookup != routeTo.end());
+    const PortID slave_port_id = route_lookup->second;
     assert(slave_port_id != InvalidPortID);
     assert(slave_port_id < respLayers.size());
 
@@ -199,6 +209,9 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // currently it is illegal to block responses... can lead to
     // deadlock
     assert(success);
+
+    // remove the request from the routing table
+    routeTo.erase(route_lookup);
 
     respLayers[slave_port_id]->succeededTiming(packetFinishTime);
 

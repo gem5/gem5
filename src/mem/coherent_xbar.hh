@@ -51,7 +51,6 @@
 #ifndef __MEM_COHERENT_XBAR_HH__
 #define __MEM_COHERENT_XBAR_HH__
 
-#include "base/hashmap.hh"
 #include "mem/snoop_filter.hh"
 #include "mem/xbar.hh"
 #include "params/CoherentXBar.hh"
@@ -259,11 +258,11 @@ class CoherentXBar : public BaseXBar
     std::vector<SlavePort*> snoopPorts;
 
     /**
-     * Store the outstanding requests so we can determine which ones
-     * we generated and which ones were merely forwarded. This is used
-     * in the coherent crossbar when coherency responses come back.
+     * Store the outstanding requests that we are expecting snoop
+     * responses from so we can determine which snoop responses we
+     * generated and which ones were merely forwarded.
      */
-    m5::hash_set<RequestPtr> outstandingReq;
+    m5::hash_set<RequestPtr> outstandingSnoop;
 
     /**
      * Keep a pointer to the system to be allow to querying memory system

@@ -54,6 +54,7 @@
 #include <deque>
 
 #include "base/addr_range_map.hh"
+#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "params/BaseXBar.hh"
@@ -246,6 +247,14 @@ class BaseXBar : public MemObject
     const uint32_t width;
 
     AddrRangeMap<PortID> portMap;
+
+    /**
+     * Remember where request packets came from so that we can route
+     * responses to the appropriate port. This relies on the fact that
+     * the underlying Request pointer inside the Packet stays
+     * constant.
+     */
+    m5::unordered_map<RequestPtr, PortID> routeTo;
 
     /** all contigous ranges seen by this crossbar */
     AddrRangeList xbarRanges;

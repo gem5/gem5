@@ -142,6 +142,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // remember if the packet is an express snoop
     bool is_express_snoop = pkt->isExpressSnoop();
+    bool is_inhibited = pkt->memInhibitAsserted();
+    // for normal requests, going downstream, the express snoop flag
+    // and the inhibited flag should always be the same
+    assert(is_express_snoop == is_inhibited);
 
     // determine the destination based on the address
     PortID master_port_id = findPort(pkt->getAddr());
@@ -162,9 +166,6 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // forwarding the packet
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
-
-    // set the source port for routing of the response
-    pkt->setSrc(slave_port_id);
 
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->lastWordDelay + curTick();
@@ -187,21 +188,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         }
     }
 
-    // remember if we add an outstanding req so we can undo it if
-    // necessary, if the packet needs a response, we should add it
-    // as outstanding and express snoops never fail so there is
-    // not need to worry about them
-    bool add_outstanding = !is_express_snoop && pkt->needsResponse();
-
-    // keep track that we have an outstanding request packet
-    // matching this request, this is used by the coherency
-    // mechanism in determining what to do with snoop responses
-    // (in recvTimingSnoop)
-    if (add_outstanding) {
-        // we should never have an exsiting request outstanding
-        assert(outstandingReq.find(pkt->req) == outstandingReq.end());
-        outstandingReq.insert(pkt->req);
-    }
+    // remember if the packet will generate a snoop response
+    const bool expect_snoop_resp = !is_inhibited && pkt->memInhibitAsserted();
+    const bool expect_response = pkt->needsResponse() &&
+        !pkt->memInhibitAsserted();
 
     // Note: Cannot create a copy of the full packet, here.
     MemCmd orig_cmd(pkt->cmd);
@@ -224,41 +214,58 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         pkt->cmd = tmp_cmd;
     }
 
-    // if this is an express snoop, we are done at this point
-    if (is_express_snoop) {
-        assert(success);
-        snoops++;
+    // check if we were successful in sending the packet onwards
+    if (!success)  {
+        // express snoops and inhibited packets should never be forced
+        // to retry
+        assert(!is_express_snoop);
+        assert(!pkt->memInhibitAsserted());
+
+        // undo the calculation so we can check for 0 again
+        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+
+        DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
+
+        // update the layer state and schedule an idle event
+        reqLayers[master_port_id]->failedTiming(src_port,
+                                                clockEdge(headerCycles));
     } else {
-        // for normal requests, check if successful
-        if (!success)  {
-            // inhibited packets should never be forced to retry
-            assert(!pkt->memInhibitAsserted());
+        // express snoops currently bypass the crossbar state entirely
+        if (!is_express_snoop) {
+            // if this particular request will generate a snoop
+            // response
+            if (expect_snoop_resp) {
+                // we should never have an exsiting request outstanding
+                assert(outstandingSnoop.find(pkt->req) ==
+                       outstandingSnoop.end());
+                outstandingSnoop.insert(pkt->req);
 
-            // if it was added as outstanding and the send failed, then
-            // erase it again
-            if (add_outstanding)
-                outstandingReq.erase(pkt->req);
+                // basic sanity check on the outstanding snoops
+                panic_if(outstandingSnoop.size() > 512,
+                         "Outstanding snoop requests exceeded 512\n");
+            }
 
-            // undo the calculation so we can check for 0 again
-            pkt->firstWordDelay = pkt->lastWordDelay = 0;
+            // remember where to route the normal response to
+            if (expect_response || expect_snoop_resp) {
+                assert(routeTo.find(pkt->req) == routeTo.end());
+                routeTo[pkt->req] = slave_port_id;
 
-            DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
-                    src_port->name(), pkt->cmdString(), pkt->getAddr());
+                panic_if(routeTo.size() > 512,
+                         "Routing table exceeds 512 packets\n");
+            }
 
-            // update the layer state and schedule an idle event
-            reqLayers[master_port_id]->failedTiming(src_port,
-                                                    clockEdge(headerCycles));
-        } else {
             // update the layer state and schedule an idle event
             reqLayers[master_port_id]->succeededTiming(packetFinishTime);
         }
-    }
 
-    // stats updates only consider packets that were successfully sent
-    if (success) {
+        // stats updates only consider packets that were successfully sent
         pktCount[slave_port_id][master_port_id]++;
         pktSize[slave_port_id][master_port_id] += pkt_size;
         transDist[pkt_cmd]++;
+
+        if (is_express_snoop)
+            snoops++;
     }
 
     return success;
@@ -270,8 +277,10 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // determine the source port based on the id
     MasterPort *src_port = masterPorts[master_port_id];
 
-    // determine the destination based on what is stored in the packet
-    PortID slave_port_id = pkt->getDest();
+    // determine the destination
+    const auto route_lookup = routeTo.find(pkt->req);
+    assert(route_lookup != routeTo.end());
+    const PortID slave_port_id = route_lookup->second;
     assert(slave_port_id != InvalidPortID);
     assert(slave_port_id < respLayers.size());
 
@@ -294,17 +303,10 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     calcPacketTiming(pkt);
     Tick packetFinishTime = pkt->lastWordDelay + curTick();
 
-    // the packet is a normal response to a request that we should
-    // have seen passing through the crossbar
-    assert(outstandingReq.find(pkt->req) != outstandingReq.end());
-
     if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches()) {
         // let the snoop filter inspect the response and update its state
         snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
     }
-
-    // remove it as outstanding
-    outstandingReq.erase(pkt->req);
 
     // send the packet through the destination slave port
     bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);
@@ -312,6 +314,9 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // currently it is illegal to block responses... can lead to
     // deadlock
     assert(success);
+
+    // remove the request from the routing table
+    routeTo.erase(route_lookup);
 
     respLayers[slave_port_id]->succeededTiming(packetFinishTime);
 
@@ -337,8 +342,8 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // we should only see express snoops from caches
     assert(pkt->isExpressSnoop());
 
-    // set the source port for routing of the response
-    pkt->setSrc(master_port_id);
+    // remeber if the packet is inhibited so we can see if it changes
+    const bool is_inhibited = pkt->memInhibitAsserted();
 
     if (snoopFilter) {
         // let the Snoop Filter work its magic and guide probing
@@ -355,6 +360,12 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
         forwardTiming(pkt, InvalidPortID);
     }
 
+    // if we can expect a response, remember how to route it
+    if (!is_inhibited && pkt->memInhibitAsserted()) {
+        assert(routeTo.find(pkt->req) == routeTo.end());
+        routeTo[pkt->req] = master_port_id;
+    }
+
     // a snoop request came from a connected slave device (one of
     // our master ports), and if it is not coming from the slave
     // device responsible for the address range something is
@@ -369,16 +380,18 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // determine the source port based on the id
     SlavePort* src_port = slavePorts[slave_port_id];
 
-    // get the destination from the packet
-    PortID dest_port_id = pkt->getDest();
+    // get the destination
+    const auto route_lookup = routeTo.find(pkt->req);
+    assert(route_lookup != routeTo.end());
+    const PortID dest_port_id = route_lookup->second;
     assert(dest_port_id != InvalidPortID);
 
     // determine if the response is from a snoop request we
     // created as the result of a normal request (in which case it
-    // should be in the outstandingReq), or if we merely forwarded
+    // should be in the outstandingSnoop), or if we merely forwarded
     // someone else's snoop request
-    bool forwardAsSnoop = outstandingReq.find(pkt->req) ==
-        outstandingReq.end();
+    const bool forwardAsSnoop = outstandingSnoop.find(pkt->req) ==
+        outstandingSnoop.end();
 
     // test if the crossbar should be considered occupied for the
     // current port, note that the check is bypassed if the response
@@ -440,13 +453,11 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
         // i.e. from a coherent master connected to the crossbar, and
         // since we created the snoop request as part of recvTiming,
         // this should now be a normal response again
-        outstandingReq.erase(pkt->req);
+        outstandingSnoop.erase(pkt->req);
 
-        // this is a snoop response from a coherent master, with a
-        // destination field set on its way through the crossbar as
-        // request, hence it should never go back to where the snoop
-        // response came from, but instead to where the original
-        // request came from
+        // this is a snoop response from a coherent master, hence it
+        // should never go back to where the snoop response came from,
+        // but instead to where the original request came from
         assert(slave_port_id != dest_port_id);
 
         if (snoopFilter) {
@@ -475,6 +486,9 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 
         respLayers[dest_port_id]->succeededTiming(packetFinishTime);
     }
+
+    // remove the request from the routing table
+    routeTo.erase(route_lookup);
 
     // stats updates
     transDist[pkt_cmd]++;
