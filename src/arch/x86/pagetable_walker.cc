@@ -523,7 +523,6 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             write = oldRead;
             write->set<uint64_t>(pte);
             write->cmd = MemCmd::WriteReq;
-            write->clearDest();
         } else {
             write = NULL;
             delete oldRead->req;

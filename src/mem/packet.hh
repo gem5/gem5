@@ -296,30 +296,6 @@ class Packet : public Printable
     unsigned size;
 
     /**
-     * Source port identifier set on a request packet to enable
-     * appropriate routing of the responses. The source port
-     * identifier is set by any multiplexing component, e.g. a
-     * crossbar, as the timing responses need this information to be
-     * routed back to the appropriate port at a later point in
-     * time. The field can be updated (over-written) as the request
-     * packet passes through additional multiplexing components, and
-     * it is their responsibility to remember the original source port
-     * identifier, for example by using an appropriate sender
-     * state. The latter is done in the cache and bridge.
-     */
-    PortID src;
-
-    /**
-     * Destination port identifier that is present on all response
-     * packets that passed through a multiplexing component as a
-     * request packet. The source port identifier is turned into a
-     * destination port identifier when the packet is turned into a
-     * response, and the destination is used, e.g. by the crossbar, to
-     * select the appropriate path through the interconnect.
-     */
-    PortID dest;
-
-    /**
      * The original value of the command field.  Only valid when the
      * current command field is an error condition; in that case, the
      * previous contents of the command field are copied here.  This
@@ -547,18 +523,6 @@ class Packet : public Printable
     bool hadBadAddress() const { return cmd == MemCmd::BadAddressError; }
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
-    /// Accessor function to get the source index of the packet.
-    PortID getSrc() const { return src; }
-    /// Accessor function to set the source index of the packet.
-    void setSrc(PortID _src) { src = _src; }
-
-    /// Accessor function for the destination index of the packet.
-    PortID getDest() const { return dest; }
-    /// Accessor function to set the destination index of the packet.
-    void setDest(PortID _dest) { dest = _dest; }
-    /// Reset destination field, e.g. to turn a response into a request again.
-    void clearDest() { dest = InvalidPortID; }
-
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
     /**
      * Update the address of this packet mid-transaction. This is used
@@ -609,8 +573,7 @@ class Packet : public Printable
      */
     Packet(const RequestPtr _req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           size(0), src(InvalidPortID), dest(InvalidPortID),
-           bytesValidStart(0), bytesValidEnd(0),
+           size(0), bytesValidStart(0), bytesValidEnd(0),
            firstWordDelay(0), lastWordDelay(0),
            senderState(NULL)
     {
@@ -632,7 +595,6 @@ class Packet : public Printable
      */
     Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
            firstWordDelay(0), lastWordDelay(0),
            senderState(NULL)
@@ -657,7 +619,6 @@ class Packet : public Printable
         :  cmd(pkt->cmd), req(pkt->req),
            data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
-           src(pkt->src), dest(pkt->dest),
            bytesValidStart(pkt->bytesValidStart),
            bytesValidEnd(pkt->bytesValidEnd),
            firstWordDelay(pkt->firstWordDelay),
@@ -743,10 +704,7 @@ class Packet : public Printable
 
     /**
      * Take a request packet and modify it in place to be suitable for
-     * returning as a response to that request. The source field is
-     * turned into the destination, and subsequently cleared. Note
-     * that the latter is not necessary for atomic requests, but
-     * causes no harm as neither field is valid.
+     * returning as a response to that request.
      */
     void
     makeResponse()
@@ -759,9 +717,6 @@ class Packet : public Printable
         // responses are never express, even if the snoop that
         // triggered them was
         flags.clear(EXPRESS_SNOOP);
-
-        dest = src;
-        src = InvalidPortID;
     }
 
     void
