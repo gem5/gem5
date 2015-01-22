@@ -207,15 +207,6 @@ Bridge::BridgeSlavePort::retryStalledReq()
 void
 Bridge::BridgeMasterPort::schedTimingReq(PacketPtr pkt, Tick when)
 {
-    // If we expect to see a response, we need to restore the source
-    // and destination field that is potentially changed by a second
-    // crossbar
-    if (!pkt->memInhibitAsserted() && pkt->needsResponse()) {
-        // Update the sender state so we can deal with the response
-        // appropriately
-        pkt->pushSenderState(new RequestState(pkt->getSrc()));
-    }
-
     // If we're about to put this packet at the head of the queue, we
     // need to schedule an event to do the transmit.  Otherwise there
     // should already be an event scheduled for sending the head
@@ -233,19 +224,6 @@ Bridge::BridgeMasterPort::schedTimingReq(PacketPtr pkt, Tick when)
 void
 Bridge::BridgeSlavePort::schedTimingResp(PacketPtr pkt, Tick when)
 {
-    // This is a response for a request we forwarded earlier.  The
-    // corresponding request state should be stored in the packet's
-    // senderState field.
-    RequestState *req_state =
-        dynamic_cast<RequestState*>(pkt->popSenderState());
-    assert(req_state != NULL);
-    pkt->setDest(req_state->origSrc);
-    delete req_state;
-
-    // the bridge sets the destination irrespective of it is valid or
-    // not, as it is checked in the crossbar
-    DPRINTF(Bridge, "response, new dest %d\n", pkt->getDest());
-
     // If we're about to put this packet at the head of the queue, we
     // need to schedule an event to do the transmit.  Otherwise there
     // should already be an event scheduled for sending the head

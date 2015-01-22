@@ -75,23 +75,6 @@ class Bridge : public MemObject
   protected:
 
     /**
-     * A bridge request state stores packets along with their sender
-     * state and original source. It has enough information to also
-     * restore the response once it comes back to the bridge.
-     */
-    class RequestState : public Packet::SenderState
-    {
-
-      public:
-
-        const PortID origSrc;
-
-        RequestState(PortID orig_src) : origSrc(orig_src)
-        { }
-
-    };
-
-    /**
      * A deferred packet stores a packet along with its scheduled
      * transmission time
      */
