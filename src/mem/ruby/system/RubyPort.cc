@@ -180,17 +180,17 @@ bool RubyPort::MemMasterPort::recvTimingResp(PacketPtr pkt)
     // got a response from a device
     assert(pkt->isResponse());
 
-    // In FS mode, ruby memory will receive pio responses from devices
-    // and it must forward these responses back to the particular CPU.
-    DPRINTF(RubyPort,  "Pio response for address %#x, going to %d\n",
-            pkt->getAddr(), pkt->getDest());
-
     // First we must retrieve the request port from the sender State
     RubyPort::SenderState *senderState =
         safe_cast<RubyPort::SenderState *>(pkt->popSenderState());
     MemSlavePort *port = senderState->port;
     assert(port != NULL);
     delete senderState;
+
+    // In FS mode, ruby memory will receive pio responses from devices
+    // and it must forward these responses back to the particular CPU.
+    DPRINTF(RubyPort,  "Pio response for address %#x, going to %s\n",
+            pkt->getAddr(), port->name());
 
     // attempt to send the response in the next cycle
     port->schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
@@ -246,9 +246,6 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         return true;
     }
 
-    // Save the port id to be used later to route the response
-    pkt->setSrc(id);
-
     assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
            RubySystem::getBlockSizeBytes());
 
@@ -259,6 +256,10 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     // Otherwise, we need to tell the port to retry at a later point
     // and return false.
     if (requestStatus == RequestStatus_Issued) {
+        // Save the port in the sender state object to be used later to
+        // route the response
+        pkt->pushSenderState(new SenderState(this));
+
         DPRINTF(RubyPort, "Request %s 0x%x issued\n", pkt->cmdString(),
                 pkt->getAddr());
         return true;
@@ -343,11 +344,14 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
     assert(system->isMemAddr(pkt->getAddr()));
     assert(pkt->isRequest());
 
-    // As it has not yet been turned around, the source field tells us
-    // which port it came from.
-    assert(pkt->getSrc() < slave_ports.size());
+    // First we must retrieve the request port from the sender State
+    RubyPort::SenderState *senderState =
+        safe_cast<RubyPort::SenderState *>(pkt->popSenderState());
+    MemSlavePort *port = senderState->port;
+    assert(port != NULL);
+    delete senderState;
 
-    slave_ports[pkt->getSrc()]->hitCallback(pkt);
+    port->hitCallback(pkt);
 
     //
     // If we had to stall the MemSlavePorts, wake them up because the sequencer

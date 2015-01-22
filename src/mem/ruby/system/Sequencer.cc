@@ -547,6 +547,8 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // subBlock with the recieved data.  The tester will later access
     // this state.
     if (m_usingRubyTester) {
+        DPRINTF(RubySequencer, "hitCallback %s 0x%x using RubyTester\n",
+                pkt->cmdString(), pkt->getAddr());
         RubyTester::SenderState* testerSenderState =
             pkt->findNextSenderState<RubyTester::SenderState>();
         assert(testerSenderState);
