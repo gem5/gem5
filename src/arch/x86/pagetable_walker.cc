@@ -124,8 +124,10 @@ Walker::recvTimingResp(PacketPtr pkt)
         delete senderWalk;
         // Since we block requests when another is outstanding, we
         // need to check if there is a waiting request to be serviced
-        if (currStates.size())
-            startWalkWrapper();
+        if (currStates.size() && !startWalkWrapperEvent.scheduled())
+            // delay sending any new requests until we are finished
+            // with the responses
+            schedule(startWalkWrapperEvent, clockEdge());
     }
     return true;
 }
