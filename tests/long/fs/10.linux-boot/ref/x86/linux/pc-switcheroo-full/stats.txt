@@ -4,11 +4,11 @@ sim_seconds                                  5.144107                       # Nu
 sim_ticks                                5144107123500                       # Number of ticks simulated
 final_tick                               5144107123500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 180241                       # Simulator instruction rate (inst/s)
-host_op_rate                                   358324                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             3805676977                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1000324                       # Number of bytes of host memory used
-host_seconds                                  1351.69                       # Real time elapsed on the host
+host_inst_rate                                 387693                       # Simulator instruction rate (inst/s)
+host_op_rate                                   770744                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8185899527                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 958064                       # Number of bytes of host memory used
+host_seconds                                   628.41                       # Real time elapsed on the host
 sim_insts                                   243630211                       # Number of instructions simulated
 sim_ops                                     484343866                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1843,7 +1843,7 @@ system.toL2Bus.snoop_fanout::overflows              0      0.00%    100.00% # Re
 system.toL2Bus.snoop_fanout::min_value              3                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::max_value              4                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::total            4256875                       # Request fanout histogram
-system.toL2Bus.reqLayer0.occupancy         5306720328                       # Layer occupancy (ticks)
+system.toL2Bus.reqLayer0.occupancy         5306709352                       # Layer occupancy (ticks)
 system.toL2Bus.reqLayer0.utilization              0.1                       # Layer utilization (%)
 system.toL2Bus.snoopLayer0.occupancy           945000                       # Layer occupancy (ticks)
 system.toL2Bus.snoopLayer0.utilization            0.0                       # Layer utilization (%)
