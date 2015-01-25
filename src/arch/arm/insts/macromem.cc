@@ -220,6 +220,7 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
 
     --uop;
     (*uop)->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 
     /* Take the control flags from the last microop for the macroop */
     if ((*uop)->isControl())
@@ -335,6 +336,7 @@ PairMemOp::PairMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
 
     assert(uop == &microOps[numMicroops]);
     (*--uop)->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 
     for (StaticInstPtr *curUop = microOps;
             !(*curUop)->isLastMicroop(); curUop++) {
@@ -360,6 +362,7 @@ BigFpMemImmOp::BigFpMemImmOp(const char *mnem, ExtMachInst machInst,
         *++uop = new MicroStrQTFpXImmUop(machInst, dest, base, imm);
     }
     (*uop)->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 }
 
 BigFpMemPostOp::BigFpMemPostOp(const char *mnem, ExtMachInst machInst,
@@ -380,6 +383,7 @@ BigFpMemPostOp::BigFpMemPostOp(const char *mnem, ExtMachInst machInst,
     }
     *uop = new MicroAddXiUop(machInst, base, base, imm);
     (*uop)->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 
     for (StaticInstPtr *curUop = microOps;
             !(*curUop)->isLastMicroop(); curUop++) {
@@ -405,6 +409,7 @@ BigFpMemPreOp::BigFpMemPreOp(const char *mnem, ExtMachInst machInst,
     }
     *uop = new MicroAddXiUop(machInst, base, base, imm);
     (*uop)->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 
     for (StaticInstPtr *curUop = microOps;
             !(*curUop)->isLastMicroop(); curUop++) {
@@ -435,6 +440,7 @@ BigFpMemRegOp::BigFpMemRegOp(const char *mnem, ExtMachInst machInst,
     }
 
     (*uop)->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 }
 
 BigFpMemLitOp::BigFpMemLitOp(const char *mnem, ExtMachInst machInst,
@@ -447,6 +453,7 @@ BigFpMemLitOp::BigFpMemLitOp(const char *mnem, ExtMachInst machInst,
 
     microOps[0] = new MicroLdFp16LitUop(machInst, dest, imm);
     microOps[0]->setLastMicroop();
+    microOps[0]->setFirstMicroop();
 }
 
 VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
@@ -540,6 +547,7 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
         assert(uopPtr);
         uopPtr->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -807,6 +815,7 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
         assert(uopPtr);
         uopPtr->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -901,6 +910,7 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
         assert(uopPtr);
         uopPtr->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
@@ -1103,6 +1113,7 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
         assert(uopPtr);
         uopPtr->setDelayedCommit();
     }
+    microOps[0]->setFirstMicroop();
     microOps[numMicroops - 1]->setLastMicroop();
 }
 

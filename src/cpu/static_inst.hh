@@ -171,6 +171,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     bool isMicroBranch() const { return flags[IsMicroBranch]; }
     //@}
 
+    void setFirstMicroop() { flags[IsFirstMicroop] = true; }
     void setLastMicroop() { flags[IsLastMicroop] = true; }
     void setDelayedCommit() { flags[IsDelayedCommit] = true; }
     void setFlag(Flags f) { flags[f] = true; }

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010, 2012 ARM Limited
+// Copyright (c) 2010, 2012, 2014 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -883,6 +883,7 @@ def template RfeConstructor {{
 #if %(use_pc)d
         uops[++uopIdx] = new %(pc_decl)s;
 #endif
+        uops[0]->setFirstMicroop();
         uops[uopIdx]->setLastMicroop();
 #endif
     }
@@ -905,6 +906,7 @@ def template SrsConstructor {{
         uops = new StaticInstPtr[numMicroops];
         uops[0] = new %(acc_name)s(machInst, _regMode, _mode, _wb);
         uops[0]->setDelayedCommit();
+        uops[0]->setFirstMicroop();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
 #endif
@@ -944,6 +946,7 @@ def template LoadStoreDImmConstructor {{
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
         uops[0] = new %(acc_name)s(machInst, _dest, _dest2, _base, _add, _imm);
+        uops[0]->setFirstMicroop();
         uops[0]->setDelayedCommit();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
@@ -972,6 +975,7 @@ def template StoreExDImmConstructor {{
         uops[0] = new %(acc_name)s(machInst, _result, _dest, _dest2,
                                    _base, _add, _imm);
         uops[0]->setDelayedCommit();
+        uops[0]->setFirstMicroop();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
 #endif
@@ -995,6 +999,7 @@ def template LoadStoreImmConstructor {{
         uops = new StaticInstPtr[numMicroops];
         uops[0] = new %(acc_name)s(machInst, _dest, _base, _add, _imm);
         uops[0]->setDelayedCommit();
+        uops[0]->setFirstMicroop();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
 #endif
@@ -1021,6 +1026,7 @@ def template StoreExImmConstructor {{
         uops[0] = new %(acc_name)s(machInst, _result, _dest,
                                    _base, _add, _imm);
         uops[0]->setDelayedCommit();
+        uops[0]->setFirstMicroop();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
 #endif
@@ -1049,6 +1055,7 @@ def template StoreDRegConstructor {{
         uops[0] = new %(acc_name)s(machInst, _dest, _dest2, _base, _add,
                                    _shiftAmt, _shiftType, _index);
         uops[0]->setDelayedCommit();
+        uops[0]->setFirstMicroop();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
 #endif
@@ -1076,6 +1083,7 @@ def template StoreRegConstructor {{
         uops[0] = new %(acc_name)s(machInst, _dest, _base, _add,
                                    _shiftAmt, _shiftType, _index);
         uops[0]->setDelayedCommit();
+        uops[0]->setFirstMicroop();
         uops[1] = new %(wb_decl)s;
         uops[1]->setLastMicroop();
 #endif
@@ -1105,6 +1113,7 @@ def template LoadDRegConstructor {{
             IntRegIndex wbIndexReg = INTREG_UREG0;
             uops[0] = new MicroUopRegMov(machInst, INTREG_UREG0, _index);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(acc_name)s(machInst, _dest, _dest2, _base, _add,
                                        _shiftAmt, _shiftType, _index);
             uops[1]->setDelayedCommit();
@@ -1115,6 +1124,7 @@ def template LoadDRegConstructor {{
             uops[0] = new %(acc_name)s(machInst, _dest, _dest2, _base, _add,
                                        _shiftAmt, _shiftType, _index);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(wb_decl)s;
             uops[1]->setLastMicroop();
         }
@@ -1147,6 +1157,7 @@ def template LoadRegConstructor {{
             uops[0] = new %(acc_name)s(machInst, INTREG_UREG0, _base, _add,
                                        _shiftAmt, _shiftType, _index);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(wb_decl)s;
             uops[1]->setDelayedCommit();
             uops[2] = new MicroUopRegMov(machInst, INTREG_PC, INTREG_UREG0);
@@ -1161,6 +1172,7 @@ def template LoadRegConstructor {{
             IntRegIndex wbIndexReg = INTREG_UREG0;
             uops[0] = new MicroUopRegMov(machInst, INTREG_UREG0, _index);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(acc_name)s(machInst, _dest, _base, _add,
                                       _shiftAmt, _shiftType, _index);
             uops[1]->setDelayedCommit();
@@ -1171,6 +1183,7 @@ def template LoadRegConstructor {{
             uops[0] = new %(acc_name)s(machInst, _dest, _base, _add,
                                       _shiftAmt, _shiftType, _index);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(wb_decl)s;
             uops[1]->setLastMicroop();
 
@@ -1209,6 +1222,7 @@ def template LoadImmConstructor {{
             uops[0] = new %(acc_name)s(machInst, INTREG_UREG0, _base, _add,
                                    _imm);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(wb_decl)s;
             uops[1]->setDelayedCommit();
             uops[2] = new MicroUopRegMov(machInst, INTREG_PC, INTREG_UREG0);
@@ -1233,6 +1247,7 @@ def template LoadImmConstructor {{
         } else {
             uops[0] = new %(acc_name)s(machInst, _dest, _base, _add, _imm);
             uops[0]->setDelayedCommit();
+            uops[0]->setFirstMicroop();
             uops[1] = new %(wb_decl)s;
             uops[1]->setLastMicroop();
         }
