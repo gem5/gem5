@@ -917,9 +917,8 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
         }
     }
 
-    if (traceData) {
-        traceData->setAddr(addr);
-    }
+    if (traceData)
+        traceData->setMem(addr, size, flags);
 
     return fault;
 }
@@ -929,9 +928,8 @@ Fault
 BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
                             Addr addr, unsigned flags, uint64_t *res)
 {
-    if (traceData) {
-        traceData->setAddr(addr);
-    }
+    if (traceData)
+        traceData->setMem(addr, size, flags);
 
     instFlags[ReqMade] = true;
     Request *req = NULL;

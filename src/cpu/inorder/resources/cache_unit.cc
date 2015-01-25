@@ -425,7 +425,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
     inst->totalSize = size;
 
     if (inst->traceData) {
-        inst->traceData->setAddr(addr);
+        inst->traceData->setMem(addr, size, flags);
     }
 
     if (inst->split2ndAccess) {     
@@ -519,9 +519,8 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
     int fullSize = size;
     inst->totalSize = size;
 
-    if (inst->traceData) {
-        inst->traceData->setAddr(addr);
-    }
+    if (inst->traceData)
+        inst->traceData->setMem(addr, size, flags);
 
     if (inst->split2ndAccess) {     
         size = inst->split2ndSize;

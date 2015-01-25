@@ -1499,7 +1499,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
     }
 
     if (inst->traceData)
-        inst->traceData->setAddr(addr);
+        inst->traceData->setMem(addr, size, flags);
 
     request->request.setThreadContext(cpu.cpuId(), /* thread id */ 0);
     request->request.setVirt(0 /* asid */,

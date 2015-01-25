@@ -402,9 +402,8 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Read;
 
-    if (traceData) {
-        traceData->setAddr(addr);
-    }
+    if (traceData)
+        traceData->setMem(addr, size, flags);
 
     RequestPtr req  = new Request(asid, addr, size,
                                   flags, dataMasterId(), pc, _cpuId, tid);
@@ -479,9 +478,8 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
         memcpy(newData, data, size);
     }
 
-    if (traceData) {
-        traceData->setAddr(addr);
-    }
+    if (traceData)
+        traceData->setMem(addr, size, flags);
 
     RequestPtr req = new Request(asid, addr, size,
                                  flags, dataMasterId(), pc, _cpuId, tid);
