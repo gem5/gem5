@@ -255,9 +255,6 @@ class ThreadContext
 
     virtual void setStCondFailures(unsigned sc_failures) = 0;
 
-    // Only really makes sense for old CPU model.  Still could be useful though.
-    virtual bool misspeculating() = 0;
-
     // Same with st cond failures.
     virtual Counter readFuncExeInst() = 0;
 
@@ -461,9 +458,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setStCondFailures(unsigned sc_failures)
     { actualTC->setStCondFailures(sc_failures); }
-
-    // @todo: Fix this!
-    bool misspeculating() { return actualTC->misspeculating(); }
 
     void syscall(int64_t callnum)
     { actualTC->syscall(callnum); }

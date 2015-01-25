@@ -71,9 +71,6 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
 
     outs << thread->getCpuPtr()->name() << " ";
 
-    if (Debug::ExecSpeculative)
-        outs << (misspeculating ? "-" : "+") << " ";
-
     if (Debug::ExecAsid)
         outs << "A" << dec << TheISA::getExecutingAsid(thread) << " ";
 

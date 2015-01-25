@@ -310,9 +310,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setStCondFailures(sc_failures);
     }
 
-    // @todo: Fix this!
-    bool misspeculating() { return actualTC->misspeculating(); }
-
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 
     uint64_t readIntRegFlat(int idx)

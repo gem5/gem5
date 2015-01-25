@@ -220,8 +220,6 @@ class SimpleThread : public ThreadState
     /// Set the status to Halted.
     void halt();
 
-    virtual bool misspeculating();
-
     void copyArchRegs(ThreadContext *tc);
 
     void clearArchRegs()
@@ -454,12 +452,5 @@ class SimpleThread : public ThreadState
 #endif
 };
 
-
-// for non-speculative execution context, spec_mode is always false
-inline bool
-SimpleThread::misspeculating()
-{
-    return false;
-}
 
 #endif // __CPU_CPU_EXEC_CONTEXT_HH__

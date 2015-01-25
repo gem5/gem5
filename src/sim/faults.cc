@@ -43,7 +43,6 @@ void FaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
         DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
-        assert(!tc->misspeculating());
     } else {
         panic("fault (%s) detected @ PC %s", name(), tc->pcState());
     }

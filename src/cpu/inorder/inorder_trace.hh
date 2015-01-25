@@ -47,8 +47,8 @@ class InOrderTraceRecord : public ExeTracerRecord
 {
   public:
     InOrderTraceRecord(unsigned num_stages, bool _stage_tracing,
-           ThreadContext *_thread, TheISA::PCState _pc, bool spec = false)
-        : ExeTracerRecord(0, _thread, NULL, _pc, spec)
+           ThreadContext *_thread, TheISA::PCState _pc)
+        : ExeTracerRecord(0, _thread, NULL, _pc)
     {
         stageTrace = _stage_tracing;
         stageCycle.resize(num_stages);

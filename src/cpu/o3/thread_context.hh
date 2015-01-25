@@ -257,14 +257,6 @@ class O3ThreadContext : public ThreadContext
     virtual void setStCondFailures(unsigned sc_failures)
     { thread->storeCondFailures = sc_failures; }
 
-    // Only really makes sense for old CPU model.  Lots of code
-    // outside the CPU still checks this function, so it will
-    // always return false to keep everything working.
-    /** Checks if the thread is misspeculating.  Because it is
-     * very difficult to determine if the thread is
-     * misspeculating, this is set as false. */
-    virtual bool misspeculating() { return false; }
-
     /** Executes a syscall in SE mode. */
     virtual void syscall(int64_t callnum)
     { return cpu->syscall(callnum, thread->threadId()); }

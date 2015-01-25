@@ -56,7 +56,6 @@ class InstRecord
     StaticInstPtr staticInst;
     TheISA::PCState pc;
     StaticInstPtr macroStaticInst;
-    bool misspeculating;
     bool predicate;
 
     // The remaining fields are only valid for particular instruction
@@ -89,12 +88,12 @@ class InstRecord
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst,
-               TheISA::PCState _pc, bool spec,
+               TheISA::PCState _pc,
                const StaticInstPtr _macroStaticInst = NULL)
         : when(_when), thread(_thread),
           staticInst(_staticInst), pc(_pc),
           macroStaticInst(_macroStaticInst),
-          misspeculating(spec), predicate(true), addr(0), addr_valid(false),
+          predicate(true), addr(0), addr_valid(false),
           data_status(DataInvalid),
           fetch_seq(0), fetch_seq_valid(false), cp_seq(0), cp_seq_valid(false)
     {
@@ -136,7 +135,6 @@ class InstRecord
     StaticInstPtr getStaticInst() { return staticInst; }
     TheISA::PCState getPCState() { return pc; }
     StaticInstPtr getMacroStaticInst() { return macroStaticInst; }
-    bool getMisspeculating() { return misspeculating; }
 
     Addr getAddr() { return addr; }
     bool getAddrValid() { return addr_valid; }

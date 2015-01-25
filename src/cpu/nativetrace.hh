@@ -56,9 +56,8 @@ class NativeTraceRecord : public ExeTracerRecord
     NativeTraceRecord(NativeTrace * _parent,
                Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst, TheISA::PCState _pc,
-               bool spec, const StaticInstPtr _macroStaticInst = NULL)
-        : ExeTracerRecord(_when, _thread, _staticInst, _pc, spec,
-                _macroStaticInst),
+               const StaticInstPtr _macroStaticInst = NULL)
+        : ExeTracerRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
         parent(_parent)
     {
     }
@@ -83,11 +82,8 @@ class NativeTrace : public ExeTracer
             const StaticInstPtr staticInst, TheISA::PCState pc,
             const StaticInstPtr macroStaticInst = NULL)
     {
-        if (tc->misspeculating())
-            return NULL;
-
         return new NativeTraceRecord(this, when, tc,
-                staticInst, pc, tc->misspeculating(), macroStaticInst);
+                staticInst, pc, macroStaticInst);
     }
 
     template<class T>

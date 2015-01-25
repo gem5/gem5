@@ -449,7 +449,6 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
         thread->syscall(callnum);
     }
 
-    bool misspeculating() { return thread->misspeculating(); }
     ThreadContext *tcBase() { return tc; }
 
   private:

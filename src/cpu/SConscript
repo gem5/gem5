@@ -81,7 +81,6 @@ DebugFlag('ExecFetchSeq', 'Format: Fetch sequence number')
 DebugFlag('ExecOpClass', 'Format: Include operand class')
 DebugFlag('ExecRegDelta')
 DebugFlag('ExecResult', 'Format: Include results from execution')
-DebugFlag('ExecSpeculative', 'Format: Include a miss-/speculation flag (-/+)')
 DebugFlag('ExecSymbol', 'Format: Try to include symbol names')
 DebugFlag('ExecThread', 'Format: Include thread ID in trace')
 DebugFlag('ExecTicks', 'Format: Include tick count')
@@ -100,7 +99,7 @@ DebugFlag('Mwait')
 
 CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
     'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
-    'ExecResult', 'ExecSpeculative', 'ExecSymbol', 'ExecThread',
+    'ExecResult', 'ExecSymbol', 'ExecThread',
     'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
     'ExecAsid', 'ExecFlags' ])
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',

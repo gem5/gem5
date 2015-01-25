@@ -37,7 +37,6 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecEnable.hh"
-#include "debug/ExecSpeculative.hh"
 #include "params/IntelTrace.hh"
 #include "sim/insttracer.hh"
 
@@ -48,8 +47,8 @@ class IntelTraceRecord : public InstRecord
   public:
     IntelTraceRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst, TheISA::PCState _pc,
-               bool spec, const StaticInstPtr _macroStaticInst = NULL)
-        : InstRecord(_when, _thread, _staticInst, _pc, spec,
+               const StaticInstPtr _macroStaticInst = NULL)
+        : InstRecord(_when, _thread, _staticInst, _pc,
                 _macroStaticInst)
     {
     }
@@ -75,11 +74,7 @@ class IntelTrace : public InstTracer
         if (!Trace::enabled)
             return NULL;
 
-        if (!Debug::ExecSpeculative && tc->misspeculating())
-            return NULL;
-
-        return new IntelTraceRecord(when, tc,
-                staticInst, pc, tc->misspeculating(), macroStaticInst);
+        return new IntelTraceRecord(when, tc, staticInst, pc, macroStaticInst);
     }
 };
 
