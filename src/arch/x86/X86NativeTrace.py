@@ -28,7 +28,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from NativeTrace import NativeTrace
+from CPUTracers import NativeTrace
 
 class X86NativeTrace(NativeTrace):
     type = 'X86NativeTrace'

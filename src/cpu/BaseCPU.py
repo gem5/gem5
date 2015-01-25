@@ -49,7 +49,7 @@ from m5.proxy import *
 
 from XBar import CoherentXBar
 from InstTracer import InstTracer
-from ExeTracer import ExeTracer
+from CPUTracers import ExeTracer
 from MemObject import MemObject
 from ClockDomain import *
 

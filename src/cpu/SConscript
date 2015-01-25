@@ -38,11 +38,9 @@ if env['TARGET_ISA'] == 'null':
 SimObject('CheckerCPU.py')
 
 SimObject('BaseCPU.py')
+SimObject('CPUTracers.py')
 SimObject('FuncUnit.py')
-SimObject('ExeTracer.py')
-SimObject('IntelTrace.py')
 SimObject('IntrControl.py')
-SimObject('NativeTrace.py')
 SimObject('TimingExpr.py')
 
 Source('activity.cc')
