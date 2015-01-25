@@ -109,8 +109,10 @@ class BaseCPU : public MemObject
 {
   protected:
 
-    // @todo remove me after debugging with legion done
+    /// Instruction count used for SPARC misc register
+    /// @todo unify this with the counters that cpus individually keep
     Tick instCnt;
+
     // every cpu has an id, put it in the base cpu
     // Set at initialization, only time a cpuId might change is during a
     // takeover (which should be done from within the BaseCPU anyway,

@@ -64,10 +64,6 @@ Source('thread_context.cc')
 Source('thread_state.cc')
 Source('timing_expr.cc')
 
-if env['TARGET_ISA'] == 'sparc':
-    SimObject('LegionTrace.py')
-    Source('legiontrace.cc')
-
 SimObject('DummyChecker.py')
 SimObject('StaticInstFlags.py')
 Source('checker/cpu.cc')
