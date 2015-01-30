@@ -286,7 +286,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
         if mdesc.disk().lower().count('android'):
-            boot_flags += " init=/init "
+            cmdline += " init=/init "
         self.boot_osflags = fillInCmdline(mdesc, cmdline)
     self.realview.attachOnChipIO(self.membus, self.bridge)
     self.realview.attachIO(self.iobus)
