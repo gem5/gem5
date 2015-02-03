@@ -465,13 +465,17 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     promoteWholeLineWrites(pkt);
 
     if (pkt->memInhibitAsserted()) {
+        // a cache above us (but not where the packet came from) is
+        // responding to the request
         DPRINTF(Cache, "mem inhibited on 0x%x (%s): not responding\n",
                 pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
         assert(!pkt->req->isUncacheable());
-        // Special tweak for multilevel coherence: snoop downward here
-        // on invalidates since there may be other caches below here
-        // that have shared copies.  Not necessary if we know that
-        // supplier had exclusive copy to begin with.
+
+        // if the packet needs exclusive, and the cache that has
+        // promised to respond (setting the inhibit flag) is not
+        // providing exclusive (it is in O vs M state), we know that
+        // there may be other shared copies in the system; go out and
+        // invalidate them all
         if (pkt->needsExclusive() && !pkt->isSupplyExclusive()) {
             // create a downstream express snoop with cleared packet
             // flags, there is no need to allocate any data as the
@@ -484,21 +488,30 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
             // make this an instantaneous express snoop, and let the
             // other caches in the system know that the packet is
-            // inhibited
+            // inhibited, because we have found the authorative copy
+            // (O) that will supply the right data
             snoop_pkt->setExpressSnoop();
             snoop_pkt->assertMemInhibit();
+
+            // this express snoop travels towards the memory, and at
+            // every crossbar it is snooped upwards thus reaching
+            // every cache in the system
             bool M5_VAR_USED success = memSidePort->sendTimingReq(snoop_pkt);
             // express snoops always succeed
             assert(success);
+
             // main memory will delete the packet
         }
-        // since we're the official target but we aren't responding,
-        // delete the packet now.
 
         /// @todo nominally we should just delete the packet here,
         /// however, until 4-phase stuff we can't because sending
         /// cache is still relying on it
         pendingDelete.push_back(pkt);
+
+        // no need to take any action in this particular cache as the
+        // caches along the path to memory are allowed to keep lines
+        // in a shared state, and a cache above us already committed
+        // to responding
         return true;
     }
 
