@@ -158,11 +158,9 @@ class StdioUI(UserInterface):
         sys.stdout.write(string)
 
 class Verifier(object):
-    def __init__(self, ui, repo=None):
+    def __init__(self, ui, repo):
         self.ui = ui
         self.repo = repo
-        if repo is None:
-            self.wctx = None
 
     def __getattr__(self, attr):
         if attr in ('prompt', 'write'):
@@ -180,8 +178,7 @@ class Verifier(object):
         raise AttributeError
 
     def open(self, filename, mode):
-        if self.repo:
-            filename = self.repo.wjoin(filename)
+        filename = self.repo.wjoin(filename)
 
         try:
             f = file(filename, mode)
@@ -192,6 +189,8 @@ class Verifier(object):
         return f
 
     def skip(self, filename):
+        filename = self.repo.wjoin(filename)
+
         # We never want to handle symlinks, so always skip them: If the location
         # pointed to is a directory, skip it. If the location is a file inside
         # the gem5 directory, it will be checked as a file, so symlink can be
@@ -447,7 +446,7 @@ def do_check_style(hgui, repo, *pats, **opts):
         if result == 'a':
             return True
         elif result == 'f':
-            func(repo.wjoin(name), regions)
+            func(name, regions)
 
         return False
 
@@ -476,18 +475,16 @@ def do_check_style(hgui, repo, *pats, **opts):
     else:
         files = [ (fn, all_regions) for fn in added + modified + clean ]
 
-    whitespace = Whitespace(ui)
-    sorted_includes = SortedIncludes(ui)
+    whitespace = Whitespace(ui, repo)
+    sorted_includes = SortedIncludes(ui, repo)
     for fname, mod_regions in files:
         if not opt_no_ignore and check_ignores(fname):
             continue
 
-        fpath = joinpath(repo.root, fname)
-
-        if whitespace.apply(fpath, prompt, mod_regions):
+        if whitespace.apply(fname, prompt, mod_regions):
             return True
 
-        if sorted_includes.apply(fpath, prompt, mod_regions):
+        if sorted_includes.apply(fname, prompt, mod_regions):
             return True
 
     return False

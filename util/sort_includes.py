@@ -49,6 +49,64 @@ def include_key(line):
 
     return key
 
+
+def _include_matcher(keyword="#include", delim="<>"):
+    """Match an include statement and return a (keyword, file, extra)
+    duple, or a touple of None values if there isn't a match."""
+
+    rex = re.compile(r'^(%s)\s*%s(.*)%s(.*)$' % (keyword, delim[0], delim[1]))
+
+    def matcher(context, line):
+        m = rex.match(line)
+        return m.groups() if m else (None, ) * 3
+
+    return matcher
+
+def _include_matcher_fname(fname, **kwargs):
+    """Match an include of a specific file name. Any keyword arguments
+    are forwarded to _include_matcher, which is used to match the
+    actual include line."""
+
+    rex = re.compile(fname)
+    base_matcher = _include_matcher(**kwargs)
+
+    def matcher(context, line):
+        (keyword, fname, extra) = base_matcher(context, line)
+        if fname and rex.match(fname):
+            return (keyword, fname, extra)
+        else:
+            return (None, ) * 3
+
+    return matcher
+
+
+def _include_matcher_main():
+    """Match a C/C++ source file's primary header (i.e., a file with
+    the same base name, but a header extension)."""
+
+    base_matcher = _include_matcher(delim='""')
+    rex = re.compile(r"^src/(.*)\.([^.]+)$")
+    header_map = {
+        "c" : "h",
+        "cc" : "hh",
+        "cpp" : "hh",
+        }
+    def matcher(context, line):
+        m = rex.match(context["filename"])
+        if not m:
+            return (None, ) * 3
+        base, ext = m.groups()
+        (keyword, fname, extra) = base_matcher(context, line)
+        try:
+            if fname == "%s.%s" % (base, header_map[ext]):
+                return (keyword, fname, extra)
+        except KeyError:
+            pass
+
+        return (None, ) * 3
+
+    return matcher
+
 class SortIncludes(object):
     # different types of includes for different sorting of headers
     # <Python.h>         - Python header needs to be first if it exists
@@ -57,124 +115,123 @@ class SortIncludes(object):
     # <*.(hh|hxx|hpp|H)> - C++ Headers (directories before files)
     # "*"                - M5 headers (directories before files)
     includes_re = (
-        ('python', '<>', r'^(#include)[ \t]+<(Python.*\.h)>(.*)'),
-        ('c', '<>', r'^(#include)[ \t]<(.+\.h)>(.*)'),
-        ('stl', '<>', r'^(#include)[ \t]+<([0-9A-z_]+)>(.*)'),
-        ('cc', '<>', r'^(#include)[ \t]+<([0-9A-z_]+\.(hh|hxx|hpp|H))>(.*)'),
-        ('m5cc', '""', r'^(#include)[ \t]"(.+\.h{1,2})"(.*)'),
-        ('swig0', '<>', r'^(%import)[ \t]<(.+)>(.*)'),
-        ('swig1', '<>', r'^(%include)[ \t]<(.+)>(.*)'),
-        ('swig2', '""', r'^(%import)[ \t]"(.+)"(.*)'),
-        ('swig3', '""', r'^(%include)[ \t]"(.+)"(.*)'),
+        ('main', '""', _include_matcher_main()),
+        ('python', '<>', _include_matcher_fname("^Python\.h$")),
+        ('c', '<>', _include_matcher_fname("^.*\.h$")),
+        ('stl', '<>', _include_matcher_fname("^\w+$")),
+        ('cc', '<>', _include_matcher_fname("^.*\.(hh|hxx|hpp|H)$")),
+        ('m5header', '""', _include_matcher_fname("^.*\.h{1,2}$", delim='""')),
+        ('swig0', '<>', _include_matcher(keyword="%import")),
+        ('swig1', '<>', _include_matcher(keyword="%include")),
+        ('swig2', '""', _include_matcher(keyword="%import", delim='""')),
+        ('swig3', '""', _include_matcher(keyword="%include", delim='""')),
         )
 
-    # compile the regexes
-    includes_re = tuple((a, b, re.compile(c)) for a,b,c in includes_re)
+    block_order = (
+        ('main', ),
+        ('python', ),
+        ('c', ),
+        ('stl', ),
+        ('cc', ),
+        ('m5header', ),
+        ('swig0', 'swig1', 'swig2', 'swig3', ),
+        )
 
     def __init__(self):
-        pass
+        self.block_priority = {}
+        for prio, keys in enumerate(self.block_order):
+            for key in keys:
+                self.block_priority[key] = prio
 
     def reset(self):
         # clear all stored headers
         self.includes = {}
-        for include_type,_,_ in self.includes_re:
-            self.includes[include_type] = []
 
-    def dump_block(self):
-        '''dump the includes'''
-        first = True
-        for include,_,_ in self.includes_re:
-            if not self.includes[include]:
-                continue
+    def dump_blocks(self, block_types):
+        """Merge includes of from several block types into one large
+        block of sorted includes. This is useful when we have multiple
+        include block types (e.g., swig includes) with the same
+        priority."""
 
-            if not first:
-                # print a newline between groups of
-                # include types
-                yield ''
-            first = False
+        includes = []
+        for block_type in block_types:
+            try:
+                includes += self.includes[block_type]
+            except KeyError:
+                pass
 
-            # print out the includes in the current group
-            # and sort them according to include_key()
-            prev = None
-            for l in sorted(self.includes[include],
-                            key=include_key):
-                if l != prev:
-                    yield l
-                prev = l
+        return sorted(set(includes))
+
+    def dump_includes(self):
+        blocks = []
+        # Create a list of blocks in the prescribed include
+        # order. Each entry in the list is a multi-line string with
+        # multiple includes.
+        for types in self.block_order:
+            block = "\n".join(self.dump_blocks(types))
+            if block:
+                blocks.append(block)
+
+        self.reset()
+        return "\n\n".join(blocks)
 
     def __call__(self, lines, filename, language):
         self.reset()
-        leading_blank = False
-        blanks = 0
-        block = False
 
-        for line in lines:
+        context = {
+            "filename" : filename,
+            "language" : language,
+            }
+
+        def match_line(line):
             if not line:
-                blanks += 1
-                if not block:
-                    # if we're not in an include block, spit out the
-                    # newline otherwise, skip it since we're going to
-                    # control newlines withinin include block
-                    yield ''
-                continue
+                return (None, line)
 
-            # Try to match each of the include types
-            for include_type,(ldelim,rdelim),include_re in self.includes_re:
-                match = include_re.match(line)
-                if not match:
-                    continue
+            for include_type, (ldelim, rdelim), matcher in self.includes_re:
+                keyword, include, extra = matcher(context, line)
+                if keyword:
+                    # if we've got a match, clean up the #include line,
+                    # fix up stl headers and store it in the proper category
+                    if include_type == 'c' and language == 'C++':
+                        stl_inc = cpp_c_headers.get(include, None)
+                        if stl_inc:
+                            include = stl_inc
+                            include_type = 'stl'
 
-                # if we've got a match, clean up the #include line,
-                # fix up stl headers and store it in the proper category
-                groups = match.groups()
-                keyword = groups[0]
-                include = groups[1]
-                extra = groups[-1]
-                if include_type == 'c' and language == 'C++':
-                    stl_inc = cpp_c_headers.get(include, None)
-                    if stl_inc:
-                        include = stl_inc
-                        include_type = 'stl'
+                    return (include_type,
+                            keyword + ' ' + ldelim + include + rdelim + extra)
 
-                line = keyword + ' ' + ldelim + include + rdelim + extra
+            return (None, line)
 
-                self.includes[include_type].append(line)
+        processing_includes = False
+        for line in lines:
+            include_type, line = match_line(line)
+            if include_type:
+                try:
+                    self.includes[include_type].append(line)
+                except KeyError:
+                    self.includes[include_type] = [ line ]
 
-                # We've entered a block, don't keep track of blank
-                # lines while in a block
-                block = True
-                blanks = 0
-                break
+                processing_includes = True
+            elif processing_includes and not line.strip():
+                # Skip empty lines while processing includes
+                pass
+            elif processing_includes:
+                # We are now exiting an include block
+                processing_includes = False
+
+                # Output pending includes, a new line between, and the
+                # current l.
+                yield self.dump_includes()
+                yield ''
+                yield line
             else:
-                # this line did not match a #include
-                assert not include_re.match(line)
-
-                # if we're not in a block and we didn't match an include
-                # to enter a block, just emit the line and continue
-                if not block:
-                    yield line
-                    continue
-
-                # We've exited an include block.
-                for block_line in self.dump_block():
-                    yield block_line
-
-                # if there are any newlines after the include block,
-                # emit a single newline (removing extras)
-                if blanks and block:
-                    yield ''
-
-                blanks = 0
-                block = False
-                self.reset()
-
-                # emit the line that ended the block
+                # We are not in an include block, so just emit the line
                 yield line
 
-        if block:
-            # We've exited an include block.
-            for block_line in self.dump_block():
-                yield block_line
+        # We've reached EOF, so dump any pending includes
+        if processing_includes:
+            yield self.dump_includes()
 
 
 
