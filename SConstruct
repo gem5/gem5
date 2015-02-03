@@ -221,7 +221,10 @@ for key,val in sorted(os.environ.iteritems()):
             any([key.startswith(prefix) for prefix in use_prefixes]):
         use_env[key] = val
 
-main = Environment(ENV=use_env)
+# Tell scons to avoid implicit command dependencies to avoid issues
+# with the param wrappes being compiled twice (see
+# http://scons.tigris.org/issues/show_bug.cgi?id=2811)
+main = Environment(ENV=use_env, IMPLICIT_COMMAND_DEPENDENCIES=0)
 main.Decider('MD5-timestamp')
 main.root = Dir(".")         # The current directory (where this file lives).
 main.srcdir = Dir("src")     # The source directory
