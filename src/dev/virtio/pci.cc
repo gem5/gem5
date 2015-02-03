@@ -123,8 +123,11 @@ PciVirtIO::read(PacketPtr pkt)
       case OFF_ISR_STATUS: {
           DPRINTF(VIOPci, "   ISR_STATUS\n");
           assert(size == sizeof(uint8_t));
-          uint8_t isr_status(interruptDeliveryPending ? 1 : 0);
-          interruptDeliveryPending = false;
+          const uint8_t isr_status(interruptDeliveryPending ? 1 : 0);
+          if (interruptDeliveryPending) {
+              interruptDeliveryPending = false;
+              intrClear();
+          }
           pkt->set<uint8_t>(isr_status);
       } break;
 
