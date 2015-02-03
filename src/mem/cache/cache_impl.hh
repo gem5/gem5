@@ -256,11 +256,9 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
 
 template<class TagStore>
 void
-Cache<TagStore>::markInService(MSHR *mshr, PacketPtr pkt)
+Cache<TagStore>::markInService(MSHR *mshr, bool pending_dirty_resp)
 {
-    // packet can be either a request or response
-
-    markInServiceInternal(mshr, pkt);
+    markInServiceInternal(mshr, pending_dirty_resp);
 #if 0
         if (mshr->originalCmd == MemCmd::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
@@ -1745,7 +1743,7 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 
             if (pkt->isInvalidate()) {
                 // Invalidation trumps our writeback... discard here
-                markInService(mshr);
+                markInService(mshr, false);
                 delete wb_pkt;
             }
         } // writebacks.size()
@@ -1910,9 +1908,10 @@ Cache<TagStore>::getTimingPacket()
             snoop_pkt.senderState = mshr;
             cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
 
-            // Check to see if the prefetch was squashed by an upper cache
-            // Or if a writeback arrived between the time the prefetch was
-            // placed in the MSHRs and when it was selected to send.
+            // Check to see if the prefetch was squashed by an upper
+            // cache (to prevent us from grabbing the line) or if a
+            // writeback arrived between the time the prefetch was
+            // placed in the MSHRs and when it was selected to be sent.
             if (snoop_pkt.prefetchSquashed() || blk != NULL) {
                 DPRINTF(Cache, "Prefetch squashed by cache.  "
                                "Deallocating mshr target %#x.\n", mshr->addr);
@@ -1926,8 +1925,13 @@ Cache<TagStore>::getTimingPacket()
                 return NULL;
             }
 
+            // Check if the prefetch hit a writeback in an upper cache
+            // and if so we will eventually get a HardPFResp from
+            // above
             if (snoop_pkt.memInhibitAsserted()) {
-                markInService(mshr, &snoop_pkt);
+                // If we are getting a non-shared response it is dirty
+                bool pending_dirty_resp = !snoop_pkt.sharedAsserted();
+                markInService(mshr, pending_dirty_resp);
                 DPRINTF(Cache, "Upward snoop of prefetch for addr"
                         " %#x (%s) hit\n",
                         tgt_pkt->getAddr(), tgt_pkt->isSecure()? "s": "ns");
@@ -2148,7 +2152,19 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
                 // care about this packet and might override it before
                 // it gets retried
             } else {
-                cache.markInService(mshr, pkt);
+                // As part of the call to sendTimingReq the packet is
+                // forwarded to all neighbouring caches (and any
+                // caches above them) as a snoop. The packet is also
+                // sent to any potential cache below as the
+                // interconnect is not allowed to buffer the
+                // packet. Thus at this point we know if any of the
+                // neighbouring, or the downstream cache is
+                // responding, and if so, if it is with a dirty line
+                // or not.
+                bool pending_dirty_resp = !pkt->sharedAsserted() &&
+                    pkt->memInhibitAsserted();
+
+                cache.markInService(mshr, pending_dirty_resp);
             }
         }
     }

@@ -225,7 +225,7 @@ class MSHR : public Packet::SenderState, public Printable
     void allocate(Addr addr, int size, PacketPtr pkt,
                   Tick when, Counter _order);
 
-    bool markInService(PacketPtr pkt);
+    bool markInService(bool pending_dirty_resp);
 
     void clearDownstreamPending();
 

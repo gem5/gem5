@@ -238,7 +238,7 @@ MSHR::clearDownstreamPending()
 }
 
 bool
-MSHR::markInService(PacketPtr pkt)
+MSHR::markInService(bool pending_dirty_resp)
 {
     assert(!inService);
     if (isForwardNoResponse()) {
@@ -249,10 +249,8 @@ MSHR::markInService(PacketPtr pkt)
         return true;
     }
 
-    assert(pkt != NULL);
     inService = true;
-    pendingDirty = targets.needsExclusive ||
-                   (!pkt->sharedAsserted() && pkt->memInhibitAsserted());
+    pendingDirty = targets.needsExclusive || pending_dirty_resp;
     postInvalidate = postDowngrade = false;
 
     if (!downstreamPending) {
