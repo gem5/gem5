@@ -227,6 +227,11 @@ class AddrRange
     Addr start() const { return _start; }
 
     /**
+     * Get the end address of the range.
+     */
+    Addr end() const { return _end; }
+
+    /**
      * Get a string representation of the range. This could
      * alternatively be implemented as a operator<<, but at the moment
      * that seems like overkill.
@@ -363,6 +368,22 @@ class AddrRange
             return intlvMatch < r.intlvMatch;
     }
 
+    bool operator==(const AddrRange& r) const
+    {
+        if (_start    != r._start)    return false;
+        if (_end      != r._end)      return false;
+        if (intlvBits != r.intlvBits) return false;
+        if (intlvBits != 0) {
+            if (intlvHighBit != r.intlvHighBit) return false;
+            if (intlvMatch   != r.intlvMatch)   return false;
+        }
+        return true;
+    }
+
+    bool operator!=(const AddrRange& r) const
+    {
+        return !(*this == r);
+    }
 #endif // SWIG
 };
 
