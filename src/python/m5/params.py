@@ -638,7 +638,7 @@ class Cycles(CheckedInt):
 
 class Float(ParamValue, float):
     cxx_type = 'double'
-    cmdLineSettable = True
+    cmd_line_settable = True
 
     def __init__(self, value):
         if isinstance(value, (int, long, float, NumericParamValue, Float, str)):
