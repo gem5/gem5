@@ -718,14 +718,12 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 {
-    DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
+    DPRINTF(SimpleCPU, "Received fetch response %#x\n", pkt->getAddr());
+    // we should only ever see one response per cycle since we only
+    // issue a new request once this response is sunk
+    assert(!tickEvent.scheduled());
     // delay processing of returned data until next CPU clock edge
-    Tick next_tick = cpu->clockEdge();
-
-    if (next_tick == curTick())
-        cpu->completeIfetch(pkt);
-    else
-        tickEvent.schedule(pkt, next_tick);
+    tickEvent.schedule(pkt, cpu->clockEdge());
 
     return true;
 }
@@ -836,25 +834,22 @@ TimingSimpleCPU::DcachePort::recvFunctionalSnoop(PacketPtr pkt)
 bool
 TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)
 {
-    // delay processing of returned data until next CPU clock edge
-    Tick next_tick = cpu->clockEdge();
+    DPRINTF(SimpleCPU, "Received load/store response %#x\n", pkt->getAddr());
 
-    if (next_tick == curTick()) {
-        cpu->completeDataAccess(pkt);
+    // The timing CPU is not really ticked, instead it relies on the
+    // memory system (fetch and load/store) to set the pace.
+    if (!tickEvent.scheduled()) {
+        // Delay processing of returned data until next CPU clock edge
+        tickEvent.schedule(pkt, cpu->clockEdge());
+        return true;
     } else {
-        if (!tickEvent.scheduled()) {
-            tickEvent.schedule(pkt, next_tick);
-        } else {
-            // In the case of a split transaction and a cache that is
-            // faster than a CPU we could get two responses before
-            // next_tick expires
-            if (!retryEvent.scheduled())
-                cpu->schedule(retryEvent, next_tick);
-            return false;
-        }
+        // In the case of a split transaction and a cache that is
+        // faster than a CPU we could get two responses in the
+        // same tick, delay the second one
+        if (!retryEvent.scheduled())
+            cpu->schedule(retryEvent, cpu->clockEdge(Cycles(1)));
+        return false;
     }
-
-    return true;
 }
 
 void
