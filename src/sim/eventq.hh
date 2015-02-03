@@ -239,7 +239,7 @@ class Event : public EventBase, public Serializable
     bool
     initialized() const
     {
-        return this && (flags & InitMask) == Initialized;
+        return (flags & InitMask) == Initialized;
     }
 
   protected:
