@@ -726,8 +726,9 @@ class AddrRange(ParamValue):
     cxx_type = 'AddrRange'
 
     def __init__(self, *args, **kwargs):
-        # Disable interleaving by default
+        # Disable interleaving and hashing by default
         self.intlvHighBit = 0
+        self.xorHighBit = 0
         self.intlvBits = 0
         self.intlvMatch = 0
 
@@ -745,6 +746,8 @@ class AddrRange(ParamValue):
             # Now on to the optional bit
             if 'intlvHighBit' in kwargs:
                 self.intlvHighBit = int(kwargs.pop('intlvHighBit'))
+            if 'xorHighBit' in kwargs:
+                self.xorHighBit = int(kwargs.pop('xorHighBit'))
             if 'intlvBits' in kwargs:
                 self.intlvBits = int(kwargs.pop('intlvBits'))
             if 'intlvMatch' in kwargs:
@@ -814,8 +817,8 @@ class AddrRange(ParamValue):
         from m5.internal.range import AddrRange
 
         return AddrRange(long(self.start), long(self.end),
-                         int(self.intlvHighBit), int(self.intlvBits),
-                         int(self.intlvMatch))
+                         int(self.intlvHighBit), int(self.xorHighBit),
+                         int(self.intlvBits), int(self.intlvMatch))
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and
