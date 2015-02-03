@@ -127,7 +127,7 @@ for alias, target in _mem_aliases_all:
         # Normal alias
         _mem_aliases[alias] = target
 
-def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, cache_line_size):
+def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     """
     Helper function for creating a single memoy controller from the given
     options.  This function is invoked multiple times in config_mem function
@@ -135,9 +135,7 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, cache_line_size):
     """
 
     import math
-    # The default behaviour is to interleave on cache line granularity
-    cache_line_bit = int(math.log(cache_line_size, 2)) - 1
-    intlv_low_bit = cache_line_bit
+    intlv_low_bit = int(math.log(intlv_size, 2))
 
     # Create an instance so we can figure out the address
     # mapping and row-buffer size
@@ -160,13 +158,13 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, cache_line_size):
             rowbuffer_size = ctrl.device_rowbuffer_size.value * \
                 ctrl.devices_per_rank.value
 
-            intlv_low_bit = int(math.log(rowbuffer_size, 2)) - 1
+            intlv_low_bit = int(math.log(rowbuffer_size, 2))
 
     # We got all we need to configure the appropriate address
     # range
     ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
                                       intlvHighBit = \
-                                          intlv_low_bit + intlv_bits,
+                                          intlv_low_bit + intlv_bits - 1,
                                       intlvBits = intlv_bits,
                                       intlvMatch = i)
     return ctrl
@@ -192,13 +190,19 @@ def config_mem(options, system):
     cls = get(options.mem_type)
     mem_ctrls = []
 
+    # The default behaviour is to interleave memory channels on 128
+    # byte granularity, or cache line granularity if larger than 128
+    # byte. This value is based on the locality seen across a large
+    # range of workloads.
+    intlv_size = max(128, system.cache_line_size.value)
+
     # For every range (most systems will only have one), create an
     # array of controllers and set their parameters to match their
     # address mapping in the case of a DRAM
     for r in system.mem_ranges:
         for i in xrange(nbr_mem_ctrls):
             mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,
-                                       system.cache_line_size.value)
+                                       intlv_size)
             # Set the number of ranks based on the command-line
             # options if it was explicitly set
             if issubclass(cls, m5.objects.DRAMCtrl) and \

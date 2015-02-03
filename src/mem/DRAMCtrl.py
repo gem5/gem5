@@ -92,7 +92,7 @@ class DRAMCtrl(AbstractMemory):
 
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")
-    addr_mapping = Param.AddrMap('RoRaBaChCo', "Address mapping policy")
+    addr_mapping = Param.AddrMap('RoRaBaCoCh', "Address mapping policy")
     page_policy = Param.PageManage('open_adaptive', "Page management policy")
 
     # enforce a limit on the number of accesses per row
