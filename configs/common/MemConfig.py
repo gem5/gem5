@@ -137,6 +137,13 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     import math
     intlv_low_bit = int(math.log(intlv_size, 2))
 
+    # Use basic hashing for the channel selection, and preferably use
+    # the lower tag bits from the last level cache. As we do not know
+    # the details of the caches here, make an educated guess. 4 MByte
+    # 4-way associative with 64 byte cache lines is 6 offset bits and
+    # 14 index bits.
+    xor_low_bit = 20
+
     # Create an instance so we can figure out the address
     # mapping and row-buffer size
     ctrl = cls()
@@ -165,6 +172,8 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
                                       intlvHighBit = \
                                           intlv_low_bit + intlv_bits - 1,
+                                      xorHighBit = \
+                                          xor_low_bit + intlv_bits - 1,
                                       intlvBits = intlv_bits,
                                       intlvMatch = i)
     return ctrl
