@@ -33,24 +33,24 @@ from os import environ as env
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
-def searchpath(path, file):
+def searchpath(path, filename):
     for p in path:
-        f = joinpath(p, file)
+        f = joinpath(p, filename)
         if os.path.exists(f):
             return f
-    raise IOError, "Can't find file '%s' on path." % file
+    raise IOError, "Can't find file '%s' on path." % filename
 
-def disk(file):
+def disk(filename):
     system()
-    return searchpath(disk.path, file)
+    return searchpath(disk.path, filename)
 
-def binary(file):
+def binary(filename):
     system()
-    return searchpath(binary.path, file)
+    return searchpath(binary.path, filename)
 
-def script(file):
+def script(filename):
     system()
-    return searchpath(script.path, file)
+    return searchpath(script.path, filename)
 
 def system():
     if not system.path:
