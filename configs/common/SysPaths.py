@@ -33,39 +33,46 @@ from os import environ as env
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
+def searchpath(path, file):
+    for p in path:
+        f = joinpath(p, file)
+        if os.path.exists(f):
+            return f
+    raise IOError, "Can't find file '%s' on path." % file
+
 def disk(file):
     system()
-    return joinpath(disk.dir, file)
+    return searchpath(disk.path, file)
 
 def binary(file):
     system()
-    return joinpath(binary.dir, file)
+    return searchpath(binary.path, file)
 
 def script(file):
     system()
-    return joinpath(script.dir, file)
+    return searchpath(script.path, file)
 
 def system():
-    if not system.dir:
+    if not system.path:
         try:
-                path = env['M5_PATH'].split(':')
+            path = env['M5_PATH'].split(':')
         except KeyError:
-                path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+            path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
 
-        for system.dir in path:
-            if os.path.isdir(system.dir):
-                break
-        else:
-            raise ImportError, "Can't find a path to system files."
+        # filter out non-existent directories
+        system.path = filter(os.path.isdir, path)
 
-    if not binary.dir:
-        binary.dir = joinpath(system.dir, 'binaries')
-    if not disk.dir:
-        disk.dir = joinpath(system.dir, 'disks')
-    if not script.dir:
-        script.dir = joinpath(config_root, 'boot')
+        if not system.path:
+            raise IOError, "Can't find a path to system files."
 
-system.dir = None
-binary.dir = None
-disk.dir = None
-script.dir = None
+    if not binary.path:
+        binary.path = [joinpath(p, 'binaries') for p in system.path]
+    if not disk.path:
+        disk.path = [joinpath(p, 'disks') for p in system.path]
+    if not script.path:
+        script.path = [joinpath(config_root, 'boot')]
+
+system.path = None
+binary.path = None
+disk.path = None
+script.path = None
