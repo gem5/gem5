@@ -746,12 +746,13 @@ FullO3CPU<Impl>::suspendContext(ThreadID tid)
     deactivateThread(tid);
 
     // If this was the last thread then unschedule the tick event.
-    if (activeThreads.size() == 0)
+    if (activeThreads.size() == 0) {
         unscheduleTickEvent();
+        lastRunningCycle = curCycle();
+        _status = Idle;
+    }
 
     DPRINTF(Quiesce, "Suspending Context\n");
-    lastRunningCycle = curCycle();
-    _status = Idle;
 }
 
 template <class Impl>
