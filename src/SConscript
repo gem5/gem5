@@ -1061,7 +1061,12 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
             new_env.Append(LINKFLAGS='-fsanitize=undefined')
 
     werror_env = new_env.Clone()
-    werror_env.Append(CCFLAGS='-Werror')
+    # Treat warnings as errors but white list some warnings that we
+    # want to allow (e.g., deprecation warnings).
+    werror_env.Append(CCFLAGS=['-Werror',
+                               '-Wno-error=deprecated-declarations',
+                               '-Wno-error=deprecated',
+                               ])
 
     def make_obj(source, static, extra_deps = None):
         '''This function adds the specified source to the correct
