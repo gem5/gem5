@@ -55,9 +55,6 @@ class Platform : public SimObject
     /** Pointer to the interrupt controller */
     IntrControl *intrctrl;
 
-    /** Pointer to the system for info about the memory system. */
-    System *system;
-
   public:
     typedef PlatformParams Params;
     Platform(const Params *p);
