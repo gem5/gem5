@@ -1136,6 +1136,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
 
     while (mshr->hasTargets()) {
         MSHR::Target *target = mshr->getTarget();
+        Packet *tgt_pkt = target->pkt;
 
         switch (target->source) {
           case MSHR::Target::FromCPU:
@@ -1145,12 +1146,12 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
             completion_time = pkt->headerDelay;
 
             // Software prefetch handling for cache closest to core
-            if (target->pkt->cmd.isSWPrefetch() && isTopLevel) {
+            if (tgt_pkt->cmd.isSWPrefetch() && isTopLevel) {
                 // a software prefetch would have already been ack'd immediately
                 // with dummy data so the core would be able to retire it.
                 // this request completes right here, so we deallocate it.
-                delete target->pkt->req;
-                delete target->pkt;
+                delete tgt_pkt->req;
+                delete tgt_pkt;
                 break; // skip response
             }
 
@@ -1160,24 +1161,24 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
             // cannot actually be determined until examining the stored MSHR
             // state. We "catch up" with that logic here, which is duplicated
             // from above.
-            if (target->pkt->isWriteInvalidate() && isTopLevel) {
+            if (tgt_pkt->isWriteInvalidate() && isTopLevel) {
                 assert(!is_error);
 
                 // NB: we use the original packet here and not the response!
-                mshr->handleFill(target->pkt, blk);
-                blk = handleFill(target->pkt, blk, writebacks);
+                mshr->handleFill(tgt_pkt, blk);
+                blk = handleFill(tgt_pkt, blk, writebacks);
                 assert(blk != NULL);
 
                 is_fill = true;
             }
 
             if (is_fill) {
-                satisfyCpuSideRequest(target->pkt, blk,
+                satisfyCpuSideRequest(tgt_pkt, blk,
                                       true, mshr->hasPostDowngrade());
 
                 // How many bytes past the first request is this one
                 int transfer_offset =
-                    target->pkt->getOffset(blkSize) - initial_offset;
+                    tgt_pkt->getOffset(blkSize) - initial_offset;
                 if (transfer_offset < 0) {
                     transfer_offset += blkSize;
                 }
@@ -1189,22 +1190,22 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 completion_time += clockEdge(responseLatency) +
                     (transfer_offset ? pkt->payloadDelay : 0);
 
-                assert(!target->pkt->req->isUncacheable());
+                assert(!tgt_pkt->req->isUncacheable());
 
-                assert(target->pkt->req->masterId() < system->maxMasters());
-                missLatency[target->pkt->cmdToIndex()][target->pkt->req->masterId()] +=
+                assert(tgt_pkt->req->masterId() < system->maxMasters());
+                missLatency[tgt_pkt->cmdToIndex()][tgt_pkt->req->masterId()] +=
                     completion_time - target->recvTime;
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade
-                assert(target->pkt->cmd == MemCmd::StoreCondReq ||
-                       target->pkt->cmd == MemCmd::StoreCondFailReq ||
-                       target->pkt->cmd == MemCmd::SCUpgradeFailReq);
+                assert(tgt_pkt->cmd == MemCmd::StoreCondReq ||
+                       tgt_pkt->cmd == MemCmd::StoreCondFailReq ||
+                       tgt_pkt->cmd == MemCmd::SCUpgradeFailReq);
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
                 completion_time += clockEdge(responseLatency) +
                     pkt->payloadDelay;
-                target->pkt->req->setExtraData(0);
+                tgt_pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
@@ -1212,34 +1213,33 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 completion_time += clockEdge(responseLatency) +
                     pkt->payloadDelay;
                 if (pkt->isRead() && !is_error) {
-                    target->pkt->setData(pkt->getConstPtr<uint8_t>());
+                    tgt_pkt->setData(pkt->getConstPtr<uint8_t>());
                 }
             }
-            target->pkt->makeTimingResponse();
+            tgt_pkt->makeTimingResponse();
             // if this packet is an error copy that to the new packet
             if (is_error)
-                target->pkt->copyError(pkt);
-            if (target->pkt->cmd == MemCmd::ReadResp &&
+                tgt_pkt->copyError(pkt);
+            if (tgt_pkt->cmd == MemCmd::ReadResp &&
                 (pkt->isInvalidate() || mshr->hasPostInvalidate())) {
                 // If intermediate cache got ReadRespWithInvalidate,
                 // propagate that.  Response should not have
                 // isInvalidate() set otherwise.
-                target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
+                tgt_pkt->cmd = MemCmd::ReadRespWithInvalidate;
                 DPRINTF(Cache, "%s updated cmd to %s for addr %#llx\n",
-                        __func__, target->pkt->cmdString(),
-                        target->pkt->getAddr());
+                        __func__, tgt_pkt->cmdString(), tgt_pkt->getAddr());
             }
             // Reset the bus additional time as it is now accounted for
-            target->pkt->headerDelay = target->pkt->payloadDelay = 0;
-            cpuSidePort->schedTimingResp(target->pkt, completion_time);
+            tgt_pkt->headerDelay = tgt_pkt->payloadDelay = 0;
+            cpuSidePort->schedTimingResp(tgt_pkt, completion_time);
             break;
 
           case MSHR::Target::FromPrefetcher:
-            assert(target->pkt->cmd == MemCmd::HardPFReq);
+            assert(tgt_pkt->cmd == MemCmd::HardPFReq);
             if (blk)
                 blk->status |= BlkHWPrefetched;
-            delete target->pkt->req;
-            delete target->pkt;
+            delete tgt_pkt->req;
+            delete tgt_pkt;
             break;
 
           case MSHR::Target::FromSnoop:
@@ -1248,8 +1248,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
             assert(!(pkt->isInvalidate() && !mshr->hasPostInvalidate()));
-            handleSnoop(target->pkt, blk, true, true,
-                        mshr->hasPostInvalidate());
+            handleSnoop(tgt_pkt, blk, true, true, mshr->hasPostInvalidate());
             break;
 
           default:
