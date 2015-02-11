@@ -68,9 +68,6 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
     if (assoc <= 0) {
         fatal("associativity must be greater than zero");
     }
-    if (hitLatency <= 0) {
-        fatal("access latency must be greater than zero");
-    }
 
     blkMask = blkSize - 1;
     setShift = floorLog2(blkSize);

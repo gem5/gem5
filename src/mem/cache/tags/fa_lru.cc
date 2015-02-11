@@ -60,8 +60,6 @@ FALRU::FALRU(const Params *p)
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
               blkSize);
-    if (!(hitLatency > 0))
-        fatal("Access latency in cycles must be at least one cycle");
     if (!isPowerOf2(size))
         fatal("Cache Size must be power of 2 for now");
 
@@ -202,7 +200,7 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int context_src,
         *inCache = tmp_in_cache;
     }
 
-    lat = hitLatency;
+    lat = accessLatency;
     //assert(check());
     return blk;
 }

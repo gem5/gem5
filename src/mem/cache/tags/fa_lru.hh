@@ -210,15 +210,6 @@ public:
     void insertBlock(PacketPtr pkt, BlkType *blk);
 
     /**
-     * Return the hit latency of this cache.
-     * @return The hit latency.
-     */
-    Cycles getHitLatency() const
-    {
-        return hitLatency;
-    }
-
-    /**
      * Return the block size of this cache.
      * @return The block size.
      */

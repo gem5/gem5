@@ -68,9 +68,8 @@ class BaseTags : public ClockedObject
     const unsigned blkSize;
     /** The size of the cache. */
     const unsigned size;
-    /** The hit latency of the cache. */
-    const Cycles hitLatency;
-
+    /** The access latency of the cache. */
+    const Cycles accessLatency;
     /** Pointer to the parent cache. */
     BaseCache *cache;
 

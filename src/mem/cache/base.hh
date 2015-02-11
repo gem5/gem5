@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -202,6 +202,17 @@ class BaseCache : public MemObject
     /** Write/writeback buffer */
     MSHRQueue writeBuffer;
 
+    /**
+     * Allocate a buffer, passing the time indicating when schedule an
+     * event to the queued port to go and ask the MSHR and write queue
+     * if they have packets to send.
+     *
+     * allocateBufferInternal() function is called in:
+     * - MSHR allocateWriteBuffer (unchached write forwarded to WriteBuffer);
+     * - MSHR allocateMissBuffer (cacheable miss in MSHR queue);
+     * - MSHR allocateUncachedReadBuffer (unchached read allocated in MSHR
+     *   queue)
+     */
     MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
                                  PacketPtr pkt, Tick time, bool requestBus)
     {
@@ -251,15 +262,25 @@ class BaseCache : public MemObject
     const unsigned blkSize;
 
     /**
-     * The latency of a hit in this device.
+     * The latency of tag lookup of a cache. It occurs when there is
+     * an access to the cache.
      */
-    const Cycles hitLatency;
+    const Cycles lookupLatency;
 
     /**
-     * The latency of sending reponse to its upper level cache/core on a
-     * linefill. In most contemporary processors, the return path on a cache
-     * miss is much quicker that the hit latency. The responseLatency parameter
-     * tries to capture this latency.
+     * This is the forward latency of the cache. It occurs when there
+     * is a cache miss and a request is forwarded downstream, in
+     * particular an outbound miss.
+     */
+    const Cycles forwardLatency;
+
+    /** The latency to fill a cache block */
+    const Cycles fillLatency;
+
+    /**
+     * The latency of sending reponse to its upper level cache/core on
+     * a linefill. The responseLatency parameter captures this
+     * latency.
      */
     const Cycles responseLatency;
 

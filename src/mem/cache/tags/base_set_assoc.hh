@@ -178,7 +178,7 @@ public:
         Addr tag = extractTag(addr);
         int set = extractSet(addr);
         BlkType *blk = sets[set].findBlk(tag, is_secure);
-        lat = hitLatency;
+        lat = accessLatency;;
 
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
@@ -195,7 +195,7 @@ public:
         if (blk != NULL) {
             if (blk->whenReady > curTick()
                 && cache->ticksToCycles(blk->whenReady - curTick())
-                > hitLatency) {
+                > accessLatency) {
                 lat = cache->ticksToCycles(blk->whenReady - curTick());
             }
             blk->refCount += 1;
@@ -342,14 +342,6 @@ public:
         return ((tag << tagShift) | ((Addr)set << setShift));
     }
 
-    /**
-     * Return the hit latency.
-     * @return the hit latency.
-     */
-    Cycles getHitLatency() const
-    {
-        return hitLatency;
-    }
     /**
      *iterated through all blocks and clear all locks
      *Needed to clear all lock tracking at once
