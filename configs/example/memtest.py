@@ -1,3 +1,15 @@
+# Copyright (c) 2015 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -25,6 +37,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Ron Dreslinski
+#          Andreas Hansson
 
 import optparse
 import sys
@@ -44,32 +57,33 @@ parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",
                   help="Stop after T ticks")
 
+# This example script stress tests the memory system by creating false
+# sharing in a tree topology. At the bottom of the tree is a shared
+# memory, and then at each level a number of testers are attached,
+# along with a number of caches that them selves fan out to subtrees
+# of testers and caches. Thus, it is possible to create a system with
+# arbitrarily deep cache hierarchies, sharing or no sharing of caches,
+# and testers not only at the L1s, but also at the L2s, L3s etc.
 #
-# The "tree" specification is a colon-separated list of one or more
-# integers.  The first integer is the number of caches/testers
-# connected directly to main memory.  The last integer in the list is
-# the number of testers associated with the uppermost level of memory
-# (L1 cache, if there are caches, or main memory if no caches).  Thus
-# if there is only one integer, there are no caches, and the integer
-# specifies the number of testers connected directly to main memory.
-# The other integers (if any) specify the number of caches at each
-# level of the hierarchy between.
-#
-# Examples:
-#
-#  "2:1"    Two caches connected to memory with a single tester behind each
-#           (single-level hierarchy, two testers total)
-#
-#  "2:2:1"  Two-level hierarchy, 2 L1s behind each of 2 L2s, 4 testers total
-#
-parser.add_option("-t", "--treespec", type="string", default="8:1",
-                  help="Colon-separated multilevel tree specification, "
+# The tree specification consists of two colon-separated lists of one
+# or more integers, one for the caches, and one for the testers. The
+# first integer is the number of caches/testers closest to main
+# memory. Each cache then fans out to a subtree. The last integer in
+# the list is the number of caches/testers associated with the
+# uppermost level of memory. The other integers (if any) specify the
+# number of caches/testers connected at each level of the crossbar
+# hierarchy. The tester string should have one element more than the
+# cache string as there should always be testers attached to the
+# uppermost caches.
+
+parser.add_option("-c", "--caches", type="string", default="2:2:1",
+                  help="Colon-separated cache hierarchy specification, "
                   "see script comments for details "
                   "[default: %default]")
-
-parser.add_option("--force-bus", action="store_true",
-                  help="Use bus between levels even with single cache")
-
+parser.add_option("-t", "--testers", type="string", default="1:1:0:2",
+                  help="Colon-separated tester hierarchy specification, "
+                  "see script comments for details "
+                  "[default: %default]")
 parser.add_option("-f", "--functional", type="int", default=0,
                   metavar="PCT",
                   help="Target percentage of functional accesses "
@@ -79,7 +93,7 @@ parser.add_option("-u", "--uncacheable", type="int", default=0,
                   help="Target percentage of uncacheable accesses "
                   "[default: %default]")
 
-parser.add_option("--progress", type="int", default=1000,
+parser.add_option("--progress", type="int", default=10000,
                   metavar="NLOADS",
                   help="Progress message interval "
                   "[default: %default]")
@@ -96,57 +110,88 @@ if args:
 
 block_size = 64
 
+# Start by partins the command line options and do some basic sanity
+# checking
 try:
-     treespec = [int(x) for x in options.treespec.split(':')]
-     numtesters = reduce(lambda x,y: x*y, treespec)
+     cachespec = [int(x) for x in options.caches.split(':')]
+     testerspec = [int(x) for x in options.testers.split(':')]
 except:
-     print "Error parsing treespec option"
+     print "Error: Unable to parse caches or testers option"
      sys.exit(1)
+
+if len(cachespec) < 1:
+     print "Error: Must have at least one level of caches"
+     sys.exit(1)
+
+if len(cachespec) != len(testerspec) - 1:
+     print "Error: Testers must have one element more than caches"
+     sys.exit(1)
+
+if testerspec[-1] == 0:
+     print "Error: Must have testers at the uppermost level"
+     sys.exit(1)
+
+for t in testerspec:
+     if t < 0:
+          print "Error: Cannot have a negative number of testers"
+          sys.exit(1)
+
+for c in cachespec:
+     if c < 1:
+          print "Error: Must have 1 or more caches at each level"
+          sys.exit(1)
+
+# Determine the tester multiplier for each level as the string
+# elements are per subsystem and it fans out
+multiplier = [1]
+for c in cachespec:
+     if c < 1:
+          print "Error: Must have at least one cache per level"
+     multiplier.append(multiplier[-1] * c)
+
+numtesters = 0
+for t, m in zip(testerspec, multiplier):
+     numtesters += t * m
 
 if numtesters > block_size:
      print "Error: Number of testers limited to %s because of false sharing" \
            % (block_size)
      sys.exit(1)
 
-if len(treespec) < 1:
-     print "Error parsing treespec"
-     sys.exit(1)
-
-# define prototype L1 cache
+# Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = BaseCache(size = '32kB', assoc = 4,
                      hit_latency = 1, response_latency = 1,
-                     tgts_per_mshr = 8)
+                     tgts_per_mshr = 8, is_top_level = True)
 
 if options.blocking:
      proto_l1.mshrs = 1
 else:
      proto_l1.mshrs = 4
 
-# build a list of prototypes, one for each level of treespec, starting
-# at the end (last entry is tester objects)
-prototypes = [ MemTest(max_loads=options.maxloads,
-                       percent_functional=options.functional,
-                       percent_uncacheable=options.uncacheable,
-                       progress_interval=options.progress) ]
+cache_proto = [proto_l1]
 
-# next comes L1 cache, if any
-if len(treespec) > 1:
-     prototypes.insert(0, proto_l1)
-
-# now add additional cache levels (if any) by scaling L1 params
-for scale in treespec[:-2]:
-     # clone previous level and update params
-     prev = prototypes[0]
+# Now add additional cache levels (if any) by scaling L1 params, the
+# first element is Ln, and the last element L1
+for scale in cachespec[:-1]:
+     # Clone previous level and update params
+     prev = cache_proto[0]
      next = prev()
      next.size = prev.size * scale
      next.hit_latency = prev.hit_latency * 10
      next.response_latency = prev.response_latency * 10
      next.assoc = prev.assoc * scale
      next.mshrs = prev.mshrs * scale
-     prototypes.insert(0, next)
+     next.is_top_level = False
+     cache_proto.insert(0, next)
 
-# system simulated
-system = System(physmem = SimpleMemory(latency = "100ns"),
+# Make a prototype for the tester to be used throughout
+proto_tester = MemTest(max_loads = options.maxloads,
+                       percent_functional = options.functional,
+                       percent_uncacheable = options.uncacheable,
+                       progress_interval = options.progress)
+
+# Set up the system along with a simple memory and reference memory
+system = System(physmem = SimpleMemory(),
                 cache_line_size = block_size)
 
 system.voltage_domain = VoltageDomain(voltage = '1V')
@@ -154,40 +199,82 @@ system.voltage_domain = VoltageDomain(voltage = '1V')
 system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
                         voltage_domain = system.voltage_domain)
 
-def make_level(spec, prototypes, attach_obj, attach_port):
-     fanout = spec[0]
-     parent = attach_obj # use attach obj as config parent too
-     if len(spec) > 1 and (fanout > 1 or options.force_bus):
-          port = getattr(attach_obj, attach_port)
-          new_bus = CoherentXBar(width=16)
-          if (port.role == 'MASTER'):
-               new_bus.slave = port
-               attach_port = "master"
-          else:
-               new_bus.master = port
-               attach_port = "slave"
-          parent.cpu_side_bus = new_bus
-          attach_obj = new_bus
-     objs = [prototypes[0]() for i in xrange(fanout)]
-     if len(spec) > 1:
-          # we just built caches, more levels to go
-          parent.cache = objs
-          for cache in objs:
-               cache.mem_side = getattr(attach_obj, attach_port)
-               make_level(spec[1:], prototypes[1:], cache, "cpu_side")
+# For each level, track the next subsys index to use
+next_subsys_index = [0] * (len(cachespec) + 1)
+
+# Recursive function to create a sub-tree of the cache and tester
+# hierarchy
+def make_cache_level(ncaches, prototypes, level, next_cache):
+     global next_subsys_index, proto_l1, testerspec, proto_tester
+
+     index = next_subsys_index[level]
+     next_subsys_index[level] += 1
+
+     # Create a subsystem to contain the crossbar and caches, and
+     # any testers
+     subsys = SubSystem()
+     setattr(system, 'l%dsubsys%d' % (level, index), subsys)
+
+     # The levels are indexing backwards through the list
+     ntesters = testerspec[len(cachespec) - level]
+
+     # Scale the progress threshold as testers higher up in the tree
+     # (smaller level) get a smaller portion of the overall bandwidth,
+     # and also make the interval of packet injection longer for the
+     # testers closer to the memory (larger level) to prevent them
+     # hogging all the bandwidth
+     limit = (len(cachespec) - level + 1) * 10000000
+     testers = [proto_tester(interval = 10 * (level * level + 1),
+                             progress_check = limit) \
+                     for i in xrange(ntesters)]
+     if ntesters:
+          subsys.tester = testers
+
+     if level != 0:
+          # Create a crossbar and add it to the subsystem, note that
+          # we do this even with a single element on this level
+          xbar = CoherentXBar(width = 32)
+          subsys.xbar = xbar
+          if next_cache:
+               xbar.master = next_cache.cpu_side
+
+          # Create and connect the caches, both the ones fanning out
+          # to create the tree, and the ones used to connect testers
+          # on this level
+          tree_caches = [prototypes[0]() for i in xrange(ncaches[0])]
+          tester_caches = [proto_l1() for i in xrange(ntesters)]
+
+          subsys.cache = tester_caches + tree_caches
+          for cache in tree_caches:
+               cache.mem_side = xbar.slave
+               make_cache_level(ncaches[1:], prototypes[1:], level - 1, cache)
+          for tester, cache in zip(testers, tester_caches):
+               tester.port = cache.cpu_side
+               cache.mem_side = xbar.slave
      else:
-          # we just built the MemTest objects
-          parent.cpu = objs
-          for t in objs:
-               t.port = getattr(attach_obj, attach_port)
+          if not next_cache:
+               print "Error: No next-level cache at top level"
+               sys.exit(1)
 
-make_level(treespec, prototypes, system.physmem, "port")
+          if ntesters > 1:
+               # Create a crossbar and add it to the subsystem
+               xbar = CoherentXBar(width = 32)
+               subsys.xbar = xbar
+               xbar.master = next_cache.cpu_side
+               for tester in testers:
+                    tester.port = xbar.slave
+          else:
+               # Single tester
+               testers[0].port = next_cache.cpu_side
 
-# -----------------------
-# run simulation
-# -----------------------
+# Top level call to create the cache hierarchy, bottom up
+make_cache_level(cachespec, cache_proto, len(cachespec), None)
 
-root = Root( full_system = False, system = system )
+# Connect the lowest level crossbar to the memory
+last_subsys = getattr(system, 'l%dsubsys0' % len(cachespec))
+last_subsys.xbar.master = system.physmem.port
+
+root = Root(full_system = False, system = system)
 if options.atomic:
     root.system.mem_mode = 'atomic'
 else:
@@ -195,15 +282,12 @@ else:
 
 # The system port is never used in the tester so merely connect it
 # to avoid problems
-root.system.system_port = root.system.physmem.cpu_side_bus.slave
+root.system.system_port = last_subsys.xbar.slave
 
-# Not much point in this being higher than the L1 latency
-m5.ticks.setGlobalFrequency('1ns')
-
-# instantiate configuration
+# Instantiate configuration
 m5.instantiate()
 
-# simulate until program terminates
+# Simulate until program terminates
 exit_event = m5.simulate(options.maxtick)
 
 print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
