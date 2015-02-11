@@ -333,9 +333,9 @@ class BaseXBar : public MemObject
 
     /**
      * Calculate the timing parameters for the packet. Updates the
-     * firstWordDelay and lastWordDelay fields of the packet
+     * headerDelay and payloadDelay fields of the packet
      * object with the relative number of ticks required to transmit
-     * the header and the first word, and the last word, respectively.
+     * the header and the payload, respectively.
      */
     void calcPacketTiming(PacketPtr pkt);
 

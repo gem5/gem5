@@ -109,23 +109,27 @@ BaseXBar::calcPacketTiming(PacketPtr pkt)
     // until the next clock edge (could be zero)
     Tick offset = clockEdge() - curTick();
 
-    // determine how many cycles are needed to send the data
+    // Determine how many cycles are needed to send the data
+    // If the packet has no data we take into account just the cycle to send
+    // the header.
     unsigned dataCycles = pkt->hasData() ? divCeil(pkt->getSize(), width) : 0;
 
     // before setting the bus delay fields of the packet, ensure that
     // the delay from any previous crossbar has been accounted for
-    if (pkt->firstWordDelay != 0 || pkt->lastWordDelay != 0)
+    if (pkt->headerDelay != 0 || pkt->payloadDelay != 0)
         panic("Packet %s already has delay (%d, %d) that should be "
-              "accounted for.\n", pkt->cmdString(), pkt->firstWordDelay,
-              pkt->lastWordDelay);
+              "accounted for.\n", pkt->cmdString(), pkt->headerDelay,
+              pkt->payloadDelay);
 
-    // The first word will be delivered on the cycle after the header.
-    pkt->firstWordDelay = (headerCycles + 1) * clockPeriod() + offset;
+    // The headerDelay takes into account the relative time to deliver the
+    // header of the packet. It will be charged of the additional delay of
+    // the xbar if the packet goes through it.
+    pkt->headerDelay = (headerCycles + 1) * clockPeriod() + offset;
 
-    // Note that currently lastWordDelay can be smaller than
-    // firstWordDelay if the packet has no data
-    pkt->lastWordDelay = (headerCycles + dataCycles) * clockPeriod() +
-        offset;
+    // The payloadDelay takes into account the relative time to deliver the
+    // payload of the packet. If the packet has no data its value is just one
+    // tick (due to header) plus the offset value.
+    pkt->payloadDelay = (headerCycles + dataCycles) * clockPeriod() + offset;
 }
 
 template <typename SrcType, typename DstType>

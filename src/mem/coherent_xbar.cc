@@ -168,7 +168,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->lastWordDelay + curTick();
+    Tick packetFinishTime = curTick() + pkt->payloadDelay;
 
     // uncacheable requests need never be snooped
     if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
@@ -222,7 +222,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         assert(!pkt->memInhibitAsserted());
 
         // undo the calculation so we can check for 0 again
-        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
         DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
@@ -301,7 +301,7 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->lastWordDelay + curTick();
+    Tick packetFinishTime = curTick() + pkt->payloadDelay;
 
     if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches()) {
         // let the snoop filter inspect the response and update its state
@@ -427,7 +427,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     assert(!pkt->isExpressSnoop());
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->lastWordDelay + curTick();
+    Tick packetFinishTime = curTick() + pkt->payloadDelay;
 
     // forward it either as a snoop response or a normal response
     if (forwardAsSnoop) {
@@ -608,8 +608,8 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         transDist[pkt_cmd]++;
     }
 
-    // @todo: Not setting first-word time
-    pkt->lastWordDelay = response_latency;
+    // @todo: Not setting header time
+    pkt->payloadDelay = response_latency;
     return response_latency;
 }
 
@@ -648,8 +648,8 @@ CoherentXBar::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
         snoops++;
     }
 
-    // @todo: Not setting first-word time
-    pkt->lastWordDelay = snoop_response_latency;
+    // @todo: Not setting header time
+    pkt->payloadDelay = snoop_response_latency;
     return snoop_response_latency;
 }
 

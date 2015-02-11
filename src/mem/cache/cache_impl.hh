@@ -419,7 +419,7 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
     pkt->popSenderState();
     delete rec;
     // @todo someone should pay for this
-    pkt->firstWordDelay = pkt->lastWordDelay = 0;
+    pkt->headerDelay = pkt->payloadDelay = 0;
     // forwardLatency is set here because there is a response from an
     // upper level cache.
     memSidePort->schedTimingSnoopResp(pkt, clockEdge(forwardLatency));
@@ -486,7 +486,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
             // also reset the bus time that the original packet has
             // not yet paid for
-            snoop_pkt->firstWordDelay = snoop_pkt->lastWordDelay = 0;
+            snoop_pkt->headerDelay = snoop_pkt->payloadDelay = 0;
 
             // make this an instantaneous express snoop, and let the
             // other caches in the system know that the packet is
@@ -521,7 +521,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         uncacheableFlush(pkt);
 
         // @todo: someone should pay for this
-        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
         // writes go in write buffer, reads use MSHR,
         // prefetches are acknowledged (responded to) and dropped
@@ -579,7 +579,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         if (needsResponse) {
             pkt->makeTimingResponse();
             // @todo: Make someone pay for this
-            pkt->firstWordDelay = pkt->lastWordDelay = 0;
+            pkt->headerDelay = pkt->payloadDelay = 0;
 
             // In this case we are considering lat neglecting
             // responseLatency, modelling hit latency just as
@@ -598,7 +598,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         // miss
 
         // @todo: Make someone pay for this
-        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
         Addr blk_addr = blockAlign(pkt->getAddr());
         MSHR *mshr = mshrQueue.findMatch(blk_addr, pkt->isSecure());
@@ -1146,8 +1146,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // from lower level caches/memory to an upper level cache or
                 // the core.
                 completion_time = clockEdge(responseLatency) +
-                    (transfer_offset ? pkt->lastWordDelay :
-                     pkt->firstWordDelay);
+                    (transfer_offset ? pkt->payloadDelay :
+                     pkt->headerDelay);
 
                 assert(!target->pkt->req->isUncacheable());
 
@@ -1163,14 +1163,14 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // from lower level caches/memory to an upper level cache or
                 // the core.
                 completion_time = clockEdge(responseLatency) +
-                    pkt->lastWordDelay;
+                    pkt->payloadDelay;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
                 completion_time = clockEdge(responseLatency) +
-                    pkt->lastWordDelay;
+                    pkt->payloadDelay;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getConstPtr<uint8_t>());
                 }
@@ -1190,7 +1190,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                         target->pkt->getAddr());
             }
             // reset the bus additional time as it is now accounted for
-            target->pkt->firstWordDelay = target->pkt->lastWordDelay = 0;
+            target->pkt->headerDelay = target->pkt->payloadDelay = 0;
             cpuSidePort->schedTimingResp(target->pkt, completion_time);
             break;
 
@@ -1239,7 +1239,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         mq = mshr->queue;
         mq->markPending(mshr);
         requestMemSideBus((RequestCause)mq->index, clockEdge() +
-                          pkt->lastWordDelay);
+                          pkt->payloadDelay);
     } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
@@ -1512,7 +1512,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     }
     // We pay for fillLatency here.
     blk->whenReady = clockEdge() + fillLatency * clockPeriod() +
-        pkt->lastWordDelay;
+        pkt->payloadDelay;
 
     return blk;
 }
@@ -1548,7 +1548,7 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
     pkt->makeTimingResponse();
     // @todo Make someone pay for this
-    pkt->firstWordDelay = pkt->lastWordDelay = 0;
+    pkt->headerDelay = pkt->payloadDelay = 0;
     if (pkt->isRead()) {
         pkt->setDataFromBlock(blk_data, blkSize);
     }
@@ -1599,7 +1599,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             snoopPkt.pushSenderState(new ForwardResponseRecord());
             // the snoop packet does not need to wait any additional
             // time
-            snoopPkt.firstWordDelay = snoopPkt.lastWordDelay = 0;
+            snoopPkt.headerDelay = snoopPkt.payloadDelay = 0;
             cpuSidePort->sendTimingSnoopReq(&snoopPkt);
             if (snoopPkt.memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache

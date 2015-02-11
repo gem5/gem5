@@ -601,7 +601,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
         assert(!read);
 
         // @todo someone should pay for this
-        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
         state = nextState;
         nextState = Ready;

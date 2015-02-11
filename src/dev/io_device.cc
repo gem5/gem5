@@ -55,7 +55,7 @@ Tick
 PioPort::recvAtomic(PacketPtr pkt)
 {
     // @todo: We need to pay for this and not just zero it out
-    pkt->firstWordDelay = pkt->lastWordDelay = 0;
+    pkt->headerDelay = pkt->payloadDelay = 0;
 
     const Tick delay(pkt->isRead() ? device->read(pkt) : device->write(pkt));
     assert(pkt->isResponse() || pkt->isError());

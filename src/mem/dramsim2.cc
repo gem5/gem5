@@ -270,7 +270,7 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
         assert(pkt->isResponse());
 
         // @todo someone should pay for this
-        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
         DPRINTF(DRAMSim2, "Queuing response for address %lld\n",
                 pkt->getAddr());

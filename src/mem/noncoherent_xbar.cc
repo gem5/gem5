@@ -128,7 +128,7 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->lastWordDelay + curTick();
+    Tick packetFinishTime = curTick() + pkt->payloadDelay;
 
     // before forwarding the packet (and possibly altering it),
     // remember if we are expecting a response
@@ -146,7 +146,7 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // undo the calculation so we can check for 0 again
-        pkt->firstWordDelay = pkt->lastWordDelay = 0;
+        pkt->headerDelay = pkt->payloadDelay = 0;
 
         // occupy until the header is sent
         reqLayers[master_port_id]->failedTiming(src_port,
@@ -201,7 +201,7 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
     calcPacketTiming(pkt);
-    Tick packetFinishTime = pkt->lastWordDelay + curTick();
+    Tick packetFinishTime = curTick() + pkt->payloadDelay;
 
     // send the packet through the destination slave port
     bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);
@@ -265,7 +265,7 @@ NoncoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     }
 
     // @todo: Not setting first-word time
-    pkt->lastWordDelay = response_latency;
+    pkt->payloadDelay = response_latency;
     return response_latency;
 }
 

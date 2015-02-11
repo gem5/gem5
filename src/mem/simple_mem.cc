@@ -125,7 +125,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
     }
 
     // @todo someone should pay for this
-    pkt->firstWordDelay = pkt->lastWordDelay = 0;
+    pkt->headerDelay = pkt->payloadDelay = 0;
 
     // update the release time according to the bandwidth limit, and
     // do so with respect to the time it takes to finish this request

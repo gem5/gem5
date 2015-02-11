@@ -124,8 +124,8 @@ void
 StubSlavePort::ResponseEvent::process()
 {
     owner.responsePacket->makeResponse();
-    owner.responsePacket->firstWordDelay = 0;
-    owner.responsePacket->lastWordDelay = 0;
+    owner.responsePacket->headerDelay = 0;
+    owner.responsePacket->payloadDelay = 0;
 
     if (owner.sendTimingResp(owner.responsePacket)) {
         owner.responsePacket = NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -313,23 +313,23 @@ class Packet : public Printable
   public:
 
     /**
-     * The extra delay from seeing the packet until the first word is
+     * The extra delay from seeing the packet until the header is
      * transmitted. This delay is used to communicate the crossbar
      * forwarding latency to the neighbouring object (e.g. a cache)
      * that actually makes the packet wait. As the delay is relative,
      * a 32-bit unsigned should be sufficient.
      */
-    uint32_t firstWordDelay;
+    uint32_t headerDelay;
 
     /**
-     * The extra pipelining delay from seeing the packet until the
-     * last word is transmitted by the component that provided it (if
-     * any). This includes the first word delay. Similar to the first
-     * word delay, this is used to make up for the fact that the
+     * The extra pipelining delay from seeing the packet until the end of
+     * payload is transmitted by the component that provided it (if
+     * any). This includes the header delay. Similar to the header
+     * delay, this is used to make up for the fact that the
      * crossbar does not make the packet wait. As the delay is
      * relative, a 32-bit unsigned should be sufficient.
      */
-    uint32_t lastWordDelay;
+    uint32_t payloadDelay;
 
     /**
      * A virtual base opaque structure used to hold state associated
@@ -574,7 +574,7 @@ class Packet : public Printable
     Packet(const RequestPtr _req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            size(0), bytesValidStart(0), bytesValidEnd(0),
-           firstWordDelay(0), lastWordDelay(0),
+           headerDelay(0), payloadDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -596,7 +596,7 @@ class Packet : public Printable
     Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            bytesValidStart(0), bytesValidEnd(0),
-           firstWordDelay(0), lastWordDelay(0),
+           headerDelay(0), payloadDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -621,8 +621,8 @@ class Packet : public Printable
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
            bytesValidStart(pkt->bytesValidStart),
            bytesValidEnd(pkt->bytesValidEnd),
-           firstWordDelay(pkt->firstWordDelay),
-           lastWordDelay(pkt->lastWordDelay),
+           headerDelay(pkt->headerDelay),
+           payloadDelay(pkt->payloadDelay),
            senderState(pkt->senderState)
     {
         if (!clear_flags)
