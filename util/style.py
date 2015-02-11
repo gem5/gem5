@@ -126,14 +126,10 @@ def modregions(wctx, fname):
     return mod_regions
 
 class UserInterface(object):
-    def __init__(self, verbose=False, auto=False):
-        self.auto = auto
+    def __init__(self, verbose=False):
         self.verbose = verbose
 
     def prompt(self, prompt, results, default):
-        if self.auto:
-            return self.auto
-
         while True:
             result = self.do_prompt(prompt, results, default)
             if result in results:
@@ -436,10 +432,17 @@ def do_check_style(hgui, repo, *pats, **opts):
     """
     from mercurial import mdiff, util
 
-    opt_fix_white = opts.get('fix_white', False)
+    opt_fix_all = opts.get('fix_all', False)
+    if not opt_fix_all:
+        opt_fix_white = opts.get('fix_white', False)
+        opt_fix_include = opts.get('fix_include', False)
+    else:
+        opt_fix_white = True
+        opt_fix_include = True
+
     opt_all = opts.get('all', False)
     opt_no_ignore = opts.get('no_ignore', False)
-    ui = MercurialUI(hgui, hgui.verbose, opt_fix_white)
+    ui = MercurialUI(hgui, verbose=hgui.verbose)
 
     def prompt(name, func, regions=all_regions):
         result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", 'aif', 'a')
@@ -450,6 +453,12 @@ def do_check_style(hgui, repo, *pats, **opts):
 
         return False
 
+    def no_prompt(name, func, regions=all_regions):
+        func(name, regions)
+        return False
+
+    prompt_white = prompt if not opt_fix_white else no_prompt
+    prompt_include = prompt if not opt_fix_include else no_prompt
 
     # Import the match (repository file name matching helper)
     # function. Different versions of Mercurial keep it in different
@@ -481,16 +490,16 @@ def do_check_style(hgui, repo, *pats, **opts):
         if not opt_no_ignore and check_ignores(fname):
             continue
 
-        if whitespace.apply(fname, prompt, mod_regions):
+        if whitespace.apply(fname, prompt_white, mod_regions):
             return True
 
-        if sorted_includes.apply(fname, prompt, mod_regions):
+        if sorted_includes.apply(fname, prompt_include, mod_regions):
             return True
 
     return False
 
 def do_check_format(hgui, repo, **args):
-    ui = MercurialUI(hgui, hgui.verbose, auto)
+    ui = MercurialUI(hgui, hgui.verbose)
 
     modified, added, removed, deleted, unknown, ignore, clean = repo.status()
 
@@ -544,7 +553,9 @@ except ImportError:
 cmdtable = {
     '^m5style' : (
         do_check_style, [
-            ('w', 'fix-white', False, _("automatically fix whitespace")),
+            ('f', 'fix-all', False, _("automatically fix style issues")),
+            ('', 'fix-white', False, _("automatically fix white space issues")),
+            ('', 'fix-include', False, _("automatically fix include ordering")),
             ('a', 'all', False,
              _("include clean files and unmodified parts of modified files")),
             ('', 'no-ignore', False, _("ignore the style ignore list")),
