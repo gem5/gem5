@@ -31,12 +31,12 @@
 #ifndef __ARCH_SPARC_TLB_HH__
 #define __ARCH_SPARC_TLB_HH__
 
+#include "arch/generic/tlb.hh"
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/tlb_map.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
 #include "params/SparcTLB.hh"
-#include "sim/tlb.hh"
 
 class ThreadContext;
 class Packet;

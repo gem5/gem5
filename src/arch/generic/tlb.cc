@@ -28,12 +28,13 @@
  * Authors: Gabe Black
  */
 
+#include "arch/generic/tlb.hh"
+
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
-#include "sim/tlb.hh"
 
 Fault
 GenericTLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode)

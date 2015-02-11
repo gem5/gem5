@@ -45,8 +45,8 @@
 #ifndef __CPU_TRANSLATION_HH__
 #define __CPU_TRANSLATION_HH__
 
+#include "arch/generic/tlb.hh"
 #include "sim/faults.hh"
-#include "sim/tlb.hh"
 
 /**
  * This class captures the state of an address translation.  A translation

@@ -47,7 +47,6 @@
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "mem/request.hh"
-#include "sim/tlb.hh"
 
 class ThreadContext;
 

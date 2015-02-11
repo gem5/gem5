@@ -39,6 +39,7 @@
 
 #include <map>
 
+#include "arch/generic/tlb.hh"
 #include "arch/power/isa_traits.hh"
 #include "arch/power/pagetable.hh"
 #include "arch/power/utility.hh"
@@ -46,7 +47,6 @@
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/PowerTLB.hh"
-#include "sim/tlb.hh"
 
 class ThreadContext;
 

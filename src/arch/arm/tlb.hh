@@ -48,12 +48,12 @@
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
+#include "arch/generic/tlb.hh"
 #include "base/statistics.hh"
 #include "dev/dma_device.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
 #include "sim/probe/pmu.hh"
-#include "sim/tlb.hh"
 
 class ThreadContext;
 

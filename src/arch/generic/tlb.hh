@@ -40,8 +40,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SIM_TLB_HH__
-#define __SIM_TLB_HH__
+#ifndef __ARCH_GENERIC_TLB_HH__
+#define __ARCH_GENERIC_TLB_HH__
 
 #include "base/misc.hh"
 #include "mem/request.hh"
@@ -147,4 +147,4 @@ class GenericTLB : public BaseTLB
     Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 };
 
-#endif // __ARCH_SPARC_TLB_HH__
+#endif // __ARCH_GENERIC_TLB_HH__

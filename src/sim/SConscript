@@ -30,7 +30,6 @@
 
 Import('*')
 
-SimObject('BaseTLB.py')
 SimObject('ClockedObject.py')
 SimObject('TickedObject.py')
 SimObject('Root.py')
@@ -75,7 +74,6 @@ if env['TARGET_ISA'] != 'null':
     Source('process.cc')
     Source('pseudo_inst.cc')
     Source('syscall_emul.cc')
-    Source('tlb.cc')
 
 DebugFlag('Checkpoint')
 DebugFlag('Config')
@@ -92,7 +90,6 @@ DebugFlag('PseudoInst')
 DebugFlag('Stack')
 DebugFlag('SyscallVerbose')
 DebugFlag('TimeSync')
-DebugFlag('TLB')
 DebugFlag('Thread')
 DebugFlag('Timer')
 DebugFlag('VtoPhys')

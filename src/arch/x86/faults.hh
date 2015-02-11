@@ -42,10 +42,10 @@
 
 #include <string>
 
+#include "arch/generic/tlb.hh"
 #include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
-#include "sim/tlb.hh"
 
 namespace X86ISA
 {

@@ -51,6 +51,7 @@
 #include <string>
 #include <queue>
 
+#include "arch/generic/tlb.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -65,7 +66,6 @@
 #include "mem/packet.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
-#include "sim/tlb.hh"
 
 /**
  * @file

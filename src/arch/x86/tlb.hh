@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/generic/tlb.hh"
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/pagetable.hh"
 #include "base/trie.hh"
@@ -51,7 +52,6 @@
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
 #include "sim/sim_object.hh"
-#include "sim/tlb.hh"
 
 class ThreadContext;
 class Packet;

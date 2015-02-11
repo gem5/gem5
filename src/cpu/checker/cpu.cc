@@ -44,6 +44,7 @@
 #include <list>
 #include <string>
 
+#include "arch/generic/tlb.hh"
 #include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "cpu/checker/cpu.hh"
@@ -53,7 +54,6 @@
 #include "cpu/thread_context.hh"
 #include "params/CheckerCPU.hh"
 #include "sim/full_system.hh"
-#include "sim/tlb.hh"
 
 using namespace std;
 using namespace TheISA;

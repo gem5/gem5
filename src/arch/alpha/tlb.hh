@@ -39,10 +39,10 @@
 #include "arch/alpha/pagetable.hh"
 #include "arch/alpha/utility.hh"
 #include "arch/alpha/vtophys.hh"
+#include "arch/generic/tlb.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/AlphaTLB.hh"
-#include "sim/tlb.hh"
 
 class ThreadContext;
 
