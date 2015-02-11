@@ -1128,11 +1128,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     }
 
     // First offset for critical word first calculations
-    int initial_offset = 0;
-
-    if (mshr->hasTargets()) {
-        initial_offset = mshr->getTarget()->pkt->getOffset(blkSize);
-    }
+    int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
     while (mshr->hasTargets()) {
         MSHR::Target *target = mshr->getTarget();
