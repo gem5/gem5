@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,173 +39,129 @@
  *
  * Authors: Erik Hallnor
  *          Steve Reinhardt
+ *          Andreas Hansson
  */
 
-// FIX ME: make trackBlkAddr use blocksize from actual cache, not hard coded
-
-#include <iomanip>
-#include <set>
-#include <string>
-#include <vector>
-
-#include "base/misc.hh"
 #include "base/random.hh"
 #include "base/statistics.hh"
 #include "cpu/testers/memtest/memtest.hh"
 #include "debug/MemTest.hh"
 #include "mem/mem_object.hh"
-#include "mem/packet.hh"
-#include "mem/port.hh"
-#include "mem/request.hh"
-#include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
-int TESTER_ALLOCATOR=0;
+unsigned int TESTER_ALLOCATOR = 0;
 
 bool
 MemTest::CpuPort::recvTimingResp(PacketPtr pkt)
 {
-    memtest->completeRequest(pkt);
+    memtest.completeRequest(pkt);
     return true;
 }
 
 void
 MemTest::CpuPort::recvRetry()
 {
-    memtest->doRetry();
+    memtest.recvRetry();
 }
 
-void
+bool
 MemTest::sendPkt(PacketPtr pkt) {
     if (atomic) {
-        cachePort.sendAtomic(pkt);
+        port.sendAtomic(pkt);
         completeRequest(pkt);
-    }
-    else if (!cachePort.sendTimingReq(pkt)) {
-        DPRINTF(MemTest, "accessRetry setting to true\n");
-
-        //
-        // dma requests should never be retried
-        //
-        if (issueDmas) {
-            panic("Nacked DMA requests are not supported\n");
-        }
-        accessRetry = true;
-        retryPkt = pkt;
     } else {
-        if (issueDmas) {
-            dmaOutstanding = true;
+        if (!port.sendTimingReq(pkt)) {
+            retryPkt = pkt;
+            return false;
         }
     }
-
+    return true;
 }
 
 MemTest::MemTest(const Params *p)
     : MemObject(p),
       tickEvent(this),
-      cachePort("test", this),
-      funcPort("functional", this),
-      funcProxy(funcPort, p->sys->cacheLineSize()),
-      retryPkt(NULL),
-//      mainMem(main_mem),
-//      checkMem(check_mem),
-      size(p->memory_size),
+      noRequestEvent(this),
+      noResponseEvent(this),
+      port("port", *this),
+      retryPkt(nullptr),
+      size(p->size),
+      interval(p->interval),
       percentReads(p->percent_reads),
       percentFunctional(p->percent_functional),
       percentUncacheable(p->percent_uncacheable),
-      issueDmas(p->issue_dmas),
-      masterId(p->sys->getMasterId(name())),
-      blockSize(p->sys->cacheLineSize()),
+      masterId(p->system->getMasterId(name())),
+      blockSize(p->system->cacheLineSize()),
+      blockAddrMask(blockSize - 1),
       progressInterval(p->progress_interval),
+      progressCheck(p->progress_check),
       nextProgressMessage(p->progress_interval),
-      percentSourceUnaligned(p->percent_source_unaligned),
-      percentDestUnaligned(p->percent_dest_unaligned),
       maxLoads(p->max_loads),
-      atomic(p->atomic),
-      suppress_func_warnings(p->suppress_func_warnings)
+      atomic(p->system->isAtomicMode()),
+      suppressFuncWarnings(p->suppress_func_warnings)
 {
     id = TESTER_ALLOCATOR++;
+    fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
+             blockSize - 1);
 
-    // Needs to be masked off once we know the block size.
-    traceBlockAddr = p->trace_addr;
     baseAddr1 = 0x100000;
     baseAddr2 = 0x400000;
     uncacheAddr = 0x800000;
 
-    blockAddrMask = blockSize - 1;
-    traceBlockAddr = blockAddr(traceBlockAddr);
-
     // set up counters
-    noResponseCycles = 0;
     numReads = 0;
     numWrites = 0;
-    schedule(tickEvent, 0);
 
-    accessRetry = false;
-    dmaOutstanding = false;
+    // kick things into action
+    schedule(tickEvent, curTick());
+    schedule(noRequestEvent, clockEdge(progressCheck));
+    schedule(noResponseEvent, clockEdge(progressCheck));
 }
 
 BaseMasterPort &
 MemTest::getMasterPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "functional")
-        return funcPort;
-    else if (if_name == "test")
-        return cachePort;
+    if (if_name == "port")
+        return port;
     else
         return MemObject::getMasterPort(if_name, idx);
 }
 
 void
-MemTest::init()
-{
-    // initial memory contents for both physical memory and functional
-    // memory should be 0; no need to initialize them.
-}
-
-
-void
-MemTest::completeRequest(PacketPtr pkt)
+MemTest::completeRequest(PacketPtr pkt, bool functional)
 {
     Request *req = pkt->req;
+    assert(req->getSize() == 1);
 
-    if (issueDmas) {
-        dmaOutstanding = false;
-    }
+    // this address is no longer outstanding
+    auto remove_addr = outstandingAddrs.find(req->getPaddr());
+    assert(remove_addr != outstandingAddrs.end());
+    outstandingAddrs.erase(remove_addr);
 
-    DPRINTF(MemTest, "completing %s at address %x (blk %x) %s\n",
+    DPRINTF(MemTest, "Completing %s at address %x (blk %x) %s\n",
             pkt->isWrite() ? "write" : "read",
-            req->getPaddr(), blockAddr(req->getPaddr()),
+            req->getPaddr(), blockAlign(req->getPaddr()),
             pkt->isError() ? "error" : "success");
 
-    MemTestSenderState *state =
-        safe_cast<MemTestSenderState *>(pkt->senderState);
-
-    uint8_t *data = state->data;
-    // @todo: This should really be a const pointer
-    uint8_t *pkt_data = pkt->getPtr<uint8_t>();
-
-    //Remove the address from the list of outstanding
-    std::set<unsigned>::iterator removeAddr =
-        outstandingAddrs.find(req->getPaddr());
-    assert(removeAddr != outstandingAddrs.end());
-    outstandingAddrs.erase(removeAddr);
+    const uint8_t *pkt_data = pkt->getConstPtr<uint8_t>();
 
     if (pkt->isError()) {
-        if (!suppress_func_warnings) {
-          warn("Functional %s access failed at %#x\n",
-               pkt->isWrite() ? "write" : "read", req->getPaddr());
+        if (!functional || !suppressFuncWarnings) {
+            warn("%s access failed at %#x\n",
+                 pkt->isWrite() ? "Write" : "Read", req->getPaddr());
         }
     } else {
         if (pkt->isRead()) {
-            if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
+            uint8_t ref_data = referenceData[req->getPaddr()];
+            if (pkt_data[0] != ref_data) {
                 panic("%s: read of %x (blk %x) @ cycle %d "
                       "returns %x, expected %x\n", name(),
-                      req->getPaddr(), blockAddr(req->getPaddr()), curTick(),
-                      *pkt_data, *data);
+                      req->getPaddr(), blockAlign(req->getPaddr()), curTick(),
+                      pkt_data[0], ref_data);
             }
 
             numReads++;
@@ -209,17 +177,21 @@ MemTest::completeRequest(PacketPtr pkt)
                 exitSimLoop("maximum number of loads reached");
         } else {
             assert(pkt->isWrite());
-            funcProxy.writeBlob(req->getPaddr(), pkt_data, req->getSize());
+
+            // update the reference data
+            referenceData[req->getPaddr()] = pkt_data[0];
             numWrites++;
             numWritesStat++;
         }
     }
 
-    noResponseCycles = 0;
-    delete state;
-    delete [] data;
     delete pkt->req;
+
+    // the packet will delete the data
     delete pkt;
+
+    // finally shift the response timeout forward
+    reschedule(noResponseEvent, clockEdge(progressCheck), true);
 }
 
 void
@@ -236,151 +208,126 @@ MemTest::regStats()
         .name(name() + ".num_writes")
         .desc("number of write accesses completed")
         ;
-
-    numCopiesStat
-        .name(name() + ".num_copies")
-        .desc("number of copy accesses completed")
-        ;
 }
 
 void
 MemTest::tick()
 {
-    if (!tickEvent.scheduled())
-        schedule(tickEvent, clockEdge(Cycles(1)));
+    // we should never tick if we are waiting for a retry
+    assert(!retryPkt);
 
-    if (++noResponseCycles >= 500000) {
-        if (issueDmas) {
-            cerr << "DMA tester ";
-        }
-        cerr << name() << ": deadlocked at cycle " << curTick() << endl;
-        fatal("");
-    }
-
-    if (accessRetry || (issueDmas && dmaOutstanding)) {
-        DPRINTF(MemTest, "MemTester waiting on accessRetry or DMA response\n");
-        return;
-    }
-
-    //make new request
+    // create a new request
     unsigned cmd = random_mt.random(0, 100);
-    unsigned offset = random_mt.random<unsigned>(0, size - 1);
-    unsigned base = random_mt.random(0, 1);
-    uint64_t data = random_mt.random<uint64_t>();
-    unsigned access_size = random_mt.random(0, 3);
+    uint8_t data = random_mt.random<uint8_t>();
     bool uncacheable = random_mt.random(0, 100) < percentUncacheable;
-
-    unsigned dma_access_size = random_mt.random(0, 3);
-
-    //If we aren't doing copies, use id as offset, and do a false sharing
-    //mem tester
-    //We can eliminate the lower bits of the offset, and then use the id
-    //to offset within the blks
-    offset = blockAddr(offset);
-    offset += id;
-    access_size = 0;
-    dma_access_size = 0;
-
+    unsigned base = random_mt.random(0, 1);
     Request::Flags flags;
     Addr paddr;
 
-    if (uncacheable) {
-        flags.set(Request::UNCACHEABLE);
-        paddr = uncacheAddr + offset;
-    } else  {
-        paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
-    }
+    // generate a unique address
+    do {
+        unsigned offset = random_mt.random<unsigned>(0, size - 1);
 
-    // For now we only allow one outstanding request per address
-    // per tester This means we assume CPU does write forwarding
-    // to reads that alias something in the cpu store buffer.
-    if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
-        return;
-    }
+        // use the tester id as offset within the block for false sharing
+        offset = blockAlign(offset);
+        offset += id;
+
+        if (uncacheable) {
+            flags.set(Request::UNCACHEABLE);
+            paddr = uncacheAddr + offset;
+        } else  {
+            paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
+        }
+    } while (outstandingAddrs.find(paddr) != outstandingAddrs.end());
 
     bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
         !uncacheable;
-    Request *req = nullptr;
-    uint8_t *result = new uint8_t[8];
+    Request *req = new Request(paddr, 1, flags, masterId);
+    req->setThreadContext(id, 0);
 
-    if (issueDmas) {
-        paddr &= ~((1 << dma_access_size) - 1);
-        req = new Request(paddr, 1 << dma_access_size, flags, masterId);
-        req->setThreadContext(id,0);
-    } else {
-        paddr &= ~((1 << access_size) - 1);
-        req = new Request(paddr, 1 << access_size, flags, masterId);
-        req->setThreadContext(id,0);
-    }
-    assert(req->getSize() == 1);
+    outstandingAddrs.insert(paddr);
+
+    // sanity check
+    panic_if(outstandingAddrs.size() > 100,
+             "Tester %s has more than 100 outstanding requests\n", name());
+
+    PacketPtr pkt = nullptr;
+    uint8_t *pkt_data = new uint8_t[1];
 
     if (cmd < percentReads) {
-        // read
-        outstandingAddrs.insert(paddr);
-
-        // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
-        funcProxy.readBlob(req->getPaddr(), result, req->getSize());
+        // start by ensuring there is a reference value if we have not
+        // seen this address before
+        uint8_t M5_VAR_USED ref_data = 0;
+        auto ref = referenceData.find(req->getPaddr());
+        if (ref == referenceData.end()) {
+            referenceData[req->getPaddr()] = 0;
+        } else {
+            ref_data = ref->second;
+        }
 
         DPRINTF(MemTest,
-                "id %d initiating %sread at addr %x (blk %x) expecting %x\n",
-                id, do_functional ? "functional " : "", req->getPaddr(),
-                blockAddr(req->getPaddr()), *result);
-
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-        pkt->dataDynamic(new uint8_t[req->getSize()]);
-        MemTestSenderState *state = new MemTestSenderState(result);
-        pkt->senderState = state;
-
-        if (do_functional) {
-            assert(pkt->needsResponse());
-            pkt->setSuppressFuncError();
-            cachePort.sendFunctional(pkt);
-            completeRequest(pkt);
-        } else {
-            sendPkt(pkt);
-        }
-    } else {
-        // write
-        outstandingAddrs.insert(paddr);
-
-        DPRINTF(MemTest, "initiating %swrite at addr %x (blk %x) value %x\n",
+                "Initiating %sread at addr %x (blk %x) expecting %x\n",
                 do_functional ? "functional " : "", req->getPaddr(),
-                blockAddr(req->getPaddr()), data & 0xff);
+                blockAlign(req->getPaddr()), ref_data);
 
-        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-        uint8_t *pkt_data = new uint8_t[req->getSize()];
+        pkt = new Packet(req, MemCmd::ReadReq);
         pkt->dataDynamic(pkt_data);
-        memcpy(pkt_data, &data, req->getSize());
-        MemTestSenderState *state = new MemTestSenderState(result);
-        pkt->senderState = state;
+    } else {
+        DPRINTF(MemTest, "Initiating %swrite at addr %x (blk %x) value %x\n",
+                do_functional ? "functional " : "", req->getPaddr(),
+                blockAlign(req->getPaddr()), data);
 
-        if (do_functional) {
-            pkt->setSuppressFuncError();
-            cachePort.sendFunctional(pkt);
-            completeRequest(pkt);
-        } else {
-            sendPkt(pkt);
-        }
+        pkt = new Packet(req, MemCmd::WriteReq);
+        pkt->dataDynamic(pkt_data);
+        pkt_data[0] = data;
+    }
+
+    // there is no point in ticking if we are waiting for a retry
+    bool keep_ticking = true;
+    if (do_functional) {
+        pkt->setSuppressFuncError();
+        port.sendFunctional(pkt);
+        completeRequest(pkt, true);
+    } else {
+        keep_ticking = sendPkt(pkt);
+    }
+
+    if (keep_ticking) {
+        // schedule the next tick
+        schedule(tickEvent, clockEdge(interval));
+
+        // finally shift the timeout for sending of requests forwards
+        // as we have successfully sent a packet
+        reschedule(noRequestEvent, clockEdge(progressCheck), true);
+    } else {
+        DPRINTF(MemTest, "Waiting for retry\n");
     }
 }
 
 void
-MemTest::doRetry()
+MemTest::noRequest()
 {
-    if (cachePort.sendTimingReq(retryPkt)) {
-        DPRINTF(MemTest, "accessRetry setting to false\n");
-        accessRetry = false;
-        retryPkt = NULL;
-    }
+    panic("%s did not send a request for %d cycles", name(), progressCheck);
 }
-
 
 void
-MemTest::printAddr(Addr a)
+MemTest::noResponse()
 {
-    cachePort.printAddr(a);
+    panic("%s did not see a response for %d cycles", name(), progressCheck);
 }
 
+void
+MemTest::recvRetry()
+{
+    assert(retryPkt);
+    if (port.sendTimingReq(retryPkt)) {
+        DPRINTF(MemTest, "Proceeding after successful retry\n");
+
+        retryPkt = nullptr;
+        // kick things into action again
+        schedule(tickEvent, clockEdge(interval));
+    }
+}
 
 MemTest *
 MemTestParams::create()

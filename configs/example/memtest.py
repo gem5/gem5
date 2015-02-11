@@ -124,7 +124,7 @@ else:
 
 # build a list of prototypes, one for each level of treespec, starting
 # at the end (last entry is tester objects)
-prototypes = [ MemTest(atomic=options.atomic, max_loads=options.maxloads,
+prototypes = [ MemTest(max_loads=options.maxloads,
                        percent_functional=options.functional,
                        percent_uncacheable=options.uncacheable,
                        progress_interval=options.progress) ]
@@ -146,11 +146,8 @@ for scale in treespec[:-2]:
      prototypes.insert(0, next)
 
 # system simulated
-system = System(funcmem = SimpleMemory(in_addr_map = False),
-                funcbus = NoncoherentXBar(),
-                physmem = SimpleMemory(latency = "100ns"),
+system = System(physmem = SimpleMemory(latency = "100ns"),
                 cache_line_size = block_size)
-
 
 system.voltage_domain = VoltageDomain(voltage = '1V')
 
@@ -182,13 +179,9 @@ def make_level(spec, prototypes, attach_obj, attach_port):
           # we just built the MemTest objects
           parent.cpu = objs
           for t in objs:
-               t.test = getattr(attach_obj, attach_port)
-               t.functional = system.funcbus.slave
+               t.port = getattr(attach_obj, attach_port)
 
 make_level(treespec, prototypes, system.physmem, "port")
-
-# connect reference memory to funcbus
-system.funcbus.master = system.funcmem.port
 
 # -----------------------
 # run simulation
@@ -202,7 +195,7 @@ else:
 
 # The system port is never used in the tester so merely connect it
 # to avoid problems
-root.system.system_port = root.system.funcbus.slave
+root.system.system_port = root.system.physmem.cpu_side_bus.slave
 
 # Not much point in this being higher than the L1 latency
 m5.ticks.setGlobalFrequency('1ns')

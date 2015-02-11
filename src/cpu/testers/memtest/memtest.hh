@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,166 +39,152 @@
  *
  * Authors: Erik Hallnor
  *          Steve Reinhardt
+ *          Andreas Hansson
  */
 
 #ifndef __CPU_MEMTEST_MEMTEST_HH__
 #define __CPU_MEMTEST_MEMTEST_HH__
 
 #include <set>
+#include <unordered_map>
 
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
-#include "mem/port.hh"
-#include "mem/port_proxy.hh"
 #include "params/MemTest.hh"
 #include "sim/eventq.hh"
-#include "sim/sim_exit.hh"
-#include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-class Packet;
+/**
+ * The MemTest class tests a cache coherent memory system by
+ * generating false sharing and verifying the read data against a
+ * reference updated on the completion of writes. Each tester reads
+ * and writes a specific byte in a cache line, as determined by its
+ * unique id. Thus, all requests issued by the MemTest instance are a
+ * single byte and a specific address is only ever touched by a single
+ * tester.
+ *
+ * In addition to verifying the data, the tester also has timeouts for
+ * both requests and responses, thus checking that the memory-system
+ * is making progress.
+ */
 class MemTest : public MemObject
 {
+
   public:
+
     typedef MemTestParams Params;
     MemTest(const Params *p);
 
-    virtual void init();
-
-    // register statistics
     virtual void regStats();
-
-    // main simulation loop (one cycle)
-    void tick();
 
     virtual BaseMasterPort &getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);
 
-    /**
-     * Print state of address in memory system via PrintReq (for
-     * debugging).
-     */
-    void printAddr(Addr a);
-
   protected:
-    class TickEvent : public Event
-    {
-      private:
-        MemTest *cpu;
 
-      public:
-        TickEvent(MemTest *c) : Event(CPU_Tick_Pri), cpu(c) {}
-        void process() { cpu->tick(); }
-        virtual const char *description() const { return "MemTest tick"; }
-    };
+    void tick();
 
-    TickEvent tickEvent;
+    EventWrapper<MemTest, &MemTest::tick> tickEvent;
+
+    void noRequest();
+
+    EventWrapper<MemTest, &MemTest::noRequest> noRequestEvent;
+
+    void noResponse();
+
+    EventWrapper<MemTest, &MemTest::noResponse> noResponseEvent;
 
     class CpuPort : public MasterPort
     {
-        MemTest *memtest;
+        MemTest &memtest;
 
       public:
 
-        CpuPort(const std::string &_name, MemTest *_memtest)
-            : MasterPort(_name, _memtest), memtest(_memtest)
+        CpuPort(const std::string &_name, MemTest &_memtest)
+            : MasterPort(_name, &_memtest), memtest(_memtest)
         { }
 
       protected:
 
-        virtual bool recvTimingResp(PacketPtr pkt);
+        bool recvTimingResp(PacketPtr pkt);
 
-        virtual void recvTimingSnoopReq(PacketPtr pkt) { }
+        void recvTimingSnoopReq(PacketPtr pkt) { }
 
-        virtual Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
+        void recvFunctionalSnoop(PacketPtr pkt) { }
 
-        virtual void recvFunctionalSnoop(PacketPtr pkt) { }
+        Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
 
-        virtual void recvRetry();
+        void recvRetry();
     };
 
-    CpuPort cachePort;
-    CpuPort funcPort;
-    PortProxy funcProxy;
-
-    class MemTestSenderState : public Packet::SenderState
-    {
-      public:
-        /** Constructor. */
-        MemTestSenderState(uint8_t *_data)
-            : data(_data)
-        { }
-
-        // Hold onto data pointer
-        uint8_t *data;
-    };
+    CpuPort port;
 
     PacketPtr retryPkt;
 
-    bool accessRetry;
-    
-    //
-    // The dmaOustanding flag enforces only one dma at a time
-    //
-    bool dmaOutstanding;
+    const unsigned size;
 
-    unsigned size;              // size of testing memory region
+    const Cycles interval;
 
-    unsigned percentReads;      // target percentage of read accesses
-    unsigned percentFunctional; // target percentage of functional accesses
-    unsigned percentUncacheable;
-
-    bool issueDmas;
+    const unsigned percentReads;
+    const unsigned percentFunctional;
+    const unsigned percentUncacheable;
 
     /** Request id for all generated traffic */
     MasterID masterId;
 
-    int id;
+    unsigned int id;
 
-    std::set<unsigned> outstandingAddrs;
+    std::set<Addr> outstandingAddrs;
 
-    unsigned blockSize;
+    // store the expected value for the addresses we have touched
+    std::unordered_map<Addr, uint8_t> referenceData;
 
-    Addr blockAddrMask;
+    const unsigned blockSize;
 
-    Addr blockAddr(Addr addr)
+    const Addr blockAddrMask;
+
+    /**
+     * Get the block aligned address.
+     *
+     * @param addr Address to align
+     * @return The block aligned address
+     */
+    Addr blockAlign(Addr addr) const
     {
         return (addr & ~blockAddrMask);
     }
 
-    Addr traceBlockAddr;
-
-    Addr baseAddr1;             // fix this to option
-    Addr baseAddr2;             // fix this to option
+    Addr baseAddr1;
+    Addr baseAddr2;
     Addr uncacheAddr;
 
-    unsigned progressInterval;  // frequency of progress reports
+    const unsigned progressInterval;  // frequency of progress reports
+    const Cycles progressCheck;
     Tick nextProgressMessage;   // access # for next progress report
-
-    unsigned percentSourceUnaligned;
-    unsigned percentDestUnaligned;
-
-    Tick noResponseCycles;
 
     uint64_t numReads;
     uint64_t numWrites;
-    uint64_t maxLoads;
+    const uint64_t maxLoads;
 
-    bool atomic;
-    bool suppress_func_warnings;
+    const bool atomic;
+
+    const bool suppressFuncWarnings;
 
     Stats::Scalar numReadsStat;
     Stats::Scalar numWritesStat;
-    Stats::Scalar numCopiesStat;
 
-    // called by MemCompleteEvent::process()
-    void completeRequest(PacketPtr pkt);
+    /**
+     * Complete a request by checking the response.
+     *
+     * @param pkt Response packet
+     * @param functional Whether the access was functional or not
+     */
+    void completeRequest(PacketPtr pkt, bool functional = false);
 
-    void sendPkt(PacketPtr pkt);
+    bool sendPkt(PacketPtr pkt);
 
-    void doRetry();
+    void recvRetry();
 
-    friend class MemCompleteEvent;
 };
 
 #endif // __CPU_MEMTEST_MEMTEST_HH__
