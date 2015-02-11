@@ -852,9 +852,9 @@ namespace Debug {
             last = len(compound) - 1
             for i,flag in enumerate(compound):
                 if i != last:
-                    comp_code('$flag,')
+                    comp_code('&$flag,')
                 else:
-                    comp_code('$flag);')
+                    comp_code('&$flag);')
             comp_code.dedent()
 
     code.append(comp_code)

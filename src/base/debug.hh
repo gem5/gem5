@@ -81,24 +81,24 @@ class CompoundFlag : public SimpleFlag
 {
   protected:
     void
-    addFlag(Flag &f)
+    addFlag(Flag *f)
     {
-        if (&f != NULL)
-            _kids.push_back(&f);
+        if (f != nullptr)
+            _kids.push_back(f);
     }
 
   public:
     CompoundFlag(const char *name, const char *desc,
-        Flag &f00 = *(Flag *)0, Flag &f01 = *(Flag *)0,
-        Flag &f02 = *(Flag *)0, Flag &f03 = *(Flag *)0,
-        Flag &f04 = *(Flag *)0, Flag &f05 = *(Flag *)0,
-        Flag &f06 = *(Flag *)0, Flag &f07 = *(Flag *)0,
-        Flag &f08 = *(Flag *)0, Flag &f09 = *(Flag *)0,
-        Flag &f10 = *(Flag *)0, Flag &f11 = *(Flag *)0,
-        Flag &f12 = *(Flag *)0, Flag &f13 = *(Flag *)0,
-        Flag &f14 = *(Flag *)0, Flag &f15 = *(Flag *)0,
-        Flag &f16 = *(Flag *)0, Flag &f17 = *(Flag *)0,
-        Flag &f18 = *(Flag *)0, Flag &f19 = *(Flag *)0)
+        Flag *f00 = nullptr, Flag *f01 = nullptr,
+        Flag *f02 = nullptr, Flag *f03 = nullptr,
+        Flag *f04 = nullptr, Flag *f05 = nullptr,
+        Flag *f06 = nullptr, Flag *f07 = nullptr,
+        Flag *f08 = nullptr, Flag *f09 = nullptr,
+        Flag *f10 = nullptr, Flag *f11 = nullptr,
+        Flag *f12 = nullptr, Flag *f13 = nullptr,
+        Flag *f14 = nullptr, Flag *f15 = nullptr,
+        Flag *f16 = nullptr, Flag *f17 = nullptr,
+        Flag *f18 = nullptr, Flag *f19 = nullptr)
         : SimpleFlag(name, desc)
     {
         addFlag(f00); addFlag(f01); addFlag(f02); addFlag(f03); addFlag(f04);
