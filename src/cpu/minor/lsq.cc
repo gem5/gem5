@@ -1545,18 +1545,8 @@ PacketPtr
 makePacketForRequest(Request &request, bool isLoad,
     Packet::SenderState *sender_state, PacketDataPtr data)
 {
-    MemCmd command;
-
-    /* Make a ret with the right command type to match the request */
-    if (request.isLLSC()) {
-        command = (isLoad ? MemCmd::LoadLockedReq : MemCmd::StoreCondReq);
-    } else if (request.isSwap()) {
-        command = MemCmd::SwapReq;
-    } else {
-        command = (isLoad ? MemCmd::ReadReq : MemCmd::WriteReq);
-    }
-
-    PacketPtr ret = new Packet(&request, command);
+    PacketPtr ret = isLoad ? Packet::createRead(&request)
+                           : Packet::createWrite(&request);
 
     if (sender_state)
         ret->pushSenderState(sender_state);

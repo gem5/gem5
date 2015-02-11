@@ -643,45 +643,47 @@ class Packet : public Printable
     }
 
     /**
-     * Change the packet type based on request type.
+     * Generate the appropriate read MemCmd based on the Request flags.
      */
-    void
-    refineCommand()
+    static MemCmd
+    makeReadCmd(const RequestPtr req)
     {
-        if (cmd == MemCmd::ReadReq) {
-            if (req->isLLSC()) {
-                cmd = MemCmd::LoadLockedReq;
-            } else if (req->isPrefetch()) {
-                cmd = MemCmd::SoftPFReq;
-            }
-        } else if (cmd == MemCmd::WriteReq) {
-            if (req->isLLSC()) {
-                cmd = MemCmd::StoreCondReq;
-            } else if (req->isSwap()) {
-                cmd = MemCmd::SwapReq;
-            }
-        }
+        if (req->isLLSC())
+            return MemCmd::LoadLockedReq;
+        else if (req->isPrefetch())
+            return MemCmd::SoftPFReq;
+        else
+            return MemCmd::ReadReq;
+    }
+
+    /**
+     * Generate the appropriate write MemCmd based on the Request flags.
+     */
+    static MemCmd
+    makeWriteCmd(const RequestPtr req)
+    {
+        if (req->isLLSC())
+            return MemCmd::StoreCondReq;
+        else if (req->isSwap())
+            return MemCmd::SwapReq;
+        else
+            return MemCmd::WriteReq;
     }
 
     /**
      * Constructor-like methods that return Packets based on Request objects.
-     * Will call refineCommand() to fine-tune the Packet type if it's not a
-     * vanilla read or write.
+     * Fine-tune the MemCmd type if it's not a vanilla read or write.
      */
     static PacketPtr
     createRead(const RequestPtr req)
     {
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-        pkt->refineCommand();
-        return pkt;
+        return new Packet(req, makeReadCmd(req));
     }
 
     static PacketPtr
     createWrite(const RequestPtr req)
     {
-        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-        pkt->refineCommand();
-        return pkt;
+        return new Packet(req, makeWriteCmd(req));
     }
 
     /**

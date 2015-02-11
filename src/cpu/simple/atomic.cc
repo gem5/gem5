@@ -341,8 +341,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
 
         // Now do the access.
         if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-            Packet pkt(req, MemCmd::ReadReq);
-            pkt.refineCommand();
+            Packet pkt(req, Packet::makeReadCmd(req));
             pkt.dataStatic(data);
 
             if (req->isMmappedIpr())

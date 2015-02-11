@@ -230,7 +230,7 @@ class CacheRequest : public ResourceRequest
     bool isMemAccPending() { return memAccPending; }
 
     //Make this data private/protected!
-    MemCmd::Command pktCmd;
+    MemCmd pktCmd;
     RequestPtr memReq;
     PacketDataPtr reqData;
     CacheReqPacket *dataPkt;
@@ -252,7 +252,7 @@ class CacheReqPacket : public Packet
 {
   public:
     CacheReqPacket(CacheRequest *_req,
-                   Command _cmd, int _idx = 0)
+                   MemCmd _cmd, int _idx = 0)
         : Packet(&(*_req->memReq), _cmd), cacheReq(_req),
           instIdx(_idx), hasSlot(false), reqData(NULL), memReq(NULL)
     {

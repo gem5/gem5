@@ -811,10 +811,17 @@ CacheUnit::finishCacheUnitReq(DynInstPtr inst, CacheRequest *cache_req)
 void
 CacheUnit::buildDataPacket(CacheRequest *cache_req)
 {
-    cache_req->dataPkt = new CacheReqPacket(cache_req,
-                                            cache_req->pktCmd,
+    MemCmd cmd;
+
+    if (cache_req->pktCmd == MemCmd::ReadReq) {
+        cmd = Packet::makeReadCmd(cache_req->memReq);
+    } else {
+        assert(cache_req->pktCmd == MemCmd::WriteReq);
+        cmd = Packet::makeWriteCmd(cache_req->memReq);
+    }
+
+    cache_req->dataPkt = new CacheReqPacket(cache_req, cmd,
                                             cache_req->instIdx);
-    cache_req->dataPkt->refineCommand(); // handle LL/SC, etc.
 
     DPRINTF(InOrderCachePort, "[slot:%i]: Slot marked for %x\n",
             cache_req->getSlot(),
