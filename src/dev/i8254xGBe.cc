@@ -58,7 +58,7 @@ using namespace iGbReg;
 using namespace Net;
 
 IGbE::IGbE(const Params *p)
-    : EtherDevice(p), etherInt(NULL),  drainManager(NULL),
+    : EtherDevice(p), etherInt(NULL), cpa(NULL), drainManager(NULL),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
       txTick(false), txFifoTick(false), rxDmaPacket(false), pktOffset(0),
       fetchDelay(p->fetch_delay), wbDelay(p->wb_delay), 
@@ -2390,7 +2390,7 @@ IGbE::txWire()
 
     anPq("TXQ", "TX FIFO Q");
     if (etherInt->sendPacket(txFifo.front())) {
-        cpa->hwQ(CPA::FL_NONE, sys, macAddr, "TXQ", "WireQ", 0);
+        anQ("TXQ", "WireQ");
         if (DTRACE(EthernetSM)) {
             IpPtr ip(txFifo.front());
             if (ip)

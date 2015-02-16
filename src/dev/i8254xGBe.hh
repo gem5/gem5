@@ -182,31 +182,38 @@ class IGbE : public EtherDevice
     void checkDrain();
 
     void anBegin(std::string sm, std::string st, int flags = CPA::FL_NONE) {
-        cpa->hwBegin((CPA::flags)flags, sys, macAddr, sm, st);
+        if (cpa)
+            cpa->hwBegin((CPA::flags)flags, sys, macAddr, sm, st);
     }
 
-    void anQ(std::string sm, std::string q) { 
-        cpa->hwQ(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    void anQ(std::string sm, std::string q) {
+        if (cpa)
+            cpa->hwQ(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
     }
 
     void anDq(std::string sm, std::string q) {
-        cpa->hwDq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+        if (cpa)
+            cpa->hwDq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
     }
 
     void anPq(std::string sm, std::string q, int num = 1) {
-        cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+        if (cpa)
+            cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
     }
 
     void anRq(std::string sm, std::string q, int num = 1) {
-        cpa->hwRq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+        if (cpa)
+            cpa->hwRq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
     }
 
     void anWe(std::string sm, std::string q) {
-        cpa->hwWe(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+        if (cpa)
+            cpa->hwWe(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
     }
 
     void anWf(std::string sm, std::string q) {
-        cpa->hwWf(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+        if (cpa)
+            cpa->hwWf(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
     }
 
 
