@@ -11,6 +11,9 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2007-2008 The Florida State University
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -35,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andreas Sandberg
+ *          Stephen Hines
  */
 
 #include "arch/arm/insts/pseudo.hh"
@@ -98,4 +102,101 @@ std::string
 DecoderFaultInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     return csprintf("gem5fault %s", faultName());
+}
+
+
+
+FailUnimplemented::FailUnimplemented(const char *_mnemonic,
+                                     ExtMachInst _machInst)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+{
+    // don't call execute() (which panics) if we're on a
+    // speculative path
+    flags[IsNonSpeculative] = true;
+}
+
+FailUnimplemented::FailUnimplemented(const char *_mnemonic,
+                                     ExtMachInst _machInst,
+                                     const std::string& _fullMnemonic)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass),
+      fullMnemonic(_fullMnemonic)
+{
+    // don't call execute() (which panics) if we're on a
+    // speculative path
+    flags[IsNonSpeculative] = true;
+}
+
+Fault
+FailUnimplemented::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
+}
+
+std::string
+FailUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    return csprintf("%-10s (unimplemented)",
+                    fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
+}
+
+
+
+WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
+                                     ExtMachInst _machInst)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+{
+    // don't call execute() (which panics) if we're on a
+    // speculative path
+    flags[IsNonSpeculative] = true;
+}
+
+WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
+                                     ExtMachInst _machInst,
+                                     const std::string& _fullMnemonic)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false),
+      fullMnemonic(_fullMnemonic)
+{
+    // don't call execute() (which panics) if we're on a
+    // speculative path
+    flags[IsNonSpeculative] = true;
+}
+
+Fault
+WarnUnimplemented::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    if (!warned) {
+        warn("\tinstruction '%s' unimplemented\n",
+             fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
+        warned = true;
+    }
+
+    return NoFault;
+}
+
+std::string
+WarnUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    return csprintf("%-10s (unimplemented)",
+                    fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
+}
+
+
+
+FlushPipeInst::FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+{
+    flags[IsNonSpeculative] = true;
+}
+
+Fault
+FlushPipeInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    Fault fault = std::make_shared<FlushPipe>();
+    return fault;
+}
+
+std::string
+FlushPipeInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    return csprintf("%-10s (pipe flush)", mnemonic);
 }

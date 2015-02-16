@@ -68,12 +68,6 @@
 //Miscellaneous instructions that don't fit elsewhere
 ##include "misc.isa"
 
-//Include the unimplemented format
-##include "unimp.isa"
-
-//Include the unknown format
-##include "unknown.isa"
-
 //Include the breakpoint format
 ##include "breakpoint.isa"
 

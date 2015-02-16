@@ -11,6 +11,9 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2007-2008 The Florida State University
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -35,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andreas Sandberg
+ *          Stephen Hines
  */
 
 #ifndef __ARCH_ARM_INSTS_PSEUDO_HH__
@@ -55,6 +59,72 @@ class DecoderFaultInst : public ArmStaticInst
     Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+/**
+ * Static instruction class for unimplemented instructions that
+ * cause simulator termination.  Note that these are recognized
+ * (legal) instructions that the simulator does not support; the
+ * 'Unknown' class is used for unrecognized/illegal instructions.
+ * This is a leaf class.
+ */
+class FailUnimplemented : public ArmStaticInst
+{
+  private:
+    /// Full mnemonic for MRC and MCR instructions including the
+    /// coproc. register name
+    std::string fullMnemonic;
+
+  public:
+    FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst);
+    FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
+                      const std::string& _fullMnemonic);
+
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+/**
+ * Base class for unimplemented instructions that cause a warning
+ * to be printed (but do not terminate simulation).  This
+ * implementation is a little screwy in that it will print a
+ * warning for each instance of a particular unimplemented machine
+ * instruction, not just for each unimplemented opcode.  Should
+ * probably make the 'warned' flag a static member of the derived
+ * class.
+ */
+class WarnUnimplemented : public ArmStaticInst
+{
+  private:
+    /// Have we warned on this instruction yet?
+    mutable bool warned;
+    /// Full mnemonic for MRC and MCR instructions including the
+    /// coproc. register name
+    std::string fullMnemonic;
+
+  public:
+    WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst);
+    WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
+                      const std::string& _fullMnemonic);
+
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class FlushPipeInst : public ArmStaticInst
+{
+  public:
+    FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst);
+
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
 };
 
 
