@@ -187,7 +187,7 @@ class ExecContext : public ::ExecContext
     }
 
     TheISA::MiscReg
-    readMiscRegNoEffect(int misc_reg)
+    readMiscRegNoEffect(int misc_reg) const
     {
         return thread.readMiscRegNoEffect(misc_reg);
     }

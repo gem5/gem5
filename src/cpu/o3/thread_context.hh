@@ -228,7 +228,7 @@ class O3ThreadContext : public ThreadContext
     { return cpu->microPC(thread->threadId()); }
 
     /** Reads a miscellaneous register. */
-    virtual MiscReg readMiscRegNoEffect(int misc_reg)
+    virtual MiscReg readMiscRegNoEffect(int misc_reg) const
     { return cpu->readMiscRegNoEffect(misc_reg, thread->threadId()); }
 
     /** Reads a misc. register, including any side-effects the

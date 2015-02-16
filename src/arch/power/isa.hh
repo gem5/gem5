@@ -61,7 +61,7 @@ class ISA : public SimObject
     }
 
     MiscReg
-    readMiscRegNoEffect(int misc_reg)
+    readMiscRegNoEffect(int misc_reg) const
     {
         fatal("Power does not currently have any misc regs defined\n");
         return dummy;

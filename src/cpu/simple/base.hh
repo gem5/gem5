@@ -367,7 +367,7 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     Addr nextInstAddr() { return thread->nextInstAddr(); }
     MicroPC microPC() { return thread->microPC(); }
 
-    MiscReg readMiscRegNoEffect(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg) const
     {
         return thread->readMiscRegNoEffect(misc_reg);
     }

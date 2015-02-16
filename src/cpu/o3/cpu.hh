@@ -403,7 +403,7 @@ class FullO3CPU : public BaseO3CPU
     /** Register accessors.  Index refers to the physical register index. */
 
     /** Reads a miscellaneous register. */
-    TheISA::MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid);
+    TheISA::MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid) const;
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.

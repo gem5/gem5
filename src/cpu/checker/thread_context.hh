@@ -275,7 +275,7 @@ class CheckerThreadContext : public ThreadContext
     MicroPC microPC()
     { return actualTC->microPC(); }
 
-    MiscReg readMiscRegNoEffect(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg) const
     { return actualTC->readMiscRegNoEffect(misc_reg); }
 
     MiscReg readMiscReg(int misc_reg)

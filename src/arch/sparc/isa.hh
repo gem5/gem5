@@ -183,7 +183,7 @@ class ISA : public SimObject
 
   public:
 
-    MiscReg readMiscRegNoEffect(int miscReg);
+    MiscReg readMiscRegNoEffect(int miscReg) const;
     MiscReg readMiscReg(int miscReg, ThreadContext *tc);
 
     void setMiscRegNoEffect(int miscReg, const MiscReg val);

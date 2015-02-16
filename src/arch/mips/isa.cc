@@ -410,14 +410,14 @@ ISA::configCP()
 }
 
 inline unsigned
-ISA::getVPENum(ThreadID tid)
+ISA::getVPENum(ThreadID tid) const
 {
     TCBindReg tcBind = miscRegFile[MISCREG_TC_BIND][tid];
     return tcBind.curVPE;
 }
 
 MiscReg
-ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid)
+ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
 {
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);

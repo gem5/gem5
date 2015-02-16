@@ -225,7 +225,7 @@ class ThreadContext
 
     virtual MicroPC microPC() = 0;
 
-    virtual MiscReg readMiscRegNoEffect(int misc_reg) = 0;
+    virtual MiscReg readMiscRegNoEffect(int misc_reg) const = 0;
 
     virtual MiscReg readMiscReg(int misc_reg) = 0;
 
@@ -429,7 +429,7 @@ class ProxyThreadContext : public ThreadContext
     void setPredicate(bool val)
     { actualTC->setPredicate(val); }
 
-    MiscReg readMiscRegNoEffect(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg) const
     { return actualTC->readMiscRegNoEffect(misc_reg); }
 
     MiscReg readMiscReg(int misc_reg)

@@ -1205,7 +1205,7 @@ FullO3CPU<Impl>::verifyMemoryMode() const
 
 template <class Impl>
 TheISA::MiscReg
-FullO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, ThreadID tid)
+FullO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
 {
     return this->isa[tid]->readMiscRegNoEffect(misc_reg);
 }

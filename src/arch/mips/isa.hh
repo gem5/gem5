@@ -76,7 +76,7 @@ namespace MipsISA
 
         void configCP();
 
-        unsigned getVPENum(ThreadID tid);
+        unsigned getVPENum(ThreadID tid) const;
 
         //////////////////////////////////////////////////////////
         //
@@ -87,7 +87,7 @@ namespace MipsISA
         //@TODO: MIPS MT's register view automatically connects
         //       Status to TCStatus depending on current thread
         void updateCP0ReadView(int misc_reg, ThreadID tid) { }
-        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
+        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
 
         //template <class TC>
         MiscReg readMiscReg(int misc_reg,

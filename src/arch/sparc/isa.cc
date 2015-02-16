@@ -173,7 +173,7 @@ ISA::clear()
 }
 
 MiscReg
-ISA::readMiscRegNoEffect(int miscReg)
+ISA::readMiscRegNoEffect(int miscReg) const
 {
 
   // The three miscRegs are moved up from the switch statement

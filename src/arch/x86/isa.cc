@@ -124,7 +124,7 @@ ISA::params() const
 }
 
 MiscReg
-ISA::readMiscRegNoEffect(int miscReg)
+ISA::readMiscRegNoEffect(int miscReg) const
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should

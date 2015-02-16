@@ -63,7 +63,7 @@ namespace X86ISA
         ISA(Params *p);
         const Params *params() const;
 
-        MiscReg readMiscRegNoEffect(int miscReg);
+        MiscReg readMiscRegNoEffect(int miscReg) const;
         MiscReg readMiscReg(int miscReg, ThreadContext *tc);
 
         void setMiscRegNoEffect(int miscReg, MiscReg val);

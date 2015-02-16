@@ -285,7 +285,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     MicroPC microPC() { return thread->microPC(); }
     //////////////////////////////////////////
 
-    MiscReg readMiscRegNoEffect(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg) const
     {
         return thread->readMiscRegNoEffect(misc_reg);
     }

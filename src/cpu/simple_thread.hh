@@ -372,7 +372,7 @@ class SimpleThread : public ThreadState
     }
 
     MiscReg
-    readMiscRegNoEffect(int misc_reg, ThreadID tid = 0)
+    readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const
     {
         return isa->readMiscRegNoEffect(misc_reg);
     }

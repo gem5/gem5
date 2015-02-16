@@ -73,7 +73,7 @@ namespace AlphaISA
 
       public:
 
-        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
+        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
         MiscReg readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
 
         void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
