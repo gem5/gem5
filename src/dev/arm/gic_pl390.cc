@@ -47,7 +47,6 @@
 #include "debug/IPI.hh"
 #include "debug/Interrupt.hh"
 #include "dev/arm/gic_pl390.hh"
-#include "dev/arm/realview.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -102,11 +101,6 @@ Pl390::Pl390(const Params *p)
             bankedIntPriority[i][j] = 0;
         }
     }
-
-    RealView *rv = dynamic_cast<RealView*>(p->platform);
-    assert(rv);
-    rv->setGic(this);
-
 }
 
 Tick

@@ -39,12 +39,21 @@
 
 #include "dev/arm/base_gic.hh"
 
+#include "dev/arm/realview.hh"
 #include "params/BaseGic.hh"
 
 BaseGic::BaseGic(const Params *p)
         : PioDevice(p),
           platform(p->platform)
 {
+    RealView *const rv(dynamic_cast<RealView*>(p->platform));
+    // The platform keeps track of the GIC that is hooked up to the
+    // system. Due to quirks in gem5's configuration system, the
+    // platform can't take a GIC as parameter. Instead, we need to
+    // register with the platform when a new GIC is created. If we
+    // can't find a platform, something is seriously wrong.
+    fatal_if(!rv, "GIC model can't register with platform code");
+    rv->setGic(this);
 }
 
 BaseGic::~BaseGic()
