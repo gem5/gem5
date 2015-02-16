@@ -152,6 +152,12 @@ class TrafficGen : public MemObject
 
         bool recvTimingResp(PacketPtr pkt);
 
+        void recvTimingSnoopReq(PacketPtr pkt) { }
+
+        void recvFunctionalSnoop(PacketPtr pkt) { }
+
+        Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
+
       private:
 
         TrafficGen& trafficGen;
