@@ -88,7 +88,7 @@ System::System(Params *p)
       loadAddrMask(p->load_addr_mask),
       loadAddrOffset(p->load_offset),
       nextPID(0),
-      physmem(name() + ".physmem", p->memories),
+      physmem(name() + ".physmem", p->memories, p->mmap_using_noreserve),
       memoryMode(p->mem_mode),
       _cacheLineSize(p->cache_line_size),
       workItemsBegin(0),

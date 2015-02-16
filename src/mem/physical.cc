@@ -56,12 +56,29 @@
 #include "mem/abstract_mem.hh"
 #include "mem/physical.hh"
 
+/**
+ * On Linux, MAP_NORESERVE allow us to simulate a very large memory
+ * without committing to actually providing the swap space on the
+ * host. On OSX the MAP_NORESERVE flag does not exist, so simply make
+ * it 0.
+ */
+#if defined(__APPLE__)
+#ifndef MAP_NORESERVE
+#define MAP_NORESERVE 0
+#endif
+#endif
+
 using namespace std;
 
 PhysicalMemory::PhysicalMemory(const string& _name,
-                               const vector<AbstractMemory*>& _memories) :
-    _name(_name), rangeCache(addrMap.end()), size(0)
+                               const vector<AbstractMemory*>& _memories,
+                               bool mmap_using_noreserve) :
+    _name(_name), rangeCache(addrMap.end()), size(0),
+    mmapUsingNoReserve(mmap_using_noreserve)
 {
+    if (mmap_using_noreserve)
+        warn("Not reserving swap space. May cause SIGSEGV on actual usage\n");
+
     // add the memories from the system to the address map as
     // appropriate
     for (const auto& m : _memories) {
@@ -148,6 +165,13 @@ PhysicalMemory::createBackingStore(AddrRange range,
     DPRINTF(AddrRanges, "Creating backing store for range %s with size %d\n",
             range.to_string(), range.size());
     int map_flags = MAP_ANON | MAP_PRIVATE;
+
+    // to be able to simulate very large memories, the user can opt to
+    // pass noreserve to mmap
+    if (mmapUsingNoReserve) {
+        map_flags |= MAP_NORESERVE;
+    }
+
     uint8_t* pmem = (uint8_t*) mmap(NULL, range.size(),
                                     PROT_READ | PROT_WRITE,
                                     map_flags, -1, 0);

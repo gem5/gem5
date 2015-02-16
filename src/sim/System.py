@@ -59,6 +59,13 @@ class System(MemObject):
                                           "All memories in the system")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
 
+    # When reserving memory on the host, we have the option of
+    # reserving swap space or not (by passing MAP_NORESERVE to
+    # mmap). By enabling this flag, we accomodate cases where a large
+    # (but sparse) memory is simulated.
+    mmap_using_noreserve = Param.Bool(False, "mmap the backing store " \
+                                          "without reserving swap")
+
     # The memory ranges are to be populated when creating the system
     # such that these can be passed from the I/O subsystem through an
     # I/O bridge or cache

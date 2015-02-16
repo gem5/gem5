@@ -85,6 +85,9 @@ class PhysicalMemory : public Serializable
     // The total memory size
     uint64_t size;
 
+    // Let the user choose if we reserve swap space when calling mmap
+    const bool mmapUsingNoReserve;
+
     // The physical memory used to provide the memory in the simulated
     // system
     std::vector<std::pair<AddrRange, uint8_t*>> backingStore;
@@ -112,7 +115,8 @@ class PhysicalMemory : public Serializable
      * Create a physical memory object, wrapping a number of memories.
      */
     PhysicalMemory(const std::string& _name,
-                   const std::vector<AbstractMemory*>& _memories);
+                   const std::vector<AbstractMemory*>& _memories,
+                   bool mmap_using_noreserve);
 
     /**
      * Unmap all the backing store we have used.
