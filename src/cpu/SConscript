@@ -35,6 +35,11 @@ if env['TARGET_ISA'] == 'null':
     Source('intr_control_noisa.cc')
     Return()
 
+# Only build the protocol buffer instructions tracer if we have protobuf support
+if env['HAVE_PROTOBUF'] and env['TARGET_ISA'] != 'x86':
+    SimObject('InstPBTrace.py')
+    Source('inst_pb_trace.cc')
+
 SimObject('CheckerCPU.py')
 
 SimObject('BaseCPU.py')
