@@ -195,6 +195,17 @@ MemChecker::ByteTracker::inExpectedData(Tick start, Tick complete, uint8_t data)
         }
         // Record non-matching, but possible value
         _lastExpectedData.push_back(last_obs.data);
+    } else {
+        // We have not seen any valid observation, and the only writes
+        // observed are overlapping, so anything (in particular the
+        // initialisation value) goes
+        // NOTE: We can overlap with multiple write clusters, here
+        if (!writeClusters.empty() && wc_overlap) {
+            // ensure that all write clusters really overlap this read
+            assert(writeClusters.begin()->start < complete &&
+                   writeClusters.rbegin()->complete > start);
+            return true;
+        }
     }
 
     if (_lastExpectedData.empty()) {
