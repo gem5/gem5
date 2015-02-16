@@ -75,8 +75,9 @@ class PhysicalMemory : public Serializable
     // Global address map
     AddrRangeMap<AbstractMemory*> addrMap;
 
-    // a mutable cache for the last range that matched an address
-    mutable AddrRange rangeCache;
+    // a mutable cache for the last address map iterator that matched
+    // an address
+    mutable AddrRangeMap<AbstractMemory*>::const_iterator rangeCache;
 
     // All address-mapped memories
     std::vector<AbstractMemory*> memories;

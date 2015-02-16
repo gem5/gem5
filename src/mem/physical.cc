@@ -60,7 +60,7 @@ using namespace std;
 
 PhysicalMemory::PhysicalMemory(const string& _name,
                                const vector<AbstractMemory*>& _memories) :
-    _name(_name), size(0)
+    _name(_name), rangeCache(addrMap.end()), size(0)
 {
     // add the memories from the system to the address map as
     // appropriate
@@ -181,7 +181,9 @@ bool
 PhysicalMemory::isMemAddr(Addr addr) const
 {
     // see if the address is within the last matched range
-    if (!rangeCache.contains(addr)) {
+    if (rangeCache != addrMap.end() && rangeCache->first.contains(addr)) {
+        return true;
+    } else {
         // lookup in the interval tree
         const auto& r = addrMap.find(addr);
         if (r == addrMap.end()) {
@@ -189,13 +191,9 @@ PhysicalMemory::isMemAddr(Addr addr) const
             return false;
         }
         // the range is in the tree, update the cache
-        rangeCache = r->first;
+        rangeCache = r;
+        return true;
     }
-
-    assert(addrMap.find(addr) != addrMap.end());
-
-    // either matched the cache or found in the tree
-    return true;
 }
 
 AddrRangeList
@@ -239,9 +237,15 @@ PhysicalMemory::access(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     Addr addr = pkt->getAddr();
-    const auto& m = addrMap.find(addr);
-    assert(m != addrMap.end());
-    m->second->access(pkt);
+    if (rangeCache != addrMap.end() && rangeCache->first.contains(addr)) {
+        rangeCache->second->access(pkt);
+    } else {
+        // do not update the cache here, as we typically call
+        // isMemAddr before calling access
+        const auto& m = addrMap.find(addr);
+        assert(m != addrMap.end());
+        m->second->access(pkt);
+    }
 }
 
 void
@@ -249,9 +253,15 @@ PhysicalMemory::functionalAccess(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     Addr addr = pkt->getAddr();
-    const auto& m = addrMap.find(addr);
-    assert(m != addrMap.end());
-    m->second->functionalAccess(pkt);
+    if (rangeCache != addrMap.end() && rangeCache->first.contains(addr)) {
+        rangeCache->second->functionalAccess(pkt);
+    } else {
+        // do not update the cache here, as we typically call
+        // isMemAddr before calling functionalAccess
+        const auto& m = addrMap.find(addr);
+        assert(m != addrMap.end());
+        m->second->functionalAccess(pkt);
+    }
 }
 
 void
