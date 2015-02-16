@@ -51,51 +51,51 @@ parser.add_option("-a", "--atomic", action="store_true",
                   help="Use atomic (non-timing) mode")
 parser.add_option("-b", "--blocking", action="store_true",
                   help="Use blocking caches")
-parser.add_option("-l", "--maxloads", metavar="N", default=0,
-                  help="Stop after N loads")
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",
                   help="Stop after T ticks")
+parser.add_option("-p", "--prefetchers", action="store_true",
+                  help="Use prefetchers")
+parser.add_option("-s", "--stridepref", action="store_true",
+                  help="Use strided prefetchers")
 
-# This example script stress tests the memory system by creating false
-# sharing in a tree topology. At the bottom of the tree is a shared
-# memory, and then at each level a number of testers are attached,
-# along with a number of caches that them selves fan out to subtrees
-# of testers and caches. Thus, it is possible to create a system with
-# arbitrarily deep cache hierarchies, sharing or no sharing of caches,
-# and testers not only at the L1s, but also at the L2s, L3s etc.
+# This example script has a lot in common with the memtest.py in that
+# it is designed to stress tests the memory system. However, this
+# script uses oblivious traffic generators to create the stimuli, and
+# couples them with memcheckers to verify that the data read matches
+# the allowed outcomes. Just like memtest.py, the traffic generators
+# and checkers are placed in a tree topology. At the bottom of the
+# tree is a shared memory, and then at each level a number of
+# generators and checkers are attached, along with a number of caches
+# that them selves fan out to subtrees of generators and caches. Thus,
+# it is possible to create a system with arbitrarily deep cache
+# hierarchies, sharing or no sharing of caches, and generators not
+# only at the L1s, but also at the L2s, L3s etc.
 #
 # The tree specification consists of two colon-separated lists of one
-# or more integers, one for the caches, and one for the testers. The
-# first integer is the number of caches/testers closest to main
-# memory. Each cache then fans out to a subtree. The last integer in
-# the list is the number of caches/testers associated with the
-# uppermost level of memory. The other integers (if any) specify the
-# number of caches/testers connected at each level of the crossbar
-# hierarchy. The tester string should have one element more than the
-# cache string as there should always be testers attached to the
-# uppermost caches.
+# or more integers, one for the caches, and one for the
+# testers/generators. The first integer is the number of
+# caches/testers closest to main memory. Each cache then fans out to a
+# subtree. The last integer in the list is the number of
+# caches/testers associated with the uppermost level of memory. The
+# other integers (if any) specify the number of caches/testers
+# connected at each level of the crossbar hierarchy. The tester string
+# should have one element more than the cache string as there should
+# always be testers attached to the uppermost caches.
+#
+# Since this script tests actual sharing, there is also a possibility
+# to stress prefetching and the interaction between prefetchers and
+# caches. The traffic generators switch between random address streams
+# and linear address streams to ensure that the prefetchers will
+# trigger. By default prefetchers are off.
 
-parser.add_option("-c", "--caches", type="string", default="2:2:1",
+parser.add_option("-c", "--caches", type="string", default="3:2",
                   help="Colon-separated cache hierarchy specification, "
                   "see script comments for details "
                   "[default: %default]")
-parser.add_option("-t", "--testers", type="string", default="1:1:0:2",
+parser.add_option("-t", "--testers", type="string", default="1:0:2",
                   help="Colon-separated tester hierarchy specification, "
                   "see script comments for details "
-                  "[default: %default]")
-parser.add_option("-f", "--functional", type="int", default=0,
-                  metavar="PCT",
-                  help="Target percentage of functional accesses "
-                  "[default: %default]")
-parser.add_option("-u", "--uncacheable", type="int", default=0,
-                  metavar="PCT",
-                  help="Target percentage of uncacheable accesses "
-                  "[default: %default]")
-
-parser.add_option("--progress", type="int", default=10000,
-                  metavar="NLOADS",
-                  help="Progress message interval "
                   "[default: %default]")
 parser.add_option("--sys-clock", action="store", type="string",
                   default='1GHz',
@@ -107,8 +107,6 @@ parser.add_option("--sys-clock", action="store", type="string",
 if args:
      print "Error: script doesn't take any positional arguments"
      sys.exit(1)
-
-block_size = 64
 
 # Start by parsing the command line options and do some basic sanity
 # checking
@@ -153,11 +151,6 @@ numtesters = 0
 for t, m in zip(testerspec, multiplier):
      numtesters += t * m
 
-if numtesters > block_size:
-     print "Error: Number of testers limited to %s because of false sharing" \
-           % (block_size)
-     sys.exit(1)
-
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = BaseCache(size = '32kB', assoc = 4,
                      hit_latency = 1, response_latency = 1,
@@ -167,6 +160,11 @@ if options.blocking:
      proto_l1.mshrs = 1
 else:
      proto_l1.mshrs = 4
+
+if options.prefetchers:
+     proto_l1.prefetcher = TaggedPrefetcher()
+elif options.stridepref:
+     proto_l1.prefetcher = StridePrefetcher()
 
 cache_proto = [proto_l1]
 
@@ -184,20 +182,37 @@ for scale in cachespec[:-1]:
      next.is_top_level = False
      cache_proto.insert(0, next)
 
-# Make a prototype for the tester to be used throughout
-proto_tester = MemTest(max_loads = options.maxloads,
-                       percent_functional = options.functional,
-                       percent_uncacheable = options.uncacheable,
-                       progress_interval = options.progress)
+# Create a config to be used by all the traffic generators
+cfg_file_name = "configs/example/memcheck.cfg"
+cfg_file = open(cfg_file_name, 'w')
 
-# Set up the system along with a simple memory and reference memory
-system = System(physmem = SimpleMemory(),
-                cache_line_size = block_size)
+# Three states, with random, linear and idle behaviours. The random
+# and linear states access memory in the range [0 : 16 Mbyte] with 8
+# byte accesses.
+cfg_file.write("STATE 0 10000000 RANDOM 65 0 16777216 8 50000 150000 0\n")
+cfg_file.write("STATE 1 10000000 LINEAR 65 0 16777216 8 50000 150000 0\n")
+cfg_file.write("STATE 2 10000000 IDLE\n")
+cfg_file.write("INIT 0\n")
+cfg_file.write("TRANSITION 0 1 0.5\n")
+cfg_file.write("TRANSITION 0 2 0.5\n")
+cfg_file.write("TRANSITION 1 0 0.5\n")
+cfg_file.write("TRANSITION 1 2 0.5\n")
+cfg_file.write("TRANSITION 2 0 0.5\n")
+cfg_file.write("TRANSITION 2 1 0.5\n")
+cfg_file.close()
+
+# Make a prototype for the tester to be used throughout
+proto_tester = TrafficGen(config_file = cfg_file_name)
+
+# Set up the system along with a DRAM controller
+system = System(physmem = DDR3_1600_x64())
 
 system.voltage_domain = VoltageDomain(voltage = '1V')
 
 system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
                         voltage_domain = system.voltage_domain)
+
+system.memchecker = MemChecker()
 
 # For each level, track the next subsys index to use
 next_subsys_index = [0] * (len(cachespec) + 1)
@@ -218,17 +233,12 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
      # The levels are indexing backwards through the list
      ntesters = testerspec[len(cachespec) - level]
 
-     # Scale the progress threshold as testers higher up in the tree
-     # (smaller level) get a smaller portion of the overall bandwidth,
-     # and also make the interval of packet injection longer for the
-     # testers closer to the memory (larger level) to prevent them
-     # hogging all the bandwidth
-     limit = (len(cachespec) - level + 1) * 10000000
-     testers = [proto_tester(interval = 10 * (level * level + 1),
-                             progress_check = limit) \
-                     for i in xrange(ntesters)]
+     testers = [proto_tester() for i in xrange(ntesters)]
+     checkers = [MemCheckerMonitor(memchecker = system.memchecker) \
+                      for i in xrange(ntesters)]
      if ntesters:
           subsys.tester = testers
+          subsys.checkers = checkers
 
      if level != 0:
           # Create a crossbar and add it to the subsystem, note that
@@ -248,8 +258,9 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
           for cache in tree_caches:
                cache.mem_side = xbar.slave
                make_cache_level(ncaches[1:], prototypes[1:], level - 1, cache)
-          for tester, cache in zip(testers, tester_caches):
-               tester.port = cache.cpu_side
+          for tester, checker, cache in zip(testers, checkers, tester_caches):
+               tester.port = checker.slave
+               checker.master = cache.cpu_side
                cache.mem_side = xbar.slave
      else:
           if not next_cache:
@@ -261,11 +272,13 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
                xbar = CoherentXBar(width = 32)
                subsys.xbar = xbar
                xbar.master = next_cache.cpu_side
-               for tester in testers:
-                    tester.port = xbar.slave
+               for tester, checker in zip(testers, checkers):
+                    tester.port = checker.slave
+                    checker.master = xbar.slave
           else:
                # Single tester
-               testers[0].port = next_cache.cpu_side
+               testers[0].port = checkers[0].slave
+               checkers[0].master = next_cache.cpu_side
 
 # Top level call to create the cache hierarchy, bottom up
 make_cache_level(cachespec, cache_proto, len(cachespec), None)
