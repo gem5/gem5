@@ -58,7 +58,7 @@ RubyPort::RubyPort(const Params *p)
       pioSlavePort(csprintf("%s.pio-slave-port", name()), this),
       memMasterPort(csprintf("%s.mem-master-port", name()), this),
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
-          p->ruby_system, p->access_backing_store, -1),
+          p->ruby_system, p->ruby_system->getAccessBackingStore(), -1),
       gotAddrRanges(p->port_master_connection_count), drainManager(NULL)
 {
     assert(m_version != -1);
@@ -66,7 +66,8 @@ RubyPort::RubyPort(const Params *p)
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
         slave_ports.push_back(new MemSlavePort(csprintf("%s.slave%d", name(),
-            i), this, p->ruby_system, p->access_backing_store, i));
+            i), this, p->ruby_system,
+            p->ruby_system->getAccessBackingStore(), i));
     }
 
     // create the master ports based on the number of connected ports
@@ -297,40 +298,40 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
                 line_address(Address(pkt->getAddr())).getAddress() +
                 RubySystem::getBlockSizeBytes());
 
-    bool accessSucceeded = false;
-    bool needsResponse = pkt->needsResponse();
-
-    // Do the functional access on ruby memory
-    if (pkt->isRead()) {
-        accessSucceeded = ruby_system->functionalRead(pkt);
-    } else if (pkt->isWrite()) {
-        accessSucceeded = ruby_system->functionalWrite(pkt);
-    } else {
-        panic("Unsupported functional command %s\n", pkt->cmdString());
-    }
-
-    // Unless the requester explicitly said otherwise, generate an error if
-    // the functional request failed
-    if (!accessSucceeded && !pkt->suppressFuncError()) {
-        fatal("Ruby functional %s failed for address %#x\n",
-              pkt->isWrite() ? "write" : "read", pkt->getAddr());
-    }
-
     if (access_backing_store) {
         // The attached physmem contains the official version of data.
         // The following command performs the real functional access.
         // This line should be removed once Ruby supplies the official version
         // of data.
         ruby_system->getPhysMem()->functionalAccess(pkt);
-    }
+    } else {
+        bool accessSucceeded = false;
+        bool needsResponse = pkt->needsResponse();
 
-    // turn packet around to go back to requester if response expected
-    if (needsResponse) {
-        pkt->setFunctionalResponseStatus(accessSucceeded);
-    }
+        // Do the functional access on ruby memory
+        if (pkt->isRead()) {
+            accessSucceeded = ruby_system->functionalRead(pkt);
+        } else if (pkt->isWrite()) {
+            accessSucceeded = ruby_system->functionalWrite(pkt);
+        } else {
+            panic("Unsupported functional command %s\n", pkt->cmdString());
+        }
 
-    DPRINTF(RubyPort, "Functional access %s!\n",
-            accessSucceeded ? "successful":"failed");
+        // Unless the requester explicitly said otherwise, generate an error if
+        // the functional request failed
+        if (!accessSucceeded && !pkt->suppressFuncError()) {
+            fatal("Ruby functional %s failed for address %#x\n",
+                  pkt->isWrite() ? "write" : "read", pkt->getAddr());
+        }
+
+        // turn packet around to go back to requester if response expected
+        if (needsResponse) {
+            pkt->setFunctionalResponseStatus(accessSucceeded);
+        }
+
+        DPRINTF(RubyPort, "Functional access %s!\n",
+                accessSucceeded ? "successful":"failed");
+    }
 }
 
 void
@@ -495,7 +496,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
-        ruby_system->getPhysMem()->functionalAccess(pkt);
+        ruby_system->getPhysMem()->access(pkt);
     } else if (needsResponse) {
         pkt->makeResponse();
     }

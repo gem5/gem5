@@ -76,6 +76,7 @@ class RubySystem : public ClockedObject
     static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
 
     SimpleMemory *getPhysMem() { return m_phys_mem; }
+    const bool getAccessBackingStore() { return m_access_backing_store; }
 
     // Public Methods
     Profiler*
@@ -125,6 +126,7 @@ class RubySystem : public ClockedObject
     static uint32_t m_block_size_bits;
     static uint32_t m_memory_size_bits;
     SimpleMemory *m_phys_mem;
+    const bool m_access_backing_store;
 
     Network* m_network;
     std::vector<AbstractController *> m_abs_cntrl_vec;

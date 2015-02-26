@@ -38,6 +38,7 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/System.hh"
+#include "mem/simple_mem.hh"
 #include "sim/eventq.hh"
 #include "sim/simulate.hh"
 
@@ -50,7 +51,7 @@ uint32_t RubySystem::m_block_size_bits;
 uint32_t RubySystem::m_memory_size_bits;
 
 RubySystem::RubySystem(const Params *p)
-    : ClockedObject(p)
+    : ClockedObject(p), m_access_backing_store(p->access_backing_store)
 {
     if (g_system_ptr != NULL)
         fatal("Only one RubySystem object currently allowed.\n");

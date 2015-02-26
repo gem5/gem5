@@ -29,8 +29,8 @@
 #ifndef __MEM_RUBY_SYSTEM_DMASEQUENCER_HH__
 #define __MEM_RUBY_SYSTEM_DMASEQUENCER_HH__
 
-#include <ostream>
 #include <memory>
+#include <ostream>
 
 #include "mem/protocol/DMASequencerRequestType.hh"
 #include "mem/protocol/RequestStatus.hh"
@@ -38,6 +38,7 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/mem_object.hh"
+#include "mem/simple_mem.hh"
 #include "mem/tport.hh"
 #include "params/DMASequencer.hh"
 
@@ -66,10 +67,13 @@ class DMASequencer : public MemObject
     {
       private:
         SlavePacketQueue queue;
+        RubySystem* ruby_system;
+        bool access_backing_store;
 
       public:
         MemSlavePort(const std::string &_name, DMASequencer *_port,
-                     PortID id);
+                     PortID id, RubySystem *_ruby_system,
+                     bool _access_backing_store);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
 

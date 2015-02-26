@@ -235,7 +235,8 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
 
     # Create a backing copy of physical memory in case required
     if options.access_backing_store:
-        ruby.phys_mem = SimpleMemory(range=AddrRange(options.mem_size),
+        ruby.access_backing_store = True
+        ruby.phys_mem = SimpleMemory(range=system.mem_ranges[0],
                                      in_addr_map=False)
 
 def send_evicts(options):

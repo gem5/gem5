@@ -47,3 +47,6 @@ class RubySystem(ClockedObject):
     all_instructions = Param.Bool(False, "")
     num_of_sequencers = Param.Int("")
     phys_mem = Param.SimpleMemory(NULL, "")
+
+    access_backing_store = Param.Bool(False, "Use phys_mem as the functional \
+        store and only use ruby for timing.")

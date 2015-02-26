@@ -45,8 +45,6 @@ class RubyPort(MemObject):
     mem_slave_port = SlavePort("Ruby memory port")
 
     using_ruby_tester = Param.Bool(False, "")
-    access_backing_store = Param.Bool(False,
-        "should the rubyport atomically update phys_mem")
     ruby_system = Param.RubySystem("")
     system = Param.System(Parent.any, "system object")
     support_data_reqs = Param.Bool(True, "data cache requests supported")

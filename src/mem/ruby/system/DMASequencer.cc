@@ -40,7 +40,8 @@
 DMASequencer::DMASequencer(const Params *p)
     : MemObject(p), m_version(p->version), m_controller(NULL),
       m_mandatory_q_ptr(NULL), m_usingRubyTester(p->using_ruby_tester),
-      slave_port(csprintf("%s.slave", name()), this, 0),
+      slave_port(csprintf("%s.slave", name()), this, 0, p->ruby_system,
+                 p->ruby_system->getAccessBackingStore()),
       drainManager(NULL), system(p->system), retry(false)
 {
     assert(m_version != -1);
@@ -73,8 +74,10 @@ DMASequencer::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 DMASequencer::MemSlavePort::MemSlavePort(const std::string &_name,
-    DMASequencer *_port, PortID id)
-    : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this)
+    DMASequencer *_port, PortID id, RubySystem* _ruby_system,
+    bool _access_backing_store)
+    : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this),
+      ruby_system(_ruby_system), access_backing_store(_access_backing_store)
 {
     DPRINTF(RubyDma, "Created slave memport on ruby sequencer %s\n", _name);
 }
@@ -208,8 +211,14 @@ DMASequencer::MemSlavePort::hitCallback(PacketPtr pkt)
     DPRINTF(RubyDma, "Hit callback needs response %d\n", needsResponse);
 
     // turn packet around to go back to requester if response expected
-    if (needsResponse) {
+
+    if (access_backing_store) {
+        ruby_system->getPhysMem()->access(pkt);
+    } else if (needsResponse) {
         pkt->makeResponse();
+    }
+
+    if (needsResponse) {
         DPRINTF(RubyDma, "Sending packet back over port\n");
         // send next cycle
         schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
