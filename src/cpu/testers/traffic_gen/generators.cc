@@ -57,6 +57,9 @@ BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
 {
     // Create new request
     Request *req = new Request(addr, size, flags, masterID);
+    // Dummy PC to have PC-based prefetchers latch on; get entropy into higher
+    // bits
+    req->setPC(((Addr)masterID) << 2);
 
     // Embed it in a packet
     PacketPtr pkt = new Packet(req, cmd);
