@@ -1966,10 +1966,28 @@ Cache<TagStore>::getTimingPacket()
             snoop_pkt.senderState = mshr;
             cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
 
-            // Check to see if the prefetch was squashed by an upper
-            // cache (to prevent us from grabbing the line) or if a
-            // writeback arrived between the time the prefetch was
-            // placed in the MSHRs and when it was selected to be sent.
+            // Check to see if the prefetch was squashed by an upper cache (to
+            // prevent us from grabbing the line) or if a Check to see if a
+            // writeback arrived between the time the prefetch was placed in
+            // the MSHRs and when it was selected to be sent or if the
+            // prefetch was squashed by an upper cache.
+
+            // It is important to check msmInhibitAsserted before
+            // prefetchSquashed. If another cache has asserted MEM_INGIBIT, it
+            // will be sending a response which will arrive at the MSHR
+            // allocated ofr this request. Checking the prefetchSquash first
+            // may result in the MSHR being prematurely deallocated.
+
+            if (snoop_pkt.memInhibitAsserted()) {
+                // If we are getting a non-shared response it is dirty
+                bool pending_dirty_resp = !snoop_pkt.sharedAsserted();
+                markInService(mshr, pending_dirty_resp);
+                DPRINTF(Cache, "Upward snoop of prefetch for addr"
+                        " %#x (%s) hit\n",
+                        tgt_pkt->getAddr(), tgt_pkt->isSecure()? "s": "ns");
+                return NULL;
+            }
+
             if (snoop_pkt.prefetchSquashed() || blk != NULL) {
                 DPRINTF(Cache, "Prefetch squashed by cache.  "
                                "Deallocating mshr target %#x.\n", mshr->addr);
@@ -1983,18 +2001,6 @@ Cache<TagStore>::getTimingPacket()
                 return NULL;
             }
 
-            // Check if the prefetch hit a writeback in an upper cache
-            // and if so we will eventually get a HardPFResp from
-            // above
-            if (snoop_pkt.memInhibitAsserted()) {
-                // If we are getting a non-shared response it is dirty
-                bool pending_dirty_resp = !snoop_pkt.sharedAsserted();
-                markInService(mshr, pending_dirty_resp);
-                DPRINTF(Cache, "Upward snoop of prefetch for addr"
-                        " %#x (%s) hit\n",
-                        tgt_pkt->getAddr(), tgt_pkt->isSecure()? "s": "ns");
-                return NULL;
-            }
         }
 
         pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
