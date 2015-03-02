@@ -221,7 +221,7 @@ namespace ArmISA
             assert(!cpsr.width);
         }
 
-        void tlbiVA(ThreadContext *tc, MiscReg newVal, uint8_t asid,
+        void tlbiVA(ThreadContext *tc, MiscReg newVal, uint16_t asid,
                     bool secure_lookup, uint8_t target_el);
 
         void tlbiALL(ThreadContext *tc, bool secure_lookup, uint8_t target_el);

@@ -1386,7 +1386,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 oc = sys->getThreadContext(x);
                 assert(oc->getITBPtr() && oc->getDTBPtr());
                 asid = bits(newVal, 63, 48);
-                if (haveLargeAsid64)
+                if (!haveLargeAsid64)
                     asid &= mask(8);
                 oc->getITBPtr()->flushAsid(asid, secure_lookup, target_el);
                 oc->getDTBPtr()->flushAsid(asid, secure_lookup, target_el);
@@ -1941,10 +1941,10 @@ ISA::updateBootUncacheable(int sctlr_idx, ThreadContext *tc)
 }
 
 void
-ISA::tlbiVA(ThreadContext *tc, MiscReg newVal, uint8_t asid, bool secure_lookup,
-            uint8_t target_el)
+ISA::tlbiVA(ThreadContext *tc, MiscReg newVal, uint16_t asid,
+            bool secure_lookup, uint8_t target_el)
 {
-    if (haveLargeAsid64)
+    if (!haveLargeAsid64)
         asid &= mask(8);
     Addr va = ((Addr) bits(newVal, 43, 0)) << 12;
     System *sys = tc->getSystemPtr();
