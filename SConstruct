@@ -784,10 +784,15 @@ if main['GCC'] and compareVersions(gcc_version, '4.9') >= 0 and \
 swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
 main.Append(SWIGFLAGS=swig_flags)
 
-# Check for 'timeout' from GNU coreutils.  If present, regressions
-# will be run with a time limit.
-TIMEOUT_version = readCommand(['timeout', '--version'], exception=False)
-main['TIMEOUT'] = TIMEOUT_version and TIMEOUT_version.find('timeout') == 0
+# Check for 'timeout' from GNU coreutils. If present, regressions will
+# be run with a time limit. We require version 8.13 since we rely on
+# support for the '--foreground' option.
+timeout_lines = readCommand(['timeout', '--version'],
+                            exception='').splitlines()
+# Get the first line and tokenize it
+timeout_version = timeout_lines[0].split() if timeout_lines else []
+main['TIMEOUT'] =  timeout_version and \
+    compareVersions(timeout_version[-1], '8.13') >= 0
 
 # filter out all existing swig scanners, they mess up the dependency
 # stuff for some reason
