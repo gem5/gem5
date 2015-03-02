@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012,2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -49,8 +49,7 @@
  * Declaration of a simple PacketQueue that is associated with
  * a port on which it attempts to send packets according to the time
  * stamp given to them at insertion. The packet queue is responsible
- * for the flow control of the port, but relies on the module
- * notifying the queue when a transfer ends.
+ * for the flow control of the port.
  */
 
 #include <list>
@@ -71,28 +70,23 @@ class PacketQueue : public Drainable
       public:
         Tick tick;      ///< The tick when the packet is ready to transmit
         PacketPtr pkt;  ///< Pointer to the packet to transmit
-        bool sendAsSnoop; ///< Should it be sent as a snoop or not
-        DeferredPacket(Tick t, PacketPtr p, bool send_as_snoop)
-            : tick(t), pkt(p), sendAsSnoop(send_as_snoop)
+        DeferredPacket(Tick t, PacketPtr p)
+            : tick(t), pkt(p)
         {}
     };
 
     typedef std::list<DeferredPacket> DeferredPacketList;
 
-    /** A list of outgoing timing response packets that haven't been
-     * serviced yet. */
+    /** A list of outgoing packets. */
     DeferredPacketList transmitList;
 
     /** The manager which is used for the event queue */
     EventManager& em;
 
-    /** This function attempts to send deferred packets.  Scheduled to
-     * be called in the future via SendEvent. */
+    /** Used to schedule sending of deferred packets. */
     void processSendEvent();
 
-    /**
-     * Event used to call processSendEvent.
-     **/
+    /** Event used to call processSendEvent. */
     EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
 
     /** If we need to drain, keep the drain manager around until we're done
@@ -104,55 +98,28 @@ class PacketQueue : public Drainable
     /** Label to use for print request packets label stack. */
     const std::string label;
 
-    /** Remember whether we're awaiting a retry from the bus. */
+    /** Remember whether we're awaiting a retry. */
     bool waitingOnRetry;
 
     /** Check whether we have a packet ready to go on the transmit list. */
     bool deferredPacketReady() const
     { return !transmitList.empty() && transmitList.front().tick <= curTick(); }
 
-    Tick deferredPacketReadyTime() const
-    { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
-
     /**
-     * Attempt to send the packet at the head of the transmit
-     * list. Caller must guarantee that the list is non-empty and that
-     * the head packet is scheduled for curTick() (or earlier). Note
-     * that a subclass of the PacketQueue can override this method and
-     * thus change the behaviour (as done by the cache).
+     * Attempt to send a packet. Note that a subclass of the
+     * PacketQueue can override this method and thus change the
+     * behaviour (as done by the cache for the request queue). The
+     * default implementation sends the head of the transmit list. The
+     * caller must guarantee that the list is non-empty and that the
+     * head packet is scheduled for curTick() (or earlier).
      */
     virtual void sendDeferredPacket();
 
     /**
-     * Attempt to send the packet at the front of the transmit list,
-     * and set waitingOnRetry accordingly. The packet is temporarily
-     * taken off the list, but put back at the front if not
-     * successfully sent.
+     * Send a packet using the appropriate method for the specific
+     * subclass (reuest, response or snoop response).
      */
-    void trySendTiming();
-
-    /**
-     *
-     */
-    virtual bool sendTiming(PacketPtr pkt, bool send_as_snoop) = 0;
-
-    /**
-     * Based on the transmit list, or the provided time, schedule a
-     * send event if there are packets to send. If we are idle and
-     * asked to drain then do so.
-     *
-     * @param time an alternative time for the next send event
-     */
-    void scheduleSend(Tick time = MaxTick);
-
-    /**
-     * Simple ports are generally used as slave ports (i.e. the
-     * respond to requests) and thus do not expect to receive any
-     * range changes (as the neighbouring port has a master role and
-     * do not have any address ranges. A subclass can override the
-     * default behaviuor if needed.
-     */
-    virtual void recvRangeChange() { }
+    virtual bool sendTiming(PacketPtr pkt) = 0;
 
     /**
      * Create a packet queue, linked to an event manager, and a label
@@ -177,40 +144,56 @@ class PacketQueue : public Drainable
      */
     virtual const std::string name() const = 0;
 
+    /**
+     * Get the size of the queue.
+     */
+    size_t size() const { return transmitList.size(); }
+
+    /**
+     * Get the next packet ready time.
+     */
+    Tick deferredPacketReadyTime() const
+    { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
+
+    /**
+     * Check if a packets address exists in the queue.
+     */
+    bool hasAddr(Addr addr) const;
+
     /** Check the list of buffered packets against the supplied
      * functional request. */
     bool checkFunctional(PacketPtr pkt);
 
     /**
-     * Schedule a send even if not already waiting for a retry. If the
-     * requested time is before an already scheduled send event it
-     * will be rescheduled.
+     * Schedule a send event if we are not already waiting for a
+     * retry. If the requested time is before an already scheduled
+     * send event, the event will be rescheduled. If MaxTick is
+     * passed, no event is scheduled. Instead, if we are idle and
+     * asked to drain then check and signal drained.
      *
-     * @param when
+     * @param when time to schedule an event
      */
     void schedSendEvent(Tick when);
 
     /**
-     * Add a packet to the transmit list, and ensure that a
-     * processSendEvent is called in the future.
+     * Add a packet to the transmit list, and schedule a send event.
      *
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
-     * @param send_as_snoop Send the packet as a snoop or not
      */
-    void schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop = false);
+    void schedSendTiming(PacketPtr pkt, Tick when);
 
     /**
-     * Used by a port to notify the queue that a retry was received
-     * and that the queue can proceed and retry sending the packet
-     * that caused the wait.
+     * Retry sending a packet from the queue. Note that this is not
+     * necessarily the same packet if something has been added with an
+     * earlier time stamp.
      */
     void retry();
 
     unsigned int drain(DrainManager *dm);
 };
 
-class MasterPacketQueue : public PacketQueue
+class ReqPacketQueue : public PacketQueue
 {
 
   protected:
@@ -220,7 +203,7 @@ class MasterPacketQueue : public PacketQueue
   public:
 
     /**
-     * Create a master packet queue, linked to an event manager, a
+     * Create a request packet queue, linked to an event manager, a
      * master port, and a label that will be used for functional print
      * request packets.
      *
@@ -228,18 +211,49 @@ class MasterPacketQueue : public PacketQueue
      * @param _masterPort Master port used to send the packets
      * @param _label Label to push on the label stack for print request packets
      */
-    MasterPacketQueue(EventManager& _em, MasterPort& _masterPort,
-                      const std::string _label = "MasterPacketQueue");
+    ReqPacketQueue(EventManager& _em, MasterPort& _masterPort,
+                   const std::string _label = "ReqPacketQueue");
 
-    virtual ~MasterPacketQueue() { }
+    virtual ~ReqPacketQueue() { }
 
     const std::string name() const
     { return masterPort.name() + "-" + label; }
 
-    bool sendTiming(PacketPtr pkt, bool send_as_snoop);
+    bool sendTiming(PacketPtr pkt);
+
 };
 
-class SlavePacketQueue : public PacketQueue
+class SnoopRespPacketQueue : public PacketQueue
+{
+
+  protected:
+
+    MasterPort& masterPort;
+
+  public:
+
+    /**
+     * Create a snoop response packet queue, linked to an event
+     * manager, a master port, and a label that will be used for
+     * functional print request packets.
+     *
+     * @param _em Event manager used for scheduling this queue
+     * @param _masterPort Master port used to send the packets
+     * @param _label Label to push on the label stack for print request packets
+     */
+    SnoopRespPacketQueue(EventManager& _em, MasterPort& _masterPort,
+                         const std::string _label = "SnoopRespPacketQueue");
+
+    virtual ~SnoopRespPacketQueue() { }
+
+    const std::string name() const
+    { return masterPort.name() + "-" + label; }
+
+    bool sendTiming(PacketPtr pkt);
+
+};
+
+class RespPacketQueue : public PacketQueue
 {
 
   protected:
@@ -249,7 +263,7 @@ class SlavePacketQueue : public PacketQueue
   public:
 
     /**
-     * Create a slave packet queue, linked to an event manager, a
+     * Create a response packet queue, linked to an event manager, a
      * slave port, and a label that will be used for functional print
      * request packets.
      *
@@ -257,15 +271,15 @@ class SlavePacketQueue : public PacketQueue
      * @param _slavePort Slave port used to send the packets
      * @param _label Label to push on the label stack for print request packets
      */
-    SlavePacketQueue(EventManager& _em, SlavePort& _slavePort,
-                     const std::string _label = "SlavePacketQueue");
+    RespPacketQueue(EventManager& _em, SlavePort& _slavePort,
+                     const std::string _label = "RespPacketQueue");
 
-    virtual ~SlavePacketQueue() { }
+    virtual ~RespPacketQueue() { }
 
     const std::string name() const
     { return slavePort.name() + "-" + label; }
 
-    bool sendTiming(PacketPtr pkt, bool send_as_snoop);
+    bool sendTiming(PacketPtr pkt);
 
 };
 

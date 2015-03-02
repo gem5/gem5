@@ -178,7 +178,7 @@ SimpleMemory::release()
     isBusy = false;
     if (retryReq) {
         retryReq = false;
-        port.sendRetry();
+        port.sendRetryReq();
     }
 }
 
@@ -216,7 +216,7 @@ SimpleMemory::getLatency() const
 }
 
 void
-SimpleMemory::recvRetry()
+SimpleMemory::recvRespRetry()
 {
     assert(retryResp);
 
@@ -284,9 +284,9 @@ SimpleMemory::MemoryPort::recvTimingReq(PacketPtr pkt)
 }
 
 void
-SimpleMemory::MemoryPort::recvRetry()
+SimpleMemory::MemoryPort::recvRespRetry()
 {
-    memory.recvRetry();
+    memory.recvRespRetry();
 }
 
 SimpleMemory*

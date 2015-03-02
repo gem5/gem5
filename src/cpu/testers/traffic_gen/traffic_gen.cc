@@ -476,7 +476,7 @@ TrafficGen::enterState(uint32_t newState)
 }
 
 void
-TrafficGen::recvRetry()
+TrafficGen::recvReqRetry()
 {
     assert(retryPkt != NULL);
 

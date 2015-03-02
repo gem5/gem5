@@ -2183,61 +2183,84 @@ Cache<TagStore>::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
 
 template<class TagStore>
 void
-Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
+Cache<TagStore>::CacheReqPacketQueue::sendDeferredPacket()
 {
-    // if we have a response packet waiting we have to start with that
-    if (deferredPacketReady()) {
-        // use the normal approach from the timing port
-        trySendTiming();
+    // sanity check
+    assert(!waitingOnRetry);
+
+    // there should never be any deferred request packets in the
+    // queue, instead we resly on the cache to provide the packets
+    // from the MSHR queue or write queue
+    assert(deferredPacketReadyTime() == MaxTick);
+
+    // check for request packets (requests & writebacks)
+    PacketPtr pkt = cache.getTimingPacket();
+    if (pkt == NULL) {
+        // can happen if e.g. we attempt a writeback and fail, but
+        // before the retry, the writeback is eliminated because
+        // we snoop another cache's ReadEx.
     } else {
-        // check for request packets (requests & writebacks)
-        PacketPtr pkt = cache.getTimingPacket();
-        if (pkt == NULL) {
-            // can happen if e.g. we attempt a writeback and fail, but
-            // before the retry, the writeback is eliminated because
-            // we snoop another cache's ReadEx.
-            waitingOnRetry = false;
-        } else {
-            MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+        MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+        // in most cases getTimingPacket allocates a new packet, and
+        // we must delete it unless it is successfully sent
+        bool delete_pkt = !mshr->isForwardNoResponse();
 
-            waitingOnRetry = !masterPort.sendTimingReq(pkt);
+        // let our snoop responses go first if there are responses to
+        // the same addresses we are about to writeback, note that
+        // this creates a dependency between requests and snoop
+        // responses, but that should not be a problem since there is
+        // a chain already and the key is that the snoop responses can
+        // sink unconditionally
+        if (snoopRespQueue.hasAddr(pkt->getAddr())) {
+            DPRINTF(CachePort, "Waiting for snoop response to be sent\n");
+            Tick when = snoopRespQueue.deferredPacketReadyTime();
+            schedSendEvent(when);
 
-            if (waitingOnRetry) {
-                DPRINTF(CachePort, "now waiting on a retry\n");
-                if (!mshr->isForwardNoResponse()) {
-                    // we are awaiting a retry, but we
-                    // delete the packet and will be creating a new packet
-                    // when we get the opportunity
-                    delete pkt;
-                }
-                // note that we have now masked any requestBus and
-                // schedSendEvent (we will wait for a retry before
-                // doing anything), and this is so even if we do not
-                // care about this packet and might override it before
-                // it gets retried
-            } else {
-                // As part of the call to sendTimingReq the packet is
-                // forwarded to all neighbouring caches (and any
-                // caches above them) as a snoop. The packet is also
-                // sent to any potential cache below as the
-                // interconnect is not allowed to buffer the
-                // packet. Thus at this point we know if any of the
-                // neighbouring, or the downstream cache is
-                // responding, and if so, if it is with a dirty line
-                // or not.
-                bool pending_dirty_resp = !pkt->sharedAsserted() &&
-                    pkt->memInhibitAsserted();
+            if (delete_pkt)
+                delete pkt;
 
-                cache.markInService(mshr, pending_dirty_resp);
+            return;
+        }
+
+
+        waitingOnRetry = !masterPort.sendTimingReq(pkt);
+
+        if (waitingOnRetry) {
+            DPRINTF(CachePort, "now waiting on a retry\n");
+            if (delete_pkt) {
+                // we are awaiting a retry, but we
+                // delete the packet and will be creating a new packet
+                // when we get the opportunity
+                delete pkt;
             }
+            // note that we have now masked any requestBus and
+            // schedSendEvent (we will wait for a retry before
+            // doing anything), and this is so even if we do not
+            // care about this packet and might override it before
+            // it gets retried
+        } else {
+            // As part of the call to sendTimingReq the packet is
+            // forwarded to all neighbouring caches (and any
+            // caches above them) as a snoop. The packet is also
+            // sent to any potential cache below as the
+            // interconnect is not allowed to buffer the
+            // packet. Thus at this point we know if any of the
+            // neighbouring, or the downstream cache is
+            // responding, and if so, if it is with a dirty line
+            // or not.
+            bool pending_dirty_resp = !pkt->sharedAsserted() &&
+                pkt->memInhibitAsserted();
+
+            cache.markInService(mshr, pending_dirty_resp);
         }
     }
 
     // if we succeeded and are not waiting for a retry, schedule the
-    // next send, not only looking at the response transmit list, but
-    // also considering when the next MSHR is ready
+    // next send considering when the next MSHR is ready, note that
+    // snoop responses have their own packet queue and thus schedule
+    // their own events
     if (!waitingOnRetry) {
-        scheduleSend(cache.nextMSHRReadyTime());
+        schedSendEvent(cache.nextMSHRReadyTime());
     }
 }
 
@@ -2245,8 +2268,9 @@ template<class TagStore>
 Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
-    : BaseCache::CacheMasterPort(_name, _cache, _queue),
-      _queue(*_cache, *this, _label), cache(_cache)
+    : BaseCache::CacheMasterPort(_name, _cache, _reqQueue, _snoopRespQueue),
+      _reqQueue(*_cache, *this, _snoopRespQueue, _label),
+      _snoopRespQueue(*_cache, *this, _label), cache(_cache)
 {
 }
 

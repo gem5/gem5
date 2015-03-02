@@ -60,7 +60,8 @@ class RubyPort : public MemObject
     class MemMasterPort : public QueuedMasterPort
     {
       private:
-        MasterPacketQueue queue;
+        ReqPacketQueue reqQueue;
+        SnoopRespPacketQueue snoopRespQueue;
 
       public:
         MemMasterPort(const std::string &_name, RubyPort *_port);
@@ -73,7 +74,7 @@ class RubyPort : public MemObject
     class MemSlavePort : public QueuedSlavePort
     {
       private:
-        SlavePacketQueue queue;
+        RespPacketQueue queue;
         RubySystem* ruby_system;
         bool access_backing_store;
 
@@ -101,7 +102,8 @@ class RubyPort : public MemObject
     class PioMasterPort : public QueuedMasterPort
     {
       private:
-        MasterPacketQueue queue;
+        ReqPacketQueue reqQueue;
+        SnoopRespPacketQueue snoopRespQueue;
 
       public:
         PioMasterPort(const std::string &_name, RubyPort *_port);
@@ -114,7 +116,7 @@ class RubyPort : public MemObject
     class PioSlavePort : public QueuedSlavePort
     {
       private:
-        SlavePacketQueue queue;
+        RespPacketQueue queue;
 
       public:
         PioSlavePort(const std::string &_name, RubyPort *_port);

@@ -76,7 +76,8 @@ class MessageMasterPort : public QueuedMasterPort
   public:
 
     MessageMasterPort(const std::string &name, MemObject *owner) :
-        QueuedMasterPort(name, owner, queue), queue(*owner, *this)
+        QueuedMasterPort(name, owner, reqQueue, snoopRespQueue),
+        reqQueue(*owner, *this), snoopRespQueue(*owner, *this)
     {}
 
     virtual ~MessageMasterPort()
@@ -87,7 +88,8 @@ class MessageMasterPort : public QueuedMasterPort
   protected:
 
     /** A packet queue for outgoing packets. */
-    MasterPacketQueue queue;
+    ReqPacketQueue reqQueue;
+    SnoopRespPacketQueue snoopRespQueue;
 
     // Accept and ignore responses.
     virtual Tick recvResponse(PacketPtr pkt)

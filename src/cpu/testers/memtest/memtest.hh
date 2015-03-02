@@ -114,7 +114,7 @@ class MemTest : public MemObject
 
         Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
 
-        void recvRetry();
+        void recvReqRetry();
     };
 
     CpuPort port;

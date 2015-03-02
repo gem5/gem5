@@ -147,7 +147,7 @@ DRAMSim2::tick()
     // state and send a retry if conditions have changed
     if (retryReq && nbrOutstanding() < wrapper.queueSize()) {
         retryReq = false;
-        port.sendRetry();
+        port.sendRetryReq();
     }
 
     schedule(tickEvent, curTick() + wrapper.clockPeriod() * SimClock::Int::ns);
@@ -244,7 +244,7 @@ DRAMSim2::recvTimingReq(PacketPtr pkt)
 }
 
 void
-DRAMSim2::recvRetry()
+DRAMSim2::recvRespRetry()
 {
     DPRINTF(DRAMSim2, "Retrying\n");
 
@@ -402,9 +402,9 @@ DRAMSim2::MemoryPort::recvTimingReq(PacketPtr pkt)
 }
 
 void
-DRAMSim2::MemoryPort::recvRetry()
+DRAMSim2::MemoryPort::recvRespRetry()
 {
-    memory.recvRetry();
+    memory.recvRespRetry();
 }
 
 DRAMSim2*

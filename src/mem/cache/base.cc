@@ -122,7 +122,7 @@ BaseCache::CacheSlavePort::processSendRetry()
 
     // reset the flag and call retry
     mustSendRetry = false;
-    sendRetry();
+    sendRetryReq();
 }
 
 void

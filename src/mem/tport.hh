@@ -68,7 +68,7 @@ class SimpleTimingPort : public QueuedSlavePort
      * name used in the QueuedSlavePort. Access is provided through
      * the queue reference in the base class.
      */
-    SlavePacketQueue queueImpl;
+    RespPacketQueue queueImpl;
 
   protected:
 

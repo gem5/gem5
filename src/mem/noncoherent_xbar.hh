@@ -76,8 +76,6 @@ class NoncoherentXBar : public BaseXBar
      * Declare the layers of this crossbar, one vector for requests
      * and one for responses.
      */
-    typedef Layer<SlavePort,MasterPort> ReqLayer;
-    typedef Layer<MasterPort,SlavePort> RespLayer;
     std::vector<ReqLayer*> reqLayers;
     std::vector<RespLayer*> respLayers;
 
@@ -123,7 +121,7 @@ class NoncoherentXBar : public BaseXBar
         /**
          * When receiving a retry, pass it to the crossbar.
          */
-        virtual void recvRetry()
+        virtual void recvRespRetry()
         { panic("Crossbar slave ports should never retry.\n"); }
 
         /**
@@ -168,8 +166,8 @@ class NoncoherentXBar : public BaseXBar
 
         /** When reciving a retry from the peer port (at id),
             pass it to the crossbar. */
-        virtual void recvRetry()
-        { xbar.recvRetry(id); }
+        virtual void recvReqRetry()
+        { xbar.recvReqRetry(id); }
 
     };
 
@@ -183,7 +181,7 @@ class NoncoherentXBar : public BaseXBar
 
     /** Timing function called by port when it is once again able to process
      * requests. */
-    void recvRetry(PortID master_port_id);
+    void recvReqRetry(PortID master_port_id);
 
     /** Function called by the port when the crossbar is recieving a Atomic
       transaction.*/

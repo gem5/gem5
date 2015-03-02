@@ -429,15 +429,15 @@ CommMonitor::getAddrRanges() const
 }
 
 void
-CommMonitor::recvRetryMaster()
+CommMonitor::recvReqRetry()
 {
-    slavePort.sendRetry();
+    slavePort.sendRetryReq();
 }
 
 void
-CommMonitor::recvRetrySlave()
+CommMonitor::recvRespRetry()
 {
-    masterPort.sendRetry();
+    masterPort.sendRetryResp();
 }
 
 void

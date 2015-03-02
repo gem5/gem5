@@ -66,7 +66,7 @@ class DMASequencer : public MemObject
     class MemSlavePort : public QueuedSlavePort
     {
       private:
-        SlavePacketQueue queue;
+        RespPacketQueue queue;
         RubySystem* ruby_system;
         bool access_backing_store;
 

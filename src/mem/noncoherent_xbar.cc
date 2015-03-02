@@ -224,7 +224,7 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
 }
 
 void
-NoncoherentXBar::recvRetry(PortID master_port_id)
+NoncoherentXBar::recvReqRetry(PortID master_port_id)
 {
     // responses never block on forwarding them, so the retry will
     // always be coming from a port to which we tried to forward a

@@ -146,7 +146,7 @@ DmaPort::drain(DrainManager *dm)
 }
 
 void
-DmaPort::recvRetry()
+DmaPort::recvReqRetry()
 {
     assert(transmitList.size());
     trySendTimingReq();

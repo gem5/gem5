@@ -330,7 +330,7 @@ LSQ<Impl>::violation()
 
 template <class Impl>
 void
-LSQ<Impl>::recvRetry()
+LSQ<Impl>::recvReqRetry()
 {
     iewStage->cacheUnblocked();
 

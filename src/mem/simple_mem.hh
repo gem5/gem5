@@ -101,7 +101,7 @@ class SimpleMemory : public AbstractMemory
 
         bool recvTimingReq(PacketPtr pkt);
 
-        void recvRetry();
+        void recvRespRetry();
 
         AddrRangeList getAddrRanges() const;
 
@@ -205,7 +205,7 @@ class SimpleMemory : public AbstractMemory
 
     bool recvTimingReq(PacketPtr pkt);
 
-    void recvRetry();
+    void recvRespRetry();
 
 };
 

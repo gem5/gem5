@@ -200,7 +200,7 @@ Bridge::BridgeSlavePort::retryStalledReq()
     if (retryReq) {
         DPRINTF(Bridge, "Request waiting for retry, now retrying\n");
         retryReq = false;
-        sendRetry();
+        sendRetryReq();
     }
 }
 
@@ -309,7 +309,7 @@ Bridge::BridgeSlavePort::trySendTiming()
         if (!masterPort.reqQueueFull() && retryReq) {
             DPRINTF(Bridge, "Request waiting for retry, now retrying\n");
             retryReq = false;
-            sendRetry();
+            sendRetryReq();
         }
     }
 
@@ -318,13 +318,13 @@ Bridge::BridgeSlavePort::trySendTiming()
 }
 
 void
-Bridge::BridgeMasterPort::recvRetry()
+Bridge::BridgeMasterPort::recvReqRetry()
 {
     trySendTiming();
 }
 
 void
-Bridge::BridgeSlavePort::recvRetry()
+Bridge::BridgeSlavePort::recvRespRetry()
 {
     trySendTiming();
 }

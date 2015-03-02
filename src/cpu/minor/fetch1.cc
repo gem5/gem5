@@ -417,7 +417,7 @@ Fetch1::recvTimingResp(PacketPtr response)
 }
 
 void
-Fetch1::recvRetry()
+Fetch1::recvReqRetry()
 {
     DPRINTF(Fetch, "recvRetry\n");
     assert(icacheState == IcacheNeedsRetry);

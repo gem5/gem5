@@ -109,7 +109,7 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
     // flow control for the responses being sent back
     class MemoryPort : public QueuedSlavePort
     {
-        SlavePacketQueue queue;
+        RespPacketQueue queue;
         RubyMemoryControl& memory;
 
       public:

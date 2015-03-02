@@ -91,7 +91,7 @@ class NetworkTest : public MemObject
 
         virtual bool recvTimingResp(PacketPtr pkt);
 
-        virtual void recvRetry();
+        virtual void recvReqRetry();
     };
 
     CpuPort cachePort;

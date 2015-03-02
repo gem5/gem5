@@ -134,7 +134,7 @@ class DmaPort : public MasterPort
   protected:
 
     bool recvTimingResp(PacketPtr pkt);
-    void recvRetry() ;
+    void recvReqRetry() ;
 
     void queueDma(PacketPtr pkt);
 

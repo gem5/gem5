@@ -356,15 +356,15 @@ MemCheckerMonitor::getAddrRanges() const
 }
 
 void
-MemCheckerMonitor::recvRetryMaster()
+MemCheckerMonitor::recvReqRetry()
 {
-    slavePort.sendRetry();
+    slavePort.sendRetryReq();
 }
 
 void
-MemCheckerMonitor::recvRetrySlave()
+MemCheckerMonitor::recvRespRetry()
 {
-    masterPort.sendRetry();
+    masterPort.sendRetryResp();
 }
 
 void

@@ -136,9 +136,9 @@ class MemCheckerMonitor : public MemObject
             return mon.isSnooping();
         }
 
-        void recvRetry()
+        void recvReqRetry()
         {
-            mon.recvRetryMaster();
+            mon.recvReqRetry();
         }
 
       private:
@@ -192,9 +192,9 @@ class MemCheckerMonitor : public MemObject
             return mon.getAddrRanges();
         }
 
-        void recvRetry()
+        void recvRespRetry()
         {
-            mon.recvRetrySlave();
+            mon.recvRespRetry();
         }
 
       private:
@@ -226,9 +226,9 @@ class MemCheckerMonitor : public MemObject
 
     bool isSnooping() const;
 
-    void recvRetryMaster();
+    void recvReqRetry();
 
-    void recvRetrySlave();
+    void recvRespRetry();
 
     void recvRangeChange();
 

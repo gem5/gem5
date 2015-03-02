@@ -729,7 +729,7 @@ TimingSimpleCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 }
 
 void
-TimingSimpleCPU::IcachePort::recvRetry()
+TimingSimpleCPU::IcachePort::recvReqRetry()
 {
     // we shouldn't get a retry unless we have a packet that we're
     // waiting to transmit
@@ -846,8 +846,8 @@ TimingSimpleCPU::DcachePort::recvTimingResp(PacketPtr pkt)
         // In the case of a split transaction and a cache that is
         // faster than a CPU we could get two responses in the
         // same tick, delay the second one
-        if (!retryEvent.scheduled())
-            cpu->schedule(retryEvent, cpu->clockEdge(Cycles(1)));
+        if (!retryRespEvent.scheduled())
+            cpu->schedule(retryRespEvent, cpu->clockEdge(Cycles(1)));
         return false;
     }
 }
@@ -859,7 +859,7 @@ TimingSimpleCPU::DcachePort::DTickEvent::process()
 }
 
 void
-TimingSimpleCPU::DcachePort::recvRetry()
+TimingSimpleCPU::DcachePort::recvReqRetry()
 {
     // we shouldn't get a retry unless we have a packet that we're
     // waiting to transmit

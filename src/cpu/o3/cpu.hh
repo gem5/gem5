@@ -150,7 +150,7 @@ class FullO3CPU : public BaseO3CPU
         virtual void recvTimingSnoopReq(PacketPtr pkt) { }
 
         /** Handles doing a retry of a failed fetch. */
-        virtual void recvRetry();
+        virtual void recvReqRetry();
     };
 
     /**
@@ -185,7 +185,7 @@ class FullO3CPU : public BaseO3CPU
         }
 
         /** Handles doing a retry of the previous send. */
-        virtual void recvRetry();
+        virtual void recvReqRetry();
 
         /**
          * As this CPU requires snooping to maintain the load store queue

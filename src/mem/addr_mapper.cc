@@ -190,15 +190,15 @@ AddrMapper::isSnooping() const
 }
 
 void
-AddrMapper::recvRetryMaster()
+AddrMapper::recvReqRetry()
 {
-    slavePort.sendRetry();
+    slavePort.sendRetryReq();
 }
 
 void
-AddrMapper::recvRetrySlave()
+AddrMapper::recvRespRetry()
 {
-    masterPort.sendRetry();
+    masterPort.sendRetryResp();
 }
 
 void

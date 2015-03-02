@@ -59,7 +59,7 @@ NetworkTest::CpuPort::recvTimingResp(PacketPtr pkt)
 }
 
 void
-NetworkTest::CpuPort::recvRetry()
+NetworkTest::CpuPort::recvReqRetry()
 {
     networktest->doRetry();
 }

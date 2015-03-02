@@ -286,7 +286,7 @@ class LSQ {
     /**
      * Retry the previous send that failed.
      */
-    void recvRetry();
+    void recvReqRetry();
 
     /**
      * Handles writing back and completing the load or store that has

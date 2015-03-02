@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012,2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -61,12 +61,10 @@ class QueuedSlavePort : public SlavePort
 
   protected:
 
-    /** Packet queue used to store outgoing requests and responses. */
-    SlavePacketQueue &queue;
+    /** Packet queue used to store outgoing responses. */
+    RespPacketQueue &respQueue;
 
-     /** This function is notification that the device should attempt to send a
-      * packet again. */
-    virtual void recvRetry() { queue.retry(); }
+    void recvRespRetry() { respQueue.retry(); }
 
   public:
 
@@ -78,8 +76,8 @@ class QueuedSlavePort : public SlavePort
      * QueuePort constructor.
      */
     QueuedSlavePort(const std::string& name, MemObject* owner,
-                    SlavePacketQueue &queue, PortID id = InvalidPortID) :
-        SlavePort(name, owner, id), queue(queue)
+                    RespPacketQueue &resp_queue, PortID id = InvalidPortID) :
+        SlavePort(name, owner, id), respQueue(resp_queue)
     { }
 
     virtual ~QueuedSlavePort() { }
@@ -91,39 +89,53 @@ class QueuedSlavePort : public SlavePort
      * @param when Absolute time (in ticks) to send packet
      */
     void schedTimingResp(PacketPtr pkt, Tick when)
-    { queue.schedSendTiming(pkt, when); }
+    { respQueue.schedSendTiming(pkt, when); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
+    bool checkFunctional(PacketPtr pkt)
+    { return respQueue.checkFunctional(pkt); }
 
-    unsigned int drain(DrainManager *dm) { return queue.drain(dm); }
+    unsigned int drain(DrainManager *dm) { return respQueue.drain(dm); }
 };
 
+/**
+ * The QueuedMasterPort combines two queues, a request queue and a
+ * snoop response queue, that both share the same port. The flow
+ * control for requests and snoop responses are completely
+ * independent, and so each queue manages its own flow control
+ * (retries).
+ */
 class QueuedMasterPort : public MasterPort
 {
 
   protected:
 
-    /** Packet queue used to store outgoing requests and responses. */
-    MasterPacketQueue &queue;
+    /** Packet queue used to store outgoing requests. */
+    ReqPacketQueue &reqQueue;
 
-     /** This function is notification that the device should attempt to send a
-      * packet again. */
-    virtual void recvRetry() { queue.retry(); }
+    /** Packet queue used to store outgoing snoop responses. */
+    SnoopRespPacketQueue &snoopRespQueue;
+
+    void recvReqRetry() { reqQueue.retry(); }
+
+    void recvRetrySnoopResp() { snoopRespQueue.retry(); }
 
   public:
 
     /**
      * Create a QueuedPort with a given name, owner, and a supplied
-     * implementation of a packet queue. The external definition of
-     * the queue enables e.g. the cache to implement a specific queue
+     * implementation of two packet queues. The external definition of
+     * the queues enables e.g. the cache to implement a specific queue
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
     QueuedMasterPort(const std::string& name, MemObject* owner,
-                     MasterPacketQueue &queue, PortID id = InvalidPortID) :
-        MasterPort(name, owner, id), queue(queue)
+                     ReqPacketQueue &req_queue,
+                     SnoopRespPacketQueue &snoop_resp_queue,
+                     PortID id = InvalidPortID) :
+        MasterPort(name, owner, id), reqQueue(req_queue),
+        snoopRespQueue(snoop_resp_queue)
     { }
 
     virtual ~QueuedMasterPort() { }
@@ -135,7 +147,7 @@ class QueuedMasterPort : public MasterPort
      * @param when Absolute time (in ticks) to send packet
      */
     void schedTimingReq(PacketPtr pkt, Tick when)
-    { queue.schedSendTiming(pkt, when); }
+    { reqQueue.schedSendTiming(pkt, when); }
 
     /**
      * Schedule the sending of a timing snoop response.
@@ -144,13 +156,18 @@ class QueuedMasterPort : public MasterPort
      * @param when Absolute time (in ticks) to send packet
      */
     void schedTimingSnoopResp(PacketPtr pkt, Tick when)
-    { queue.schedSendTiming(pkt, when, true); }
+    { snoopRespQueue.schedSendTiming(pkt, when); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt) { return queue.checkFunctional(pkt); }
+    bool checkFunctional(PacketPtr pkt)
+    {
+        return reqQueue.checkFunctional(pkt) ||
+            snoopRespQueue.checkFunctional(pkt);
+    }
 
-    unsigned int drain(DrainManager *dm) { return queue.drain(dm); }
+    unsigned int drain(DrainManager *dm)
+    { return reqQueue.drain(dm) + snoopRespQueue.drain(dm); }
 };
 
 #endif // __MEM_QPORT_HH__

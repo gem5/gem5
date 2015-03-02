@@ -77,7 +77,7 @@ class Fetch1 : public Named
         bool recvTimingResp(PacketPtr pkt)
         { return fetch.recvTimingResp(pkt); }
 
-        void recvRetry() { fetch.recvRetry(); }
+        void recvReqRetry() { fetch.recvReqRetry(); }
     };
 
     /** Memory access queuing.
@@ -345,7 +345,7 @@ class Fetch1 : public Named
 
     /** Memory interface */
     virtual bool recvTimingResp(PacketPtr pkt);
-    virtual void recvRetry();
+    virtual void recvReqRetry();
 
   public:
     Fetch1(const std::string &name_,

@@ -181,8 +181,9 @@ class AbstractController : public MemObject, public Consumer
     class MemoryPort : public QueuedMasterPort
     {
       private:
-        // Packet queue used to store outgoing requests and responses.
-        MasterPacketQueue _queue;
+        // Packet queues used to store outgoing requests and snoop responses.
+        ReqPacketQueue reqQueue;
+        SnoopRespPacketQueue snoopRespQueue;
 
         // Controller that operates this port.
         AbstractController *controller;

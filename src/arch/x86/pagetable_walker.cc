@@ -133,13 +133,13 @@ Walker::recvTimingResp(PacketPtr pkt)
 }
 
 void
-Walker::WalkerPort::recvRetry()
+Walker::WalkerPort::recvReqRetry()
 {
-    walker->recvRetry();
+    walker->recvReqRetry();
 }
 
 void
-Walker::recvRetry()
+Walker::recvReqRetry()
 {
     std::list<WalkerState *>::iterator iter;
     for (iter = currStates.begin(); iter != currStates.end(); iter++) {

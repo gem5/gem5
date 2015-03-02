@@ -136,7 +136,8 @@ RubyPort::getSlavePort(const std::string &if_name, PortID idx)
 
 RubyPort::PioMasterPort::PioMasterPort(const std::string &_name,
                            RubyPort *_port)
-    : QueuedMasterPort(_name, _port, queue), queue(*_port, *this)
+    : QueuedMasterPort(_name, _port, reqQueue, snoopRespQueue),
+      reqQueue(*_port, *this), snoopRespQueue(*_port, *this)
 {
     DPRINTF(RubyPort, "Created master pioport on sequencer %s\n", _name);
 }
@@ -150,7 +151,8 @@ RubyPort::PioSlavePort::PioSlavePort(const std::string &_name,
 
 RubyPort::MemMasterPort::MemMasterPort(const std::string &_name,
                            RubyPort *_port)
-    : QueuedMasterPort(_name, _port, queue), queue(*_port, *this)
+    : QueuedMasterPort(_name, _port, reqQueue, snoopRespQueue),
+      reqQueue(*_port, *this), snoopRespQueue(*_port, *this)
 {
     DPRINTF(RubyPort, "Created master memport on ruby sequencer %s\n", _name);
 }
@@ -374,7 +376,7 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
             DPRINTF(RubyPort,
                     "Sequencer may now be free.  SendRetry to port %s\n",
                     (*i)->name());
-            (*i)->sendRetry();
+            (*i)->sendRetryReq();
         }
     }
 

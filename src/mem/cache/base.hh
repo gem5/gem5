@@ -125,20 +125,20 @@ class BaseCache : public MemObject
 
         /**
          * Schedule a send of a request packet (from the MSHR). Note
-         * that we could already have a retry or a transmit list of
-         * responses outstanding.
+         * that we could already have a retry outstanding.
          */
         void requestBus(RequestCause cause, Tick time)
         {
             DPRINTF(CachePort, "Asserting bus request for cause %d\n", cause);
-            queue.schedSendEvent(time);
+            reqQueue.schedSendEvent(time);
         }
 
       protected:
 
         CacheMasterPort(const std::string &_name, BaseCache *_cache,
-                        MasterPacketQueue &_queue) :
-            QueuedMasterPort(_name, _cache, _queue)
+                        ReqPacketQueue &_reqQueue,
+                        SnoopRespPacketQueue &_snoopRespQueue) :
+            QueuedMasterPort(_name, _cache, _reqQueue, _snoopRespQueue)
         { }
 
         /**
@@ -176,7 +176,7 @@ class BaseCache : public MemObject
                        const std::string &_label);
 
         /** A normal packet queue used to store responses. */
-        SlavePacketQueue queue;
+        RespPacketQueue queue;
 
         bool blocked;
 

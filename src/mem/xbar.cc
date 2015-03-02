@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -271,7 +271,7 @@ BaseXBar::Layer<SrcType,DstType>::retryWaiting()
 
     // tell the port to retry, which in some cases ends up calling the
     // layer again
-    retryingPort->sendRetry();
+    sendRetry(retryingPort);
 
     // If the layer is still in the retry state, sendTiming wasn't
     // called in zero time (e.g. the cache does this), burn a cycle

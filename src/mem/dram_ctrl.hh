@@ -95,7 +95,7 @@ class DRAMCtrl : public AbstractMemory
     class MemoryPort : public QueuedSlavePort
     {
 
-        SlavePacketQueue queue;
+        RespPacketQueue queue;
         DRAMCtrl& memory;
 
       public:

@@ -327,7 +327,9 @@ AbstractController::MemoryPort::recvTimingResp(PacketPtr pkt)
 AbstractController::MemoryPort::MemoryPort(const std::string &_name,
                                            AbstractController *_controller,
                                            const std::string &_label)
-    : QueuedMasterPort(_name, _controller, _queue),
-      _queue(*_controller, *this, _label), controller(_controller)
+    : QueuedMasterPort(_name, _controller, reqQueue, snoopRespQueue),
+      reqQueue(*_controller, *this, _label),
+      snoopRespQueue(*_controller, *this, _label),
+      controller(_controller)
 {
 }

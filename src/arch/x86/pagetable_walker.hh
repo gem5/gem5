@@ -77,7 +77,7 @@ namespace X86ISA
             void recvTimingSnoopReq(PacketPtr pkt) { }
             Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
             void recvFunctionalSnoop(PacketPtr pkt) { }
-            void recvRetry();
+            void recvReqRetry();
             bool isSnooping() const { return true; }
         };
 
@@ -190,7 +190,7 @@ namespace X86ISA
 
         // Functions for dealing with packets.
         bool recvTimingResp(PacketPtr pkt);
-        void recvRetry();
+        void recvReqRetry();
         bool sendTiming(WalkerState * sendingState, PacketPtr pkt);
 
       public:

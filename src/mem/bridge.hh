@@ -193,7 +193,7 @@ class Bridge : public MemObject
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        void recvRetry();
+        void recvRespRetry();
 
         /** When receiving a Atomic requestfrom the peer port,
             pass it to the bridge. */
@@ -301,7 +301,7 @@ class Bridge : public MemObject
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        void recvRetry();
+        void recvReqRetry();
     };
 
     /** Slave port of the bridge. */

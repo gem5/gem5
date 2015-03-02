@@ -138,7 +138,7 @@ DMASequencer::ruby_hit_callback(PacketPtr pkt)
         retry = false;
         DPRINTF(RubyDma,"Sequencer may now be free.  SendRetry to port %s\n",
                 slave_port.name());
-        slave_port.sendRetry();
+        slave_port.sendRetryReq();
     }
 
     testDrainComplete();

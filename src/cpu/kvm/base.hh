@@ -561,9 +561,9 @@ class BaseKvmCPU : public BaseCPU
             return true;
         }
 
-        void recvRetry()
+        void recvReqRetry()
         {
-            panic("The KVM CPU doesn't expect recvRetry!\n");
+            panic("The KVM CPU doesn't expect recvReqRetry!\n");
         }
 
     };

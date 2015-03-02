@@ -1407,7 +1407,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::recvRetry()
+DefaultFetch<Impl>::recvReqRetry()
 {
     if (retryPkt != NULL) {
         assert(cacheBlocked);

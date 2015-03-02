@@ -114,18 +114,21 @@ class Cache : public BaseCache
      * current MSHR status. This queue has a pointer to our specific
      * cache implementation and is used by the MemSidePort.
      */
-    class MemSidePacketQueue : public MasterPacketQueue
+    class CacheReqPacketQueue : public ReqPacketQueue
     {
 
       protected:
 
         Cache<TagStore> &cache;
+        SnoopRespPacketQueue &snoopRespQueue;
 
       public:
 
-        MemSidePacketQueue(Cache<TagStore> &cache, MasterPort &port,
-                           const std::string &label) :
-            MasterPacketQueue(cache, port, label), cache(cache) { }
+        CacheReqPacketQueue(Cache<TagStore> &cache, MasterPort &port,
+                            SnoopRespPacketQueue &snoop_resp_queue,
+                            const std::string &label) :
+            ReqPacketQueue(cache, port, label), cache(cache),
+            snoopRespQueue(snoop_resp_queue) { }
 
         /**
          * Override the normal sendDeferredPacket and do not only
@@ -145,7 +148,9 @@ class Cache : public BaseCache
       private:
 
         /** The cache-specific queue. */
-        MemSidePacketQueue _queue;
+        CacheReqPacketQueue _reqQueue;
+
+        SnoopRespPacketQueue _snoopRespQueue;
 
         // a pointer to our specific cache implementation
         Cache<TagStore> *cache;

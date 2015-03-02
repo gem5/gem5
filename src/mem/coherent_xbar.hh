@@ -75,12 +75,9 @@ class CoherentXBar : public BaseXBar
      * Declare the layers of this crossbar, one vector for requests,
      * one for responses, and one for snoop responses
      */
-    typedef Layer<SlavePort,MasterPort> ReqLayer;
-    typedef Layer<MasterPort,SlavePort> RespLayer;
-    typedef Layer<SlavePort,MasterPort> SnoopLayer;
     std::vector<ReqLayer*> reqLayers;
     std::vector<RespLayer*> respLayers;
-    std::vector<SnoopLayer*> snoopLayers;
+    std::vector<SnoopRespLayer*> snoopLayers;
 
     /**
      * Declaration of the coherent crossbar slave port type, one will
@@ -131,7 +128,7 @@ class CoherentXBar : public BaseXBar
         /**
          * When receiving a retry, pass it to the crossbar.
          */
-        virtual void recvRetry()
+        virtual void recvRespRetry()
         { panic("Crossbar slave ports should never retry.\n"); }
 
         /**
@@ -202,8 +199,8 @@ class CoherentXBar : public BaseXBar
 
         /** When reciving a retry from the peer port (at id),
             pass it to the crossbar. */
-        virtual void recvRetry()
-        { xbar.recvRetry(id); }
+        virtual void recvReqRetry()
+        { xbar.recvReqRetry(id); }
 
     };
 
@@ -233,14 +230,15 @@ class CoherentXBar : public BaseXBar
          * Override the sending of retries and pass them on through
          * the mirrored slave port.
          */
-        void sendRetry() {
-            slavePort.sendRetry();
+        void sendRetryResp() {
+            // forward it as a snoop response retry
+            slavePort.sendRetrySnoopResp();
         }
 
         /**
          * Provided as necessary.
          */
-        void recvRetry() { panic("SnoopRespPort should never see retry\n"); }
+        void recvReqRetry() { panic("SnoopRespPort should never see retry\n"); }
 
         /**
          * Provided as necessary.
@@ -292,7 +290,7 @@ class CoherentXBar : public BaseXBar
 
     /** Timing function called by port when it is once again able to process
      * requests. */
-    void recvRetry(PortID master_port_id);
+    void recvReqRetry(PortID master_port_id);
 
     /**
      * Forward a timing packet to our snoopers, potentially excluding

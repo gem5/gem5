@@ -224,7 +224,7 @@ class DefaultFetch
     void startupStage();
 
     /** Handles retrying the fetch access. */
-    void recvRetry();
+    void recvReqRetry();
 
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);

@@ -101,7 +101,7 @@ class LSQ : public Named
         bool recvTimingResp(PacketPtr pkt)
         { return lsq.recvTimingResp(pkt); }
 
-        void recvRetry() { lsq.recvRetry(); }
+        void recvReqRetry() { lsq.recvReqRetry(); }
 
         void recvTimingSnoopReq(PacketPtr pkt)
         { return lsq.recvTimingSnoopReq(pkt); }
@@ -712,7 +712,7 @@ class LSQ : public Named
 
     /** Memory interface */
     bool recvTimingResp(PacketPtr pkt);
-    void recvRetry();
+    void recvReqRetry();
     void recvTimingSnoopReq(PacketPtr pkt);
 
     /** Return the raw-bindable port */

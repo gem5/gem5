@@ -143,9 +143,9 @@ class AddrMapper : public MemObject
             return mapper.isSnooping();
         }
 
-        void recvRetry()
+        void recvReqRetry()
         {
-            mapper.recvRetryMaster();
+            mapper.recvReqRetry();
         }
 
       private:
@@ -193,9 +193,9 @@ class AddrMapper : public MemObject
             return mapper.getAddrRanges();
         }
 
-        void recvRetry()
+        void recvRespRetry()
         {
-            mapper.recvRetrySlave();
+            mapper.recvRespRetry();
         }
 
       private:
@@ -227,9 +227,9 @@ class AddrMapper : public MemObject
 
     bool isSnooping() const;
 
-    void recvRetryMaster();
+    void recvReqRetry();
 
-    void recvRetrySlave();
+    void recvRespRetry();
 
     void recvRangeChange();
 };

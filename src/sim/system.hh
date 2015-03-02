@@ -99,7 +99,7 @@ class System : public MemObject
         { }
         bool recvTimingResp(PacketPtr pkt)
         { panic("SystemPort does not receive timing!\n"); return false; }
-        void recvRetry()
+        void recvReqRetry()
         { panic("SystemPort does not expect retry!\n"); }
     };
 

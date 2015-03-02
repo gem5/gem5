@@ -1235,7 +1235,7 @@ LSQ::recvTimingResp(PacketPtr response)
 }
 
 void
-LSQ::recvRetry()
+LSQ::recvReqRetry()
 {
     DPRINTF(MinorMem, "Received retry request\n");
 

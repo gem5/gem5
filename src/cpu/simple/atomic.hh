@@ -139,7 +139,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
             return true;
         }
 
-        void recvRetry()
+        void recvReqRetry()
         {
             panic("Atomic CPU doesn't expect recvRetry!\n");
         }

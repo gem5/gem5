@@ -63,7 +63,7 @@ MemTest::CpuPort::recvTimingResp(PacketPtr pkt)
 }
 
 void
-MemTest::CpuPort::recvRetry()
+MemTest::CpuPort::recvReqRetry()
 {
     memtest.recvRetry();
 }

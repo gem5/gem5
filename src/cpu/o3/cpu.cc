@@ -101,9 +101,9 @@ FullO3CPU<Impl>::IcachePort::recvTimingResp(PacketPtr pkt)
 
 template<class Impl>
 void
-FullO3CPU<Impl>::IcachePort::recvRetry()
+FullO3CPU<Impl>::IcachePort::recvReqRetry()
 {
-    fetch->recvRetry();
+    fetch->recvReqRetry();
 }
 
 template <class Impl>
@@ -126,9 +126,9 @@ FullO3CPU<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::DcachePort::recvRetry()
+FullO3CPU<Impl>::DcachePort::recvReqRetry()
 {
-    lsq->recvRetry();
+    lsq->recvReqRetry();
 }
 
 template <class Impl>

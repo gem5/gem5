@@ -157,7 +157,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         TimingCPUPort(const std::string& _name, TimingSimpleCPU* _cpu)
-            : MasterPort(_name, _cpu), cpu(_cpu), retryEvent(this)
+            : MasterPort(_name, _cpu), cpu(_cpu), retryRespEvent(this)
         { }
 
       protected:
@@ -179,7 +179,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             void schedule(PacketPtr _pkt, Tick t);
         };
 
-        EventWrapper<MasterPort, &MasterPort::sendRetry> retryEvent;
+        EventWrapper<MasterPort, &MasterPort::sendRetryResp> retryRespEvent;
     };
 
     class IcachePort : public TimingCPUPort
@@ -195,7 +195,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTimingResp(PacketPtr pkt);
 
-        virtual void recvRetry();
+        virtual void recvReqRetry();
 
         struct ITickEvent : public TickEvent
         {
@@ -232,7 +232,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTimingResp(PacketPtr pkt);
 
-        virtual void recvRetry();
+        virtual void recvReqRetry();
 
         virtual bool isSnooping() const {
             return true;

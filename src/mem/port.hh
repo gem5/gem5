@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012,2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -214,7 +214,7 @@ class MasterPort : public BaseMasterPort
      * Attempt to send a timing request to the slave port by calling
      * its corresponding receive function. If the send does not
      * succeed, as indicated by the return value, then the sender must
-     * wait for a recvRetry at which point it can re-issue a
+     * wait for a recvReqRetry at which point it can re-issue a
      * sendTimingReq.
      *
      * @param pkt Packet to send.
@@ -227,8 +227,8 @@ class MasterPort : public BaseMasterPort
      * Attempt to send a timing snoop response packet to the slave
      * port by calling its corresponding receive function. If the send
      * does not succeed, as indicated by the return value, then the
-     * sender must wait for a recvRetry at which point it can re-issue
-     * a sendTimingSnoopResp.
+     * sender must wait for a recvRetrySnoop at which point it can
+     * re-issue a sendTimingSnoopResp.
      *
      * @param pkt Packet to send.
      */
@@ -236,9 +236,11 @@ class MasterPort : public BaseMasterPort
 
     /**
      * Send a retry to the slave port that previously attempted a
-     * sendTimingResp to this master port and failed.
+     * sendTimingResp to this master port and failed. Note that this
+     * is virtual so that the "fake" snoop response port in the
+     * coherent crossbar can override the behaviour.
      */
-    virtual void sendRetry();
+    virtual void sendRetryResp();
 
     /**
      * Determine if this master port is snooping or not. The default
@@ -294,12 +296,21 @@ class MasterPort : public BaseMasterPort
     }
 
     /**
-     * Called by the slave port if sendTimingReq or
-     * sendTimingSnoopResp was called on this master port (causing
-     * recvTimingReq and recvTimingSnoopResp to be called on the
-     * slave port) and was unsuccesful.
+     * Called by the slave port if sendTimingReq was called on this
+     * master port (causing recvTimingReq to be called on the slave
+     * port) and was unsuccesful.
      */
-    virtual void recvRetry() = 0;
+    virtual void recvReqRetry() = 0;
+
+    /**
+     * Called by the slave port if sendTimingSnoopResp was called on this
+     * master port (causing recvTimingSnoopResp to be called on the slave
+     * port) and was unsuccesful.
+     */
+    virtual void recvRetrySnoopResp()
+    {
+        panic("%s was not expecting a snoop retry\n", name());
+    }
 
     /**
      * Called to receive an address range change from the peer slave
@@ -356,7 +367,7 @@ class SlavePort : public BaseSlavePort
      * Attempt to send a timing response to the master port by calling
      * its corresponding receive function. If the send does not
      * succeed, as indicated by the return value, then the sender must
-     * wait for a recvRetry at which point it can re-issue a
+     * wait for a recvRespRetry at which point it can re-issue a
      * sendTimingResp.
      *
      * @param pkt Packet to send.
@@ -376,10 +387,15 @@ class SlavePort : public BaseSlavePort
 
     /**
      * Send a retry to the master port that previously attempted a
-     * sendTimingReq or sendTimingSnoopResp to this slave port and
-     * failed.
+     * sendTimingReq to this slave port and failed.
      */
-    void sendRetry();
+    void sendRetryReq();
+
+    /**
+     * Send a retry to the master port that previously attempted a
+     * sendTimingSnoopResp to this slave port and failed.
+     */
+    void sendRetrySnoopResp();
 
     /**
      * Find out if the peer master port is snooping or not.
@@ -448,7 +464,7 @@ class SlavePort : public BaseSlavePort
      * slave port (causing recvTimingResp to be called on the master
      * port) and was unsuccesful.
      */
-    virtual void recvRetry() = 0;
+    virtual void recvRespRetry() = 0;
 
 };
 

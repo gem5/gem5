@@ -66,8 +66,8 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this,
                                          csprintf(".reqLayer%d", i)));
-        snoopLayers.push_back(new SnoopLayer(*bp, *this,
-                                             csprintf(".snoopLayer%d", i)));
+        snoopLayers.push_back(new SnoopRespLayer(*bp, *this,
+                                                 csprintf(".snoopLayer%d", i)));
     }
 
     // see if we have a default slave device connected and if so add
@@ -80,9 +80,9 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         masterPorts.push_back(bp);
         reqLayers.push_back(new ReqLayer(*bp, *this, csprintf(".reqLayer%d",
                                              defaultPortID)));
-        snoopLayers.push_back(new SnoopLayer(*bp, *this,
-                                             csprintf(".snoopLayer%d",
-                                                      defaultPortID)));
+        snoopLayers.push_back(new SnoopRespLayer(*bp, *this,
+                                                 csprintf(".snoopLayer%d",
+                                                          defaultPortID)));
     }
 
     // create the slave ports, once again starting at zero
@@ -528,7 +528,7 @@ CoherentXBar::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
 }
 
 void
-CoherentXBar::recvRetry(PortID master_port_id)
+CoherentXBar::recvReqRetry(PortID master_port_id)
 {
     // responses and snoop responses never block on forwarding them,
     // so the retry will always be coming from a port to which we

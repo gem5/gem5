@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -174,6 +174,16 @@ class BaseXBar : public MemObject
          */
         void regStats();
 
+      protected:
+
+        /**
+         * Sending the actual retry, in a manner specific to the
+         * individual layers. Note that for a MasterPort, there is
+         * both a RequestLayer and a SnoopResponseLayer using the same
+         * port, but using different functions for the flow control.
+         */
+        virtual void sendRetry(SrcType* retry_port) = 0;
+
       private:
 
         /** The destination port this layer converges at. */
@@ -239,6 +249,64 @@ class BaseXBar : public MemObject
         Stats::Scalar occupancy;
         Stats::Formula utilization;
 
+    };
+
+    class ReqLayer : public Layer<SlavePort,MasterPort>
+    {
+      public:
+        /**
+         * Create a request layer and give it a name.
+         *
+         * @param _port destination port the layer converges at
+         * @param _xbar the crossbar this layer belongs to
+         * @param _name the layer's name
+         */
+        ReqLayer(MasterPort& _port, BaseXBar& _xbar, const std::string& _name) :
+            Layer(_port, _xbar, _name) {}
+
+      protected:
+
+        void sendRetry(SlavePort* retry_port)
+        { retry_port->sendRetryReq(); }
+    };
+
+    class RespLayer : public Layer<MasterPort,SlavePort>
+    {
+      public:
+        /**
+         * Create a response layer and give it a name.
+         *
+         * @param _port destination port the layer converges at
+         * @param _xbar the crossbar this layer belongs to
+         * @param _name the layer's name
+         */
+        RespLayer(SlavePort& _port, BaseXBar& _xbar, const std::string& _name) :
+            Layer(_port, _xbar, _name) {}
+
+      protected:
+
+        void sendRetry(MasterPort* retry_port)
+        { retry_port->sendRetryResp(); }
+    };
+
+    class SnoopRespLayer : public Layer<SlavePort,MasterPort>
+    {
+      public:
+        /**
+         * Create a snoop response layer and give it a name.
+         *
+         * @param _port destination port the layer converges at
+         * @param _xbar the crossbar this layer belongs to
+         * @param _name the layer's name
+         */
+        SnoopRespLayer(MasterPort& _port, BaseXBar& _xbar,
+                       const std::string& _name) :
+            Layer(_port, _xbar, _name) {}
+
+      protected:
+
+        void sendRetry(SlavePort* retry_port)
+        { retry_port->sendRetrySnoopResp(); }
     };
 
     /** cycles of overhead per transaction */

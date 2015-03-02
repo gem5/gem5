@@ -80,7 +80,7 @@ class DRAMSim2 : public AbstractMemory
 
         bool recvTimingReq(PacketPtr pkt);
 
-        void recvRetry();
+        void recvRespRetry();
 
         AddrRangeList getAddrRanges() const;
 
@@ -208,7 +208,7 @@ class DRAMSim2 : public AbstractMemory
     Tick recvAtomic(PacketPtr pkt);
     void recvFunctional(PacketPtr pkt);
     bool recvTimingReq(PacketPtr pkt);
-    void recvRetry();
+    void recvRespRetry();
 
 };
 

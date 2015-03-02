@@ -91,7 +91,7 @@ class TrafficGen : public MemObject
      * Receive a retry from the neighbouring port and attempt to
      * resend the waiting packet.
      */
-    void recvRetry();
+    void recvReqRetry();
 
     /** Struct to represent a probabilistic transition during parsing. */
     struct Transition {
@@ -148,7 +148,7 @@ class TrafficGen : public MemObject
 
       protected:
 
-        void recvRetry() { trafficGen.recvRetry(); }
+        void recvReqRetry() { trafficGen.recvReqRetry(); }
 
         bool recvTimingResp(PacketPtr pkt);
 

@@ -748,7 +748,7 @@ DRAMCtrl::processRespondEvent()
     // so if there is a read that was forced to wait, retry now
     if (retryRdReq) {
         retryRdReq = false;
-        port.sendRetry();
+        port.sendRetryReq();
     }
 }
 
@@ -1441,7 +1441,7 @@ DRAMCtrl::processNextReqEvent()
     // the next request processing
     if (retryWrReq && writeQueue.size() < writeBufferSize) {
         retryWrReq = false;
-        port.sendRetry();
+        port.sendRetryReq();
     }
 }
 
