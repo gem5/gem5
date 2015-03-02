@@ -4,10 +4,10 @@ sim_seconds                                  0.000003                       # Nu
 sim_ticks                                     2694500                       # Number of ticks simulated
 final_tick                                    2694500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 396323                       # Simulator instruction rate (inst/s)
-host_op_rate                                   463654                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              232084410                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 298640                       # Number of bytes of host memory used
+host_inst_rate                                 771856                       # Simulator instruction rate (inst/s)
+host_op_rate                                   901727                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              450886881                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 297796                       # Number of bytes of host memory used
 host_seconds                                     0.01                       # Real time elapsed on the host
 sim_insts                                        4591                       # Number of instructions simulated
 sim_ops                                          5377                       # Number of ops (including micro ops) simulated
@@ -347,18 +347,16 @@ system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port         8139 
 system.membus.pkt_size::total                   26555                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoop_fanout::samples              6531                       # Request fanout histogram
-system.membus.snoop_fanout::mean             4.704946                       # Request fanout histogram
+system.membus.snoop_fanout::mean             2.704946                       # Request fanout histogram
 system.membus.snoop_fanout::stdev            0.456102                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::0                       0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::1                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::2                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::3                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::4                    1927     29.51%     29.51% # Request fanout histogram
-system.membus.snoop_fanout::5                    4604     70.49%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::2                    1927     29.51%     29.51% # Request fanout histogram
+system.membus.snoop_fanout::3                    4604     70.49%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
-system.membus.snoop_fanout::min_value               4                       # Request fanout histogram
-system.membus.snoop_fanout::max_value               5                       # Request fanout histogram
+system.membus.snoop_fanout::min_value               2                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               3                       # Request fanout histogram
 system.membus.snoop_fanout::total                6531                       # Request fanout histogram
 
 ---------- End Simulation Statistics   ----------

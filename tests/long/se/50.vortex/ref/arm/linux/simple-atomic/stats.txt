@@ -4,11 +4,11 @@ sim_seconds                                  0.048960                       # Nu
 sim_ticks                                 48960011000                       # Number of ticks simulated
 final_tick                                48960011000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1376675                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1760576                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              950486092                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 308184                       # Number of bytes of host memory used
-host_seconds                                    51.51                       # Real time elapsed on the host
+host_inst_rate                                1566427                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2003243                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1081494789                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 308080                       # Number of bytes of host memory used
+host_seconds                                    45.27                       # Real time elapsed on the host
 sim_insts                                    70913181                       # Number of instructions simulated
 sim_ops                                      90688136                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -230,18 +230,16 @@ system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port    185233556 
 system.membus.pkt_size::total               497813828                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoop_fanout::samples         120930618                       # Request fanout histogram
-system.membus.snoop_fanout::mean             4.646198                       # Request fanout histogram
+system.membus.snoop_fanout::mean             2.646198                       # Request fanout histogram
 system.membus.snoop_fanout::stdev            0.478149                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::0                       0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::1                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::2                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::3                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::4                42785550     35.38%     35.38% # Request fanout histogram
-system.membus.snoop_fanout::5                78145068     64.62%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::2                42785550     35.38%     35.38% # Request fanout histogram
+system.membus.snoop_fanout::3                78145068     64.62%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
-system.membus.snoop_fanout::min_value               4                       # Request fanout histogram
-system.membus.snoop_fanout::max_value               5                       # Request fanout histogram
+system.membus.snoop_fanout::min_value               2                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               3                       # Request fanout histogram
 system.membus.snoop_fanout::total           120930618                       # Request fanout histogram
 
 ---------- End Simulation Statistics   ----------
