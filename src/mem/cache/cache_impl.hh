@@ -1596,15 +1596,16 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
         // invalidate it.
         pkt->cmd = MemCmd::ReadRespWithInvalidate;
     }
-    DPRINTF(Cache, "%s created response: %s address %x size %d\n",
-            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
-    // Here we condiser forward_time, paying for just forward latency and
+    // Here we consider forward_time, paying for just forward latency and
     // also charging the delay provided by the xbar.
     // forward_time is used as send_time in next allocateWriteBuffer().
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
-    memSidePort->schedTimingSnoopResp(pkt, forward_time);
+    DPRINTF(Cache, "%s created response: %s address %x size %d tick: %lu\n",
+            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(),
+            forward_time);
+    memSidePort->schedTimingSnoopResp(pkt, forward_time, true);
 }
 
 template<class TagStore>

@@ -180,8 +180,10 @@ class PacketQueue : public Drainable
      *
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
+     * @param force_order Do not reorder packets despite timing, but keep them
+     *                    in insertion order.
      */
-    void schedSendTiming(PacketPtr pkt, Tick when);
+    void schedSendTiming(PacketPtr pkt, Tick when, bool force_order = false);
 
     /**
      * Retry sending a packet from the queue. Note that this is not

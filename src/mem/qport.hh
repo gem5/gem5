@@ -155,8 +155,9 @@ class QueuedMasterPort : public MasterPort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingSnoopResp(PacketPtr pkt, Tick when)
-    { snoopRespQueue.schedSendTiming(pkt, when); }
+    void schedTimingSnoopResp(PacketPtr pkt, Tick when, bool force_order =
+                              false)
+    { snoopRespQueue.schedSendTiming(pkt, when, force_order); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
