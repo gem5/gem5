@@ -100,10 +100,10 @@ TLB::init()
 }
 
 void
-TLB::setMMU(Stage2MMU *m)
+TLB::setMMU(Stage2MMU *m, MasterID master_id)
 {
     stage2Mmu = m;
-    tableWalker->setMMU(m);
+    tableWalker->setMMU(m, master_id);
 }
 
 bool
@@ -1215,13 +1215,7 @@ TLB::translateComplete(RequestPtr req, ThreadContext *tc,
 BaseMasterPort*
 TLB::getMasterPort()
 {
-    return &tableWalker->getMasterPort("port");
-}
-
-DmaPort&
-TLB::getWalkerPort()
-{
-    return tableWalker->getWalkerPort();
+    return &stage2Mmu->getPort();
 }
 
 void

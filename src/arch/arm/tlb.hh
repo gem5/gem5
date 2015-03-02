@@ -163,7 +163,9 @@ class TLB : public BaseTLB
     /// setup all the back pointers
     virtual void init();
 
-    void setMMU(Stage2MMU *m);
+    TableWalker *getTableWalker() { return tableWalker; }
+
+    void setMMU(Stage2MMU *m, MasterID master_id);
 
     int getsize() const { return size; }
 
@@ -307,15 +309,6 @@ class TLB : public BaseTLB
      * @return A pointer to the walker master port
      */
     virtual BaseMasterPort* getMasterPort();
-
-    /**
-     * Allow the MMU (overseeing both stage 1 and stage 2 TLBs) to
-     * access the table walker port of this TLB so that it can
-     * orchestrate staged translations.
-     *
-     * @return The table walker DMA port
-     */
-    DmaPort& getWalkerPort();
 
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.

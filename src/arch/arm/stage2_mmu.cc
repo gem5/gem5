@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,29 +37,31 @@
  * Authors: Thomas Grocutt
  */
 
-#include "arch/arm/faults.hh"
 #include "arch/arm/stage2_mmu.hh"
+#include "arch/arm/faults.hh"
 #include "arch/arm/system.hh"
+#include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/Checkpoint.hh"
-#include "debug/TLB.hh"
-#include "debug/TLBVerbose.hh"
 
 using namespace ArmISA;
 
 Stage2MMU::Stage2MMU(const Params *p)
-    : SimObject(p), _stage1Tlb(p->tlb), _stage2Tlb(p->stage2_tlb)
+    : SimObject(p), _stage1Tlb(p->tlb), _stage2Tlb(p->stage2_tlb),
+      port(_stage1Tlb->getTableWalker(), p->sys),
+      masterId(p->sys->getMasterId(_stage1Tlb->getTableWalker()->name()))
 {
-    stage1Tlb()->setMMU(this);
-    stage2Tlb()->setMMU(this);
+    // we use the stage-one table walker as the parent of the port,
+    // and to get our master id, this is done to keep things
+    // symmetrical with other ISAs in terms of naming and stats
+    stage1Tlb()->setMMU(this, masterId);
+    stage2Tlb()->setMMU(this, masterId);
 }
 
 Fault
 Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
-    uint8_t *data, int numBytes, Request::Flags flags, int masterId,
-    bool isFunctional)
+    uint8_t *data, int numBytes, Request::Flags flags, bool isFunctional)
 {
     Fault fault;
 
@@ -77,9 +79,9 @@ Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
         Packet pkt = Packet(&req, MemCmd::ReadReq);
         pkt.dataStatic(data);
         if (isFunctional) {
-            stage1Tlb()->getWalkerPort().sendFunctional(&pkt);
+            port.sendFunctional(&pkt);
         } else {
-            stage1Tlb()->getWalkerPort().sendAtomic(&pkt);
+            port.sendAtomic(&pkt);
         }
         assert(!pkt.isError());
     }
@@ -96,8 +98,8 @@ Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
 
 Fault
 Stage2MMU::readDataTimed(ThreadContext *tc, Addr descAddr,
-    Stage2Translation *translation, int numBytes, Request::Flags flags,
-    int masterId)
+                         Stage2Translation *translation, int numBytes,
+                         Request::Flags flags)
 {
     Fault fault;
     // translate to physical address using the second stage MMU
@@ -128,15 +130,20 @@ Stage2MMU::Stage2Translation::finish(const Fault &_fault, RequestPtr req,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        DmaPort& port = parent.stage1Tlb()->getWalkerPort();
-        port.dmaAction(MemCmd::ReadReq, req->getPaddr(), numBytes,
-                       event, data, tc->getCpuPtr()->clockPeriod(),
-                       req->getFlags());
+        parent.getPort().dmaAction(MemCmd::ReadReq, req->getPaddr(), numBytes,
+                                   event, data, tc->getCpuPtr()->clockPeriod(),
+                                   req->getFlags());
     } else {
         // We can't do the DMA access as there's been a problem, so tell the
         // event we're done
         event->process();
     }
+}
+
+unsigned int
+Stage2MMU::drain(DrainManager *dm)
+{
+    return port.drain(dm);
 }
 
 ArmISA::Stage2MMU *

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014 ARM Limited
+ * Copyright (c) 2010, 2012-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,9 +56,10 @@
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), port(this, p->sys), drainManager(NULL),
-      stage2Mmu(NULL), isStage2(p->is_stage2), tlb(NULL),
-      currState(NULL), pending(false), masterId(p->sys->getMasterId(name())),
+    : MemObject(p), drainManager(NULL),
+      stage2Mmu(NULL), port(NULL), masterId(Request::invldMasterId),
+      isStage2(p->is_stage2), tlb(NULL),
+      currState(NULL), pending(false),
       numSquashable(p->num_squash_per_cycle),
       pendingReqs(0),
       pendingChangeTick(curTick()),
@@ -71,7 +72,7 @@ TableWalker::TableWalker(const Params *p)
 
     // Cache system-level properties
     if (FullSystem) {
-        armSys = dynamic_cast<ArmSystem *>(p->sys);
+        ArmSystem *armSys = dynamic_cast<ArmSystem *>(p->sys);
         assert(armSys);
         haveSecurity = armSys->haveSecurity();
         _haveLPAE = armSys->haveLPAE();
@@ -79,7 +80,6 @@ TableWalker::TableWalker(const Params *p)
         physAddrRange = armSys->physAddrRange();
         _haveLargeAsid64 = armSys->haveLargeAsid64();
     } else {
-        armSys = NULL;
         haveSecurity = _haveLPAE = _haveVirtualization = false;
         _haveLargeAsid64 = false;
         physAddrRange = 32;
@@ -90,6 +90,35 @@ TableWalker::TableWalker(const Params *p)
 TableWalker::~TableWalker()
 {
     ;
+}
+
+void
+TableWalker::setMMU(Stage2MMU *m, MasterID master_id)
+{
+    stage2Mmu = m;
+    port = &m->getPort();
+    masterId = master_id;
+}
+
+void
+TableWalker::init()
+{
+    fatal_if(!stage2Mmu, "Table walker must have a valid stage-2 MMU\n");
+    fatal_if(!port, "Table walker must have a valid port\n");
+    fatal_if(!tlb, "Table walker must have a valid TLB\n");
+}
+
+BaseMasterPort&
+TableWalker::getMasterPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "port") {
+        if (!isStage2) {
+            return *port;
+        } else {
+            fatal("Cannot access table walker port through stage-two walker\n");
+        }
+    }
+    return MemObject::getMasterPort(if_name, idx);
 }
 
 TableWalker::WalkerState::WalkerState() :
@@ -119,8 +148,6 @@ TableWalker::completeDrain()
 unsigned int
 TableWalker::drain(DrainManager *dm)
 {
-    unsigned int count = port.drain(dm);
-
     bool state_queues_not_empty = false;
 
     for (int i = 0; i < MAX_LOOKUP_LEVELS; ++i) {
@@ -136,13 +163,13 @@ TableWalker::drain(DrainManager *dm)
         DPRINTF(Drain, "TableWalker not drained\n");
 
         // return port drain count plus the table walker itself needs to drain
-        return count + 1;
+        return 1;
     } else {
         setDrainState(Drainable::Drained);
         DPRINTF(Drain, "TableWalker free, no need to drain\n");
 
         // table walker is drained, but its ports may still need to be drained
-        return count;
+        return 0;
     }
 }
 
@@ -155,15 +182,6 @@ TableWalker::drainResume()
         currState = NULL;
         pendingChange();
     }
-}
-
-BaseMasterPort&
-TableWalker::getMasterPort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "port") {
-        return port;
-    }
-    return MemObject::getMasterPort(if_name, idx);
 }
 
 Fault
@@ -946,7 +964,7 @@ TableWalker::processWalkAArch64()
             panic("Invalid table lookup level");
             break;
         }
-        port.dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
+        port->dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
                        event, (uint8_t*) &currState->longDesc.data,
                        currState->tc->getCpuPtr()->clockPeriod(), flag);
         DPRINTF(TLBVerbose,
@@ -955,7 +973,7 @@ TableWalker::processWalkAArch64()
         stateQueues[start_lookup_level].push_back(currState);
         currState = NULL;
     } else if (!currState->functional) {
-        port.dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
+        port->dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
                        NULL, (uint8_t*) &currState->longDesc.data,
                        currState->tc->getCpuPtr()->clockPeriod(), flag);
         doLongDescriptor();
@@ -965,7 +983,7 @@ TableWalker::processWalkAArch64()
                                      masterId);
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
         pkt->dataStatic((uint8_t*) &currState->longDesc.data);
-        port.sendFunctional(pkt);
+        port->sendFunctional(pkt);
         doLongDescriptor();
         delete req;
         delete pkt;
@@ -1916,11 +1934,11 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                                              currState->vaddr);
             currState->stage2Tran = tran;
             stage2Mmu->readDataTimed(currState->tc, descAddr, tran, numBytes,
-                                     flags, masterId);
+                                     flags);
             fault = tran->fault;
         } else {
             fault = stage2Mmu->readDataUntimed(currState->tc,
-                currState->vaddr, descAddr, data, numBytes, flags, masterId,
+                currState->vaddr, descAddr, data, numBytes, flags,
                 currState->functional);
         }
 
@@ -1939,7 +1957,7 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
         }
     } else {
         if (isTiming) {
-            port.dmaAction(MemCmd::ReadReq, descAddr, numBytes, event, data,
+            port->dmaAction(MemCmd::ReadReq, descAddr, numBytes, event, data,
                            currState->tc->getCpuPtr()->clockPeriod(),flags);
             if (queueIndex >= 0) {
                 DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
@@ -1948,7 +1966,7 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                 currState = NULL;
             }
         } else if (!currState->functional) {
-            port.dmaAction(MemCmd::ReadReq, descAddr, numBytes, NULL, data,
+            port->dmaAction(MemCmd::ReadReq, descAddr, numBytes, NULL, data,
                            currState->tc->getCpuPtr()->clockPeriod(), flags);
             (this->*doDescriptor)();
         } else {
@@ -1956,7 +1974,7 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
             req->taskId(ContextSwitchTaskId::DMA);
             PacketPtr  pkt = new Packet(req, MemCmd::ReadReq);
             pkt->dataStatic(data);
-            port.sendFunctional(pkt);
+            port->sendFunctional(pkt);
             (this->*doDescriptor)();
             delete req;
             delete pkt;
