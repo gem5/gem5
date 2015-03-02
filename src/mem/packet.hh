@@ -304,11 +304,9 @@ class Packet : public Printable
     MemCmd origCmd;
 
     /**
-     * These values specify the range of bytes found that satisfy a
-     * functional read.
+     * Track the bytes found that satisfy a functional read.
      */
-    uint16_t bytesValidStart;
-    uint16_t bytesValidEnd;
+    std::vector<bool> bytesValid;
 
   public:
 
@@ -573,8 +571,7 @@ class Packet : public Printable
      */
     Packet(const RequestPtr _req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           size(0), bytesValidStart(0), bytesValidEnd(0),
-           headerDelay(0), payloadDelay(0),
+           size(0), headerDelay(0), payloadDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -595,7 +592,6 @@ class Packet : public Printable
      */
     Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           bytesValidStart(0), bytesValidEnd(0),
            headerDelay(0), payloadDelay(0),
            senderState(NULL)
     {
@@ -619,8 +615,7 @@ class Packet : public Printable
         :  cmd(pkt->cmd), req(pkt->req),
            data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
-           bytesValidStart(pkt->bytesValidStart),
-           bytesValidEnd(pkt->bytesValidEnd),
+           bytesValid(pkt->bytesValid),
            headerDelay(pkt->headerDelay),
            payloadDelay(pkt->payloadDelay),
            senderState(pkt->senderState)
