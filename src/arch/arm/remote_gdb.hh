@@ -68,6 +68,7 @@ enum {
 // AArch64 registers
 enum {
     GDB64_X0 = 0,
+    GDB64_SPX = 31,
     GDB64_PC = 32,
     GDB64_CPSR = 33,
     GDB64_V0 = 34,
