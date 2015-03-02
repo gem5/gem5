@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -346,6 +358,17 @@ class UnifiedRenameMap
     {
         return std::min(intMap.numFreeEntries(), floatMap.numFreeEntries());
     }
+
+    /**
+     * Return whether there are enough registers to serve the request.
+     */
+    bool canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t ccRegs) const
+    {
+        return intRegs <= intMap.numFreeEntries() &&
+            floatRegs <= floatMap.numFreeEntries() &&
+            ccRegs <= ccMap.numFreeEntries();
+    }
+
 };
 
 #endif //__CPU_O3_RENAME_MAP_HH__

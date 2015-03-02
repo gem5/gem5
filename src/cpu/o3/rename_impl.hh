@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014 ARM Limited
+ * Copyright (c) 2010-2012, 2014-2015 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -633,7 +633,9 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         // Check here to make sure there are enough destination registers
         // to rename to.  Otherwise block.
-        if (renameMap[tid]->numFreeEntries() < inst->numDestRegs()) {
+        if (!renameMap[tid]->canRename(inst->numIntDestRegs(),
+                                       inst->numFPDestRegs(),
+                                       inst->numCCDestRegs())) {
             DPRINTF(Rename, "Blocking due to lack of free "
                     "physical registers to rename to.\n");
             blockThisCycle = true;

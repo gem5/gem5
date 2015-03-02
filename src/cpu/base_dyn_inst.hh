@@ -594,6 +594,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     // for machines with separate int & FP reg files
     int8_t numFPDestRegs()  const { return staticInst->numFPDestRegs(); }
     int8_t numIntDestRegs() const { return staticInst->numIntDestRegs(); }
+    int8_t numCCDestRegs() const { return staticInst->numCCDestRegs(); }
 
     /** Returns the logical register index of the i'th destination register. */
     RegIndex destRegIdx(int i) const { return staticInst->destRegIdx(i); }
