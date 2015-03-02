@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,10 +49,29 @@ class BaseXBar(MemObject):
     type = 'BaseXBar'
     abstract = True
     cxx_header = "mem/xbar.hh"
-    slave = VectorSlavePort("vector port for connecting masters")
-    master = VectorMasterPort("vector port for connecting slaves")
-    header_cycles = Param.Cycles(1, "cycles of overhead per transaction")
-    width = Param.Unsigned(8, "xbar width (bytes)")
+
+    slave = VectorSlavePort("Vector port for connecting masters")
+    master = VectorMasterPort("Vector port for connecting slaves")
+
+    # Latencies governing the time taken for the variuos paths a
+    # packet has through the crossbar. Note that the crossbar itself
+    # does not add the latency due to assumptions in the coherency
+    # mechanism. Instead the latency is annotated on the packet and
+    # left to the neighbouring modules.
+    #
+    # A request incurs the frontend latency, possibly snoop filter
+    # lookup latency, and forward latency. A response incurs the
+    # response latency. Frontend latency encompasses arbitration and
+    # deciding what to do when a request arrives. the forward latency
+    # is the latency involved once a decision is made to forward the
+    # request. The response latency, is similar to the forward
+    # latency, but for responses rather than requests.
+    frontend_latency = Param.Cycles(3, "Frontend latency")
+    forward_latency = Param.Cycles(4, "Forward latency")
+    response_latency = Param.Cycles(2, "Response latency")
+
+    # Width governing the throughput of the crossbar
+    width = Param.Unsigned(8, "Datapath width per port (bytes)")
 
     # The default port can be left unconnected, or be used to connect
     # a default slave port
@@ -74,12 +93,21 @@ class CoherentXBar(BaseXBar):
     type = 'CoherentXBar'
     cxx_header = "mem/coherent_xbar.hh"
 
+    # The coherent crossbar additionally has snoop responses that are
+    # forwarded after a specific latency.
+    snoop_response_latency = Param.Cycles(4, "Snoop response latency")
+
+    # An optional snoop filter
+    snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter")
+
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
-    snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter.")
 
 class SnoopFilter(SimObject):
     type = 'SnoopFilter'
     cxx_header = "mem/snoop_filter.hh"
-    lookup_latency = Param.Cycles(3, "lookup latency (cycles)")
+
+    # Lookup latency of the snoop filter, added to requests that pass
+    # through a coherent crossbar.
+    lookup_latency = Param.Cycles(1, "Lookup latency")
 
     system = Param.System(Parent.any, "System that the crossbar belongs to.")

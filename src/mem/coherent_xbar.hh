@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -271,6 +271,9 @@ class CoherentXBar : public BaseXBar
     /** A snoop filter that tracks cache line residency and can restrict the
       * broadcast needed for probes.  NULL denotes an absent filter. */
     SnoopFilter *snoopFilter;
+
+    /** Cycles of snoop response latency.*/
+    const Cycles snoopResponseLatency;
 
     /** Function called by the port when the crossbar is recieving a Timing
       request packet.*/

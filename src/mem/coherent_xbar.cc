@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,7 +55,8 @@
 #include "sim/system.hh"
 
 CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
-    : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter)
+    : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter),
+      snoopResponseLatency(p->snoop_response_latency)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -167,8 +168,17 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
-    calcPacketTiming(pkt);
-    Tick packetFinishTime = curTick() + pkt->payloadDelay;
+    // store the old header delay so we can restore it if needed
+    Tick old_header_delay = pkt->headerDelay;
+
+    // a request sees the frontend and forward latency
+    Tick xbar_delay = (frontendLatency + forwardLatency) * clockPeriod();
+
+    // set the packet header and payload delay
+    calcPacketTiming(pkt, xbar_delay);
+
+    // determine how long to be crossbar layer is busy
+    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     // uncacheable requests need never be snooped
     if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
@@ -177,6 +187,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         if (snoopFilter) {
             // check with the snoop filter where to forward this packet
             auto sf_res = snoopFilter->lookupRequest(pkt, *src_port);
+            // If SnoopFilter is enabled, the total time required by a packet
+            // to be delivered through the xbar has to be charged also with
+            // to lookup latency of the snoop filter (sf_res.second).
+            pkt->headerDelay += sf_res.second * clockPeriod();
             packetFinishTime += sf_res.second * clockPeriod();
             DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x"\
                     " SF size: %i lat: %i\n", src_port->name(),
@@ -221,15 +235,15 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         assert(!is_express_snoop);
         assert(!pkt->memInhibitAsserted());
 
-        // undo the calculation so we can check for 0 again
-        pkt->headerDelay = pkt->payloadDelay = 0;
+        // restore the header delay
+        pkt->headerDelay = old_header_delay;
 
         DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // update the layer state and schedule an idle event
         reqLayers[master_port_id]->failedTiming(src_port,
-                                                clockEdge(headerCycles));
+                                                clockEdge(Cycles(1)));
     } else {
         // express snoops currently bypass the crossbar state entirely
         if (!is_express_snoop) {
@@ -300,8 +314,14 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
-    calcPacketTiming(pkt);
-    Tick packetFinishTime = curTick() + pkt->payloadDelay;
+    // a response sees the response latency
+    Tick xbar_delay = responseLatency * clockPeriod();
+
+    // set the packet header and payload delay
+    calcPacketTiming(pkt, xbar_delay);
+
+    // determine how long to be crossbar layer is busy
+    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches()) {
         // let the snoop filter inspect the response and update its state
@@ -426,8 +446,17 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // responses are never express snoops
     assert(!pkt->isExpressSnoop());
 
-    calcPacketTiming(pkt);
-    Tick packetFinishTime = curTick() + pkt->payloadDelay;
+    // a snoop response sees the snoop response latency, and if it is
+    // forwarded as a normal response, the response latency
+    Tick xbar_delay =
+        (forwardAsSnoop ? snoopResponseLatency : responseLatency) *
+        clockPeriod();
+
+    // set the packet header and payload delay
+    calcPacketTiming(pkt, xbar_delay);
+
+    // determine how long to be crossbar layer is busy
+    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     // forward it either as a snoop response or a normal response
     if (forwardAsSnoop) {

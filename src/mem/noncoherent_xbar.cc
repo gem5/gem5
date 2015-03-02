@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -127,8 +127,17 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
-    calcPacketTiming(pkt);
-    Tick packetFinishTime = curTick() + pkt->payloadDelay;
+    // store the old header delay so we can restore it if needed
+    Tick old_header_delay = pkt->headerDelay;
+
+    // a request sees the frontend and forward latency
+    Tick xbar_delay = (frontendLatency + forwardLatency) * clockPeriod();
+
+    // set the packet header and payload delay
+    calcPacketTiming(pkt, xbar_delay);
+
+    // determine how long to be crossbar layer is busy
+    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     // before forwarding the packet (and possibly altering it),
     // remember if we are expecting a response
@@ -145,12 +154,12 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
                 src_port->name(), pkt->cmdString(), pkt->getAddr());
 
-        // undo the calculation so we can check for 0 again
-        pkt->headerDelay = pkt->payloadDelay = 0;
+        // restore the header delay as it is additive
+        pkt->headerDelay = old_header_delay;
 
         // occupy until the header is sent
         reqLayers[master_port_id]->failedTiming(src_port,
-                                                clockEdge(headerCycles));
+                                                clockEdge(Cycles(1)));
 
         return false;
     }
@@ -200,8 +209,14 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
-    calcPacketTiming(pkt);
-    Tick packetFinishTime = curTick() + pkt->payloadDelay;
+    // a response sees the response latency
+    Tick xbar_delay = responseLatency * clockPeriod();
+
+    // set the packet header and payload delay
+    calcPacketTiming(pkt, xbar_delay);
+
+    // determine how long to be crossbar layer is busy
+    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     // send the packet through the destination slave port
     bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);

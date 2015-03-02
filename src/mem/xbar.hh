@@ -309,8 +309,15 @@ class BaseXBar : public MemObject
         { retry_port->sendRetrySnoopResp(); }
     };
 
-    /** cycles of overhead per transaction */
-    const Cycles headerCycles;
+    /**
+     * Cycles of front-end pipeline including the delay to accept the request
+     * and to decode the address.
+     */
+    const Cycles frontendLatency;
+    /** Cycles of forward latency */
+    const Cycles forwardLatency;
+    /** Cycles of response latency */
+    const Cycles responseLatency;
     /** the width of the xbar in bytes */
     const uint32_t width;
 
@@ -404,8 +411,11 @@ class BaseXBar : public MemObject
      * headerDelay and payloadDelay fields of the packet
      * object with the relative number of ticks required to transmit
      * the header and the payload, respectively.
+     *
+     * @param pkt Packet to populate with timings
+     * @param header_delay Header delay to be added
      */
-    void calcPacketTiming(PacketPtr pkt);
+    void calcPacketTiming(PacketPtr pkt, Tick header_delay);
 
     /**
      * Remember for each of the master ports of the crossbar if we got

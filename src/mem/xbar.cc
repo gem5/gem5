@@ -56,7 +56,10 @@
 
 BaseXBar::BaseXBar(const BaseXBarParams *p)
     : MemObject(p),
-      headerCycles(p->header_cycles), width(p->width),
+      frontendLatency(p->frontend_latency),
+      forwardLatency(p->forward_latency),
+      responseLatency(p->response_latency),
+      width(p->width),
       gotAddrRanges(p->port_default_connection_count +
                           p->port_master_connection_count, false),
       gotAllAddrRanges(false), defaultPortID(InvalidPortID),
@@ -102,34 +105,41 @@ BaseXBar::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 void
-BaseXBar::calcPacketTiming(PacketPtr pkt)
+BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 {
     // the crossbar will be called at a time that is not necessarily
     // coinciding with its own clock, so start by determining how long
     // until the next clock edge (could be zero)
     Tick offset = clockEdge() - curTick();
 
-    // Determine how many cycles are needed to send the data
-    // If the packet has no data we take into account just the cycle to send
-    // the header.
-    unsigned dataCycles = pkt->hasData() ? divCeil(pkt->getSize(), width) : 0;
+    // the header delay depends on the path through the crossbar, and
+    // we therefore rely on the caller to provide the actual
+    // value
+    pkt->headerDelay += offset + header_delay;
 
-    // before setting the bus delay fields of the packet, ensure that
-    // the delay from any previous crossbar has been accounted for
-    if (pkt->headerDelay != 0 || pkt->payloadDelay != 0)
-        panic("Packet %s already has delay (%d, %d) that should be "
-              "accounted for.\n", pkt->cmdString(), pkt->headerDelay,
-              pkt->payloadDelay);
+    // note that we add the header delay to the existing value, and
+    // align it to the crossbar clock
 
-    // The headerDelay takes into account the relative time to deliver the
-    // header of the packet. It will be charged of the additional delay of
-    // the xbar if the packet goes through it.
-    pkt->headerDelay = (headerCycles + 1) * clockPeriod() + offset;
+    // do a quick sanity check to ensure the timings are not being
+    // ignored, note that this specific value may cause problems for
+    // slower interconnects
+    panic_if(pkt->headerDelay > SimClock::Int::us,
+             "Encountered header delay exceeding 1 us\n");
 
-    // The payloadDelay takes into account the relative time to deliver the
-    // payload of the packet. If the packet has no data its value is just one
-    // tick (due to header) plus the offset value.
-    pkt->payloadDelay = (headerCycles + dataCycles) * clockPeriod() + offset;
+    if (pkt->hasData()) {
+        // the payloadDelay takes into account the relative time to
+        // deliver the payload of the packet, after the header delay,
+        // we take the maximum since the payload delay could already
+        // be longer than what this parcitular crossbar enforces.
+        pkt->payloadDelay = std::max<Tick>(pkt->payloadDelay,
+                                           divCeil(pkt->getSize(), width) *
+                                           clockPeriod());
+    }
+
+    // the payload delay is not paying for the clock offset as that is
+    // already done using the header delay, and the payload delay is
+    // also used to determine how long the crossbar layer is busy and
+    // thus regulates throughput
 }
 
 template <typename SrcType, typename DstType>
@@ -274,14 +284,15 @@ BaseXBar::Layer<SrcType,DstType>::retryWaiting()
     sendRetry(retryingPort);
 
     // If the layer is still in the retry state, sendTiming wasn't
-    // called in zero time (e.g. the cache does this), burn a cycle
+    // called in zero time (e.g. the cache does this when a writeback
+    // is squashed)
     if (state == RETRY) {
         // update the state to busy and reset the retrying port, we
         // have done our bit and sent the retry
         state = BUSY;
 
-        // occupy the crossbar layer until the next cycle ends
-        occupyLayer(xbar.clockEdge(Cycles(1)));
+        // occupy the crossbar layer until the next clock edge
+        occupyLayer(xbar.clockEdge());
     }
 }
 
