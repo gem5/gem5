@@ -38,7 +38,7 @@ cpus = [ MemTest() for i in xrange(nb_cores) ]
 # system simulated
 system = System(cpu = cpus,
                 physmem = SimpleMemory(),
-                membus = CoherentXBar(width=16))
+                membus = SystemXBar())
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain()
 system.clk_domain = SrcClockDomain(clock = '1GHz',
@@ -49,7 +49,7 @@ system.clk_domain = SrcClockDomain(clock = '1GHz',
 system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
                                        voltage_domain = system.voltage_domain)
 
-system.toL2Bus = CoherentXBar(clk_domain = system.cpu_clk_domain, width=16)
+system.toL2Bus = L2XBar(clk_domain = system.cpu_clk_domain)
 system.l2c = L2Cache(clk_domain = system.cpu_clk_domain, size='64kB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.master
 

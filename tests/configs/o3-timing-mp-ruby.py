@@ -38,7 +38,7 @@ import ruby_config
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = CoherentXBar(),
+system = System(cpu = cpus, physmem = ruby_memory, membus = SystemXBar(),
                 mem_mode = "timing",
                 clk_domain = SrcClockDomain(clock = '1GHz'))
 

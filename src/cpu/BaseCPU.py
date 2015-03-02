@@ -47,7 +47,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from XBar import CoherentXBar
+from XBar import L2XBar
 from InstTracer import InstTracer
 from CPUTracers import ExeTracer
 from MemObject import MemObject
@@ -285,10 +285,7 @@ class BaseCPU(MemObject):
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
-        # Set a width of 32 bytes (256-bits), which is four times that
-        # of the default bus. The clock of the CPU is inherited by
-        # default.
-        self.toL2Bus = CoherentXBar(width = 32)
+        self.toL2Bus = L2XBar()
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
         self.toL2Bus.master = self.l2cache.cpu_side

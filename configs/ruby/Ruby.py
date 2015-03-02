@@ -116,7 +116,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
 
         crossbar = None
         if len(system.mem_ranges) > 1:
-            crossbar = NoncoherentXBar()
+            crossbar = IOXBar()
             crossbars.append(crossbar)
             dir_cntrl.memory = crossbar.slave
 

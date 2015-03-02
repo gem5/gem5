@@ -243,7 +243,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
      if level != 0:
           # Create a crossbar and add it to the subsystem, note that
           # we do this even with a single element on this level
-          xbar = CoherentXBar(width = 32)
+          xbar = L2XBar(width = 32)
           subsys.xbar = xbar
           if next_cache:
                xbar.master = next_cache.cpu_side
@@ -269,7 +269,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
 
           if ntesters > 1:
                # Create a crossbar and add it to the subsystem
-               xbar = CoherentXBar(width = 32)
+               xbar = L2XBar(width = 32)
                subsys.xbar = xbar
                xbar.master = next_cache.cpu_side
                for tester, checker in zip(testers, checkers):

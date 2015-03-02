@@ -49,7 +49,7 @@ cpu = TrafficGen(config_file = "tests/quick/se/70.tgen/tgen-simple-mem.cfg")
 
 # system simulated
 system = System(cpu = cpu, physmem = SimpleMemory(),
-                membus = NoncoherentXBar(width = 16),
+                membus = IOXBar(width = 16),
                 clk_domain = SrcClockDomain(clock = '1GHz',
                                             voltage_domain =
                                             VoltageDomain()))

@@ -50,7 +50,7 @@ class CowIdeDisk(IdeDisk):
     def childImage(self, ci):
         self.image.child.image_file = ci
 
-class MemBus(CoherentXBar):
+class MemBus(SystemXBar):
     badaddr_responder = BadAddr()
     default = Self.badaddr_responder.pio
 
@@ -78,7 +78,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.tsunami = BaseTsunami()
 
     # Create the io bus to connect all device ports
-    self.iobus = NoncoherentXBar()
+    self.iobus = IOXBar()
     self.tsunami.attachIO(self.iobus)
 
     self.tsunami.ide.pio = self.iobus.master
@@ -143,7 +143,7 @@ def makeSparcSystem(mem_mode, mdesc=None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
-    self.iobus = NoncoherentXBar()
+    self.iobus = IOXBar()
     self.membus = MemBus()
     self.bridge = Bridge(delay='50ns')
     self.t1000 = T1000()
@@ -205,7 +205,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         mdesc = SysConfig()
 
     self.readfile = mdesc.script()
-    self.iobus = NoncoherentXBar()
+    self.iobus = IOXBar()
     self.membus = MemBus()
     self.membus.badaddr_responder.warn_access = "warn"
     self.bridge = Bridge(delay='50ns')
@@ -311,7 +311,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
-    self.iobus = NoncoherentXBar()
+    self.iobus = IOXBar()
     self.membus = MemBus()
     self.bridge = Bridge(delay='50ns')
     self.mem_ranges = [AddrRange('1GB')]
@@ -358,7 +358,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     x86_sys.membus = MemBus()
 
     # North Bridge
-    x86_sys.iobus = NoncoherentXBar()
+    x86_sys.iobus = IOXBar()
     x86_sys.bridge = Bridge(delay='50ns')
     x86_sys.bridge.master = x86_sys.iobus.slave
     x86_sys.bridge.slave = x86_sys.membus.master
@@ -394,7 +394,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
 
 def connectX86RubySystem(x86_sys):
     # North Bridge
-    x86_sys.iobus = NoncoherentXBar()
+    x86_sys.iobus = IOXBar()
 
     # add the ide to the list of dma devices that later need to attach to
     # dma controllers
