@@ -261,8 +261,7 @@ Cache<TagStore>::markInService(MSHR *mshr, bool pending_dirty_resp)
     markInServiceInternal(mshr, pending_dirty_resp);
 #if 0
         if (mshr->originalCmd == MemCmd::HardPFReq) {
-            DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
-                    name());
+            DPRINTF(HWPrefetch, "Marking a HW_PF in service\n");
             //Also clear pending if need be
             if (!prefetcher->havePending())
             {
@@ -324,10 +323,10 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     // that can modify its value.
     blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), lat, id);
 
-    DPRINTF(Cache, "%s%s %x (%s) %s %s\n", pkt->cmdString(),
+    DPRINTF(Cache, "%s%s %x (%s) %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
             pkt->getAddr(), pkt->isSecure() ? "s" : "ns",
-            blk ? "hit" : "miss", blk ? blk->print() : "");
+            blk ? "hit " + blk->print() : "miss");
 
     // Writeback handling is special case.  We can write the block into
     // the cache without having a writeable copy (or any copy at all).

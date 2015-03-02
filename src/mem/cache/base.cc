@@ -92,13 +92,13 @@ void
 BaseCache::CacheSlavePort::setBlocked()
 {
     assert(!blocked);
-    DPRINTF(CachePort, "Cache port %s blocking new requests\n", name());
+    DPRINTF(CachePort, "Port is blocking new requests\n");
     blocked = true;
     // if we already scheduled a retry in this cycle, but it has not yet
     // happened, cancel it
     if (sendRetryEvent.scheduled()) {
         owner.deschedule(sendRetryEvent);
-        DPRINTF(CachePort, "Cache port %s deschedule retry\n", name());
+        DPRINTF(CachePort, "Port descheduled retry\n");
         mustSendRetry = true;
     }
 }
@@ -107,10 +107,10 @@ void
 BaseCache::CacheSlavePort::clearBlocked()
 {
     assert(blocked);
-    DPRINTF(CachePort, "Cache port %s accepting new requests\n", name());
+    DPRINTF(CachePort, "Port is accepting new requests\n");
     blocked = false;
     if (mustSendRetry) {
-        // @TODO: need to find a better time (next bus cycle?)
+        // @TODO: need to find a better time (next cycle?)
         owner.schedule(sendRetryEvent, curTick() + 1);
     }
 }
@@ -118,7 +118,7 @@ BaseCache::CacheSlavePort::clearBlocked()
 void
 BaseCache::CacheSlavePort::processSendRetry()
 {
-    DPRINTF(CachePort, "Cache port %s sending retry\n", name());
+    DPRINTF(CachePort, "Port is sending retry\n");
 
     // reset the flag and call retry
     mustSendRetry = false;

@@ -129,7 +129,8 @@ class BaseCache : public MemObject
          */
         void requestBus(RequestCause cause, Tick time)
         {
-            DPRINTF(CachePort, "Asserting bus request for cause %d\n", cause);
+            DPRINTF(CachePort, "Scheduling request at %llu due to %d\n",
+                    time, cause);
             reqQueue.schedSendEvent(time);
         }
 
