@@ -45,9 +45,6 @@ def template AA64FpRegRegOpConstructor {{
                 _dest, _op1, mode)
     {
         %(constructor)s;
-        for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-        }
     }
 }};
 
@@ -58,9 +55,6 @@ def template AA64FpRegImmOpConstructor {{
                 _dest, _imm, mode)
     {
         %(constructor)s;
-        for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-        }
     }
 }};
 
@@ -74,9 +68,6 @@ def template AA64FpRegRegImmOpConstructor {{
                          _dest, _op1, _imm, mode)
     {
         %(constructor)s;
-        for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-        }
     }
 }};
 
@@ -90,9 +81,6 @@ def template AA64FpRegRegRegOpConstructor {{
                          _dest, _op1, _op2, mode)
     {
         %(constructor)s;
-        for (int x = 0; x < _numDestRegs; x++) {
-            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-        }
     }
 }};
 
@@ -119,8 +107,5 @@ def template AA64FpRegRegRegRegOpConstructor {{
                          _dest, _op1, _op2, _op3, mode)
     {
         %(constructor)s;
-        for (int x = 0; x < _numDestRegs; x++) {
-                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
-        }
     }
 }};
