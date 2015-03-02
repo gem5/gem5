@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,23 +38,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Sandberg
  */
+
+#include "dev/arm/pl011.hh"
 
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/arm/pl011.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/sim_exit.hh"
+#include "params/Pl011.hh"
 
-Pl011::Pl011(const Params *p)
-    : Uart(p, 0xfff), control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
-      imsc(0), rawInt(0), maskInt(0), intNum(p->int_num), gic(p->gic),
-      endOnEOT(p->end_on_eot), intDelay(p->int_delay), intEvent(this)
+Pl011::Pl011(const Pl011Params *p)
+    : Uart(p, 0xfff),
+      intEvent(this),
+      control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
+      imsc(0), rawInt(0),
+      gic(p->gic), endOnEOT(p->end_on_eot), intNum(p->int_num),
+      intDelay(p->int_delay)
 {
 }
 
@@ -75,17 +81,23 @@ Pl011::read(PacketPtr pkt)
     switch(daddr) {
       case UART_DR:
         data = 0;
-        if (term->dataAvailable())
+        if (term->dataAvailable()) {
             data = term->in();
+            // Since we don't simulate a FIFO for incoming data, we
+            // assume it's empty and clear RXINTR and RTINTR.
+            clearInterrupts(UART_RXINTR | UART_RTINTR);
+        }
         break;
       case UART_FR:
-        // For now we're infintely fast, so TX is never full, always empty,
-        // always clear to send
-        data = UART_FR_TXFE | UART_FR_CTS;
-        if (!term->dataAvailable())
-            data |= UART_FR_RXFE;
-        DPRINTF(Uart, "Reading FR register as %#x rawInt=0x%x imsc=0x%x maskInt=0x%x\n",
-                data, rawInt, imsc, maskInt);
+        data =
+            UART_FR_CTS | // Clear To Send
+            (!term->dataAvailable() ? UART_FR_RXFE : 0) | // RX FIFO Empty
+            UART_FR_TXFE; // TX FIFO empty
+
+        DPRINTF(Uart,
+                "Reading FR register as %#x rawInt=0x%x "
+                "imsc=0x%x maskInt=0x%x\n",
+                data, rawInt, imsc, maskInt());
         break;
       case UART_CR:
         data = control;
@@ -110,8 +122,8 @@ Pl011::read(PacketPtr pkt)
         DPRINTF(Uart, "Reading Raw Int status as 0x%x\n", rawInt);
         break;
       case UART_MIS:
-        DPRINTF(Uart, "Reading Masked Int status as 0x%x\n", rawInt);
-        data = maskInt;
+        DPRINTF(Uart, "Reading Masked Int status as 0x%x\n", maskInt());
+        data = maskInt();
         break;
       default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
@@ -182,15 +194,11 @@ Pl011::write(PacketPtr pkt)
             exitSimLoop("UART received EOT", 0);
 
         term->out(data & 0xFF);
-
-        //raw interrupt is set regardless of imsc.txim
-        rawInt.txim = 1;
-        if (imsc.txim) {
-            DPRINTF(Uart, "TX int enabled, scheduling interruptt\n");
-            if (!intEvent.scheduled())
-                schedule(intEvent, curTick() + intDelay);
-        }
-
+        // We're supposed to clear TXINTR when this register is
+        // written to, however. since we're also infinitely fast, we
+        // need to immediately raise it again.
+        clearInterrupts(UART_TXINTR);
+        raiseInterrupts(UART_TXINTR);
         break;
       case UART_CR:
         control = data;
@@ -208,35 +216,13 @@ Pl011::write(PacketPtr pkt)
         ifls = data;
         break;
       case UART_IMSC:
-        imsc = data;
-
-        if (imsc.feim || imsc.peim || imsc.beim || imsc.oeim || imsc.rsvd)
-            panic("Unknown interrupt enabled\n");
-
-        // rimim, ctsmim, dcdmim, dsrmim can be enabled but are ignored
-        // they are supposed to interrupt on a change of status in the line
-        // which we should never have since our terminal is happy to always
-        // receive bytes.
-
-        if (imsc.txim) {
-            DPRINTF(Uart, "Writing to IMSC: TX int enabled, scheduling interruptt\n");
-            rawInt.txim = 1;
-            if (!intEvent.scheduled())
-                schedule(intEvent, curTick() + intDelay);
-        }
-
+        DPRINTF(Uart, "Setting interrupt mask 0x%x\n", data);
+        setInterruptMask(data);
         break;
 
       case UART_ICR:
         DPRINTF(Uart, "Clearing interrupts 0x%x\n", data);
-        rawInt = rawInt & ~data;
-        maskInt = rawInt & imsc;
-
-        DPRINTF(Uart, " -- Masked interrupts 0x%x\n", maskInt);
-
-        if (!maskInt)
-            gic->clearInt(intNum);
-
+        clearInterrupts(data);
         break;
       default:
         panic("Tried to write PL011 at offset %#x that doesn't exist\n", daddr);
@@ -251,27 +237,36 @@ Pl011::dataAvailable()
 {
     /*@todo ignore the fifo, just say we have data now
      * We might want to fix this, or we might not care */
-    rawInt.rxim = 1;
-    rawInt.rtim = 1;
-
     DPRINTF(Uart, "Data available, scheduling interrupt\n");
-
-    if (!intEvent.scheduled())
-        schedule(intEvent, curTick() + intDelay);
+    raiseInterrupts(UART_RXINTR | UART_RTINTR);
 }
 
 void
 Pl011::generateInterrupt()
 {
     DPRINTF(Uart, "Generate Interrupt: imsc=0x%x rawInt=0x%x maskInt=0x%x\n",
-            imsc, rawInt, maskInt);
-    maskInt = imsc & rawInt;
+            imsc, rawInt, maskInt());
 
-    if (maskInt.rxim || maskInt.rtim || maskInt.txim) {
+    if (maskInt()) {
         gic->sendInt(intNum);
         DPRINTF(Uart, " -- Generated\n");
     }
+}
 
+void
+Pl011::setInterrupts(uint16_t ints, uint16_t mask)
+{
+    const bool old_ints(!!maskInt());
+
+    imsc = mask;
+    rawInt = ints;
+
+    if (!old_ints && maskInt()) {
+        if (!intEvent.scheduled())
+            schedule(intEvent, curTick() + intDelay);
+    } else if (old_ints && !maskInt()) {
+        gic->clearInt(intNum);
+    }
 }
 
 
@@ -286,17 +281,9 @@ Pl011::serialize(std::ostream &os)
     SERIALIZE_SCALAR(lcrh);
     SERIALIZE_SCALAR(ifls);
 
-    uint16_t imsc_serial = imsc;
-    SERIALIZE_SCALAR(imsc_serial);
-
-    uint16_t rawInt_serial = rawInt;
-    SERIALIZE_SCALAR(rawInt_serial);
-
-    uint16_t maskInt_serial = maskInt;
-    SERIALIZE_SCALAR(maskInt_serial);
-
-    SERIALIZE_SCALAR(endOnEOT);
-    SERIALIZE_SCALAR(intDelay);
+    // Preserve backwards compatibility by giving these silly names.
+    paramOut(os, "imsc_serial", imsc);
+    paramOut(os, "rawInt_serial", rawInt);
 }
 
 void
@@ -310,20 +297,9 @@ Pl011::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(lcrh);
     UNSERIALIZE_SCALAR(ifls);
 
-    uint16_t imsc_serial;
-    UNSERIALIZE_SCALAR(imsc_serial);
-    imsc = imsc_serial;
-
-    uint16_t rawInt_serial;
-    UNSERIALIZE_SCALAR(rawInt_serial);
-    rawInt = rawInt_serial;
-
-    uint16_t maskInt_serial;
-    UNSERIALIZE_SCALAR(maskInt_serial);
-    maskInt = maskInt_serial;
-
-    UNSERIALIZE_SCALAR(endOnEOT);
-    UNSERIALIZE_SCALAR(intDelay);
+    // Preserve backwards compatibility by giving these silly names.
+    paramIn(cp, section, "imsc_serial", imsc);
+    paramIn(cp, section, "rawInt_serial", rawInt);
 }
 
 Pl011 *
