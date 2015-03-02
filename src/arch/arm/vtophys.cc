@@ -63,8 +63,8 @@ ArmISA::vtophys(Addr vaddr)
     fatal("VTOPHYS: Can't convert vaddr to paddr on ARM without a thread context");
 }
 
-Addr
-ArmISA::vtophys(ThreadContext *tc, Addr addr)
+static std::pair<bool, Addr>
+try_translate(ThreadContext *tc, Addr addr)
 {
     Fault fault;
     // Set up a functional memory Request to pass to the TLB
@@ -82,22 +82,33 @@ ArmISA::vtophys(ThreadContext *tc, Addr addr)
     tlb = static_cast<ArmISA::TLB*>(tc->getDTBPtr());
     fault = tlb->translateFunctional(&req, tc, BaseTLB::Read, TLB::NormalTran);
     if (fault == NoFault)
-        return req.getPaddr();
+        return std::make_pair(true, req.getPaddr());
 
     tlb = static_cast<ArmISA::TLB*>(tc->getITBPtr());
     fault = tlb->translateFunctional(&req, tc, BaseTLB::Read, TLB::NormalTran);
     if (fault == NoFault)
-        return req.getPaddr();
+        return std::make_pair(true, req.getPaddr());
 
-    panic("Table walkers support functional accesses. We should never get here\n");
+    return std::make_pair(false, 0);
+}
+
+Addr
+ArmISA::vtophys(ThreadContext *tc, Addr addr)
+{
+    const std::pair<bool, Addr> translation(try_translate(tc, addr));
+
+    if (translation.first)
+        return translation.second;
+    else
+        panic("Table walkers support functional accesses. We should never get here\n");
 }
 
 bool
 ArmISA::virtvalid(ThreadContext *tc, Addr vaddr)
 {
-    if (vtophys(tc, vaddr) != -1)
-        return true;
-    return false;
+    const std::pair<bool, Addr> translation(try_translate(tc, vaddr));
+
+    return translation.first;
 }
 
 
