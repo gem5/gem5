@@ -1887,39 +1887,33 @@ template<class TagStore>
 MSHR *
 Cache<TagStore>::getNextMSHR()
 {
-    // Check both MSHR queue and write buffer for potential requests
+    // Check both MSHR queue and write buffer for potential requests,
+    // note that null does not mean there is no request, it could
+    // simply be that it is not ready
     MSHR *miss_mshr  = mshrQueue.getNextMSHR();
     MSHR *write_mshr = writeBuffer.getNextMSHR();
 
-    // Now figure out which one to send... some cases are easy
-    if (miss_mshr && !write_mshr) {
-        return miss_mshr;
-    }
-    if (write_mshr && !miss_mshr) {
-        return write_mshr;
-    }
+    // If we got a write buffer request ready, first priority is a
+    // full write buffer, otherwhise we favour the miss requests
+    if (write_mshr &&
+        ((writeBuffer.isFull() && writeBuffer.inServiceEntries == 0) ||
+         !miss_mshr)) {
+        // need to search MSHR queue for conflicting earlier miss.
+        MSHR *conflict_mshr =
+            mshrQueue.findPending(write_mshr->addr, write_mshr->size,
+                                  write_mshr->isSecure);
 
-    if (miss_mshr && write_mshr) {
-        // We have one of each... normally we favor the miss request
-        // unless the write buffer is full
-        if (writeBuffer.isFull() && writeBuffer.inServiceEntries == 0) {
-            // Write buffer is full, so we'd like to issue a write;
-            // need to search MSHR queue for conflicting earlier miss.
-            MSHR *conflict_mshr =
-                mshrQueue.findPending(write_mshr->addr, write_mshr->size,
-                                      write_mshr->isSecure);
+        if (conflict_mshr && conflict_mshr->order < write_mshr->order) {
+            // Service misses in order until conflict is cleared.
+            return conflict_mshr;
 
-            if (conflict_mshr && conflict_mshr->order < write_mshr->order) {
-                // Service misses in order until conflict is cleared.
-                return conflict_mshr;
-            }
-
-            // No conflicts; issue write
-            return write_mshr;
+            // @todo Note that we ignore the ready time of the conflict here
         }
 
-        // Write buffer isn't full, but need to check it for
-        // conflicting earlier writeback
+        // No conflicts; issue write
+        return write_mshr;
+    } else if (miss_mshr) {
+        // need to check for conflicting earlier writeback
         MSHR *conflict_mshr =
             writeBuffer.findPending(miss_mshr->addr, miss_mshr->size,
                                     miss_mshr->isSecure);
@@ -1937,6 +1931,8 @@ Cache<TagStore>::getNextMSHR()
             // have to flush writes in order?  I don't think so... not
             // for Alpha anyway.  Maybe for x86?
             return conflict_mshr;
+
+            // @todo Note that we ignore the ready time of the conflict here
         }
 
         // No conflicts; issue read
