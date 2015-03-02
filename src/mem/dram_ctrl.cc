@@ -877,13 +877,18 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
     if (needsResponse) {
         // access already turned the packet into a response
         assert(pkt->isResponse());
-
-        // @todo someone should pay for this
+        // response_time consumes the static latency and is charged also
+        // with headerDelay that takes into account the delay provided by
+        // the xbar and also the payloadDelay that takes into account the
+        // number of data beats.
+        Tick response_time = curTick() + static_latency + pkt->headerDelay +
+                             pkt->payloadDelay;
+        // Here we reset the timing of the packet before sending it out.
         pkt->headerDelay = pkt->payloadDelay = 0;
 
         // queue the packet in the response queue to be sent out after
         // the static latency has passed
-        port.schedTimingResp(pkt, curTick() + static_latency);
+        port.schedTimingResp(pkt, response_time);
     } else {
         // @todo the packet is going to be deleted, and the DRAMPacket
         // is still having a pointer to it

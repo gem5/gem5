@@ -268,8 +268,10 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
     if (needsResponse) {
         // access already turned the packet into a response
         assert(pkt->isResponse());
-
-        // @todo someone should pay for this
+        // Here we pay for xbar additional delay and to process the payload
+        // of the packet.
+        Tick time = curTick() + pkt->headerDelay + pkt->payloadDelay;
+        // Reset the timings of the packet
         pkt->headerDelay = pkt->payloadDelay = 0;
 
         DPRINTF(DRAMSim2, "Queuing response for address %lld\n",
@@ -281,7 +283,7 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
         // if we are not already waiting for a retry, or are scheduled
         // to send a response, schedule an event
         if (!retryResp && !sendResponseEvent.scheduled())
-            schedule(sendResponseEvent, curTick());
+            schedule(sendResponseEvent, time);
     } else {
         // @todo the packet is going to be deleted, and the DRAMPacket
         // is still having a pointer to it

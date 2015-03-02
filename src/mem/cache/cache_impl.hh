@@ -417,12 +417,14 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
 
     pkt->popSenderState();
     delete rec;
-    // @todo someone should pay for this
-    pkt->headerDelay = pkt->payloadDelay = 0;
     // forwardLatency is set here because there is a response from an
     // upper level cache.
-    memSidePort->schedTimingSnoopResp(pkt, clockEdge(forwardLatency));
-
+    // To pay the delay that occurs if the packet comes from the bus,
+    // we charge also headerDelay.
+    Tick snoop_resp_time = clockEdge(forwardLatency) + pkt->headerDelay;
+    // Reset the timing of the packet.
+    pkt->headerDelay = pkt->payloadDelay = 0;
+    memSidePort->schedTimingSnoopResp(pkt, snoop_resp_time);
 }
 
 template<class TagStore>
@@ -519,31 +521,41 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     if (pkt->req->isUncacheable()) {
         uncacheableFlush(pkt);
 
-        // @todo: someone should pay for this
-        pkt->headerDelay = pkt->payloadDelay = 0;
-
         // writes go in write buffer, reads use MSHR,
         // prefetches are acknowledged (responded to) and dropped
         if (pkt->cmd.isPrefetch()) {
             // prefetching (cache loading) uncacheable data is nonsensical
             pkt->makeTimingResponse();
             std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
-            // We use lookupLatency here because the request is uncacheable
-            cpuSidePort->schedTimingResp(pkt, clockEdge(lookupLatency));
+            // We use lookupLatency here because the request is uncacheable.
+            // We pay also for headerDelay that is charged of bus latencies if
+            // the packet comes from the bus.
+            Tick time = clockEdge(lookupLatency) + pkt->headerDelay;
+            // Reset the timing of the packet.
+            pkt->headerDelay = pkt->payloadDelay = 0;
+            cpuSidePort->schedTimingResp(pkt, time);
             return true;
         } else if (pkt->isWrite() && !pkt->isRead()) {
-            // We use forwardLatency here because there is an uncached
-            // memory write, forwarded to WriteBuffer. It specifies the
-            // latency to allocate an internal buffer and to schedule an
-            // event to the queued port.
-            allocateWriteBuffer(pkt, clockEdge(forwardLatency), true);
+            // We pay also for headerDelay that is charged of bus latencies if
+            // the packet comes from the bus.
+            Tick allocate_wr_buffer_time = clockEdge(forwardLatency) +
+                                            pkt->headerDelay;
+            // Reset the timing of the packet.
+            pkt->headerDelay = pkt->payloadDelay = 0;
+            allocateWriteBuffer(pkt, allocate_wr_buffer_time, true);
         } else {
             // We use forwardLatency here because there is an uncached
             // memory read, allocateded to MSHR queue (it requires the same
             // time of forwarding to WriteBuffer, in our assumption). It
             // specifies the latency to allocate an internal buffer and to
             // schedule an event to the queued port.
-            allocateUncachedReadBuffer(pkt, clockEdge(forwardLatency), true);
+            // We pay also for headerDelay that is charged of bus latencies if
+            // the packet comes from the bus.
+            Tick allocate_rd_buffer_time = clockEdge(forwardLatency) +
+                                            pkt->headerDelay;
+            // Reset the timing of the packet.
+            pkt->headerDelay = pkt->payloadDelay = 0;
+            allocateUncachedReadBuffer(pkt, allocate_rd_buffer_time, true);
         }
         assert(pkt->needsResponse()); // else we should delete it here??
         return true;
@@ -557,6 +569,20 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     // Note that lat is passed by reference here. The function access() calls
     // accessBlock() which can modify lat value.
     bool satisfied = access(pkt, blk, lat, writebacks);
+    // Here we charge the headerDelay that takes into account the latencies
+    // of the bus, if the packet comes from it.
+    // The latency charged it is just lat that is the value of lookupLatency
+    // modified by access() function, or if not just lookupLatency.
+    // In case of a hit we are neglecting response latency.
+    // In case of a miss we are neglecting forward latency.
+    Tick request_time = clockEdge(lat) + pkt->headerDelay;
+    // Here we condiser forward_time, paying for just forward latency and
+    // also charging the delay provided by the xbar.
+    // forward_time is used in allocateWriteBuffer() function, called
+    // in case of writeback.
+    Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
+    // Here we reset the timing of the packet.
+    pkt->headerDelay = pkt->payloadDelay = 0;
 
     // track time of availability of next prefetch, if any
     Tick next_pf_time = MaxTick;
@@ -580,13 +606,12 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             // @todo: Make someone pay for this
             pkt->headerDelay = pkt->payloadDelay = 0;
 
-            // In this case we are considering lat neglecting
-            // responseLatency, modelling hit latency just as
-            // lookupLatency We pass lat by reference to access(),
-            // which calls accessBlock() function. If it is a hit,
-            // accessBlock() can modify lat to override the
-            // lookupLatency value.
-            cpuSidePort->schedTimingResp(pkt, clockEdge(lat));
+            // In this case we are considering request_time that takes
+            // into account the delay of the xbar, if any, and just
+            // lat, neglecting responseLatency, modelling hit latency
+            // just as lookupLatency or or the value of lat overriden
+            // by access(), that calls accessBlock() function.
+            cpuSidePort->schedTimingResp(pkt, request_time);
         } else {
             /// @todo nominally we should just delete the packet here,
             /// however, until 4-phase stuff we can't because sending
@@ -595,9 +620,6 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         }
     } else {
         // miss
-
-        // @todo: Make someone pay for this
-        pkt->headerDelay = pkt->payloadDelay = 0;
 
         Addr blk_addr = blockAlign(pkt->getAddr());
         MSHR *mshr = mshrQueue.findMatch(blk_addr, pkt->isSecure());
@@ -638,7 +660,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             // (also keeps valgrind from complaining when debugging settings
             //  print out instruction results)
             std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
-            cpuSidePort->schedTimingResp(pkt, clockEdge(lat));
+            // request_time is used here, taking into account lat and the delay
+            // charged if the packet comes from the xbar.
+            cpuSidePort->schedTimingResp(pkt, request_time);
 
             // If an outstanding request is in progress (we found an
             // MSHR) this is set to null
@@ -659,12 +683,13 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
                     mshr->threadNum = -1;
                 }
-                // We use forwardLatency here because it is the same
+                // We use forward_time here because it is the same
                 // considering new targets. We have multiple requests for the
-                // same address here. It pecifies the latency to allocate an
+                // same address here. It specifies the latency to allocate an
                 // internal buffer and to schedule an event to the queued
-                // port.
-                mshr->allocateTarget(pkt, clockEdge(forwardLatency), order++);
+                // port and also takes into account the additional delay of
+                // the xbar.
+                mshr->allocateTarget(pkt, forward_time, order++);
                 if (mshr->getNumTargets() == numTarget) {
                     noTargetMSHR = mshr;
                     setBlocked(Blocked_NoTargets);
@@ -695,11 +720,12 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             // no-write-allocate or bypass accesses this will have to
             // be changed.
             if (pkt->cmd == MemCmd::Writeback) {
-                // We use forwardLatency here because there is an
+                // We use forward_time here because there is an
                 // uncached memory write, forwarded to WriteBuffer. It
                 // specifies the latency to allocate an internal buffer and to
-                // schedule an event to the queued port.
-                allocateWriteBuffer(pkt, clockEdge(forwardLatency), true);
+                // schedule an event to the queued port and also takes into
+                // account the additional delay of the xbar.
+                allocateWriteBuffer(pkt, forward_time, true);
             } else {
                 if (blk && blk->isValid()) {
                     // If we have a write miss to a valid block, we
@@ -721,13 +747,14 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                     assert(!blk->isWritable());
                     blk->status &= ~BlkReadable;
                 }
-                // Here we are using forwardLatency, modelling the latency of
+                // Here we are using forward_time, modelling the latency of
                 // a miss (outbound) just as forwardLatency, neglecting the
                 // lookupLatency component. In this case this latency value
                 // specifies the latency to allocate an internal buffer and to
                 // schedule an event to the queued port, when a cacheable miss
                 // is forwarded to MSHR queue.
-                allocateMissBuffer(pkt, clockEdge(forwardLatency), true);
+                // We take also into account the additional delay of the xbar.
+                allocateMissBuffer(pkt, forward_time, true);
             }
 
             if (prefetcher) {
@@ -737,7 +764,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             }
         }
     }
-    // Here we condiser just forward latency.
+    // Here we condiser just forward_time.
     if (next_pf_time != MaxTick)
         requestMemSideBus(Request_PF, std::max(clockEdge(forwardLatency),
                                                 next_pf_time));
@@ -747,7 +774,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         // We use forwardLatency here because we are copying writebacks
         // to write buffer. It specifies the latency to allocate an internal
         // buffer and to schedule an event to the queued port.
-        allocateWriteBuffer(wbPkt, clockEdge(forwardLatency), true);
+        allocateWriteBuffer(wbPkt, forward_time, true);
         writebacks.pop_front();
     }
 
@@ -1063,6 +1090,13 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick() - initial_tgt->recvTime;
     PacketList writebacks;
+    // We need forward_time here because we have a call of
+    // allocateWriteBuffer() that need this parameter to specify the
+    // time to request the bus.  In this case we use forward latency
+    // because there is a writeback.  We pay also here for headerDelay
+    // that is charged of bus latencies if the packet comes from the
+    // bus.
+    Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
 
     if (pkt->req->isUncacheable()) {
         assert(pkt->req->masterId() < system->maxMasters());
@@ -1101,6 +1135,9 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         switch (target->source) {
           case MSHR::Target::FromCPU:
             Tick completion_time;
+            // Here we charge on completion_time the delay of the xbar if the
+            // packet comes from it, charged on headerDelay.
+            completion_time = pkt->headerDelay;
 
             // Software prefetch handling for cache closest to core
             if (target->pkt->cmd.isSWPrefetch() && isTopLevel) {
@@ -1140,13 +1177,12 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                     transfer_offset += blkSize;
                 }
 
-                // If critical word (no offset) return first word time.
+                // If not critical word (offset) return payloadDelay.
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = clockEdge(responseLatency) +
-                    (transfer_offset ? pkt->payloadDelay :
-                     pkt->headerDelay);
+                completion_time += clockEdge(responseLatency) +
+                    (transfer_offset ? pkt->payloadDelay : 0);
 
                 assert(!target->pkt->req->isUncacheable());
 
@@ -1161,14 +1197,14 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // responseLatency is the latency of the return path
                 // from lower level caches/memory to an upper level cache or
                 // the core.
-                completion_time = clockEdge(responseLatency) +
+                completion_time += clockEdge(responseLatency) +
                     pkt->payloadDelay;
                 target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
-                completion_time = clockEdge(responseLatency) +
+                completion_time += clockEdge(responseLatency) +
                     pkt->payloadDelay;
                 if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getConstPtr<uint8_t>());
@@ -1188,7 +1224,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                         __func__, target->pkt->cmdString(),
                         target->pkt->getAddr());
             }
-            // reset the bus additional time as it is now accounted for
+            // Reset the bus additional time as it is now accounted for
             target->pkt->headerDelay = target->pkt->payloadDelay = 0;
             cpuSidePort->schedTimingResp(target->pkt, completion_time);
             break;
@@ -1254,6 +1290,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 requestMemSideBus(Request_PF, next_pf_time);
         }
     }
+    // reset the xbar additional timinig  as it is now accounted for
+    pkt->headerDelay = pkt->payloadDelay = 0;
 
     // copy writebacks to write buffer
     while (!writebacks.empty()) {
@@ -1268,8 +1306,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
             // writebacks to write buffer. It specifies the latency to
             // allocate an internal buffer and to schedule an event to the
             // queued port.
-            allocateWriteBuffer(writebackBlk(blk), clockEdge(forwardLatency),
-                                 true);
+            allocateWriteBuffer(writebackBlk(blk), forward_time, true);
         }
         blk->invalidate();
     }
@@ -1546,8 +1583,6 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
 
     assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
     pkt->makeTimingResponse();
-    // @todo Make someone pay for this
-    pkt->headerDelay = pkt->payloadDelay = 0;
     if (pkt->isRead()) {
         pkt->setDataFromBlock(blk_data, blkSize);
     }
@@ -1563,8 +1598,13 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     }
     DPRINTF(Cache, "%s created response: %s address %x size %d\n",
             __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
-    // We model a snoop just considering forwardLatency
-    memSidePort->schedTimingSnoopResp(pkt, clockEdge(forwardLatency));
+    // Here we condiser forward_time, paying for just forward latency and
+    // also charging the delay provided by the xbar.
+    // forward_time is used as send_time in next allocateWriteBuffer().
+    Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
+    // Here we reset the timing of the packet.
+    pkt->headerDelay = pkt->payloadDelay = 0;
+    memSidePort->schedTimingSnoopResp(pkt, forward_time);
 }
 
 template<class TagStore>
