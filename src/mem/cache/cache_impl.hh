@@ -179,7 +179,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
         // appended themselves to this cache before knowing the store
         // will fail.
         blk->status |= BlkDirty;
-        DPRINTF(Cache, "%s for %s address %x size %d (write)\n", __func__,
+        DPRINTF(Cache, "%s for %s addr %#llx size %d (write)\n", __func__,
                 pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
@@ -241,7 +241,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
         assert(blk != tempBlock);
         tags->invalidate(blk);
         blk->invalidate();
-        DPRINTF(Cache, "%s for %s address %x size %d (invalidation)\n",
+        DPRINTF(Cache, "%s for %s addr %#llx size %d (invalidation)\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     }
 }
@@ -308,7 +308,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     // sanity check
     assert(pkt->isRequest());
 
-    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     if (pkt->req->isUncacheable()) {
         uncacheableFlush(pkt);
@@ -323,9 +323,9 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     // that can modify its value.
     blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), lat, id);
 
-    DPRINTF(Cache, "%s%s %x (%s) %s\n", pkt->cmdString(),
+    DPRINTF(Cache, "%s%s addr %#llx size %d (%s) %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
-            pkt->getAddr(), pkt->isSecure() ? "s" : "ns",
+            pkt->getAddr(), pkt->getSize(), pkt->isSecure() ? "s" : "ns",
             blk ? "hit " + blk->print() : "miss");
 
     // Writeback handling is special case.  We can write the block into
@@ -392,7 +392,7 @@ template<class TagStore>
 void
 Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
 {
-    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     assert(pkt->isResponse());
@@ -409,7 +409,7 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
         assert(pkt->cmd == MemCmd::HardPFResp);
         // Check if it's a prefetch response and handle it. We shouldn't
         // get any other kinds of responses without FRRs.
-        DPRINTF(Cache, "Got prefetch response from above for addr %#x (%s)\n",
+        DPRINTF(Cache, "Got prefetch response from above for addr %#llx (%s)\n",
                 pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
         recvTimingResp(pkt);
         return;
@@ -470,7 +470,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     if (pkt->memInhibitAsserted()) {
         // a cache above us (but not where the packet came from) is
         // responding to the request
-        DPRINTF(Cache, "mem inhibited on 0x%x (%s): not responding\n",
+        DPRINTF(Cache, "mem inhibited on addr %#llx (%s): not responding\n",
                 pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
         assert(!pkt->req->isUncacheable());
 
@@ -678,6 +678,10 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
             // Coalesce unless it was a software prefetch (see above).
             if (pkt) {
+                DPRINTF(Cache, "%s coalescing MSHR for %s addr %#llx size %d\n",
+                        __func__, pkt->cmdString(), pkt->getAddr(),
+                        pkt->getSize());
+
                 assert(pkt->req->masterId() < system->maxMasters());
                 mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
                 if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
@@ -833,7 +837,7 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
     PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 
     pkt->allocate();
-    DPRINTF(Cache, "%s created %s address %x size %d\n",
+    DPRINTF(Cache, "%s created %s addr %#llx size %d\n",
             __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     return pkt;
 }
@@ -863,19 +867,19 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
             if (blk && blk->isValid()) {
                 tags->invalidate(blk);
                 blk->invalidate();
-                DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x (%s):"
+                DPRINTF(Cache, "rcvd mem-inhibited %s on %#llx (%s):"
                         " invalidating\n",
                         pkt->cmdString(), pkt->getAddr(),
                         pkt->isSecure() ? "s" : "ns");
             }
             if (!last_level_cache) {
-                DPRINTF(Cache, "forwarding mem-inhibited %s on 0x%x (%s)\n",
+                DPRINTF(Cache, "forwarding mem-inhibited %s on %#llx (%s)\n",
                         pkt->cmdString(), pkt->getAddr(),
                         pkt->isSecure() ? "s" : "ns");
                 lat += ticksToCycles(memSidePort->sendAtomic(pkt));
             }
         } else {
-            DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: not responding\n",
+            DPRINTF(Cache, "rcvd mem-inhibited %s on %#llx: not responding\n",
                     pkt->cmdString(), pkt->getAddr());
         }
 
@@ -902,7 +906,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
             bus_pkt = pkt;
         }
 
-        DPRINTF(Cache, "Sending an atomic %s for %x (%s)\n",
+        DPRINTF(Cache, "Sending an atomic %s for %#llx (%s)\n",
                 bus_pkt->cmdString(), bus_pkt->getAddr(),
                 bus_pkt->isSecure() ? "s" : "ns");
 
@@ -912,7 +916,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
 
         lat += ticksToCycles(memSidePort->sendAtomic(bus_pkt));
 
-        DPRINTF(Cache, "Receive response: %s for addr %x (%s) in state %i\n",
+        DPRINTF(Cache, "Receive response: %s for addr %#llx (%s) in state %i\n",
                 bus_pkt->cmdString(), bus_pkt->getAddr(),
                 bus_pkt->isSecure() ? "s" : "ns",
                 old_state);
@@ -1024,7 +1028,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         || writeBuffer.checkFunctional(pkt, blk_addr)
         || memSidePort->checkFunctional(pkt);
 
-    DPRINTF(Cache, "functional %s %x (%s) %s%s%s\n",
+    DPRINTF(Cache, "functional %s %#llx (%s) %s%s%s\n",
             pkt->cmdString(), pkt->getAddr(), is_secure ? "s" : "ns",
             (blk && blk->isValid()) ? "valid " : "",
             have_data ? "data " : "", done ? "done " : "");
@@ -1067,13 +1071,14 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     assert(mshr);
 
     if (is_error) {
-        DPRINTF(Cache, "Cache received packet with error for address %x (%s), "
+        DPRINTF(Cache, "Cache received packet with error for addr %#llx (%s), "
                 "cmd: %s\n", pkt->getAddr(), pkt->isSecure() ? "s" : "ns",
                 pkt->cmdString());
     }
 
-    DPRINTF(Cache, "Handling response to %s for address %x (%s)\n",
-            pkt->cmdString(), pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
+    DPRINTF(Cache, "Handling response %s for addr %#llx size %d (%s)\n",
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize(),
+            pkt->isSecure() ? "s" : "ns");
 
     MSHRQueue *mq = mshr->queue;
     bool wasFull = mq->isFull();
@@ -1112,7 +1117,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
 
     if (is_fill && !is_error) {
-        DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
+        DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
                 pkt->getAddr());
 
         // give mshr a chance to do some dirty work
@@ -1220,7 +1225,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 // propagate that.  Response should not have
                 // isInvalidate() set otherwise.
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
-                DPRINTF(Cache, "%s updated cmd to %s for address %x\n",
+                DPRINTF(Cache, "%s updated cmd to %s for addr %#llx\n",
                         __func__, target->pkt->cmdString(),
                         target->pkt->getAddr());
             }
@@ -1311,7 +1316,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
         blk->invalidate();
     }
 
-    DPRINTF(Cache, "Leaving %s with %s for address %x\n", __func__,
+    DPRINTF(Cache, "Leaving %s with %s for addr %#llx\n", __func__,
             pkt->cmdString(), pkt->getAddr());
     delete pkt;
 }
@@ -1417,7 +1422,7 @@ template<class TagStore>
 void
 Cache<TagStore>::uncacheableFlush(PacketPtr pkt)
 {
-    DPRINTF(Cache, "%s%s %x uncacheable\n", pkt->cmdString(),
+    DPRINTF(Cache, "%s%s addr %#llx uncacheable\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
             pkt->getAddr());
 
@@ -1451,7 +1456,7 @@ Cache<TagStore>::allocateBlock(Addr addr, bool is_secure,
             // allocation failed, block not inserted
             return NULL;
         } else {
-            DPRINTF(Cache, "replacement: replacing %x (%s) with %x (%s): %s\n",
+            DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx (%s): %s\n",
                     repl_addr, blk->isSecure() ? "s" : "ns",
                     addr, is_secure ? "s" : "ns",
                     blk->isDirty() ? "writeback" : "clean");
@@ -1503,7 +1508,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             tempBlock->set = tags->extractSet(addr);
             tempBlock->tag = tags->extractTag(addr);
             // @todo: set security state as well...
-            DPRINTF(Cache, "using temp block for %x (%s)\n", addr,
+            DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
         } else {
             tags->insertBlock(pkt, blk);
@@ -1537,7 +1542,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             blk->status |= BlkDirty;
     }
 
-    DPRINTF(Cache, "Block addr %x (%s) moving from state %x to %s\n",
+    DPRINTF(Cache, "Block addr %#llx (%s) moving from state %x to %s\n",
             addr, is_secure ? "s" : "ns", old_state, blk->print());
 
     // if we got new data, copy it in (checking for a read response
@@ -1570,7 +1575,7 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     assert(req_pkt->isRequest());
     assert(req_pkt->needsResponse());
 
-    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             req_pkt->cmdString(), req_pkt->getAddr(), req_pkt->getSize());
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
@@ -1602,7 +1607,7 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
-    DPRINTF(Cache, "%s created response: %s address %x size %d tick: %lu\n",
+    DPRINTF(Cache, "%s created response: %s addr %#llx size %d tick: %lu\n",
             __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(),
             forward_time);
     memSidePort->schedTimingSnoopResp(pkt, forward_time, true);
@@ -1614,7 +1619,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
                              bool is_timing, bool is_deferred,
                              bool pending_inval)
 {
-    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     // deferred snoops can only happen in timing mode
     assert(!(is_deferred && !is_timing));
@@ -1668,11 +1673,11 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     }
 
     if (!blk || !blk->isValid()) {
-        DPRINTF(Cache, "%s snoop miss for %s address %x size %d\n",
+        DPRINTF(Cache, "%s snoop miss for %s addr %#llx size %d\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
         return;
     } else {
-       DPRINTF(Cache, "%s snoop hit for %s for address %x size %d, "
+       DPRINTF(Cache, "%s snoop hit for %s for addr %#llx size %d, "
                "old state is %s\n", __func__, pkt->cmdString(),
                pkt->getAddr(), pkt->getSize(), blk->print());
     }
@@ -1753,7 +1758,7 @@ template<class TagStore>
 void
 Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 {
-    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     // Snoops shouldn't happen when bypassing caches
@@ -1798,7 +1803,7 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
     if (mshr && mshr->handleSnoop(pkt, order++)) {
-        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x (%s)."
+        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %#llx (%s)."
                 "mshrs: %s\n", blk_addr, is_secure ? "s" : "ns",
                 mshr->print());
 
@@ -1810,7 +1815,7 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
     //We also need to check the writeback buffers and handle those
     std::vector<MSHR *> writebacks;
     if (writeBuffer.findMatches(blk_addr, is_secure, writebacks)) {
-        DPRINTF(Cache, "Snoop hit in writeback to addr: %x (%s)\n",
+        DPRINTF(Cache, "Snoop hit in writeback to addr %#llx (%s)\n",
                 pkt->getAddr(), is_secure ? "s" : "ns");
 
         //Look through writebacks for any non-uncachable writes, use that
@@ -1981,7 +1986,7 @@ Cache<TagStore>::getTimingPacket()
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
 
-    DPRINTF(CachePort, "%s %s for address %x size %d\n", __func__,
+    DPRINTF(CachePort, "%s %s for addr %#llx size %d\n", __func__,
             tgt_pkt->cmdString(), tgt_pkt->getAddr(), tgt_pkt->getSize());
 
     if (mshr->isForwardNoResponse()) {

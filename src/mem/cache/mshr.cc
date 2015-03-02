@@ -312,7 +312,7 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 bool
 MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
-    DPRINTF(Cache, "%s for %s address %x size %d\n", __func__,
+    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     if (!inService || (pkt->isExpressSnoop() && downstreamPending)) {
         // Request has not been issued yet, or it's been issued
@@ -458,7 +458,7 @@ MSHR::checkFunctional(PacketPtr pkt)
 void
 MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
-    ccprintf(os, "%s[%x:%x](%s) %s %s %s state: %s %s %s %s %s\n",
+    ccprintf(os, "%s[%#llx:%#llx](%s) %s %s %s state: %s %s %s %s %s\n",
              prefix, addr, addr+size-1,
              isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
