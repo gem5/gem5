@@ -3,6 +3,38 @@
     "sim_quantum": 0, 
     "system": {
         "kernel": "", 
+        "mmap_using_noreserve": false, 
+        "kernel_addr_check": true, 
+        "membus": {
+            "slave": {
+                "peer": [
+                    "system.system_port", 
+                    "system.l2c.mem_side"
+                ], 
+                "role": "SLAVE"
+            }, 
+            "name": "membus", 
+            "snoop_filter": null, 
+            "forward_latency": 4, 
+            "clk_domain": "system.clk_domain", 
+            "system": "system", 
+            "width": 16, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": [
+                    "system.physmem.port"
+                ], 
+                "role": "MASTER"
+            }, 
+            "response_latency": 2, 
+            "cxx_class": "CoherentXBar", 
+            "path": "system.membus", 
+            "snoop_response_latency": 4, 
+            "type": "CoherentXBar", 
+            "use_default_range": false, 
+            "frontend_latency": 3
+        }, 
+        "symbolfile": "", 
         "l2c": {
             "is_top_level": false, 
             "prefetcher": null, 
@@ -34,6 +66,7 @@
             "mshrs": 20, 
             "forward_snoops": true, 
             "hit_latency": 20, 
+            "demand_mshr_reserve": 1, 
             "tgts_per_mshr": 12, 
             "addr_ranges": [
                 "0:18446744073709551615"
@@ -50,34 +83,6 @@
             }, 
             "two_queue": false
         }, 
-        "kernel_addr_check": true, 
-        "membus": {
-            "slave": {
-                "peer": [
-                    "system.system_port", 
-                    "system.l2c.mem_side"
-                ], 
-                "role": "SLAVE"
-            }, 
-            "name": "membus", 
-            "snoop_filter": null, 
-            "clk_domain": "system.clk_domain", 
-            "header_cycles": 1, 
-            "system": "system", 
-            "width": 8, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": [
-                    "system.physmem.port"
-                ], 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "CoherentXBar", 
-            "path": "system.membus", 
-            "type": "CoherentXBar", 
-            "use_default_range": false
-        }, 
-        "symbolfile": "", 
         "readfile": "", 
         "cxx_class": "System", 
         "load_offset": 0, 
@@ -177,10 +182,10 @@
             }, 
             "name": "toL2Bus", 
             "snoop_filter": null, 
+            "forward_latency": 0, 
             "clk_domain": "system.cpu_clk_domain", 
-            "header_cycles": 1, 
             "system": "system", 
-            "width": 8, 
+            "width": 32, 
             "eventq_index": 0, 
             "master": {
                 "peer": [
@@ -188,10 +193,13 @@
                 ], 
                 "role": "MASTER"
             }, 
+            "response_latency": 1, 
             "cxx_class": "CoherentXBar", 
             "path": "system.toL2Bus", 
+            "snoop_response_latency": 1, 
             "type": "CoherentXBar", 
-            "use_default_range": false
+            "use_default_range": false, 
+            "frontend_latency": 1
         }, 
         "mem_mode": "atomic", 
         "name": "system", 
@@ -264,6 +272,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -302,6 +311,7 @@
                         "output": "cout", 
                         "chkpt": "", 
                         "errout": "cerr", 
+                        "kvmInSE": false, 
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
@@ -358,6 +368,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -454,6 +465,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -492,6 +504,7 @@
                         "output": "cout", 
                         "chkpt": "", 
                         "errout": "cerr", 
+                        "kvmInSE": false, 
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
@@ -548,6 +561,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -644,6 +658,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -682,6 +697,7 @@
                         "output": "cout", 
                         "chkpt": "", 
                         "errout": "cerr", 
+                        "kvmInSE": false, 
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
@@ -738,6 +754,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -834,6 +851,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
@@ -872,6 +890,7 @@
                         "output": "cout", 
                         "chkpt": "", 
                         "errout": "cerr", 
+                        "kvmInSE": false, 
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
@@ -928,6 +947,7 @@
                     "mshrs": 4, 
                     "forward_snoops": true, 
                     "hit_latency": 2, 
+                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"

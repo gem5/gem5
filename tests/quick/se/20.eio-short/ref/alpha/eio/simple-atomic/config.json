@@ -3,6 +3,7 @@
     "sim_quantum": 0, 
     "system": {
         "kernel": "", 
+        "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "membus": {
             "slave": {
@@ -15,10 +16,10 @@
             }, 
             "name": "membus", 
             "snoop_filter": null, 
+            "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
-            "header_cycles": 1, 
             "system": "system", 
-            "width": 8, 
+            "width": 16, 
             "eventq_index": 0, 
             "master": {
                 "peer": [
@@ -26,10 +27,13 @@
                 ], 
                 "role": "MASTER"
             }, 
+            "response_latency": 2, 
             "cxx_class": "CoherentXBar", 
             "path": "system.membus", 
+            "snoop_response_latency": 4, 
             "type": "CoherentXBar", 
-            "use_default_range": false
+            "use_default_range": false, 
+            "frontend_latency": 3
         }, 
         "symbolfile": "", 
         "readfile": "", 
@@ -177,6 +181,7 @@
                         "output": "cout", 
                         "chkpt": "", 
                         "errout": "cerr", 
+                        "kvmInSE": false, 
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 

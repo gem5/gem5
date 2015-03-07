@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 21 2014 15:53:23
-gem5 started Sep 21 2014 16:10:49
-gem5 executing on zizzer
+gem5 compiled Mar  7 2015 13:46:57
+gem5 started Mar  7 2015 13:47:23
+gem5 executing on zizzer2
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-atomic-mp -re /z/stever/hg/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-atomic-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
