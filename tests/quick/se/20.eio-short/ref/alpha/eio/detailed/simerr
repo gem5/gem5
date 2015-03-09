@@ -1,4 +1,0 @@
-warn: Entering event queue @ 0.  Starting simulation...
-warn: cycle 0: fault (page_table_fault) detected @ PC 0x000000
-
-gzip: stdout: Broken pipe
