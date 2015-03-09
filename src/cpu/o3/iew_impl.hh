@@ -1095,20 +1095,11 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             iewExecutedNop[tid]++;
 
             add_to_iq = false;
-        } else if (inst->isExecuted()) {
-            assert(0 && "Instruction shouldn't be executed.\n");
-            DPRINTF(IEW, "Issue: Executed branch encountered, "
-                    "skipping.\n");
-
-            inst->setIssued();
-            inst->setCanCommit();
-
-            instQueue.recordProducer(inst);
-
-            add_to_iq = false;
         } else {
+            assert(!inst->isExecuted());
             add_to_iq = true;
         }
+
         if (inst->isNonSpeculative()) {
             DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
                     "encountered, skipping.\n", tid);
