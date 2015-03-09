@@ -1338,10 +1338,8 @@ DefaultCommit<Impl>::markCompletedInsts()
 {
     // Grab completed insts out of the IEW instruction queue, and mark
     // instructions completed within the ROB.
-    for (int inst_num = 0;
-         inst_num < fromIEW->size && fromIEW->insts[inst_num];
-         ++inst_num)
-    {
+    for (int inst_num = 0; inst_num < fromIEW->size; ++inst_num) {
+        assert(fromIEW->insts[inst_num]);
         if (!fromIEW->insts[inst_num]->isSquashed()) {
             DPRINTF(Commit, "[tid:%i]: Marking PC %s, [sn:%lli] ready "
                     "within ROB.\n",
