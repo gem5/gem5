@@ -873,7 +873,6 @@ system.cpu0.commit.op_class_0::IprAccess            0      0.00%    100.00% # Cl
 system.cpu0.commit.op_class_0::InstPrefetch            0      0.00%    100.00% # Class of committed instruction
 system.cpu0.commit.op_class_0::total        532162399                       # Class of committed instruction
 system.cpu0.commit.bw_lim_events             22726868                       # number cycles where commit BW limit reached
-system.cpu0.commit.bw_limited                       0                       # number of insts not committed due to BW limits
 system.cpu0.rob.rob_reads                  1220262369                       # The number of ROB reads
 system.cpu0.rob.rob_writes                 1241914021                       # The number of ROB writes
 system.cpu0.timesIdled                        4040058                       # Number of times that the entire CPU went into an idle state and unscheduled itself
@@ -1848,7 +1847,6 @@ system.cpu1.commit.op_class_0::IprAccess            0      0.00%    100.00% # Cl
 system.cpu1.commit.op_class_0::InstPrefetch            0      0.00%    100.00% # Class of committed instruction
 system.cpu1.commit.op_class_0::total        535141123                       # Class of committed instruction
 system.cpu1.commit.bw_lim_events             22907771                       # number cycles where commit BW limit reached
-system.cpu1.commit.bw_limited                       0                       # number of insts not committed due to BW limits
 system.cpu1.rob.rob_reads                  1220174232                       # The number of ROB reads
 system.cpu1.rob.rob_writes                 1248183780                       # The number of ROB writes
 system.cpu1.timesIdled                        4134360                       # Number of times that the entire CPU went into an idle state and unscheduled itself

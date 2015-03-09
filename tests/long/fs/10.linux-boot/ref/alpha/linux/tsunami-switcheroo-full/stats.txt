@@ -1317,7 +1317,6 @@ system.cpu2.commit.op_class_0::IprAccess       303954      0.94%    100.00% # Cl
 system.cpu2.commit.op_class_0::InstPrefetch            0      0.00%    100.00% # Class of committed instruction
 system.cpu2.commit.op_class_0::total         32325567                       # Class of committed instruction
 system.cpu2.commit.bw_lim_events               870316                       # number cycles where commit BW limit reached
-system.cpu2.commit.bw_limited                       0                       # number of insts not committed due to BW limits
 system.cpu2.rob.rob_reads                    62726939                       # The number of ROB reads
 system.cpu2.rob.rob_writes                   70507401                       # The number of ROB writes
 system.cpu2.timesIdled                         178497                       # Number of times that the entire CPU went into an idle state and unscheduled itself
