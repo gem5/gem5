@@ -406,29 +406,29 @@ class DefaultCommit
     std::list<ThreadID> priority_list;
 
     /** IEW to Commit delay. */
-    Cycles iewToCommitDelay;
+    const Cycles iewToCommitDelay;
 
     /** Commit to IEW delay. */
-    Cycles commitToIEWDelay;
+    const Cycles commitToIEWDelay;
 
     /** Rename to ROB delay. */
-    Cycles renameToROBDelay;
+    const Cycles renameToROBDelay;
 
-    Cycles fetchToCommitDelay;
+    const Cycles fetchToCommitDelay;
 
     /** Rename width, in instructions.  Used so ROB knows how many
      *  instructions to get from the rename instruction queue.
      */
-    unsigned renameWidth;
+    const unsigned renameWidth;
 
     /** Commit width, in instructions. */
-    unsigned commitWidth;
+    const unsigned commitWidth;
 
     /** Number of Reorder Buffers */
     unsigned numRobs;
 
     /** Number of Active Threads */
-    ThreadID numThreads;
+    const ThreadID numThreads;
 
     /** Is a drain pending? Commit is looking for an instruction boundary while
      * there are no pending interrupts
@@ -445,7 +445,7 @@ class DefaultCommit
     /** The latency to handle a trap.  Used when scheduling trap
      * squash event.
      */
-    Cycles trapLatency;
+    const Cycles trapLatency;
 
     /** The interrupt fault. */
     Fault interrupt;
