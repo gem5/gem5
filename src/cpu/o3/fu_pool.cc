@@ -157,22 +157,6 @@ FUPool::FUPool(const Params *p)
     }
 }
 
-void
-FUPool::annotateMemoryUnits(Cycles hit_latency)
-{
-    maxOpLatencies[MemReadOp] = hit_latency;
-
-    fuListIterator i = funcUnits.begin();
-    fuListIterator iend = funcUnits.end();
-    for (; i != iend; ++i) {
-        if ((*i)->provides(MemReadOp))
-            (*i)->opLatency(MemReadOp) = hit_latency;
-
-        if ((*i)->provides(MemWriteOp))
-            (*i)->opLatency(MemWriteOp) = hit_latency;
-    }
-}
-
 int
 FUPool::getUnit(OpClass capability)
 {

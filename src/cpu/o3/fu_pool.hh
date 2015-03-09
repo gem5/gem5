@@ -133,11 +133,6 @@ class FUPool : public SimObject
     FUPool(const Params *p);
     ~FUPool();
 
-    /** Annotates units that provide memory operations. Included only because
-     *  old FU pool provided this function.
-     */
-    void annotateMemoryUnits(Cycles hit_latency);
-
     /**
      * Gets a FU providing the requested capability. Will mark the unit as busy,
      * but leaves the freeing of the unit up to the IEW stage.
