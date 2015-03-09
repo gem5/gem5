@@ -906,13 +906,10 @@ DefaultCommit<Impl>::commit()
                 if (toIEW->commitInfo[tid].mispredictInst->isUncondCtrl()) {
                      toIEW->commitInfo[tid].branchTaken = true;
                 }
+                ++branchMispredicts;
             }
 
             toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
-
-            if (toIEW->commitInfo[tid].mispredictInst) {
-                ++branchMispredicts;
-            }
         }
 
         if (commitStatus[tid] == ROBSquashing) {
