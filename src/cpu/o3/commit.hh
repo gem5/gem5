@@ -492,10 +492,6 @@ class DefaultCommit
     /** Stat for the total number of squashed instructions discarded by commit.
      */
     Stats::Scalar commitSquashedInsts;
-    /** Stat for the total number of times commit is told to squash.
-     * @todo: Actually increment this stat.
-     */
-    Stats::Scalar commitSquashEvents;
     /** Stat for the total number of times commit has had to stall due to a non-
      * speculative instruction reaching the head of the ROB.
      */
@@ -530,8 +526,6 @@ class DefaultCommit
 
     /** Number of cycles where the commit bandwidth limit is reached. */
     Stats::Scalar commitEligibleSamples;
-    /** Number of instructions not committed due to bandwidth limits. */
-    Stats::Vector commitEligible;
 };
 
 #endif // __CPU_O3_COMMIT_HH__

@@ -184,19 +184,18 @@ DefaultCommit<Impl>::regStats()
         .name(name() + ".commitSquashedInsts")
         .desc("The number of squashed insts skipped by commit")
         .prereq(commitSquashedInsts);
-    commitSquashEvents
-        .name(name() + ".commitSquashEvents")
-        .desc("The number of times commit is told to squash")
-        .prereq(commitSquashEvents);
+
     commitNonSpecStalls
         .name(name() + ".commitNonSpecStalls")
         .desc("The number of times commit has been forced to stall to "
               "communicate backwards")
         .prereq(commitNonSpecStalls);
+
     branchMispredicts
         .name(name() + ".branchMispredicts")
         .desc("The number of times a branch was mispredicted")
         .prereq(branchMispredicts);
+
     numCommittedDist
         .init(0,commitWidth,1)
         .name(name() + ".committed_per_cycle")
@@ -281,13 +280,6 @@ DefaultCommit<Impl>::regStats()
         .flags(total | pdf | dist)
         ;
     statCommittedInstType.ysubnames(Enums::OpClassStrings);
-
-    commitEligible
-        .init(cpu->numThreads)
-        .name(name() + ".bw_limited")
-        .desc("number of insts not committed due to BW limits")
-        .flags(total)
-        ;
 
     commitEligibleSamples
         .name(name() + ".bw_lim_events")
@@ -994,7 +986,7 @@ DefaultCommit<Impl>::commitInsts()
         if (interrupt != NoFault)
             handleInterrupt();
 
-        int commit_thread = getCommittingThread();
+        ThreadID commit_thread = getCommittingThread();
 
         if (commit_thread == -1 || !rob->isHeadReady(commit_thread))
             break;
