@@ -96,7 +96,6 @@ DefaultCommit<Impl>::TrapEvent::description() const
 template <class Impl>
 DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
-      squashCounter(0),
       iewToCommitDelay(params->iewToCommitDelay),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToROBDelay(params->renameToROBDelay),
@@ -460,7 +459,6 @@ DefaultCommit<Impl>::takeOverFrom()
         tcSquash[tid] = false;
         squashAfterInst[tid] = NULL;
     }
-    squashCounter = 0;
     rob->takeOverFrom();
 }
 
@@ -506,32 +504,6 @@ DefaultCommit<Impl>::updateStatus()
     }
 
     _status = _nextStatus;
-}
-
-template <class Impl>
-void
-DefaultCommit<Impl>::setNextStatus()
-{
-    int squashes = 0;
-
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
-        if (commitStatus[tid] == ROBSquashing) {
-            squashes++;
-        }
-    }
-
-    squashCounter = squashes;
-
-    // If commit is currently squashing, then it will have activity for the
-    // next cycle. Set its next status as active.
-    if (squashCounter) {
-        _nextStatus = Active;
-    }
 }
 
 template <class Impl>
@@ -856,6 +828,8 @@ DefaultCommit<Impl>::commit()
     list<ThreadID>::iterator threads = activeThreads->begin();
     list<ThreadID>::iterator end = activeThreads->end();
 
+    int num_squashing_threads = 0;
+
     while (threads != end) {
         ThreadID tid = *threads++;
 
@@ -941,11 +915,18 @@ DefaultCommit<Impl>::commit()
             }
         }
 
+        if (commitStatus[tid] == ROBSquashing) {
+            num_squashing_threads++;
+        }
     }
 
-    setNextStatus();
+    // If commit is currently squashing, then it will have activity for the
+    // next cycle. Set its next status as active.
+    if (num_squashing_threads) {
+        _nextStatus = Active;
+    }
 
-    if (squashCounter != numThreads) {
+    if (num_squashing_threads != numThreads) {
         // If we're not currently squashing, then get instructions.
         getInsts();
 

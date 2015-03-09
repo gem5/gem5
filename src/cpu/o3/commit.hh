@@ -246,11 +246,6 @@ class DefaultCommit
      */
     void updateStatus();
 
-    /** Sets the next status based on threads' statuses, which becomes the
-     * current status at the end of the cycle.
-     */
-    void setNextStatus();
-
     /** Returns if any of the threads have the number of ROB entries changed
      * on this cycle. Used to determine if the number of free ROB entries needs
      * to be sent back to previous stages.
@@ -391,9 +386,6 @@ class DefaultCommit
      * then the number of free entries must be re-broadcast.
      */
     bool changedROBNumEntries[Impl::MaxThreads];
-
-    /** A counter of how many threads are currently squashing. */
-    ThreadID squashCounter;
 
     /** Records if a thread has to squash this cycle due to a trap. */
     bool trapSquash[Impl::MaxThreads];
