@@ -286,7 +286,9 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.gic_cpu_addr = self.realview.gic.cpu_addr
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
-        if mdesc.disk().lower().count('android'):
+        # Android disk images must have 'android' keyword in the disk name
+        # Look for 'android' in disk name and append /init to boot_osflags
+        if (os.path.split(mdesc.disk())[-1]).lower().count('android'):
             cmdline += " init=/init "
         self.boot_osflags = fillInCmdline(mdesc, cmdline)
     self.realview.attachOnChipIO(self.membus, self.bridge)
