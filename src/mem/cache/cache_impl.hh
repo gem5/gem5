@@ -12,7 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2010 Advanced Micro Devices, Inc.
+ * Copyright (c) 2010,2015 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1818,37 +1818,35 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
         DPRINTF(Cache, "Snoop hit in writeback to addr %#llx (%s)\n",
                 pkt->getAddr(), is_secure ? "s" : "ns");
 
-        //Look through writebacks for any non-uncachable writes, use that
-        if (writebacks.size()) {
-            // We should only ever find a single match
-            assert(writebacks.size() == 1);
-            mshr = writebacks[0];
-            assert(!mshr->isUncacheable());
-            assert(mshr->getNumTargets() == 1);
-            PacketPtr wb_pkt = mshr->getTarget()->pkt;
-            assert(wb_pkt->cmd == MemCmd::Writeback);
+        // Look through writebacks for any cachable writes.
+        // We should only ever find a single match
+        assert(writebacks.size() == 1);
+        MSHR *wb_entry = writebacks[0];
+        assert(!wb_entry->isUncacheable());
+        assert(wb_entry->getNumTargets() == 1);
+        PacketPtr wb_pkt = wb_entry->getTarget()->pkt;
+        assert(wb_pkt->cmd == MemCmd::Writeback);
 
-            assert(!pkt->memInhibitAsserted());
-            pkt->assertMemInhibit();
-            if (!pkt->needsExclusive()) {
-                pkt->assertShared();
-                // the writeback is no longer the exclusive copy in the system
-                wb_pkt->clearSupplyExclusive();
-            } else {
-                // if we're not asserting the shared line, we need to
-                // invalidate our copy.  we'll do that below as long as
-                // the packet's invalidate flag is set...
-                assert(pkt->isInvalidate());
-            }
-            doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
-                                   false, false);
+        assert(!pkt->memInhibitAsserted());
+        pkt->assertMemInhibit();
+        if (!pkt->needsExclusive()) {
+            pkt->assertShared();
+            // the writeback is no longer the exclusive copy in the system
+            wb_pkt->clearSupplyExclusive();
+        } else {
+            // if we're not asserting the shared line, we need to
+            // invalidate our copy.  we'll do that below as long as
+            // the packet's invalidate flag is set...
+            assert(pkt->isInvalidate());
+        }
+        doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
+                               false, false);
 
-            if (pkt->isInvalidate()) {
-                // Invalidation trumps our writeback... discard here
-                markInService(mshr, false);
-                delete wb_pkt;
-            }
-        } // writebacks.size()
+        if (pkt->isInvalidate()) {
+            // Invalidation trumps our writeback... discard here
+            markInService(wb_entry, false);
+            delete wb_pkt;
+        }
     }
 
     // If this was a shared writeback, there may still be
