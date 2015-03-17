@@ -1713,8 +1713,16 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
 
     if (!respond && is_timing && is_deferred) {
         // if it's a deferred timing snoop then we've made a copy of
-        // the packet, and so if we're not using that copy to respond
-        // then we need to delete it here.
+        // both the request and the packet, and so if we're not using
+        // those copies to respond and delete them here
+        DPRINTF(Cache, "Deleting pkt %p and request %p for cmd %s addr: %p\n",
+                pkt, pkt->req, pkt->cmdString(), pkt->getAddr());
+
+        // the packets needs a response (just not from us), so we also
+        // need to delete the request and not rely on the packet
+        // destructor
+        assert(pkt->needsResponse());
+        delete pkt->req;
         delete pkt;
     }
 

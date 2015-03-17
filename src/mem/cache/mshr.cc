@@ -365,17 +365,28 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // Clear flags and also allocate new data as the original
         // packet data storage may have been deleted by the time we
         // get to send this packet.
-        PacketPtr cp_pkt = new Packet(pkt, true, true);
-        targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
-                     downstreamPending && targets.needsExclusive);
+        PacketPtr cp_pkt = nullptr;
 
         if (isPendingDirty()) {
+            // Case 1: The new packet will need to get the response from the
+            // MSHR already queued up here
+            cp_pkt = new Packet(pkt, true, true);
             pkt->assertMemInhibit();
             // in the case of an uncacheable request there is no need
             // to set the exclusive flag, but since the recipient does
             // not care there is no harm in doing so
             pkt->setSupplyExclusive();
+        } else {
+            // Case 2: We only need to buffer the packet for information
+            // purposes; the original request can proceed without waiting
+            // => Create a copy of the request, as that may get deallocated as
+            // well
+            cp_pkt = new Packet(new Request(*pkt->req), pkt->cmd);
+            DPRINTF(Cache, "Copying packet %p -> %p and request %p -> %p\n",
+                    pkt, cp_pkt, pkt->req, cp_pkt->req);
         }
+        targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
+                    downstreamPending && targets.needsExclusive);
 
         if (pkt->needsExclusive()) {
             // This transaction will take away our pending copy
