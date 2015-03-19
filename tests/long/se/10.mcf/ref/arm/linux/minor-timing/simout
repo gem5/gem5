@@ -1,14 +1,12 @@
-Redirecting stdout to build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing/simout
-Redirecting stderr to build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  7 2014 10:57:46
-gem5 started May  7 2014 16:03:40
-gem5 executing on cz3211bhr8
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing -re tests/run.py build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing
+gem5 compiled Mar 15 2015 20:30:55
+gem5 started Mar 15 2015 20:31:14
+gem5 executing on zizzer2
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing -re /z/stever/hg/gem5/tests/run.py build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu.isa: ISA system set to: 0 0x11aa5150
+      0: system.cpu.isa: ISA system set to: 0 0x45a0240
 info: Entering event queue @ 0.  Starting simulation...
 
 MCF SPEC version 1.6.I
@@ -26,4 +24,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 61276704500 because target called exit()
+Exiting @ tick 61589191500 because target called exit()
