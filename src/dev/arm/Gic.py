@@ -54,7 +54,6 @@ class Pl390(BaseGic):
 
     dist_addr = Param.Addr(0x1f001000, "Address for distributor")
     cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
-    msix_addr = Param.Addr(0x0, "Address for MSI-X register")
     dist_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to distributor")
     cpu_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to cpu interface")
     int_latency = Param.Latency('10ns', "Delay for interrupt to get to CPU")
