@@ -217,7 +217,7 @@ Bridge::BridgeMasterPort::schedTimingReq(PacketPtr pkt, Tick when)
 
     assert(transmitList.size() != reqQueueLimit);
 
-    transmitList.push_back(DeferredPacket(pkt, when));
+    transmitList.emplace_back(DeferredPacket(pkt, when));
 }
 
 
@@ -232,7 +232,7 @@ Bridge::BridgeSlavePort::schedTimingResp(PacketPtr pkt, Tick when)
         bridge.schedule(sendEvent, when);
     }
 
-    transmitList.push_back(DeferredPacket(pkt, when));
+    transmitList.emplace_back(DeferredPacket(pkt, when));
 }
 
 void
