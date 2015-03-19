@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,6 +37,7 @@
 
 from m5.params import *
 from m5.proxy import *
+from m5.SimObject import SimObject
 
 from Device import PioDevice
 from Platform import Platform
@@ -58,3 +59,18 @@ class Pl390(BaseGic):
     cpu_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to cpu interface")
     int_latency = Param.Latency('10ns', "Delay for interrupt to get to CPU")
     it_lines = Param.UInt32(128, "Number of interrupt lines supported (max = 1020)")
+
+class Gicv2mFrame(SimObject):
+    type = 'Gicv2mFrame'
+    cxx_header = "dev/arm/gic_v2m.hh"
+    spi_base = Param.UInt32(0x0, "Frame SPI base number");
+    spi_len = Param.UInt32(0x0, "Frame SPI total number");
+    addr = Param.Addr("Address for frame PIO")
+
+class Gicv2m(PioDevice):
+    type = 'Gicv2m'
+    cxx_header = "dev/arm/gic_v2m.hh"
+
+    pio_delay = Param.Latency('10ns', "Delay for PIO r/w")
+    gic = Param.BaseGic(Parent.any, "Gic on which to trigger interrupts")
+    frames = VectorParam.Gicv2mFrame([], "Power of two number of frames")
