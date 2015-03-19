@@ -331,13 +331,8 @@ TrafficGen::parseConfig()
                                  blocksize, page_size);
 
                         if (nbr_of_banks_util > nbr_of_banks_DRAM)
-                            fatal("Attempting to use more banks (%) than "
-                                  "what is available (%)\n",
-                                  nbr_of_banks_util, nbr_of_banks_DRAM);
-
-                        if (nbr_of_banks_util > nbr_of_banks_DRAM)
-                            fatal("Attempting to use more banks (%) than "
-                                  "what is available (%)\n",
+                            fatal("Attempting to use more banks (%d) than "
+                                  "what is available (%d)\n",
                                   nbr_of_banks_util, nbr_of_banks_DRAM);
 
                         // count the number of sequential packets to
