@@ -43,6 +43,18 @@ from m5.objects import *
 from Benchmarks import *
 from m5.util import *
 
+# Populate to reflect supported os types per target ISA
+os_types = { 'alpha' : [ 'linux' ],
+             'mips'  : [ 'linux' ],
+             'sparc' : [ 'linux' ],
+             'x86'   : [ 'linux' ],
+             'arm'   : [ 'linux',
+                         'android-gingerbread',
+                         'android-ics',
+                         'android-jellybean',
+                         'android-kitkat' ],
+           }
+
 class CowIdeDisk(IdeDisk):
     image = CowDiskImage(child=RawDiskImage(read_only=True),
                          read_only=False)
@@ -53,7 +65,6 @@ class CowIdeDisk(IdeDisk):
 class MemBus(SystemXBar):
     badaddr_responder = BadAddr()
     default = Self.badaddr_responder.pio
-
 
 def fillInCmdline(mdesc, template, **kwargs):
     kwargs.setdefault('disk', mdesc.disk())
@@ -286,11 +297,31 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.gic_cpu_addr = self.realview.gic.cpu_addr
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
-        # Android disk images must have 'android' keyword in the disk name
-        # Look for 'android' in disk name and append /init to boot_osflags
+        # This check is for users who have previously put 'android' in
+        # the disk image filename to tell the config scripts to
+        # prepare the kernel with android-specific boot options. That
+        # behavior has been replaced with a more explicit option per
+        # the error message below. The disk can have any name now and
+        # doesn't need to include 'android' substring.
         if (os.path.split(mdesc.disk())[-1]).lower().count('android'):
-            cmdline += " init=/init "
+            if 'android' not in mdesc.os_type():
+                fatal("It looks like you are trying to boot an Android " \
+                      "platform.  To boot Android, you must specify " \
+                      "--os-type with an appropriate Android release on " \
+                      "the command line.")
+
+        # android-specific tweaks
+        if 'android' in mdesc.os_type():
+            # generic tweaks
+            cmdline += " init=/init"
+
+            # release-specific tweaks
+            if 'kitkat' in mdesc.os_type():
+                cmdline += " androidboot.hardware=gem5 qemu=1 qemu.gles=0 " + \
+                           "android.bootanim=0"
+
         self.boot_osflags = fillInCmdline(mdesc, cmdline)
+
     self.realview.attachOnChipIO(self.membus, self.bridge)
     self.realview.attachIO(self.iobus)
     self.intrctrl = IntrControl()

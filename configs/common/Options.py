@@ -46,6 +46,8 @@ from Benchmarks import *
 import CpuConfig
 import MemConfig
 
+from FSConfig import os_types
+
 def _listCpuTypes(option, opt, value, parser):
     CpuConfig.print_cpu_list()
     sys.exit(0)
@@ -241,6 +243,9 @@ def addFSOptions(parser):
 
     # System options
     parser.add_option("--kernel", action="store", type="string")
+    parser.add_option("--os-type", action="store", type="choice",
+            choices=os_types[buildEnv['TARGET_ISA']], default="linux",
+            help="Specifies type of OS to boot")
     parser.add_option("--script", action="store", type="string")
     parser.add_option("--frame-capture", action="store_true",
             help="Stores changed frame buffers from the VNC server to compressed "\
