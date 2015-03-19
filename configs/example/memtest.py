@@ -40,10 +40,19 @@
 #          Andreas Hansson
 
 import optparse
+import random
 import sys
 
 import m5
 from m5.objects import *
+
+# This example script stress tests the memory system by creating false
+# sharing in a tree topology. At the bottom of the tree is a shared
+# memory, and then at each level a number of testers are attached,
+# along with a number of caches that them selves fan out to subtrees
+# of testers and caches. Thus, it is possible to create a system with
+# arbitrarily deep cache hierarchies, sharing or no sharing of caches,
+# and testers not only at the L1s, but also at the L2s, L3s etc.
 
 parser = optparse.OptionParser()
 
@@ -57,14 +66,6 @@ parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",
                   help="Stop after T ticks")
 
-# This example script stress tests the memory system by creating false
-# sharing in a tree topology. At the bottom of the tree is a shared
-# memory, and then at each level a number of testers are attached,
-# along with a number of caches that them selves fan out to subtrees
-# of testers and caches. Thus, it is possible to create a system with
-# arbitrarily deep cache hierarchies, sharing or no sharing of caches,
-# and testers not only at the L1s, but also at the L2s, L3s etc.
-#
 # The tree specification consists of two colon-separated lists of one
 # or more integers, one for the caches, and one for the testers. The
 # first integer is the number of caches/testers closest to main
@@ -92,8 +93,9 @@ parser.add_option("-u", "--uncacheable", type="int", default=0,
                   metavar="PCT",
                   help="Target percentage of uncacheable accesses "
                   "[default: %default]")
-
-parser.add_option("--progress", type="int", default=10000,
+parser.add_option("-r", "--random", action="store_true",
+                  help="Generate a random tree topology")
+parser.add_option("--progress", type="int", default=100000,
                   metavar="NLOADS",
                   help="Progress message interval "
                   "[default: %default]")
@@ -108,55 +110,69 @@ if args:
      print "Error: script doesn't take any positional arguments"
      sys.exit(1)
 
+# Get the total number of testers
+def numtesters(cachespec, testerspec):
+     # Determine the tester multiplier for each level as the
+     # elements are per subsystem and it fans out
+     multiplier = [1]
+     for c in cachespec:
+          multiplier.append(multiplier[-1] * c)
+
+     total = 0
+     for t, m in zip(testerspec, multiplier):
+          total += t * m
+
+     return total
+
 block_size = 64
 
 # Start by parsing the command line options and do some basic sanity
 # checking
-try:
-     cachespec = [int(x) for x in options.caches.split(':')]
-     testerspec = [int(x) for x in options.testers.split(':')]
-except:
-     print "Error: Unable to parse caches or testers option"
-     sys.exit(1)
+if options.random:
+     # Generate a tree with a valid number of testers
+     while True:
+          tree_depth = random.randint(1, 4)
+          cachespec = [random.randint(1, 3) for i in range(tree_depth)]
+          testerspec = [random.randint(1, 3) for i in range(tree_depth + 1)]
+          if numtesters(cachespec, testerspec) < block_size:
+               break
 
-if len(cachespec) < 1:
-     print "Error: Must have at least one level of caches"
-     sys.exit(1)
-
-if len(cachespec) != len(testerspec) - 1:
-     print "Error: Testers must have one element more than caches"
-     sys.exit(1)
-
-if testerspec[-1] == 0:
-     print "Error: Must have testers at the uppermost level"
-     sys.exit(1)
-
-for t in testerspec:
-     if t < 0:
-          print "Error: Cannot have a negative number of testers"
+     print "Generated random tree -c", ':'.join(map(str, cachespec)), \
+         "-t", ':'.join(map(str, testerspec))
+else:
+     try:
+          cachespec = [int(x) for x in options.caches.split(':')]
+          testerspec = [int(x) for x in options.testers.split(':')]
+     except:
+          print "Error: Unable to parse caches or testers option"
           sys.exit(1)
 
-for c in cachespec:
-     if c < 1:
-          print "Error: Must have 1 or more caches at each level"
+     if len(cachespec) < 1:
+          print "Error: Must have at least one level of caches"
           sys.exit(1)
 
-# Determine the tester multiplier for each level as the string
-# elements are per subsystem and it fans out
-multiplier = [1]
-for c in cachespec:
-     if c < 1:
-          print "Error: Must have at least one cache per level"
-     multiplier.append(multiplier[-1] * c)
+     if len(cachespec) != len(testerspec) - 1:
+          print "Error: Testers must have one element more than caches"
+          sys.exit(1)
 
-numtesters = 0
-for t, m in zip(testerspec, multiplier):
-     numtesters += t * m
+     if testerspec[-1] == 0:
+          print "Error: Must have testers at the uppermost level"
+          sys.exit(1)
 
-if numtesters > block_size:
-     print "Error: Number of testers limited to %s because of false sharing" \
-           % (block_size)
-     sys.exit(1)
+     for t in testerspec:
+          if t < 0:
+               print "Error: Cannot have a negative number of testers"
+               sys.exit(1)
+
+     for c in cachespec:
+          if c < 1:
+               print "Error: Must have 1 or more caches at each level"
+               sys.exit(1)
+
+     if numtesters(cachespec, testerspec) > block_size:
+          print "Error: Limited to %s testers because of false sharing" \
+              % (block_size)
+          sys.exit(1)
 
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = BaseCache(size = '32kB', assoc = 4,
@@ -223,7 +239,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
      # and also make the interval of packet injection longer for the
      # testers closer to the memory (larger level) to prevent them
      # hogging all the bandwidth
-     limit = (len(cachespec) - level + 1) * 10000000
+     limit = (len(cachespec) - level + 1) * 100000000
      testers = [proto_tester(interval = 10 * (level * level + 1),
                              progress_check = limit) \
                      for i in xrange(ntesters)]
