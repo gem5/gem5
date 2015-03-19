@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -176,9 +176,22 @@ CommMonitor::recvFunctionalSnoop(PacketPtr pkt)
 Tick
 CommMonitor::recvAtomic(PacketPtr pkt)
 {
-    // allow stack distance calculations for atomic if enabled
+    // do stack distance calculations if enabled
     if (stackDistCalc)
         stackDistCalc->update(pkt->cmd, pkt->getAddr());
+
+   // if tracing enabled, store the packet information
+   // to the trace stream
+   if (traceStream != NULL) {
+        ProtoMessage::Packet pkt_msg;
+        pkt_msg.set_tick(curTick());
+        pkt_msg.set_cmd(pkt->cmdToIndex());
+        pkt_msg.set_flags(pkt->req->getFlags());
+        pkt_msg.set_addr(pkt->getAddr());
+        pkt_msg.set_size(pkt->getSize());
+
+        traceStream->write(pkt_msg);
+    }
 
     return masterPort.sendAtomic(pkt);
 }
