@@ -104,10 +104,10 @@ def run_test(target, source, env):
     timeout = 15 * 60 # used to be a param, probably should be again
     if env['BATCH']:
         cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
-    # The slowest regression (bzip2) requires ~2.8 hours;
-    # 4 hours was chosen to be conservative.
+    # The slowest regression (bzip2) requires ~4 hours;
+    # 5 hours was chosen to be conservative.
     elif env['TIMEOUT']:
-        cmd = 'timeout --foreground 4h %s' % cmd
+        cmd = 'timeout --foreground 5h %s' % cmd
 
     # Create a default value for the status string, changed as needed
     # based on the status.
