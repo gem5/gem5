@@ -581,6 +581,13 @@ def run(options, root, testsys, cpu_class):
         cpt_starttick, checkpoint_dir = findCptDir(options, cptdir, testsys)
     m5.instantiate(checkpoint_dir)
 
+    # Initialization is complete.  If we're not in control of simulation
+    # (that is, if we're a slave simulator acting as a component in another
+    #  'master' simulator) then we're done here.  The other simulator will
+    # call simulate() directly. --initialize-only is used to indicate this.
+    if options.initialize_only:
+        return
+
     # Handle the max tick settings now that tick frequency was resolved
     # during system instantiation
     # NOTE: the maxtick variable here is in absolute ticks, so it must

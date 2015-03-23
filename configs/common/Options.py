@@ -150,6 +150,9 @@ def addCommonOptions(parser):
     parser.add_option("--init-param", action="store", type="int", default=0,
                       help="""Parameter available in simulation with m5
                               initparam""")
+    parser.add_option("--initialize-only", action="store_true", default=False,
+                      help="""Exit after initialization. Do not simulate time.
+                              Useful when gem5 is run as a library.""")
 
     # Simpoint options
     parser.add_option("--simpoint-profile", action="store_true",
