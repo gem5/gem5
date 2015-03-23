@@ -108,11 +108,11 @@ class Request
     /** The request is to an uncacheable address. */
     static const FlagsType UNCACHEABLE                 = 0x00001000;
     /** This request is to a memory mapped register. */
-    static const FlagsType MMAPPED_IPR                  = 0x00002000;
+    static const FlagsType MMAPPED_IPR                 = 0x00002000;
     /** This request is a clear exclusive. */
     static const FlagsType CLEAR_LL                    = 0x00004000;
     /** This request is made in privileged mode. */
-    static const FlagsType PRIVILEGED                   = 0x00008000;
+    static const FlagsType PRIVILEGED                  = 0x00008000;
 
     /** This is a write that is targeted and zeroing an entire cache block.
      * There is no need for a read/modify/write
@@ -167,12 +167,12 @@ class Request
     /** Invalid request id for assertion checking only. It is invalid behavior
      * to ever send this id as part of a request.
      * @todo C++1x replace with numeric_limits when constexpr is added  */
-    static const MasterID invldMasterId = USHRT_MAX;
+    static const MasterID invldMasterId = std::numeric_limits<MasterID>::max();
     /** @} */
 
     /** Invalid or unknown Pid. Possible when operating system is not present
      *  or has not assigned a pid yet */
-    static const uint32_t invldPid = UINT_MAX;
+    static const uint32_t invldPid = std::numeric_limits<uint32_t>::max();
 
   private:
     typedef uint8_t PrivateFlagsType;
@@ -270,7 +270,7 @@ class Request
     /** The context ID (for statistics, typically). */
     int _contextId;
     /** The thread ID (id within this CPU) */
-    int _threadId;
+    ThreadID _threadId;
 
     /** program counter of initiating access; for tracing/debugging */
     Addr _pc;
@@ -325,8 +325,7 @@ class Request
     }
 
     Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc,
-            int cid, ThreadID tid)
+            Addr pc, int cid, ThreadID tid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
@@ -357,7 +356,6 @@ class Request
     setVirt(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
             Addr pc)
     {
-        assert(size >= 0);
         _asid = asid;
         _vaddr = vaddr;
         _size = size;
@@ -446,7 +444,7 @@ class Request
         return privateFlags.isSet(VALID_SIZE);
     }
 
-    int
+    unsigned
     getSize() const
     {
         assert(privateFlags.isSet(VALID_SIZE));
@@ -459,13 +457,6 @@ class Request
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         return _time;
-    }
-
-    void
-    time(Tick time)
-    {
-        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
-        _time = time;
     }
 
     /** Accessor for flags. */
@@ -485,13 +476,6 @@ class Request
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         _flags.set(flags);
-    }
-
-    void
-    setArchFlags(Flags flags)
-    {
-        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
-        _flags.set(flags & ARCH_BITS);
     }
 
     /** Accessor function for vaddr.*/
@@ -587,7 +571,7 @@ class Request
     }
 
     /** Accessor function for thread ID. */
-    int
+    ThreadID
     threadId() const
     {
         assert(privateFlags.isSet(VALID_THREAD_ID));
