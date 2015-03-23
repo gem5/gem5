@@ -27,7 +27,7 @@
 # Authors: Ali Saidi
 
 import os, sys
-from os.path import isdir, join as joinpath
+from os.path import join as joinpath
 from os import environ as env
 
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -58,6 +58,9 @@ def system():
             path = env['M5_PATH'].split(':')
         except KeyError:
             path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+
+        # expand '~' and '~user' in paths
+        path = map(os.path.expanduser, path)
 
         # filter out non-existent directories
         system.path = filter(os.path.isdir, path)
