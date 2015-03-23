@@ -604,7 +604,7 @@ Sequencer::makeRequest(PacketPtr pkt)
             primary_type = RubyRequestType_Load_Linked;
         }
         secondary_type = RubyRequestType_ATOMIC;
-    } else if (pkt->req->isLocked()) {
+    } else if (pkt->req->isLockedRMW()) {
         //
         // x86 locked instructions are translated to store cache coherence
         // requests because these requests should always be treated as read

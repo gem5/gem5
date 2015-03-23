@@ -127,7 +127,7 @@ class Request
      * made up of a locked load, some operation on the data, and then a locked
      * store.
      */
-    static const FlagsType LOCKED                      = 0x00100000;
+    static const FlagsType LOCKED_RMW                  = 0x00100000;
     /** The request is a Load locked/store conditional. */
     static const FlagsType LLSC                        = 0x00200000;
     /** This request is for a memory swap. */
@@ -626,7 +626,7 @@ class Request
     bool isPrefetch() const { return _flags.isSet(PREFETCH); }
     bool isLLSC() const { return _flags.isSet(LLSC); }
     bool isPriv() const { return _flags.isSet(PRIVILEGED); }
-    bool isLocked() const { return _flags.isSet(LOCKED); }
+    bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }

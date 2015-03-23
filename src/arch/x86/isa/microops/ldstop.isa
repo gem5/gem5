@@ -409,7 +409,7 @@ let {{
                       '(StoreCheck << FlagShift)')
     defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
                                'Data = Mem & mask(dataSize * 8);',
-                      '(StoreCheck << FlagShift) | Request::LOCKED')
+                      '(StoreCheck << FlagShift) | Request::LOCKED_RMW')
 
     defineMicroLoadOp('Ldfp', code='FpData_uqw = Mem', big = False)
 
@@ -461,7 +461,7 @@ let {{
 
     defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
     defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
-            mem_flags="Request::LOCKED")
+            mem_flags="Request::LOCKED_RMW")
 
     defineMicroStoreOp('Stfp', code='Mem = FpData_uqw;')
 

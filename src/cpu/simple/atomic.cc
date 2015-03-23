@@ -373,7 +373,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
         //If we don't need to access a second cache line, stop now.
         if (secondAddr <= addr)
         {
-            if (req->isLocked() && fault == NoFault) {
+            if (req->isLockedRMW() && fault == NoFault) {
                 assert(!locked);
                 locked = true;
             }
@@ -480,7 +480,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
         //stop now.
         if (fault != NoFault || secondAddr <= addr)
         {
-            if (req->isLocked() && fault == NoFault) {
+            if (req->isLockedRMW() && fault == NoFault) {
                 assert(locked);
                 locked = false;
             }
