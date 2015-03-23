@@ -293,9 +293,9 @@ def main(*args):
             datetime.datetime.now().strftime("%b %e %Y %X")
         print "gem5 executing on %s" % socket.gethostname()
 
-        print "command line:",
-        for argv in sys.argv:
-            print argv,
+        # in Python 3 pipes.quote() is moved to shlex.quote()
+        import pipes
+        print "command line:", " ".join(map(pipes.quote, sys.argv))
         print
 
     # check to make sure we can find the listed script
