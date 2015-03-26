@@ -71,11 +71,6 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     void process();     // process event
 
     virtual const char *description() const;
-
-    virtual ~GlobalSimLoopExitEvent() {
-        // simulate()'s singleton GlobalSimLoopExitEvent is always scheduled
-        deschedule();
-    }
 };
 
 class LocalSimLoopExitEvent : public Event

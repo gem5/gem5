@@ -71,13 +71,7 @@ thread_loop(EventQueue *queue)
     }
 }
 
-GlobalEvent*
-getLimitEvent(void) {
-    static GlobalSimLoopExitEvent
-           simulate_limit_event(mainEventQueue[0]->getCurTick(),
-                                "simulate() limit reached", 0);
-    return &simulate_limit_event;
-}
+GlobalSimLoopExitEvent *simulate_limit_event = nullptr;
 
 /** Simulate for num_cycles additional cycles.  If num_cycles is -1
  * (the default), do not limit simulation; some other event must
@@ -104,6 +98,9 @@ simulate(Tick num_cycles)
         }
 
         threads_initialized = true;
+        simulate_limit_event =
+            new GlobalSimLoopExitEvent(mainEventQueue[0]->getCurTick(),
+                                       "simulate() limit reached", 0);
     }
 
     inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
@@ -113,7 +110,7 @@ simulate(Tick num_cycles)
     else // counter would roll over or be set to MaxTick anyhow
         num_cycles = MaxTick;
 
-    getLimitEvent()->reschedule(num_cycles);
+    simulate_limit_event->reschedule(num_cycles);
 
     GlobalSyncEvent *quantum_event = NULL;
     if (numMainEventQueues > 1) {
