@@ -82,7 +82,7 @@ class InstPBTraceRecord : public InstRecord
 
 };
 
-class InstPBTrace : InstTracer
+class InstPBTrace : public InstTracer
 {
  public:
     InstPBTrace(const InstPBTraceParams *p);
