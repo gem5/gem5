@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -45,8 +45,8 @@
  * Miss Status and Handling Register (MSHR) declaration.
  */
 
-#ifndef __MSHR_HH__
-#define __MSHR_HH__
+#ifndef __MEM_CACHE_MSHR_HH__
+#define __MEM_CACHE_MSHR_HH__
 
 #include <list>
 
@@ -149,11 +149,11 @@ class MSHR : public Packet::SenderState, public Printable
     /** Order number assigned by the miss queue. */
     Counter order;
 
-    /** Address of the request. */
-    Addr addr;
+    /** Block aligned address of the MSHR. */
+    Addr blkAddr;
 
-    /** Size of the request. */
-    int size;
+    /** Block size of the cache. */
+    unsigned blkSize;
 
     /** True if the request targets the secure memory space. */
     bool isSecure;
@@ -216,14 +216,14 @@ class MSHR : public Packet::SenderState, public Printable
 
     /**
      * Allocate a miss to this MSHR.
-     * @param cmd The requesting command.
-     * @param addr The address of the miss.
-     * @param asid The address space id of the miss.
-     * @param size The number of bytes to request.
-     * @param pkt  The original miss.
+     * @param blk_addr The address of the block.
+     * @param blk_size The number of bytes to request.
+     * @param pkt The original miss.
+     * @param when_ready When should the MSHR be ready to act upon.
+     * @param _order The logical order of this MSHR
      */
-    void allocate(Addr addr, int size, PacketPtr pkt,
-                  Tick when, Counter _order);
+    void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
+                  Tick when_ready, Counter _order);
 
     bool markInService(bool pending_dirty_resp);
 
@@ -304,4 +304,4 @@ class MSHR : public Packet::SenderState, public Printable
     std::string print() const;
 };
 
-#endif //__MSHR_HH__
+#endif // __MEM_CACHE_MSHR_HH__

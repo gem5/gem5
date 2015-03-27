@@ -836,6 +836,9 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
     }
     PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 
+    // the packet should be block aligned
+    assert(pkt->getAddr() == blockAlign(pkt->getAddr()));
+
     pkt->allocate();
     DPRINTF(Cache, "%s created %s addr %#llx size %d\n",
             __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -1209,6 +1212,10 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
                 completion_time += clockEdge(responseLatency) +
                     pkt->payloadDelay;
                 if (pkt->isRead() && !is_error) {
+                    // sanity check
+                    assert(pkt->getAddr() == tgt_pkt->getAddr());
+                    assert(pkt->getSize() >= tgt_pkt->getSize());
+
                     tgt_pkt->setData(pkt->getConstPtr<uint8_t>());
                 }
             }
@@ -1543,7 +1550,10 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     // if we got new data, copy it in (checking for a read response
     // and a response that has data is the same in the end)
     if (pkt->isRead()) {
+        // sanity checks
         assert(pkt->hasData());
+        assert(pkt->getSize() == blkSize);
+
         std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
     }
     // We pay for fillLatency here.
@@ -1899,7 +1909,7 @@ Cache<TagStore>::getNextMSHR()
          !miss_mshr)) {
         // need to search MSHR queue for conflicting earlier miss.
         MSHR *conflict_mshr =
-            mshrQueue.findPending(write_mshr->addr, write_mshr->size,
+            mshrQueue.findPending(write_mshr->blkAddr,
                                   write_mshr->isSecure);
 
         if (conflict_mshr && conflict_mshr->order < write_mshr->order) {
@@ -1914,7 +1924,7 @@ Cache<TagStore>::getNextMSHR()
     } else if (miss_mshr) {
         // need to check for conflicting earlier writeback
         MSHR *conflict_mshr =
-            writeBuffer.findPending(miss_mshr->addr, miss_mshr->size,
+            writeBuffer.findPending(miss_mshr->blkAddr,
                                     miss_mshr->isSecure);
         if (conflict_mshr) {
             // not sure why we don't check order here... it was in the
@@ -1985,10 +1995,10 @@ Cache<TagStore>::getTimingPacket()
 
     if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
-        assert(tags->findBlock(mshr->addr, mshr->isSecure) == NULL);
+        assert(tags->findBlock(mshr->blkAddr, mshr->isSecure) == NULL);
         pkt = tgt_pkt;
     } else {
-        BlkType *blk = tags->findBlock(mshr->addr, mshr->isSecure);
+        BlkType *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
 
         if (tgt_pkt->cmd == MemCmd::HardPFReq) {
             // We need to check the caches above us to verify that
@@ -2025,7 +2035,8 @@ Cache<TagStore>::getTimingPacket()
 
             if (snoop_pkt.isBlockCached() || blk != NULL) {
                 DPRINTF(Cache, "Block present, prefetch squashed by cache.  "
-                               "Deallocating mshr target %#x.\n", mshr->addr);
+                               "Deallocating mshr target %#x.\n",
+                        mshr->blkAddr);
 
                 // Deallocate the mshr target
                 if (mshr->queue->forceDeallocateTarget(mshr)) {

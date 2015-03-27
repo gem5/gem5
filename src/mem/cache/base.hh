@@ -217,6 +217,11 @@ class BaseCache : public MemObject
     MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
                                  PacketPtr pkt, Tick time, bool requestBus)
     {
+        // check that the address is block aligned since we rely on
+        // this in a number of places when checking for matches and
+        // overlap
+        assert(addr == blockAlign(addr));
+
         MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
 
         if (mq->isFull()) {
@@ -506,7 +511,7 @@ class BaseCache : public MemObject
     {
         assert(pkt->isWrite() && !pkt->isRead());
         return allocateBufferInternal(&writeBuffer,
-                                      pkt->getAddr(), pkt->getSize(),
+                                      blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, requestBus);
     }
 
@@ -515,7 +520,7 @@ class BaseCache : public MemObject
         assert(pkt->req->isUncacheable());
         assert(pkt->isRead());
         return allocateBufferInternal(&mshrQueue,
-                                      pkt->getAddr(), pkt->getSize(),
+                                      blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, requestBus);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -64,8 +64,8 @@ using namespace std;
 MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
                pendingDirty(false),
                postInvalidate(false), postDowngrade(false),
-               queue(NULL), order(0), addr(0),
-               size(0), isSecure(false), inService(false),
+               queue(NULL), order(0), blkAddr(0),
+               blkSize(0), isSecure(false), inService(false),
                isForward(false), threadNum(InvalidThreadID), data(NULL)
 {
 }
@@ -202,13 +202,13 @@ print(std::ostream &os, int verbosity, const std::string &prefix) const
 
 
 void
-MSHR::allocate(Addr _addr, int _size, PacketPtr target, Tick whenReady,
-               Counter _order)
+MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
+               Tick when_ready, Counter _order)
 {
-    addr = _addr;
-    size = _size;
+    blkAddr = blk_addr;
+    blkSize = blk_size;
     isSecure = target->isSecure();
-    readyTime = whenReady;
+    readyTime = when_ready;
     order = _order;
     assert(target);
     isForward = false;
@@ -221,7 +221,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target, Tick whenReady,
     // snoop (mem-side request), so set source according to request here
     Target::Source source = (target->cmd == MemCmd::HardPFReq) ?
         Target::FromPrefetcher : Target::FromCPU;
-    targets.add(target, whenReady, _order, source, true);
+    targets.add(target, when_ready, _order, source, true);
     assert(deferredTargets.isReset());
     data = NULL;
 }
@@ -446,7 +446,7 @@ MSHR::checkFunctional(PacketPtr pkt)
     // For other requests, we iterate over the individual targets
     // since that's where the actual data lies.
     if (pkt->isPrint()) {
-        pkt->checkFunctional(this, addr, isSecure, size, NULL);
+        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, NULL);
         return false;
     } else {
         return (targets.checkFunctional(pkt) ||
@@ -459,7 +459,7 @@ void
 MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
     ccprintf(os, "%s[%#llx:%#llx](%s) %s %s %s state: %s %s %s %s %s\n",
-             prefix, addr, addr+size-1,
+             prefix, blkAddr, blkAddr + blkSize - 1,
              isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
              isForwardNoResponse() ? "ForwNoResp" : "",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -45,8 +45,8 @@
  * Declaration of a structure to manage MSHRs.
  */
 
-#ifndef __MEM__CACHE__MISS__MSHR_QUEUE_HH__
-#define __MEM__CACHE__MISS__MSHR_QUEUE_HH__
+#ifndef __MEM_CACHE_MSHR_QUEUE_HH__
+#define __MEM_CACHE_MSHR_QUEUE_HH__
 
 #include <vector>
 
@@ -120,44 +120,48 @@ class MSHRQueue : public Drainable
 
     /**
      * Find the first MSHR that matches the provided address.
-     * @param addr The address to find.
+     * @param blk_addr The block address to find.
      * @param is_secure True if the target memory space is secure.
      * @return Pointer to the matching MSHR, null if not found.
      */
-    MSHR *findMatch(Addr addr, bool is_secure) const;
+    MSHR *findMatch(Addr blk_addr, bool is_secure) const;
 
     /**
      * Find and return all the matching entries in the provided vector.
-     * @param addr The address to find.
+     * @param blk_addr The block  address to find.
      * @param is_secure True if the target memory space is secure.
      * @param matches The vector to return pointers to the matching entries.
      * @return True if any matches are found, false otherwise.
-     * @todo Typedef the vector??
      */
-    bool findMatches(Addr addr, bool is_secure,
+    bool findMatches(Addr blk_addr, bool is_secure,
                      std::vector<MSHR*>& matches) const;
 
     /**
      * Find any pending requests that overlap the given request.
-     * @param pkt The request to find.
+     * @param blk_addr Block address.
      * @param is_secure True if the target memory space is secure.
      * @return A pointer to the earliest matching MSHR.
      */
-    MSHR *findPending(Addr addr, int size, bool is_secure) const;
+    MSHR *findPending(Addr blk_addr, bool is_secure) const;
 
     bool checkFunctional(PacketPtr pkt, Addr blk_addr);
 
     /**
      * Allocates a new MSHR for the request and size. This places the request
      * as the first target in the MSHR.
-     * @param pkt The request to handle.
-     * @param size The number in bytes to fetch from memory.
+     *
+     * @param blk_addr The address of the block.
+     * @param blk_size The number of bytes to request.
+     * @param pkt The original miss.
+     * @param when_ready When should the MSHR be ready to act upon.
+     * @param order The logical order of this MSHR
+     *
      * @return The a pointer to the MSHR allocated.
      *
      * @pre There are free entries.
      */
-    MSHR *allocate(Addr addr, int size, PacketPtr &pkt,
-                   Tick when, Counter order);
+    MSHR *allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
+                   Tick when_ready, Counter order);
 
     /**
      * Removes the given MSHR from the queue. This places the MSHR on the
@@ -257,4 +261,4 @@ class MSHRQueue : public Drainable
     unsigned int drain(DrainManager *dm);
 };
 
-#endif //__MEM__CACHE__MISS__MSHR_QUEUE_HH__
+#endif //__MEM_CACHE_MSHR_QUEUE_HH__
