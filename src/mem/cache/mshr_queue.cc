@@ -69,7 +69,13 @@ MSHR *
 MSHRQueue::findMatch(Addr blk_addr, bool is_secure) const
 {
     for (const auto& mshr : allocatedList) {
-        if (mshr->blkAddr == blk_addr && mshr->isSecure == is_secure) {
+        // we ignore any MSHRs allocated for uncacheable accesses and
+        // simply ignore them when matching, in the cache we never
+        // check for matches when adding new uncacheable entries, and
+        // we do not want normal cacheable accesses being added to an
+        // MSHR serving an uncacheable access
+        if (!mshr->isUncacheable() && mshr->blkAddr == blk_addr &&
+            mshr->isSecure == is_secure) {
             return mshr;
         }
     }
@@ -84,7 +90,8 @@ MSHRQueue::findMatches(Addr blk_addr, bool is_secure,
     assert(matches.empty());
     bool retval = false;
     for (const auto& mshr : allocatedList) {
-        if (mshr->blkAddr == blk_addr && mshr->isSecure == is_secure) {
+        if (!mshr->isUncacheable() && mshr->blkAddr == blk_addr &&
+            mshr->isSecure == is_secure) {
             retval = true;
             matches.push_back(mshr);
         }

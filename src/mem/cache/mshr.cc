@@ -273,6 +273,15 @@ MSHR::deallocate()
 void
 MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 {
+    // assume we'd never issue a prefetch when we've got an
+    // outstanding miss
+    assert(pkt->cmd != MemCmd::HardPFReq);
+
+    // uncacheable accesses always allocate a new MSHR, and cacheable
+    // accesses ignore any uncacheable MSHRs, thus we should never
+    // have targets addded if originally allocated uncacheable
+    assert(!_isUncacheable);
+
     // if there's a request already in service for this MSHR, we will
     // have to defer the new target until after the response if any of
     // the following are true:
@@ -283,11 +292,6 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
     //   getting an exclusive block back or we have already snooped
     //   another read request that will downgrade our exclusive block
     //   to shared
-
-    // assume we'd never issue a prefetch when we've got an
-    // outstanding miss
-    assert(pkt->cmd != MemCmd::HardPFReq);
-
     if (inService &&
         (!deferredTargets.empty() || hasPostInvalidate() ||
          (pkt->needsExclusive() &&
