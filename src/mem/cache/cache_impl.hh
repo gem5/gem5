@@ -518,49 +518,6 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         return true;
     }
 
-    if (pkt->req->isUncacheable()) {
-        uncacheableFlush(pkt);
-
-        // writes go in write buffer, reads use MSHR,
-        // prefetches are acknowledged (responded to) and dropped
-        if (pkt->cmd.isPrefetch()) {
-            // prefetching (cache loading) uncacheable data is nonsensical
-            pkt->makeTimingResponse();
-            std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
-            // We use lookupLatency here because the request is uncacheable.
-            // We pay also for headerDelay that is charged of bus latencies if
-            // the packet comes from the bus.
-            Tick time = clockEdge(lookupLatency) + pkt->headerDelay;
-            // Reset the timing of the packet.
-            pkt->headerDelay = pkt->payloadDelay = 0;
-            cpuSidePort->schedTimingResp(pkt, time);
-            return true;
-        } else if (pkt->isWrite() && !pkt->isRead()) {
-            // We pay also for headerDelay that is charged of bus latencies if
-            // the packet comes from the bus.
-            Tick allocate_wr_buffer_time = clockEdge(forwardLatency) +
-                                            pkt->headerDelay;
-            // Reset the timing of the packet.
-            pkt->headerDelay = pkt->payloadDelay = 0;
-            allocateWriteBuffer(pkt, allocate_wr_buffer_time, true);
-        } else {
-            // We use forwardLatency here because there is an uncached
-            // memory read, allocateded to MSHR queue (it requires the same
-            // time of forwarding to WriteBuffer, in our assumption). It
-            // specifies the latency to allocate an internal buffer and to
-            // schedule an event to the queued port.
-            // We pay also for headerDelay that is charged of bus latencies if
-            // the packet comes from the bus.
-            Tick allocate_rd_buffer_time = clockEdge(forwardLatency) +
-                                            pkt->headerDelay;
-            // Reset the timing of the packet.
-            pkt->headerDelay = pkt->payloadDelay = 0;
-            allocateMissBuffer(pkt, allocate_rd_buffer_time, true);
-        }
-        assert(pkt->needsResponse()); // else we should delete it here??
-        return true;
-    }
-
     // We use lookupLatency here because it is used to specify the latency
     // to access.
     Cycles lat = lookupLatency;
@@ -590,6 +547,11 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     bool needsResponse = pkt->needsResponse();
 
     if (satisfied) {
+        // should never be satisfying an uncacheable access as we
+        // flush and invalidate any existing block as part of the
+        // lookup
+        assert(!pkt->req->isUncacheable());
+
         // hit (for all other request types)
 
         if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
@@ -622,7 +584,11 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         // miss
 
         Addr blk_addr = blockAlign(pkt->getAddr());
-        MSHR *mshr = mshrQueue.findMatch(blk_addr, pkt->isSecure());
+
+        // ignore any existing MSHR if we are dealing with an
+        // uncacheable request
+        MSHR *mshr = pkt->req->isUncacheable() ? nullptr :
+            mshrQueue.findMatch(blk_addr, pkt->isSecure());
 
         // Software prefetch handling:
         // To keep the core from waiting on data it won't look at
@@ -636,6 +602,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         if (pkt->cmd.isSWPrefetch() && isTopLevel) {
             assert(needsResponse);
             assert(pkt->req->hasPaddr());
+            assert(!pkt->req->isUncacheable());
 
             // There's no reason to add a prefetch as an additional target
             // to an existing MSHR. If an outstanding request is already
@@ -718,12 +685,13 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
             }
         } else {
             // no MSHR
-            assert(pkt->req->masterId() < system->maxMasters());
-            mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
-            // always mark as cache fill for now... if we implement
-            // no-write-allocate or bypass accesses this will have to
-            // be changed.
-            if (pkt->cmd == MemCmd::Writeback) {
+            if (!pkt->req->isUncacheable()) {
+                assert(pkt->req->masterId() < system->maxMasters());
+                mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
+            }
+
+            if (pkt->cmd == MemCmd::Writeback ||
+                (pkt->req->isUncacheable() && pkt->isWrite())) {
                 // We use forward_time here because there is an
                 // uncached memory write, forwarded to WriteBuffer. It
                 // specifies the latency to allocate an internal buffer and to
@@ -732,6 +700,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                 allocateWriteBuffer(pkt, forward_time, true);
             } else {
                 if (blk && blk->isValid()) {
+                    // should have flushed and have no valid block
+                    assert(!pkt->req->isUncacheable());
+
                     // If we have a write miss to a valid block, we
                     // need to mark the block non-readable.  Otherwise
                     // if we allow reads while there's an outstanding
@@ -795,7 +766,11 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
     bool blkValid = blk && blk->isValid();
 
     if (cpu_pkt->req->isUncacheable()) {
-        //assert(blk == NULL);
+        // note that at the point we see the uncacheable request we
+        // flush any block, but there could be an outstanding MSHR,
+        // and the cache could have filled again before we actually
+        // send out the forwarded uncacheable request (blk could thus
+        // be non-null)
         return NULL;
     }
 
