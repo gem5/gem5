@@ -104,7 +104,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         }
     }
 
-    push_back(Target(pkt, readyTime, order, source, markPending));
+    emplace_back(Target(pkt, readyTime, order, source, markPending));
 }
 
 
@@ -130,9 +130,8 @@ MSHR::TargetList::replaceUpgrades()
     if (!hasUpgrade)
         return;
 
-    Iterator end_i = end();
-    for (Iterator i = begin(); i != end_i; ++i) {
-        replaceUpgrade(i->pkt);
+    for (auto& t : *this) {
+        replaceUpgrade(t.pkt);
     }
 
     hasUpgrade = false;
@@ -142,16 +141,15 @@ MSHR::TargetList::replaceUpgrades()
 void
 MSHR::TargetList::clearDownstreamPending()
 {
-    Iterator end_i = end();
-    for (Iterator i = begin(); i != end_i; ++i) {
-        if (i->markedPending) {
+    for (auto& t : *this) {
+        if (t.markedPending) {
             // Iterate over the SenderState stack and see if we find
             // an MSHR entry. If we find one, clear the
             // downstreamPending flag by calling
             // clearDownstreamPending(). This recursively clears the
             // downstreamPending flag in all caches this packet has
             // passed through.
-            MSHR *mshr = i->pkt->findNextSenderState<MSHR>();
+            MSHR *mshr = t.pkt->findNextSenderState<MSHR>();
             if (mshr != NULL) {
                 mshr->clearDownstreamPending();
             }
@@ -163,9 +161,8 @@ MSHR::TargetList::clearDownstreamPending()
 bool
 MSHR::TargetList::checkFunctional(PacketPtr pkt)
 {
-    Iterator end_i = end();
-    for (Iterator i = begin(); i != end_i; ++i) {
-        if (pkt->checkFunctional(i->pkt)) {
+    for (auto& t : *this) {
+        if (pkt->checkFunctional(t.pkt)) {
             return true;
         }
     }
@@ -175,13 +172,12 @@ MSHR::TargetList::checkFunctional(PacketPtr pkt)
 
 
 void
-MSHR::TargetList::
-print(std::ostream &os, int verbosity, const std::string &prefix) const
+MSHR::TargetList::print(std::ostream &os, int verbosity,
+                        const std::string &prefix) const
 {
-    ConstIterator end_i = end();
-    for (ConstIterator i = begin(); i != end_i; ++i) {
+    for (auto& t : *this) {
         const char *s;
-        switch (i->source) {
+        switch (t.source) {
           case Target::FromCPU:
             s = "FromCPU";
             break;
@@ -196,7 +192,7 @@ print(std::ostream &os, int verbosity, const std::string &prefix) const
             break;
         }
         ccprintf(os, "%s%s: ", prefix, s);
-        i->pkt->print(os, verbosity, "");
+        t.pkt->print(os, verbosity, "");
     }
 }
 
@@ -413,7 +409,7 @@ MSHR::promoteDeferredTargets()
 
 
 void
-MSHR::handleFill(Packet *pkt, CacheBlk *blk)
+MSHR::handleFill(PacketPtr pkt, CacheBlk *blk)
 {
     if (!pkt->sharedAsserted()
         && !(hasPostInvalidate() || hasPostDowngrade())

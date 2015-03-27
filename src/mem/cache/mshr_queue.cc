@@ -68,10 +68,7 @@ MSHRQueue::MSHRQueue(const std::string &_label,
 MSHR *
 MSHRQueue::findMatch(Addr blk_addr, bool is_secure) const
 {
-    MSHR::ConstIterator i = allocatedList.begin();
-    MSHR::ConstIterator end = allocatedList.end();
-    for (; i != end; ++i) {
-        MSHR *mshr = *i;
+    for (const auto& mshr : allocatedList) {
         if (mshr->blkAddr == blk_addr && mshr->isSecure == is_secure) {
             return mshr;
         }
@@ -86,10 +83,7 @@ MSHRQueue::findMatches(Addr blk_addr, bool is_secure,
     // Need an empty vector
     assert(matches.empty());
     bool retval = false;
-    MSHR::ConstIterator i = allocatedList.begin();
-    MSHR::ConstIterator end = allocatedList.end();
-    for (; i != end; ++i) {
-        MSHR *mshr = *i;
+    for (const auto& mshr : allocatedList) {
         if (mshr->blkAddr == blk_addr && mshr->isSecure == is_secure) {
             retval = true;
             matches.push_back(mshr);
@@ -103,10 +97,7 @@ bool
 MSHRQueue::checkFunctional(PacketPtr pkt, Addr blk_addr)
 {
     pkt->pushLabel(label);
-    MSHR::ConstIterator i = allocatedList.begin();
-    MSHR::ConstIterator end = allocatedList.end();
-    for (; i != end; ++i) {
-        MSHR *mshr = *i;
+    for (const auto& mshr : allocatedList) {
         if (mshr->blkAddr == blk_addr && mshr->checkFunctional(pkt)) {
             pkt->popLabel();
             return true;
@@ -120,10 +111,7 @@ MSHRQueue::checkFunctional(PacketPtr pkt, Addr blk_addr)
 MSHR *
 MSHRQueue::findPending(Addr blk_addr, bool is_secure) const
 {
-    MSHR::ConstIterator i = readyList.begin();
-    MSHR::ConstIterator end = readyList.end();
-    for (; i != end; ++i) {
-        MSHR *mshr = *i;
+    for (const auto& mshr : readyList) {
         if (mshr->blkAddr == blk_addr && mshr->isSecure == is_secure) {
             return mshr;
         }
@@ -139,15 +127,13 @@ MSHRQueue::addToReadyList(MSHR *mshr)
         return readyList.insert(readyList.end(), mshr);
     }
 
-    MSHR::Iterator i = readyList.begin();
-    MSHR::Iterator end = readyList.end();
-    for (; i != end; ++i) {
+    for (auto i = readyList.begin(); i != readyList.end(); ++i) {
         if ((*i)->readyTime > mshr->readyTime) {
             return readyList.insert(i, mshr);
         }
     }
     assert(false);
-    return end;  // keep stupid compilers happy
+    return readyList.end();  // keep stupid compilers happy
 }
 
 
@@ -251,9 +237,7 @@ MSHRQueue::forceDeallocateTarget(MSHR *mshr)
 void
 MSHRQueue::squash(int threadNum)
 {
-    MSHR::Iterator i = allocatedList.begin();
-    MSHR::Iterator end = allocatedList.end();
-    for (; i != end;) {
+    for (auto i = allocatedList.begin(); i != allocatedList.end();) {
         MSHR *mshr = *i;
         if (mshr->threadNum == threadNum) {
             while (mshr->hasTargets()) {

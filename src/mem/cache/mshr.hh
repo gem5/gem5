@@ -100,13 +100,13 @@ class MSHR : public Packet::SenderState, public Printable
             FromPrefetcher
         };
 
-        Tick recvTime;  //!< Time when request was received (for stats)
-        Tick readyTime; //!< Time when request is ready to be serviced
-        Counter order;  //!< Global order (for memory consistency mgmt)
-        PacketPtr pkt;  //!< Pending request packet.
-        Source source;  //!< Did request come from cpu, memory, or prefetcher?
-        bool markedPending; //!< Did we mark upstream MSHR
-                            //!<  as downstreamPending?
+        const Tick recvTime;  //!< Time when request was received (for stats)
+        const Tick readyTime; //!< Time when request is ready to be serviced
+        const Counter order;  //!< Global order (for memory consistency mgmt)
+        const PacketPtr pkt;  //!< Pending request packet.
+        const Source source;  //!< Request from cpu, memory, or prefetcher?
+        const bool markedPending; //!< Did we mark upstream MSHR
+                                  //!< as downstreamPending?
 
         Target(PacketPtr _pkt, Tick _readyTime, Counter _order,
                Source _source, bool _markedPending)
@@ -116,9 +116,6 @@ class MSHR : public Packet::SenderState, public Printable
     };
 
     class TargetList : public std::list<Target> {
-        /** Target list iterator. */
-        typedef std::list<Target>::iterator Iterator;
-        typedef std::list<Target>::const_iterator ConstIterator;
 
       public:
         bool needsExclusive;
@@ -126,7 +123,7 @@ class MSHR : public Packet::SenderState, public Printable
 
         TargetList();
         void resetFlags() { needsExclusive = hasUpgrade = false; }
-        bool isReset()    { return !needsExclusive && !hasUpgrade; }
+        bool isReset() const { return !needsExclusive && !hasUpgrade; }
         void add(PacketPtr pkt, Tick readyTime, Counter order,
                  Target::Source source, bool markPending);
         void replaceUpgrades();
@@ -285,7 +282,7 @@ class MSHR : public Packet::SenderState, public Printable
 
     bool promoteDeferredTargets();
 
-    void handleFill(Packet *pkt, CacheBlk *blk);
+    void handleFill(PacketPtr pkt, CacheBlk *blk);
 
     bool checkFunctional(PacketPtr pkt);
 
