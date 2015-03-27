@@ -150,7 +150,8 @@ class O3_ARM_v7a_ICache(BaseCache):
     tgts_per_mshr = 8
     size = '32kB'
     assoc = 2
-    is_top_level = 'true'
+    is_top_level = True
+    forward_snoops = False
 
 # Data Cache
 class O3_ARM_v7a_DCache(BaseCache):
@@ -161,7 +162,7 @@ class O3_ARM_v7a_DCache(BaseCache):
     size = '32kB'
     assoc = 2
     write_buffers = 16
-    is_top_level = 'true'
+    is_top_level = True
 
 # TLB Cache
 # Use a cache as a L2 TLB
@@ -173,7 +174,7 @@ class O3_ARM_v7aWalkCache(BaseCache):
     size = '1kB'
     assoc = 8
     write_buffers = 16
-    is_top_level = 'true'
+    is_top_level = True
 
 
 # L2 Cache
@@ -185,7 +186,7 @@ class O3_ARM_v7aL2(BaseCache):
     size = '1MB'
     assoc = 16
     write_buffers = 8
-    prefetch_on_access = 'true'
+    prefetch_on_access = True
     # Simple stride prefetcher
     prefetcher = StridePrefetcher(degree=8, latency = 1)
     tags = RandomRepl()
