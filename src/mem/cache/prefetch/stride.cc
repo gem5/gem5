@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,27 +59,40 @@ StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
       pcTableAssoc(p->table_assoc),
       pcTableSets(p->table_sets),
       useMasterId(p->use_master_id),
-      degree(p->degree)
+      degree(p->degree),
+      pcTable(pcTableAssoc, pcTableSets, name())
 {
     // Don't consult stride prefetcher on instruction accesses
     onInst = false;
 
     assert(isPowerOf2(pcTableSets));
-
-    for (int c = 0; c < maxContexts; c++) {
-        pcTable[c] = new StrideEntry*[pcTableSets];
-        for (int s = 0; s < pcTableSets; s++) {
-            pcTable[c][s] = new StrideEntry[pcTableAssoc];
-        }
-    }
 }
 
-StridePrefetcher::~StridePrefetcher()
+StridePrefetcher::StrideEntry**
+StridePrefetcher::PCTable::allocateNewContext(int context)
 {
-    for (int c = 0; c < maxContexts; c++) {
+    auto res = entries.insert(std::make_pair(context,
+                              new StrideEntry*[pcTableSets]));
+    auto it = res.first;
+    chatty_assert(res.second, "Allocating an already created context\n");
+    assert(it->first == context);
+
+    DPRINTF(HWPrefetch, "Adding context %i with stride entries at %p\n",
+            context, it->second);
+
+    StrideEntry** entry = it->second;
+    for (int s = 0; s < pcTableSets; s++) {
+        entry[s] = new StrideEntry[pcTableAssoc];
+    }
+    return entry;
+}
+
+StridePrefetcher::PCTable::~PCTable() {
+    for (auto entry : entries) {
         for (int s = 0; s < pcTableSets; s++) {
-            delete[] pcTable[c][s];
+            delete[] entry.second[s];
         }
+        delete[] entry.second;
     }
 }
 
@@ -97,8 +110,6 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
     Addr pc = pkt->req->getPC();
     bool is_secure = pkt->isSecure();
     MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
-
-    assert(master_id < maxContexts);
 
     // Lookup pc-based information
     StrideEntry *entry;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,14 +48,13 @@
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_HH__
 
+#include "base/hashmap.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "params/StridePrefetcher.hh"
 
 class StridePrefetcher : public QueuedPrefetcher
 {
   protected:
-    static const int maxContexts = 64;
-
     const int maxConf;
     const int threshConf;
     const int minConf;
@@ -81,7 +80,30 @@ class StridePrefetcher : public QueuedPrefetcher
         int confidence;
     };
 
-    StrideEntry **pcTable[maxContexts];
+    class PCTable
+    {
+      public:
+        PCTable(int assoc, int sets, const std::string name) :
+            pcTableAssoc(assoc), pcTableSets(sets), _name(name) {}
+        StrideEntry** operator[] (int context) {
+            auto it = entries.find(context);
+            if (it != entries.end())
+                return it->second;
+
+            return allocateNewContext(context);
+        }
+
+        ~PCTable();
+      private:
+        const std::string name() {return _name; }
+        const int pcTableAssoc;
+        const int pcTableSets;
+        const std::string _name;
+        m5::hash_map<int, StrideEntry**> entries;
+
+        StrideEntry** allocateNewContext(int context);
+    };
+    PCTable pcTable;
 
     bool pcTableHit(Addr pc, bool is_secure, int master_id, StrideEntry* &entry);
     StrideEntry* pcTableVictim(Addr pc, int master_id);
@@ -90,7 +112,6 @@ class StridePrefetcher : public QueuedPrefetcher
   public:
 
     StridePrefetcher(const StridePrefetcherParams *p);
-    ~StridePrefetcher();
 
     void calculatePrefetch(const PacketPtr &pkt, std::vector<Addr> &addresses);
 };
