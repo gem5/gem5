@@ -555,7 +555,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
                                             pkt->headerDelay;
             // Reset the timing of the packet.
             pkt->headerDelay = pkt->payloadDelay = 0;
-            allocateUncachedReadBuffer(pkt, allocate_rd_buffer_time, true);
+            allocateMissBuffer(pkt, allocate_rd_buffer_time, true);
         }
         assert(pkt->needsResponse()); // else we should delete it here??
         return true;

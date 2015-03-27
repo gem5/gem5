@@ -210,9 +210,7 @@ class BaseCache : public MemObject
      *
      * allocateBufferInternal() function is called in:
      * - MSHR allocateWriteBuffer (unchached write forwarded to WriteBuffer);
-     * - MSHR allocateMissBuffer (cacheable miss in MSHR queue);
-     * - MSHR allocateUncachedReadBuffer (unchached read allocated in MSHR
-     *   queue)
+     * - MSHR allocateMissBuffer (miss in MSHR queue);
      */
     MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
                                  PacketPtr pkt, Tick time, bool requestBus)
@@ -501,7 +499,6 @@ class BaseCache : public MemObject
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
-        assert(!pkt->req->isUncacheable());
         return allocateBufferInternal(&mshrQueue,
                                       blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, requestBus);
@@ -511,15 +508,6 @@ class BaseCache : public MemObject
     {
         assert(pkt->isWrite() && !pkt->isRead());
         return allocateBufferInternal(&writeBuffer,
-                                      blockAlign(pkt->getAddr()), blkSize,
-                                      pkt, time, requestBus);
-    }
-
-    MSHR *allocateUncachedReadBuffer(PacketPtr pkt, Tick time, bool requestBus)
-    {
-        assert(pkt->req->isUncacheable());
-        assert(pkt->isRead());
-        return allocateBufferInternal(&mshrQueue,
                                       blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, requestBus);
     }
