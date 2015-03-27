@@ -1651,11 +1651,11 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             if (snoopPkt.sharedAsserted()) {
                 pkt->assertShared();
             }
-            // If this request is a prefetch and an
-            // upper level squashes the prefetch request,
-            // make sure to propogate the squash to the requester.
-            if (snoopPkt.prefetchSquashed()) {
-                pkt->setPrefetchSquashed();
+            // If this request is a prefetch or clean evict and an
+            // upper level signals block present, make sure to
+            // propagate the block presence to the requester.
+            if (snoopPkt.isBlockCached()) {
+                pkt->setBlockCached();
             }
         } else {
             cpuSidePort->sendAtomicSnoop(pkt);
@@ -1695,7 +1695,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     if (pkt->cmd == MemCmd::HardPFReq) {
         DPRINTF(Cache, "Squashing prefetch from lower cache %#x\n",
                 pkt->getAddr());
-        pkt->setPrefetchSquashed();
+        pkt->setBlockCached();
         return;
     }
 
@@ -1789,9 +1789,10 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
 
     // Squash any prefetch requests from below on MSHR hits
     if (mshr && pkt->cmd == MemCmd::HardPFReq) {
-        DPRINTF(Cache, "Squashing prefetch from lower cache on mshr hit %#x\n",
+        DPRINTF(Cache, "Setting block present to squash prefetch from"
+                "lower cache on mshr hit %#x\n",
                 pkt->getAddr());
-        pkt->setPrefetchSquashed();
+        pkt->setBlockCached();
         return;
     }
 
@@ -2022,8 +2023,8 @@ Cache<TagStore>::getTimingPacket()
                 return NULL;
             }
 
-            if (snoop_pkt.prefetchSquashed() || blk != NULL) {
-                DPRINTF(Cache, "Prefetch squashed by cache.  "
+            if (snoop_pkt.isBlockCached() || blk != NULL) {
+                DPRINTF(Cache, "Block present, prefetch squashed by cache.  "
                                "Deallocating mshr target %#x.\n", mshr->addr);
 
                 // Deallocate the mshr target

@@ -261,8 +261,9 @@ class Packet : public Printable
     /// suppress the error if this packet encounters a functional
     /// access failure.
     static const FlagsType SUPPRESS_FUNC_ERROR    = 0x00008000;
-    // Signal prefetch squash through express snoop flag
-    static const FlagsType PREFETCH_SNOOP_SQUASH  = 0x00010000;
+    // Signal block present to squash prefetch and cache evict packets
+    // through express snoop flag
+    static const FlagsType BLOCK_CACHED          = 0x00010000;
 
     Flags flags;
 
@@ -505,8 +506,8 @@ class Packet : public Printable
     bool isSupplyExclusive() const  { return flags.isSet(SUPPLY_EXCLUSIVE); }
     void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
     bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }
-    void setPrefetchSquashed()      { flags.set(PREFETCH_SNOOP_SQUASH); }
-    bool prefetchSquashed() const   { return flags.isSet(PREFETCH_SNOOP_SQUASH); }
+    void setBlockCached()          { flags.set(BLOCK_CACHED); }
+    bool isBlockCached() const     { return flags.isSet(BLOCK_CACHED); }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
