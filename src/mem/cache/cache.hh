@@ -332,18 +332,6 @@ class Cache : public BaseCache
     bool invalidateVisitor(BlkType &blk);
 
     /**
-     * Flush a cache line due to an uncacheable memory access to the
-     * line.
-     *
-     * @note This shouldn't normally happen, but we need to handle it
-     * since some architecture models don't implement cache
-     * maintenance operations. We won't even try to get a decent
-     * timing here since the line should have been flushed earlier by
-     * a cache maintenance operation.
-     */
-    void uncacheableFlush(PacketPtr pkt);
-
-    /**
      * Squash all requests associated with specified thread.
      * intended for use by I-cache.
      * @param threadNum The thread to squash.

@@ -311,7 +311,22 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     if (pkt->req->isUncacheable()) {
-        uncacheableFlush(pkt);
+        DPRINTF(Cache, "%s%s addr %#llx uncacheable\n", pkt->cmdString(),
+                pkt->req->isInstFetch() ? " (ifetch)" : "",
+                pkt->getAddr());
+
+        if (pkt->req->isClearLL())
+            tags->clearLocks();
+
+        // flush and invalidate any existing block
+        BlkType *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
+        if (old_blk && old_blk->isValid()) {
+            if (old_blk->isDirty())
+                writebacks.push_back(writebackBlk(old_blk));
+            tags->invalidate(old_blk);
+            old_blk->invalidate();
+        }
+
         blk = NULL;
         // lookupLatency is the latency in case the request is uncacheable.
         lat = lookupLatency;
@@ -518,14 +533,32 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
         return true;
     }
 
+    // anything that is merely forwarded pays for the forward latency and
+    // the delay provided by the crossbar
+    Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
+
     // We use lookupLatency here because it is used to specify the latency
     // to access.
     Cycles lat = lookupLatency;
     BlkType *blk = NULL;
-    PacketList writebacks;
-    // Note that lat is passed by reference here. The function access() calls
-    // accessBlock() which can modify lat value.
-    bool satisfied = access(pkt, blk, lat, writebacks);
+    bool satisfied = false;
+    {
+        PacketList writebacks;
+        // Note that lat is passed by reference here. The function
+        // access() calls accessBlock() which can modify lat value.
+        satisfied = access(pkt, blk, lat, writebacks);
+
+        // copy writebacks to write buffer here to ensure they logically
+        // proceed anything happening below
+        while (!writebacks.empty()) {
+            PacketPtr wbPkt = writebacks.front();
+            // We use forwardLatency here because we are copying
+            // writebacks to write buffer.
+            allocateWriteBuffer(wbPkt, forward_time, true);
+            writebacks.pop_front();
+        }
+    }
+
     // Here we charge the headerDelay that takes into account the latencies
     // of the bus, if the packet comes from it.
     // The latency charged it is just lat that is the value of lookupLatency
@@ -533,11 +566,6 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     // In case of a hit we are neglecting response latency.
     // In case of a miss we are neglecting forward latency.
     Tick request_time = clockEdge(lat) + pkt->headerDelay;
-    // Here we condiser forward_time, paying for just forward latency and
-    // also charging the delay provided by the xbar.
-    // forward_time is used in allocateWriteBuffer() function, called
-    // in case of writeback.
-    Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
 
@@ -743,15 +771,6 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     if (next_pf_time != MaxTick)
         requestMemSideBus(Request_PF, std::max(clockEdge(forwardLatency),
                                                 next_pf_time));
-    // copy writebacks to write buffer
-    while (!writebacks.empty()) {
-        PacketPtr wbPkt = writebacks.front();
-        // We use forwardLatency here because we are copying writebacks
-        // to write buffer. It specifies the latency to allocate an internal
-        // buffer and to schedule an event to the queued port.
-        allocateWriteBuffer(wbPkt, forward_time, true);
-        writebacks.pop_front();
-    }
 
     return true;
 }
@@ -870,8 +889,18 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
 
     BlkType *blk = NULL;
     PacketList writebacks;
+    bool satisfied = access(pkt, blk, lat, writebacks);
 
-    if (!access(pkt, blk, lat, writebacks)) {
+    // handle writebacks resulting from the access here to ensure they
+    // logically proceed anything happening below
+    while (!writebacks.empty()){
+        PacketPtr wbPkt = writebacks.front();
+        memSidePort->sendAtomic(wbPkt);
+        writebacks.pop_front();
+        delete wbPkt;
+    }
+
+    if (!satisfied) {
         // MISS
 
         PacketPtr bus_pkt = getBusPacket(pkt, blk, pkt->needsExclusive());
@@ -894,6 +923,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
 
         lat += ticksToCycles(memSidePort->sendAtomic(bus_pkt));
 
+        // We are now dealing with the response handling
         DPRINTF(Cache, "Receive response: %s for addr %#llx (%s) in state %i\n",
                 bus_pkt->cmdString(), bus_pkt->getAddr(),
                 bus_pkt->isSecure() ? "s" : "ns",
@@ -944,7 +974,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
     // immediately rather than calling requestMemSideBus() as we do
     // there).
 
-    // Handle writebacks if needed
+    // Handle writebacks (from the response handling) if needed
     while (!writebacks.empty()){
         PacketPtr wbPkt = writebacks.front();
         memSidePort->sendAtomic(wbPkt);
@@ -1394,25 +1424,6 @@ Cache<TagStore>::invalidateVisitor(BlkType &blk)
 
     return true;
 }
-
-template<class TagStore>
-void
-Cache<TagStore>::uncacheableFlush(PacketPtr pkt)
-{
-    DPRINTF(Cache, "%s%s addr %#llx uncacheable\n", pkt->cmdString(),
-            pkt->req->isInstFetch() ? " (ifetch)" : "",
-            pkt->getAddr());
-
-    if (pkt->req->isClearLL())
-        tags->clearLocks();
-
-    BlkType *blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
-    if (blk) {
-        writebackVisitor(*blk);
-        invalidateVisitor(*blk);
-    }
-}
-
 
 template<class TagStore>
 typename Cache<TagStore>::BlkType*
