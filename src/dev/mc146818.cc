@@ -127,8 +127,11 @@ MC146818::startup()
 {
     assert(!event.scheduled());
     assert(!tickEvent.scheduled());
-    schedule(event, curTick() + event.offset);
-    schedule(tickEvent, curTick() + tickEvent.offset);
+
+    if (stat_regB.pie)
+        schedule(event, curTick() + event.offset);
+    if (!rega_dv_disabled(stat_regA))
+        schedule(tickEvent, curTick() + tickEvent.offset);
 }
 
 void
