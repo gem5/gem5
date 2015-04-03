@@ -202,6 +202,9 @@ IdeController::readConfig(PacketPtr pkt)
         break;
       case sizeof(uint16_t):
         switch (offset) {
+          case UDMAControl:
+            pkt->set<uint16_t>(udmaControl);
+            break;
           case PrimaryTiming:
             pkt->set<uint16_t>(primaryTiming);
             break;
@@ -222,10 +225,16 @@ IdeController::readConfig(PacketPtr pkt)
                 (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
-        if (offset == IDEConfig)
+        switch (offset) {
+          case PrimaryTiming:
+            pkt->set<uint32_t>(primaryTiming);
+            break;
+          case IDEConfig:
             pkt->set<uint32_t>(ideConfig);
-        else
+            break;
+          default:
             panic("No 32bit reads implemented for this device.");
+        }
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: 4 data: %#x\n", offset,
                 (uint32_t)pkt->get<uint32_t>());
         break;
@@ -268,6 +277,9 @@ IdeController::writeConfig(PacketPtr pkt)
             break;
           case sizeof(uint16_t):
             switch (offset) {
+              case UDMAControl:
+                udmaControl = pkt->get<uint16_t>();
+                break;
               case PrimaryTiming:
                 primaryTiming = pkt->get<uint16_t>();
                 break;
@@ -289,10 +301,16 @@ IdeController::writeConfig(PacketPtr pkt)
                     offset, (uint32_t)pkt->get<uint16_t>());
             break;
           case sizeof(uint32_t):
-            if (offset == IDEConfig)
+            switch (offset) {
+              case PrimaryTiming:
+                primaryTiming = pkt->get<uint32_t>();
+                break;
+              case IDEConfig:
                 ideConfig = pkt->get<uint32_t>();
-            else
+                break;
+              default:
                 panic("Write of unimplemented PCI config. register: %x\n", offset);
+            }
             break;
           default:
             panic("invalid access size(?) for PCI configspace!\n");
