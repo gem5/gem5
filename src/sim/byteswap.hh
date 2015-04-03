@@ -149,7 +149,7 @@ template <typename T> inline T letobe(T value) {return swap_byte(value);}
 
 //For conversions not involving the guest system, we can define the functions
 //conditionally based on the BYTE_ORDER macro and outside of the namespaces
-#if defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN) && BYTE_ORDER == BIG_ENDIAN
+#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) && BYTE_ORDER == BIG_ENDIAN
 const ByteOrder HostByteOrder = BigEndianByteOrder;
 template <typename T> inline T htole(T value) {return swap_byte(value);}
 template <typename T> inline T letoh(T value) {return swap_byte(value);}
