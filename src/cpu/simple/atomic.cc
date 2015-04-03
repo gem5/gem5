@@ -168,8 +168,6 @@ AtomicSimpleCPU::drainResume()
         _status = BaseSimpleCPU::Idle;
         notIdleFraction = 0;
     }
-
-    system->totalNumInsts = 0;
 }
 
 bool

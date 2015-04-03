@@ -840,15 +840,15 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
         thread->numInst++;
         thread->numInsts++;
         cpu.stats.numInsts++;
+        cpu.system->totalNumInsts++;
+
+        /* Act on events related to instruction counts */
+        cpu.comInstEventQueue[inst->id.threadId]->serviceEvents(thread->numInst);
+        cpu.system->instEventQueue.serviceEvents(cpu.system->totalNumInsts);
     }
     thread->numOp++;
     thread->numOps++;
     cpu.stats.numOps++;
-    cpu.system->totalNumInsts++;
-
-    /* Act on events related to instruction counts */
-    cpu.comInstEventQueue[inst->id.threadId]->serviceEvents(thread->numInst);
-    cpu.system->instEventQueue.serviceEvents(cpu.system->totalNumInsts);
 
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)

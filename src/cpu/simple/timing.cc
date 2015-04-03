@@ -94,8 +94,6 @@ TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
       fetchEvent(this), drainManager(NULL)
 {
     _status = Idle;
-
-    system->totalNumInsts = 0;
 }
 
 
