@@ -1,0 +1,65 @@
+This directory contains a connector that allows gem5 to be used as a
+component in SST (Structural Simulation Toolkit, sst-simulator.org). More
+specifically, it creates a .so that wraps the libgem5_*.so library. At a
+high level, this allows memory traffic to pass between the two simulators.
+SST Links are roughly analogous to gem5 Ports, although Links do not have
+a notion of master and slave. This distinction is important to gem5, so
+when connecting a gem5 CPU to an SST cache, an ExternalSlave must be used,
+and similarly when connecting the memory side of SST cache to a gem5 port
+(for memory <-> I/O), an ExternalMaster must be used.
+
+The connector handles the administrative aspects of gem5
+(initialization, simulation, shutdown) as well as translating
+SST's MemEvents into gem5 Packets and vice-versa.
+
+Step-by-step instructions:
+
+0. install SST and its dependencies
+
+Note: the Makefile assumes you installed from an SVN checkout, not a release.
+If you install a release, modify SST_VERSION at the top of the Makefile.
+
+0b. set/append to the PKG_CONFIG_PATH variable the path where SST installed
+    its pkgconfig, if not in a system-wide location.
+
+Then from gem5 root:
+
+1. build gem5 library:
+% scons build/ARM/libgem5_opt.so
+
+Note: if you would rather use a fast, debug, etc. variant instead,
+modify GEM5_LIB at the top of the Makefile.
+
+2. build gem5 SST component:
+% make -C ext/sst
+
+3. run SST like so:
+% sst --add-lib-path <path to ./ext/sst> <config script, e.g. ext/sst/*.py>
+
+===========
+
+Note: if you want to use an arch other than ARM (not tested/supported),
+tweak the Makefile to get includes from that build directory instead.
+
+===========
+
+This directory provides:
+1. an SST "Component" for gem5;
+2. a class that implements gem5's "ExternalMaster" interface to connect with
+   SST "Link"s exchanging "memEvents"
+   (sst/elements/memHierarchy stuff - caches, memories, etc.)
+   This lets gem5 receive packets from SST, as in
+   an SST LL$ (a master external to gem5) <-> I/O devices.
+3. a class that implements gem5's "ExternalSlave" interface to connect with
+   SST "Link"s exchanging "memEvents" once again with the packet flow reversed:
+   gem5 CPU <-> SST L1 cache (a slave external to gem5)
+4. an example configuration that uses both as follows:
+   gem5 CPUs
+       ^
+       | [ExternalSlave]
+       v
+   SST cache hierarchy <-> SST memory
+       ^
+       | [ExternalMaster]
+       v
+   gem5 I/O devices (terminal, disk, etc.)
