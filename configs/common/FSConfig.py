@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 ARM Limited
+# Copyright (c) 2010-2012, 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -203,7 +203,8 @@ def makeSparcSystem(mem_mode, mdesc=None):
     return self
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
-                  dtb_filename=None, bare_metal=False, cmdline=None):
+                  dtb_filename=None, bare_metal=False, cmdline=None,
+                  external_memory=""):
     assert machine_type
 
     if bare_metal:
@@ -293,7 +294,15 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                       'lpj=19988480 norandmaps rw loglevel=8 ' + \
                       'mem=%(mem)s root=%(rootdev)s'
 
-        self.realview.setupBootLoader(self.membus, self, binary)
+        # When using external memory, gem5 writes the boot loader to nvmem
+        # and then SST will read from it, but SST can only get to nvmem from
+        # iobus, as gem5's membus is only used for initialization and
+        # SST doesn't use it.  Attaching nvmem to iobus solves this issue.
+        # During initialization, system_port -> membus -> iobus -> nvmem.
+        if external_memory:
+            self.realview.setupBootLoader(self.iobus,  self, binary)
+        else:
+            self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
@@ -322,7 +331,24 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
         self.boot_osflags = fillInCmdline(mdesc, cmdline)
 
-    self.realview.attachOnChipIO(self.membus, self.bridge)
+    if external_memory:
+        # I/O traffic enters iobus
+        self.external_io = ExternalMaster(port_data="external_io",
+                                          port_type=external_memory)
+        self.external_io.port = self.iobus.slave
+
+        # Ensure iocache only receives traffic destined for (actual) memory.
+        self.iocache = ExternalSlave(port_data="iocache",
+                                     port_type=external_memory,
+                                     addr_ranges=self.mem_ranges)
+        self.iocache.port = self.iobus.master
+
+        # Let system_port get to nvmem and nothing else.
+        self.bridge.ranges = [self.realview.nvmem.range]
+
+        self.realview.attachOnChipIO(self.iobus)
+    else:
+        self.realview.attachOnChipIO(self.membus, self.bridge)
     self.realview.attachIO(self.iobus)
     self.intrctrl = IntrControl()
     self.terminal = Terminal()

@@ -189,6 +189,14 @@ def config_mem(options, system):
     them.
     """
 
+    if options.external_memory_system:
+        system.external_memory = m5.objects.ExternalSlave(
+            port_type=options.external_memory_system,
+            port_data="init_mem0", port=system.membus.master,
+            addr_ranges=system.mem_ranges)
+        system.kernel_addr_check = False
+        return
+
     nbr_mem_ctrls = options.mem_channels
     import math
     from m5.util import fatal

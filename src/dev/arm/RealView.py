@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2014 ARM Limited
+# Copyright (c) 2009-2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -509,21 +509,22 @@ class VExpress_EMM(RealView):
 
     # Attach I/O devices that are on chip and also set the appropriate
     # ranges for the bridge
-    def attachOnChipIO(self, bus, bridge):
-       self.gic.pio = bus.master
-       self.local_cpu_timer.pio = bus.master
-       if hasattr(self, "gicv2m"):
-           self.gicv2m.pio      = bus.master
-       self.hdlcd.dma           = bus.slave
-       # Bridge ranges based on excluding what is part of on-chip I/O
-       # (gic, a9scu)
-       bridge.ranges = [AddrRange(0x2F000000, size='16MB'),
-                        AddrRange(0x2B000000, size='4MB'),
-                        AddrRange(0x30000000, size='256MB'),
-                        AddrRange(0x40000000, size='512MB'),
-                        AddrRange(0x18000000, size='64MB'),
-                        AddrRange(0x1C000000, size='64MB')]
-       self.vgic.pio = bus.master
+    def attachOnChipIO(self, bus, bridge=None):
+        self.gic.pio             = bus.master
+        self.vgic.pio            = bus.master
+        self.local_cpu_timer.pio = bus.master
+        if hasattr(self, "gicv2m"):
+            self.gicv2m.pio      = bus.master
+        self.hdlcd.dma           = bus.slave
+        if bridge:
+            # Bridge ranges based on excluding what is part of on-chip I/O
+            # (gic, a9scu)
+            bridge.ranges = [AddrRange(0x2F000000, size='16MB'),
+                             AddrRange(0x2B000000, size='4MB'),
+                             AddrRange(0x30000000, size='256MB'),
+                             AddrRange(0x40000000, size='512MB'),
+                             AddrRange(0x18000000, size='64MB'),
+                             AddrRange(0x1C000000, size='64MB')]
 
 
     # Set the clock domain for IO objects that are considered
