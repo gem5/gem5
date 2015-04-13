@@ -29,7 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from BaseCPU import BaseCPU
-from BranchPredictor import BranchPredictor
+from BranchPredictor import *
 
 class ThreadModel(Enum):
     vals = ['Single', 'SMT', 'SwitchOnCacheMiss']
@@ -72,6 +72,6 @@ class InOrderCPU(BaseCPU):
     div32Latency = Param.Cycles(1, "Latency for 32-bit Divide Operations")
     div32RepeatRate = Param.Cycles(1, "Repeat Rate for 32-bit Divide Operations")
 
-    branchPred = Param.BranchPredictor(BranchPredictor(numThreads =
+    branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
                                        "Branch Predictor")

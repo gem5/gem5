@@ -49,6 +49,7 @@
 #include "base/types.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/pred/sat_counter.hh"
+#include "params/LocalBP.hh"
 
 /**
  * Implements a local predictor that uses the PC to index into a table of
@@ -63,9 +64,9 @@ class LocalBP : public BPredUnit
     /**
      * Default branch predictor constructor.
      */
-    LocalBP(const Params *params);
+    LocalBP(const LocalBPParams *params);
 
-    virtual void uncondBranch(void * &bp_history);
+    virtual void uncondBranch(Addr pc, void * &bp_history);
 
     /**
      * Looks up the given address in the branch predictor and returns
@@ -123,9 +124,6 @@ class LocalBP : public BPredUnit
 
     /** Number of bits of the local predictor's counters. */
     unsigned localCtrBits;
-
-    /** Number of bits to shift the PC when calculating index. */
-    unsigned instShiftAmt;
 
     /** Mask to get index bits. */
     unsigned indexMask;

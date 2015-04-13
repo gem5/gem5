@@ -36,8 +36,8 @@
 #include "base/intmath.hh"
 #include "cpu/pred/bi_mode.hh"
 
-BiModeBP::BiModeBP(const Params *params)
-    : BPredUnit(params), instShiftAmt(params->instShiftAmt),
+BiModeBP::BiModeBP(const BiModeBPParams *params)
+    : BPredUnit(params),
       globalHistoryReg(0),
       globalHistoryBits(ceilLog2(params->globalPredictorSize)),
       choicePredictorSize(params->choicePredictorSize),
@@ -77,7 +77,7 @@ BiModeBP::BiModeBP(const Params *params)
  * chooses the taken array and the taken array predicts taken.
  */
 void
-BiModeBP::uncondBranch(void * &bpHistory)
+BiModeBP::uncondBranch(Addr pc, void * &bpHistory)
 {
     BPHistory *history = new BPHistory;
     history->globalHistoryReg = globalHistoryReg;
@@ -242,4 +242,10 @@ BiModeBP::updateGlobalHistReg(bool taken)
     globalHistoryReg = taken ? (globalHistoryReg << 1) | 1 :
                                (globalHistoryReg << 1);
     globalHistoryReg &= historyRegisterMask;
+}
+
+BiModeBP*
+BiModeBPParams::create()
+{
+    return new BiModeBP(this);
 }

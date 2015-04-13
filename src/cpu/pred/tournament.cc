@@ -44,7 +44,7 @@
 #include "base/intmath.hh"
 #include "cpu/pred/tournament.hh"
 
-TournamentBP::TournamentBP(const Params *params)
+TournamentBP::TournamentBP(const TournamentBPParams *params)
     : BPredUnit(params),
       localPredictorSize(params->localPredictorSize),
       localCtrBits(params->localCtrBits),
@@ -58,8 +58,7 @@ TournamentBP::TournamentBP(const Params *params)
           ceilLog2(params->globalPredictorSize) :
           ceilLog2(params->choicePredictorSize)),
       choicePredictorSize(params->choicePredictorSize),
-      choiceCtrBits(params->choiceCtrBits),
-      instShiftAmt(params->instShiftAmt)
+      choiceCtrBits(params->choiceCtrBits)
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");
@@ -249,7 +248,7 @@ TournamentBP::lookup(Addr branch_addr, void * &bp_history)
 }
 
 void
-TournamentBP::uncondBranch(void * &bp_history)
+TournamentBP::uncondBranch(Addr pc, void * &bp_history)
 {
     // Create BPHistory and pass it back to be recorded.
     BPHistory *history = new BPHistory;
@@ -374,6 +373,12 @@ TournamentBP::squash(void *bp_history)
 
     // Delete this BPHistory now that we're done with it.
     delete history;
+}
+
+TournamentBP*
+TournamentBPParams::create()
+{
+    return new TournamentBP(this);
 }
 
 #ifdef DEBUG

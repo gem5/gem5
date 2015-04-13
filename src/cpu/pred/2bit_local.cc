@@ -34,11 +34,10 @@
 #include "cpu/pred/2bit_local.hh"
 #include "debug/Fetch.hh"
 
-LocalBP::LocalBP(const Params *params)
+LocalBP::LocalBP(const LocalBPParams *params)
     : BPredUnit(params),
       localPredictorSize(params->localPredictorSize),
-      localCtrBits(params->localCtrBits),
-      instShiftAmt(params->instShiftAmt)
+      localCtrBits(params->localCtrBits)
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");
@@ -153,6 +152,12 @@ LocalBP::getLocalIndex(Addr &branch_addr)
 }
 
 void
-LocalBP::uncondBranch(void *&bp_history)
+LocalBP::uncondBranch(Addr pc, void *&bp_history)
 {
+}
+
+LocalBP*
+LocalBPParams::create()
+{
+    return new LocalBP(this);
 }

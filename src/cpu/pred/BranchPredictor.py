@@ -1,4 +1,5 @@
 # Copyright (c) 2012 Mark D. Hill and David A. Wood
+# Copyright (c) 2015 The University of Wisconsin
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nilay Vaish
+# Authors: Nilay Vaish and Dibakar Gope
 
 from m5.SimObject import SimObject
 from m5.params import *
@@ -33,20 +34,45 @@ class BranchPredictor(SimObject):
     type = 'BranchPredictor'
     cxx_class = 'BPredUnit'
     cxx_header = "cpu/pred/bpred_unit.hh"
+    abstract = True
 
     numThreads = Param.Unsigned(1, "Number of threads")
-    predType = Param.String("tournament",
-        "Branch predictor type ('local', 'tournament', 'bi-mode')")
+    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
+    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
+    RASSize = Param.Unsigned(16, "RAS size")
+    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+
+
+class LocalBP(BranchPredictor):
+    type = 'LocalBP'
+    cxx_class = 'LocalBP'
+    cxx_header = "cpu/pred/2bit_local.hh"
+
     localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
     localCtrBits = Param.Unsigned(2, "Bits per counter")
-    localHistoryTableSize = Param.Unsigned(2048, "Size of local history table")
+
+
+class TournamentBP(BranchPredictor):
+    type = 'TournamentBP'
+    cxx_class = 'TournamentBP'
+    cxx_header = "cpu/pred/tournament.hh"
+
+    localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
+    localCtrBits = Param.Unsigned(2, "Bits per counter")
+    localHistoryTableSize = Param.Unsigned(2048, "size of local history table")
     globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
     globalCtrBits = Param.Unsigned(2, "Bits per counter")
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
-    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
-    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
 
-    RASSize = Param.Unsigned(16, "RAS size")
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+class BiModeBP(BranchPredictor):
+    type = 'BiModeBP'
+    cxx_class = 'BiModeBP'
+    cxx_header = "cpu/pred/bi_mode.hh"
+
+    globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
+    globalCtrBits = Param.Unsigned(2, "Bits per counter")
+    choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
+    choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
+

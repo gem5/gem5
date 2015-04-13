@@ -37,6 +37,7 @@
 
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/pred/sat_counter.hh"
+#include "params/BiModeBP.hh"
 
 /**
  * Implements a bi-mode branch predictor. The bi-mode predictor is a two-level
@@ -55,8 +56,8 @@
 class BiModeBP : public BPredUnit
 {
   public:
-    BiModeBP(const Params *params);
-    void uncondBranch(void * &bp_history);
+    BiModeBP(const BiModeBPParams *params);
+    void uncondBranch(Addr pc, void * &bp_history);
     void squash(void *bp_history);
     bool lookup(Addr branch_addr, void * &bp_history);
     void btbUpdate(Addr branch_addr, void * &bp_history);
@@ -92,8 +93,6 @@ class BiModeBP : public BPredUnit
     std::vector<SatCounter> takenCounters;
     // not-taken direction predictors
     std::vector<SatCounter> notTakenCounters;
-
-    unsigned instShiftAmt;
 
     unsigned globalHistoryReg;
     unsigned globalHistoryBits;

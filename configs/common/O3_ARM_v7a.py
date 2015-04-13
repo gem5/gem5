@@ -88,8 +88,7 @@ class O3_ARM_v7a_FUP(FUPool):
               O3_ARM_v7a_Load(), O3_ARM_v7a_Store(), O3_ARM_v7a_FP()]
 
 # Bi-Mode Branch Predictor
-class O3_ARM_v7a_BP(BranchPredictor):
-    predType = "bi-mode"
+class O3_ARM_v7a_BP(BiModeBP):
     globalPredictorSize = 8192
     globalCtrBits = 2
     choicePredictorSize = 8192

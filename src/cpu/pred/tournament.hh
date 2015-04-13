@@ -50,6 +50,7 @@
 #include "base/types.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/pred/sat_counter.hh"
+#include "params/TournamentBP.hh"
 
 /**
  * Implements a tournament branch predictor, hopefully identical to the one
@@ -66,7 +67,7 @@ class TournamentBP : public BPredUnit
     /**
      * Default branch predictor constructor.
      */
-    TournamentBP(const Params *params);
+    TournamentBP(const TournamentBPParams *params);
 
     /**
      * Looks up the given address in the branch predictor and returns
@@ -84,7 +85,7 @@ class TournamentBP : public BPredUnit
      * global history stored in it.
      * @param bp_history Pointer that will be set to the BPHistory object.
      */
-    void uncondBranch(void * &bp_history);
+    void uncondBranch(Addr pc, void * &bp_history);
     /**
      * Updates the branch predictor to Not Taken if a BTB entry is
      * invalid or not found.
@@ -233,11 +234,6 @@ class TournamentBP : public BPredUnit
 
     /** Number of bits in the choice predictor's counters. */
     unsigned choiceCtrBits;
-
-    /** Number of bits to shift the instruction over to get rid of the word
-     *  offset.
-     */
-    unsigned instShiftAmt;
 
     /** Thresholds for the counter value; above the threshold is taken,
      *  equal to or below the threshold is not taken.

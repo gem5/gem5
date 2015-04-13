@@ -97,7 +97,7 @@ class BPredUnit : public SimObject
                         TheISA::PCState &predPC, ThreadID tid);
 
     // @todo: Rename this function.
-    virtual void uncondBranch(void * &bp_history) = 0;
+    virtual void uncondBranch(Addr pc, void * &bp_history) = 0;
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -260,7 +260,8 @@ class BPredUnit : public SimObject
     typedef std::deque<PredictorHistory> History;
 
     /** Number of the threads for which the branch history is maintained. */
-    uint32_t numThreads;
+    const unsigned numThreads;
+
 
     /**
      * The per-thread predictor history. This is used to update the predictor
@@ -295,6 +296,9 @@ class BPredUnit : public SimObject
     Stats::Scalar RASIncorrect;
 
   protected:
+    /** Number of bits to shift instructions by for predictor addresses. */
+    const unsigned instShiftAmt;
+
     /**
      * @{
      * @name PMU Probe points.

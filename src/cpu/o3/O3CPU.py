@@ -32,7 +32,7 @@ from m5.proxy import *
 from BaseCPU import BaseCPU
 from FUPool import *
 from O3Checker import O3Checker
-from BranchPredictor import BranchPredictor
+from BranchPredictor import *
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
@@ -139,7 +139,7 @@ class DerivO3CPU(BaseCPU):
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
     smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
 
-    branchPred = Param.BranchPredictor(BranchPredictor(numThreads =
+    branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
                                        "Branch Predictor")
     needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
