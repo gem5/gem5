@@ -45,7 +45,10 @@ format WarnUnimpl {
                 // 32-bit memory operand
                 default: Inst::FADD1(Md);
             }
-            0x1: fmul();
+            0x1: decode MODRM_MOD {
+                0x3: Inst::FMUL1(Eq);
+                default: Inst::FMUL1(Md);
+            }
             0x2: fcom();
             0x3: fcomp();
             0x4: decode MODRM_MOD {
@@ -53,7 +56,10 @@ format WarnUnimpl {
                 default: Inst::FSUB1(Md);
             }
             0x5: fsubr();
-            0x6: fdiv();
+            0x6: decode MODRM_MOD {
+                0x3: Inst::FDIV1(Eq);
+                default: Inst::FDIV1(Md);
+            }
             0x7: fdivr();
         }
         0x1: decode MODRM_REG {
@@ -210,7 +216,10 @@ format WarnUnimpl {
                 0x3: Inst::FADD2(Eq);
                 default: Inst::FADD2(Mq);
             }
-            0x1: fmul();
+            0x1: decode MODRM_MOD {
+                0x3: Inst::FMUL2(Eq);
+                default: Inst::FMUL2(Mq);
+            }
             0x2: decode MODRM_MOD {
                 0x3: Inst::UD2();
                 default: fcom();
@@ -229,10 +238,10 @@ format WarnUnimpl {
             }
             0x6: decode MODRM_MOD {
                 0x3: fdivr();
-                default: fdiv();
+                default: Inst::FDIV2(Mq);
             }
             0x7: decode MODRM_MOD {
-                0x3: fdiv();
+                0x3: Inst::FDIV2(Eq);
                 default: fdivr();
             }
         }
@@ -282,7 +291,7 @@ format WarnUnimpl {
                 default: fiadd();
             }
             0x1: decode MODRM_MOD {
-                0x3: fmulp();
+                0x3: Inst::FMULP(Eq);
                 default: fimul();
             }
             0x2: decode MODRM_MOD {
@@ -312,7 +321,7 @@ format WarnUnimpl {
                 default: fidiv();
             }
             0x7: decode MODRM_MOD {
-                0x3: fdivp();
+                0x3: Inst::FDIVP(Eq);
                 default: fidivr();
             }
         }

@@ -36,7 +36,62 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FMUL
-# FMULP
+def macroop FMUL1_R
+{
+    mulfp st(0), sti, st(0)
+};
+
+
+def macroop FMUL1_M
+{
+    ldfp87 ufp1, seg, sib, disp
+    mulfp st(0), st(0), ufp1
+};
+
+def macroop FMUL1_P
+{
+    rdip t7
+    ldfp87 ufp1, seg, riprel, disp
+    mulfp st(0), st(0), ufp1
+};
+
+def macroop FMUL2_R
+{
+    mulfp sti, sti, st(0)
+};
+
+def macroop FMUL2_M
+{
+    ldfp87 ufp1, seg, sib, disp
+    mulfp st(0), st(0), ufp1
+};
+
+def macroop FMUL2_P
+{
+    rdip t7
+    ldfp87 ufp1, seg, riprel, disp
+    mulfp st(0), st(0), ufp1
+};
+
+def macroop FMULP
+{
+    mulfp st(1), st(0), st(1), spm=1
+};
+
+def macroop FMULP_R
+{
+    mulfp sti, sti, st(0), spm=1
+};
+
+def macroop FMULP_M
+{
+    fault "std::make_shared<UnimpInstFault>()"
+};
+
+def macroop FMULP_P
+{
+   fault "std::make_shared<UnimpInstFault>()"
+};
+
 # FIMUL
 '''

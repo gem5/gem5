@@ -36,8 +36,63 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FDIV
-# FDIVP
+def macroop FDIV1_R
+{
+    divfp st(0), st(0), sti
+};
+
+
+def macroop FDIV1_M
+{
+    ldfp87 ufp1, seg, sib, disp
+    divfp st(0), st(0), ufp1
+};
+
+def macroop FDIV1_P
+{
+    rdip t7
+    ldfp87 ufp1, seg, riprel, disp
+    divfp st(0), st(0), ufp1
+};
+
+def macroop FDIV2_R
+{
+    divfp sti, sti, st(0)
+};
+
+def macroop FDIV2_M
+{
+    ldfp87 ufp1, seg, sib, disp
+    divfp st(0), st(0), ufp1
+};
+
+def macroop FDIV2_P
+{
+    rdip t7
+    ldfp87 ufp1, seg, riprel, disp
+    divfp st(0), st(0), ufp1
+};
+
+def macroop FDIVP
+{
+    divfp st(1), st(1), st(0), spm=1
+};
+
+def macroop FDIVP_R
+{
+    divfp sti, sti, st(0), spm=1
+};
+
+def macroop FDIVP_M
+{
+    fault "std::make_shared<UnimpInstFault>()"
+};
+
+def macroop FDIVP_P
+{
+   fault "std::make_shared<UnimpInstFault>()"
+};
+
 # FIDIV
 # FDIVR
 # FDIVRP
