@@ -272,7 +272,8 @@ Process::dup_fd(int sim_fd, int tgt_fd)
 
 // generate new target fd for sim_fd
 int
-Process::alloc_fd(int sim_fd, string filename, int flags, int mode, bool pipe)
+Process::alloc_fd(int sim_fd, const string& filename, int flags, int mode,
+                  bool pipe)
 {
     // in case open() returns an error, don't allocate a new fd
     if (sim_fd == -1)
@@ -384,7 +385,7 @@ Process::fix_file_offsets()
 
     if (in == "stdin" || in == "cin")
         stdin_fd = STDIN_FILENO;
-    else if (in == "None")
+    else if (in == "NULL")
         stdin_fd = -1;
     else {
         // open standard in and seek to the right location
@@ -397,7 +398,7 @@ Process::fix_file_offsets()
         stdout_fd = STDOUT_FILENO;
     else if (out == "stderr" || out == "cerr")
         stdout_fd = STDERR_FILENO;
-    else if (out == "None")
+    else if (out == "NULL")
         stdout_fd = -1;
     else {
         stdout_fd = Process::openOutputFile(out);
@@ -409,7 +410,7 @@ Process::fix_file_offsets()
         stderr_fd = STDOUT_FILENO;
     else if (err == "stderr" || err == "cerr")
         stderr_fd = STDERR_FILENO;
-    else if (err == "None")
+    else if (err == "NULL")
         stderr_fd = -1;
     else if (err == out)
         stderr_fd = stdout_fd;
@@ -456,7 +457,7 @@ Process::fix_file_offsets()
                 fdo->fd = fd;
 
                 //Seek to correct location before checkpoint
-                if (lseek(fd,fdo->fileOffset, SEEK_SET) < 0)
+                if (lseek(fd, fdo->fileOffset, SEEK_SET) < 0)
                     panic("Unable to seek to correct location in file: %s",
                           fdo->filename);
             }
@@ -472,8 +473,8 @@ Process::find_file_offsets()
         if (fdo->fd != -1) {
             fdo->fileOffset = lseek(fdo->fd, 0, SEEK_CUR);
         } else {
-                fdo->filename = "NULL";
-                fdo->fileOffset = 0;
+            fdo->filename = "NULL";
+            fdo->fileOffset = 0;
         }
     }
 }

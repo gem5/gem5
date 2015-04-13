@@ -189,7 +189,7 @@ class Process : public SimObject
     void dup_fd(int sim_fd, int tgt_fd);
 
     // generate new target fd for sim_fd
-    int alloc_fd(int sim_fd, std::string filename, int flags, int mode,
+    int alloc_fd(int sim_fd, const std::string& filename, int flags, int mode,
                  bool pipe);
 
     // free target fd (e.g., after close)
