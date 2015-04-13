@@ -40,7 +40,8 @@ AbstractController::AbstractController(const Params *p)
       m_transitions_per_cycle(p->transitions_per_cycle),
       m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
       memoryPort(csprintf("%s.memory", name()), this, ""),
-      m_responseFromMemory_ptr(new MessageBuffer())
+      m_responseFromMemory_ptr(new MessageBuffer()),
+      m_rubySystem(p->ruby_system)
 {
     // Set the sender pointer of the response message buffer from the
     // memory controller.
@@ -217,6 +218,13 @@ AbstractController::queueMemoryRead(const MachineID &id, Address addr,
     SenderState *s = new SenderState(id);
     pkt->pushSenderState(s);
 
+    // Use functional rather than timing accesses during warmup
+    if (m_rubySystem->m_warmup_enabled) {
+        memoryPort.sendFunctional(pkt);
+        recvTimingResp(pkt);
+        return;
+    }
+
     memoryPort.schedTimingReq(pkt, clockEdge(latency));
 }
 
@@ -236,6 +244,13 @@ AbstractController::queueMemoryWrite(const MachineID &id, Address addr,
 
     SenderState *s = new SenderState(id);
     pkt->pushSenderState(s);
+
+    // Use functional rather than timing accesses during warmup
+    if (m_rubySystem->m_warmup_enabled) {
+        memoryPort.sendFunctional(pkt);
+        recvTimingResp(pkt);
+        return;
+    }
 
     // Create a block and copy data from the block.
     memoryPort.schedTimingReq(pkt, clockEdge(latency));

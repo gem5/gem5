@@ -205,6 +205,9 @@ class AbstractController : public MemObject, public Consumer
     // memory controller.
     MessageBuffer *m_responseFromMemory_ptr;
 
+    // Needed so we know if we are warming up
+    RubySystem *m_rubySystem;
+
     // State that is stored in packets sent to the memory controller.
     struct SenderState : public Packet::SenderState
     {
