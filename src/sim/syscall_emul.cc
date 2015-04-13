@@ -594,13 +594,14 @@ SyscallReturn
 dupFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->sim_fd(process->getSyscallArg(tc, index));
-    if (fd < 0)
+    int tgt_fd = process->getSyscallArg(tc, index);
+    int sim_fd = process->sim_fd(tgt_fd);
+    if (sim_fd < 0)
         return -EBADF;
 
-    Process::FdMap *fdo = process->sim_fd_obj(fd);
+    Process::FdMap *fdo = process->sim_fd_obj(tgt_fd);
 
-    int result = dup(fd);
+    int result = dup(sim_fd);
     return (result == -1) ? -errno :
         process->alloc_fd(result, fdo->filename, fdo->flags, fdo->mode, false);
 }
