@@ -462,6 +462,7 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].system =  testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
+            switch_cpus[i].progress_interval = testsys.cpu[i].progress_interval
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts

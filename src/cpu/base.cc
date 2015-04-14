@@ -94,6 +94,14 @@ void
 CPUProgressEvent::process()
 {
     Counter temp = cpu->totalOps();
+
+    if (_repeatEvent)
+      cpu->schedule(this, curTick() + _interval);
+
+    if(cpu->switchedOut()) {
+      return;
+    }
+
 #ifndef NDEBUG
     double ipc = double(temp - lastNumInst) / (_interval / cpu->clockPeriod());
 
@@ -107,9 +115,6 @@ CPUProgressEvent::process()
             temp - lastNumInst);
 #endif
     lastNumInst = temp;
-
-    if (_repeatEvent)
-        cpu->schedule(this, curTick() + _interval);
 }
 
 const char *
