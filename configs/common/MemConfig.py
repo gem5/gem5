@@ -45,24 +45,6 @@ from textwrap import  TextWrapper
 # classes.
 _mem_classes = {}
 
-# Memory aliases. We make sure they exist before we add them to the
-# fina; list. A target may be specified as a tuple, in which case the
-# first available memory controller model in the tuple will be used.
-_mem_aliases_all = [
-    ("simple_mem", "SimpleMemory"),
-    ("ddr3_1600_x64", "DDR3_1600_x64"),
-    ("lpddr2_s4_1066_x32", "LPDDR2_S4_1066_x32"),
-    ("lpddr3_1600_x32", "LPDDR3_1600_x32"),
-    ("wio_200_x128", "WideIO_200_x128"),
-    ("dramsim2", "DRAMSim2"),
-    ("ruby_memory", "RubyMemoryControl")
-    ]
-
-# Filtered list of aliases. Only aliases for existing memory
-# controllers exist in this list.
-_mem_aliases = {}
-
-
 def is_mem_class(cls):
     """Determine if a class is a memory controller that can be instantiated"""
 
@@ -75,19 +57,17 @@ def is_mem_class(cls):
         return False
 
 def get(name):
-    """Get a memory class from a user provided class name or alias."""
-
-    real_name = _mem_aliases.get(name, name)
+    """Get a memory class from a user provided class name."""
 
     try:
-        mem_class = _mem_classes[real_name]
+        mem_class = _mem_classes[name]
         return mem_class
     except KeyError:
         print "%s is not a valid memory controller." % (name,)
         sys.exit(1)
 
 def print_mem_list():
-    """Print a list of available memory classes including their aliases."""
+    """Print a list of available memory classes."""
 
     print "Available memory classes:"
     doc_wrapper = TextWrapper(initial_indent="\t\t", subsequent_indent="\t\t")
@@ -101,31 +81,13 @@ def print_mem_list():
             for line in doc_wrapper.wrap(doc):
                 print line
 
-    if _mem_aliases:
-        print "\nMemory aliases:"
-        for alias, target in _mem_aliases.items():
-            print "\t%s => %s" % (alias, target)
-
 def mem_names():
     """Return a list of valid memory names."""
-    return _mem_classes.keys() + _mem_aliases.keys()
+    return _mem_classes.keys()
 
 # Add all memory controllers in the object hierarchy.
 for name, cls in inspect.getmembers(m5.objects, is_mem_class):
     _mem_classes[name] = cls
-
-for alias, target in _mem_aliases_all:
-    if isinstance(target, tuple):
-        # Some aliases contain a list of memory controller models
-        # sorted in priority order. Use the first target that's
-        # available.
-        for t in target:
-            if t in _mem_classes:
-                _mem_aliases[alias] = t
-                break
-    elif target in _mem_classes:
-        # Normal alias
-        _mem_aliases[alias] = target
 
 def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     """

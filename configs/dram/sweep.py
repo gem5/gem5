@@ -54,7 +54,7 @@ import MemConfig
 parser = optparse.OptionParser()
 
 # Use a single-channel DDR3-1600 x64 by default
-parser.add_option("--mem-type", type="choice", default="ddr3_1600_x64",
+parser.add_option("--mem-type", type="choice", default="DDR3_1600_x64",
                   choices=MemConfig.mem_names(),
                   help = "type of memory to use")
 
