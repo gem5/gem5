@@ -1164,10 +1164,7 @@ InstructionQueue<Impl>::squash(ThreadID tid)
     // time buffer.
     squashedSeqNum[tid] = fromCommit->commitInfo[tid].doneSeqNum;
 
-    // Call doSquash if there are insts in the IQ
-    if (count[tid] > 0) {
-        doSquash(tid);
-    }
+    doSquash(tid);
 
     // Also tell the memory dependence unit to squash.
     memDepUnit[tid].squash(squashedSeqNum[tid], tid);
