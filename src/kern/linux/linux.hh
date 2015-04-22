@@ -130,6 +130,12 @@ class Linux : public OperatingSystem
         int64_t tv_usec;        //!< microseconds
     };
 
+    /// For clock_gettime().
+    struct timespec {
+        time_t tv_sec;         //!< seconds
+        int64_t tv_nsec;        //!< nanoseconds
+    };
+
     /// Clock ticks per second, for times().
     static const int M5_SC_CLK_TCK = 100;
 
