@@ -1274,9 +1274,8 @@ getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             break;
 
         default:
-            std::cerr << "getrlimitFunc: unimplemented resource " << resource
-                << std::endl;
-            abort();
+            warn("getrlimit: unimplemented resource %d", resource);
+            return -EINVAL;
             break;
     }
 
