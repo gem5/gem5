@@ -707,7 +707,7 @@ sysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     TypedBufferArg<typename OS::tgt_sysinfo>
-        sysinfo(process->getSyscallArg(tc, index));   
+        sysinfo(process->getSyscallArg(tc, index));
 
     sysinfo->uptime=seconds_since_epoch;
     sysinfo->totalram=process->system->memSize();
@@ -915,7 +915,7 @@ fstatat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     int index = 0;
     int dirfd = process->getSyscallArg(tc, index);
     if (dirfd != OS::TGT_AT_FDCWD)
-        warn("openat: first argument not AT_FDCWD; unlikely to work");
+        warn("fstatat64: first argument not AT_FDCWD; unlikely to work");
 
     std::string path;
     if (!tc->getMemProxy().tryReadString(path,
