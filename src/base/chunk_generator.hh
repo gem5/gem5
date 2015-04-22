@@ -123,6 +123,12 @@ class ChunkGenerator
     bool done() const { return (curSize == 0); }
 
     /**
+     * Is this the last chunk?
+     * @return True if yes, false if more to go.
+     */
+    bool last() const { return (sizeLeft == 0); }
+
+    /**
      * Advance generator to next chunk.
      * @return True if successful, false if unsuccessful
      * (because we were at the last chunk).
