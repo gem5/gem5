@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009, 2012-2013 ARM Limited
+# Copyright (c) 2013-2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,47 +33,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ali Saidi
+# Authors: Rene de Jong
+#
+import sys
+from m5.params import *
+from m5.proxy import *
+from Device import DmaDevice
+from AbstractNVM import *
 
-Import('*')
+class UFSHostDevice(DmaDevice):
+    type = 'UFSHostDevice'
+    cxx_header = "dev/arm/ufs_device.hh"
+    pio_addr = Param.Addr("Address for SCSI configuration slave interface")
+    pio_latency = Param.Latency("10ns", "Time between action and write/read \
+       result by AMBA DMA Device")
+    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
+    int_num = Param.UInt32("Interrupt number that connects to GIC")
+    img_blk_size = Param.UInt32(512, "Size of one image block in bytes")
+    # Every image that is added to the vector will generate a new logic unit
+    # in the UFS device; Theoretically (when using the driver from Linux
+    # kernel 3.9 onwards), this can be as many as eigth. Up to two have been
+    # tested.
+    image = VectorParam.DiskImage("Disk images")
+    # Every logic unit can have its own flash dimensions. So the number of
+    # images that have been provided in the image vector, should be equal to
+    # the number of flash objects that are created. Each logic unit can have
+    # its own flash dimensions; to allow the system to define a hetrogeneous
+    # storage system.
+    internalflash = VectorParam.AbstractNVM("Describes the internal flash")
+    ufs_slots = Param.UInt32(32, "Number of commands that can be queued in \
+        the Host controller (min: 1, max: 32)")
 
-if env['TARGET_ISA'] == 'arm':
-    SimObject('AbstractNVM.py')
-    SimObject('FlashDevice.py')
-    SimObject('Gic.py')
-    SimObject('RealView.py')
-    SimObject('UFSHostDevice.py')
-    SimObject('EnergyCtrl.py')
-
-    Source('a9scu.cc')
-    Source('amba_device.cc')
-    Source('amba_fake.cc')
-    Source('base_gic.cc')
-    Source('flash_device.cc')
-    Source('generic_timer.cc')
-    Source('gic_pl390.cc')
-    Source('gic_v2m.cc')
-    Source('pl011.cc')
-    Source('pl111.cc')
-    Source('hdlcd.cc')
-    Source('kmi.cc')
-    Source('timer_sp804.cc')
-    Source('rv_ctrl.cc')
-    Source('realview.cc')
-    Source('rtc_pl031.cc')
-    Source('timer_cpulocal.cc')
-    Source('vgic.cc')
-    Source('ufs_device.cc')
-    Source('energy_ctrl.cc')
-
-    DebugFlag('AMBA')
-    DebugFlag('FlashDevice')
-    DebugFlag('HDLcd')
-    DebugFlag('PL111')
-    DebugFlag('GICV2M')
-    DebugFlag('Pl050')
-    DebugFlag('GIC')
-    DebugFlag('RVCTRL')
-    DebugFlag('EnergyCtrl')
-    DebugFlag('UFSHostDevice')
-    DebugFlag('VGIC')
