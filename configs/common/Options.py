@@ -234,6 +234,8 @@ def addSEOptions(parser):
     parser.add_option("-o", "--options", default="",
                       help="""The options to pass to the binary, use " "
                               around the entire string""")
+    parser.add_option("-e", "--env", default="",
+                      help="Initialize workload environment from text file.")
     parser.add_option("-i", "--input", default="",
                       help="Read stdin from a file.")
     parser.add_option("--output", default="",

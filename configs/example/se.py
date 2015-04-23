@@ -94,6 +94,10 @@ def get_processes(options):
         process.executable = wrkld
         process.cwd = os.getcwd()
 
+        if options.env:
+            with open(options.env, 'r') as f:
+                process.env = [line.rstrip() for line in f]
+
         if len(pargs) > idx:
             process.cmd = [wrkld] + pargs[idx].split()
         else:
