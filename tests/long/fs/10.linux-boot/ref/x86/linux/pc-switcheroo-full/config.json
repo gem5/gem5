@@ -2,7 +2,106 @@
     "name": null, 
     "sim_quantum": 0, 
     "system": {
-        "kernel": "/usr/local/google/home/gabeblack/gem5/dist/m5/system/binaries/x86_64-vmlinux-2.6.22.9", 
+        "kernel": "/home/stever/m5/m5_system_2.0b3/binaries/x86_64-vmlinux-2.6.22.9", 
+        "mmap_using_noreserve": false, 
+        "kernel_addr_check": true, 
+        "bridge": {
+            "ranges": [
+                "3221225472:4294901760", 
+                "9223372036854775808:11529215046068469759", 
+                "13835058055282163712:18446744073709551615"
+            ], 
+            "slave": {
+                "peer": "system.membus.master[0]", 
+                "role": "SLAVE"
+            }, 
+            "name": "bridge", 
+            "req_size": 16, 
+            "clk_domain": "system.clk_domain", 
+            "delay": 50000, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": "system.iobus.slave[0]", 
+                "role": "MASTER"
+            }, 
+            "cxx_class": "Bridge", 
+            "path": "system.bridge", 
+            "resp_size": 16, 
+            "type": "Bridge"
+        }, 
+        "iobus": {
+            "slave": {
+                "peer": [
+                    "system.bridge.master", 
+                    "system.pc.south_bridge.ide.dma", 
+                    "system.pc.south_bridge.io_apic.int_master"
+                ], 
+                "role": "SLAVE"
+            }, 
+            "name": "iobus", 
+            "default": {
+                "peer": "system.pc.pciconfig.pio", 
+                "role": "MASTER"
+            }, 
+            "forward_latency": 1, 
+            "clk_domain": "system.clk_domain", 
+            "width": 16, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": [
+                    "system.apicbridge.slave", 
+                    "system.pc.south_bridge.cmos.pio", 
+                    "system.pc.south_bridge.dma1.pio", 
+                    "system.pc.south_bridge.ide.pio", 
+                    "system.pc.south_bridge.ide.config", 
+                    "system.pc.south_bridge.keyboard.pio", 
+                    "system.pc.south_bridge.pic1.pio", 
+                    "system.pc.south_bridge.pic2.pio", 
+                    "system.pc.south_bridge.pit.pio", 
+                    "system.pc.south_bridge.speaker.pio", 
+                    "system.pc.south_bridge.io_apic.pio", 
+                    "system.pc.i_dont_exist1.pio", 
+                    "system.pc.i_dont_exist2.pio", 
+                    "system.pc.behind_pci.pio", 
+                    "system.pc.com_1.pio", 
+                    "system.pc.fake_com_2.pio", 
+                    "system.pc.fake_com_3.pio", 
+                    "system.pc.fake_com_4.pio", 
+                    "system.pc.fake_floppy.pio", 
+                    "system.iocache.cpu_side"
+                ], 
+                "role": "MASTER"
+            }, 
+            "response_latency": 2, 
+            "cxx_class": "NoncoherentXBar", 
+            "path": "system.iobus", 
+            "type": "NoncoherentXBar", 
+            "use_default_range": false, 
+            "frontend_latency": 2
+        }, 
+        "apicbridge": {
+            "ranges": [
+                "11529215046068469760:11529215046068473855"
+            ], 
+            "slave": {
+                "peer": "system.iobus.master[0]", 
+                "role": "SLAVE"
+            }, 
+            "name": "apicbridge", 
+            "req_size": 16, 
+            "clk_domain": "system.clk_domain", 
+            "delay": 50000, 
+            "eventq_index": 0, 
+            "master": {
+                "peer": "system.membus.slave[0]", 
+                "role": "MASTER"
+            }, 
+            "cxx_class": "Bridge", 
+            "path": "system.apicbridge", 
+            "resp_size": 16, 
+            "type": "Bridge"
+        }, 
+        "symbolfile": "", 
         "l2c": {
             "is_top_level": false, 
             "prefetcher": null, 
@@ -51,103 +150,7 @@
             }, 
             "two_queue": false
         }, 
-        "kernel_addr_check": true, 
-        "bridge": {
-            "ranges": [
-                "3221225472:4294901760", 
-                "9223372036854775808:11529215046068469759", 
-                "13835058055282163712:18446744073709551615"
-            ], 
-            "slave": {
-                "peer": "system.membus.master[0]", 
-                "role": "SLAVE"
-            }, 
-            "name": "bridge", 
-            "req_size": 16, 
-            "clk_domain": "system.clk_domain", 
-            "delay": 50000, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": "system.iobus.slave[0]", 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "Bridge", 
-            "path": "system.bridge", 
-            "resp_size": 16, 
-            "type": "Bridge"
-        }, 
-        "iobus": {
-            "slave": {
-                "peer": [
-                    "system.bridge.master", 
-                    "system.pc.south_bridge.ide.dma", 
-                    "system.pc.south_bridge.io_apic.int_master"
-                ], 
-                "role": "SLAVE"
-            }, 
-            "name": "iobus", 
-            "default": {
-                "peer": "system.pc.pciconfig.pio", 
-                "role": "MASTER"
-            }, 
-            "clk_domain": "system.clk_domain", 
-            "header_cycles": 1, 
-            "width": 8, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": [
-                    "system.apicbridge.slave", 
-                    "system.pc.south_bridge.cmos.pio", 
-                    "system.pc.south_bridge.dma1.pio", 
-                    "system.pc.south_bridge.ide.pio", 
-                    "system.pc.south_bridge.ide.config", 
-                    "system.pc.south_bridge.keyboard.pio", 
-                    "system.pc.south_bridge.pic1.pio", 
-                    "system.pc.south_bridge.pic2.pio", 
-                    "system.pc.south_bridge.pit.pio", 
-                    "system.pc.south_bridge.speaker.pio", 
-                    "system.pc.south_bridge.io_apic.pio", 
-                    "system.pc.i_dont_exist1.pio", 
-                    "system.pc.i_dont_exist2.pio", 
-                    "system.pc.behind_pci.pio", 
-                    "system.pc.com_1.pio", 
-                    "system.pc.fake_com_2.pio", 
-                    "system.pc.fake_com_3.pio", 
-                    "system.pc.fake_com_4.pio", 
-                    "system.pc.fake_floppy.pio", 
-                    "system.iocache.cpu_side"
-                ], 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "NoncoherentXBar", 
-            "path": "system.iobus", 
-            "type": "NoncoherentXBar", 
-            "use_default_range": false
-        }, 
-        "apicbridge": {
-            "ranges": [
-                "11529215046068469760:11529215046068473855"
-            ], 
-            "slave": {
-                "peer": "system.iobus.master[0]", 
-                "role": "SLAVE"
-            }, 
-            "name": "apicbridge", 
-            "req_size": 16, 
-            "clk_domain": "system.clk_domain", 
-            "delay": 50000, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": "system.membus.slave[0]", 
-                "role": "MASTER"
-            }, 
-            "cxx_class": "Bridge", 
-            "path": "system.apicbridge", 
-            "resp_size": 16, 
-            "type": "Bridge"
-        }, 
-        "symbolfile": "", 
-        "readfile": "/usr/local/google/home/gabeblack/gem5/hg/gem5/tests/halt.sh", 
+        "readfile": "/home/stever/hg/m5sim.org/gem5/tests/halt.sh", 
         "intel_mp_table": {
             "oem_table_addr": 0, 
             "name": "intel_mp_table", 
@@ -768,10 +771,10 @@
                 "ret_data16": 65535
             }, 
             "snoop_filter": null, 
+            "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
-            "header_cycles": 1, 
             "system": "system", 
-            "width": 8, 
+            "width": 16, 
             "eventq_index": 0, 
             "master": {
                 "peer": [
@@ -782,10 +785,13 @@
                 ], 
                 "role": "MASTER"
             }, 
+            "response_latency": 2, 
             "cxx_class": "CoherentXBar", 
             "path": "system.membus", 
+            "snoop_response_latency": 4, 
             "type": "CoherentXBar", 
-            "use_default_range": false
+            "use_default_range": false, 
+            "frontend_latency": 3
         }, 
         "pc": {
             "fake_com_4": {
@@ -1179,7 +1185,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks0.image.child", 
-                                    "image_file": "/usr/local/google/home/gabeblack/gem5/dist/m5/system/disks/linux-x86.img", 
+                                    "image_file": "/home/stever/m5/m5_system_2.0b3/disks/linux-x86.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks0.image", 
@@ -1207,7 +1213,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks1.image.child", 
-                                    "image_file": "/usr/local/google/home/gabeblack/gem5/dist/m5/system/disks/linux-bigswap2.img", 
+                                    "image_file": "/home/stever/m5/m5_system_2.0b3/disks/linux-bigswap2.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks1.image", 
@@ -1650,7 +1656,7 @@
                 "path": "system.physmem", 
                 "tXP": 0, 
                 "tXS": 0, 
-                "addr_mapping": "RoRaBaChCo", 
+                "addr_mapping": "RoRaBaCoCh", 
                 "IDD3P0": "0.0", 
                 "IDD3P1": "0.0", 
                 "IDD3N": "0.057", 
@@ -1701,10 +1707,10 @@
             }, 
             "name": "toL2Bus", 
             "snoop_filter": null, 
+            "forward_latency": 0, 
             "clk_domain": "system.cpu_clk_domain", 
-            "header_cycles": 1, 
             "system": "system", 
-            "width": 8, 
+            "width": 32, 
             "eventq_index": 0, 
             "master": {
                 "peer": [
@@ -1712,10 +1718,13 @@
                 ], 
                 "role": "MASTER"
             }, 
+            "response_latency": 1, 
             "cxx_class": "CoherentXBar", 
             "path": "system.toL2Bus", 
+            "snoop_response_latency": 1, 
             "type": "CoherentXBar", 
-            "use_default_range": false
+            "use_default_range": false, 
+            "frontend_latency": 1
         }, 
         "work_end_ckpt_count": 0, 
         "mem_mode": "atomic", 
@@ -2555,11 +2564,10 @@
                     "eventq_index": 0, 
                     "BTBTagSize": 16, 
                     "BTBEntries": 4096, 
-                    "cxx_class": "BPredUnit", 
+                    "cxx_class": "TournamentBP", 
                     "path": "system.cpu2.branchPred", 
                     "localPredictorSize": 2048, 
-                    "type": "BranchPredictor", 
-                    "predType": "tournament", 
+                    "type": "TournamentBP", 
                     "RASSize": 16, 
                     "globalPredictorSize": 8192
                 }, 

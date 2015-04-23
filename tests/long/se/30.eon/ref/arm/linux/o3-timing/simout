@@ -1,17 +1,18 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 21 2014 11:22:42
-gem5 started Jun 21 2014 21:42:59
+gem5 compiled Apr 22 2015 10:58:25
+gem5 started Apr 22 2015 11:46:25
 gem5 executing on phenom
 command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing
+
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu.isa: ISA system set to: 0 0x6560400
+      0: system.cpu.isa: ISA system set to: 0 0x2c9dca0
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Eon, Version 1.1
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
-OO-style eon Time= 0.060000
-Exiting @ tick 64766858000 because target called exit()
+OO-style eon Time= 0.110000
+Exiting @ tick 112553814500 because target called exit()

@@ -4,11 +4,11 @@ sim_seconds                                  2.827616                       # Nu
 sim_ticks                                2827616186000                       # Number of ticks simulated
 final_tick                               2827616186000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  69501                       # Simulator instruction rate (inst/s)
-host_op_rate                                    84304                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1736810486                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 620504                       # Number of bytes of host memory used
-host_seconds                                  1628.05                       # Real time elapsed on the host
+host_inst_rate                                  73888                       # Simulator instruction rate (inst/s)
+host_op_rate                                    89625                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1846444734                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 556020                       # Number of bytes of host memory used
+host_seconds                                  1531.38                       # Real time elapsed on the host
 sim_insts                                   113151083                       # Number of instructions simulated
 sim_ops                                     137250963                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -756,7 +756,7 @@ system.cpu.iq.iqInstsAdded                  143540852                       # Nu
 system.cpu.iq.iqNonSpecInstsAdded             2119167                       # Number of non-speculative instructions added to the IQ
 system.cpu.iq.iqInstsIssued                 143328299                       # Number of instructions issued
 system.cpu.iq.iqSquashedInstsIssued            272168                       # Number of squashed instructions issued
-system.cpu.iq.iqSquashedInstsExamined         6274201                       # Number of squashed instructions iterated over during squash; mainly for profiling
+system.cpu.iq.iqSquashedInstsExamined         8409052                       # Number of squashed instructions iterated over during squash; mainly for profiling
 system.cpu.iq.iqSquashedOperandsExamined     14689564                       # Number of squashed operands that are examined and possibly removed from graph
 system.cpu.iq.iqSquashedNonSpecRemoved         125312                       # Number of squashed non-spec instructions that were removed
 system.cpu.iq.issued_per_cycle::samples     256876545                       # Number of insts issued each cycle
@@ -849,10 +849,10 @@ system.cpu.iq.rate                           0.544758                       # In
 system.cpu.iq.fu_busy_cnt                    22576275                       # FU busy when requested
 system.cpu.iq.fu_busy_rate                   0.157514                       # FU busy rate (busy events/executed inst)
 system.cpu.iq.int_inst_queue_reads          566346239                       # Number of integer instruction queue reads
-system.cpu.iq.int_inst_queue_writes         151939321                       # Number of integer instruction queue writes
+system.cpu.iq.int_inst_queue_writes         154074171                       # Number of integer instruction queue writes
 system.cpu.iq.int_inst_queue_wakeup_accesses    140211060                       # Number of integer instruction queue wakeup accesses
 system.cpu.iq.fp_inst_queue_reads               35347                       # Number of floating instruction queue reads
-system.cpu.iq.fp_inst_queue_writes              13215                       # Number of floating instruction queue writes
+system.cpu.iq.fp_inst_queue_writes              13216                       # Number of floating instruction queue writes
 system.cpu.iq.fp_inst_queue_wakeup_accesses        11430                       # Number of floating instruction queue wakeup accesses
 system.cpu.iq.int_alu_accesses              165879209                       # Number of integer alu accesses
 system.cpu.iq.fp_alu_accesses                   23028                       # Number of floating point alu accesses

@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 20 2015 13:24:00
-gem5 started Apr 20 2015 13:25:09
+gem5 compiled Apr 22 2015 08:10:29
+gem5 started Apr 22 2015 10:12:51
 gem5 executing on phenom
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/X86/tests/opt/long/fs/10.linux-boot/x86/linux/pc-o3-timing
 

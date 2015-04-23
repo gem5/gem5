@@ -1,12 +1,13 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 19 2014 12:27:06
-gem5 started Jul 19 2014 12:27:28
+gem5 compiled Apr 22 2015 07:55:25
+gem5 started Apr 22 2015 08:43:58
 gem5 executing on phenom
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/00.hello/alpha/tru64/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/00.hello/alpha/tru64/o3-timing
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 11975500 because target called exit()
+Exiting @ tick 12774000 because target called exit()

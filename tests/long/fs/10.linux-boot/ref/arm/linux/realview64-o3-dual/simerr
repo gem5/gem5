@@ -7,6 +7,6 @@ warn: Existing EnergyCtrl, but no enabled DVFSHandler found.
 warn: SCReg: Writing 0 to dcc0:site0:pos0:fn7:dev0
 warn: Tried to read RealView I/O at offset 0x60 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x48 that doesn't exist
-warn: allocating bonus target for snoop
 warn: Tried to read RealView I/O at offset 0x8 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x48 that doesn't exist
+warn: allocating bonus target for snoop
