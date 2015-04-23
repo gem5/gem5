@@ -76,9 +76,6 @@ enum {
     GDB64_NUMREGS = 98
 };
 
-const int GDB_REG_BYTES = std::max(GDB64_NUMREGS * sizeof(uint64_t),
-                                   GDB32_NUMREGS * sizeof(uint32_t));
-
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
@@ -89,6 +86,9 @@ class RemoteGDB : public BaseRemoteGDB
     void setregs();
 
   public:
+    const int GDB_REG_BYTES = std::max(GDB64_NUMREGS * sizeof(uint64_t),
+                                       GDB32_NUMREGS * sizeof(uint32_t));
+
     RemoteGDB(System *_system, ThreadContext *tc);
 };
 } // namespace ArmISA

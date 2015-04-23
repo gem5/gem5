@@ -68,10 +68,6 @@ class EthPacketData
         : data(new uint8_t[size]), length(0)
     { }
 
-    EthPacketData(std::auto_ptr<uint8_t> d, int l)
-        : data(d.release()), length(l)
-    { }
-
     ~EthPacketData() { if (data) delete [] data; }
 
   public:
