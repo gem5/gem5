@@ -111,10 +111,6 @@ class RemoteGDB : public BaseRemoteGDB
         GDB64_NUMREGS = (GDB64_GS_32 + 1) / 2 + 1
     };
 
-    const int GDB_REG_BYTES =
-        std::max(RemoteGDB::GDB32_NUMREGS * sizeof(uint32_t),
-                 RemoteGDB::GDB64_NUMREGS * sizeof(uint64_t));
-
     RemoteGDB(System *system, ThreadContext *context);
 
     bool acc(Addr addr, size_t len);
@@ -125,6 +121,10 @@ class RemoteGDB : public BaseRemoteGDB
 
     bool checkBpLen(size_t len) { return len == 1; }
 };
+
+const int GDB_REG_BYTES M5_VAR_USED =
+    std::max(RemoteGDB::GDB32_NUMREGS * sizeof(uint32_t),
+             RemoteGDB::GDB64_NUMREGS * sizeof(uint64_t));
 
 }
 
