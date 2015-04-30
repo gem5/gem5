@@ -71,9 +71,9 @@ class ArmSystem(System):
     have_large_asid_64 = Param.Bool(False,
         "True if ASID is 16 bits in AArch64 (ARMv8)")
 
-class LinuxArmSystem(ArmSystem):
-    type = 'LinuxArmSystem'
-    cxx_header = "arch/arm/linux/system.hh"
+class GenericArmSystem(ArmSystem):
+    type = 'GenericArmSystem'
+    cxx_header = "arch/arm/system.hh"
     load_addr_mask = 0x0fffffff
     machine_type = Param.ArmMachineType('VExpress_EMM',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
@@ -91,3 +91,11 @@ class LinuxArmSystem(ArmSystem):
                                     "guest kernel panics")
     panic_on_oops = Param.Bool(False, "Trigger a gem5 panic if the " \
                                    "guest kernel oopses")
+
+class LinuxArmSystem(GenericArmSystem):
+    type = 'LinuxArmSystem'
+    cxx_header = "arch/arm/linux/system.hh"
+
+class FreebsdArmSystem(GenericArmSystem):
+    type = 'FreebsdArmSystem'
+    cxx_header = "arch/arm/freebsd/system.hh"

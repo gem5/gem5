@@ -181,31 +181,43 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
     //Auxilliary vectors are loaded only for elf formatted executables.
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if (elfObject) {
-        IntType features =
-            Arm_Swp |
-            Arm_Half |
-            Arm_Thumb |
-//            Arm_26Bit |
-            Arm_FastMult |
-//            Arm_Fpa |
-            Arm_Vfp |
-            Arm_Edsp |
-//            Arm_Java |
-//            Arm_Iwmmxt |
-//            Arm_Crunch |
-            Arm_ThumbEE |
-            Arm_Neon |
-            Arm_Vfpv3 |
-            Arm_Vfpv3d16 |
-            0;
 
-        //Bits which describe the system hardware capabilities
-        //XXX Figure out what these should be
-        auxv.push_back(auxv_t(M5_AT_HWCAP, features));
+        if (objFile->getOpSys() == ObjectFile::Linux) {
+            IntType features =
+                Arm_Swp |
+                Arm_Half |
+                Arm_Thumb |
+//                Arm_26Bit |
+                Arm_FastMult |
+//                Arm_Fpa |
+                Arm_Vfp |
+                Arm_Edsp |
+//                Arm_Java |
+//                Arm_Iwmmxt |
+//                Arm_Crunch |
+                Arm_ThumbEE |
+                Arm_Neon |
+                Arm_Vfpv3 |
+                Arm_Vfpv3d16 |
+                0;
+
+            //Bits which describe the system hardware capabilities
+            //XXX Figure out what these should be
+            auxv.push_back(auxv_t(M5_AT_HWCAP, features));
+            //Frequency at which times() increments
+            auxv.push_back(auxv_t(M5_AT_CLKTCK, 0x64));
+            //Whether to enable "secure mode" in the executable
+            auxv.push_back(auxv_t(M5_AT_SECURE, 0));
+            // Pointer to 16 bytes of random data
+            auxv.push_back(auxv_t(M5_AT_RANDOM, 0));
+            //The filename of the program
+            auxv.push_back(auxv_t(M5_AT_EXECFN, 0));
+            //The string "v71" -- ARM v7 architecture
+            auxv.push_back(auxv_t(M5_AT_PLATFORM, 0));
+        }
+
         //The system page size
         auxv.push_back(auxv_t(M5_AT_PAGESZ, ArmISA::PageBytes));
-        //Frequency at which times() increments
-        auxv.push_back(auxv_t(M5_AT_CLKTCK, 0x64));
         // For statically linked executables, this is the virtual address of the
         // program header tables if they appear in the executable image
         auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
@@ -217,7 +229,6 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
         //to 0 for regular executables. It should be something else
         //(not sure what) for dynamic libraries.
         auxv.push_back(auxv_t(M5_AT_BASE, 0));
-
         //XXX Figure out what this should be.
         auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
         //The entry point to the program
@@ -227,16 +238,6 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
         auxv.push_back(auxv_t(M5_AT_EUID, euid()));
         auxv.push_back(auxv_t(M5_AT_GID, gid()));
         auxv.push_back(auxv_t(M5_AT_EGID, egid()));
-        //Whether to enable "secure mode" in the executable
-        auxv.push_back(auxv_t(M5_AT_SECURE, 0));
-
-        // Pointer to 16 bytes of random data
-        auxv.push_back(auxv_t(M5_AT_RANDOM, 0));
-
-        //The filename of the program
-        auxv.push_back(auxv_t(M5_AT_EXECFN, 0));
-        //The string "v71" -- ARM v7 architecture
-        auxv.push_back(auxv_t(M5_AT_PLATFORM, 0));
     }
 
     //Figure out how big the initial stack nedes to be
@@ -456,11 +457,33 @@ ArmLiveProcess64::setSyscallArg(ThreadContext *tc,
 void
 ArmLiveProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
+
+    if (objFile->getOpSys() == ObjectFile::FreeBSD) {
+        // Decode return value
+        if (sysret.encodedValue() >= 0)
+            // FreeBSD checks the carry bit to determine if syscall is succeeded
+            tc->setCCReg(CCREG_C, 0);
+        else {
+            sysret = -sysret.encodedValue();
+        }
+    }
+
     tc->setIntReg(ReturnValueReg, sysret.encodedValue());
 }
 
 void
 ArmLiveProcess64::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
+
+    if (objFile->getOpSys() == ObjectFile::FreeBSD) {
+        // Decode return value
+        if (sysret.encodedValue() >= 0)
+            // FreeBSD checks the carry bit to determine if syscall is succeeded
+            tc->setCCReg(CCREG_C, 0);
+        else {
+            sysret = -sysret.encodedValue();
+        }
+    }
+
     tc->setIntReg(ReturnValueReg, sysret.encodedValue());
 }

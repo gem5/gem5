@@ -63,7 +63,8 @@ class ObjectFile
         Tru64,
         Linux,
         Solaris,
-        LinuxArmOABI
+        LinuxArmOABI,
+        FreeBSD
     };
 
   protected:

@@ -276,6 +276,9 @@ Pl390::readCpu(PacketPtr pkt)
             ctx_id);
 
     switch(daddr) {
+      case ICCIIDR:
+        pkt->set<uint32_t>(0);
+        break;
       case ICCICR:
         pkt->set<uint32_t>(cpuEnabled[ctx_id]);
         break;
@@ -525,7 +528,8 @@ Pl390::writeCpu(PacketPtr pkt)
         } else {
             uint32_t int_num = 1 << intNumToBit(iar.ack_id);
             if (!(activeInt[intNumToWord(iar.ack_id)] & int_num))
-                panic("Done handling interrupt that isn't active?\n");
+                warn("Done handling interrupt that isn't active: %d\n",
+                      intNumToBit(iar.ack_id));
             activeInt[intNumToWord(iar.ack_id)] &= ~int_num;
         }
         updateRunPri();

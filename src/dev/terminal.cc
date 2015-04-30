@@ -34,7 +34,16 @@
  */
 
 #include <sys/ioctl.h>
+
+#if defined(__FreeBSD__)
+#include <termios.h>
+
+#else
 #include <sys/termios.h>
+
+#endif
+#include "dev/terminal.hh"
+
 #include <poll.h>
 #include <unistd.h>
 
@@ -53,7 +62,6 @@
 #include "debug/Terminal.hh"
 #include "debug/TerminalVerbose.hh"
 #include "dev/platform.hh"
-#include "dev/terminal.hh"
 #include "dev/uart.hh"
 
 using namespace std;

@@ -244,8 +244,26 @@ ArmSystem::haveLargeAsid64(ThreadContext *tc)
 {
     return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->haveLargeAsid64();
 }
+
 ArmSystem *
 ArmSystemParams::create()
 {
     return new ArmSystem(this);
+}
+
+void
+GenericArmSystem::initState()
+{
+    // Moved from the constructor to here since it relies on the
+    // address map being resolved in the interconnect
+
+    // Call the initialisation of the super class
+    ArmSystem::initState();
+}
+
+GenericArmSystem *
+GenericArmSystemParams::create()
+{
+
+    return new GenericArmSystem(this);
 }

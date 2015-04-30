@@ -44,16 +44,24 @@
 
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+
+#if defined(__FreeBSD__)
+#include <termios.h>
+
+#else
 #include <sys/termios.h>
-#include <sys/types.h>
+
+#endif
+#include "base/vnc/vncserver.hh"
+
 #include <fcntl.h>
 #include <poll.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cstdio>
 
-#include "base/vnc/vncserver.hh"
 #include "base/atomicio.hh"
 #include "base/bitmap.hh"
 #include "base/misc.hh"

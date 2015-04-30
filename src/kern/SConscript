@@ -37,6 +37,7 @@ Source('kernel_stats.cc')
 Source('linux/events.cc')
 Source('linux/linux.cc')
 Source('linux/printk.cc')
+Source('freebsd/events.cc')
 Source('operatingsystem.cc')
 Source('system_events.cc')
 

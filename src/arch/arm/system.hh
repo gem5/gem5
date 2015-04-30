@@ -49,6 +49,7 @@
 #include "dev/arm/generic_timer.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
+#include "params/GenericArmSystem.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
@@ -265,8 +266,25 @@ class ArmSystem : public System
     /** Returns true if ASID is 16 bits for the system of a specific thread
      * context while in AArch64 (ARMv8) */
     static bool haveLargeAsid64(ThreadContext *tc);
+};
 
+class GenericArmSystem : public ArmSystem
+{
+  public:
+    typedef GenericArmSystemParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    GenericArmSystem(Params *p) : ArmSystem(p) {};
+    virtual ~GenericArmSystem() {};
+
+    /**
+     * Initialise the system
+     */
+    virtual void initState();
 };
 
 #endif
-

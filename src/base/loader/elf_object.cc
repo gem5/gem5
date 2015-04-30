@@ -150,6 +150,9 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
           case ELFOSABI_ARM:
             opSys = ObjectFile::LinuxArmOABI;
             break;
+          case ELFOSABI_FREEBSD:
+            opSys = ObjectFile::FreeBSD;
+            break;
           default:
             opSys = ObjectFile::UnknownOpSys;
         }
@@ -160,7 +163,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             Elf_Scn *section;
             GElf_Shdr shdr;
             Elf_Data *data;
-            uint32_t osAbi;;
+            uint32_t osAbi;
+            uint32_t *elem;
             int secIdx = 1;
 
             // Get the first section
@@ -194,6 +198,16 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
                         opSys = ObjectFile::Solaris;
                 if (!strcmp(".stab.index", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
                         opSys = ObjectFile::Solaris;
+                if (shdr.sh_type == SHT_NOTE && !strcmp(".note.tag",
+                            elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name))) {
+                    data = elf_rawdata(section, NULL);
+                    assert(data->d_buf);
+                    elem = (uint32_t *)data->d_buf;
+                    if (elem[0] == 0x8) { //size of name
+                        if (memcmp((void *)&elem[3], "FreeBSD", 0x8) == 0)
+                                opSys = ObjectFile::FreeBSD;
+                    }
+                }
 
             section = elf_getscn(elf, ++secIdx);
             } // while sections

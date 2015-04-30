@@ -1,18 +1,10 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
- * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2015 Ruslan Bukin <br@bsdpad.com>
  * All rights reserved.
+ *
+ * This software was developed by the University of Cambridge Computer
+ * Laboratory as part of the CTSRD Project, with support from the UK Higher
+ * Education Innovation Fund (HEIF).
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,12 +28,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_ARM_LINUX_SYSTEM_HH__
-#define __ARCH_ARM_LINUX_SYSTEM_HH__
+#ifndef __ARCH_ARM_FREEBSD_SYSTEM_HH__
+#define __ARCH_ARM_FREEBSD_SYSTEM_HH__
 
 #include <cstdio>
 #include <map>
@@ -50,20 +40,20 @@
 
 #include "arch/arm/system.hh"
 #include "base/output.hh"
-#include "kern/linux/events.hh"
-#include "params/LinuxArmSystem.hh"
+#include "kern/freebsd/events.hh"
+#include "params/FreebsdArmSystem.hh"
 #include "sim/core.hh"
 
-class DumpStatsPCEvent;
+class DumpStatsPCEventF;
 
-class LinuxArmSystem : public GenericArmSystem
+class FreebsdArmSystem : public GenericArmSystem
 {
   protected:
-    DumpStatsPCEvent *dumpStatsPCEvent;
+    DumpStatsPCEventF *dumpStatsPCEventF;
 
   public:
     /** Boilerplate params code */
-    typedef LinuxArmSystemParams Params;
+    typedef FreebsdArmSystemParams Params;
     const Params *
     params() const
     {
@@ -84,8 +74,8 @@ class LinuxArmSystem : public GenericArmSystem
      * mappings between taskIds and OS process IDs */
     std::ostream* taskFile;
 
-    LinuxArmSystem(Params *p);
-    ~LinuxArmSystem();
+    FreebsdArmSystem(Params *p);
+    ~FreebsdArmSystem();
 
     void initState();
 
@@ -109,14 +99,14 @@ class LinuxArmSystem : public GenericArmSystem
      * processor for the appropriate amount of time. This is not functionally
      * required but does speed up simulation.
      */
-    Linux::UDelayEvent *uDelaySkipEvent;
+    FreeBSD::UDelayEvent *uDelaySkipEvent;
 
     /** Another PC based skip event for const_udelay(). Similar to the udelay
      * skip, but this function precomputes the first multiply that is done
      * in the generic case since the parameter is known at compile time.
      * Thus we need to do some division to get back to us.
      */
-    Linux::UDelayEvent *constUDelaySkipEvent;
+    FreeBSD::UDelayEvent *constUDelaySkipEvent;
 
     /** These variables store addresses of important data structures
      * that are normaly kept coherent at boot with cache mainetence operations.
@@ -130,10 +120,10 @@ class LinuxArmSystem : public GenericArmSystem
     Addr bootReleaseAddr;
 };
 
-class DumpStatsPCEvent : public PCEvent
+class DumpStatsPCEventF : public PCEvent
 {
   public:
-    DumpStatsPCEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+    DumpStatsPCEventF(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
 
@@ -141,5 +131,5 @@ class DumpStatsPCEvent : public PCEvent
 };
 
 
-#endif // __ARCH_ARM_LINUX_SYSTEM_HH__
+#endif // __ARCH_ARM_FREEBSD_SYSTEM_HH__
 

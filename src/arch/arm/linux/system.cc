@@ -61,7 +61,7 @@ using namespace ArmISA;
 using namespace Linux;
 
 LinuxArmSystem::LinuxArmSystem(Params *p)
-    : ArmSystem(p), dumpStatsPCEvent(nullptr),
+    : GenericArmSystem(p), dumpStatsPCEvent(nullptr),
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
       taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr),
       bootReleaseAddr(p->boot_release_addr)
@@ -133,7 +133,7 @@ LinuxArmSystem::initState()
     // address map being resolved in the interconnect
 
     // Call the initialisation of the super class
-    ArmSystem::initState();
+    GenericArmSystem::initState();
 
     // Load symbols at physical address, we might not want
     // to do this permanently, for but early bootup work

@@ -77,6 +77,7 @@
 #include "arch/mips/linux/process.hh"
 #elif THE_ISA == ARM_ISA
 #include "arch/arm/linux/process.hh"
+#include "arch/arm/freebsd/process.hh"
 #elif THE_ISA == X86_ISA
 #include "arch/x86/linux/process.hh"
 #elif THE_ISA == POWER_ISA
@@ -734,6 +735,15 @@ LiveProcess::create(LiveProcessParams * params)
         } else {
             process = new ArmLinuxProcess32(params, objFile,
                                             objFile->getArch());
+        }
+        break;
+      case ObjectFile::FreeBSD:
+        if (arch == ObjectFile::Arm64) {
+            process = new ArmFreebsdProcess64(params, objFile,
+                                              objFile->getArch());
+        } else {
+            process = new ArmFreebsdProcess32(params, objFile,
+                                              objFile->getArch());
         }
         break;
       case ObjectFile::LinuxArmOABI:
