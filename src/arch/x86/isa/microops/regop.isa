@@ -629,7 +629,7 @@ let {{
             uint64_t dividend = remainder;
             //Do the division.
             if (divisor == 0) {
-                fault = std::make_shared<DivideByZero>();
+                fault = std::make_shared<DivideError>();
             } else {
                 divide(dividend, divisor, quotient, remainder);
                 //Record the final results.
@@ -652,7 +652,7 @@ let {{
             //If we overshot, do nothing. This lets us unrool division loops a
             //little.
             if (divisor == 0) {
-                fault = std::make_shared<DivideByZero>();
+                fault = std::make_shared<DivideError>();
             } else if (remaining) {
                 if (divisor & (ULL(1) << 63)) {
                     while (remaining && !(dividend & (ULL(1) << 63))) {

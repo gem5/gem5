@@ -167,7 +167,7 @@ namespace X86ISA
 
     // Class  |  Type    | vector |               Cause                 | mnem
     //------------------------------------------------------------------------
-    //Contrib   Fault     0         Divide-by-Zero-Error                  #DE
+    //Contrib   Fault     0         Divide Error                          #DE
     //Benign    Either    1         Debug                                 #DB
     //Benign    Interrupt 2         Non-Maskable-Interrupt                #NMI
     //Benign    Trap      3         Breakpoint                            #BP
@@ -193,11 +193,12 @@ namespace X86ISA
     //Benign    Interrupt 0-255     External Interrupts                   #INTR
     //Benign    Interrupt 0-255     Software Interrupts                   INTn
 
-    class DivideByZero : public X86Fault
+    // Note that
+    class DivideError : public X86Fault
     {
       public:
-        DivideByZero() :
-            X86Fault("Divide-by-Zero-Error", "#DE", 0)
+        DivideError() :
+            X86Fault("Divide-Error", "#DE", 0)
         {}
     };
 
