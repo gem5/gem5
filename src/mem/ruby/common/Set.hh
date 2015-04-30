@@ -62,10 +62,12 @@ class Set
     // 64 bits if the -m64 parameter is passed to g++, which it is
     // for an AMD opteron under our configuration
 
-    long *m_p_nArray;      // an word array to hold the bits in the set
-    long m_p_nArray_Static[NUMBER_WORDS_PER_SET];
+    // an word array to hold the bits in the set
+    unsigned long *m_p_nArray;
+    unsigned long m_p_nArray_Static[NUMBER_WORDS_PER_SET];
 
-    static const int LONG_BITS = std::numeric_limits<long>::digits + 1;
+    static const int LONG_BITS =
+        std::numeric_limits<unsigned long>::digits + 1;
     static const int INDEX_SHIFT = LONG_BITS == 64 ? 6 : 5;
     static const int INDEX_MASK = (1 << INDEX_SHIFT) - 1;
 

@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <memory>
+#include <stack>
 
 #include "mem/packet.hh"
 
@@ -44,12 +45,14 @@ class Message
         : m_time(curTime),
           m_LastEnqueueTime(curTime),
           m_DelayedTicks(0)
-    { }
+    {
+      timeStamps.push(curTime);
+    }
 
     Message(const Message &other)
         : m_time(other.m_time),
           m_LastEnqueueTime(other.m_LastEnqueueTime),
-          m_DelayedTicks(other.m_DelayedTicks)
+          m_DelayedTicks(other.m_DelayedTicks), timeStamps(other.timeStamps)
     { }
 
     virtual ~Message() { }
@@ -90,6 +93,7 @@ class Message
     Tick m_time;
     Tick m_LastEnqueueTime; // my last enqueue time
     Tick m_DelayedTicks; // my delayed cycles
+    std::stack<Tick> timeStamps;
 };
 
 inline std::ostream&
