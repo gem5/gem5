@@ -72,8 +72,8 @@ class FUPool : public SimObject
   private:
     /** Maximum op execution latencies, per op class. */
     Cycles maxOpLatencies[Num_OpClasses];
-    /** Maximum issue latencies, per op class. */
-    Cycles maxIssueLatencies[Num_OpClasses];
+    /** Whether op is pipelined or not. */
+    bool pipelined[Num_OpClasses];
 
     /** Bitvector listing capabilities of this FU pool. */
     std::bitset<Num_OpClasses> capabilityList;
@@ -160,8 +160,8 @@ class FUPool : public SimObject
     }
 
     /** Returns the issue latency of the given capability. */
-    Cycles getIssueLatency(OpClass capability) {
-        return maxIssueLatencies[capability];
+    bool isPipelined(OpClass capability) {
+        return pipelined[capability];
     }
 
     /** Have all the FUs drained? */

@@ -49,7 +49,7 @@ class IntALU(FUDesc):
 
 class IntMultDiv(FUDesc):
     opList = [ OpDesc(opClass='IntMult', opLat=3),
-               OpDesc(opClass='IntDiv', opLat=20, issueLat=19) ]
+               OpDesc(opClass='IntDiv', opLat=20, pipelined=False) ]
 
     # DIV and IDIV instructions in x86 are implemented using a loop which
     # issues division microops.  The latency of these microops should really be
@@ -57,7 +57,6 @@ class IntMultDiv(FUDesc):
     # of the quotient.
     if buildEnv['TARGET_ISA'] in ('x86'):
         opList[1].opLat=1
-        opList[1].issueLat=1
 
     count=2
 
@@ -69,8 +68,8 @@ class FP_ALU(FUDesc):
 
 class FP_MultDiv(FUDesc):
     opList = [ OpDesc(opClass='FloatMult', opLat=4),
-               OpDesc(opClass='FloatDiv', opLat=12, issueLat=12),
-               OpDesc(opClass='FloatSqrt', opLat=24, issueLat=24) ]
+               OpDesc(opClass='FloatDiv', opLat=12, pipelined=False),
+               OpDesc(opClass='FloatSqrt', opLat=24, pipelined=False) ]
     count = 2
 
 class SIMD_Unit(FUDesc):
@@ -109,6 +108,6 @@ class RdWrPort(FUDesc):
     count = 4
 
 class IprPort(FUDesc):
-    opList = [ OpDesc(opClass='IprAccess', opLat = 3, issueLat = 3) ]
+    opList = [ OpDesc(opClass='IprAccess', opLat = 3, pipelined = False) ]
     count = 1
 

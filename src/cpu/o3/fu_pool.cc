@@ -89,7 +89,7 @@ FUPool::FUPool(const Params *p)
 
     for (int i = 0; i < Num_OpClasses; ++i) {
         maxOpLatencies[i] = Cycles(0);
-        maxIssueLatencies[i] = Cycles(0);
+        pipelined[i] = true;
     }
 
     //
@@ -123,13 +123,13 @@ FUPool::FUPool(const Params *p)
                     fuPerCapList[(*j)->opClass].addFU(numFU + k);
 
                 // indicate that this FU has the capability
-                fu->addCapability((*j)->opClass, (*j)->opLat, (*j)->issueLat);
+                fu->addCapability((*j)->opClass, (*j)->opLat, (*j)->pipelined);
 
                 if ((*j)->opLat > maxOpLatencies[(*j)->opClass])
                     maxOpLatencies[(*j)->opClass] = (*j)->opLat;
 
-                if ((*j)->issueLat > maxIssueLatencies[(*j)->opClass])
-                    maxIssueLatencies[(*j)->opClass] = (*j)->issueLat;
+                if (!(*j)->pipelined)
+                    pipelined[(*j)->opClass] = false;
             }
 
             numFU++;

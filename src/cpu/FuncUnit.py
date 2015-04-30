@@ -54,9 +54,10 @@ class OpClass(Enum):
 class OpDesc(SimObject):
     type = 'OpDesc'
     cxx_header = "cpu/func_unit.hh"
-    issueLat = Param.Cycles(1, "cycles until another can be issued")
     opClass = Param.OpClass("type of operation")
     opLat = Param.Cycles(1, "cycles until result is available")
+    pipelined = Param.Bool(True, "set to true when the functional unit for"
+        "this op is fully pipelined. False means not pipelined at all.")
 
 class FUDesc(SimObject):
     type = 'FUDesc'
