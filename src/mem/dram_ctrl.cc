@@ -1174,11 +1174,12 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         // currently dealing with (which is the head of the queue)
         ++p;
 
-        // keep on looking until we have found required condition or
-        // reached the end
-        while (!(got_more_hits &&
-                 (got_bank_conflict || pageMgmt == Enums::close_adaptive)) &&
-               p != queue.end()) {
+        // keep on looking until we find a hit or reach the end of the queue
+        // 1) if a hit is found, then both open and close adaptive policies keep
+        // the page open
+        // 2) if no hit is found, got_bank_conflict is set to true if a bank
+        // conflict request is waiting in the queue
+        while (!got_more_hits && p != queue.end()) {
             bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
                 (dram_pkt->bank == (*p)->bank);
             bool same_row = dram_pkt->row == (*p)->row;
