@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011 ARM Limited
+// Copyright (c) 2010-2011, 2015 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -3694,7 +3694,7 @@ let {{
 
     def vdupGprInst(name, Name, opClass, types, rCount):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect destReg;
         for (unsigned i = 0; i < eCount; i++) {
             destReg.elements[i] = htog((Element)Op1);
@@ -3777,11 +3777,11 @@ let {{
 
     def buildVext(name, Name, opClass, types, rCount, op):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2, destReg;
         '''
         for reg in range(rCount):
-            eWalkCode += simdEnabledCheckCode + '''
+            eWalkCode += '''
                 srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d_uw);
                 srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d_uw);
             ''' % { "reg" : reg }
@@ -3825,7 +3825,7 @@ let {{
 
     def buildVtbxl(name, Name, opClass, length, isVtbl):
         global header_output, decoder_output, exec_output
-        code = '''
+        code = simdEnabledCheckCode + '''
             union
             {
                 uint8_t bytes[32];
