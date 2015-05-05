@@ -701,8 +701,10 @@ Cache::recvTimingReq(PacketPtr pkt)
             }
         } else {
             // no MSHR
-            if (!pkt->req->isUncacheable()) {
-                assert(pkt->req->masterId() < system->maxMasters());
+            assert(pkt->req->masterId() < system->maxMasters());
+            if (pkt->req->isUncacheable()) {
+                mshr_uncacheable[pkt->cmdToIndex()][pkt->req->masterId()]++;
+            } else {
                 mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
             }
 
