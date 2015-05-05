@@ -1074,17 +1074,15 @@ system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_s
 system.cpu.toL2Bus.pkt_size::total              27968                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.snoops                          64                       # Total snoops (count)
 system.cpu.toL2Bus.snoop_fanout::samples          503                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::mean        3.127237                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::mean        1.127237                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::stdev       0.333570                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::0                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::1                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::2                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::3                439     87.28%     87.28% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::4                 64     12.72%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::1                439     87.28%     87.28% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::2                 64     12.72%    100.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::overflows            0      0.00%    100.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::min_value            3                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::max_value            4                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::min_value            1                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::max_value            2                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::total            503                       # Request fanout histogram
 system.cpu.toL2Bus.reqLayer0.occupancy         219500                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.reqLayer0.utilization          1.2                       # Layer utilization (%)

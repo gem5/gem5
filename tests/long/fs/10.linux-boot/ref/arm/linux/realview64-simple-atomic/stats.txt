@@ -4,11 +4,11 @@ sim_seconds                                 51.111153                       # Nu
 sim_ticks                                51111152682000                       # Number of ticks simulated
 final_tick                               51111152682000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1276359                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1499931                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            66258489115                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 712024                       # Number of bytes of host memory used
-host_seconds                                   771.39                       # Real time elapsed on the host
+host_inst_rate                                1196191                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1405721                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            62096813616                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 713636                       # Number of bytes of host memory used
+host_seconds                                   823.09                       # Real time elapsed on the host
 sim_insts                                   984570519                       # Number of instructions simulated
 sim_ops                                    1157031967                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -569,19 +569,17 @@ system.cpu.toL2Bus.pkt_size_system.cpu.itb.walker.dma::system.cpu.l2cache.cpu_si
 system.cpu.toL2Bus.pkt_size_system.cpu.dtb.walker.dma::system.cpu.l2cache.cpu_side      6175776                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size::total         2238699610                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.snoops                      116338                       # Total snoops (count)
-system.cpu.toL2Bus.snoop_fanout::samples     36147883                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::mean        3.003196                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::stdev       0.056441                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::samples     36258168                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::mean        1.034933                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::stdev       0.183610                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::0                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::1                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::2                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::3           36032362     99.68%     99.68% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::4             115521      0.32%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::1           34991563     96.51%     96.51% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::2            1266605      3.49%    100.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::overflows            0      0.00%    100.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::min_value            3                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::max_value            4                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::total       36147883                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::min_value            1                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::max_value            2                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::total       36258168                       # Request fanout histogram
 system.iobus.trans_dist::ReadReq                40246                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               40246                       # Transaction distribution
 system.iobus.trans_dist::WriteReq              136515                       # Transaction distribution
@@ -724,17 +722,17 @@ system.membus.pkt_size_system.iocache.mem_side::system.physmem.port     14217536
 system.membus.pkt_size_system.iocache.mem_side::total     14217536                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size::total               227117498                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
-system.membus.snoop_fanout::samples           3583537                       # Request fanout histogram
+system.membus.snoop_fanout::samples           3693822                       # Request fanout histogram
 system.membus.snoop_fanout::mean                    1                       # Request fanout histogram
 system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::0                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::1                 3583537    100.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::1                 3693822    100.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::2                       0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::min_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
-system.membus.snoop_fanout::total             3583537                       # Request fanout histogram
+system.membus.snoop_fanout::total             3693822                       # Request fanout histogram
 system.realview.ethernet.txBytes                  966                       # Bytes Transmitted
 system.realview.ethernet.txPackets                  3                       # Number of Packets Transmitted
 system.realview.ethernet.txIpChecksums              0                       # Number of tx IP Checksums done by device

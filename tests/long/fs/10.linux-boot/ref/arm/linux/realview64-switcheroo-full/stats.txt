@@ -4,11 +4,11 @@ sim_seconds                                 51.274696                       # Nu
 sim_ticks                                51274696167500                       # Number of ticks simulated
 final_tick                               51274696167500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 281052                       # Simulator instruction rate (inst/s)
-host_op_rate                                   330247                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            16260391227                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 656704                       # Number of bytes of host memory used
-host_seconds                                  3153.35                       # Real time elapsed on the host
+host_inst_rate                                 293957                       # Simulator instruction rate (inst/s)
+host_op_rate                                   345410                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            17006997815                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 724900                       # Number of bytes of host memory used
+host_seconds                                  3014.92                       # Real time elapsed on the host
 sim_insts                                   886256415                       # Number of instructions simulated
 sim_ops                                    1041383802                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -830,6 +830,15 @@ system.cpu0.dcache.demand_mshr_misses::total      3911848                       
 system.cpu0.dcache.overall_mshr_misses::cpu1.data      1288838                       # number of overall MSHR misses
 system.cpu0.dcache.overall_mshr_misses::cpu2.data      3261967                       # number of overall MSHR misses
 system.cpu0.dcache.overall_mshr_misses::total      4550805                       # number of overall MSHR misses
+system.cpu0.dcache.ReadReq_mshr_uncacheable::cpu1.data         5448                       # number of ReadReq MSHR uncacheable
+system.cpu0.dcache.ReadReq_mshr_uncacheable::cpu2.data         8279                       # number of ReadReq MSHR uncacheable
+system.cpu0.dcache.ReadReq_mshr_uncacheable::total        13727                       # number of ReadReq MSHR uncacheable
+system.cpu0.dcache.WriteReq_mshr_uncacheable::cpu1.data         5373                       # number of WriteReq MSHR uncacheable
+system.cpu0.dcache.WriteReq_mshr_uncacheable::cpu2.data         7916                       # number of WriteReq MSHR uncacheable
+system.cpu0.dcache.WriteReq_mshr_uncacheable::total        13289                       # number of WriteReq MSHR uncacheable
+system.cpu0.dcache.overall_mshr_uncacheable_misses::cpu1.data        10821                       # number of overall MSHR uncacheable misses
+system.cpu0.dcache.overall_mshr_uncacheable_misses::cpu2.data        16195                       # number of overall MSHR uncacheable misses
+system.cpu0.dcache.overall_mshr_uncacheable_misses::total        27016                       # number of overall MSHR uncacheable misses
 system.cpu0.dcache.ReadReq_mshr_miss_latency::cpu1.data  10846992750                       # number of ReadReq MSHR miss cycles
 system.cpu0.dcache.ReadReq_mshr_miss_latency::cpu2.data  30627833111                       # number of ReadReq MSHR miss cycles
 system.cpu0.dcache.ReadReq_mshr_miss_latency::total  41474825861                       # number of ReadReq MSHR miss cycles
@@ -911,15 +920,15 @@ system.cpu0.dcache.demand_avg_mshr_miss_latency::total 19118.200690             
 system.cpu0.dcache.overall_avg_mshr_miss_latency::cpu1.data 17677.220786                       # average overall mshr miss latency
 system.cpu0.dcache.overall_avg_mshr_miss_latency::cpu2.data 19254.630415                       # average overall mshr miss latency
 system.cpu0.dcache.overall_avg_mshr_miss_latency::total 18807.890668                       # average overall mshr miss latency
-system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::cpu1.data          inf                       # average ReadReq mshr uncacheable latency
-system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::cpu2.data          inf                       # average ReadReq mshr uncacheable latency
-system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::total          inf                       # average ReadReq mshr uncacheable latency
-system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::cpu1.data          inf                       # average WriteReq mshr uncacheable latency
-system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::cpu2.data          inf                       # average WriteReq mshr uncacheable latency
-system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::total          inf                       # average WriteReq mshr uncacheable latency
-system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu1.data          inf                       # average overall mshr uncacheable latency
-system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu2.data          inf                       # average overall mshr uncacheable latency
-system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::total          inf                       # average overall mshr uncacheable latency
+system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::cpu1.data 164300.431351                       # average ReadReq mshr uncacheable latency
+system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::cpu2.data 178149.293514                       # average ReadReq mshr uncacheable latency
+system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::total 172652.928608                       # average ReadReq mshr uncacheable latency
+system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::cpu1.data 166593.057882                       # average WriteReq mshr uncacheable latency
+system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::cpu2.data 181697.568974                       # average WriteReq mshr uncacheable latency
+system.cpu0.dcache.WriteReq_avg_mshr_uncacheable_latency::total 175590.522688                       # average WriteReq mshr uncacheable latency
+system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu1.data 165438.799556                       # average overall mshr uncacheable latency
+system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu2.data 179883.665144                       # average overall mshr uncacheable latency
+system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::total 174097.912607                       # average overall mshr uncacheable latency
 system.cpu0.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu0.icache.tags.replacements         14550991                       # number of replacements
 system.cpu0.icache.tags.tagsinuse          511.976833                       # Cycle average of tags in use
@@ -2434,6 +2443,15 @@ system.l2c.overall_mshr_misses::cpu2.itb.walker         1470                    
 system.l2c.overall_mshr_misses::cpu2.inst        34248                       # number of overall MSHR misses
 system.l2c.overall_mshr_misses::cpu2.data       279438                       # number of overall MSHR misses
 system.l2c.overall_mshr_misses::total          440923                       # number of overall MSHR misses
+system.l2c.ReadReq_mshr_uncacheable::cpu1.data         5448                       # number of ReadReq MSHR uncacheable
+system.l2c.ReadReq_mshr_uncacheable::cpu2.data         8279                       # number of ReadReq MSHR uncacheable
+system.l2c.ReadReq_mshr_uncacheable::total        13727                       # number of ReadReq MSHR uncacheable
+system.l2c.WriteReq_mshr_uncacheable::cpu1.data         5373                       # number of WriteReq MSHR uncacheable
+system.l2c.WriteReq_mshr_uncacheable::cpu2.data         7916                       # number of WriteReq MSHR uncacheable
+system.l2c.WriteReq_mshr_uncacheable::total        13289                       # number of WriteReq MSHR uncacheable
+system.l2c.overall_mshr_uncacheable_misses::cpu1.data        10821                       # number of overall MSHR uncacheable misses
+system.l2c.overall_mshr_uncacheable_misses::cpu2.data        16195                       # number of overall MSHR uncacheable misses
+system.l2c.overall_mshr_uncacheable_misses::total        27016                       # number of overall MSHR uncacheable misses
 system.l2c.ReadReq_mshr_miss_latency::cpu1.dtb.walker     45139750                       # number of ReadReq MSHR miss cycles
 system.l2c.ReadReq_mshr_miss_latency::cpu1.itb.walker     44046000                       # number of ReadReq MSHR miss cycles
 system.l2c.ReadReq_mshr_miss_latency::cpu1.inst    809585750                       # number of ReadReq MSHR miss cycles
@@ -2557,15 +2575,15 @@ system.l2c.overall_avg_mshr_miss_latency::cpu2.itb.walker 77340.992517          
 system.l2c.overall_avg_mshr_miss_latency::cpu2.inst 73676.090575                       # average overall mshr miss latency
 system.l2c.overall_avg_mshr_miss_latency::cpu2.data 85155.613786                       # average overall mshr miss latency
 system.l2c.overall_avg_mshr_miss_latency::total 79627.010818                       # average overall mshr miss latency
-system.l2c.ReadReq_avg_mshr_uncacheable_latency::cpu1.data          inf                       # average ReadReq mshr uncacheable latency
-system.l2c.ReadReq_avg_mshr_uncacheable_latency::cpu2.data          inf                       # average ReadReq mshr uncacheable latency
-system.l2c.ReadReq_avg_mshr_uncacheable_latency::total          inf                       # average ReadReq mshr uncacheable latency
-system.l2c.WriteReq_avg_mshr_uncacheable_latency::cpu1.data          inf                       # average WriteReq mshr uncacheable latency
-system.l2c.WriteReq_avg_mshr_uncacheable_latency::cpu2.data          inf                       # average WriteReq mshr uncacheable latency
-system.l2c.WriteReq_avg_mshr_uncacheable_latency::total          inf                       # average WriteReq mshr uncacheable latency
-system.l2c.overall_avg_mshr_uncacheable_latency::cpu1.data          inf                       # average overall mshr uncacheable latency
-system.l2c.overall_avg_mshr_uncacheable_latency::cpu2.data          inf                       # average overall mshr uncacheable latency
-system.l2c.overall_avg_mshr_uncacheable_latency::total          inf                       # average overall mshr uncacheable latency
+system.l2c.ReadReq_avg_mshr_uncacheable_latency::cpu1.data 150300.018355                       # average ReadReq mshr uncacheable latency
+system.l2c.ReadReq_avg_mshr_uncacheable_latency::cpu2.data 164140.053147                       # average ReadReq mshr uncacheable latency
+system.l2c.ReadReq_avg_mshr_uncacheable_latency::total 158647.191666                       # average ReadReq mshr uncacheable latency
+system.l2c.WriteReq_avg_mshr_uncacheable_latency::cpu1.data 153591.103666                       # average WriteReq mshr uncacheable latency
+system.l2c.WriteReq_avg_mshr_uncacheable_latency::cpu2.data 168686.141486                       # average WriteReq mshr uncacheable latency
+system.l2c.WriteReq_avg_mshr_uncacheable_latency::total 162582.925427                       # average WriteReq mshr uncacheable latency
+system.l2c.overall_avg_mshr_uncacheable_latency::cpu1.data 151934.155808                       # average overall mshr uncacheable latency
+system.l2c.overall_avg_mshr_uncacheable_latency::cpu2.data 166362.148564                       # average overall mshr uncacheable latency
+system.l2c.overall_avg_mshr_uncacheable_latency::total 160583.154279                       # average overall mshr uncacheable latency
 system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate
 system.membus.trans_dist::ReadReq              465050                       # Transaction distribution
 system.membus.trans_dist::ReadResp             465050                       # Transaction distribution
@@ -2596,17 +2614,17 @@ system.membus.pkt_size_system.iocache.mem_side::system.physmem.port     14192960
 system.membus.pkt_size_system.iocache.mem_side::total     14192960                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size::total               173983314                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                              541                       # Total snoops (count)
-system.membus.snoop_fanout::samples           2749696                       # Request fanout histogram
+system.membus.snoop_fanout::samples           2860073                       # Request fanout histogram
 system.membus.snoop_fanout::mean                    1                       # Request fanout histogram
 system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::0                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::1                 2749696    100.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::1                 2860073    100.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::2                       0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::min_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
-system.membus.snoop_fanout::total             2749696                       # Request fanout histogram
+system.membus.snoop_fanout::total             2860073                       # Request fanout histogram
 system.membus.reqLayer0.occupancy            47655000                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization               0.0                       # Layer utilization (%)
 system.membus.reqLayer1.occupancy                1500                       # Layer occupancy (ticks)
@@ -2684,19 +2702,17 @@ system.toL2Bus.pkt_size_system.cpu0.itb.walker.dma::system.l2c.cpu_side      309
 system.toL2Bus.pkt_size_system.cpu0.dtb.walker.dma::system.l2c.cpu_side      6299696                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size::total             2099087298                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.snoops                          376855                       # Total snoops (count)
-system.toL2Bus.snoop_fanout::samples         34241641                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::mean            3.003374                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::stdev           0.057992                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::samples         34352020                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::mean            1.045142                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::stdev           0.207615                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::0                      0      0.00%      0.00% # Request fanout histogram
-system.toL2Bus.snoop_fanout::1                      0      0.00%      0.00% # Request fanout histogram
-system.toL2Bus.snoop_fanout::2                      0      0.00%      0.00% # Request fanout histogram
-system.toL2Bus.snoop_fanout::3               34126094     99.66%     99.66% # Request fanout histogram
-system.toL2Bus.snoop_fanout::4                 115547      0.34%    100.00% # Request fanout histogram
+system.toL2Bus.snoop_fanout::1               32801302     95.49%     95.49% # Request fanout histogram
+system.toL2Bus.snoop_fanout::2                1550718      4.51%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
-system.toL2Bus.snoop_fanout::min_value              3                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::max_value              4                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::total           34241641                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::min_value              1                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::max_value              2                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::total           34352020                       # Request fanout histogram
 system.toL2Bus.reqLayer0.occupancy        13384646524                       # Layer occupancy (ticks)
 system.toL2Bus.reqLayer0.utilization              0.0                       # Layer utilization (%)
 system.toL2Bus.snoopLayer0.occupancy           375000                       # Layer occupancy (ticks)

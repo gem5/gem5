@@ -4,11 +4,11 @@ sim_seconds                                  0.395727                       # Nu
 sim_ticks                                395726778500                       # Number of ticks simulated
 final_tick                               395726778500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1109777                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1366282                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              685499869                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 303676                       # Number of bytes of host memory used
-host_seconds                                   577.28                       # Real time elapsed on the host
+host_inst_rate                                1575908                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1940150                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              973424664                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 311080                       # Number of bytes of host memory used
+host_seconds                                   406.53                       # Real time elapsed on the host
 sim_insts                                   640654411                       # Number of instructions simulated
 sim_ops                                     788730070                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -230,16 +230,14 @@ system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port   1668035929 
 system.membus.pkt_size::total              4241547525                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoop_fanout::samples        1022670353                       # Request fanout histogram
-system.membus.snoop_fanout::mean             2.629116                       # Request fanout histogram
+system.membus.snoop_fanout::mean             0.629116                       # Request fanout histogram
 system.membus.snoop_fanout::stdev            0.483042                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::0                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::1                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::2               379292454     37.09%     37.09% # Request fanout histogram
-system.membus.snoop_fanout::3               643377899     62.91%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::0               379292454     37.09%     37.09% # Request fanout histogram
+system.membus.snoop_fanout::1               643377899     62.91%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
-system.membus.snoop_fanout::min_value               2                       # Request fanout histogram
-system.membus.snoop_fanout::max_value               3                       # Request fanout histogram
+system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::total          1022670353                       # Request fanout histogram
 
 ---------- End Simulation Statistics   ----------

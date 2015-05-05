@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409271000                       # Number of ticks simulated
 final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               10268281                       # Simulator instruction rate (inst/s)
-host_op_rate                                 10268278                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             3928851236                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 533084                       # Number of bytes of host memory used
-host_seconds                                    51.01                       # Real time elapsed on the host
+host_inst_rate                               20752053                       # Simulator instruction rate (inst/s)
+host_op_rate                                 20752044                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7940152278                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 485568                       # Number of bytes of host memory used
+host_seconds                                    25.24                       # Real time elapsed on the host
 sim_insts                                   523780905                       # Number of instructions simulated
 sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -244,16 +244,16 @@ drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port     572
 drivesys.membus.pkt_size_drivesys.iobridge.master::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.pkt_size::total             175319714                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.snoops                              0                       # Total snoops (count)
-drivesys.membus.snoop_fanout::samples        27109094                       # Request fanout histogram
-drivesys.membus.snoop_fanout::mean           0.790778                       # Request fanout histogram
-drivesys.membus.snoop_fanout::stdev          0.406753                       # Request fanout histogram
+drivesys.membus.snoop_fanout::samples        27247410                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean           0.786764                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev          0.409593                       # Request fanout histogram
 drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-drivesys.membus.snoop_fanout::0               5671825     20.92%     20.92% # Request fanout histogram
-drivesys.membus.snoop_fanout::1              21437269     79.08%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0               5810141     21.32%     21.32% # Request fanout histogram
+drivesys.membus.snoop_fanout::1              21437269     78.68%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
-drivesys.membus.snoop_fanout::total          27109094                       # Request fanout histogram
+drivesys.membus.snoop_fanout::total          27247410                       # Request fanout histogram
 drivesys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 drivesys.tsunami.ethernet.txBytes                 798                       # Bytes Transmitted
 drivesys.tsunami.ethernet.rxBytes                 960                       # Bytes Received
@@ -551,16 +551,16 @@ testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port     572613
 testsys.membus.pkt_size_testsys.iobridge.master::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.pkt_size::total              183678150                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.snoops                               0                       # Total snoops (count)
-testsys.membus.snoop_fanout::samples         28747524                       # Request fanout histogram
-testsys.membus.snoop_fanout::mean            0.787786                       # Request fanout histogram
-testsys.membus.snoop_fanout::stdev           0.408876                       # Request fanout histogram
+testsys.membus.snoop_fanout::samples         28885173                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean            0.784032                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev           0.411493                       # Request fanout histogram
 testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
-testsys.membus.snoop_fanout::0                6100637     21.22%     21.22% # Request fanout histogram
-testsys.membus.snoop_fanout::1               22646887     78.78%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0                6238286     21.60%     21.60% # Request fanout histogram
+testsys.membus.snoop_fanout::1               22646887     78.40%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
-testsys.membus.snoop_fanout::total           28747524                       # Request fanout histogram
+testsys.membus.snoop_fanout::total           28885173                       # Request fanout histogram
 testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
 testsys.tsunami.ethernet.rxBytes                  798                       # Bytes Received
@@ -619,11 +619,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                             5226750004                       # Simulator instruction rate (inst/s)
-host_op_rate                               5225740576                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             4062718512                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 533084                       # Number of bytes of host memory used
-host_seconds                                     0.10                       # Real time elapsed on the host
+host_inst_rate                            10415397218                       # Simulator instruction rate (inst/s)
+host_op_rate                              10413013630                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8095289719                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 485568                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                   523853183                       # Number of instructions simulated
 sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -838,16 +838,16 @@ drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port       1
 drivesys.membus.pkt_size_drivesys.iobridge.master::total       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.pkt_size::total                340576                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.snoops                              0                       # Total snoops (count)
-drivesys.membus.snoop_fanout::samples           51723                       # Request fanout histogram
-drivesys.membus.snoop_fanout::mean           0.792723                       # Request fanout histogram
-drivesys.membus.snoop_fanout::stdev          0.405360                       # Request fanout histogram
+drivesys.membus.snoop_fanout::samples           52004                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean           0.788439                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev          0.408419                       # Request fanout histogram
 drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-drivesys.membus.snoop_fanout::0                 10721     20.73%     20.73% # Request fanout histogram
-drivesys.membus.snoop_fanout::1                 41002     79.27%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0                 11002     21.16%     21.16% # Request fanout histogram
+drivesys.membus.snoop_fanout::1                 41002     78.84%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
-drivesys.membus.snoop_fanout::total             51723                       # Request fanout histogram
+drivesys.membus.snoop_fanout::total             52004                       # Request fanout histogram
 drivesys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 drivesys.tsunami.ethernet.descDMAReads           4850                       # Number of descriptors the device read w/ DMA
 drivesys.tsunami.ethernet.descDMAWrites             0                       # Number of descriptors the device wrote w/ DMA
@@ -1092,16 +1092,16 @@ testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port       1163
 testsys.membus.pkt_size_testsys.iobridge.master::total       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.pkt_size::total                 340448                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.snoops                               0                       # Total snoops (count)
-testsys.membus.snoop_fanout::samples            51694                       # Request fanout histogram
-testsys.membus.snoop_fanout::mean            0.792645                       # Request fanout histogram
-testsys.membus.snoop_fanout::stdev           0.405416                       # Request fanout histogram
+testsys.membus.snoop_fanout::samples            51975                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean            0.788360                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev           0.408475                       # Request fanout histogram
 testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
-testsys.membus.snoop_fanout::0                  10719     20.74%     20.74% # Request fanout histogram
-testsys.membus.snoop_fanout::1                  40975     79.26%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0                  11000     21.16%     21.16% # Request fanout histogram
+testsys.membus.snoop_fanout::1                  40975     78.84%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
-testsys.membus.snoop_fanout::total              51694                       # Request fanout histogram
+testsys.membus.snoop_fanout::total              51975                       # Request fanout histogram
 testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
 testsys.tsunami.ethernet.descDMAReads            4849                       # Number of descriptors the device read w/ DMA
 testsys.tsunami.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
