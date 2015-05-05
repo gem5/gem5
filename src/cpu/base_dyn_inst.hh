@@ -144,7 +144,7 @@ class BaseDynInst : public ExecContext, public RefCounted
          *  @todo: Consider if this is necessary or not.
          */
         EACalcDone,
-        IsUncacheable,
+        IsStrictlyOrdered,
         ReqMade,
         MemOpDone,
         MaxFlags
@@ -834,8 +834,8 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Returns whether or not the eff. addr. source registers are ready. */
     bool eaSrcsReady();
 
-    /** Is this instruction's memory access uncacheable. */
-    bool uncacheable() { return instFlags[IsUncacheable]; }
+    /** Is this instruction's memory access strictly ordered? */
+    bool strictlyOrdered() const { return instFlags[IsStrictlyOrdered]; }
 
     /** Has this instruction generated a memory request. */
     bool hasRequest() { return instFlags[ReqMade]; }
@@ -1052,7 +1052,7 @@ BaseDynInst<Impl>::finishTranslation(WholeTranslationState *state)
 {
     fault = state->getFault();
 
-    instFlags[IsUncacheable] = state->isUncacheable();
+    instFlags[IsStrictlyOrdered] = state->isStrictlyOrdered();
 
     if (fault == NoFault) {
         physEffAddr = state->getPaddr();

@@ -985,13 +985,13 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     if (flags & Request::CLEAR_LL){
         // @todo: check implications of security extensions
        req->setPaddr(0);
-       req->setFlags(Request::UNCACHEABLE);
+       req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
        req->setFlags(Request::CLEAR_LL);
        return NoFault;
     }
     if ((req->isInstFetch() && (!sctlr.i)) ||
         ((!req->isInstFetch()) && (!sctlr.c))){
-       req->setFlags(Request::UNCACHEABLE);
+       req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
     }
     if (!is_fetch) {
         assert(flags & MustBeOne);
@@ -1018,10 +1018,10 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
         // @todo: double check this (ARM ARM issue C B3.2.1)
         if (long_desc_format || sctlr.tre == 0) {
-            req->setFlags(Request::UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
         } else {
             if (nmrr.ir0 == 0 || nmrr.or0 == 0 || prrr.tr0 != 0x2)
-                req->setFlags(Request::UNCACHEABLE);
+                req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
         }
 
         // Set memory attributes
@@ -1074,9 +1074,9 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
                 te->shareable, te->innerAttrs, te->outerAttrs,
                 static_cast<uint8_t>(te->mtype), isStage2);
         setAttr(te->attributes);
-        if (te->nonCacheable) {
-            req->setFlags(Request::UNCACHEABLE);
-        }
+
+        if (te->nonCacheable)
+            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
 
         Addr pa = te->pAddr(vaddr);
         req->setPaddr(pa);

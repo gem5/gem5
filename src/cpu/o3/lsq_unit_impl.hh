@@ -471,7 +471,7 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
     while (load_idx != loadTail) {
         DynInstPtr ld_inst = loadQueue[load_idx];
 
-        if (!ld_inst->effAddrValid() || ld_inst->uncacheable()) {
+        if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered()) {
             incrLdIdx(load_idx);
             continue;
         }
@@ -528,7 +528,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
      */
     while (load_idx != loadTail) {
         DynInstPtr ld_inst = loadQueue[load_idx];
-        if (!ld_inst->effAddrValid() || ld_inst->uncacheable()) {
+        if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered()) {
             incrLdIdx(load_idx);
             continue;
         }
@@ -617,15 +617,15 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     // along to commit without the instruction completing.
     if (load_fault != NoFault || !inst->readPredicate()) {
         // Send this instruction to commit, also make sure iew stage
-        // realizes there is activity.
-        // Mark it as executed unless it is an uncached load that
-        // needs to hit the head of commit.
+        // realizes there is activity.  Mark it as executed unless it
+        // is a strictly ordered load that needs to hit the head of
+        // commit.
         if (!inst->readPredicate())
             inst->forwardOldRegs();
         DPRINTF(LSQUnit, "Load [sn:%lli] not executed from %s\n",
                 inst->seqNum,
                 (load_fault != NoFault ? "fault" : "predication"));
-        if (!(inst->hasRequest() && inst->uncacheable()) ||
+        if (!(inst->hasRequest() && inst->strictlyOrdered()) ||
             inst->isAtCommit()) {
             inst->setExecuted();
         }

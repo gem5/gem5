@@ -1145,7 +1145,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // think are possible.
         assert(head_inst->isNonSpeculative() || head_inst->isStoreConditional()
                || head_inst->isMemBarrier() || head_inst->isWriteBarrier() ||
-               (head_inst->isLoad() && head_inst->uncacheable()));
+               (head_inst->isLoad() && head_inst->strictlyOrdered()));
 
         DPRINTF(Commit, "Encountered a barrier or non-speculative "
                 "instruction [sn:%lli] at the head of the ROB, PC %s.\n",
@@ -1162,11 +1162,11 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // it is executed.
         head_inst->clearCanCommit();
 
-        if (head_inst->isLoad() && head_inst->uncacheable()) {
-            DPRINTF(Commit, "[sn:%lli]: Uncached load, PC %s.\n",
+        if (head_inst->isLoad() && head_inst->strictlyOrdered()) {
+            DPRINTF(Commit, "[sn:%lli]: Strictly ordered load, PC %s.\n",
                     head_inst->seqNum, head_inst->pcState());
-            toIEW->commitInfo[tid].uncached = true;
-            toIEW->commitInfo[tid].uncachedLoad = head_inst;
+            toIEW->commitInfo[tid].strictlyOrdered = true;
+            toIEW->commitInfo[tid].strictlyOrderedLoad = head_inst;
         } else {
             ++commitNonSpecStalls;
         }

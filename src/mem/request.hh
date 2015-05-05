@@ -101,8 +101,24 @@ class Request
     static const FlagsType INST_FETCH                  = 0x00000100;
     /** The virtual address is also the physical address. */
     static const FlagsType PHYSICAL                    = 0x00000200;
-    /** The request is to an uncacheable address. */
-    static const FlagsType UNCACHEABLE                 = 0x00001000;
+    /**
+     * The request is to an uncacheable address.
+     *
+     * @note Uncacheable accesses may be reordered by CPU models. The
+     * STRICT_ORDER flag should be set if such reordering is
+     * undesirable.
+     */
+    static const FlagsType UNCACHEABLE                = 0x00000400;
+    /**
+     * The request is required to be strictly ordered by <i>CPU
+     * models</i> and is non-speculative.
+     *
+     * A strictly ordered request is guaranteed to never be re-ordered
+     * or executed speculatively by a CPU model. The memory system may
+     * still reorder requests in caches unless the UNCACHEABLE flag is
+     * set as well.
+     */
+    static const FlagsType STRICT_ORDER                = 0x00000800;
     /** This request is to a memory mapped register. */
     static const FlagsType MMAPPED_IPR                 = 0x00002000;
     /** This request is a clear exclusive. */
@@ -618,6 +634,7 @@ class Request
     /** Accessor functions for flags.  Note that these are for testing
        only; setting flags should be done via setFlags(). */
     bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
+    bool isStrictlyOrdered() const { return _flags.isSet(STRICT_ORDER); }
     bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
     bool isPrefetch() const { return _flags.isSet(PREFETCH); }
     bool isLLSC() const { return _flags.isSet(LLSC); }

@@ -1418,9 +1418,9 @@ DefaultIEW<Impl>::writebackInsts()
 
         // Some instructions will be sent to commit without having
         // executed because they need commit to handle them.
-        // E.g. Uncached loads have not actually executed when they
+        // E.g. Strictly ordered loads have not actually executed when they
         // are first sent to commit.  Instead commit must tell the LSQ
-        // when it's ready to execute the uncached load.
+        // when it's ready to execute the strictly ordered load.
         if (!inst->isSquashed() && inst->isExecuted() && inst->getFault() == NoFault) {
             int dependents = instQueue.wakeDependents(inst);
 
@@ -1522,9 +1522,10 @@ DefaultIEW<Impl>::tick()
         if (fromCommit->commitInfo[tid].nonSpecSeqNum != 0) {
 
             //DPRINTF(IEW,"NonspecInst from thread %i",tid);
-            if (fromCommit->commitInfo[tid].uncached) {
-                instQueue.replayMemInst(fromCommit->commitInfo[tid].uncachedLoad);
-                fromCommit->commitInfo[tid].uncachedLoad->setAtCommit();
+            if (fromCommit->commitInfo[tid].strictlyOrdered) {
+                instQueue.replayMemInst(
+                    fromCommit->commitInfo[tid].strictlyOrderedLoad);
+                fromCommit->commitInfo[tid].strictlyOrderedLoad->setAtCommit();
             } else {
                 instQueue.scheduleNonSpec(
                     fromCommit->commitInfo[tid].nonSpecSeqNum);

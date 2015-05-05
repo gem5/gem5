@@ -206,7 +206,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
             req->setFlags(Request::MMAPPED_IPR);
             req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(MiscReg));
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
-            req->setFlags(Request::UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
             Addr configAddress =
                 tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
             if (bits(configAddress, 31, 31)) {
@@ -217,7 +217,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
                 req->setPaddr(PhysAddrPrefixIO | IOPort);
             }
         } else {
-            req->setFlags(Request::UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
             req->setPaddr(PhysAddrPrefixIO | IOPort);
         }
         return NoFault;
@@ -261,7 +261,7 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
                 return new GeneralProtection(0);
             */
             // Force the access to be uncacheable.
-            req->setFlags(Request::UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
             req->setPaddr(x86LocalAPICAddress(tc->contextId(),
                                               paddr - apicRange.start()));
         }
@@ -401,7 +401,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
             req->setPaddr(paddr);
             if (entry->uncacheable)
-                req->setFlags(Request::UNCACHEABLE);
+                req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
         } else {
             //Use the address which already has segmentation applied.
             DPRINTF(TLB, "Paging disabled.\n");

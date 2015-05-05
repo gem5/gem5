@@ -926,7 +926,7 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
     bool is_load = request->isLoad;
     bool is_llsc = request->request.isLLSC();
     bool is_swap = request->request.isSwap();
-    bool bufferable = !(request->request.isUncacheable() ||
+    bool bufferable = !(request->request.isStrictlyOrdered() ||
         is_llsc || is_swap);
 
     if (is_load) {

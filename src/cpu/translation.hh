@@ -153,14 +153,14 @@ class WholeTranslationState
     }
 
     /**
-     * Check if this request is uncacheable.  We only need to check the main
-     * request because the flags will have been copied here on a split
-     * translation.
+     * Check if this request is strictly ordered device access.  We
+     * only need to check the main request because the flags will have
+     * been copied here on a split translation.
      */
     bool
-    isUncacheable() const
+    isStrictlyOrdered() const
     {
-        return mainReq->isUncacheable();
+        return mainReq->isStrictlyOrdered();
     }
 
     /**

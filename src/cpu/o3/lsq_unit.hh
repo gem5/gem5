@@ -559,15 +559,15 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
     assert(!load_inst->isExecuted());
 
-    // Make sure this isn't an uncacheable access
-    // A bit of a hackish way to get uncached accesses to work only if they're
-    // at the head of the LSQ and are ready to commit (at the head of the ROB
-    // too).
-    if (req->isUncacheable() &&
+    // Make sure this isn't a strictly ordered load
+    // A bit of a hackish way to get strictly ordered accesses to work
+    // only if they're at the head of the LSQ and are ready to commit
+    // (at the head of the ROB too).
+    if (req->isStrictlyOrdered() &&
         (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
-        DPRINTF(LSQUnit, "Uncachable load [sn:%lli] PC %s\n",
+        DPRINTF(LSQUnit, "Strictly ordered load [sn:%lli] PC %s\n",
                 load_inst->seqNum, load_inst->pcState());
 
         // Must delete request now that it wasn't handed off to
@@ -579,7 +579,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             delete sreqHigh;
         }
         return std::make_shared<GenericISA::M5PanicFault>(
-            "Uncachable load [sn:%llx] PC %s\n",
+            "Strictly ordered load [sn:%llx] PC %s\n",
             load_inst->seqNum, load_inst->pcState());
     }
 
@@ -653,7 +653,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
         if (store_size == 0)
             continue;
-        else if (storeQueue[store_idx].inst->uncacheable())
+        else if (storeQueue[store_idx].inst->strictlyOrdered())
             continue;
 
         assert(storeQueue[store_idx].inst->effAddrValid());

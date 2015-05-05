@@ -571,8 +571,10 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                     ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
                     (!write || ce->pte.writable())) {
                     req->setPaddr(ce->pte.translate(vaddr));
-                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                        req->setFlags(Request::UNCACHEABLE);
+                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1) {
+                        req->setFlags(
+                            Request::UNCACHEABLE | Request::STRICT_ORDER);
+                    }
                     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
                     return NoFault;
                 } // if matched
@@ -584,8 +586,10 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                     ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
                     (!write || ce->pte.writable())) {
                     req->setPaddr(ce->pte.translate(vaddr));
-                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                        req->setFlags(Request::UNCACHEABLE);
+                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1) {
+                        req->setFlags(
+                            Request::UNCACHEABLE | Request::STRICT_ORDER);
+                    }
                     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
                     return NoFault;
                 } // if matched
@@ -748,7 +752,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     }
 
     if (e->pte.sideffect() || (e->pte.paddr() >> 39) & 1)
-        req->setFlags(Request::UNCACHEABLE);
+        req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
 
     // cache translation date for next translation
     cacheState = tlbdata;

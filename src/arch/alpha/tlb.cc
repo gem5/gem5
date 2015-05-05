@@ -225,7 +225,7 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
                 "IPR memory space not implemented!");
         } else {
             // mark request as uncacheable
-            req->setFlags(Request::UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
 
             // Clear bits 42:35 of the physical address (10-2 in
             // Tsunami manual)
