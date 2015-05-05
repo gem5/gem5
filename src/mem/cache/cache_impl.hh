@@ -819,6 +819,18 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     }
     PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 
+    // if there are sharers in the upper levels, pass that info downstream
+    if (cpu_pkt->sharedAsserted()) {
+        // note that cpu_pkt may have spent a considerable time in the
+        // MSHR queue and that the information could possibly be out
+        // of date, however, there is no harm in conservatively
+        // assuming the block is shared
+        pkt->assertShared();
+        DPRINTF(Cache, "%s passing shared from %s to %s addr %#llx size %d\n",
+                __func__, cpu_pkt->cmdString(), pkt->cmdString(),
+                pkt->getAddr(), pkt->getSize());
+    }
+
     // the packet should be block aligned
     assert(pkt->getAddr() == blockAlign(pkt->getAddr()));
 
