@@ -79,8 +79,6 @@ class FreebsdArmSystem : public GenericArmSystem
 
     void initState();
 
-    bool adderBootUncacheable(Addr a);
-
     void startup();
 
     /** This function creates a new task Id for the given pid.

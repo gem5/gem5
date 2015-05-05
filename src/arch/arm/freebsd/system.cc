@@ -53,8 +53,7 @@ using namespace FreeBSD;
 FreebsdArmSystem::FreebsdArmSystem(Params *p)
     : GenericArmSystem(p), dumpStatsPCEventF(nullptr),
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
-      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr),
-      bootReleaseAddr(p->boot_release_addr)
+      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
 {
     if (p->panic_on_panic) {
         kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
@@ -72,13 +71,6 @@ FreebsdArmSystem::FreebsdArmSystem(Params *p)
 
     uDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
         "DELAY", "DELAY", 1000, 0);
-}
-
-bool
-FreebsdArmSystem::adderBootUncacheable(Addr a)
-{
-
-    return false;
 }
 
 void

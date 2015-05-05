@@ -89,8 +89,6 @@ class LinuxArmSystem : public GenericArmSystem
 
     void initState();
 
-    bool adderBootUncacheable(Addr a);
-
     void startup();
 
     /** This function creates a new task Id for the given pid.
@@ -118,16 +116,6 @@ class LinuxArmSystem : public GenericArmSystem
      */
     Linux::UDelayEvent *constUDelaySkipEvent;
 
-    /** These variables store addresses of important data structures
-     * that are normaly kept coherent at boot with cache mainetence operations.
-     * Since these operations aren't supported in gem5, we keep them coherent
-     * by making them uncacheable until all processors in the system boot.
-     */
-    Addr secDataPtrAddr;
-    Addr secDataAddr;
-    Addr penReleaseAddr;
-    Addr pen64ReleaseAddr;
-    Addr bootReleaseAddr;
 };
 
 class DumpStatsPCEvent : public PCEvent

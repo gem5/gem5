@@ -1103,10 +1103,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 miscRegs[sctlr_idx] = (MiscReg)new_sctlr;
                 tc->getITBPtr()->invalidateMiscReg();
                 tc->getDTBPtr()->invalidateMiscReg();
-
-                if (new_sctlr.c)
-                    updateBootUncacheable(sctlr_idx, tc);
-                return;
             }
           case MISCREG_MIDR:
           case MISCREG_ID_PFR0:
@@ -1656,11 +1652,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             {
                 tc->getITBPtr()->invalidateMiscReg();
                 tc->getDTBPtr()->invalidateMiscReg();
-                SCTLR new_sctlr = newVal;
                 setMiscRegNoEffect(misc_reg, newVal);
-                if (new_sctlr.c)
-                    updateBootUncacheable(misc_reg, tc);
-                return;
             }
           case MISCREG_CONTEXTIDR:
           case MISCREG_PRRR:
@@ -1906,38 +1898,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         }
     }
     setMiscRegNoEffect(misc_reg, newVal);
-}
-
-void
-ISA::updateBootUncacheable(int sctlr_idx, ThreadContext *tc)
-{
-    System *sys;
-    ThreadContext *oc;
-
-    // Check if all CPUs are booted with caches enabled
-    // so we can stop enforcing coherency of some kernel
-    // structures manually.
-    sys = tc->getSystemPtr();
-    for (int x = 0; x < sys->numContexts(); x++) {
-        oc = sys->getThreadContext(x);
-        // @todo: double check this for security
-        SCTLR other_sctlr = oc->readMiscRegNoEffect(sctlr_idx);
-        if (!other_sctlr.c && oc->status() != ThreadContext::Halted)
-            return;
-    }
-
-    for (int x = 0; x < sys->numContexts(); x++) {
-        oc = sys->getThreadContext(x);
-        oc->getDTBPtr()->allCpusCaching();
-        oc->getITBPtr()->allCpusCaching();
-
-       // If CheckerCPU is connected, need to notify it.
-        CheckerCPU *checker = oc->getCheckerCpuPtr();
-        if (checker) {
-            checker->getDTBPtr()->allCpusCaching();
-            checker->getITBPtr()->allCpusCaching();
-        }
-    }
 }
 
 void

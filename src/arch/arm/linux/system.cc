@@ -63,8 +63,7 @@ using namespace Linux;
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : GenericArmSystem(p), dumpStatsPCEvent(nullptr),
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
-      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr),
-      bootReleaseAddr(p->boot_release_addr)
+      taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
 {
     if (p->panic_on_panic) {
         kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
@@ -96,34 +95,6 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
         constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
          "__const_udelay", "__const_udelay", 1000, 107374);
 
-    secDataPtrAddr = 0;
-    secDataAddr = 0;
-    penReleaseAddr = 0;
-
-    kernelSymtab->findAddress("__secondary_data", secDataPtrAddr);
-    kernelSymtab->findAddress("secondary_data", secDataAddr);
-    kernelSymtab->findAddress("pen_release", penReleaseAddr);
-    kernelSymtab->findAddress("secondary_holding_pen_release", pen64ReleaseAddr);
-
-    secDataPtrAddr &= ~ULL(0x7F);
-    secDataAddr &= ~ULL(0x7F);
-    penReleaseAddr &= ~ULL(0x7F);
-    pen64ReleaseAddr &= ~ULL(0x7F);
-    bootReleaseAddr = (bootReleaseAddr & ~ULL(0x7F)) + loadAddrOffset;
-
-}
-
-bool
-LinuxArmSystem::adderBootUncacheable(Addr a)
-{
-    Addr block = a & ~ULL(0x7F);
-
-    if (block == secDataPtrAddr || block == secDataAddr ||
-            block == penReleaseAddr || pen64ReleaseAddr == block ||
-            block == bootReleaseAddr)
-        return true;
-
-    return false;
 }
 
 void
@@ -174,10 +145,6 @@ LinuxArmSystem::initState()
             warn("dtb_file cast failed; couldn't append bootargs "
                  "to DTB file: %s\n", params()->dtb_filename);
         }
-
-        Addr ra = _dtb_file->findReleaseAddr();
-        if (ra)
-            bootReleaseAddr = ra & ~ULL(0x7F);
 
         dtb_file->setTextBase(params()->atags_addr + loadAddrOffset);
         dtb_file->loadSections(physProxy);

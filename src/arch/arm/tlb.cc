@@ -74,7 +74,7 @@ TLB::TLB(const ArmTLBParams *p)
     : BaseTLB(p), table(new TlbEntry[p->size]), size(p->size),
       isStage2(p->is_stage2), stage2Req(false), _attr(0),
       directToStage2(false), tableWalker(p->walker), stage2Tlb(NULL),
-      stage2Mmu(NULL), rangeMRU(1), bootUncacheability(false),
+      stage2Mmu(NULL), rangeMRU(1),
       aarch64(false), aarch64EL(EL0), isPriv(false), isSecure(false),
       isHyp(false), asid(0), vmid(0), dacr(0),
       miscRegValid(false), curTranType(NormalTran)
@@ -368,7 +368,6 @@ TLB::takeOverFrom(BaseTLB *_otlb)
         haveLPAE = otlb->haveLPAE;
         directToStage2 = otlb->directToStage2;
         stage2Req = otlb->stage2Req;
-        bootUncacheability = otlb->bootUncacheability;
 
         /* Sync the stage2 MMU if they exist in both
          * the old CPU and the new
@@ -391,7 +390,6 @@ TLB::serialize(ostream &os)
     SERIALIZE_SCALAR(haveLPAE);
     SERIALIZE_SCALAR(directToStage2);
     SERIALIZE_SCALAR(stage2Req);
-    SERIALIZE_SCALAR(bootUncacheability);
 
     int num_entries = size;
     SERIALIZE_SCALAR(num_entries);
@@ -410,7 +408,6 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(haveLPAE);
     UNSERIALIZE_SCALAR(directToStage2);
     UNSERIALIZE_SCALAR(stage2Req);
-    UNSERIALIZE_SCALAR(bootUncacheability);
 
     int num_entries;
     UNSERIALIZE_SCALAR(num_entries);
@@ -1081,18 +1078,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             req->setFlags(Request::UNCACHEABLE);
         }
 
-        if (!bootUncacheability &&
-            ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr)) {
-            req->setFlags(Request::UNCACHEABLE);
-        }
-
         Addr pa = te->pAddr(vaddr);
         req->setPaddr(pa);
-
-        if (!bootUncacheability &&
-            ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(pa)) {
-            req->setFlags(Request::UNCACHEABLE);
-        }
 
         if (isSecure && !te->ns) {
             req->setFlags(Request::SECURE);

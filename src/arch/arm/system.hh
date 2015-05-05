@@ -133,15 +133,6 @@ class ArmSystem : public System
      */
     virtual void initState();
 
-    /** Check if an address should be uncacheable until all caches are enabled.
-     * This exits because coherence on some addresses at boot is maintained via
-     * sw coherence until the caches are enbaled. Since we don't support sw
-     * coherence operations in gem5, this is a method that allows a system
-     * type to designate certain addresses that should remain uncachebale
-     * for a while.
-     */
-    virtual bool adderBootUncacheable(Addr a) { return false; }
-
     virtual Addr fixFuncEventAddr(Addr addr)
     {
         // Remove the low bit that thumb symbols have set

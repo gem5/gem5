@@ -79,8 +79,6 @@ class GenericArmSystem(ArmSystem):
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
     atags_addr = Param.Addr("Address where default atags structure should " \
                                 "be written")
-    boot_release_addr = Param.Addr(0xfff8, "Address where secondary CPUs " \
-                                       "spin waiting boot in the loader")
     dtb_filename = Param.String("",
         "File that contains the Device Tree Blob. Don't use DTB if empty.")
     early_kernel_symbols = Param.Bool(False,
