@@ -1076,7 +1076,13 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         setAttr(te->attributes);
 
         if (te->nonCacheable)
-            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+            req->setFlags(Request::UNCACHEABLE);
+
+        // Require requests to be ordered if the request goes to
+        // strongly ordered or device memory (i.e., anything other
+        // than normal memory requires strict order).
+        if (te->mtype != TlbEntry::MemoryType::Normal)
+            req->setFlags(Request::STRICT_ORDER);
 
         Addr pa = te->pAddr(vaddr);
         req->setPaddr(pa);
