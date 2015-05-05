@@ -134,12 +134,17 @@ class FUPool : public SimObject
     FUPool(const Params *p);
     ~FUPool();
 
+    static constexpr auto NoCapableFU = -2;
+    static constexpr auto NoFreeFU = -1;
     /**
-     * Gets a FU providing the requested capability. Will mark the unit as busy,
-     * but leaves the freeing of the unit up to the IEW stage.
+     * Gets a FU providing the requested capability. Will mark the
+     * unit as busy, but leaves the freeing of the unit up to the IEW
+     * stage.
+     *
      * @param capability The capability requested.
-     * @return Returns -2 if the FU pool does not have the capability, -1 if
-     * there is no free FU, and the FU's index otherwise.
+     * @return Returns NoCapableFU if the FU pool does not have the
+     * capability, NoFreeFU if there is no free FU, and the FU's index
+     * otherwise.
      */
     int getUnit(OpClass capability);
 

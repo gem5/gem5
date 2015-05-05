@@ -801,21 +801,21 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             continue;
         }
 
-        int idx = -2;
+        int idx = FUPool::NoCapableFU;
         Cycles op_latency = Cycles(1);
         ThreadID tid = issuing_inst->threadNumber;
 
         if (op_class != No_OpClass) {
             idx = fuPool->getUnit(op_class);
             issuing_inst->isFloating() ? fpAluAccesses++ : intAluAccesses++;
-            if (idx > -1) {
+            if (idx > FUPool::NoFreeFU) {
                 op_latency = fuPool->getOpLatency(op_class);
             }
         }
 
         // If we have an instruction that doesn't require a FU, or a
         // valid FU, then schedule for execution.
-        if (idx == -2 || idx != -1) {
+        if (idx != FUPool::NoFreeFU) {
             if (op_latency == Cycles(1)) {
                 i2e_info->size++;
                 instsToExecute.push_back(issuing_inst);
