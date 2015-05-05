@@ -174,7 +174,7 @@ class O3_ARM_v7aWalkCache(BaseCache):
     assoc = 8
     write_buffers = 16
     is_top_level = True
-
+    forward_snoops = False
 
 # L2 Cache
 class O3_ARM_v7aL2(BaseCache):
