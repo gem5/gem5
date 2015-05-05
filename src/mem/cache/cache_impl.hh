@@ -1950,7 +1950,7 @@ Cache::getTimingPacket()
     } else {
         CacheBlk *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
 
-        if (tgt_pkt->cmd == MemCmd::HardPFReq) {
+        if (tgt_pkt->cmd == MemCmd::HardPFReq && forwardSnoops) {
             // We need to check the caches above us to verify that
             // they don't have a copy of this block in the dirty state
             // at the moment. Without this check we could get a stale
