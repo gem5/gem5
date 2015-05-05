@@ -149,7 +149,7 @@ public:
      * Invalidate the given block.
      * @param blk The block to invalidate.
      */
-    void invalidate(BlkType *blk)
+    void invalidate(CacheBlk *blk)
     {
         assert(blk);
         assert(blk->isValid());
@@ -172,7 +172,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    BlkType* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
                                  int context_src)
     {
         Addr tag = extractTag(addr);
@@ -212,7 +212,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    BlkType* findBlock(Addr addr, bool is_secure) const;
+    CacheBlk* findBlock(Addr addr, bool is_secure) const;
 
     /**
      * Find an invalid block to evict for the address provided.
@@ -221,7 +221,7 @@ public:
      * @param addr The addr to a find a replacement candidate for.
      * @return The candidate block.
      */
-    BlkType* findVictim(Addr addr) const
+    CacheBlk* findVictim(Addr addr)
     {
         BlkType *blk = NULL;
         int set = extractSet(addr);
@@ -242,7 +242,7 @@ public:
      * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-     void insertBlock(PacketPtr pkt, BlkType *blk)
+     void insertBlock(PacketPtr pkt, CacheBlk *blk)
      {
          Addr addr = pkt->getAddr();
          MasterID master_id = pkt->req->masterId();
@@ -312,16 +312,6 @@ public:
     }
 
     /**
-     * Get the block offset from an address.
-     * @param addr The address to get the offset of.
-     * @return The block offset.
-     */
-    int extractBlkOffset(Addr addr) const
-    {
-        return (addr & blkMask);
-    }
-
-    /**
      * Align an address to the block size.
      * @param addr the address to align.
      * @return The block address.
@@ -375,8 +365,7 @@ public:
      *
      * \param visitor Visitor to call on each block.
      */
-    template <typename V>
-    void forEachBlk(V &visitor) {
+    void forEachBlk(CacheBlkVisitor &visitor) M5_ATTR_OVERRIDE {
         for (unsigned i = 0; i < numSets * assoc; ++i) {
             if (!visitor(blks[i]))
                 return;

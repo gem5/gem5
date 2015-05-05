@@ -58,11 +58,11 @@ class RandomRepl : public BaseSetAssoc
      */
     ~RandomRepl() {}
 
-    BlkType* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
-    BlkType* findVictim(Addr addr) const;
+    CacheBlk* findVictim(Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
-    void invalidate(BlkType *blk);
+    void invalidate(CacheBlk *blk);
 };
 
 #endif // __MEM_CACHE_TAGS_RANDOM_REPL_HH__

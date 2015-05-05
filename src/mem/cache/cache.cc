@@ -41,11 +41,3 @@
 #include "mem/cache/tags/random_repl.hh"
 #include "mem/cache/cache_impl.hh"
 
-// Template Instantiations
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template class Cache<FALRU>;
-template class Cache<LRU>;
-template class Cache<RandomRepl>;
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS

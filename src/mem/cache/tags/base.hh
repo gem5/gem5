@@ -53,6 +53,7 @@
 
 #include "base/callback.hh"
 #include "base/statistics.hh"
+#include "mem/cache/blk.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
 
@@ -179,6 +180,38 @@ class BaseTags : public ClockedObject
      * Print all tags used
      */
     virtual std::string print() const = 0;
+
+    /**
+     * Find a block using the memory address
+     */
+    virtual CacheBlk * findBlock(Addr addr, bool is_secure) const = 0;
+
+    /**
+     * Calculate the block offset of an address.
+     * @param addr the address to get the offset of.
+     * @return the block offset.
+     */
+    int extractBlkOffset(Addr addr) const
+    {
+        return (addr & (Addr)(blkSize-1));
+    }
+
+    virtual void invalidate(CacheBlk *blk) = 0;
+
+    virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+                                  int context_src) = 0;
+
+    virtual Addr extractTag(Addr addr) const = 0;
+
+    virtual void insertBlock(PacketPtr pkt, CacheBlk *blk) = 0;
+
+    virtual Addr regenerateBlkAddr(Addr tag, unsigned set) const = 0;
+
+    virtual CacheBlk* findVictim(Addr addr) = 0;
+
+    virtual int extractSet(Addr addr) const = 0;
+
+    virtual void forEachBlk(CacheBlkVisitor &visitor) = 0;
 };
 
 class BaseTagsCallback : public Callback

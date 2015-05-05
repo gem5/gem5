@@ -44,16 +44,16 @@ RandomRepl::RandomRepl(const Params *p)
 {
 }
 
-BaseSetAssoc::BlkType*
+CacheBlk*
 RandomRepl::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
 {
     return BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
 }
 
-BaseSetAssoc::BlkType*
-RandomRepl::findVictim(Addr addr) const
+CacheBlk*
+RandomRepl::findVictim(Addr addr)
 {
-    BlkType *blk = BaseSetAssoc::findVictim(addr);
+    CacheBlk *blk = BaseSetAssoc::findVictim(addr);
 
     // if all blocks are valid, pick a replacement at random
     if (blk->isValid()) {
@@ -77,7 +77,7 @@ RandomRepl::insertBlock(PacketPtr pkt, BlkType *blk)
 }
 
 void
-RandomRepl::invalidate(BlkType *blk)
+RandomRepl::invalidate(CacheBlk *blk)
 {
     BaseSetAssoc::invalidate(blk);
 }

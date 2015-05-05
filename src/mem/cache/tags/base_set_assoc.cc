@@ -119,7 +119,7 @@ BaseSetAssoc::~BaseSetAssoc()
     delete [] sets;
 }
 
-BaseSetAssoc::BlkType*
+CacheBlk*
 BaseSetAssoc::findBlock(Addr addr, bool is_secure) const
 {
     Addr tag = extractTag(addr);

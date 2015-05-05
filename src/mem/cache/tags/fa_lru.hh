@@ -174,7 +174,7 @@ public:
      * Invalidate a cache block.
      * @param blk The block to invalidate.
      */
-    void invalidate(BlkType *blk);
+    void invalidate(CacheBlk *blk);
 
     /**
      * Access block and update replacement data.  May not succeed, in which case
@@ -188,8 +188,14 @@ public:
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
-                          int context_src, int *inCache = 0);
+    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+                          int context_src, int *inCache);
+
+    /**
+     * Just a wrapper of above function to conform with the base interface.
+     */
+    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+                          int context_src);
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -198,16 +204,16 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* findBlock(Addr addr, bool is_secure) const;
+    CacheBlk* findBlock(Addr addr, bool is_secure) const;
 
     /**
      * Find a replacement block for the address provided.
      * @param pkt The request to a find a replacement candidate for.
      * @return The block to place the replacement in.
      */
-    FALRUBlk* findVictim(Addr addr);
+    CacheBlk* findVictim(Addr addr);
 
-    void insertBlock(PacketPtr pkt, BlkType *blk);
+    void insertBlock(PacketPtr pkt, CacheBlk *blk);
 
     /**
      * Return the block size of this cache.
@@ -261,22 +267,12 @@ public:
     }
 
     /**
-     * Calculate the block offset of an address.
-     * @param addr the address to get the offset of.
-     * @return the block offset.
-     */
-    int extractBlkOffset(Addr addr) const
-    {
-        return (addr & (Addr)(blkSize-1));
-    }
-
-    /**
      * Regenerate the block address from the tag and the set.
      * @param tag The tag of the block.
      * @param set The set the block belongs to.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(Addr tag, int set) const
+    Addr regenerateBlkAddr(Addr tag, unsigned set) const
     {
         return (tag);
     }
@@ -304,8 +300,7 @@ public:
      *
      * \param visitor Visitor to call on each block.
      */
-    template <typename V>
-    void forEachBlk(V &visitor) {
+    void forEachBlk(CacheBlkVisitor &visitor) M5_ATTR_OVERRIDE {
         for (int i = 0; i < numBlocks; i++) {
             if (!visitor(blks[i]))
                 return;

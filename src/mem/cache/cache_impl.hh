@@ -65,15 +65,14 @@
 #include "mem/cache/mshr.hh"
 #include "sim/sim_exit.hh"
 
-template<class TagStore>
-Cache<TagStore>::Cache(const Params *p)
+Cache::Cache(const Params *p)
     : BaseCache(p),
-      tags(dynamic_cast<TagStore*>(p->tags)),
+      tags(p->tags),
       prefetcher(p->prefetcher),
       doFastWrites(true),
       prefetchOnAccess(p->prefetch_on_access)
 {
-    tempBlock = new BlkType();
+    tempBlock = new CacheBlk();
     tempBlock->data = new uint8_t[blkSize];
 
     cpuSidePort = new CpuSidePort(p->name + ".cpu_side", this,
@@ -86,8 +85,7 @@ Cache<TagStore>::Cache(const Params *p)
         prefetcher->setCache(this);
 }
 
-template<class TagStore>
-Cache<TagStore>::~Cache()
+Cache::~Cache()
 {
     delete [] tempBlock->data;
     delete tempBlock;
@@ -96,16 +94,14 @@ Cache<TagStore>::~Cache()
     delete memSidePort;
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::regStats()
+Cache::regStats()
 {
     BaseCache::regStats();
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
+Cache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
 {
     assert(pkt->isRequest());
 
@@ -145,11 +141,9 @@ Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 }
 
 
-template<class TagStore>
 void
-Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
-                                       bool deferred_response,
-                                       bool pending_downgrade)
+Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
+                             bool deferred_response, bool pending_downgrade)
 {
     assert(pkt->isRequest());
 
@@ -254,9 +248,8 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
 /////////////////////////////////////////////////////
 
 
-template<class TagStore>
 void
-Cache<TagStore>::markInService(MSHR *mshr, bool pending_dirty_resp)
+Cache::markInService(MSHR *mshr, bool pending_dirty_resp)
 {
     markInServiceInternal(mshr, pending_dirty_resp);
 #if 0
@@ -272,9 +265,8 @@ Cache<TagStore>::markInService(MSHR *mshr, bool pending_dirty_resp)
 }
 
 
-template<class TagStore>
 void
-Cache<TagStore>::squash(int threadNum)
+Cache::squash(int threadNum)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
@@ -300,10 +292,9 @@ Cache<TagStore>::squash(int threadNum)
 //
 /////////////////////////////////////////////////////
 
-template<class TagStore>
 bool
-Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
-                        Cycles &lat, PacketList &writebacks)
+Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
+              PacketList &writebacks)
 {
     // sanity check
     assert(pkt->isRequest());
@@ -319,7 +310,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
             tags->clearLocks();
 
         // flush and invalidate any existing block
-        BlkType *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
+        CacheBlk *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
         if (old_blk && old_blk->isValid()) {
             if (old_blk->isDirty())
                 writebacks.push_back(writebackBlk(old_blk));
@@ -403,9 +394,8 @@ class ForwardResponseRecord : public Packet::SenderState
     ForwardResponseRecord() {}
 };
 
-template<class TagStore>
 void
-Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
+Cache::recvTimingSnoopResp(PacketPtr pkt)
 {
     DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -442,9 +432,8 @@ Cache<TagStore>::recvTimingSnoopResp(PacketPtr pkt)
     memSidePort->schedTimingSnoopResp(pkt, snoop_resp_time);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::promoteWholeLineWrites(PacketPtr pkt)
+Cache::promoteWholeLineWrites(PacketPtr pkt)
 {
     // Cache line clearing instructions
     if (doFastWrites && (pkt->cmd == MemCmd::WriteReq) &&
@@ -455,9 +444,8 @@ Cache<TagStore>::promoteWholeLineWrites(PacketPtr pkt)
     }
 }
 
-template<class TagStore>
 bool
-Cache<TagStore>::recvTimingReq(PacketPtr pkt)
+Cache::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(CacheTags, "%s tags: %s\n", __func__, tags->print());
 //@todo Add back in MemDebug Calls
@@ -540,7 +528,7 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
     // We use lookupLatency here because it is used to specify the latency
     // to access.
     Cycles lat = lookupLatency;
-    BlkType *blk = NULL;
+    CacheBlk *blk = NULL;
     bool satisfied = false;
     {
         PacketList writebacks;
@@ -777,10 +765,9 @@ Cache<TagStore>::recvTimingReq(PacketPtr pkt)
 
 
 // See comment in cache.hh.
-template<class TagStore>
 PacketPtr
-Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
-                              bool needsExclusive) const
+Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
+                    bool needsExclusive) const
 {
     bool blkValid = blk && blk->isValid();
 
@@ -840,9 +827,8 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
 }
 
 
-template<class TagStore>
 Tick
-Cache<TagStore>::recvAtomic(PacketPtr pkt)
+Cache::recvAtomic(PacketPtr pkt)
 {
     // We are in atomic mode so we pay just for lookupLatency here.
     Cycles lat = lookupLatency;
@@ -860,7 +846,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
         // have to invalidate ourselves and any lower caches even if
         // upper cache will be responding
         if (pkt->isInvalidate()) {
-            BlkType *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+            CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
             if (blk && blk->isValid()) {
                 tags->invalidate(blk);
                 blk->invalidate();
@@ -887,7 +873,7 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
     // writebacks... that would mean that someone used an atomic
     // access in timing mode
 
-    BlkType *blk = NULL;
+    CacheBlk *blk = NULL;
     PacketList writebacks;
     bool satisfied = access(pkt, blk, lat, writebacks);
 
@@ -990,9 +976,8 @@ Cache<TagStore>::recvAtomic(PacketPtr pkt)
 }
 
 
-template<class TagStore>
 void
-Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
+Cache::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 {
     if (system->bypassCaches()) {
         // Packets from the memory side are snoop request and
@@ -1007,7 +992,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 
     Addr blk_addr = blockAlign(pkt->getAddr());
     bool is_secure = pkt->isSecure();
-    BlkType *blk = tags->findBlock(pkt->getAddr(), is_secure);
+    CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
     pkt->pushLabel(name());
@@ -1067,9 +1052,8 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 /////////////////////////////////////////////////////
 
 
-template<class TagStore>
 void
-Cache<TagStore>::recvTimingResp(PacketPtr pkt)
+Cache::recvTimingResp(PacketPtr pkt)
 {
     assert(pkt->isResponse());
 
@@ -1099,7 +1083,7 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
 
     // Initial target is used just for stats
     MSHR::Target *initial_tgt = mshr->getTarget();
-    BlkType *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick() - initial_tgt->recvTime;
     PacketList writebacks;
@@ -1328,12 +1312,8 @@ Cache<TagStore>::recvTimingResp(PacketPtr pkt)
     delete pkt;
 }
 
-
-
-
-template<class TagStore>
 PacketPtr
-Cache<TagStore>::writebackBlk(BlkType *blk)
+Cache::writebackBlk(CacheBlk *blk)
 {
     assert(blk && blk->isValid() && blk->isDirty());
 
@@ -1360,35 +1340,31 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     return writeback;
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::memWriteback()
+Cache::memWriteback()
 {
-    WrappedBlkVisitor visitor(*this, &Cache<TagStore>::writebackVisitor);
+    CacheBlkVisitorWrapper visitor(*this, &Cache::writebackVisitor);
     tags->forEachBlk(visitor);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::memInvalidate()
+Cache::memInvalidate()
 {
-    WrappedBlkVisitor visitor(*this, &Cache<TagStore>::invalidateVisitor);
+    CacheBlkVisitorWrapper visitor(*this, &Cache::invalidateVisitor);
     tags->forEachBlk(visitor);
 }
 
-template<class TagStore>
 bool
-Cache<TagStore>::isDirty() const
+Cache::isDirty() const
 {
-    CacheBlkIsDirtyVisitor<BlkType> visitor;
+    CacheBlkIsDirtyVisitor visitor;
     tags->forEachBlk(visitor);
 
     return visitor.isDirty();
 }
 
-template<class TagStore>
 bool
-Cache<TagStore>::writebackVisitor(BlkType &blk)
+Cache::writebackVisitor(CacheBlk &blk)
 {
     if (blk.isDirty()) {
         assert(blk.isValid());
@@ -1408,9 +1384,8 @@ Cache<TagStore>::writebackVisitor(BlkType &blk)
     return true;
 }
 
-template<class TagStore>
 bool
-Cache<TagStore>::invalidateVisitor(BlkType &blk)
+Cache::invalidateVisitor(CacheBlk &blk)
 {
 
     if (blk.isDirty())
@@ -1418,19 +1393,17 @@ Cache<TagStore>::invalidateVisitor(BlkType &blk)
 
     if (blk.isValid()) {
         assert(!blk.isDirty());
-        tags->invalidate(dynamic_cast< BlkType *>(&blk));
+        tags->invalidate(&blk);
         blk.invalidate();
     }
 
     return true;
 }
 
-template<class TagStore>
-typename Cache<TagStore>::BlkType*
-Cache<TagStore>::allocateBlock(Addr addr, bool is_secure,
-                               PacketList &writebacks)
+CacheBlk*
+Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 {
-    BlkType *blk = tags->findVictim(addr);
+    CacheBlk *blk = tags->findVictim(addr);
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
@@ -1465,10 +1438,8 @@ Cache<TagStore>::allocateBlock(Addr addr, bool is_secure,
 // is called by both atomic and timing-mode accesses, and in atomic
 // mode we don't mess with the write buffer (we just perform the
 // writebacks atomically once the original request is complete).
-template<class TagStore>
-typename Cache<TagStore>::BlkType*
-Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
-                            PacketList &writebacks)
+CacheBlk*
+Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
 {
     assert(pkt->isResponse() || pkt->isWriteInvalidate());
     Addr addr = pkt->getAddr();
@@ -1556,11 +1527,9 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 //
 /////////////////////////////////////////////////////
 
-template<class TagStore>
 void
-Cache<TagStore>::
-doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
-                       bool already_copied, bool pending_inval)
+Cache::doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
+                              bool already_copied, bool pending_inval)
 {
     // sanity check
     assert(req_pkt->isRequest());
@@ -1604,11 +1573,9 @@ doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     memSidePort->schedTimingSnoopResp(pkt, forward_time, true);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
-                             bool is_timing, bool is_deferred,
-                             bool pending_inval)
+Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
+                   bool is_deferred, bool pending_inval)
 {
     DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -1745,9 +1712,8 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
 }
 
 
-template<class TagStore>
 void
-Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
+Cache::recvTimingSnoopReq(PacketPtr pkt)
 {
     DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -1778,7 +1744,7 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
     }
 
     bool is_secure = pkt->isSecure();
-    BlkType *blk = tags->findBlock(pkt->getAddr(), is_secure);
+    CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
 
     Addr blk_addr = blockAlign(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
@@ -1849,18 +1815,16 @@ Cache<TagStore>::recvTimingSnoopReq(PacketPtr pkt)
     handleSnoop(pkt, blk, true, false, false);
 }
 
-template<class TagStore>
 bool
-Cache<TagStore>::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
+Cache::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 {
     // Express snoop responses from master to slave, e.g., from L1 to L2
     cache->recvTimingSnoopResp(pkt);
     return true;
 }
 
-template<class TagStore>
 Tick
-Cache<TagStore>::recvAtomicSnoop(PacketPtr pkt)
+Cache::recvAtomicSnoop(PacketPtr pkt)
 {
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
@@ -1871,16 +1835,15 @@ Cache<TagStore>::recvAtomicSnoop(PacketPtr pkt)
         return 0;
     }
 
-    BlkType *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
     handleSnoop(pkt, blk, false, false, false);
     // We consider forwardLatency here because a snoop occurs in atomic mode
     return forwardLatency * clockPeriod();
 }
 
 
-template<class TagStore>
 MSHR *
-Cache<TagStore>::getNextMSHR()
+Cache::getNextMSHR()
 {
     // Check both MSHR queue and write buffer for potential requests,
     // note that null does not mean there is no request, it could
@@ -1962,9 +1925,8 @@ Cache<TagStore>::getNextMSHR()
 }
 
 
-template<class TagStore>
 PacketPtr
-Cache<TagStore>::getTimingPacket()
+Cache::getTimingPacket()
 {
     MSHR *mshr = getNextMSHR();
 
@@ -1984,7 +1946,7 @@ Cache<TagStore>::getTimingPacket()
         assert(tags->findBlock(mshr->blkAddr, mshr->isSecure) == NULL);
         pkt = tgt_pkt;
     } else {
-        BlkType *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
+        CacheBlk *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
 
         if (tgt_pkt->cmd == MemCmd::HardPFReq) {
             // We need to check the caches above us to verify that
@@ -2056,9 +2018,8 @@ Cache<TagStore>::getTimingPacket()
 }
 
 
-template<class TagStore>
 Tick
-Cache<TagStore>::nextMSHRReadyTime() const
+Cache::nextMSHRReadyTime() const
 {
     Tick nextReady = std::min(mshrQueue.nextMSHRReadyTime(),
                               writeBuffer.nextMSHRReadyTime());
@@ -2073,9 +2034,8 @@ Cache<TagStore>::nextMSHRReadyTime() const
     return nextReady;
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::serialize(std::ostream &os)
+Cache::serialize(std::ostream &os)
 {
     bool dirty(isDirty());
 
@@ -2094,9 +2054,8 @@ Cache<TagStore>::serialize(std::ostream &os)
     SERIALIZE_SCALAR(bad_checkpoint);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::unserialize(Checkpoint *cp, const std::string &section)
+Cache::unserialize(Checkpoint *cp, const std::string &section)
 {
     bool bad_checkpoint;
     UNSERIALIZE_SCALAR(bad_checkpoint);
@@ -2113,16 +2072,14 @@ Cache<TagStore>::unserialize(Checkpoint *cp, const std::string &section)
 //
 ///////////////
 
-template<class TagStore>
 AddrRangeList
-Cache<TagStore>::CpuSidePort::getAddrRanges() const
+Cache::CpuSidePort::getAddrRanges() const
 {
     return cache->getAddrRanges();
 }
 
-template<class TagStore>
 bool
-Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
+Cache::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     assert(!cache->system->bypassCaches());
 
@@ -2150,24 +2107,21 @@ Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
     return success;
 }
 
-template<class TagStore>
 Tick
-Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
+Cache::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
     return cache->recvAtomic(pkt);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
+Cache::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
     // functional request
     cache->functionalAccess(pkt, true);
 }
 
-template<class TagStore>
-Cache<TagStore>::
-CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
+Cache::
+CpuSidePort::CpuSidePort(const std::string &_name, Cache *_cache,
                          const std::string &_label)
     : BaseCache::CacheSlavePort(_name, _cache, _label), cache(_cache)
 {
@@ -2179,33 +2133,29 @@ CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
 //
 ///////////////
 
-template<class TagStore>
 bool
-Cache<TagStore>::MemSidePort::recvTimingResp(PacketPtr pkt)
+Cache::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
     cache->recvTimingResp(pkt);
     return true;
 }
 
 // Express snooping requests to memside port
-template<class TagStore>
 void
-Cache<TagStore>::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
+Cache::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
 {
     // handle snooping requests
     cache->recvTimingSnoopReq(pkt);
 }
 
-template<class TagStore>
 Tick
-Cache<TagStore>::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
+Cache::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
     return cache->recvAtomicSnoop(pkt);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
+Cache::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
 {
     // functional snoop (note that in contrast to atomic we don't have
     // a specific functionalSnoop method, as they have the same
@@ -2213,9 +2163,8 @@ Cache<TagStore>::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
     cache->functionalAccess(pkt, false);
 }
 
-template<class TagStore>
 void
-Cache<TagStore>::CacheReqPacketQueue::sendDeferredPacket()
+Cache::CacheReqPacketQueue::sendDeferredPacket()
 {
     // sanity check
     assert(!waitingOnRetry);
@@ -2296,9 +2245,8 @@ Cache<TagStore>::CacheReqPacketQueue::sendDeferredPacket()
     }
 }
 
-template<class TagStore>
-Cache<TagStore>::
-MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
+Cache::
+MemSidePort::MemSidePort(const std::string &_name, Cache *_cache,
                          const std::string &_label)
     : BaseCache::CacheMasterPort(_name, _cache, _reqQueue, _snoopRespQueue),
       _reqQueue(*_cache, *this, _snoopRespQueue, _label),
