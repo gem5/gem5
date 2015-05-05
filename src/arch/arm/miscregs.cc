@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 #include "arch/arm/miscregs.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
+#include "sim/full_system.hh"
 
 namespace ArmISA
 {
@@ -2138,7 +2139,9 @@ canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
         if (el == EL0 && !sctlr.uma)
             return false;
     }
-    if (reg == MISCREG_DC_ZVA_Xt) {
+    if (FullSystem && reg == MISCREG_DC_ZVA_Xt) {
+        // In syscall-emulation mode, this test is skipped and DCZVA is always
+        // allowed at EL0
         SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
         if (el == EL0 && !sctlr.dze)
             return false;
