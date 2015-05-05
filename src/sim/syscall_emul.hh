@@ -97,6 +97,7 @@ class SyscallDesc {
     const char *name;   //!< Syscall name (e.g., "open").
     FuncPtr funcPtr;    //!< Pointer to emulation function.
     int flags;          //!< Flags (see Flags enum).
+    bool warned;        //!< Have we warned about unimplemented syscall?
 
     /// Flag values for controlling syscall behavior.
     enum Flags {
@@ -104,17 +105,21 @@ class SyscallDesc {
         /// Used for syscalls with non-standard return conventions
         /// that explicitly set the ThreadContext regs (e.g.,
         /// sigreturn).
-        SuppressReturnValue = 1
+        SuppressReturnValue = 1,
+        WarnOnce = 2
     };
 
     /// Constructor.
     SyscallDesc(const char *_name, FuncPtr _funcPtr, int _flags = 0)
-        : name(_name), funcPtr(_funcPtr), flags(_flags)
+        : name(_name), funcPtr(_funcPtr), flags(_flags), warned(false)
     {
     }
 
     /// Emulate the syscall.  Public interface for calling through funcPtr.
     void doSyscall(int callnum, LiveProcess *proc, ThreadContext *tc);
+
+    /// Is the WarnOnce flag set?
+    bool warnOnce() const {  return (flags & WarnOnce); }
 };
 
 
@@ -136,8 +141,6 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
 /// behavior of the program.  Print a warning only if the appropriate
 /// trace flag is enabled.  Return success to the target program.
 SyscallReturn ignoreFunc(SyscallDesc *desc, int num,
-                         LiveProcess *p, ThreadContext *tc);
-SyscallReturn ignoreWarnOnceFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
 
 /// Target exit() handler: terminate current context.

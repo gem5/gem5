@@ -99,20 +99,18 @@ ignoreFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int index = 0;
-    warn("ignoring syscall %s(%d, ...)", desc->name,
-         process->getSyscallArg(tc, index));
+    const char *extra_text = "";
 
-    return 0;
-}
+    if (desc->warnOnce()) {
+        if (desc->warned)
+            return 0;
 
+        desc->warned = true;
+        extra_text = "\n      (further warnings will be suppressed)";
+    }
 
-SyscallReturn
-ignoreWarnOnceFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-           ThreadContext *tc)
-{
-    int index = 0;
-    warn_once("ignoring syscall %s(%d, ...)", desc->name,
-              process->getSyscallArg(tc, index));
+    warn("ignoring syscall %s(%d, ...)%s", desc->name,
+         process->getSyscallArg(tc, index), extra_text);
 
     return 0;
 }
