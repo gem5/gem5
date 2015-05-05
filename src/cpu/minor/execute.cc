@@ -150,7 +150,7 @@ Execute::Execute(const std::string &name_,
     }
 
     /** Check that there is a functional unit for all operation classes */
-    for (int op_class = No_OpClass + 1; op_class < Num_OpClass; op_class++) {
+    for (int op_class = No_OpClass + 1; op_class < Num_OpClasses; op_class++) {
         bool found_fu = false;
         unsigned int fu_index = 0;
 

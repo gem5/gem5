@@ -43,6 +43,7 @@
 #ifndef __CPU_O3_FU_POOL_HH__
 #define __CPU_O3_FU_POOL_HH__
 
+#include <array>
 #include <bitset>
 #include <list>
 #include <string>
@@ -71,9 +72,9 @@ class FUPool : public SimObject
 {
   private:
     /** Maximum op execution latencies, per op class. */
-    Cycles maxOpLatencies[Num_OpClasses];
+    std::array<Cycles, Num_OpClasses> maxOpLatencies;
     /** Whether op is pipelined or not. */
-    bool pipelined[Num_OpClasses];
+    std::array<bool, Num_OpClasses> pipelined;
 
     /** Bitvector listing capabilities of this FU pool. */
     std::bitset<Num_OpClasses> capabilityList;

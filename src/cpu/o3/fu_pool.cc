@@ -87,10 +87,8 @@ FUPool::FUPool(const Params *p)
 
     funcUnits.clear();
 
-    for (int i = 0; i < Num_OpClasses; ++i) {
-        maxOpLatencies[i] = Cycles(0);
-        pipelined[i] = true;
-    }
+    maxOpLatencies.fill(Cycles(0));
+    pipelined.fill(true);
 
     //
     //  Iterate through the list of FUDescData structures
