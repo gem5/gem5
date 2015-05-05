@@ -101,10 +101,6 @@ class Request
     static const FlagsType INST_FETCH                  = 0x00000100;
     /** The virtual address is also the physical address. */
     static const FlagsType PHYSICAL                    = 0x00000200;
-    /** The request is an ALPHA VPTE pal access (hw_ld). */
-    static const FlagsType VPTE                        = 0x00000400;
-    /** Use the alternate mode bits in ALPHA. */
-    static const FlagsType ALTMODE                     = 0x00000800;
     /** The request is to an uncacheable address. */
     static const FlagsType UNCACHEABLE                 = 0x00001000;
     /** This request is to a memory mapped register. */

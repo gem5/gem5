@@ -147,7 +147,7 @@ DtbFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // on VPTE loads (instead of locking the registers until IPR_VA is
         // read, like the EV5).  The EV6 approach is cleaner and seems to
         // work with EV5 PAL code, but not the other way around.
-        if (reqFlags.noneSet(Request::VPTE | Request::PREFETCH)) {
+        if (reqFlags.noneSet(AlphaRequestFlags::VPTE | Request::PREFETCH)) {
             // set VA register with faulting address
             tc->setMiscRegNoEffect(IPR_VA, vaddr);
 

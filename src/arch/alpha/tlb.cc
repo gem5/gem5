@@ -466,7 +466,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     }
 
     if (PcPAL(req->getPC())) {
-        mode = (req->getFlags() & Request::ALTMODE) ?
+        mode = (req->getFlags() & AlphaRequestFlags::ALTMODE) ?
             (mode_type)ALT_MODE_AM(
                 tc->readMiscRegNoEffect(IPR_ALT_MODE))
             : mode_kernel;
@@ -523,7 +523,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 if (write) { write_misses++; } else { read_misses++; }
                 uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                     MM_STAT_DTB_MISS_MASK;
-                return (req->getFlags() & Request::VPTE) ?
+                return (req->getFlags() & AlphaRequestFlags::VPTE) ?
                     (Fault)(std::make_shared<PDtbMissFault>(req->getVaddr(),
                                                             req->getFlags(),
                                                             flags)) :
