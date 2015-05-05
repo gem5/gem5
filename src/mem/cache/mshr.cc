@@ -371,6 +371,9 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 
         if (isPendingDirty()) {
             pkt->assertMemInhibit();
+            // in the case of an uncacheable request there is no need
+            // to set the exclusive flag, but since the recipient does
+            // not care there is no harm in doing so
             pkt->setSupplyExclusive();
         }
 
@@ -380,7 +383,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         }
     }
 
-    if (!pkt->needsExclusive()) {
+    if (!pkt->needsExclusive() && !pkt->req->isUncacheable()) {
         // This transaction will get a read-shared copy, downgrading
         // our copy if we had an exclusive one
         postDowngrade = true;

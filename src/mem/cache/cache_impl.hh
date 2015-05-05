@@ -475,7 +475,6 @@ Cache::recvTimingReq(PacketPtr pkt)
         // responding to the request
         DPRINTF(Cache, "mem inhibited on addr %#llx (%s): not responding\n",
                 pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
-        assert(!pkt->req->isUncacheable());
 
         // if the packet needs exclusive, and the cache that has
         // promised to respond (setting the inhibit flag) is not
@@ -856,7 +855,6 @@ Cache::recvAtomic(PacketPtr pkt)
     promoteWholeLineWrites(pkt);
 
     if (pkt->memInhibitAsserted()) {
-        assert(!pkt->req->isUncacheable());
         // have to invalidate ourselves and any lower caches even if
         // upper cache will be responding
         if (pkt->isInvalidate()) {
@@ -1560,7 +1558,8 @@ Cache::doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
         // responses)
         pkt = new Packet(req_pkt, false, req_pkt->isRead());
 
-    assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
+    assert(req_pkt->req->isUncacheable() || req_pkt->isInvalidate() ||
+           pkt->sharedAsserted());
     pkt->makeTimingResponse();
     if (pkt->isRead()) {
         pkt->setDataFromBlock(blk_data, blkSize);
@@ -1676,7 +1675,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         return;
     }
 
-    if (pkt->isRead() && !invalidate) {
+    if (!pkt->req->isUncacheable() && pkt->isRead() && !invalidate) {
         assert(!needs_exclusive);
         pkt->assertShared();
         int bits_to_clear = BlkWritable;
@@ -1699,6 +1698,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // will write it back at a later point
         pkt->assertMemInhibit();
         if (have_exclusive) {
+            // in the case of an uncacheable request there is no need
+            // to set the exclusive flag, but since the recipient does
+            // not care there is no harm in doing so
             pkt->setSupplyExclusive();
         }
         if (is_timing) {
@@ -1707,7 +1709,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             pkt->makeAtomicResponse();
             pkt->setDataFromBlock(blk->data, blkSize);
         }
-    } else if (is_timing && is_deferred) {
+    }
+
+    if (!respond && is_timing && is_deferred) {
         // if it's a deferred timing snoop then we've made a copy of
         // the packet, and so if we're not using that copy to respond
         // then we need to delete it here.
@@ -1735,25 +1739,8 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
-    // check if the packet is for an address range covered by this
-    // cache, partly to not waste time looking for it, but also to
-    // ensure that we only forward the snoop upwards if it is within
-    // our address ranges
-    bool in_range = false;
-    for (AddrRangeList::const_iterator r = addrRanges.begin();
-         r != addrRanges.end(); ++r) {
-        if (r->contains(pkt->getAddr())) {
-            in_range = true;
-            break;
-        }
-    }
-
-    // Note that some deferred snoops don't have requests, since the
-    // original access may have already completed
-    if ((pkt->req && pkt->req->isUncacheable()) ||
-        pkt->cmd == MemCmd::Writeback || !in_range) {
-        //Can't get a hit on an uncacheable address
-        //Revisit this for multi level coherence
+    // no need to snoop writebacks or requests that are not in range
+    if (pkt->cmd == MemCmd::Writeback || !inRange(pkt->getAddr())) {
         return;
     }
 
@@ -1843,9 +1830,8 @@ Cache::recvAtomicSnoop(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
-    if (pkt->req->isUncacheable() || pkt->cmd == MemCmd::Writeback) {
-        // Can't get a hit on an uncacheable address
-        // Revisit this for multi level coherence
+    // no need to snoop writebacks or requests that are not in range
+    if (pkt->cmd == MemCmd::Writeback || !inRange(pkt->getAddr())) {
         return 0;
     }
 

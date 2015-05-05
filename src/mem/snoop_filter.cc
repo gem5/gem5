@@ -74,7 +74,7 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
     DPRINTF(SnoopFilter, "%s:   SF value %x.%x\n",
             __func__, sf_item.requested, sf_item.holder);
 
-    if (cpkt->needsResponse()) {
+    if (!cpkt->req->isUncacheable() && cpkt->needsResponse()) {
         if (!cpkt->memInhibitAsserted()) {
             // Max one request per address per port
             panic_if(sf_item.requested & req_port, "double request :( "\
@@ -103,6 +103,9 @@ SnoopFilter::updateRequest(const Packet* cpkt, const SlavePort& slave_port,
 {
     DPRINTF(SnoopFilter, "%s: packet src %s addr 0x%x cmd %s\n",
             __func__, slave_port.name(), cpkt->getAddr(), cpkt->cmdString());
+
+    if (cpkt->req->isUncacheable())
+        return;
 
     Addr line_addr = cpkt->getAddr() & ~(linesize - 1);
     SnoopMask req_port = portToMask(slave_port);
@@ -195,13 +198,16 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
             __func__, rsp_port.name(), req_port.name(), cpkt->getAddr(),
             cpkt->cmdString());
 
+    assert(cpkt->isResponse());
+    assert(cpkt->memInhibitAsserted());
+
+    if (cpkt->req->isUncacheable())
+        return;
+
     Addr line_addr = cpkt->getAddr() & ~(linesize - 1);
     SnoopMask rsp_mask = portToMask(rsp_port);
     SnoopMask req_mask = portToMask(req_port);
     SnoopItem& sf_item = cachedLocations[line_addr];
-
-    assert(cpkt->isResponse());
-    assert(cpkt->memInhibitAsserted());
 
     DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
             __func__,  sf_item.requested, sf_item.holder);
@@ -270,11 +276,14 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
     DPRINTF(SnoopFilter, "%s: packet src %s addr 0x%x cmd %s\n",
             __func__, slave_port.name(), cpkt->getAddr(), cpkt->cmdString());
 
+    assert(cpkt->isResponse());
+
+    if (cpkt->req->isUncacheable())
+        return;
+
     Addr line_addr = cpkt->getAddr() & ~(linesize - 1);
     SnoopMask slave_mask = portToMask(slave_port);
     SnoopItem& sf_item = cachedLocations[line_addr];
-
-    assert(cpkt->isResponse());
 
     DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
             __func__,  sf_item.requested, sf_item.holder);

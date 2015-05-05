@@ -153,6 +153,17 @@ BaseCache::getSlavePort(const std::string &if_name, PortID idx)
     }
 }
 
+bool
+BaseCache::inRange(Addr addr) const
+{
+    for (const auto& r : addrRanges) {
+        if (r.contains(addr)) {
+            return true;
+       }
+    }
+    return false;
+}
+
 void
 BaseCache::regStats()
 {

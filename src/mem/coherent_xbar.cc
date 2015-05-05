@@ -180,8 +180,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // determine how long to be crossbar layer is busy
     Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
-    // uncacheable requests need never be snooped
-    if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
+    if (!system->bypassCaches()) {
         // the packet is a memory-mapped request and should be
         // broadcasted to our snoopers but the source
         if (snoopFilter) {
@@ -213,8 +212,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
 
-    if (snoopFilter && !pkt->req->isUncacheable()
-        && !system->bypassCaches()) {
+    if (snoopFilter && !system->bypassCaches()) {
         // The packet may already be overwritten by the sendTimingReq function.
         // The snoop filter needs to see the original request *and* the return
         // status of the send operation, so we need to recreate the original
@@ -323,7 +321,7 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
     // determine how long to be crossbar layer is busy
     Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
-    if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches()) {
+    if (snoopFilter && !system->bypassCaches()) {
         // let the snoop filter inspect the response and update its state
         snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
     }
@@ -578,8 +576,7 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
 
-    // uncacheable requests need never be snooped
-    if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
+    if (!system->bypassCaches()) {
         // forward to all snoopers but the source
         std::pair<MemCmd, Tick> snoop_result;
         if (snoopFilter) {
@@ -613,8 +610,7 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     Tick response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
 
     // Lower levels have replied, tell the snoop filter
-    if (snoopFilter && !pkt->req->isUncacheable() && !system->bypassCaches() &&
-        pkt->isResponse()) {
+    if (snoopFilter && !system->bypassCaches() && pkt->isResponse()) {
         snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
     }
 
@@ -764,8 +760,7 @@ CoherentXBar::recvFunctional(PacketPtr pkt, PortID slave_port_id)
                 pkt->cmdString());
     }
 
-    // uncacheable requests need never be snooped
-    if (!pkt->req->isUncacheable() && !system->bypassCaches()) {
+    if (!system->bypassCaches()) {
         // forward to all snoopers but the source
         forwardFunctional(pkt, slave_port_id);
     }

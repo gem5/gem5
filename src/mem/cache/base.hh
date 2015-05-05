@@ -262,6 +262,16 @@ class BaseCache : public MemObject
      */
     virtual bool isDirty() const = 0;
 
+    /**
+     * Determine if an address is in the ranges covered by this
+     * cache. This is useful to filter snoops.
+     *
+     * @param addr Address to check against
+     *
+     * @return If the address in question is in range
+     */
+    bool inRange(Addr addr) const;
+
     /** Block size of this cache */
     const unsigned blkSize;
 
