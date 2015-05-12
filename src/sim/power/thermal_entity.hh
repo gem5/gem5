@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,30 +34,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
+
+#ifndef __SIM_THERMAL_ENTITY_HH__
+#define __SIM_THERMAL_ENTITY_HH__
+
+#include "sim/linear_solver.hh"
+
+class ThermalNode;
 
 /**
- * @file
- * SubSystem declarations.
+ * An abstract class that represents any thermal entity which is used
+ * in the circuital thermal equivalent model. It is necessary for
+ * ThermalModel to be able to solve the circuit.
  */
-
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
-
-#include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
-#include "sim/sim_object.hh"
-
-/**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
- */
-class SubSystem : public SimObject
+class ThermalEntity
 {
   public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
+    // Get the equation given a node and a step in seconds (assuming N nodes)
+    virtual LinearEquation getEquation(ThermalNode *tn, unsigned n,
+                                       double step) const = 0;
 };
+
 
 #endif

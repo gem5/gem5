@@ -1,4 +1,4 @@
-# Copyright (c) 2014 ARM Limited
+# Copyright (c) 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -33,25 +33,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Geoffrey Blake
-#
+# Authors: David Guillen Fandos
 
 from m5.SimObject import SimObject
 from m5.params import *
 
-# An empty simobject. Used for organizing simobjects
-# into logical groups as subsystems of a larger
-# system. For example, if we wanted to build a cpu cluster
-# subsystem of 2 cores with private L1 caches and a shared
-# L2, but needed 8 total cores, we could instantiate 4
-# SubSystems containing the same child simobjects but avoid
-# any naming conflicts.
-#
-class SubSystem(SimObject):
-    type = 'SubSystem'
-    cxx_header = "sim/sub_system.hh"
-    abstract = False
+# Represents a group of simobj which produce heat
+class ThermalDomain(SimObject):
+    type = 'ThermalDomain'
+    cxx_header = "sim/power/thermal_domain.hh"
 
-    # Thermal doamin associated to this object, inheriting the parent's
-    # clock domain by default
-    thermal_domain = Param.ThermalDomain(NULL, "Thermal domain")
+    @classmethod
+    def export_methods(cls, code):
+        code('''
+      void setNode(ThermalNode * node);
+''')
+
+    # Static temperature which may change over time
+    initial_temperature = Param.Float(25.0, "Initial temperature")

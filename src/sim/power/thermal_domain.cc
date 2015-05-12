@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,30 +34,81 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
 
-/**
- * @file
- * SubSystem declarations.
- */
-
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
-
-#include "params/SubSystem.hh"
 #include "sim/power/thermal_domain.hh"
+
+#include <algorithm>
+
+#include "base/statistics.hh"
+#include "debug/ThermalDomain.hh"
+#include "params/ThermalDomain.hh"
+#include "sim/power/thermal_model.hh"
 #include "sim/sim_object.hh"
 
-/**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
- */
-class SubSystem : public SimObject
+ThermalDomain::ThermalDomain(const Params *p)
+    : SimObject(p), _initTemperature(p->initial_temperature),
+    node(NULL), subsystem(NULL)
 {
-  public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
-};
+}
 
-#endif
+double
+ThermalDomain::currentTemperature() const
+{
+    return node->temp;
+}
+
+void
+ThermalDomain::setSubSystem(SubSystem * ss)
+{
+    assert(!this->subsystem);
+    this->subsystem = ss;
+
+    ppThermalUpdate = new ProbePointArg<double>(subsystem->getProbeManager(),
+                                                "thermalUpdate");
+}
+
+void
+ThermalDomain::regStats()
+{
+    currentTemp
+        .method(this, &ThermalDomain::currentTemperature)
+        .name(params()->name + ".temp")
+        .desc("Temperature in centigrate degrees")
+        ;
+}
+
+void
+ThermalDomain::emitUpdate()
+{
+    ppThermalUpdate->notify(node->temp);
+}
+
+ThermalDomain *
+ThermalDomainParams::create()
+{
+    return new ThermalDomain(this);
+}
+
+void
+ThermalDomain::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(_initTemperature);
+}
+
+void
+ThermalDomain::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(_initTemperature);
+}
+
+
+LinearEquation
+ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
+{
+    LinearEquation eq(n);
+    if (tn == node)
+        eq[eq.cnt()] = 1.75f; // Fake 1.75 Watts for now, to be changed to PM
+    return eq;
+}

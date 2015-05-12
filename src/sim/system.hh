@@ -293,6 +293,11 @@ class System : public MemObject
      */
     Addr getPageShift() const { return TheISA::PageShift; }
 
+    /**
+     * The thermal model used for this system (if any).
+     */
+    ThermalModel * getThermalModel() const { return thermalModel; }
+
   protected:
 
     PhysicalMemory physmem;
@@ -312,6 +317,8 @@ class System : public MemObject
      * like cache statistics.
      */
     std::vector<std::string> masterIds;
+
+    ThermalModel * thermalModel;
 
   public:
 

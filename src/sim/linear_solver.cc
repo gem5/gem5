@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,30 +34,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
 
-/**
- * @file
- * SubSystem declarations.
- */
+#include "sim/linear_solver.hh"
 
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
-
-#include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
-#include "sim/sim_object.hh"
-
-/**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
- */
-class SubSystem : public SimObject
+std::vector <double>
+LinearSystem::solve() const
 {
-  public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
-};
+    // Solve using gauss elimination, not ideal for big matrices
+    std::vector < LinearEquation > smatrix = this->matrix;
 
-#endif
+    unsigned order = smatrix.size();
+    for (unsigned row = 0; row < order - 1; row++) {
+        // Look for a non-zero row, and swap
+        for (unsigned i = row; i < order; i++) {
+            if (smatrix[i][row] != 0.0f) {
+                if (i != row) {
+                    LinearEquation tmp = smatrix[i];
+                    smatrix[i] = smatrix[row];
+                    smatrix[row] = tmp;
+                }
+                break;
+            }
+        }
+
+        // Divide row by leading number to make it 1.0
+        smatrix[row] *= (1.0f / smatrix[row][row]);
+
+        // Add it (properly scaled) to the rows below
+        for (unsigned i = row + 1; i < order; i++) {
+            LinearEquation t = smatrix[row];
+            t *= -1.0f * smatrix[i][row];
+            smatrix[i] = smatrix[i] + t;
+        }
+    }
+
+    // smatrix is now a triangular matrix with diagonal being 1
+    // Just backproagate variable values from order-1 till 0
+    std::vector <double> ret(order, 0.0f);
+    for (int row = order - 1; row >= 0; row--) {
+        // Unknown value
+        ret[row] = -smatrix[row][smatrix[row].cnt()] / smatrix[row][row];
+        // Propagate variable in the cnt term
+        for (int i = row - 1; i >= 0; i--) {
+            smatrix[i][smatrix[i].cnt()] += ret[row] * smatrix[i][row];
+            smatrix[i][row] = 0.0f;
+        }
+    }
+
+    return ret;
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,30 +34,82 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
 
-/**
- * @file
- * SubSystem declarations.
- */
+#ifndef __SIM_THERMAL_DOMAIN_HH__
+#define __SIM_THERMAL_DOMAIN_HH__
 
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
+#include <vector>
 
-#include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
+#include "base/statistics.hh"
+#include "params/ThermalDomain.hh"
+#include "sim/power/thermal_entity.hh"
+#include "sim/probe/probe.hh"
 #include "sim/sim_object.hh"
+#include "sim/sub_system.hh"
+
+class ThermalNode;
 
 /**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
+ * A ThermalDomain is used to group objects under that operate under
+ * the same temperature. Theses domains can be tied together using thermal
+ * models (such as RC) to model temperature across components.
  */
-class SubSystem : public SimObject
+class ThermalDomain : public SimObject, public ThermalEntity
 {
   public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
+
+    typedef ThermalDomainParams Params;
+    ThermalDomain(const Params *p);
+
+    /**
+     * Get the startup temperature.
+     *
+     * @return Initial temperature of the domain
+     */
+    double initialTemperature() const { return _initTemperature; }
+
+    /**
+     * Get the current temperature.
+     *
+     * @return Initial temperature of the domain
+     */
+    double currentTemperature() const;
+
+    /** Set/Get circuit node associated with this domain */
+    void setNode(ThermalNode * n) { node = n; }
+    ThermalNode * getNode() const { return node; }
+
+    /** Get nodal equation imposed by this node */
+    LinearEquation getEquation(ThermalNode * tn, unsigned n,
+                               double step) const;
+
+    /**
+      *  Emit a temperature update through probe points interface
+      */
+    void emitUpdate();
+
+    /**
+      *  Set the SubSystem reference we belong to
+      */
+    void setSubSystem(SubSystem * ss);
+
+    void regStats();
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+
+  private:
+    double _initTemperature;
+    ThermalNode * node;
+    SubSystem * subsystem;
+
+    /** Stat for reporting voltage of the domain */
+    Stats::Value currentTemp;
+
+    /** Probe to signal for temperature changes in this domain */
+    ProbePointArg<double> *ppThermalUpdate;
+
 };
 
 #endif

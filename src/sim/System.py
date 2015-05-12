@@ -59,6 +59,10 @@ class System(MemObject):
                                           "All memories in the system")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
 
+    thermal_model = Param.ThermalModel(NULL, "Thermal model")
+    thermal_components = VectorParam.SimObject([],
+            "A collection of all thermal components in the system.")
+
     # When reserving memory on the host, we have the option of
     # reserving swap space or not (by passing MAP_NORESERVE to
     # mmap). By enabling this flag, we accomodate cases where a large

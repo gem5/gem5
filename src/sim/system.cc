@@ -95,6 +95,7 @@ System::System(Params *p)
       workItemsBegin(0),
       workItemsEnd(0),
       numWorkIds(p->num_work_ids),
+      thermalModel(p->thermal_model),
       _params(p),
       totalNumInsts(0),
       instEventQueue("system instruction-based event queue")

@@ -1,14 +1,7 @@
-# Copyright (c) 2014 ARM Limited
-# All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# -*- mode:python -*-
+
+# Copyright (c) 2015 ARM Limited
+# All rights reserved
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,25 +26,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Geoffrey Blake
-#
+# Authors: David Guillen Fandos
 
-from m5.SimObject import SimObject
-from m5.params import *
+Import('*')
 
-# An empty simobject. Used for organizing simobjects
-# into logical groups as subsystems of a larger
-# system. For example, if we wanted to build a cpu cluster
-# subsystem of 2 cores with private L1 caches and a shared
-# L2, but needed 8 total cores, we could instantiate 4
-# SubSystems containing the same child simobjects but avoid
-# any naming conflicts.
-#
-class SubSystem(SimObject):
-    type = 'SubSystem'
-    cxx_header = "sim/sub_system.hh"
-    abstract = False
+SimObject('ThermalDomain.py')
+SimObject('ThermalModel.py')
 
-    # Thermal doamin associated to this object, inheriting the parent's
-    # clock domain by default
-    thermal_domain = Param.ThermalDomain(NULL, "Thermal domain")
+Source('thermal_domain.cc')
+Source('thermal_model.cc')
+
+DebugFlag('ThermalDomain')

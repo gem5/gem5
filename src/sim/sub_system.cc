@@ -39,6 +39,15 @@
 
 #include "params/SubSystem.hh"
 #include "sim/sub_system.hh"
+#include "sim/power/thermal_domain.hh"
+
+SubSystem::SubSystem(const Params *p)
+ : SimObject(p)
+{
+    // Link thermalDomain <-> SubSystem
+    if (p->thermal_domain)
+        p->thermal_domain->setSubSystem(this);
+}
 
 SubSystem *
 SubSystemParams::create()
