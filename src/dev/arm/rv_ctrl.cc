@@ -37,11 +37,14 @@
  * Authors: Ali Saidi
  */
 
+#include "dev/arm/rv_ctrl.hh"
+
 #include "base/trace.hh"
 #include "debug/RVCTRL.hh"
-#include "dev/arm/rv_ctrl.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/power/thermal_model.hh"
+#include "sim/system.hh"
 #include "sim/voltage_domain.hh"
 
 RealViewCtrl::RealViewCtrl(Params *p)
@@ -293,7 +296,21 @@ RealViewOsc::write(uint32_t freq)
     clockPeriod(SimClock::Float::s / freq);
 }
 
+uint32_t
+RealViewTemperatureSensor::read() const
+{
+    // Temperature reported in uC
+    ThermalModel * tm = system->getThermalModel();
+    if (tm) {
+        double t = tm->getTemp();
+        if (t < 0)
+            warn("Temperature below zero!\n");
+        return fmax(0, t) * 1000000;
+    }
 
+    // Report a dummy 25 degrees temperature
+    return 25000000;
+}
 
 RealViewCtrl *
 RealViewCtrlParams::create()
@@ -305,4 +322,10 @@ RealViewOsc *
 RealViewOscParams::create()
 {
     return new RealViewOsc(this);
+}
+
+RealViewTemperatureSensor *
+RealViewTemperatureSensorParams::create()
+{
+    return new RealViewTemperatureSensor(this);
 }

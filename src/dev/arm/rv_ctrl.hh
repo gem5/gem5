@@ -44,6 +44,7 @@
 #include "dev/io_device.hh"
 #include "params/RealViewCtrl.hh"
 #include "params/RealViewOsc.hh"
+#include "params/RealViewTemperatureSensor.hh"
 
 /** @file
  * This implements the simple real view registers on a PBXA9
@@ -217,6 +218,33 @@ class RealViewOsc
 
   protected:
     void clockPeriod(Tick clock_period);
+};
+
+/**
+ * This device implements the temperature sensor used in the
+ * RealView/Versatile Express platform.
+ *
+ * See ARM DUI 0447J (ARM  Motherboard Express uATX -- V2M-P1).
+ */
+class RealViewTemperatureSensor
+    : public SimObject, RealViewCtrl::Device
+{
+  public:
+    RealViewTemperatureSensor(RealViewTemperatureSensorParams *p)
+    : SimObject(p),
+      RealViewCtrl::Device(*p->parent, RealViewCtrl::FUNC_TEMP,
+                           p->site, p->position, p->dcc, p->device),
+      system(p->system)
+    {}
+    virtual ~RealViewTemperatureSensor() {};
+
+  public: // RealViewCtrl::Device interface
+    uint32_t read() const override;
+    void write(uint32_t temp) override {}
+
+  protected:
+    /** The system this RV device belongs to */
+    System * system;
 };
 
 

@@ -129,6 +129,22 @@ class RealViewOsc(ClockDomain):
 
     freq = Param.Clock("Default frequency")
 
+class RealViewTemperatureSensor(SimObject):
+    type = 'RealViewTemperatureSensor'
+    cxx_header = "dev/arm/rv_ctrl.hh"
+
+    parent = Param.RealViewCtrl(Parent.any, "RealView controller")
+
+    system = Param.System(Parent.any, "system")
+
+    # See ARM DUI 0447J (ARM Motherboard Express uATX -- V2M-P1) and
+    # the individual core/logic tile reference manuals for details
+    # about the site/position/dcc/device allocation.
+    site = Param.UInt8("Board Site")
+    position = Param.UInt8("Position in device stack")
+    dcc = Param.UInt8("Daughterboard Configuration Controller")
+    device = Param.UInt8("Device ID")
+
 class VExpressMCC(SubSystem):
     """ARM V2M-P1 Motherboard Configuration Controller
 
@@ -140,10 +156,16 @@ Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
     class Osc(RealViewOsc):
         site, position, dcc = (0, 0, 0)
 
+    class Temperature(RealViewTemperatureSensor):
+        site, position, dcc = (0, 0, 0)
+
     osc_mcc = Osc(device=0, freq="50MHz")
     osc_clcd = Osc(device=1, freq="23.75MHz")
     osc_peripheral = Osc(device=2, freq="24MHz")
     osc_system_bus = Osc(device=4, freq="24MHz")
+
+    # See Table 4.19 in ARM DUI 0447J (Motherboard Express uATX TRM).
+    temp_crtl = Temperature(device=0)
 
 class CoreTile2A15DCC(SubSystem):
     """ARM CoreTile Express A15x2 Daughterboard Configuration Controller
