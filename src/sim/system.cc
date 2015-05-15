@@ -302,8 +302,6 @@ System::initState()
             DPRINTF(Loader, "Kernel loaded...\n");
         }
     }
-
-    activeCpus.clear();
 }
 
 void
