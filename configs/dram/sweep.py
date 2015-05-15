@@ -96,6 +96,7 @@ system.mem_ranges = [mem_range]
 # force a single channel to match the assumptions in the DRAM traffic
 # generator
 options.mem_channels = 1
+options.external_memory_system = 0
 MemConfig.config_mem(options, system)
 
 # the following assumes that we are using the native DRAM
