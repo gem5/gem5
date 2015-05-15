@@ -525,9 +525,9 @@ TableWalker::processWalk()
         return f;
     }
 
-    Request::Flags flag = 0;
+    Request::Flags flag = Request::PT_WALK;
     if (currState->sctlr.c == 0) {
-        flag = Request::UNCACHEABLE;
+        flag.set(Request::UNCACHEABLE);
     }
 
     bool delayed;
@@ -553,7 +553,7 @@ TableWalker::processWalkLPAE()
 
     statWalkWaitTime.sample(curTick() - currState->startTime);
 
-    Request::Flags flag = 0;
+    Request::Flags flag = Request::PT_WALK;
     if (currState->isSecure)
         flag.set(Request::SECURE);
 
@@ -689,7 +689,7 @@ TableWalker::processWalkLPAE()
     }
 
     if (currState->sctlr.c == 0) {
-        flag = Request::UNCACHEABLE;
+        flag.set(Request::UNCACHEABLE);
     }
 
     if (currState->isSecure)
@@ -936,9 +936,9 @@ TableWalker::processWalkAArch64()
         return f;
     }
 
-    Request::Flags flag = 0;
+    Request::Flags flag = Request::PT_WALK;
     if (currState->sctlr.c == 0) {
-        flag = Request::UNCACHEABLE;
+        flag.set(Request::UNCACHEABLE);
     }
 
     currState->longDesc.lookupLevel = start_lookup_level;
@@ -1452,7 +1452,7 @@ TableWalker::doL1Descriptor()
                 return;
             }
 
-            Request::Flags flag = 0;
+            Request::Flags flag = Request::PT_WALK;
             if (currState->isSecure)
                 flag.set(Request::SECURE);
 
@@ -1633,7 +1633,7 @@ TableWalker::doLongDescriptor()
                 return;
             }
 
-            Request::Flags flag = 0;
+            Request::Flags flag = Request::PT_WALK;
             if (currState->secureLookup)
                 flag.set(Request::SECURE);
 
