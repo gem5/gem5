@@ -44,6 +44,8 @@
 #ifndef __CPU_O3_DYN_INST_HH__
 #define __CPU_O3_DYN_INST_HH__
 
+#include <array>
+
 #include "arch/isa_traits.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/cpu.hh"
@@ -108,13 +110,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
   protected:
     /** Values to be written to the destination misc. registers. */
-    MiscReg _destMiscRegVal[TheISA::MaxMiscDestRegs];
+    std::array<MiscReg, TheISA::MaxMiscDestRegs> _destMiscRegVal;
 
     /** Indexes of the destination misc. registers. They are needed to defer
      * the write accesses to the misc. registers until the commit stage, when
      * the instruction is out of its speculative state.
      */
-    short _destMiscRegIdx[TheISA::MaxMiscDestRegs];
+    std::array<short, TheISA::MaxMiscDestRegs> _destMiscRegIdx;
 
     /** Number of destination misc. registers. */
     uint8_t _numDestMiscRegs;

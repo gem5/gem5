@@ -68,7 +68,7 @@ namespace X86ISA
     const bool CurThreadInfoImplemented = false;
     const int CurThreadInfoReg = -1;
 
-    const ExtMachInst NoopMachInst = {
+    const ExtMachInst NoopMachInst M5_VAR_USED = {
         0x0,                            // No legacy prefixes.
         0x0,                            // No rex prefix.
         { OneByteOpcode, 0x90 },          // One opcode byte, 0x90.

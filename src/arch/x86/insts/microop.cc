@@ -55,7 +55,7 @@ namespace X86ISA
           case ConditionTests::EZF:
             return ccflags.ezf;
           case ConditionTests::SZnZF:
-            return !(!ccflags.ezf & ccflags.zf);
+            return !(!ccflags.ezf && ccflags.zf);
           case ConditionTests::MSTRZ:
             panic("This condition is not implemented!");
           case ConditionTests::STRZ:
@@ -63,7 +63,7 @@ namespace X86ISA
           case ConditionTests::MSTRC:
             panic("This condition is not implemented!");
           case ConditionTests::STRZnEZF:
-            return !ccflags.ezf & ccflags.zf;
+            return !ccflags.ezf && ccflags.zf;
                 //And no interrupts or debug traps are waiting
           case ConditionTests::OF:
             return ccflags.of;
@@ -88,7 +88,7 @@ namespace X86ISA
           case ConditionTests::NotEZF:
             return !ccflags.ezf;
           case ConditionTests::NotSZnZF:
-            return !ccflags.ezf & ccflags.zf;
+            return !ccflags.ezf && ccflags.zf;
           case ConditionTests::NotMSTRZ:
             panic("This condition is not implemented!");
           case ConditionTests::NotSTRZ:
@@ -96,7 +96,7 @@ namespace X86ISA
           case ConditionTests::NotMSTRC:
             panic("This condition is not implemented!");
           case ConditionTests::STRnZnEZF:
-            return !ccflags.ezf & !ccflags.zf;
+            return !ccflags.ezf && !ccflags.zf;
                 //And no interrupts or debug traps are waiting
           case ConditionTests::NotOF:
             return !ccflags.of;

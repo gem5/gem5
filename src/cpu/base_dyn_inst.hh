@@ -46,6 +46,7 @@
 #ifndef __CPU_BASE_DYN_INST_HH__
 #define __CPU_BASE_DYN_INST_HH__
 
+#include <array>
 #include <bitset>
 #include <list>
 #include <string>
@@ -258,22 +259,22 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Flattened register index of the destination registers of this
      *  instruction.
      */
-    TheISA::RegIndex _flatDestRegIdx[TheISA::MaxInstDestRegs];
+    std::array<TheISA::RegIndex, TheISA::MaxInstDestRegs> _flatDestRegIdx;
 
     /** Physical register index of the destination registers of this
      *  instruction.
      */
-    PhysRegIndex _destRegIdx[TheISA::MaxInstDestRegs];
+    std::array<PhysRegIndex, TheISA::MaxInstDestRegs> _destRegIdx;
 
     /** Physical register index of the source registers of this
      *  instruction.
      */
-    PhysRegIndex _srcRegIdx[TheISA::MaxInstSrcRegs];
+    std::array<PhysRegIndex, TheISA::MaxInstSrcRegs> _srcRegIdx;
 
     /** Physical register index of the previous producers of the
      *  architected destinations.
      */
-    PhysRegIndex _prevDestRegIdx[TheISA::MaxInstDestRegs];
+    std::array<PhysRegIndex, TheISA::MaxInstDestRegs> _prevDestRegIdx;
 
 
   public:
