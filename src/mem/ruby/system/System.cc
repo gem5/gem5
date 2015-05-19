@@ -49,6 +49,11 @@ bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
 uint32_t RubySystem::m_memory_size_bits;
+bool RubySystem::m_warmup_enabled = false;
+// To look forward to allowing multiple RubySystem instances, track the number
+// of RubySystems that need to be warmed up on checkpoint restore.
+unsigned RubySystem::m_systems_to_warmup = 0;
+bool RubySystem::m_cooldown_enabled = false;
 
 RubySystem::RubySystem(const Params *p)
     : ClockedObject(p), m_access_backing_store(p->access_backing_store)
@@ -64,9 +69,6 @@ RubySystem::RubySystem(const Params *p)
     assert(isPowerOf2(m_block_size_bytes));
     m_block_size_bits = floorLog2(m_block_size_bytes);
     m_memory_size_bits = p->memory_size_bits;
-
-    m_warmup_enabled = false;
-    m_cooldown_enabled = false;
 
     // Setup the global variables used in Ruby
     g_system_ptr = this;
@@ -252,6 +254,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     readCompressedTrace(cache_trace_file, uncompressed_trace,
                         cache_trace_size);
     m_warmup_enabled = true;
+    m_systems_to_warmup++;
 
     vector<Sequencer*> sequencer_map;
     Sequencer* t = NULL;
@@ -307,7 +310,10 @@ RubySystem::startup()
 
         delete m_cache_recorder;
         m_cache_recorder = NULL;
-        m_warmup_enabled = false;
+        m_systems_to_warmup--;
+        if (m_systems_to_warmup == 0) {
+            m_warmup_enabled = false;
+        }
 
         // Restore eventq head
         eventq_head = eventq->replaceHead(eventq_head);
@@ -322,9 +328,9 @@ RubySystem::startup()
 void
 RubySystem::RubyEvent::process()
 {
-    if (ruby_system->m_warmup_enabled) {
+    if (RubySystem::getWarmupEnabled()) {
         ruby_system->m_cache_recorder->enqueueNextFetchRequest();
-    }  else if (ruby_system->m_cooldown_enabled) {
+    } else if (RubySystem::getCooldownEnabled()) {
         ruby_system->m_cache_recorder->enqueueNextFlushRequest();
     }
 }

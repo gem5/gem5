@@ -74,6 +74,8 @@ class RubySystem : public ClockedObject
     static uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
     static uint32_t getBlockSizeBits() { return m_block_size_bits; }
     static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
+    static bool getWarmupEnabled() { return m_warmup_enabled; }
+    static bool getCooldownEnabled() { return m_cooldown_enabled; }
 
     SimpleMemory *getPhysMem() { return m_phys_mem; }
     const bool getAccessBackingStore() { return m_access_backing_store; }
@@ -125,6 +127,9 @@ class RubySystem : public ClockedObject
     static uint32_t m_block_size_bytes;
     static uint32_t m_block_size_bits;
     static uint32_t m_memory_size_bits;
+    static bool m_warmup_enabled;
+    static unsigned m_systems_to_warmup;
+    static bool m_cooldown_enabled;
     SimpleMemory *m_phys_mem;
     const bool m_access_backing_store;
 
@@ -133,8 +138,6 @@ class RubySystem : public ClockedObject
 
   public:
     Profiler* m_profiler;
-    bool m_warmup_enabled;
-    bool m_cooldown_enabled;
     CacheRecorder* m_cache_recorder;
 };
 

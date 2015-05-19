@@ -191,7 +191,7 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     }
 
     // If running a cache trace, don't worry about the last arrival checks
-    if (!g_system_ptr->m_warmup_enabled) {
+    if (!RubySystem::getWarmupEnabled()) {
         m_last_arrival_time = arrival_time;
     }
 

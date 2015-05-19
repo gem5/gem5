@@ -525,7 +525,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
              request_address, total_latency);
 
     // update the data unless it is a non-data-carrying flush
-    if (g_system_ptr->m_warmup_enabled) {
+    if (RubySystem::getWarmupEnabled()) {
         data.setData(pkt->getConstPtr<uint8_t>(),
                      request_address.getOffset(), pkt->getSize());
     } else if (!pkt->isFlush()) {
@@ -557,12 +557,12 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
 
     delete srequest;
 
-    if (g_system_ptr->m_warmup_enabled) {
+    if (RubySystem::getWarmupEnabled()) {
         assert(pkt->req);
         delete pkt->req;
         delete pkt;
         g_system_ptr->m_cache_recorder->enqueueNextFetchRequest();
-    } else if (g_system_ptr->m_cooldown_enabled) {
+    } else if (RubySystem::getCooldownEnabled()) {
         delete pkt;
         g_system_ptr->m_cache_recorder->enqueueNextFlushRequest();
     } else {
