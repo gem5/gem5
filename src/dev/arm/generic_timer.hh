@@ -145,6 +145,8 @@ class ArchTimer
     ArchTimerCtrl _control;
     /// Programmed limit value for the upcounter ({CNTP/CNTHP/CNTV}_CVAL).
     uint64_t _counterLimit;
+    /// Offset relative to the physical timer (CNTVOFF)
+    uint64_t _offset;
 
     /**
      * Timer settings or the offset has changed, re-evaluate
@@ -180,6 +182,9 @@ class ArchTimer
     uint32_t control() const { return _control; }
     void setControl(uint32_t val);
 
+    uint64_t offset() const { return _offset; }
+    void setOffset(uint64_t val);
+
     /// Returns the value of the counter which this timer relies on.
     uint64_t value() const;
 
@@ -206,17 +211,24 @@ class GenericTimer : public SimObject
   protected:
     struct CoreTimers {
         CoreTimers(GenericTimer &parent, unsigned cpu,
-                   unsigned _irqPhys)
+                   unsigned _irqPhys, unsigned _irqVirt)
             : irqPhys(*parent.gic, _irqPhys, cpu),
+              irqVirt(*parent.gic, _irqVirt, cpu),
               // This should really be phys_timerN, but we are stuck with
               // arch_timer for backwards compatibility.
               phys(csprintf("%s.arch_timer%d", parent.name(), cpu),
                    parent, parent.systemCounter,
-                   irqPhys)
+                   irqPhys),
+              virt(csprintf("%s.virt_timer%d", parent.name(), cpu),
+                   parent, parent.systemCounter,
+                   irqVirt)
         {}
 
         ArchTimer::Interrupt irqPhys;
+        ArchTimer::Interrupt irqVirt;
+
         ArchTimer phys;
+        ArchTimer virt;
 
       private:
         // Disable copying
@@ -238,6 +250,9 @@ class GenericTimer : public SimObject
 
     /// Physical timer interrupt
     const unsigned irqPhys;
+
+    /// Virtual timer interrupt
+    const unsigned irqVirt;
 };
 
 class GenericTimerISA : public ArmISA::BaseISADevice

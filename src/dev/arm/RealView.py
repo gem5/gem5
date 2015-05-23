@@ -136,9 +136,10 @@ class GenericTimer(SimObject):
     cxx_header = "dev/arm/generic_timer.hh"
     system = Param.System(Parent.any, "system")
     gic = Param.BaseGic(Parent.any, "GIC to use for interrupting")
-    int_phys = Param.UInt32("Interrupt number used per-cpu to GIC")
-    # @todo: for now only one timer per CPU is supported, which is the
-    # normal behaviour when Security and Virt. extensions are disabled.
+    # @todo: for now only two timers per CPU is supported, which is the
+    # normal behaviour when security extensions are disabled.
+    int_phys = Param.UInt32("Physical timer interrupt number")
+    int_virt = Param.UInt32("Virtual timer interrupt number")
 
 class PL031(AmbaIntDevice):
     type = 'PL031'
@@ -457,7 +458,7 @@ class VExpress_EMM(RealView):
                                idreg=0x02250000, pio_addr=0x1C010000)
     gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
-    generic_timer = GenericTimer(int_phys=29)
+    generic_timer = GenericTimer(int_phys=29, int_virt=27)
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)

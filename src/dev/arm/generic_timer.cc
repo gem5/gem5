@@ -93,7 +93,7 @@ ArchTimer::ArchTimer(const std::string &name,
                      const Interrupt &interrupt)
     : _name(name), _parent(parent), _systemCounter(sysctr),
       _interrupt(interrupt),
-      _control(0), _counterLimit(0),
+      _control(0), _counterLimit(0), _offset(0),
       _counterLimitReachedEvent(this)
 {
 }
@@ -159,10 +159,17 @@ ArchTimer::setControl(uint32_t val)
     _control.imask = new_ctl.imask;
 }
 
+void
+ArchTimer::setOffset(uint64_t val)
+{
+    _offset = val;
+    updateCounter();
+}
+
 uint64_t
 ArchTimer::value() const
 {
-    return _systemCounter.value();
+    return _systemCounter.value() - _offset;
 }
 
 void
@@ -170,6 +177,7 @@ ArchTimer::serialize(std::ostream &os) const
 {
     paramOut(os, "control_serial", _control);
     SERIALIZE_SCALAR(_counterLimit);
+    SERIALIZE_SCALAR(_offset);
 
     const bool event_scheduled(_counterLimitReachedEvent.scheduled());
     SERIALIZE_SCALAR(event_scheduled);
@@ -184,6 +192,11 @@ ArchTimer::unserialize(Checkpoint *cp,
                                          const std::string &section)
 {
     paramIn(cp, section, "control_serial", _control);
+    // We didn't serialize an offset before we added support for the
+    // virtual timer. Consider it optional to maintain backwards
+    // compatibility.
+    if (!UNSERIALIZE_OPT_SCALAR(_offset))
+        _offset = 0;
     bool event_scheduled;
     UNSERIALIZE_SCALAR(event_scheduled);
     if (event_scheduled) {
@@ -218,7 +231,8 @@ ArchTimer::Interrupt::clear()
 GenericTimer::GenericTimer(GenericTimerParams *p)
     : SimObject(p),
       gic(p->gic),
-      irqPhys(p->int_phys)
+      irqPhys(p->int_phys),
+      irqVirt(p->int_virt)
 {
     dynamic_cast<ArmSystem &>(*p->system).setGenericTimer(this);
 }
@@ -236,6 +250,9 @@ GenericTimer::serialize(std::ostream &os)
 
         nameOut(os, core.phys.name());
         core.phys.serialize(os);
+
+        nameOut(os, core.virt.name());
+        core.virt.serialize(os);
     }
 }
 
@@ -260,6 +277,7 @@ GenericTimer::unserialize(Checkpoint *cp, const std::string &section)
         // This should really be phys_timerN, but we are stuck with
         // arch_timer for backwards compatibility.
         core.phys.unserialize(cp, csprintf("%s.arch_timer%d", section, i));
+        core.virt.unserialize(cp, csprintf("%s.virt_timer%d", section, i));
     }
 }
 
@@ -282,7 +300,7 @@ GenericTimer::createTimers(unsigned cpus)
     timers.resize(cpus);
     for (unsigned i = old_cpu_count; i < cpus; ++i) {
         timers[i].reset(
-            new CoreTimers(*this, i, irqPhys));
+            new CoreTimers(*this, i, irqPhys, irqVirt));
     }
 }
 
@@ -334,13 +352,23 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, MiscReg val)
       // Virtual timer
       case MISCREG_CNTVOFF:
       case MISCREG_CNTVOFF_EL2:
+        core.virt.setOffset(val);
+        return;
+
       case MISCREG_CNTV_CVAL:
       case MISCREG_CNTV_CVAL_EL0:
+        core.virt.setCompareValue(val);
+        return;
+
       case MISCREG_CNTV_TVAL:
       case MISCREG_CNTV_TVAL_EL0:
+        core.virt.setTimerValue(val);
+        return;
+
       case MISCREG_CNTV_CTL:
       case MISCREG_CNTV_CTL_EL0:
-        /* FALLTHROUGH */
+        core.virt.setControl(val);
+        return;
 
       // PL1 phys. timer, secure
       case MISCREG_CNTP_CTL_S:
@@ -405,19 +433,23 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
       // Virtual timer
       case MISCREG_CNTVCT:
       case MISCREG_CNTVCT_EL0:
-        warn_once("Virtual timer not implemented, "
-                  "returning physical timer value\n");
-        return core.phys.value();
+        return core.virt.value();
 
       case MISCREG_CNTVOFF:
       case MISCREG_CNTVOFF_EL2:
+        return core.virt.offset();
+
       case MISCREG_CNTV_CVAL:
       case MISCREG_CNTV_CVAL_EL0:
+        return core.virt.compareValue();
+
       case MISCREG_CNTV_TVAL:
       case MISCREG_CNTV_TVAL_EL0:
+        return core.virt.timerValue();
+
       case MISCREG_CNTV_CTL:
       case MISCREG_CNTV_CTL_EL0:
-        /* FALLTHROUGH */
+        return core.virt.control();
 
       // PL1 phys. timer, secure
       case MISCREG_CNTP_CTL_S:
