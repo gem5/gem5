@@ -85,11 +85,6 @@ class ArmSystem : public System
     const bool _haveVirtualization;
 
     /**
-     * True if this system implements the Generic Timer extension
-     */
-    const bool _haveGenericTimer;
-
-    /**
      * Pointer to the Generic Timer wrapper.
      */
     GenericTimer *_genericTimer;
@@ -156,9 +151,6 @@ class ArmSystem : public System
       * Extensions
       */
     bool haveVirtualization() const { return _haveVirtualization; }
-
-    /** Returns true if this system implements the Generic Timer extension. */
-    bool haveGenericTimer() const { return _haveGenericTimer; }
 
     /** Sets the pointer to the Generic Timer. */
     void setGenericTimer(GenericTimer *generic_timer)
