@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,26 +37,59 @@
  * Authors: William Wang
  *          Ali Saidi
  *          Chris Emmons
+ *          Andreas Sandberg
  */
+
+#include "base/bitmap.hh"
 
 #include <cassert>
 
-#include "base/bitmap.hh"
 #include "base/misc.hh"
 
-const size_t Bitmap::sizeofHeaderBuffer = sizeof(Magic) + sizeof(Header) +
-                                        sizeof(Info);
-
 // bitmap class ctor
-Bitmap::Bitmap(VideoConvert::Mode _mode, uint16_t w, uint16_t h, uint8_t *d)
-    : mode(_mode), height(h), width(w), data(d),
-    vc(mode, VideoConvert::rgb8888, width, height), headerBuffer(0)
+Bitmap::Bitmap(VideoConvert::Mode mode, uint16_t w, uint16_t h, uint8_t *d)
+    : height(h), width(w),
+      header(getCompleteHeader()),
+      data(d),
+      vc(mode, VideoConvert::rgb8888, width, height)
 {
 }
 
-Bitmap::~Bitmap() {
-    if (headerBuffer)
-        delete [] headerBuffer;
+Bitmap::~Bitmap()
+{
+}
+
+const Bitmap::CompleteV1Header
+Bitmap::getCompleteHeader() const
+{
+    const uint32_t pixel_array_size(sizeof(PixelType) * width * height);
+    const uint32_t file_size(sizeof(CompleteV1Header) + pixel_array_size);
+
+    const CompleteV1Header header = {
+        // File header
+        {
+            {'B','M'}, /* Magic */
+            file_size,
+            0, 0, /* Reserved */
+            sizeof(CompleteV1Header) /* Offset to pixel array */
+        },
+        // Info/DIB header
+        {
+            sizeof(InfoHeaderV1),
+            width,
+            height,
+            1, /* Color planes */
+            32, /* Bits per pixel */
+            0, /* No compression */
+            pixel_array_size, /* Image size in bytes */
+            2835, /* x pixels per meter (assume 72 DPI) */
+            2835, /* y pixels per meter (assume 72 DPI) */
+            0, /* Colors in color table */
+            0 /* Important color count (0 == all are important) */
+        }
+    };
+
+    return header;
 }
 
 void
@@ -64,43 +97,24 @@ Bitmap::write(std::ostream *bmp) const
 {
     assert(data);
 
-    // header is always the same for a bitmap object; compute the info once per
-    //   bitmap object
-    if (!headerBuffer) {
-        // For further information see:
-        //   http://en.wikipedia.org/wiki/BMP_file_format
-        Magic magic = {{'B','M'}};
-        Header header = {
-            static_cast<uint32_t>(sizeof(VideoConvert::Rgb8888)) *
-            width * height, 0, 0, 54};
-        Info info = {static_cast<uint32_t>(sizeof(Info)), width, height, 1,
-                     static_cast<uint32_t>(sizeof(VideoConvert::Rgb8888)) * 8,
-                     0, static_cast<uint32_t>(sizeof(VideoConvert::Rgb8888)) *
-                     width * height, 1, 1, 0, 0};
-
-        char *p = headerBuffer = new char[sizeofHeaderBuffer];
-        memcpy(p, &magic, sizeof(Magic));
-        p += sizeof(Magic);
-        memcpy(p, &header, sizeof(Header));
-        p += sizeof(Header);
-        memcpy(p, &info,   sizeof(Info));
-    }
-
     // 1.  write the header
-    bmp->write(headerBuffer, sizeofHeaderBuffer);
+    bmp->write(reinterpret_cast<const char *>(&header), sizeof(header));
 
     // 2.  write the bitmap data
-    uint8_t *tmp = vc.convert(data);
-    uint32_t *tmp32 = (uint32_t*)tmp;
+    const uint8_t *pixels(vc.convert(data));
 
     // BMP start store data left to right starting with the bottom row
     // so we need to do some creative flipping
-    for (int i = height - 1; i >= 0; i--)
-        for (int j = 0; j < width; j++)
-            bmp->write((char*)&tmp32[i * width + j], sizeof(uint32_t));
+    for (int y = height - 1; y >= 0; y--) {
+        for (int x = 0; x < width; x++) {
+            bmp->write(
+                (const char *)&pixels[sizeof(PixelType) * (y * width + x)],
+                sizeof(PixelType));
+        }
+    }
 
     bmp->flush();
 
-    delete [] tmp;
+    delete[] pixels;
 }
 
