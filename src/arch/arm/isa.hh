@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014 ARM Limited
+ * Copyright (c) 2010, 2012-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,7 +49,6 @@
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
 #include "debug/Checkpoint.hh"
-#include "dev/arm/generic_timer.hh"
 #include "sim/sim_object.hh"
 
 struct ArmISAParams;
@@ -139,6 +138,9 @@ namespace ArmISA
         // PMU belonging to this ISA
         BaseISADevice *pmu;
 
+        // Generic timer interface belonging to this ISA
+        std::unique_ptr<BaseISADevice> timer;
+
         // Cached copies of system-level properties
         bool haveSecurity;
         bool haveLPAE;
@@ -205,9 +207,7 @@ namespace ArmISA
             }
         }
 
-        ::GenericTimer::SystemCounter * getSystemCounter(ThreadContext *tc);
-        ::GenericTimer::ArchTimer * getArchTimer(ThreadContext *tc,
-                                                 int cpu_id);
+        BaseISADevice &getGenericTimer(ThreadContext *tc);
 
 
       private:

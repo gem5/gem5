@@ -151,24 +151,6 @@ ArmSystem::initState()
     }
 }
 
-GenericTimer::ArchTimer *
-ArmSystem::getArchTimer(int cpu_id) const
-{
-    if (_genericTimer) {
-        return _genericTimer->getArchTimer(cpu_id);
-    }
-    return NULL;
-}
-
-GenericTimer::SystemCounter *
-ArmSystem::getSystemCounter() const
-{
-    if (_genericTimer) {
-        return _genericTimer->getSystemCounter();
-    }
-    return NULL;
-}
-
 bool
 ArmSystem::haveSecurity(ThreadContext *tc)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #include "cpu/base.hh"
 #include "debug/Arm.hh"
 #include "debug/MiscRegs.hh"
+#include "dev/arm/generic_timer.hh"
 #include "params/ArmISA.hh"
 #include "sim/faults.hh"
 #include "sim/stat_control.hh"
@@ -730,52 +731,14 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
                 return readMiscRegNoEffect(MISCREG_SCR_EL3);
             }
         }
+
       // Generic Timer registers
-      case MISCREG_CNTFRQ:
-      case MISCREG_CNTFRQ_EL0:
-        inform_once("Read CNTFREQ_EL0 frequency\n");
-        return getSystemCounter(tc)->freq();
-      case MISCREG_CNTPCT:
-      case MISCREG_CNTPCT_EL0:
-        return getSystemCounter(tc)->value();
-      case MISCREG_CNTVCT:
-        return getSystemCounter(tc)->value();
-      case MISCREG_CNTVCT_EL0:
-        return getSystemCounter(tc)->value();
-      case MISCREG_CNTP_CVAL:
-      case MISCREG_CNTP_CVAL_EL0:
-        return getArchTimer(tc, tc->cpuId())->compareValue();
-      case MISCREG_CNTP_TVAL:
-      case MISCREG_CNTP_TVAL_EL0:
-        return getArchTimer(tc, tc->cpuId())->timerValue();
-      case MISCREG_CNTP_CTL:
-      case MISCREG_CNTP_CTL_EL0:
-        return getArchTimer(tc, tc->cpuId())->control();
-      // PL1 phys. timer, secure
-      //   AArch64
-      // case MISCREG_CNTPS_CVAL_EL1:
-      // case MISCREG_CNTPS_TVAL_EL1:
-      // case MISCREG_CNTPS_CTL_EL1:
-      // PL2 phys. timer, non-secure
-      //   AArch32
-      // case MISCREG_CNTHCTL:
-      // case MISCREG_CNTHP_CVAL:
-      // case MISCREG_CNTHP_TVAL:
-      // case MISCREG_CNTHP_CTL:
-      //   AArch64
-      // case MISCREG_CNTHCTL_EL2:
-      // case MISCREG_CNTHP_CVAL_EL2:
-      // case MISCREG_CNTHP_TVAL_EL2:
-      // case MISCREG_CNTHP_CTL_EL2:
-      // Virtual timer
-      //   AArch32
-      // case MISCREG_CNTV_CVAL:
-      // case MISCREG_CNTV_TVAL:
-      // case MISCREG_CNTV_CTL:
-      //   AArch64
-      // case MISCREG_CNTV_CVAL_EL2:
-      // case MISCREG_CNTV_TVAL_EL2:
-      // case MISCREG_CNTV_CTL_EL2:
+      case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:
+      case MISCREG_CNTPCT ... MISCREG_CNTHP_CVAL:
+      case MISCREG_CNTKCTL_EL1 ... MISCREG_CNTV_CVAL_EL0:
+      case MISCREG_CNTVOFF_EL2 ... MISCREG_CNTPS_CVAL_EL1:
+        return getGenericTimer(tc).readMiscReg(misc_reg);
+
       default:
         break;
 
@@ -1853,47 +1816,11 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             break;
 
           // Generic Timer registers
-          case MISCREG_CNTFRQ:
-          case MISCREG_CNTFRQ_EL0:
-            getSystemCounter(tc)->setFreq(val);
-            break;
-          case MISCREG_CNTP_CVAL:
-          case MISCREG_CNTP_CVAL_EL0:
-            getArchTimer(tc, tc->cpuId())->setCompareValue(val);
-            break;
-          case MISCREG_CNTP_TVAL:
-          case MISCREG_CNTP_TVAL_EL0:
-            getArchTimer(tc, tc->cpuId())->setTimerValue(val);
-            break;
-          case MISCREG_CNTP_CTL:
-          case MISCREG_CNTP_CTL_EL0:
-            getArchTimer(tc, tc->cpuId())->setControl(val);
-            break;
-          // PL1 phys. timer, secure
-          //   AArch64
-          case MISCREG_CNTPS_CVAL_EL1:
-          case MISCREG_CNTPS_TVAL_EL1:
-          case MISCREG_CNTPS_CTL_EL1:
-          // PL2 phys. timer, non-secure
-          //   AArch32
-          case MISCREG_CNTHCTL:
-          case MISCREG_CNTHP_CVAL:
-          case MISCREG_CNTHP_TVAL:
-          case MISCREG_CNTHP_CTL:
-          //   AArch64
-          case MISCREG_CNTHCTL_EL2:
-          case MISCREG_CNTHP_CVAL_EL2:
-          case MISCREG_CNTHP_TVAL_EL2:
-          case MISCREG_CNTHP_CTL_EL2:
-          // Virtual timer
-          //   AArch32
-          case MISCREG_CNTV_CVAL:
-          case MISCREG_CNTV_TVAL:
-          case MISCREG_CNTV_CTL:
-          //   AArch64
-          // case MISCREG_CNTV_CVAL_EL2:
-          // case MISCREG_CNTV_TVAL_EL2:
-          // case MISCREG_CNTV_CTL_EL2:
+          case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:
+          case MISCREG_CNTPCT ... MISCREG_CNTHP_CVAL:
+          case MISCREG_CNTKCTL_EL1 ... MISCREG_CNTV_CVAL_EL0:
+          case MISCREG_CNTVOFF_EL2 ... MISCREG_CNTPS_CVAL_EL1:
+            getGenericTimer(tc).setMiscReg(misc_reg, newVal);
             break;
         }
     }
@@ -1988,26 +1915,23 @@ ISA::tlbiMVA(ThreadContext *tc, MiscReg newVal, bool secure_lookup, bool hyp,
     }
 }
 
-::GenericTimer::SystemCounter *
-ISA::getSystemCounter(ThreadContext *tc)
+BaseISADevice &
+ISA::getGenericTimer(ThreadContext *tc)
 {
-    ::GenericTimer::SystemCounter *cnt = ((ArmSystem *) tc->getSystemPtr())->
-        getSystemCounter();
-    if (cnt == NULL) {
-        panic("System counter not available\n");
-    }
-    return cnt;
-}
+    // We only need to create an ISA interface the first time we try
+    // to access the timer.
+    if (timer)
+        return *timer.get();
 
-::GenericTimer::ArchTimer *
-ISA::getArchTimer(ThreadContext *tc, int cpu_id)
-{
-    ::GenericTimer::ArchTimer *timer = ((ArmSystem *) tc->getSystemPtr())->
-        getArchTimer(cpu_id);
-    if (timer == NULL) {
-        panic("Architected timer not available\n");
+    assert(system);
+    GenericTimer *generic_timer(system->getGenericTimer());
+    if (!generic_timer) {
+        panic("Trying to get a generic timer from a system that hasn't "
+              "been configured to use a generic timer.\n");
     }
-    return timer;
+
+    timer.reset(new GenericTimerISA(*generic_timer, tc->cpuId()));
+    return *timer.get();
 }
 
 }

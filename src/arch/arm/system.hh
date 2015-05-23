@@ -46,13 +46,13 @@
 #include <string>
 #include <vector>
 
-#include "dev/arm/generic_timer.hh"
 #include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
 #include "params/GenericArmSystem.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+class GenericTimer;
 class ThreadContext;
 
 class ArmSystem : public System
@@ -166,11 +166,8 @@ class ArmSystem : public System
         _genericTimer = generic_timer;
     }
 
-    /** Returns a pointer to the system counter. */
-    GenericTimer::SystemCounter *getSystemCounter() const;
-
-    /** Returns a pointer to the appropriate architected timer. */
-    GenericTimer::ArchTimer *getArchTimer(int cpu_id) const;
+    /** Get a pointer to the system's generic timer model */
+    GenericTimer *getGenericTimer() const { return _genericTimer; }
 
     /** Returns true if the register width of the highest implemented exception
      * level is 64 bits (ARMv8) */
