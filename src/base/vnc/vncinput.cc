@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,9 +53,10 @@ using namespace std;
 
 VncInput::VncInput(const Params *p)
     : SimObject(p), keyboard(NULL), mouse(NULL),
-      vc(NULL), fbPtr(NULL), videoMode(VideoConvert::UnknownMode),
-      _videoWidth(1), _videoHeight(1), captureEnabled(p->frame_capture),
-      captureCurrentFrame(0), captureLastHash(0), captureBitmap(0)
+      fb(&FrameBuffer::dummy),
+      _videoWidth(fb->width()), _videoHeight(fb->height()),
+      captureEnabled(p->frame_capture),
+      captureCurrentFrame(0), captureLastHash(0)
 {
     if (captureEnabled) {
         // remove existing frame output directory if it exists, then create a
@@ -68,33 +69,40 @@ VncInput::VncInput(const Params *p)
 }
 
 void
-VncInput::setFrameBufferParams(VideoConvert::Mode mode, uint16_t width,
-    uint16_t height)
+VncInput::setFrameBuffer(const FrameBuffer *rfb)
 {
-    DPRINTF(VNC, "Updating video params: mode: %d width: %d height: %d\n", mode,
-            width, height);
+    if (!rfb)
+        panic("Trying to VNC frame buffer to NULL!");
 
-    if (mode != videoMode || width != videoWidth() || height != videoHeight()) {
-        videoMode = mode;
+    fb = rfb;
+
+    // create bitmap of the frame with new attributes
+    if (captureEnabled)
+        captureBitmap.reset(new Bitmap(rfb));
+
+    // Setting a new frame buffer means that we need to send an update
+    // to the client. Mark the internal buffers as dirty to do so.
+    setDirty();
+}
+
+void
+VncInput::setDirty()
+{
+    const unsigned width(fb->width());
+    const unsigned height(fb->height());
+
+    if (_videoWidth != width || _videoHeight != height) {
+        DPRINTF(VNC, "Updating video params: width: %d height: %d\n",
+                width, height);
+
         _videoWidth = width;
         _videoHeight = height;
 
-        if (vc)
-            delete vc;
-
-        vc = new VideoConvert(mode, VideoConvert::rgb8888, videoWidth(),
-                videoHeight());
-
-        if (captureEnabled) {
-            // create bitmap of the frame with new attributes
-            if (captureBitmap)
-                delete captureBitmap;
-
-            assert(fbPtr);
-            captureBitmap = new Bitmap(videoMode, width, height, fbPtr);
-            assert(captureBitmap);
-        }
+        frameBufferResized();
     }
+
+     if (captureEnabled)
+        captureFrameBuffer();
 }
 
 void
@@ -103,7 +111,7 @@ VncInput::captureFrameBuffer()
     assert(captureBitmap);
 
     // skip identical frames
-    uint64_t new_hash = captureBitmap->getHash();
+    uint64_t new_hash = fb->getHash();
     if (captureLastHash == new_hash)
         return;
     captureLastHash = new_hash;
@@ -116,8 +124,8 @@ VncInput::captureFrameBuffer()
 
     // create the compressed framebuffer file
     ostream *fb_out = simout.create(captureOutputDirectory + frameFilename,
-                    true);
-    captureBitmap->write(fb_out);
+                                    true);
+    captureBitmap->write(*fb_out);
     simout.close(fb_out);
 
     ++captureCurrentFrame;

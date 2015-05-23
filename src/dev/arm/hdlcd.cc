@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,15 +37,15 @@
  * Authors: Chris Emmons
  */
 
+#include "dev/arm/hdlcd.hh"
+
 #include "base/vnc/vncinput.hh"
-#include "base/bitmap.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/HDLcd.hh"
 #include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/arm/hdlcd.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
@@ -63,10 +63,11 @@ HDLcd::HDLcd(const Params *p)
       h_sync(0), h_back_porch(0), h_data(0), h_front_porch(0),
       polarities(0), command(0), pixel_format(0),
       red_select(0), green_select(0), blue_select(0),
-      pixelClock(p->pixel_clock), vnc(p->vnc), bmp(NULL), pic(NULL),
+      pixelClock(p->pixel_clock),
+      fb(0, 0), vnc(p->vnc), bmp(&fb), pic(NULL),
       frameReadStartTime(0),
       dmaStartAddr(0), dmaCurAddr(0), dmaMaxAddr(0), dmaPendingNum(0),
-      frameUnderrun(false), virtualDisplayBuffer(NULL), pixelBufferSize(0),
+      frameUnderrun(false), pixelBufferSize(0),
       pixelIndex(0), doUpdateParams(false), frameUnderway(false),
       dmaBytesInFlight(0),
       startFrameEvent(this), endFrameEvent(this), renderPixelEvent(this),
@@ -81,13 +82,11 @@ HDLcd::HDLcd(const Params *p)
         dmaDoneEventFree[i] = &dmaDoneEventAll[i];
 
     if (vnc)
-        vnc->setFramebufferAddr(NULL);
+        vnc->setFrameBuffer(&fb);
 }
 
 HDLcd::~HDLcd()
 {
-    if (virtualDisplayBuffer)
-        delete [] virtualDisplayBuffer;
 }
 
 // read registers and frame buffer
@@ -315,8 +314,14 @@ HDLcd::write(PacketPtr pkt)
 void
 HDLcd::updateVideoParams(bool unserializing = false)
 {
-    const uint16_t bpp = bytesPerPixel() << 3;
-    const size_t buffer_size = bytesPerPixel() * width() * height();
+    const uint16_t bpp M5_VAR_USED = bytesPerPixel() << 3;
+
+    // Workaround configuration bugs where multiple display
+    // controllers are attached to the same VNC server by reattaching
+    // enabled devices. This isn't ideal, but works as long as only
+    // one display controller is active at a time.
+    if (command.enable && vnc)
+        vnc->setFrameBuffer(&fb);
 
     // updating these parameters while LCD is enabled is not supported
     if (frameUnderway && !unserializing)
@@ -328,18 +333,14 @@ HDLcd::updateVideoParams(bool unserializing = false)
     // there must be no outstanding DMA transactions for this to work
     if (!unserializing) {
         assert(dmaPendingNum == 0);
-        if (virtualDisplayBuffer)
-            delete [] virtualDisplayBuffer;
-        virtualDisplayBuffer = new uint8_t[buffer_size];
-        memset(virtualDisplayBuffer, 0, buffer_size);
+
+        virtualDisplayBuffer.resize(bytesPerPixel() * area());
+        fb.resize(width(), height());
+        fb.clear();
+
+        std::fill(virtualDisplayBuffer.begin(), virtualDisplayBuffer.end(),
+                  0);
     }
-
-    assert(virtualDisplayBuffer);
-    if (vnc)
-        vnc->setFramebufferAddr(virtualDisplayBuffer);
-
-    if (bmp)
-        delete bmp;
 
     DPRINTF(HDLcd, "bpp = %d\n", bpp);
     DPRINTF(HDLcd, "display size = %d x %d\n", width(), height());
@@ -354,61 +355,11 @@ HDLcd::updateVideoParams(bool unserializing = false)
     DPRINTF(HDLcd, "simulated refresh rate ~ %.1ffps generating ~ %.1fMB/s "
             "traffic ([%.1fMHz, T=%d sim clocks] pclk, %d bpp => %.1fMB/s peak requirement)\n",
             fps,
-            fps * buffer_size / 1024 / 1024,
+            fps * virtualDisplayBuffer.size() / 1024 / 1024,
             (double)SimClock::Frequency / pixelClock / 1000000.0,
             pixelClock,
             bpp,
             (double)(SimClock::Frequency / pixelClock * (bpp / 8)) / 1024 / 1024);
-
-    if (pixel_format.big_endian)
-        panic("Big Endian pixel format not implemented by HDLcd controller");
-
-    if (vnc) {
-        if ((bpp == 24) &&
-                (red_select.size == 8) &&
-                (blue_select.size == 8) &&
-                (green_select.size == 8) &&
-                (green_select.offset == 8)) {
-            if ((blue_select.offset == 0) &&
-                    (red_select.offset == 16)) {
-                vnc->setFrameBufferParams(VideoConvert::rgb8888, width(),
-                        height());
-                bmp = new Bitmap(VideoConvert::rgb8888, width(), height(),
-                        virtualDisplayBuffer);
-                DPRINTF(HDLcd, "color mode:  rgb888\n");
-            } else if ((red_select.offset == 0) &&
-                    (blue_select.offset == 16)) {
-                vnc->setFrameBufferParams(VideoConvert::bgr8888, width(),
-                        height());
-                bmp = new Bitmap(VideoConvert::bgr8888, width(), height(),
-                        virtualDisplayBuffer);
-                DPRINTF(HDLcd, "color mode:  bgr888\n");
-            }
-        } else if ((bpp == 16) &&
-                (red_select.size == 5) &&
-                (blue_select.size == 5) &&
-                (green_select.size == 6) &&
-                (green_select.offset == 5)) {
-            if ((blue_select.offset == 0) &&
-                    (red_select.offset == 11)) {
-                vnc->setFrameBufferParams(VideoConvert::rgb565, width(),
-                        height());
-                bmp = new Bitmap(VideoConvert::rgb565, width(), height(),
-                        virtualDisplayBuffer);
-                DPRINTF(HDLcd, "color mode:  rgb565\n");
-            } else if ((red_select.offset == 0) &&
-                    (blue_select.offset == 11)) {
-                vnc->setFrameBufferParams(VideoConvert::bgr565, width(),
-                        height());
-                bmp = new Bitmap(VideoConvert::bgr565, width(), height(),
-                        virtualDisplayBuffer);
-                DPRINTF(HDLcd, "color mode:  bgr565\n");
-            }
-        } else {
-            DPRINTF(HDLcd, "color mode:  undefined\n");
-            panic("Unimplemented video mode\n");
-        }
-    }
 }
 
 void
@@ -424,7 +375,7 @@ HDLcd::startFrame()
         doUpdateParams = false;
     }
     frameUnderway = true;
-    assert(virtualDisplayBuffer);
+    assert(!virtualDisplayBuffer.empty());
     assert(pixelBufferSize == 0);
     assert(dmaBytesInFlight == 0);
     assert(dmaPendingNum == 0);
@@ -484,10 +435,11 @@ HDLcd::fillPixelBuffer()
         // will be uncacheable as well. If we have uncacheable and cacheable
         // requests in the memory system for the same address it won't be
         // pleased
+        uint8_t *const dma_dst(
+            virtualDisplayBuffer.data() + dmaCurAddr - dmaStartAddr);
         event->setTransactionSize(transaction_size);
         dmaPort.dmaAction(MemCmd::ReadReq, dmaCurAddr, transaction_size, event,
-                          virtualDisplayBuffer + dmaCurAddr - dmaStartAddr,
-                          0, Request::UNCACHEABLE);
+                          dma_dst, 0, Request::UNCACHEABLE);
         dmaCurAddr += transaction_size;
         dmaBytesInFlight += transaction_size;
     }
@@ -549,12 +501,24 @@ HDLcd::renderPixel()
     schedule(renderPixelEvent, nextEventTick);
 }
 
+PixelConverter
+HDLcd::pixelConverter() const
+{
+    return PixelConverter(
+        bytesPerPixel(),
+        red_select.offset, green_select.offset, blue_select.offset,
+        red_select.size, green_select.size, blue_select.size,
+        pixel_format.big_endian ? BigEndianByteOrder : LittleEndianByteOrder);
+}
+
 void
 HDLcd::endFrame() {
     assert(pixelBufferSize == 0);
     assert(dmaPendingNum == 0);
     assert(dmaBytesInFlight == 0);
     assert(dmaDoneEventFree.size() == dmaDoneEventAll.size());
+
+    fb.copyIn(virtualDisplayBuffer, pixelConverter());
 
     if (vnc)
         vnc->setDirty();
@@ -563,10 +527,9 @@ HDLcd::endFrame() {
         if (!pic)
             pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
-        assert(bmp);
         assert(pic);
         pic->seekp(0);
-        bmp->write(pic);
+        bmp.write(*pic);
     }
 
     // start the next frame
@@ -664,8 +627,7 @@ HDLcd::serialize(std::ostream &os)
     SERIALIZE_SCALAR(dmaPendingNum);
     SERIALIZE_SCALAR(frameUnderrun);
 
-    const size_t buffer_size = bytesPerPixel() * width() * height();
-    SERIALIZE_ARRAY(virtualDisplayBuffer, buffer_size);
+    arrayParamOut(os, "virtualDisplayBuffer", virtualDisplayBuffer);
 
     SERIALIZE_SCALAR(pixelBufferSize);
     SERIALIZE_SCALAR(pixelIndex);
@@ -777,9 +739,7 @@ HDLcd::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(frameUnderrun);
     UNSERIALIZE_SCALAR(dmaBytesInFlight);
 
-    const size_t buffer_size = bytesPerPixel() * width() * height();
-    virtualDisplayBuffer = new uint8_t[buffer_size];
-    UNSERIALIZE_ARRAY(virtualDisplayBuffer, buffer_size);
+    arrayParamIn(cp, section, "virtualDisplayBuffer", virtualDisplayBuffer);
 
     UNSERIALIZE_SCALAR(pixelBufferSize);
     UNSERIALIZE_SCALAR(pixelIndex);
@@ -823,6 +783,8 @@ HDLcd::unserialize(Checkpoint *cp, const std::string &section)
 
     if (frameUnderway) {
         updateVideoParams(true);
+        fb.resize(width(), height());
+        fb.copyIn(virtualDisplayBuffer, pixelConverter());
         if (vnc)
             vnc->setDirty();
     }

@@ -42,6 +42,7 @@ Source('cprintf.cc')
 Source('debug.cc')
 if env['USE_FENV']:
     Source('fenv.c')
+Source('framebuffer.cc')
 Source('hostinfo.cc')
 Source('inet.cc')
 Source('inifile.cc')

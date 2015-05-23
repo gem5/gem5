@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,7 +47,6 @@
 
 #include <iostream>
 
-#include "base/vnc/convert.hh"
 #include "base/vnc/vncinput.hh"
 #include "base/bitmap.hh"
 #include "base/circlebuf.hh"
@@ -305,24 +304,11 @@ class VncServer : public VncInput
      */
     void sendFrameBufferResized();
 
-  public:
-    /** The frame buffer uses this call to notify the vnc server that
-     * the frame buffer has been updated and a new image needs to be sent to the
-     * client
-     */
-    void
-    setDirty()
-    {
-        VncInput::setDirty();
-        sendUpdate = true;
-        sendFrameBufferUpdate();
-    }
+    static const PixelConverter pixelConverter;
 
-    /** Set the mode of the data the frame buffer will be sending us
-     * @param mode the mode
-     */
-    void setFrameBufferParams(VideoConvert::Mode mode, uint16_t width,
-        uint16_t height);
+  public:
+    void setDirty() M5_ATTR_OVERRIDE;
+    void frameBufferResized() M5_ATTR_OVERRIDE;
 };
 
 #endif

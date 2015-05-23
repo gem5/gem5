@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,8 +46,8 @@
 #define __BASE_VNC_VNC_INPUT_HH__
 
 #include <iostream>
+#include <memory>
 
-#include "base/vnc/convert.hh"
 #include "base/bitmap.hh"
 #include "params/VncInput.hh"
 #include "sim/sim_object.hh"
@@ -160,11 +160,7 @@ class VncInput : public SimObject
      * tell us where the data is instead of constanly copying it around
      * @param rfb frame buffer that we're going to use
      */
-    void
-    setFramebufferAddr(uint8_t* rfb)
-    {
-        fbPtr = rfb;
-    }
+    virtual void setFrameBuffer(const FrameBuffer *rfb);
 
     /** Set up the device that would like to receive notifications when keys are
      * pressed in the vnc client keyboard
@@ -196,32 +192,19 @@ class VncInput : public SimObject
      * the frame buffer has been updated and a new image needs to be sent to the
      * client
      */
-    virtual void setDirty()
-    {
-        if (captureEnabled)
-            captureFrameBuffer();
-    }
-
-    /** Set the mode of the data the frame buffer will be sending us
-     * @param mode the mode
-     */
-    virtual void setFrameBufferParams(VideoConvert::Mode mode, uint16_t width, uint16_t height);
+    virtual void setDirty();
 
   protected:
+    virtual void frameBufferResized() {};
+
     /** The device to notify when we get key events */
     VncKeyboard *keyboard;
 
     /** The device to notify when we get mouse events */
     VncMouse *mouse;
 
-    /** The video converter that transforms data for us */
-    VideoConvert *vc;
-
     /** pointer to the actual data that is stored in the frame buffer device */
-    uint8_t* fbPtr;
-
-    /** The mode of data we're getting frame buffer in */
-    VideoConvert::Mode videoMode;
+    const FrameBuffer *fb;
 
     /** the width of the frame buffer we are sending to the client */
     uint16_t _videoWidth;
@@ -242,7 +225,7 @@ class VncInput : public SimObject
     uint64_t captureLastHash;
 
     /** Cached bitmap object for writing out frame buffers to file */
-    Bitmap *captureBitmap;
+    std::unique_ptr<Bitmap> captureBitmap;
 
     /** Captures the current frame buffer to a file */
     void captureFrameBuffer();

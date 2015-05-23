@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,6 +61,7 @@
 
 #include <cerrno>
 #include <cstdio>
+#include <cstddef>
 
 #include "base/atomicio.hh"
 #include "base/bitmap.hh"
@@ -73,6 +74,12 @@
 #include "sim/core.hh"
 
 using namespace std;
+
+const PixelConverter VncServer::pixelConverter(
+    4,        // 4 bytes / pixel
+    16, 8, 0, // R in [23, 16], G in [15, 8], B in [7, 0]
+    8, 8, 8,  // 8 bits / channel
+    LittleEndianByteOrder);
 
 /** @file
  * Implementiation of a VNC server
@@ -122,20 +129,19 @@ VncServer::VncServer(const Params *p)
 
     curState = WaitForProtocolVersion;
 
-    // currently we only support this one pixel format
-    // unpacked 32bit rgb (rgb888 + 8 bits of nothing/alpha)
-    // keep it around for telling the client and making
-    // sure the client cooperates
-    pixelFormat.bpp = 32;
-    pixelFormat.depth = 24;
-    pixelFormat.bigendian = 0;
+    // We currently only support one pixel format. Extract the pixel
+    // representation from our PixelConverter instance and keep it
+    // around for telling the client and making sure it cooperates
+    pixelFormat.bpp = 8 * pixelConverter.length;
+    pixelFormat.depth = pixelConverter.depth;
+    pixelFormat.bigendian = pixelConverter.byte_order == BigEndianByteOrder;
     pixelFormat.truecolor = 1;
-    pixelFormat.redmax = 0xff;
-    pixelFormat.greenmax = 0xff;
-    pixelFormat.bluemax = 0xff;
-    pixelFormat.redshift = 16;
-    pixelFormat.greenshift = 8;
-    pixelFormat.blueshift = 0;
+    pixelFormat.redmax = pixelConverter.ch_r.mask;
+    pixelFormat.greenmax = pixelConverter.ch_g.mask;
+    pixelFormat.bluemax = pixelConverter.ch_b.mask;
+    pixelFormat.redshift = pixelConverter.ch_r.offset;
+    pixelFormat.greenshift = pixelConverter.ch_g.offset;
+    pixelFormat.blueshift = pixelConverter.ch_b.offset;
 
     DPRINTF(VNC, "Vnc server created at port %d\n", p->port);
 }
@@ -615,12 +621,10 @@ void
 VncServer::sendFrameBufferUpdate()
 {
 
-    if (!fbPtr || dataFd <= 0 || curState != NormalPhase || !sendUpdate) {
+    if (dataFd <= 0 || curState != NormalPhase || !sendUpdate) {
         DPRINTF(VNC, "NOT sending framebuffer update\n");
         return;
     }
-
-    assert(vc);
 
     // The client will request data constantly, unless we throttle it
     sendUpdate = false;
@@ -650,19 +654,25 @@ VncServer::sendFrameBufferUpdate()
     write(&fbu);
     write(&fbr);
 
-    assert(fbPtr);
+    assert(fb);
 
-    uint8_t *tmp = vc->convert(fbPtr);
-    uint64_t num_pixels = videoWidth() * videoHeight();
-    write(tmp, num_pixels * sizeof(uint32_t));
-    delete [] tmp;
+    std::vector<uint8_t> line_buffer(pixelConverter.length * fb->width());
+    for (int y = 0; y < fb->height(); ++y) {
+        // Convert and send a line at a time
+        uint8_t *raw_pixel(line_buffer.data());
+        for (unsigned x = 0; x < fb->width(); ++x) {
+            pixelConverter.fromPixel(raw_pixel, fb->pixel(x, y));
+            raw_pixel += pixelConverter.length;
+        }
 
+        write(line_buffer.data(), line_buffer.size());
+    }
 }
 
 void
 VncServer::sendFrameBufferResized()
 {
-    assert(fbPtr && dataFd > 0 && curState == NormalPhase);
+    assert(fb && dataFd > 0 && curState == NormalPhase);
     DPRINTF(VNC, "Sending framebuffer resize\n");
 
     FrameBufferUpdate fbu;
@@ -692,19 +702,23 @@ VncServer::sendFrameBufferResized()
 }
 
 void
-VncServer::setFrameBufferParams(VideoConvert::Mode mode, uint16_t width,
-    uint16_t height)
+VncServer::setDirty()
 {
-    VncInput::setFrameBufferParams(mode, width, height);
+    VncInput::setDirty();
 
-    if (mode != videoMode || width != videoWidth() || height != videoHeight()) {
-        if (dataFd > 0 && fbPtr && curState == NormalPhase) {
-            if (supportsResizeEnc)
-                sendFrameBufferResized();
-            else
-                // The frame buffer changed size and we can't update the client
-                detach();
-        }
+    sendUpdate = true;
+    sendFrameBufferUpdate();
+}
+
+void
+VncServer::frameBufferResized()
+{
+    if (dataFd > 0 && curState == NormalPhase) {
+        if (supportsResizeEnc)
+            sendFrameBufferResized();
+        else
+            // The frame buffer changed size and we can't update the client
+            detach();
     }
 }
 

@@ -45,7 +45,7 @@
 #include <ostream>
 
 #include "base/compiler.hh"
-#include "base/vnc/convert.hh"
+#include "base/framebuffer.hh"
 
 /**
  * @file Declaration of a class that writes a frame buffer to a bitmap
@@ -59,38 +59,17 @@ class  Bitmap
     /**
      * Create a bitmap that takes data in a given mode & size and
      * outputs to an ostream.
-     *
-     * @param mode the type of data that is being provided
-     * @param h the hight of the image
-     * @param w the width of the image
-     * @param d the data for the image in mode
      */
-    Bitmap(VideoConvert::Mode mode, uint16_t w, uint16_t h, uint8_t *d);
+    Bitmap(const FrameBuffer *fb);
 
     ~Bitmap();
-
-    /**
-     * Provide the converter with the data that should be output. It
-     * will be converted into rgb8888 and written when write() is
-     * called.
-     *
-     * @param d the data
-     */
-    void rawData(uint8_t* d) { data = d; }
 
     /**
      * Write the frame buffer data into the provided ostream
      *
      * @param bmp stream to write to
      */
-    void write(std::ostream *bmp) const;
-
-    /**
-     * Gets a hash over the bitmap for quick comparisons to other bitmaps.
-     *
-     * @return hash of the bitmap
-     */
-    uint64_t getHash() const { return vc.getHash(data); }
+    void write(std::ostream &bmp) const;
 
 
   private:
@@ -121,16 +100,26 @@ class  Bitmap
         InfoHeaderV1 info;
     } M5_ATTR_PACKED;
 
-    typedef uint32_t PixelType;
+    struct BmpPixel32 {
+        BmpPixel32 &operator=(const Pixel &rhs) {
+            red = rhs.red;
+            green = rhs.green;
+            blue = rhs.blue;
+            padding = 0;
+
+            return *this;
+        }
+        uint8_t blue;
+        uint8_t green;
+        uint8_t red;
+        uint8_t padding;
+    } M5_ATTR_PACKED;
+
+    typedef BmpPixel32 PixelType;
 
     const CompleteV1Header getCompleteHeader() const;
 
-    const uint16_t height;
-    const uint16_t width;
-    const CompleteV1Header header;
-    uint8_t *data;
-
-    VideoConvert vc;
+    const FrameBuffer &fb;
 };
 
 #endif // __BASE_BITMAP_HH__

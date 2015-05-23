@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,7 +39,6 @@
  */
 
 #include "base/vnc/vncinput.hh"
-#include "base/bitmap.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/PL111.hh"
@@ -63,7 +62,9 @@ Pl111::Pl111(const Params *p)
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
       clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0),
-      pixelClock(p->pixel_clock), vnc(p->vnc), bmp(NULL), pic(NULL),
+      pixelClock(p->pixel_clock),
+      converter(PixelConverter::rgba8888_le), fb(LcdMaxWidth, LcdMaxHeight),
+      vnc(p->vnc), bmp(&fb), pic(NULL),
       width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
@@ -83,7 +84,7 @@ Pl111::Pl111(const Params *p)
         dmaDoneEventFree[i] = &dmaDoneEventAll[i];
 
     if (vnc)
-        vnc->setFramebufferAddr(dmaBuffer);
+        vnc->setFrameBuffer(&fb);
 }
 
 Pl111::~Pl111()
@@ -378,45 +379,66 @@ Pl111::write(PacketPtr pkt)
     return pioDelay;
 }
 
+PixelConverter
+Pl111::pixelConverter() const
+{
+    unsigned rw, gw, bw;
+    unsigned offsets[3];
+
+    switch (lcdControl.lcdbpp) {
+      case bpp24:
+        rw = gw = bw = 8;
+        offsets[0] = 0;
+        offsets[1] = 8;
+        offsets[2] = 16;
+        break;
+
+      case bpp16m565:
+        rw = 5;
+        gw = 6;
+        bw = 5;
+        offsets[0] = 0;
+        offsets[1] = 5;
+        offsets[2] = 11;
+        break;
+
+      default:
+        panic("Unimplemented video mode\n");
+    }
+
+    if (lcdControl.bgr) {
+        return PixelConverter(
+            bytesPerPixel,
+            offsets[2], offsets[1], offsets[0],
+            rw, gw, bw,
+            LittleEndianByteOrder);
+    } else {
+        return PixelConverter(
+            bytesPerPixel,
+            offsets[0], offsets[1], offsets[2],
+            rw, gw, bw,
+            LittleEndianByteOrder);
+    }
+}
+
 void
 Pl111::updateVideoParams()
 {
-        if (lcdControl.lcdbpp == bpp24) {
-            bytesPerPixel = 4;
-        } else if (lcdControl.lcdbpp == bpp16m565) {
-            bytesPerPixel = 2;
-        }
+    if (lcdControl.lcdbpp == bpp24) {
+        bytesPerPixel = 4;
+    } else if (lcdControl.lcdbpp == bpp16m565) {
+        bytesPerPixel = 2;
+    }
 
-        if (vnc) {
-            if (lcdControl.lcdbpp == bpp24 && lcdControl.bgr)
-                vnc->setFrameBufferParams(VideoConvert::bgr8888, width,
-                       height);
-            else if (lcdControl.lcdbpp == bpp24 && !lcdControl.bgr)
-                vnc->setFrameBufferParams(VideoConvert::rgb8888, width,
-                       height);
-            else if (lcdControl.lcdbpp == bpp16m565 && lcdControl.bgr)
-                vnc->setFrameBufferParams(VideoConvert::bgr565, width,
-                       height);
-            else if (lcdControl.lcdbpp == bpp16m565 && !lcdControl.bgr)
-                vnc->setFrameBufferParams(VideoConvert::rgb565, width,
-                       height);
-            else
-                panic("Unimplemented video mode\n");
-        }
+    fb.resize(width, height);
+    converter = pixelConverter();
 
-        if (bmp)
-            delete bmp;
-
-        if (lcdControl.lcdbpp == bpp24 && lcdControl.bgr)
-            bmp = new Bitmap(VideoConvert::bgr8888, width, height, dmaBuffer);
-        else if (lcdControl.lcdbpp == bpp24 && !lcdControl.bgr)
-            bmp = new Bitmap(VideoConvert::rgb8888, width, height, dmaBuffer);
-        else if (lcdControl.lcdbpp == bpp16m565 && lcdControl.bgr)
-            bmp = new Bitmap(VideoConvert::bgr565, width, height, dmaBuffer);
-        else if (lcdControl.lcdbpp == bpp16m565 && !lcdControl.bgr)
-            bmp = new Bitmap(VideoConvert::rgb565, width, height, dmaBuffer);
-        else
-            panic("Unimplemented video mode\n");
+    // Workaround configuration bugs where multiple display
+    // controllers are attached to the same VNC server by reattaching
+    // enabled devices. This isn't ideal, but works as long as only
+    // one display controller is active at a time.
+    if (lcdControl.lcdpwr && vnc)
+        vnc->setFrameBuffer(&fb);
 }
 
 void
@@ -493,6 +515,7 @@ Pl111::dmaDone()
         }
 
         assert(!readEvent.scheduled());
+        fb.copyIn(dmaBuffer, converter);
         if (vnc)
             vnc->setDirty();
 
@@ -502,10 +525,9 @@ Pl111::dmaDone()
             if (!pic)
                 pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
-            assert(bmp);
             assert(pic);
             pic->seekp(0);
-            bmp->write(pic);
+            bmp.write(*pic);
         }
 
         // schedule the next read based on when the last frame started
@@ -721,6 +743,7 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
 
     if (lcdControl.lcdpwr) {
         updateVideoParams();
+        fb.copyIn(dmaBuffer, converter);
         if (vnc)
             vnc->setDirty();
     }

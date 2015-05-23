@@ -58,8 +58,6 @@
 #include <libkern/OSByteOrder.h>
 #endif
 
-enum ByteOrder {BigEndianByteOrder, LittleEndianByteOrder};
-
 //These functions actually perform the swapping for parameters
 //of various bit lengths
 inline uint64_t

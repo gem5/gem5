@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,13 +47,15 @@
 #define __DEV_ARM_PL111_HH__
 
 #include <fstream>
+#include <memory>
 
+#include "base/bitmap.hh"
+#include "base/framebuffer.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/Pl111.hh"
 #include "sim/serialize.hh"
 
 class VncInput;
-class Bitmap;
 
 class Pl111: public AmbaDmaDevice
 {
@@ -256,11 +258,14 @@ class Pl111: public AmbaDmaDevice
     /** Pixel clock */
     Tick pixelClock;
 
+    PixelConverter converter;
+    FrameBuffer fb;
+
     /** VNC server */
     VncInput *vnc;
 
     /** Helper to write out bitmaps */
-    Bitmap *bmp;
+    Bitmap bmp;
 
     /** Picture of what the current frame buffer looks like */
     std::ostream *pic;
@@ -294,6 +299,8 @@ class Pl111: public AmbaDmaDevice
 
     /** Number of pending dma reads */
     uint32_t dmaPendingNum;
+
+    PixelConverter pixelConverter() const;
 
     /** Send updated parameters to the vnc server */
     void updateVideoParams();

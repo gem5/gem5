@@ -47,11 +47,8 @@
 #include "base/misc.hh"
 
 // bitmap class ctor
-Bitmap::Bitmap(VideoConvert::Mode mode, uint16_t w, uint16_t h, uint8_t *d)
-    : height(h), width(w),
-      header(getCompleteHeader()),
-      data(d),
-      vc(mode, VideoConvert::rgb8888, width, height)
+Bitmap::Bitmap(const FrameBuffer *_fb)
+    : fb(*_fb)
 {
 }
 
@@ -62,7 +59,7 @@ Bitmap::~Bitmap()
 const Bitmap::CompleteV1Header
 Bitmap::getCompleteHeader() const
 {
-    const uint32_t pixel_array_size(sizeof(PixelType) * width * height);
+    const uint32_t pixel_array_size(sizeof(PixelType) * fb.area());
     const uint32_t file_size(sizeof(CompleteV1Header) + pixel_array_size);
 
     const CompleteV1Header header = {
@@ -76,8 +73,8 @@ Bitmap::getCompleteHeader() const
         // Info/DIB header
         {
             sizeof(InfoHeaderV1),
-            width,
-            height,
+            fb.width(),
+            fb.height(),
             1, /* Color planes */
             32, /* Bits per pixel */
             0, /* No compression */
@@ -93,28 +90,25 @@ Bitmap::getCompleteHeader() const
 }
 
 void
-Bitmap::write(std::ostream *bmp) const
+Bitmap::write(std::ostream &bmp) const
 {
-    assert(data);
+    const CompleteV1Header header(getCompleteHeader());
 
     // 1.  write the header
-    bmp->write(reinterpret_cast<const char *>(&header), sizeof(header));
+    bmp.write(reinterpret_cast<const char *>(&header), sizeof(header));
 
     // 2.  write the bitmap data
-    const uint8_t *pixels(vc.convert(data));
-
     // BMP start store data left to right starting with the bottom row
     // so we need to do some creative flipping
-    for (int y = height - 1; y >= 0; y--) {
-        for (int x = 0; x < width; x++) {
-            bmp->write(
-                (const char *)&pixels[sizeof(PixelType) * (y * width + x)],
-                sizeof(PixelType));
-        }
+    std::vector<PixelType> line_buffer(fb.width());
+    for (int y = 0; y < fb.height(); ++y) {
+        for (unsigned x = 0; x < fb.width(); ++x)
+            line_buffer[x] = fb.pixel(x, fb.height() - y - 1);
+
+        bmp.write(reinterpret_cast<const char *>(line_buffer.data()),
+                  line_buffer.size() * sizeof(line_buffer[0]));
     }
 
-    bmp->flush();
-
-    delete[] pixels;
+    bmp.flush();
 }
 

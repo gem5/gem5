@@ -188,4 +188,9 @@ typedef std::shared_ptr<FaultBase> Fault;
 constexpr decltype(nullptr) NoFault = nullptr;
 #endif
 
+enum ByteOrder {
+    BigEndianByteOrder,
+    LittleEndianByteOrder
+};
+
 #endif // __BASE_TYPES_HH__

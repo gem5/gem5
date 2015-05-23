@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -83,13 +83,15 @@
 #define __DEV_ARM_HDLCD_HH__
 
 #include <fstream>
+#include <memory>
 
+#include "base/bitmap.hh"
+#include "base/framebuffer.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/HDLcd.hh"
 #include "sim/serialize.hh"
 
 class VncInput;
-class Bitmap;
 
 class HDLcd: public AmbaDmaDevice
 {
@@ -141,6 +143,8 @@ class HDLcd: public AmbaDmaDevice
 
     /** AXI port width in bytes */
     static const size_t AXI_PORT_WIDTH = 8;
+
+    static const size_t MAX_BURST_SIZE = MAX_BURST_LEN * AXI_PORT_WIDTH;
 
     /**
      * @name RegisterFieldLayouts
@@ -242,11 +246,13 @@ class HDLcd: public AmbaDmaDevice
     /** Pixel clock period */
     const Tick pixelClock;
 
+    FrameBuffer fb;
+
     /** VNC server */
     VncInput *vnc;
 
     /** Helper to write out bitmaps */
-    Bitmap *bmp;
+    Bitmap bmp;
 
     /** Picture of what the current frame buffer looks like */
     std::ostream *pic;
@@ -325,7 +331,7 @@ class HDLcd: public AmbaDmaDevice
     bool frameUnderrun;
 
     /** HDLcd virtual display buffer */
-    uint8_t *virtualDisplayBuffer;
+    std::vector<uint8_t> virtualDisplayBuffer;
 
     /** Size of the pixel buffer */
     size_t pixelBufferSize;
@@ -402,6 +408,8 @@ class HDLcd: public AmbaDmaDevice
         return fb_line_count.fb_line_count;
     }
 
+    inline size_t area() const { return height() * width(); }
+
     /**
      * Gets the total number of pixel clocks per display line.
      *
@@ -435,6 +443,8 @@ class HDLcd: public AmbaDmaDevice
 
     /** Called when it is time to render a pixel */
     void renderPixel();
+
+    PixelConverter pixelConverter() const;
 
     /** Start of frame event */
     EventWrapper<HDLcd, &HDLcd::startFrame> startFrameEvent;
