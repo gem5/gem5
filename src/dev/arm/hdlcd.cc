@@ -74,7 +74,8 @@ HDLcd::HDLcd(const Params *p)
       fillPixelBufferEvent(this), intEvent(this),
       dmaDoneEventAll(MAX_OUTSTANDING_DMA_REQ_CAPACITY, this),
       dmaDoneEventFree(MAX_OUTSTANDING_DMA_REQ_CAPACITY),
-      enableCapture(p->enable_capture)
+      enableCapture(p->enable_capture),
+      workaround_swap_rb(p->workaround_swap_rb)
 {
     pioSize = 0xFFFF;
 
@@ -504,11 +505,24 @@ HDLcd::renderPixel()
 PixelConverter
 HDLcd::pixelConverter() const
 {
-    return PixelConverter(
-        bytesPerPixel(),
-        red_select.offset, green_select.offset, blue_select.offset,
-        red_select.size, green_select.size, blue_select.size,
+    ByteOrder byte_order(
         pixel_format.big_endian ? BigEndianByteOrder : LittleEndianByteOrder);
+
+    /* Some Linux kernels have a broken driver that swaps the red and
+     * blue color select registers. */
+    if (!workaround_swap_rb) {
+        return PixelConverter(
+            bytesPerPixel(),
+            red_select.offset, green_select.offset, blue_select.offset,
+            red_select.size, green_select.size, blue_select.size,
+            byte_order);
+    } else {
+        return PixelConverter(
+            bytesPerPixel(),
+            blue_select.offset, green_select.offset, red_select.offset,
+            blue_select.size, green_select.size, red_select.size,
+            byte_order);
+    }
 }
 
 void

@@ -175,6 +175,8 @@ class HDLcd(AmbaDmaDevice):
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
                                      "display")
     amba_id = 0x00141000
+    workaround_swap_rb = Param.Bool(True, "Workaround incorrect color "
+                                    "selector order in some kernels")
     enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
 
 class RealView(Platform):

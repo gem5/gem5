@@ -486,6 +486,8 @@ class HDLcd: public AmbaDmaDevice
 
     bool enableCapture;
 
+    const bool workaround_swap_rb;
+
   public:
     typedef HDLcdParams Params;
 
