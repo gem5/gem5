@@ -816,14 +816,14 @@ BaseKvmCPU::getAndFormatOneReg(uint64_t id) const
         ss << value;                             \
     }  break
 
-#define HANDLE_ARRAY(len)                       \
-    case KVM_REG_SIZE_U ## len: {               \
-        uint8_t value[len / 8];                 \
-        getOneReg(id, value);                   \
-        ss << "[" << value[0];                  \
-        for (int i = 1; i < len  / 8; ++i)      \
-            ss << ", " << value[i];             \
-        ss << "]";                              \
+#define HANDLE_ARRAY(len)                               \
+    case KVM_REG_SIZE_U ## len: {                       \
+        uint8_t value[len / 8];                         \
+        getOneReg(id, value);                           \
+        ccprintf(ss, "[0x%x", value[0]);                \
+        for (int i = 1; i < len  / 8; ++i)              \
+            ccprintf(ss, ", 0x%x", value[i]);           \
+        ccprintf(ss, "]");                              \
       } break
 
     switch (id & KVM_REG_SIZE_MASK) {
