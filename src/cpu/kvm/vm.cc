@@ -191,10 +191,11 @@ Kvm::capXSave() const
 #endif
 }
 
+
+#if defined(__i386__) || defined(__x86_64__)
 bool
 Kvm::getSupportedCPUID(struct kvm_cpuid2 &cpuid) const
 {
-#if defined(__i386__) || defined(__x86_64__)
     if (ioctl(KVM_GET_SUPPORTED_CPUID, (void *)&cpuid) == -1) {
         if (errno == E2BIG)
             return false;
@@ -202,9 +203,6 @@ Kvm::getSupportedCPUID(struct kvm_cpuid2 &cpuid) const
             panic("KVM: Failed to get supported CPUID (errno: %i)\n", errno);
     } else
         return true;
-#else
-    panic("KVM: getSupportedCPUID is unsupported on this platform.\n");
-#endif
 }
 
 const Kvm::CPUIDVector &
@@ -230,7 +228,6 @@ Kvm::getSupportedCPUID() const
 bool
 Kvm::getSupportedMSRs(struct kvm_msr_list &msrs) const
 {
-#if defined(__i386__) || defined(__x86_64__)
     if (ioctl(KVM_GET_MSR_INDEX_LIST, (void *)&msrs) == -1) {
         if (errno == E2BIG)
             return false;
@@ -238,9 +235,6 @@ Kvm::getSupportedMSRs(struct kvm_msr_list &msrs) const
             panic("KVM: Failed to get supported CPUID (errno: %i)\n", errno);
     } else
         return true;
-#else
-    panic("KVM: getSupportedCPUID is unsupported on this platform.\n");
-#endif
 }
 
 const Kvm::MSRIndexVector &
@@ -261,6 +255,9 @@ Kvm::getSupportedMSRs() const
 
     return supportedMSRCache;
 }
+
+#endif // x86-specific
+
 
 int
 Kvm::checkExtension(int extension) const

@@ -75,9 +75,6 @@ class Kvm
     friend class KvmVM;
 
   public:
-    typedef std::vector<struct kvm_cpuid_entry2> CPUIDVector;
-    typedef std::vector<uint32_t> MSRIndexVector;
-
     virtual ~Kvm();
 
     Kvm *create();
@@ -143,6 +140,16 @@ class Kvm
     bool capXSave() const;
     /** @} */
 
+#if defined(__i386__) || defined(__x86_64__)
+  public: // x86-specific
+    /**
+     * @{
+     * @name X86-specific APIs
+     */
+
+    typedef std::vector<struct kvm_cpuid_entry2> CPUIDVector;
+    typedef std::vector<uint32_t> MSRIndexVector;
+
     /**
      * Get the CPUID features supported by the hardware and Kvm.
      *
@@ -180,6 +187,17 @@ class Kvm
      * @return Reference to cached MSR index list.
      */
     const MSRIndexVector &getSupportedMSRs() const;
+
+  private: // x86-specific
+    /** Cached vector of supported CPUID entries. */
+    mutable CPUIDVector supportedCPUIDCache;
+
+    /** Cached vector of supported MSRs. */
+    mutable MSRIndexVector supportedMSRCache;
+
+
+    /** @} */
+#endif
 
   protected:
     /**
@@ -238,12 +256,6 @@ class Kvm
     int apiVersion;
     /** Size of the MMAPed vCPU parameter area. */
     int vcpuMMapSize;
-
-    /** Cached vector of supported CPUID entries. */
-    mutable CPUIDVector supportedCPUIDCache;
-
-    /** Cached vector of supported MSRs. */
-    mutable MSRIndexVector supportedMSRCache;
 
     /** Singleton instance */
     static Kvm *instance;
