@@ -54,6 +54,7 @@
 
 class Checkpoint;
 class GenericTimerParams;
+class GenericTimerMemParams;
 
 /// Global system counter.  It is shared by the architected timers.
 /// @todo: implement memory-mapped controls
@@ -271,6 +272,63 @@ class GenericTimerISA : public ArmISA::BaseISADevice
   protected:
     GenericTimer &parent;
     unsigned cpu;
+};
+
+class GenericTimerMem : public PioDevice
+{
+  public:
+    GenericTimerMem(GenericTimerMemParams *p);
+
+    void serialize(std::ostream &os) M5_ATTR_OVERRIDE;
+    void unserialize(Checkpoint *cp, const std::string &sec) M5_ATTR_OVERRIDE;
+
+  public: // PioDevice
+    AddrRangeList getAddrRanges() const M5_ATTR_OVERRIDE { return addrRanges; }
+    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
+
+  protected:
+    uint64_t ctrlRead(Addr addr, size_t size) const;
+    void ctrlWrite(Addr addr, size_t size, uint64_t value);
+
+    uint64_t timerRead(Addr addr, size_t size) const;
+    void timerWrite(Addr addr, size_t size, uint64_t value);
+
+  protected: // Registers
+    static const Addr CTRL_CNTFRQ          = 0x000;
+    static const Addr CTRL_CNTNSAR         = 0x004;
+    static const Addr CTRL_CNTTIDR         = 0x008;
+    static const Addr CTRL_CNTACR_BASE     = 0x040;
+    static const Addr CTRL_CNTVOFF_LO_BASE = 0x080;
+    static const Addr CTRL_CNTVOFF_HI_BASE = 0x084;
+
+    static const Addr TIMER_CNTPCT_LO    = 0x000;
+    static const Addr TIMER_CNTPCT_HI    = 0x004;
+    static const Addr TIMER_CNTVCT_LO    = 0x008;
+    static const Addr TIMER_CNTVCT_HI    = 0x00C;
+    static const Addr TIMER_CNTFRQ       = 0x010;
+    static const Addr TIMER_CNTEL0ACR    = 0x014;
+    static const Addr TIMER_CNTVOFF_LO   = 0x018;
+    static const Addr TIMER_CNTVOFF_HI   = 0x01C;
+    static const Addr TIMER_CNTP_CVAL_LO = 0x020;
+    static const Addr TIMER_CNTP_CVAL_HI = 0x024;
+    static const Addr TIMER_CNTP_TVAL    = 0x028;
+    static const Addr TIMER_CNTP_CTL     = 0x02C;
+    static const Addr TIMER_CNTV_CVAL_LO = 0x030;
+    static const Addr TIMER_CNTV_CVAL_HI = 0x034;
+    static const Addr TIMER_CNTV_TVAL    = 0x038;
+    static const Addr TIMER_CNTV_CTL     = 0x03C;
+
+  protected: // Params
+    const AddrRange ctrlRange;
+    const AddrRange timerRange;
+    const AddrRangeList addrRanges;
+
+  protected:
+    /// System counter.
+    SystemCounter systemCounter;
+    ArchTimer physTimer;
+    ArchTimer virtTimer;
 };
 
 #endif // __DEV_ARM_GENERIC_TIMER_HH__

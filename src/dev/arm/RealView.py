@@ -141,6 +141,16 @@ class GenericTimer(SimObject):
     int_phys = Param.UInt32("Physical timer interrupt number")
     int_virt = Param.UInt32("Virtual timer interrupt number")
 
+class GenericTimerMem(PioDevice):
+    type = 'GenericTimerMem'
+    cxx_header = "dev/arm/generic_timer.hh"
+    gic = Param.BaseGic(Parent.any, "GIC to use for interrupting")
+
+    base = Param.Addr(0, "Base address")
+
+    int_phys = Param.UInt32("Interrupt number")
+    int_virt = Param.UInt32("Interrupt number")
+
 class PL031(AmbaIntDevice):
     type = 'PL031'
     cxx_header = "dev/arm/rtc_pl031.hh"

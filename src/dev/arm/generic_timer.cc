@@ -43,7 +43,9 @@
 #include "arch/arm/system.hh"
 #include "debug/Timer.hh"
 #include "dev/arm/base_gic.hh"
+#include "mem/packet_access.hh"
 #include "params/GenericTimer.hh"
+#include "params/GenericTimerMem.hh"
 
 SystemCounter::SystemCounter()
     : _freq(0), _period(0), _resetTick(0), _regCntkctl(0)
@@ -479,8 +481,347 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
 }
 
 
+
+GenericTimerMem::GenericTimerMem(GenericTimerMemParams *p)
+    : PioDevice(p),
+      ctrlRange(RangeSize(p->base, TheISA::PageBytes)),
+      timerRange(RangeSize(p->base + TheISA::PageBytes, TheISA::PageBytes)),
+      addrRanges{ctrlRange, timerRange},
+      systemCounter(),
+      physTimer(csprintf("%s.phys_timer0", name()),
+                *this, systemCounter,
+                ArchTimer::Interrupt(*p->gic, p->int_phys)),
+      virtTimer(csprintf("%s.virt_timer0", name()),
+                *this, systemCounter,
+                ArchTimer::Interrupt(*p->gic, p->int_virt))
+{
+}
+
+void
+GenericTimerMem::serialize(std::ostream &os)
+{
+    paramOut(os, "timer_count", 1);
+
+    nameOut(os, csprintf("%s.sys_counter", name()));
+    systemCounter.serialize(os);
+
+    nameOut(os, physTimer.name());
+    physTimer.serialize(os);
+
+    nameOut(os, virtTimer.name());
+    virtTimer.serialize(os);
+}
+
+void
+GenericTimerMem::unserialize(Checkpoint *cp, const std::string &section)
+{
+    systemCounter.unserialize(cp, csprintf("%s.sys_counter", section));
+
+    unsigned timer_count;
+    UNSERIALIZE_SCALAR(timer_count);
+    // The timer count variable is just here for future versions where
+    // we support more than one set of timers.
+    if (timer_count != 1)
+        panic("Incompatible checkpoint: Only one set of timers supported");
+
+    physTimer.unserialize(cp, csprintf("%s.phys_timer0", section));
+    virtTimer.unserialize(cp, csprintf("%s.virt_timer0", section));
+}
+
+Tick
+GenericTimerMem::read(PacketPtr pkt)
+{
+    const unsigned size(pkt->getSize());
+    const Addr addr(pkt->getAddr());
+    uint64_t value;
+
+    pkt->makeResponse();
+    if (ctrlRange.contains(addr)) {
+        value = ctrlRead(addr - ctrlRange.start(), size);
+    } else if (timerRange.contains(addr)) {
+        value = timerRead(addr - timerRange.start(), size);
+    } else {
+        panic("Invalid address: 0x%x\n", addr);
+    }
+
+    DPRINTF(Timer, "Read 0x%x <- 0x%x(%i)\n", value, addr, size);
+
+    if (size == 8) {
+        pkt->set<uint64_t>(value);
+    } else if (size == 4) {
+        pkt->set<uint32_t>(value);
+    } else {
+        panic("Unexpected access size: %i\n", size);
+    }
+
+    return 0;
+}
+
+Tick
+GenericTimerMem::write(PacketPtr pkt)
+{
+    const unsigned size(pkt->getSize());
+    if (size != 8 && size != 4)
+        panic("Unexpected access size\n");
+
+    const Addr addr(pkt->getAddr());
+    const uint64_t value(size == 8 ?
+                         pkt->get<uint64_t>() : pkt->get<uint32_t>());
+
+    DPRINTF(Timer, "Write 0x%x -> 0x%x(%i)\n", value, addr, size);
+    if (ctrlRange.contains(addr)) {
+        ctrlWrite(addr - ctrlRange.start(), size, value);
+    } else if (timerRange.contains(addr)) {
+        timerWrite(addr - timerRange.start(), size, value);
+    } else {
+        panic("Invalid address: 0x%x\n", addr);
+    }
+
+    pkt->makeResponse();
+    return 0;
+}
+
+uint64_t
+GenericTimerMem::ctrlRead(Addr addr, size_t size) const
+{
+    if (size == 4) {
+        switch (addr) {
+          case CTRL_CNTFRQ:
+            return systemCounter.freq();
+
+          case CTRL_CNTTIDR:
+            return 0x3; // Frame 0 implemented with virtual timers
+
+          case CTRL_CNTNSAR:
+          case CTRL_CNTACR_BASE:
+            warn("Reading from unimplemented control register (0x%x)\n", addr);
+            return 0;
+
+          case CTRL_CNTVOFF_LO_BASE:
+            return virtTimer.offset();
+
+          case CTRL_CNTVOFF_HI_BASE:
+            return virtTimer.offset() >> 32;
+
+          default:
+            warn("Unexpected address (0x%x:%i), assuming RAZ\n", addr, size);
+            return 0;
+        }
+    } else if (size == 8) {
+        switch (addr) {
+          case CTRL_CNTVOFF_LO_BASE:
+            return virtTimer.offset();
+
+          default:
+            warn("Unexpected address (0x%x:%i), assuming RAZ\n", addr, size);
+            return 0;
+        }
+    } else {
+        panic("Invalid access size: %i\n", size);
+    }
+}
+
+void
+GenericTimerMem::ctrlWrite(Addr addr, size_t size, uint64_t value)
+{
+    if (size == 4) {
+        switch (addr) {
+          case CTRL_CNTFRQ:
+          case CTRL_CNTNSAR:
+          case CTRL_CNTTIDR:
+          case CTRL_CNTACR_BASE:
+            warn("Write to unimplemented control register (0x%x)\n", addr);
+            return;
+
+          case CTRL_CNTVOFF_LO_BASE:
+            virtTimer.setOffset(
+                insertBits(virtTimer.offset(), 31, 0, value));
+            return;
+
+          case CTRL_CNTVOFF_HI_BASE:
+            virtTimer.setOffset(
+                insertBits(virtTimer.offset(), 63, 32, value));
+            return;
+
+          default:
+            warn("Ignoring write to unexpected address (0x%x:%i)\n",
+                 addr, size);
+            return;
+        }
+    } else if (size == 8) {
+        switch (addr) {
+          case CTRL_CNTVOFF_LO_BASE:
+            virtTimer.setOffset(value);
+            return;
+
+          default:
+            warn("Ignoring write to unexpected address (0x%x:%i)\n",
+                 addr, size);
+            return;
+        }
+    } else {
+        panic("Invalid access size: %i\n", size);
+    }
+}
+
+uint64_t
+GenericTimerMem::timerRead(Addr addr, size_t size) const
+{
+    if (size == 4) {
+        switch (addr) {
+          case TIMER_CNTPCT_LO:
+            return physTimer.value();
+
+          case TIMER_CNTPCT_HI:
+            return physTimer.value() >> 32;
+
+          case TIMER_CNTVCT_LO:
+            return virtTimer.value();
+
+          case TIMER_CNTVCT_HI:
+            return virtTimer.value() >> 32;
+
+          case TIMER_CNTFRQ:
+            return systemCounter.freq();
+
+          case TIMER_CNTEL0ACR:
+            warn("Read from unimplemented timer register (0x%x)\n", addr);
+            return 0;
+
+          case CTRL_CNTVOFF_LO_BASE:
+            return virtTimer.offset();
+
+          case CTRL_CNTVOFF_HI_BASE:
+            return virtTimer.offset() >> 32;
+
+          case TIMER_CNTP_CVAL_LO:
+            return physTimer.compareValue();
+
+          case TIMER_CNTP_CVAL_HI:
+            return physTimer.compareValue() >> 32;
+
+          case TIMER_CNTP_TVAL:
+            return physTimer.timerValue();
+
+          case TIMER_CNTP_CTL:
+            return physTimer.control();
+
+          case TIMER_CNTV_CVAL_LO:
+            return virtTimer.compareValue();
+
+          case TIMER_CNTV_CVAL_HI:
+            return virtTimer.compareValue() >> 32;
+
+          case TIMER_CNTV_TVAL:
+            return virtTimer.timerValue();
+
+          case TIMER_CNTV_CTL:
+            return virtTimer.control();
+
+          default:
+            warn("Unexpected address (0x%x:%i), assuming RAZ\n", addr, size);
+            return 0;
+        }
+    } else if (size == 8) {
+        switch (addr) {
+          case TIMER_CNTPCT_LO:
+            return physTimer.value();
+
+          case TIMER_CNTVCT_LO:
+            return virtTimer.value();
+
+          case CTRL_CNTVOFF_LO_BASE:
+            return virtTimer.offset();
+
+          case TIMER_CNTP_CVAL_LO:
+            return physTimer.compareValue();
+
+          case TIMER_CNTV_CVAL_LO:
+            return virtTimer.compareValue();
+
+          default:
+            warn("Unexpected address (0x%x:%i), assuming RAZ\n", addr, size);
+            return 0;
+        }
+    } else {
+        panic("Invalid access size: %i\n", size);
+    }
+}
+
+void
+GenericTimerMem::timerWrite(Addr addr, size_t size, uint64_t value)
+{
+    if (size == 4) {
+        switch (addr) {
+          case TIMER_CNTEL0ACR:
+            warn("Unimplemented timer register (0x%x)\n", addr);
+            return;
+
+          case TIMER_CNTP_CVAL_LO:
+            physTimer.setCompareValue(
+                insertBits(physTimer.compareValue(), 31, 0, value));
+            return;
+
+          case TIMER_CNTP_CVAL_HI:
+            physTimer.setCompareValue(
+                insertBits(physTimer.compareValue(), 63, 32, value));
+            return;
+
+          case TIMER_CNTP_TVAL:
+            physTimer.setTimerValue(value);
+            return;
+
+          case TIMER_CNTP_CTL:
+            physTimer.setControl(value);
+            return;
+
+          case TIMER_CNTV_CVAL_LO:
+            virtTimer.setCompareValue(
+                insertBits(virtTimer.compareValue(), 31, 0, value));
+            return;
+
+          case TIMER_CNTV_CVAL_HI:
+            virtTimer.setCompareValue(
+                insertBits(virtTimer.compareValue(), 63, 32, value));
+            return;
+
+          case TIMER_CNTV_TVAL:
+            virtTimer.setTimerValue(value);
+            return;
+
+          case TIMER_CNTV_CTL:
+            virtTimer.setControl(value);
+            return;
+
+          default:
+            warn("Unexpected address (0x%x:%i), ignoring write\n", addr, size);
+            return;
+        }
+    } else if (size == 8) {
+        switch (addr) {
+          case TIMER_CNTP_CVAL_LO:
+            return physTimer.setCompareValue(value);
+
+          case TIMER_CNTV_CVAL_LO:
+            return virtTimer.setCompareValue(value);
+
+          default:
+            warn("Unexpected address (0x%x:%i), ignoring write\n", addr, size);
+            return;
+        }
+    } else {
+        panic("Invalid access size: %i\n", size);
+    }
+}
+
 GenericTimer *
 GenericTimerParams::create()
 {
     return new GenericTimer(this);
+}
+
+GenericTimerMem *
+GenericTimerMemParams::create()
+{
+    return new GenericTimerMem(this);
 }
