@@ -4,11 +4,11 @@ sim_seconds                                  2.804323                       # Nu
 sim_ticks                                2804323403500                       # Number of ticks simulated
 final_tick                               2804323403500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 111575                       # Simulator instruction rate (inst/s)
-host_op_rate                                   135423                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2674508102                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 626368                       # Number of bytes of host memory used
-host_seconds                                  1048.54                       # Real time elapsed on the host
+host_inst_rate                                 111566                       # Simulator instruction rate (inst/s)
+host_op_rate                                   135412                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2674295919                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 578464                       # Number of bytes of host memory used
+host_seconds                                  1048.62                       # Real time elapsed on the host
 sim_insts                                   116990114                       # Number of instructions simulated
 sim_ops                                     141995948                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -347,8 +347,8 @@ system.cf0.dma_read_txs                             1                       # Nu
 system.cf0.dma_write_full_pages                   540                       # Number of full page size DMA writes.
 system.cf0.dma_write_bytes                    2318336                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                          631                       # Number of DMA write transactions.
-system.cpu0.branchPred.lookups               26894348                       # Number of BP lookups
-system.cpu0.branchPred.condPredicted         13975310                       # Number of conditional branches predicted
+system.cpu0.branchPred.lookups               26894349                       # Number of BP lookups
+system.cpu0.branchPred.condPredicted         13975311                       # Number of conditional branches predicted
 system.cpu0.branchPred.condIncorrect           545296                       # Number of conditional branches incorrect
 system.cpu0.branchPred.BTBLookups            16832825                       # Number of BTB lookups
 system.cpu0.branchPred.BTBHits               12628735                       # Number of BTB hits
@@ -574,7 +574,7 @@ system.cpu0.numWorkItemsStarted                     0                       # nu
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 system.cpu0.fetch.icacheStallCycles          39965142                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu0.fetch.Insts                     103919162                       # Number of instructions fetch has processed
-system.cpu0.fetch.Branches                   26894348                       # Number of branches that fetch encountered
+system.cpu0.fetch.Branches                   26894349                       # Number of branches that fetch encountered
 system.cpu0.fetch.predictedBranches          19302280                       # Number of branches that fetch has predicted taken
 system.cpu0.fetch.Cycles                     61475471                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu0.fetch.SquashCycles                3204102                       # Number of cycles fetch has spent squashing

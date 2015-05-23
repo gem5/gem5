@@ -1,11 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 22 2015 10:58:25
-gem5 started Apr 22 2015 11:13:13
-gem5 executing on phenom
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3 -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3
+gem5 compiled May  6 2015 17:58:20
+gem5 started May  6 2015 20:51:07
+gem5 executing on e104799-lin
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3 -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3
 
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu0.isa: ISA system set to: 0x351fd50 0x351fd50
-      0: system.cpu1.isa: ISA system set to: 0x351fd50 0x351fd50
+      0: system.cpu0.isa: ISA system set to: 0x4a64c00 0x4a64c00
+      0: system.cpu1.isa: ISA system set to: 0x4a64c00 0x4a64c00

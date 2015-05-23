@@ -4,11 +4,11 @@ sim_seconds                                  2.625378                       # Nu
 sim_ticks                                2625378187500                       # Number of ticks simulated
 final_tick                               2625378187500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  94574                       # Simulator instruction rate (inst/s)
-host_op_rate                                   114754                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2065319127                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 650700                       # Number of bytes of host memory used
-host_seconds                                  1271.17                       # Real time elapsed on the host
+host_inst_rate                                 105357                       # Simulator instruction rate (inst/s)
+host_op_rate                                   127837                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2300779000                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 602544                       # Number of bytes of host memory used
+host_seconds                                  1141.08                       # Real time elapsed on the host
 sim_insts                                   120220550                       # Number of instructions simulated
 sim_ops                                     145872273                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1570,8 +1570,8 @@ system.cpu0.toL2Bus.respLayer2.occupancy     15837483                       # La
 system.cpu0.toL2Bus.respLayer2.utilization          0.0                       # Layer utilization (%)
 system.cpu0.toL2Bus.respLayer3.occupancy     61547958                       # Layer occupancy (ticks)
 system.cpu0.toL2Bus.respLayer3.utilization          0.0                       # Layer utilization (%)
-system.cpu1.branchPred.lookups               35319893                       # Number of BP lookups
-system.cpu1.branchPred.condPredicted         12619406                       # Number of conditional branches predicted
+system.cpu1.branchPred.lookups               35319894                       # Number of BP lookups
+system.cpu1.branchPred.condPredicted         12619407                       # Number of conditional branches predicted
 system.cpu1.branchPred.condIncorrect           374072                       # Number of conditional branches incorrect
 system.cpu1.branchPred.BTBLookups            19615876                       # Number of BTB lookups
 system.cpu1.branchPred.BTBHits               15617711                       # Number of BTB hits
@@ -1801,7 +1801,7 @@ system.cpu1.numWorkItemsStarted                     0                       # nu
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 system.cpu1.fetch.icacheStallCycles          11092326                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu1.fetch.Insts                     115445294                       # Number of instructions fetch has processed
-system.cpu1.fetch.Branches                   35319893                       # Number of branches that fetch encountered
+system.cpu1.fetch.Branches                   35319894                       # Number of branches that fetch encountered
 system.cpu1.fetch.predictedBranches          28266544                       # Number of branches that fetch has predicted taken
 system.cpu1.fetch.Cycles                     98824380                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu1.fetch.SquashCycles                3951464                       # Number of cycles fetch has spent squashing
