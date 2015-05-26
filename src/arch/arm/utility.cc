@@ -272,6 +272,38 @@ isBigEndian64(ThreadContext *tc)
 }
 
 Addr
+purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+                 TTBCR tcr)
+{
+    switch (el) {
+      case EL0:
+      case EL1:
+        if (bits(addr, 55, 48) == 0xFF && tcr.tbi1)
+            return addr | mask(63, 55);
+        else if (!bits(addr, 55, 48) && tcr.tbi0)
+            return bits(addr,55, 0);
+        break;
+      // @todo: uncomment this to enable Virtualization
+      // case EL2:
+      //   assert(ArmSystem::haveVirtualization());
+      //   tcr = tc->readMiscReg(MISCREG_TCR_EL2);
+      //   if (tcr.tbi)
+      //       return addr & mask(56);
+      //   break;
+      case EL3:
+        assert(ArmSystem::haveSecurity(tc));
+        if (tcr.tbi)
+            return addr & mask(56);
+        break;
+      default:
+        panic("Invalid exception level");
+        break;
+    }
+
+    return addr;  // Nothing to do if this is not a tagged address
+}
+
+Addr
 purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el)
 {
     TTBCR tcr;

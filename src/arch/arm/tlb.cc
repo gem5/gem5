@@ -546,7 +546,7 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (aarch64)
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL);
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
     else
         vaddr = vaddr_tainted;
     uint32_t flags = req->getFlags();
@@ -765,7 +765,7 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
     assert(aarch64);
 
     Addr vaddr_tainted = req->getVaddr();
-    Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL);
+    Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
 
     uint32_t flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
@@ -959,7 +959,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (aarch64)
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL);
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
     else
         vaddr = vaddr_tainted;
     uint32_t flags = req->getFlags();
@@ -1110,7 +1110,6 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     // Generate Illegal Inst Set State fault if IL bit is set in CPSR
     if (fault == NoFault) {
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
         if (aarch64 && is_fetch && cpsr.il == 1) {
             return std::make_shared<IllegalInstSetStateFault>();
         }
@@ -1222,7 +1221,7 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
     }
 
     DPRINTF(TLBVerbose, "TLB variables changed!\n");
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    cpsr = tc->readMiscReg(MISCREG_CPSR);
     // Dependencies: SCR/SCR_EL3, CPSR
     isSecure  = inSecureState(tc);
     isSecure &= (tranType & HypMode)    == 0;
@@ -1328,7 +1327,7 @@ TLB::getTE(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
     Addr vaddr = 0;
     ExceptionLevel target_el = aarch64 ? aarch64EL : EL1;
     if (aarch64) {
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el);
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el, ttbcr);
     } else {
         vaddr = vaddr_tainted;
     }

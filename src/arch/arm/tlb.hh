@@ -312,6 +312,7 @@ class TLB : public BaseTLB
     // translateFunctional/translateSe/translateFs checks if they are
     // invalid and call updateMiscReg if necessary.
 protected:
+    CPSR cpsr;
     bool aarch64;
     ExceptionLevel aarch64EL;
     SCTLR sctlr;

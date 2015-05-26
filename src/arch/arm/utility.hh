@@ -168,6 +168,8 @@ bool isBigEndian64(ThreadContext *tc);
  * @param el The controlled exception level.
  * @return The purified address.
  */
+Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+                      TTBCR tcr);
 Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el);
 
 static inline bool
