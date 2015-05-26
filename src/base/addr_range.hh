@@ -282,26 +282,26 @@ class AddrRange
      */
     bool intersects(const AddrRange& r) const
     {
-        if (!interleaved()) {
-            return _start <= r._end && _end >= r._start;
-        }
+        if (_start > r._end || _end < r._start)
+            // start with the simple case of no overlap at all,
+            // applicable even if we have interleaved ranges
+            return false;
+        else if (!interleaved() && !r.interleaved())
+            // if neither range is interleaved, we are done
+            return true;
 
-        // the current range is interleaved, split the check up in
-        // three cases
+        // now it gets complicated, focus on the cases we care about
         if (r.size() == 1)
             // keep it simple and check if the address is within
             // this range
             return contains(r.start());
-        else if (!r.interleaved())
-            // be conservative and ignore the interleaving
-            return _start <= r._end && _end >= r._start;
         else if (mergesWith(r))
             // restrict the check to ranges that belong to the
             // same chunk
             return intlvMatch == r.intlvMatch;
         else
-            panic("Cannot test intersection of interleaved range %s\n",
-                  to_string());
+            panic("Cannot test intersection of %s and %s\n",
+                  to_string(), r.to_string());
     }
 
     /**
