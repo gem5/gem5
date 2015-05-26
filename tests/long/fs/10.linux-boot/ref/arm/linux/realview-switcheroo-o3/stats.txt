@@ -4,11 +4,11 @@ sim_seconds                                  2.804323                       # Nu
 sim_ticks                                2804323403500                       # Number of ticks simulated
 final_tick                               2804323403500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 111566                       # Simulator instruction rate (inst/s)
-host_op_rate                                   135412                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             2674295919                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 578464                       # Number of bytes of host memory used
-host_seconds                                  1048.62                       # Real time elapsed on the host
+host_inst_rate                                 112232                       # Simulator instruction rate (inst/s)
+host_op_rate                                   136221                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2690265937                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 630508                       # Number of bytes of host memory used
+host_seconds                                  1042.40                       # Real time elapsed on the host
 sim_insts                                   116990114                       # Number of instructions simulated
 sim_ops                                     141995948                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -868,7 +868,7 @@ system.cpu0.fp_regfile_reads                    16878                       # nu
 system.cpu0.fp_regfile_writes                   13235                       # number of floating regfile writes
 system.cpu0.cc_regfile_reads                265909763                       # number of cc regfile reads
 system.cpu0.cc_regfile_writes                27649979                       # number of cc regfile writes
-system.cpu0.misc_regfile_reads              189136920                       # number of misc regfile reads
+system.cpu0.misc_regfile_reads              144518865                       # number of misc regfile reads
 system.cpu0.misc_regfile_writes                724107                       # number of misc regfile writes
 system.cpu0.dcache.tags.replacements           853909                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.982202                       # Cycle average of tags in use
@@ -1704,9 +1704,9 @@ system.cpu1.iew.iewDispNonSpecInsts            585252                       # Nu
 system.cpu1.iew.iewIQFullEvents                 42277                       # Number of times the IQ has become full, causing a stall
 system.cpu1.iew.iewLSQFullEvents               608480                       # Number of times the LSQ has become full, causing a stall
 system.cpu1.iew.memOrderViolationEvents         51509                       # Number of memory order violations
-system.cpu1.iew.predictedTakenIncorrect        260301                       # Number of branches that were predicted taken incorrectly
+system.cpu1.iew.predictedTakenIncorrect        260306                       # Number of branches that were predicted taken incorrectly
 system.cpu1.iew.predictedNotTakenIncorrect       223242                       # Number of branches that were predicted not taken incorrectly
-system.cpu1.iew.branchMispredicts              483543                       # Number of branch mispredicts detected at execute
+system.cpu1.iew.branchMispredicts              483548                       # Number of branch mispredicts detected at execute
 system.cpu1.iew.iewExecutedInsts             79294806                       # Number of executed instructions
 system.cpu1.iew.iewExecLoadInsts             14687602                       # Number of load instructions executed
 system.cpu1.iew.iewExecSquashedInsts           558095                       # Number of squashed instructions skipped in execute
@@ -1807,7 +1807,7 @@ system.cpu1.fp_regfile_reads                    15994                       # nu
 system.cpu1.fp_regfile_writes                   13022                       # number of floating regfile writes
 system.cpu1.cc_regfile_reads                279979126                       # number of cc regfile reads
 system.cpu1.cc_regfile_writes                29562027                       # number of cc regfile writes
-system.cpu1.misc_regfile_reads              195055071                       # number of misc regfile reads
+system.cpu1.misc_regfile_reads              148792397                       # number of misc regfile reads
 system.cpu1.misc_regfile_writes                795609                       # number of misc regfile writes
 system.iobus.trans_dist::ReadReq                30198                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               30198                       # Transaction distribution

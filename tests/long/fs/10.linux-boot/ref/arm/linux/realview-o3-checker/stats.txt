@@ -981,7 +981,7 @@ system.cpu.fp_regfile_reads                      9606                       # nu
 system.cpu.fp_regfile_writes                     2716                       # number of floating regfile writes
 system.cpu.cc_regfile_reads                 502981881                       # number of cc regfile reads
 system.cpu.cc_regfile_writes                 53178096                       # number of cc regfile writes
-system.cpu.misc_regfile_reads               446088160                       # number of misc regfile reads
+system.cpu.misc_regfile_reads               334359649                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                1519760                       # number of misc regfile writes
 system.cpu.dcache.tags.replacements            839617                       # number of replacements
 system.cpu.dcache.tags.tagsinuse           511.954240                       # Cycle average of tags in use

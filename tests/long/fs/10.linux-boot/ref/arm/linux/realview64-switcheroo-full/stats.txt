@@ -1842,7 +1842,7 @@ system.cpu2.fp_regfile_reads                   673893                       # nu
 system.cpu2.fp_regfile_writes                  409456                       # number of floating regfile writes
 system.cpu2.cc_regfile_reads                 92253105                       # number of cc regfile reads
 system.cpu2.cc_regfile_writes                93114012                       # number of cc regfile writes
-system.cpu2.misc_regfile_reads             1670741863                       # number of misc regfile reads
+system.cpu2.misc_regfile_reads              838596406                       # number of misc regfile reads
 system.cpu2.misc_regfile_writes               9943766                       # number of misc regfile writes
 system.iobus.trans_dist::ReadReq                40265                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               40265                       # Transaction distribution

@@ -872,7 +872,7 @@ system.cpu0.fp_regfile_reads                   805500                       # nu
 system.cpu0.fp_regfile_writes                  450680                       # number of floating regfile writes
 system.cpu0.cc_regfile_reads                133543353                       # number of cc regfile reads
 system.cpu0.cc_regfile_writes               134332816                       # number of cc regfile writes
-system.cpu0.misc_regfile_reads             3015329804                       # number of misc regfile reads
+system.cpu0.misc_regfile_reads             1348291201                       # number of misc regfile reads
 system.cpu0.misc_regfile_writes              16059632                       # number of misc regfile writes
 system.cpu0.dcache.tags.replacements          6141043                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          503.422627                       # Cycle average of tags in use
@@ -2134,7 +2134,7 @@ system.cpu1.fp_regfile_reads                   666608                       # nu
 system.cpu1.fp_regfile_writes                  325148                       # number of floating regfile writes
 system.cpu1.cc_regfile_reads                119080359                       # number of cc regfile reads
 system.cpu1.cc_regfile_writes               119756232                       # number of cc regfile writes
-system.cpu1.misc_regfile_reads             2706897787                       # number of misc regfile reads
+system.cpu1.misc_regfile_reads             1205246137                       # number of misc regfile reads
 system.cpu1.misc_regfile_writes              15455536                       # number of misc regfile writes
 system.cpu1.dcache.tags.replacements          5466279                       # number of replacements
 system.cpu1.dcache.tags.tagsinuse          430.006906                       # Cycle average of tags in use
