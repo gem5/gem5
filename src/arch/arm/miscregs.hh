@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -663,16 +663,17 @@ namespace ArmISA
         MISCREG_CPUMERRSR_EL1,          // 596
         MISCREG_L2MERRSR_EL1,           // 597
         MISCREG_CBAR_EL1,               // 598
+        MISCREG_CONTEXTIDR_EL2,         // 599
 
         // Dummy registers
-        MISCREG_NOP,                    // 599
-        MISCREG_RAZ,                    // 600
-        MISCREG_CP14_UNIMPL,            // 601
-        MISCREG_CP15_UNIMPL,            // 602
-        MISCREG_A64_UNIMPL,             // 603
-        MISCREG_UNKNOWN,                // 604
+        MISCREG_NOP,                    // 600
+        MISCREG_RAZ,                    // 601
+        MISCREG_CP14_UNIMPL,            // 602
+        MISCREG_CP15_UNIMPL,            // 603
+        MISCREG_A64_UNIMPL,             // 604
+        MISCREG_UNKNOWN,                // 605
 
-        NUM_MISCREGS                    // 605
+        NUM_MISCREGS                    // 606
     };
 
     enum MiscRegInfo {
@@ -1344,6 +1345,7 @@ namespace ArmISA
         "cpumerrsr_el1",
         "l2merrsr_el1",
         "cbar_el1",
+        "contextidr_el2",
 
         // Dummy registers
         "nop",

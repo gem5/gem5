@@ -1334,6 +1334,8 @@ bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS] = {
     bitset<NUM_MISCREG_INFOS>(string("11111111110000000100")),
     // MISCREG_CBAR_EL1
     bitset<NUM_MISCREG_INFOS>(string("01010101010000000001")),
+    // MISCREG_CONTEXTIDR_EL2
+    bitset<NUM_MISCREG_INFOS>(string("11111100000000000001")),
 
     // Dummy registers
     // MISCREG_NOP
@@ -3343,6 +3345,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                 switch (crm) {
                   case 0:
                     switch (op2) {
+                      case 1:
+                        return MISCREG_CONTEXTIDR_EL2;
                       case 2:
                         return MISCREG_TPIDR_EL2;
                     }
