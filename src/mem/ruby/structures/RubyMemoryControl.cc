@@ -169,6 +169,8 @@ RubyMemoryControl::RubyMemoryControl(const Params *p)
                                           m_banks_per_rank,
                                           m_ranks_per_dimm,
                                           m_dimms_per_channel);
+
+    warn("RubyMemoryControl is deprecated, use a DRAMCtrl subclass instead\n");
 }
 
 void
