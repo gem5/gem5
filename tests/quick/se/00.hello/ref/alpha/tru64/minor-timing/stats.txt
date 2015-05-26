@@ -4,10 +4,10 @@ sim_seconds                                  0.000020                       # Nu
 sim_ticks                                    20287000                       # Number of ticks simulated
 final_tick                                   20287000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 136939                       # Simulator instruction rate (inst/s)
-host_op_rate                                   136838                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1073215892                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 292092                       # Number of bytes of host memory used
+host_inst_rate                                 140405                       # Simulator instruction rate (inst/s)
+host_op_rate                                   140306                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1100341704                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 292772                       # Number of bytes of host memory used
 host_seconds                                     0.02                       # Real time elapsed on the host
 sim_insts                                        2585                       # Number of instructions simulated
 sim_ops                                          2585                       # Number of ops (including micro ops) simulated
@@ -298,12 +298,12 @@ system.cpu.numWorkItemsStarted                      0                       # nu
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.committedInsts                        2585                       # Number of instructions committed
 system.cpu.committedOps                          2585                       # Number of ops (including micro ops) committed
-system.cpu.discardedOps                           595                       # Number of ops (including micro ops) which were discarded before commit
+system.cpu.discardedOps                           594                       # Number of ops (including micro ops) which were discarded before commit
 system.cpu.numFetchSuspends                         0                       # Number of times Execute suspended instruction fetching
 system.cpu.cpi                              15.695938                       # CPI: cycles per instruction
 system.cpu.ipc                               0.063711                       # IPC: instructions per cycle
-system.cpu.tickCycles                            5396                       # Number of cycles that the object actually ticked
-system.cpu.idleCycles                           35178                       # Total number of cycles that the object has spent stopped
+system.cpu.tickCycles                            5391                       # Number of cycles that the object actually ticked
+system.cpu.idleCycles                           35183                       # Total number of cycles that the object has spent stopped
 system.cpu.dcache.tags.replacements                 0                       # number of replacements
 system.cpu.dcache.tags.tagsinuse            48.342007                       # Cycle average of tags in use
 system.cpu.dcache.tags.total_refs                 692                       # Total number of references to valid blocks.
