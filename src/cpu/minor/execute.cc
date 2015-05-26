@@ -770,7 +770,7 @@ Execute::issue(bool only_issue_microops)
 
             if (discarded) {
                 num_insts_discarded++;
-            } else {
+            } else if (!inst->isBubble()) {
                 num_insts_issued++;
 
                 if (num_insts_issued == issueLimit)
