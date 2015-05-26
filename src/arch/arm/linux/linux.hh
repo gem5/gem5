@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2011-2012 ARM Limited
+ * Copyright (c) 2010, 2011-2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -106,6 +106,11 @@ class ArmLinux32 : public Linux
     struct timeval {
         int32_t tv_sec;         //!< seconds
         int32_t tv_usec;        //!< microseconds
+    };
+
+    struct timespec {
+        int32_t tv_sec;   //!< seconds
+        int32_t tv_nsec;  //!< nanoseconds
     };
 
     // For writev/readv
@@ -295,6 +300,11 @@ class ArmLinux64 : public Linux
     struct timeval {
         int64_t tv_sec;         //!< seconds
         int64_t tv_usec;        //!< microseconds
+    };
+
+    struct timespec {
+        int64_t tv_sec;   //!< seconds
+        int64_t tv_nsec;  //!< nanoseconds
     };
 
     // For writev/readv

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -713,6 +713,42 @@ readlinkatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (dirfd != OS::TGT_AT_FDCWD)
         warn("openat: first argument not AT_FDCWD; unlikely to work");
     return readlinkFunc(desc, callnum, process, tc, 1);
+}
+
+/// Target renameat() handler.
+template <class OS>
+SyscallReturn
+renameatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+             ThreadContext *tc)
+{
+    int index = 0;
+
+    int olddirfd = process->getSyscallArg(tc, index);
+    if (olddirfd != OS::TGT_AT_FDCWD)
+        warn("renameat: first argument not AT_FDCWD; unlikely to work");
+
+    std::string old_name;
+
+    if (!tc->getMemProxy().tryReadString(old_name,
+                                         process->getSyscallArg(tc, index)))
+        return -EFAULT;
+
+    int newdirfd = process->getSyscallArg(tc, index);
+    if (newdirfd != OS::TGT_AT_FDCWD)
+        warn("renameat: third argument not AT_FDCWD; unlikely to work");
+
+    std::string new_name;
+
+    if (!tc->getMemProxy().tryReadString(new_name,
+                                         process->getSyscallArg(tc, index)))
+        return -EFAULT;
+
+    // Adjust path for current working directory
+    old_name = process->fullPath(old_name);
+    new_name = process->fullPath(new_name);
+
+    int result = rename(old_name.c_str(), new_name.c_str());
+    return (result == -1) ? -errno : result;
 }
 
 /// Target sysinfo() handler.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -382,7 +382,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 260 */ SyscallDesc("timer_getoverrun", unimplementedFunc),
     /* 261 */ SyscallDesc("timer_delete", unimplementedFunc),
     /* 262 */ SyscallDesc("clock_settime", unimplementedFunc),
-    /* 263 */ SyscallDesc("clock_gettime", unimplementedFunc),
+    /* 263 */ SyscallDesc("clock_gettime", clock_gettimeFunc<ArmLinux32>),
     /* 264 */ SyscallDesc("clock_getres", unimplementedFunc),
     /* 265 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
     /* 266 */ SyscallDesc("statfs64", unimplementedFunc),
@@ -526,7 +526,7 @@ static SyscallDesc syscallDescs64[] = {
     /*   35 */ SyscallDesc("unlinkat", unlinkatFunc<ArmLinux64>),
     /*   36 */ SyscallDesc("symlinkat", unimplementedFunc),
     /*   37 */ SyscallDesc("linkat", unimplementedFunc),
-    /*   38 */ SyscallDesc("renameat", unimplementedFunc),
+    /*   38 */ SyscallDesc("renameat", renameatFunc<ArmLinux64>),
     /*   39 */ SyscallDesc("umount2", unimplementedFunc),
     /*   40 */ SyscallDesc("mount", unimplementedFunc),
     /*   41 */ SyscallDesc("pivot_root", unimplementedFunc),
@@ -601,7 +601,7 @@ static SyscallDesc syscallDescs64[] = {
     /*  110 */ SyscallDesc("timer_settime", unimplementedFunc),
     /*  111 */ SyscallDesc("timer_delete", unimplementedFunc),
     /*  112 */ SyscallDesc("clock_settime", unimplementedFunc),
-    /*  113 */ SyscallDesc("clock_gettime", unimplementedFunc),
+    /*  113 */ SyscallDesc("clock_gettime", clock_gettimeFunc<ArmLinux64>),
     /*  114 */ SyscallDesc("clock_getres", unimplementedFunc),
     /*  115 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
     /*  116 */ SyscallDesc("syslog", unimplementedFunc),
@@ -1521,7 +1521,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 1030 */ SyscallDesc("mkdir", mkdirFunc),
     /* 1031 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 1032 */ SyscallDesc("lchown", unimplementedFunc),
-    /* 1033 */ SyscallDesc("access", unimplementedFunc),
+    /* 1033 */ SyscallDesc("access", accessFunc),
     /* 1034 */ SyscallDesc("rename", renameFunc),
     /* 1035 */ SyscallDesc("readlink", readlinkFunc),
     /* 1036 */ SyscallDesc("symlink", unimplementedFunc),
