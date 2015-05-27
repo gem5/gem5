@@ -444,6 +444,12 @@ BaseCache::regStats()
         .desc("number of cache copies performed")
         ;
 
+    unusedPrefetches
+        .name(name() + ".unused_prefetches")
+        .desc("number of HardPF blocks evicted w/o reference")
+        .flags(nozero)
+        ;
+
     writebacks
         .init(system->maxMasters())
         .name(name() + ".writebacks")

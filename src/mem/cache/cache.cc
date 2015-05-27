@@ -1709,6 +1709,9 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
                     addr, is_secure ? "s" : "ns",
                     blk->isDirty() ? "writeback" : "clean");
 
+            if (blk->wasPrefetched()) {
+                unusedPrefetches++;
+            }
             // Will send up Writeback/CleanEvict snoops via isCachedAbove
             // when pushing this writeback list into the write buffer.
             if (blk->isDirty() || writebackClean) {

@@ -387,6 +387,9 @@ class BaseCache : public MemObject
     /** The number of cache copies performed. */
     Stats::Scalar cacheCopies;
 
+    /** The number of times a HW-prefetched block is evicted w/o reference. */
+    Stats::Scalar unusedPrefetches;
+
     /** Number of blocks written back per thread. */
     Stats::Vector writebacks;
 
