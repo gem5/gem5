@@ -128,9 +128,13 @@ AddrMapper::recvTimingReq(PacketPtr pkt)
     // packets)
     bool successful = masterPort.sendTimingReq(pkt);
 
-    // If not successful, restore the sender state
-    if (!successful && needsResponse) {
-        delete pkt->popSenderState();
+    // If not successful, restore the address and sender state
+    if (!successful) {
+        pkt->setAddr(orig_addr);
+
+        if (needsResponse) {
+            delete pkt->popSenderState();
+        }
     }
 
     return successful;
