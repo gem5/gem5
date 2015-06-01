@@ -37,6 +37,8 @@
  * Authors: Andreas Sandberg
  */
 
+#include "arch/arm/kvm/arm_cpu.hh"
+
 #include <linux/kvm.h>
 
 #include <algorithm>
@@ -44,7 +46,6 @@
 #include <memory>
 
 #include "arch/registers.hh"
-#include "cpu/kvm/arm_cpu.hh"
 #include "cpu/kvm/base.hh"
 #include "debug/Kvm.hh"
 #include "debug/KvmContext.hh"

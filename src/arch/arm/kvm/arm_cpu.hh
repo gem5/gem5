@@ -37,8 +37,8 @@
  * Authors: Andreas Sandberg
  */
 
-#ifndef __CPU_KVM_ARM_CPU_HH__
-#define __CPU_KVM_ARM_CPU_HH__
+#ifndef __ARCH_ARM_KVM_ARM_CPU_HH__
+#define __ARCH_ARM_KVM_ARM_CPU_HH__
 
 #include <set>
 #include <vector>
@@ -167,4 +167,4 @@ class ArmKvmCPU : public BaseKvmCPU
     static const std::set<uint64_t> invariant_regs;
 };
 
-#endif
+#endif // __ARCH_ARM_KVM_ARM_CPU_HH__

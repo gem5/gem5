@@ -1,4 +1,6 @@
-# Copyright (c) 2012 ARM Limited
+# -*- mode:python -*-
+
+# Copyright (c) 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,9 +37,14 @@
 #
 # Authors: Andreas Sandberg
 
-from m5.params import *
-from BaseKvmCPU import BaseKvmCPU
+Import('*')
 
-class ArmKvmCPU(BaseKvmCPU):
-    type = 'ArmKvmCPU'
-    cxx_header = "cpu/kvm/arm_cpu.hh"
+if not (env['USE_KVM'] and env['TARGET_ISA'] == 'arm'):
+    Return()
+
+import platform
+host_isa = platform.machine()
+
+if host_isa == "armv7l":
+    SimObject('ArmKvmCPU.py')
+    Source('arm_cpu.cc')
