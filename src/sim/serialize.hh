@@ -59,7 +59,7 @@ class EventQueue;
  * SimObject shouldn't cause the version number to increase, only changes to
  * existing objects such as serializing/unserializing more state, changing sizes
  * of serialized arrays, etc. */
-static const uint64_t gem5CheckpointVersion = 0x000000000000000d;
+static const uint64_t gem5CheckpointVersion = 0x000000000000000e;
 
 template <class T>
 void paramOut(std::ostream &os, const std::string &name, const T &param);

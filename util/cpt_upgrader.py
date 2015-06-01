@@ -602,6 +602,18 @@ def from_C(cpt):
                 cpt.set(sec, 'intRegs', ' '.join(intRegs))
                 cpt.set(sec, 'ccRegs',  ' '.join(ccRegs))
 
+# Checkpoint version E adds the ARM CONTEXTIDR_EL2 miscreg.
+def from_D(cpt):
+    if cpt.get('root','isa') == 'arm':
+        for sec in cpt.sections():
+            import re
+            # Search for all ISA sections
+            if re.search('.*sys.*\.cpu.*\.isa$', sec):
+                miscRegs = cpt.get(sec, 'miscRegs').split()
+                # CONTEXTIDR_EL2 defaults to 0b11111100000000000001
+                miscRegs[599:599] = [0xFC001]
+                cpt.set(sec, 'miscRegs', ' '.join(str(x) for x in miscRegs))
+
 migrations = []
 migrations.append(from_0)
 migrations.append(from_1)
@@ -616,6 +628,7 @@ migrations.append(from_9)
 migrations.append(from_A)
 migrations.append(from_B)
 migrations.append(from_C)
+migrations.append(from_D)
 
 verbose_print = False
 
