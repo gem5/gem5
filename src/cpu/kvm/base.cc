@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -533,15 +533,23 @@ BaseKvmCPU::tick()
 
       case RunningServiceCompletion:
       case Running: {
-          EventQueue *q = curEventQueue();
-          Tick ticksToExecute(q->nextTick() - curTick());
+          const uint64_t nextInstEvent(
+              !comInstEventQueue[0]->empty() ?
+              comInstEventQueue[0]->nextTick() : UINT64_MAX);
+          // Enter into KVM and complete pending IO instructions if we
+          // have an instruction event pending.
+          const Tick ticksToExecute(
+              nextInstEvent > ctrInsts ?
+              curEventQueue()->nextTick() - curTick() : 0);
 
           // We might need to update the KVM state.
           syncKvmState();
 
           // Setup any pending instruction count breakpoints using
-          // PerfEvent.
-          setupInstStop();
+          // PerfEvent if we are going to execute more than just an IO
+          // completion.
+          if (ticksToExecute > 0)
+              setupInstStop();
 
           DPRINTF(KvmRun, "Entering KVM...\n");
           if (drainManager) {
