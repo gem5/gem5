@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2015 ARM Limited
 # All rights reserved.
 #
@@ -37,23 +35,10 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from BaseKvmCPU import BaseKvmCPU
 
-if not (env['USE_KVM'] and env['TARGET_ISA'] == 'arm'):
-    Return()
-
-import platform
-host_isa = platform.machine()
-
-SimObject('KvmGic.py')
-Source('gic.cc')
-
-SimObject('BaseArmKvmCPU.py')
-Source('base_cpu.cc')
-
-if host_isa == "armv7l":
-    SimObject('ArmKvmCPU.py')
-    Source('arm_cpu.cc')
-elif host_isa == "aarch64":
-    SimObject('ArmV8KvmCPU.py')
-    Source('armv8_cpu.cc')
+class BaseArmKvmCPU(BaseKvmCPU):
+    type = 'BaseArmKvmCPU'
+    cxx_header = "arch/arm/kvm/base_cpu.hh"
+    abstract = True

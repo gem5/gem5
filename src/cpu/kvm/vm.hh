@@ -398,6 +398,23 @@ class KvmVM : public SimObject
     /** Global KVM interface */
     Kvm kvm;
 
+#if defined(__aarch64__)
+  public: // ARM-specific
+    /**
+     * Ask the kernel for the preferred CPU target to simulate.
+     *
+     * When creating an ARM vCPU in Kvm, we need to initialize it with
+     * a call to BaseArmKvmCPU::kvmArmVCpuInit(). When calling this
+     * function, we need to know what type of CPU the host has. This
+     * call sets up the kvm_vcpu_init structure with the values the
+     * kernel wants.
+     *
+     * @param[out] target Target structure to initialize.
+     */
+    void kvmArmPreferredTarget(struct kvm_vcpu_init &target) const;
+
+#endif
+
   protected:
     /**
      * VM CPU initialization code.

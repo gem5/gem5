@@ -52,7 +52,7 @@ _cpu_aliases_all = [
     ("atomic", "AtomicSimpleCPU"),
     ("minor", "MinorCPU"),
     ("detailed", "DerivO3CPU"),
-    ("kvm", ("ArmKvmCPU", "X86KvmCPU")),
+    ("kvm", ("ArmKvmCPU", "ArmV8KvmCPU", "X86KvmCPU")),
     ]
 
 # Filtered list of aliases. Only aliases for existing CPUs exist in

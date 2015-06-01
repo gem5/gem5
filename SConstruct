@@ -1048,7 +1048,7 @@ def is_isa_kvm_compatible(isa):
         return False
 
     if isa == "arm":
-        return host_isa == "armv7l"
+        return host_isa in ( "armv7l", "aarch64" )
     elif isa == "x86":
         if host_isa != "x86_64":
             return False

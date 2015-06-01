@@ -520,6 +520,17 @@ KvmVM::allocVCPUID()
     return nextVCPUID++;
 }
 
+#if defined(__aarch64__)
+void
+KvmVM::kvmArmPreferredTarget(struct kvm_vcpu_init &target) const
+{
+    if (ioctl(KVM_ARM_PREFERRED_TARGET, &target) == -1) {
+        panic("KVM: Failed to get ARM preferred CPU target (errno: %i)\n",
+              errno);
+    }
+}
+#endif
+
 int
 KvmVM::ioctl(int request, long p1) const
 {
