@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -385,6 +385,15 @@ class KvmVM : public SimObject
      *  Free a previously allocated memory slot.
      */
     void freeMemSlot(const MemSlot slot);
+
+    /**
+     * Create an in-kernel device model.
+     *
+     * @param type Device type (KVM_DEV_TYPE_xxx)
+     * @param flags Creation flags (KVM_CREATE_DEVICE_xxx)
+     * @return Device file descriptor
+     */
+    int createDevice(uint32_t type, uint32_t flags = 0);
 
     /** Global KVM interface */
     Kvm kvm;

@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2015 ARM Limited
 # All rights reserved.
 #
@@ -37,17 +35,20 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
 
-if not (env['USE_KVM'] and env['TARGET_ISA'] == 'arm'):
-    Return()
+from Gic import BaseGic
+from KvmVM import KvmVM
+from System import System
 
-import platform
-host_isa = platform.machine()
+class KvmGic(BaseGic):
+    type = 'KvmGic'
+    cxx_header = "arch/arm/kvm/gic.hh"
 
-SimObject('KvmGic.py')
-Source('gic.cc')
+    dist_addr = Param.Addr(0x1f001000, "Address for distributor")
+    cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
 
-if host_isa == "armv7l":
-    SimObject('ArmKvmCPU.py')
-    Source('arm_cpu.cc')
+    system = Param.System(Parent.any,
+                          'System this interrupt controller belongs to')
+    kvmVM = Param.KvmVM(Parent.any, 'KVM VM (i.e., shared memory domain)')

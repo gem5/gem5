@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -483,6 +483,23 @@ KvmVM::setIRQLine(uint32_t irq, bool high)
     if (ioctl(KVM_IRQ_LINE, &kvm_level) == -1)
         panic("KVM: Failed to set IRQ line level (errno: %i)\n",
               errno);
+}
+
+int
+KvmVM::createDevice(uint32_t type, uint32_t flags)
+{
+#if defined(KVM_CREATE_DEVICE)
+    struct kvm_create_device dev = { type, 0, flags };
+
+    if (ioctl(KVM_CREATE_DEVICE, &dev) == -1) {
+        panic("KVM: Failed to create device (errno: %i)\n",
+              errno);
+    }
+
+    return dev.fd;
+#else
+    panic("Kernel headers don't support KVM_CREATE_DEVICE\n");
+#endif
 }
 
 int

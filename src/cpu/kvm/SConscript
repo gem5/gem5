@@ -44,6 +44,7 @@ if env['USE_KVM']:
     SimObject('BaseKvmCPU.py')
 
     Source('base.cc')
+    Source('device.cc')
     Source('vm.cc')
     Source('perfevent.cc')
     Source('timer.cc')
