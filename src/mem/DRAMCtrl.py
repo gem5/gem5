@@ -11,6 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2013 Amin Farmahini-Farahani
+# Copyright (c) 2015 University of Kaiserslautern
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,6 +39,8 @@
 #
 # Authors: Andreas Hansson
 #          Ani Udipi
+#          Omar Naji
+#          Matthias Jung
 
 from m5.params import *
 from AbstractMemory import *
@@ -373,6 +376,92 @@ class DDR3_1600_x64(DRAMCtrl):
     IDD4R = '187mA'
     IDD5 = '220mA'
     VDD = '1.5V'
+
+# A single HMC-2500 x32 model based on:
+# [1] DRAMSpec: a high-level DRAM bank modelling tool
+# developed at the University of Kaiserslautern. This high level tool
+# uses RC (resistance-capacitance) and CV (capacitance-voltage) models to
+# estimate the DRAM bank latency and power numbers.
+# [2] A Logic-base Interconnect for Supporting Near Memory Computation in the
+# Hybrid Memory Cube (E. Azarkhish et. al)
+# Assumed for the HMC model is a 30 nm technology node.
+# The modelled HMC consists of 4 Gbit layers which sum up to 2GB of memory (4
+# layers).
+# Each layer has 16 vaults and each vault consists of 2 banks per layer.
+# In order to be able to use the same controller used for 2D DRAM generations
+# for HMC, the following analogy is done:
+# Channel (DDR) => Vault (HMC)
+# device_size (DDR) => size of a single layer in a vault
+# ranks per channel (DDR) => number of layers
+# banks per rank (DDR) => banks per layer
+# devices per rank (DDR) => devices per layer ( 1 for HMC).
+# The parameters for which no input is available are inherited from the DDR3
+# configuration.
+# This configuration includes the latencies from the DRAM to the logic layer of
+# the HMC
+class HMC_2500_x32(DDR3_1600_x64):
+    # size of device
+    # two banks per device with each bank 4MB [2]
+    device_size = '8MB'
+
+    # 1x32 configuration, 1 device with 32 TSVs [2]
+    device_bus_width = 32
+
+    # HMC is a BL8 device [2]
+    burst_length = 8
+
+    # Each device has a page (row buffer) size of 256 bytes [2]
+    device_rowbuffer_size = '256B'
+
+    # 1x32 configuration, so 1 device [2]
+    devices_per_rank = 1
+
+    # 4 layers so 4 ranks [2]
+    ranks_per_channel = 4
+
+    # HMC has 2 banks per layer [2]
+    # Each layer represents a rank. With 4 layers and 8 banks in total, each
+    # layer has 2 banks; thus 2 banks per rank.
+    banks_per_rank = 2
+
+    # 1250 MHz [2]
+    tCK = '0.8ns'
+
+    # 8 beats across an x32 interface translates to 4 clocks @ 1250 MHz
+    tBURST = '3.2ns'
+
+    # Values using DRAMSpec HMC model [1]
+    tRCD = '10.2ns'
+    tCL = '9.9ns'
+    tRP = '7.7ns'
+    tRAS = '21.6ns'
+
+    # tRRD depends on the power supply network for each vendor.
+    # We assume a tRRD of a double bank approach to be equal to 4 clock
+    # cycles (Assumption)
+    tRRD = '3.2ns'
+
+    # activation limit is set to 0 since there are only 2 banks per vault layer.
+    activation_limit = 0
+
+    # Values using DRAMSpec HMC model [1]
+    tRFC = '59ns'
+    tWR = '8ns'
+    tRTP = '4.9ns'
+
+    # Default different rank bus delay assumed to 1 CK for TSVs, @1250 MHz = 0.8
+    # ns (Assumption)
+    tCS = '0.8ns'
+
+    # Value using DRAMSpec HMC model [1]
+    tREFI = '3.9us'
+
+    # Set default controller parameters
+    page_policy = 'close'
+    write_buffer_size = 8
+    read_buffer_size = 8
+    addr_mapping = 'RoCoRaBaCh'
+    min_writes_per_switch = 8
 
 # A single DDR3-2133 x64 channel refining a selected subset of the
 # options for the DDR-1600 configuration, based on the same DDR3-1600
