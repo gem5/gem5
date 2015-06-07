@@ -47,7 +47,9 @@ OpenFlagTransTable ArmFreebsd32::openFlagTable[] = {
   { ArmFreebsd32::TGT_O_NONBLOCK,   O_NONBLOCK },
   { ArmFreebsd32::TGT_O_SYNC,       O_SYNC },
   { ArmFreebsd32::TGT_FASYNC,       FASYNC },
+#ifdef O_DIRECT
   { ArmFreebsd32::TGT_O_DIRECT,     O_DIRECT },
+#endif
   { ArmFreebsd32::TGT_O_DIRECTORY,  O_DIRECTORY },
   { ArmFreebsd32::TGT_O_NOFOLLOW,   O_NOFOLLOW },
 };
@@ -57,20 +59,22 @@ const int ArmFreebsd32::NUM_OPEN_FLAGS = sizeof(ArmFreebsd32::openFlagTable) /
 
 // open(2) flags translation table
 OpenFlagTransTable ArmFreebsd64::openFlagTable[] = {
-  { ArmFreebsd32::TGT_O_RDONLY,     O_RDONLY },
-  { ArmFreebsd32::TGT_O_WRONLY,     O_WRONLY },
-  { ArmFreebsd32::TGT_O_RDWR,       O_RDWR },
-  { ArmFreebsd32::TGT_O_CREAT,      O_CREAT },
-  { ArmFreebsd32::TGT_O_EXCL,       O_EXCL },
-  { ArmFreebsd32::TGT_O_NOCTTY,     O_NOCTTY },
-  { ArmFreebsd32::TGT_O_TRUNC,      O_TRUNC },
-  { ArmFreebsd32::TGT_O_APPEND,     O_APPEND },
-  { ArmFreebsd32::TGT_O_NONBLOCK,   O_NONBLOCK },
-  { ArmFreebsd32::TGT_O_SYNC,       O_SYNC },
-  { ArmFreebsd32::TGT_FASYNC,       FASYNC },
-  { ArmFreebsd32::TGT_O_DIRECT,     O_DIRECT },
-  { ArmFreebsd32::TGT_O_DIRECTORY,  O_DIRECTORY },
-  { ArmFreebsd32::TGT_O_NOFOLLOW,   O_NOFOLLOW },
+  { ArmFreebsd64::TGT_O_RDONLY,     O_RDONLY },
+  { ArmFreebsd64::TGT_O_WRONLY,     O_WRONLY },
+  { ArmFreebsd64::TGT_O_RDWR,       O_RDWR },
+  { ArmFreebsd64::TGT_O_CREAT,      O_CREAT },
+  { ArmFreebsd64::TGT_O_EXCL,       O_EXCL },
+  { ArmFreebsd64::TGT_O_NOCTTY,     O_NOCTTY },
+  { ArmFreebsd64::TGT_O_TRUNC,      O_TRUNC },
+  { ArmFreebsd64::TGT_O_APPEND,     O_APPEND },
+  { ArmFreebsd64::TGT_O_NONBLOCK,   O_NONBLOCK },
+  { ArmFreebsd64::TGT_O_SYNC,       O_SYNC },
+  { ArmFreebsd64::TGT_FASYNC,       FASYNC },
+#ifdef O_DIRECT
+  { ArmFreebsd64::TGT_O_DIRECT,     O_DIRECT },
+#endif
+  { ArmFreebsd64::TGT_O_DIRECTORY,  O_DIRECTORY },
+  { ArmFreebsd64::TGT_O_NOFOLLOW,   O_NOFOLLOW },
 };
 
 const int ArmFreebsd64::NUM_OPEN_FLAGS = sizeof(ArmFreebsd64::openFlagTable) /
