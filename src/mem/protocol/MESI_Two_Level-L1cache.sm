@@ -1341,6 +1341,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // transitions from SM
   transition(SM, Inv, IM) {
+    forward_eviction_to_cpu;
     fi_sendInvAck;
     dg_invalidate_sc;
     l_popRequestQueue;
