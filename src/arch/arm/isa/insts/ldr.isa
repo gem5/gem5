@@ -349,7 +349,7 @@ let {{
     buildLoads("ldrsbt", size=1, sign=True, user=True)
     buildLoads("ldrh", size=2)
     buildLoads("ldrht", size=2, user=True)
-    buildLoads("hdrsh", size=2, sign=True)
+    buildLoads("ldrsh", size=2, sign=True)
     buildLoads("ldrsht", size=2, sign=True, user=True)
 
     buildDoubleLoads("ldrd")
