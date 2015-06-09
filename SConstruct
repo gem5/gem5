@@ -599,10 +599,16 @@ if main['GCC']:
     # assemblers detect this as an error, "Error: expecting string
     # instruction after `rep'"
     if compareVersions(gcc_version, "4.8") > 0:
-        as_version = readCommand([main['AS'], '-v', '/dev/null'],
-                                 exception=False).split()
+        as_version_raw = readCommand([main['AS'], '-v', '/dev/null'],
+                                     exception=False).split()
 
-        if not as_version or compareVersions(as_version[-1], "2.23") < 0:
+        # version strings may contain extra distro-specific
+        # qualifiers, so play it safe and keep only what comes before
+        # the first hyphen
+        as_version = as_version_raw[-1].split('-')[0] if as_version_raw \
+            else None
+
+        if not as_version or compareVersions(as_version, "2.23") < 0:
             print termcap.Yellow + termcap.Bold + \
                 'Warning: This combination of gcc and binutils have' + \
                 ' known incompatibilities.\n' + \
