@@ -67,6 +67,7 @@ CircleBuf::flush()
 {
     _start = 0;
     _stop = 0;
+    _size = 0;
     _rollover = false;
 }
 
