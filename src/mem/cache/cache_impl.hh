@@ -1610,7 +1610,11 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // rewritten to be relative to cpu-side bus (if any)
         bool alreadyResponded = pkt->memInhibitAsserted();
         if (is_timing) {
-            Packet snoopPkt(pkt, true, false);  // clear flags, no allocation
+            // copy the packet so that we can clear any flags before
+            // forwarding it upwards, we also allocate data (passing
+            // the pointer along in case of static data), in case
+            // there is a snoop hit in upper levels
+            Packet snoopPkt(pkt, true, true);
             snoopPkt.setExpressSnoop();
             snoopPkt.pushSenderState(new ForwardResponseRecord());
             // the snoop packet does not need to wait any additional
@@ -1622,6 +1626,8 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
                 assert(!alreadyResponded);
                 pkt->assertMemInhibit();
             } else {
+                // no cache (or anyone else for that matter) will
+                // respond, so delete the ForwardResponseRecord here
                 delete snoopPkt.popSenderState();
             }
             if (snoopPkt.sharedAsserted()) {
