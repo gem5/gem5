@@ -62,9 +62,9 @@ AmbaIntDevice::AmbaIntDevice(const Params *p, Addr pio_size)
 
 
 
-AmbaDmaDevice::AmbaDmaDevice(const Params *p)
+AmbaDmaDevice::AmbaDmaDevice(const Params *p, Addr pio_size)
     : DmaDevice(p), ambaId(AmbaVendor | p->amba_id),
-      pioAddr(p->pio_addr), pioSize(0),
+      pioAddr(p->pio_addr), pioSize(pio_size),
       pioDelay(p->pio_latency),intNum(p->int_num), gic(p->gic)
 {
 }

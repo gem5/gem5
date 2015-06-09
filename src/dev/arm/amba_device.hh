@@ -109,7 +109,7 @@ class AmbaDmaDevice : public DmaDevice, public AmbaDevice
 
   public:
     typedef AmbaDmaDeviceParams Params;
-    AmbaDmaDevice(const Params *p);
+    AmbaDmaDevice(const Params *p, Addr pio_size = 0);
 };
 
 
