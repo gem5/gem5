@@ -692,11 +692,18 @@ class Packet : public Printable
      */
     ~Packet()
     {
-        // If this is a request packet for which there's no response,
-        // delete the request object here, since the requester will
-        // never get the chance.
-        if (req && isRequest() && !needsResponse())
+        // Delete the request object if this is a request packet which
+        // does not need a response, because the requester will not get
+        // a chance. If the request packet needs a response then the
+        // request will be deleted on receipt of the response
+        // packet. We also make sure to never delete the request for
+        // express snoops, even for cases when responses are not
+        // needed (CleanEvict and Writeback), since the snoop packet
+        // re-uses the same request.
+        if (req && isRequest() && !needsResponse() &&
+            !isExpressSnoop()) {
             delete req;
+        }
         deleteData();
     }
 
