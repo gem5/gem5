@@ -144,7 +144,6 @@ ISA::ISA(Params *p)
     pmu->setISA(this);
 
     system = dynamic_cast<ArmSystem *>(p->system);
-    DPRINTFN("ISA system set to: %p %p\n", system, p->system);
 
     // Cache system-level properties
     if (FullSystem && system) {
