@@ -212,6 +212,11 @@ class Clocked
         return clockDomain.clockPeriod();
     }
 
+    inline double voltage() const
+    {
+        return clockDomain.voltage();
+    }
+
     inline Cycles ticksToCycles(Tick t) const
     { return Cycles(divCeil(t, clockPeriod())); }
 
