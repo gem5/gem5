@@ -37,13 +37,13 @@
  * Authors: Ali Saidi
  *          Giacomo Gabrielli
  */
+#include "arch/arm/table_walker.hh"
 
 #include <memory>
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/stage2_mmu.hh"
 #include "arch/arm/system.hh"
-#include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -51,6 +51,7 @@
 #include "debug/Drain.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
+#include "dev/dma_device.hh"
 #include "sim/system.hh"
 
 using namespace ArmISA;

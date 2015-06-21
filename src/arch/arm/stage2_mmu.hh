@@ -42,6 +42,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/tlb.hh"
+#include "dev/dma_device.hh"
 #include "mem/request.hh"
 #include "params/ArmStage2MMU.hh"
 #include "sim/eventq.hh"

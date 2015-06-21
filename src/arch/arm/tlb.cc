@@ -42,6 +42,8 @@
  *          Steve Reinhardt
  */
 
+#include "arch/arm/tlb.hh"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -52,7 +54,6 @@
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/stage2_lookup.hh"
 #include "arch/arm/stage2_mmu.hh"
-#include "arch/arm/tlb.hh"
 #include "arch/arm/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"

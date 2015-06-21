@@ -46,12 +46,13 @@
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
-#include "dev/dma_device.hh"
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
 #include "sim/eventq.hh"
 
 class ThreadContext;
+
+class DmaPort;
 
 namespace ArmISA {
 class Translation;

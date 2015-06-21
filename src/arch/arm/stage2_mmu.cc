@@ -38,6 +38,7 @@
  */
 
 #include "arch/arm/stage2_mmu.hh"
+
 #include "arch/arm/faults.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/table_walker.hh"
