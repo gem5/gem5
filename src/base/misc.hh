@@ -219,6 +219,20 @@ extern bool want_hack, hack_verbose;
     cond_message_once(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)
 
 /**
+ * Conditional warning macro that checks the supplied condition and
+ * only prints a warning if the condition is true. Useful to replace
+ * if + warn.
+ *
+ * @param cond Condition that is checked; if true -> warn
+ * @param ...  Printf-based format string with arguments, extends printout.
+ */
+#define warn_if(cond, ...) \
+    do { \
+        if ((cond)) \
+            warn(__VA_ARGS__); \
+    } while (0)
+
+/**
  * The chatty assert macro will function like a normal assert, but will allow the
  * specification of additional, helpful material to aid debugging why the
  * assertion actually failed.  Like the normal assertion, the chatty_assert
