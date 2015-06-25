@@ -188,8 +188,8 @@ class RubyPort : public MemObject
   private:
     void addToRetryList(MemSlavePort * port)
     {
-        assert(std::find(retryList.begin(), retryList.end(), port) ==
-               retryList.end());
+        if (std::find(retryList.begin(), retryList.end(), port) !=
+               retryList.end()) return;
         retryList.push_back(port);
     }
 
