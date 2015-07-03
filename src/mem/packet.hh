@@ -101,6 +101,8 @@ class MemCmd
         UpgradeFailResp,        // Valid for SCUpgradeReq only
         ReadExReq,
         ReadExResp,
+        ReadCleanReq,
+        ReadSharedReq,
         LoadLockedReq,
         StoreCondReq,
         StoreCondFailReq,       // Failed StoreCondReq in MSHR (never sent)

@@ -184,6 +184,10 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
             // special handling for coherent block requests from
             // upper-level caches
             if (pkt->needsExclusive()) {
+                // sanity check
+                assert(pkt->cmd == MemCmd::ReadExReq ||
+                       pkt->cmd == MemCmd::SCUpgradeFailReq);
+
                 // if we have a dirty copy, make sure the recipient
                 // keeps it marked dirty
                 if (blk->isDirty()) {
@@ -193,8 +197,9 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
                 if (blk != tempBlock)
                     tags->invalidate(blk);
                 blk->invalidate();
-            } else if (blk->isWritable() && !pending_downgrade
-                      && !pkt->sharedAsserted() && !pkt->req->isInstFetch()) {
+            } else if (blk->isWritable() && !pending_downgrade &&
+                       !pkt->sharedAsserted() &&
+                       pkt->cmd != MemCmd::ReadCleanReq) {
                 // we can give the requester an exclusive copy (by not
                 // asserting shared line) on a read request if:
                 // - we have an exclusive copy at this level (& below)
@@ -901,7 +906,8 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         cmd = cpu_pkt->cmd;
     } else {
         // block is invalid
-        cmd = needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
+        cmd = needsExclusive ? MemCmd::ReadExReq :
+            (isReadOnly ? MemCmd::ReadCleanReq : MemCmd::ReadSharedReq);
     }
     PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 

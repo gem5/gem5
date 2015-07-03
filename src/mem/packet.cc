@@ -71,7 +71,8 @@ MemCmd::commandInfo[] =
 {
     /* InvalidCmd */
     { 0, InvalidCmd, "InvalidCmd" },
-    /* ReadReq */
+    /* ReadReq - Read issued by a non-caching agent such as a CPU or
+     * device, with no restrictions on alignment. */
     { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadReq" },
     /* ReadResp */
     { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
@@ -125,12 +126,23 @@ MemCmd::commandInfo[] =
      * that it has failed, acquires line as Dirty*/
     { SET4(IsRead, NeedsExclusive, IsResponse, HasData),
             InvalidCmd, "UpgradeFailResp" },
-    /* ReadExReq */
+    /* ReadExReq - Read issues by a cache, always cache-line aligned,
+     * and the response is guaranteed to be writeable (exclusive or
+     * even modified) */
     { SET5(IsRead, NeedsExclusive, IsInvalidate, IsRequest, NeedsResponse),
             ReadExResp, "ReadExReq" },
-    /* ReadExResp */
+    /* ReadExResp - Response matching a read exclusive, as we check
+     * the need for exclusive also on responses */
     { SET4(IsRead, NeedsExclusive, IsResponse, HasData),
             InvalidCmd, "ReadExResp" },
+    /* ReadCleanReq - Read issued by a cache, always cache-line
+     * aligned, and the response is guaranteed to not contain dirty data
+     * (exclusive or shared).*/
+    { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadCleanReq" },
+    /* ReadSharedReq - Read issued by a cache, always cache-line
+     * aligned, response is shared, possibly exclusive, owned or even
+     * modified. */
+    { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadSharedReq" },
     /* LoadLockedReq: note that we use plain ReadResp as response, so that
      *                we can also use ReadRespWithInvalidate when needed */
     { SET4(IsRead, IsLlsc, IsRequest, NeedsResponse),
