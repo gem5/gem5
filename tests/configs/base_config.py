@@ -92,8 +92,8 @@ class BaseSystem(object):
         Arguments:
           cpu -- CPU instance to work on.
         """
-        cpu.addPrivateSplitL1Caches(L1Cache(size='32kB', assoc=1),
-                                    L1Cache(size='32kB', assoc=4))
+        cpu.addPrivateSplitL1Caches(L1_ICache(size='32kB', assoc=1),
+                                    L1_DCache(size='32kB', assoc=4))
 
     def create_caches_shared(self, system):
         """Add shared caches to a system.
@@ -212,8 +212,8 @@ class BaseSESystemUniprocessor(BaseSESystem):
         # The atomic SE configurations do not use caches
         if self.mem_mode == "timing":
             # @todo We might want to revisit these rather enthusiastic L1 sizes
-            cpu.addTwoLevelCacheHierarchy(L1Cache(size='128kB'),
-                                          L1Cache(size='256kB'),
+            cpu.addTwoLevelCacheHierarchy(L1_ICache(size='128kB'),
+                                          L1_DCache(size='256kB'),
                                           L2Cache(size='2MB'))
 
     def create_caches_shared(self, system):
@@ -256,8 +256,8 @@ class BaseFSSystemUniprocessor(BaseFSSystem):
         BaseFSSystem.__init__(self, **kwargs)
 
     def create_caches_private(self, cpu):
-        cpu.addTwoLevelCacheHierarchy(L1Cache(size='32kB', assoc=1),
-                                      L1Cache(size='32kB', assoc=4),
+        cpu.addTwoLevelCacheHierarchy(L1_ICache(size='32kB', assoc=1),
+                                      L1_DCache(size='32kB', assoc=4),
                                       L2Cache(size='4MB', assoc=8))
 
     def create_caches_shared(self, system):

@@ -65,6 +65,7 @@ class BaseCache(MemObject):
     forward_snoops = Param.Bool(True,
         "Forward snoops from mem side to cpu side")
     is_top_level = Param.Bool(False, "Is this cache at the top level (e.g. L1)")
+    is_read_only = Param.Bool(False, "Is this cache read only (e.g. inst)")
 
     prefetcher = Param.BasePrefetcher(NULL,"Prefetcher attached to cache")
     prefetch_on_access = Param.Bool(False,

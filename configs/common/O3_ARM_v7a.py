@@ -151,6 +151,7 @@ class O3_ARM_v7a_ICache(BaseCache):
     assoc = 2
     is_top_level = True
     forward_snoops = False
+    is_read_only = True
 
 # Data Cache
 class O3_ARM_v7a_DCache(BaseCache):
@@ -175,6 +176,7 @@ class O3_ARM_v7aWalkCache(BaseCache):
     write_buffers = 16
     is_top_level = True
     forward_snoops = False
+    is_read_only = True
 
 # L2 Cache
 class O3_ARM_v7aL2(BaseCache):

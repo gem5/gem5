@@ -81,8 +81,8 @@ class LinuxX86FSSystem(LinuxX86SystemBuilder,
         LinuxX86SystemBuilder.__init__(self)
 
     def create_caches_private(self, cpu):
-        cpu.addPrivateSplitL1Caches(L1Cache(size='32kB', assoc=1),
-                                    L1Cache(size='32kB', assoc=4),
+        cpu.addPrivateSplitL1Caches(L1_ICache(size='32kB', assoc=1),
+                                    L1_DCache(size='32kB', assoc=4),
                                     PageTableWalkerCache(),
                                     PageTableWalkerCache())
 
@@ -100,8 +100,8 @@ class LinuxX86FSSystemUniprocessor(LinuxX86SystemBuilder,
         LinuxX86SystemBuilder.__init__(self)
 
     def create_caches_private(self, cpu):
-        cpu.addTwoLevelCacheHierarchy(L1Cache(size='32kB', assoc=1),
-                                      L1Cache(size='32kB', assoc=4),
+        cpu.addTwoLevelCacheHierarchy(L1_ICache(size='32kB', assoc=1),
+                                      L1_DCache(size='32kB', assoc=4),
                                       L2Cache(size='4MB', assoc=8),
                                       PageTableWalkerCache(),
                                       PageTableWalkerCache())

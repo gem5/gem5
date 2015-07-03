@@ -299,8 +299,13 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     // sanity check
     assert(pkt->isRequest());
 
+    chatty_assert(!(isReadOnly && pkt->isWrite()),
+                  "Should never see a write in a read-only cache %s\n",
+                  name());
+
     DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+
     if (pkt->req->isUncacheable()) {
         DPRINTF(Cache, "%s%s addr %#llx uncacheable\n", pkt->cmdString(),
                 pkt->req->isInstFetch() ? " (ifetch)" : "",
@@ -1419,6 +1424,7 @@ Cache::recvTimingResp(PacketPtr pkt)
 PacketPtr
 Cache::writebackBlk(CacheBlk *blk)
 {
+    chatty_assert(!isReadOnly, "Writeback from read-only cache");
     assert(blk && blk->isValid() && blk->isDirty());
 
     writebacks[Request::wbMasterId]++;
@@ -1627,7 +1633,12 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
     blk->status |= BlkValid | BlkReadable;
 
     if (!pkt->sharedAsserted()) {
+        // we could get non-shared responses from memory (rather than
+        // a cache) even in a read-only cache, note that we set this
+        // bit even for a read-only cache as we use it to represent
+        // the exclusive state
         blk->status |= BlkWritable;
+
         // If we got this via cache-to-cache transfer (i.e., from a
         // cache that was an owner) and took away that owner's copy,
         // then we need to write it back.  Normally this happens
@@ -1635,8 +1646,12 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
         // there are cases (such as failed store conditionals or
         // compare-and-swaps) where we'll demand an exclusive copy but
         // end up not writing it.
-        if (pkt->memInhibitAsserted())
+        if (pkt->memInhibitAsserted()) {
             blk->status |= BlkDirty;
+
+            chatty_assert(!isReadOnly, "Should never see dirty snoop response "
+                          "in read-only cache %s\n", name());
+        }
     }
 
     DPRINTF(Cache, "Block addr %#llx (%s) moving from state %x to %s\n",
@@ -1784,6 +1799,10 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
                "old state is %s\n", __func__, pkt->cmdString(),
                pkt->getAddr(), pkt->getSize(), blk->print());
     }
+
+    chatty_assert(!(isReadOnly && blk->isDirty()),
+                  "Should never have a dirty block in a read-only cache %s\n",
+                  name());
 
     // we may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now

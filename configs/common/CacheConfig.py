@@ -64,7 +64,7 @@ def config_cache(options, system):
             O3_ARM_v7a_DCache, O3_ARM_v7a_ICache, O3_ARM_v7aL2
     else:
         dcache_class, icache_class, l2_cache_class = \
-            L1Cache, L1Cache, L2Cache
+            L1_DCache, L1_ICache, L2Cache
 
     # Set the cache line size of the system
     system.cache_line_size = options.cacheline_size

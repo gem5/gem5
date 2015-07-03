@@ -310,6 +310,14 @@ class BaseCache : public MemObject
     const bool isTopLevel;
 
     /**
+     * Is this cache read only, for example the instruction cache, or
+     * table-walker cache. A cache that is read only should never see
+     * any writes, and should never get any dirty data (and hence
+     * never have to do any writebacks).
+     */
+    const bool isReadOnly;
+
+    /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause
      */
@@ -516,6 +524,8 @@ class BaseCache : public MemObject
 
     MSHR *allocateWriteBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
+        // should only see clean evictions in a read-only cache
+        assert(!isReadOnly || pkt->cmd == MemCmd::CleanEvict);
         assert(pkt->isWrite() && !pkt->isRead());
         return allocateBufferInternal(&writeBuffer,
                                       blockAlign(pkt->getAddr()), blkSize,
