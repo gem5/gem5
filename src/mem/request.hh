@@ -89,97 +89,109 @@ class Request
     typedef uint8_t ArchFlagsType;
     typedef ::Flags<FlagsType> Flags;
 
-    /**
-     * Architecture specific flags.
-     *
-     * These bits int the flag field are reserved for
-     * architecture-specific code. For example, SPARC uses them to
-     * represent ASIs.
-     */
-    static const FlagsType ARCH_BITS                   = 0x000000FF;
-    /** The request was an instruction fetch. */
-    static const FlagsType INST_FETCH                  = 0x00000100;
-    /** The virtual address is also the physical address. */
-    static const FlagsType PHYSICAL                    = 0x00000200;
-    /**
-     * The request is to an uncacheable address.
-     *
-     * @note Uncacheable accesses may be reordered by CPU models. The
-     * STRICT_ORDER flag should be set if such reordering is
-     * undesirable.
-     */
-    static const FlagsType UNCACHEABLE                = 0x00000400;
-    /**
-     * The request is required to be strictly ordered by <i>CPU
-     * models</i> and is non-speculative.
-     *
-     * A strictly ordered request is guaranteed to never be re-ordered
-     * or executed speculatively by a CPU model. The memory system may
-     * still reorder requests in caches unless the UNCACHEABLE flag is
-     * set as well.
-     */
-    static const FlagsType STRICT_ORDER                = 0x00000800;
-    /** This request is to a memory mapped register. */
-    static const FlagsType MMAPPED_IPR                 = 0x00002000;
-    /** This request is a clear exclusive. */
-    static const FlagsType CLEAR_LL                    = 0x00004000;
-    /** This request is made in privileged mode. */
-    static const FlagsType PRIVILEGED                  = 0x00008000;
+    enum : FlagsType {
+        /**
+         * Architecture specific flags.
+         *
+         * These bits int the flag field are reserved for
+         * architecture-specific code. For example, SPARC uses them to
+         * represent ASIs.
+         */
+        ARCH_BITS                   = 0x000000FF,
+        /** The request was an instruction fetch. */
+        INST_FETCH                  = 0x00000100,
+        /** The virtual address is also the physical address. */
+        PHYSICAL                    = 0x00000200,
+        /**
+         * The request is to an uncacheable address.
+         *
+         * @note Uncacheable accesses may be reordered by CPU models. The
+         * STRICT_ORDER flag should be set if such reordering is
+         * undesirable.
+         */
+        UNCACHEABLE                = 0x00000400,
+        /**
+         * The request is required to be strictly ordered by <i>CPU
+         * models</i> and is non-speculative.
+         *
+         * A strictly ordered request is guaranteed to never be
+         * re-ordered or executed speculatively by a CPU model. The
+         * memory system may still reorder requests in caches unless
+         * the UNCACHEABLE flag is set as well.
+         */
+        STRICT_ORDER                = 0x00000800,
+        /** This request is to a memory mapped register. */
+        MMAPPED_IPR                 = 0x00002000,
+        /** This request is a clear exclusive. */
+        CLEAR_LL                    = 0x00004000,
+        /** This request is made in privileged mode. */
+        PRIVILEGED                  = 0x00008000,
 
-    /** This is a write that is targeted and zeroing an entire cache block.
-     * There is no need for a read/modify/write
-     */
-    static const FlagsType CACHE_BLOCK_ZERO            = 0x00010000;
+        /**
+         * This is a write that is targeted and zeroing an entire
+         * cache block.  There is no need for a read/modify/write
+         */
+        CACHE_BLOCK_ZERO            = 0x00010000,
 
-    /** The request should not cause a memory access. */
-    static const FlagsType NO_ACCESS                   = 0x00080000;
-    /** This request will lock or unlock the accessed memory. When used with
-     * a load, the access locks the particular chunk of memory. When used
-     * with a store, it unlocks. The rule is that locked accesses have to be
-     * made up of a locked load, some operation on the data, and then a locked
-     * store.
-     */
-    static const FlagsType LOCKED_RMW                  = 0x00100000;
-    /** The request is a Load locked/store conditional. */
-    static const FlagsType LLSC                        = 0x00200000;
-    /** This request is for a memory swap. */
-    static const FlagsType MEM_SWAP                    = 0x00400000;
-    static const FlagsType MEM_SWAP_COND               = 0x00800000;
+        /** The request should not cause a memory access. */
+        NO_ACCESS                   = 0x00080000,
+        /**
+         * This request will lock or unlock the accessed memory. When
+         * used with a load, the access locks the particular chunk of
+         * memory. When used with a store, it unlocks. The rule is
+         * that locked accesses have to be made up of a locked load,
+         * some operation on the data, and then a locked store.
+         */
+        LOCKED_RMW                  = 0x00100000,
+        /** The request is a Load locked/store conditional. */
+        LLSC                        = 0x00200000,
+        /** This request is for a memory swap. */
+        MEM_SWAP                    = 0x00400000,
+        MEM_SWAP_COND               = 0x00800000,
 
-    /** The request is a prefetch. */
-    static const FlagsType PREFETCH                    = 0x01000000;
-    /** The request should be prefetched into the exclusive state. */
-    static const FlagsType PF_EXCLUSIVE                = 0x02000000;
-    /** The request should be marked as LRU. */
-    static const FlagsType EVICT_NEXT                  = 0x04000000;
+        /** The request is a prefetch. */
+        PREFETCH                    = 0x01000000,
+        /** The request should be prefetched into the exclusive state. */
+        PF_EXCLUSIVE                = 0x02000000,
+        /** The request should be marked as LRU. */
+        EVICT_NEXT                  = 0x04000000,
 
-    /** The request should be handled by the generic IPR code (only
-     * valid together with MMAPPED_IPR) */
-    static const FlagsType GENERIC_IPR                 = 0x08000000;
+        /**
+         * The request should be handled by the generic IPR code (only
+         * valid together with MMAPPED_IPR)
+         */
+        GENERIC_IPR                 = 0x08000000,
 
-    /** The request targets the secure memory space. */
-    static const FlagsType SECURE                      = 0x10000000;
-    /** The request is a page table walk */
-    static const FlagsType PT_WALK                     = 0x20000000;
+        /** The request targets the secure memory space. */
+        SECURE                      = 0x10000000,
+        /** The request is a page table walk */
+        PT_WALK                     = 0x20000000,
 
-    /** These flags are *not* cleared when a Request object is reused
-       (assigned a new address). */
-    static const FlagsType STICKY_FLAGS = INST_FETCH;
+        /**
+         * These flags are *not* cleared when a Request object is
+         * reused (assigned a new address).
+         */
+        STICKY_FLAGS = INST_FETCH
+    };
 
-    /** Request Ids that are statically allocated
+    /** Master Ids that are statically allocated
      * @{*/
-    /** This request id is used for writeback requests by the caches */
-    static const MasterID wbMasterId = 0;
-    /** This request id is used for functional requests that don't come from a
-     * particular device
-     */
-    static const MasterID funcMasterId = 1;
-    /** This request id is used for message signaled interrupts */
-    static const MasterID intMasterId = 2;
-    /** Invalid request id for assertion checking only. It is invalid behavior
-     * to ever send this id as part of a request.
-     * @todo C++1x replace with numeric_limits when constexpr is added  */
-    static const MasterID invldMasterId = std::numeric_limits<MasterID>::max();
+    enum : MasterID {
+        /** This master id is used for writeback requests by the caches */
+        wbMasterId = 0,
+        /**
+         * This master id is used for functional requests that
+         * don't come from a particular device
+         */
+        funcMasterId = 1,
+        /** This master id is used for message signaled interrupts */
+        intMasterId = 2,
+        /**
+         * Invalid master id for assertion checking only. It is
+         * invalid behavior to ever send this id as part of a request.
+         */
+        invldMasterId = std::numeric_limits<MasterID>::max()
+    };
     /** @} */
 
     /** Invalid or unknown Pid. Possible when operating system is not present
@@ -190,24 +202,27 @@ class Request
     typedef uint8_t PrivateFlagsType;
     typedef ::Flags<PrivateFlagsType> PrivateFlags;
 
-    /** Whether or not the size is valid. */
-    static const PrivateFlagsType VALID_SIZE           = 0x00000001;
-    /** Whether or not paddr is valid (has been written yet). */
-    static const PrivateFlagsType VALID_PADDR          = 0x00000002;
-    /** Whether or not the vaddr & asid are valid. */
-    static const PrivateFlagsType VALID_VADDR          = 0x00000004;
-    /** Whether or not the pc is valid. */
-    static const PrivateFlagsType VALID_PC             = 0x00000010;
-    /** Whether or not the context ID is valid. */
-    static const PrivateFlagsType VALID_CONTEXT_ID     = 0x00000020;
-    static const PrivateFlagsType VALID_THREAD_ID      = 0x00000040;
-    /** Whether or not the sc result is valid. */
-    static const PrivateFlagsType VALID_EXTRA_DATA     = 0x00000080;
+    enum : PrivateFlagsType {
+        /** Whether or not the size is valid. */
+        VALID_SIZE           = 0x00000001,
+        /** Whether or not paddr is valid (has been written yet). */
+        VALID_PADDR          = 0x00000002,
+        /** Whether or not the vaddr & asid are valid. */
+        VALID_VADDR          = 0x00000004,
+        /** Whether or not the pc is valid. */
+        VALID_PC             = 0x00000010,
+        /** Whether or not the context ID is valid. */
+        VALID_CONTEXT_ID     = 0x00000020,
+        VALID_THREAD_ID      = 0x00000040,
+        /** Whether or not the sc result is valid. */
+        VALID_EXTRA_DATA     = 0x00000080,
 
-    /** These flags are *not* cleared when a Request object is reused
-       (assigned a new address). */
-    static const PrivateFlagsType STICKY_PRIVATE_FLAGS =
-        VALID_CONTEXT_ID | VALID_THREAD_ID;
+        /**
+         * These flags are *not* cleared when a Request object is reused
+         * (assigned a new address).
+         */
+        STICKY_PRIVATE_FLAGS = VALID_CONTEXT_ID | VALID_THREAD_ID
+    };
 
   private:
 
@@ -480,9 +495,9 @@ class Request
     }
 
     /** Note that unlike other accessors, this function sets *specific
-       flags* (ORs them in); it does not assign its argument to the
-       _flags field.  Thus this method should rightly be called
-       setFlags() and not just flags(). */
+        flags* (ORs them in); it does not assign its argument to the
+        _flags field.  Thus this method should rightly be called
+        setFlags() and not just flags(). */
     void
     setFlags(Flags flags)
     {
@@ -632,7 +647,7 @@ class Request
     Tick getAccessLatency() const { return accessDelta; }
 
     /** Accessor functions for flags.  Note that these are for testing
-       only; setting flags should be done via setFlags(). */
+        only; setting flags should be done via setFlags(). */
     bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
     bool isStrictlyOrdered() const { return _flags.isSet(STRICT_ORDER); }
     bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
