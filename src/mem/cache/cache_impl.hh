@@ -161,10 +161,9 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
     // isWrite() will be true for them
     if (pkt->cmd == MemCmd::SwapReq) {
         cmpAndSwap(blk, pkt);
-    } else if (pkt->isWrite() &&
-               (!pkt->isWriteInvalidate() || isTopLevel)) {
+    } else if (pkt->isWrite()) {
         assert(blk->isWritable());
-        // Write or WriteInvalidate at the first cache with block in Exclusive
+        // Write or WriteLine at the first cache with block in Exclusive
         if (blk->checkWrite(pkt)) {
             pkt->writeDataToBlock(blk->data, blkSize);
         }
@@ -233,10 +232,9 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
             }
         }
     } else {
-        // Upgrade or WriteInvalidate at a different cache than received it.
-        // Since we have it Exclusively (E or M), we ack then invalidate.
-        assert(pkt->isUpgrade() ||
-               (pkt->isWriteInvalidate() && !isTopLevel));
+        // Upgrade or Invalidate, since we have it Exclusively (E or
+        // M), we ack then invalidate.
+        assert(pkt->isUpgrade() || pkt->isInvalidate());
         assert(blk != tempBlock);
         tags->invalidate(blk);
         blk->invalidate();
@@ -526,8 +524,8 @@ Cache::promoteWholeLineWrites(PacketPtr pkt)
     // Cache line clearing instructions
     if (doFastWrites && (pkt->cmd == MemCmd::WriteReq) &&
         (pkt->getSize() == blkSize) && (pkt->getOffset(blkSize) == 0)) {
-        pkt->cmd = MemCmd::WriteInvalidateReq;
-        DPRINTF(Cache, "packet promoted from Write to WriteInvalidate\n");
+        pkt->cmd = MemCmd::WriteLineReq;
+        DPRINTF(Cache, "packet promoted from Write to WriteLineReq\n");
         assert(isTopLevel); // should only happen at L1 or I/O cache
     }
 }
@@ -902,8 +900,12 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // where the determination the StoreCond fails is delayed due to
         // all caches not being on the same local bus.
         cmd = MemCmd::SCUpgradeFailReq;
-    } else if (cpu_pkt->isWriteInvalidate()) {
-        cmd = cpu_pkt->cmd;
+    } else if (cpu_pkt->cmd == MemCmd::WriteLineReq) {
+        // forward as invalidate to all other caches, this gives us
+        // the line in exclusive state, and invalidates all other
+        // copies
+        cmd = MemCmd::InvalidateReq;
+        assert(isTopLevel);
     } else {
         // block is invalid
         cmd = needsExclusive ? MemCmd::ReadExReq :
@@ -1031,14 +1033,24 @@ Cache::recvAtomic(PacketPtr pkt)
                 if (bus_pkt->isError()) {
                     pkt->makeAtomicResponse();
                     pkt->copyError(bus_pkt);
-                } else if (pkt->isWriteInvalidate()) {
-                    // note the use of pkt, not bus_pkt here.
-                    if (isTopLevel) {
-                        blk = handleFill(pkt, blk, writebacks);
-                        satisfyCpuSideRequest(pkt, blk);
-                    } else if (blk) {
+                } else if (pkt->cmd == MemCmd::InvalidateReq) {
+                    assert(!isTopLevel);
+                    if (blk) {
+                        // invalidate response to a cache that received
+                        // an invalidate request
                         satisfyCpuSideRequest(pkt, blk);
                     }
+                } else if (pkt->cmd == MemCmd::WriteLineReq) {
+                    // invalidate response to the cache that
+                    // received the original write-line request
+                    assert(isTopLevel);
+
+                    // note the use of pkt, not bus_pkt here.
+
+                    // write-line request to the cache that promoted
+                    // the write to a whole line
+                    blk = handleFill(pkt, blk, writebacks);
+                    satisfyCpuSideRequest(pkt, blk);
                 } else if (bus_pkt->isRead() ||
                            bus_pkt->cmd == MemCmd::UpgradeResp) {
                     // we're updating cache state to allow us to
@@ -1225,6 +1237,10 @@ Cache::recvTimingResp(PacketPtr pkt)
         assert(blk != NULL);
     }
 
+    // allow invalidation responses originating from write-line
+    // requests to be discarded
+    bool discard_invalidate = false;
+
     // First offset for critical word first calculations
     int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
@@ -1250,12 +1266,12 @@ Cache::recvTimingResp(PacketPtr pkt)
             }
 
             // unlike the other packet flows, where data is found in other
-            // caches or memory and brought back, write invalidates always
+            // caches or memory and brought back, write-line requests always
             // have the data right away, so the above check for "is fill?"
             // cannot actually be determined until examining the stored MSHR
             // state. We "catch up" with that logic here, which is duplicated
             // from above.
-            if (tgt_pkt->isWriteInvalidate() && isTopLevel) {
+            if (tgt_pkt->cmd == MemCmd::WriteLineReq) {
                 assert(!is_error);
 
                 // NB: we use the original packet here and not the response!
@@ -1263,7 +1279,10 @@ Cache::recvTimingResp(PacketPtr pkt)
                 blk = handleFill(tgt_pkt, blk, writebacks);
                 assert(blk != NULL);
 
+                // treat as a fill, and discard the invalidation
+                // response
                 is_fill = true;
+                discard_invalidate = true;
             }
 
             if (is_fill) {
@@ -1357,8 +1376,11 @@ Cache::recvTimingResp(PacketPtr pkt)
     }
 
     if (blk && blk->isValid()) {
+        // an invalidate response stemming from a write line request
+        // should not invalidate the block, so check if the
+        // invalidation should be discarded
         if ((pkt->isInvalidate() || mshr->hasPostInvalidate()) &&
-            (!pkt->isWriteInvalidate() || !isTopLevel)) {
+            !discard_invalidate) {
             assert(blk != tempBlock);
             tags->invalidate(blk);
             blk->invalidate();
@@ -1585,7 +1607,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 CacheBlk*
 Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
 {
-    assert(pkt->isResponse() || pkt->isWriteInvalidate());
+    assert(pkt->isResponse() || pkt->cmd == MemCmd::WriteLineReq);
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
 #if TRACING_ON
@@ -1602,10 +1624,10 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
         // better have read new data...
         assert(pkt->hasData());
 
-        // only read responses and (original) write invalidate req's have data;
-        // note that we don't write the data here for write invalidate - that
+        // only read responses and write-line requests have data;
+        // note that we don't write the data here for write-line - that
         // happens in the subsequent satisfyCpuSideRequest.
-        assert(pkt->isRead() || pkt->isWriteInvalidate());
+        assert(pkt->isRead() || pkt->cmd == MemCmd::WriteLineReq);
 
         // need to do a replacement
         blk = allocateBlock(addr, is_secure, writebacks);
@@ -1810,15 +1832,13 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
                   "Should never have a dirty block in a read-only cache %s\n",
                   name());
 
-    // we may end up modifying both the block state and the packet (if
+    // We may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
-    // and then do it later.  If we find dirty data while snooping for a
-    // WriteInvalidate, we don't care, since no merging needs to take place.
-    // We need the eviction to happen as normal, but the data needn't be
-    // sent anywhere. nor should the writeback be inhibited at the memory
-    // controller for any reason.
-    bool respond = blk->isDirty() && pkt->needsResponse()
-                                  && !pkt->isWriteInvalidate();
+    // and then do it later. If we find dirty data while snooping for
+    // an invalidate, we don't need to send a response. The
+    // invalidation itself is taken care of below.
+    bool respond = blk->isDirty() && pkt->needsResponse() &&
+        pkt->cmd != MemCmd::InvalidateReq;
     bool have_exclusive = blk->isWritable();
 
     // Invalidate any prefetch's from below that would strip write permissions

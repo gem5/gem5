@@ -92,8 +92,7 @@ class MemCmd
         HardPFReq,
         SoftPFResp,
         HardPFResp,
-        WriteInvalidateReq,
-        WriteInvalidateResp,
+        WriteLineReq,
         UpgradeReq,
         SCUpgradeReq,           // Special "weak" upgrade for StoreCond
         UpgradeResp,
@@ -122,7 +121,8 @@ class MemCmd
         // Fake simulator-only commands
         PrintReq,       // Print state matching address
         FlushReq,      //request for a cache flush
-        InvalidationReq,   // request for address to be invalidated from lsq
+        InvalidateReq,   // request for address to be invalidated
+        InvalidateResp,
         NUM_MEM_CMDS
     };
 
@@ -188,8 +188,6 @@ class MemCmd
     bool needsExclusive() const    { return testCmdAttrib(NeedsExclusive); }
     bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
-    bool isWriteInvalidate() const { return testCmdAttrib(IsWrite) &&
-                                            testCmdAttrib(IsInvalidate); }
 
     /**
      * Check if this particular packet type carries payload data. Note
@@ -483,7 +481,6 @@ class Packet : public Printable
     bool needsExclusive() const      { return cmd.needsExclusive(); }
     bool needsResponse() const       { return cmd.needsResponse(); }
     bool isInvalidate() const        { return cmd.isInvalidate(); }
-    bool isWriteInvalidate() const   { return cmd.isWriteInvalidate(); }
     bool hasData() const             { return cmd.hasData(); }
     bool isLLSC() const              { return cmd.isLLSC(); }
     bool isError() const             { return cmd.isError(); }

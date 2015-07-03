@@ -549,7 +549,7 @@ RubyPort::ruby_eviction_callback(const Address& address)
             new Request(address.getAddress(), 0, 0, Request::funcMasterId);
     // Use a single packet to signal all snooping ports of the invalidation.
     // This assumes that snooping ports do NOT modify the packet/request
-    Packet pkt(req, MemCmd::InvalidationReq);
+    Packet pkt(req, MemCmd::InvalidateReq);
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
         // check if the connected master port is snooping
         if ((*p)->isSnooping()) {

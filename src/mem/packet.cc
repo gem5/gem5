@@ -101,13 +101,9 @@ MemCmd::commandInfo[] =
     /* HardPFResp */
     { SET4(IsRead, IsResponse, IsHWPrefetch, HasData),
             InvalidCmd, "HardPFResp" },
-    /* WriteInvalidateReq */
-    { SET6(IsWrite, NeedsExclusive, IsInvalidate,
-           IsRequest, HasData, NeedsResponse),
-            WriteInvalidateResp, "WriteInvalidateReq" },
-    /* WriteInvalidateResp */
-    { SET3(IsWrite, NeedsExclusive, IsResponse),
-            InvalidCmd, "WriteInvalidateResp" },
+    /* WriteLineReq */
+    { SET5(IsWrite, NeedsExclusive, IsRequest, NeedsResponse, HasData),
+            WriteResp, "WriteLineReq" },
     /* UpgradeReq */
     { SET5(IsInvalidate, NeedsExclusive, IsUpgrade, IsRequest, NeedsResponse),
             UpgradeResp, "UpgradeReq" },
@@ -182,8 +178,11 @@ MemCmd::commandInfo[] =
     /* Flush Request */
     { SET3(IsRequest, IsFlush, NeedsExclusive), InvalidCmd, "FlushReq" },
     /* Invalidation Request */
-    { SET3(NeedsExclusive, IsInvalidate, IsRequest),
-      InvalidCmd, "InvalidationReq" },
+    { SET4(IsInvalidate, IsRequest, NeedsExclusive, NeedsResponse),
+      InvalidateResp, "InvalidateReq" },
+    /* Invalidation Response */
+    { SET3(IsInvalidate, IsResponse, NeedsExclusive),
+      InvalidCmd, "InvalidateResp" }
 };
 
 bool
