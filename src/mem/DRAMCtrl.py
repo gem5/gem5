@@ -522,6 +522,11 @@ class DDR4_2400_x64(DRAMCtrl):
     # constraints incurred by the bank groups
     banks_per_rank = 16
 
+    # override the default buffer sizes and go for something larger to
+    # accommodate the larger bank count
+    write_buffer_size = 128
+    read_buffer_size = 64
+
     # 1200 MHz
     tCK = '0.833ns'
 
