@@ -65,8 +65,7 @@ class ElfObject : public ObjectFile
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask);
 
-    ElfObject(const std::string &_filename, int _fd,
-              size_t _len, uint8_t *_data,
+    ElfObject(const std::string &_filename, size_t _len, uint8_t *_data,
               Arch _arch, OpSys _opSys);
 
     void getSections();
@@ -90,7 +89,7 @@ class ElfObject : public ObjectFile
     virtual bool isDynamic() { return sectionExists(".interp"); }
     virtual bool hasTLS() { return sectionExists(".tbss"); }
 
-    static ObjectFile *tryFile(const std::string &fname, int fd,
+    static ObjectFile *tryFile(const std::string &fname,
                                size_t len, uint8_t *data);
     Addr programHeaderTable() {return _programHeaderTable;}
     uint16_t programHeaderSize() {return _programHeaderSize;}

@@ -36,7 +36,7 @@
 class RawObject: public ObjectFile
 {
   protected:
-    RawObject(const std::string &_filename, int _fd, size_t _len,
+    RawObject(const std::string &_filename, size_t _len,
               uint8_t *_data, Arch _arch, OpSys _opSys);
   public:
     virtual ~RawObject() {}
@@ -46,7 +46,7 @@ class RawObject: public ObjectFile
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max());
 
-    static ObjectFile *tryFile(const std::string &fname, int fd, size_t len,
+    static ObjectFile *tryFile(const std::string &fname, size_t len,
             uint8_t *data);
 };
 

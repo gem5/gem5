@@ -39,11 +39,11 @@
 using namespace std;
 
 ObjectFile *
-AoutObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
+AoutObject::tryFile(const string &fname, size_t len, uint8_t *data)
 {
     if (!N_BADMAG(*(aout_exechdr *)data)) {
         // right now this is only used for Alpha PAL code
-        return new AoutObject(fname, fd, len, data,
+        return new AoutObject(fname, len, data,
                               ObjectFile::Alpha, ObjectFile::UnknownOpSys);
     }
     else {
@@ -52,10 +52,10 @@ AoutObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 }
 
 
-AoutObject::AoutObject(const string &_filename, int _fd,
+AoutObject::AoutObject(const string &_filename,
                        size_t _len, uint8_t *_data,
                        Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
+    : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
     execHdr = (aout_exechdr *)fileData;
 

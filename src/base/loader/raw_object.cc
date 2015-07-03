@@ -34,15 +34,15 @@
 #include "debug/Loader.hh"
 
 ObjectFile *
-RawObject::tryFile(const std::string &fname, int fd, size_t len, uint8_t *data)
+RawObject::tryFile(const std::string &fname, size_t len, uint8_t *data)
 {
-    return new RawObject(fname, fd, len, data, ObjectFile::UnknownArch,
+    return new RawObject(fname, len, data, ObjectFile::UnknownArch,
             ObjectFile::UnknownOpSys);
 }
 
-RawObject::RawObject(const std::string &_filename, int _fd, size_t _len,
+RawObject::RawObject(const std::string &_filename, size_t _len,
         uint8_t *_data, Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
+    : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
     text.baseAddr = 0;
     text.size = len;

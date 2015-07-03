@@ -69,15 +69,13 @@ class ObjectFile
 
   protected:
     const std::string filename;
-    int descriptor;
     uint8_t *fileData;
     size_t len;
 
     Arch  arch;
     OpSys opSys;
 
-    ObjectFile(const std::string &_filename, int _fd,
-               size_t _len, uint8_t *_data,
+    ObjectFile(const std::string &_filename, size_t _len, uint8_t *_data,
                Arch _arch, OpSys _opSys);
 
   public:

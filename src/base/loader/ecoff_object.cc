@@ -49,11 +49,11 @@
 using namespace std;
 
 ObjectFile *
-EcoffObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
+EcoffObject::tryFile(const string &fname, size_t len, uint8_t *data)
 {
     if (((ecoff_filehdr *)data)->f_magic == ECOFF_MAGIC_ALPHA) {
         // it's Alpha ECOFF
-        return new EcoffObject(fname, fd, len, data,
+        return new EcoffObject(fname, len, data,
                                ObjectFile::Alpha, ObjectFile::Tru64);
     }
     else {
@@ -62,10 +62,9 @@ EcoffObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 }
 
 
-EcoffObject::EcoffObject(const string &_filename, int _fd,
-                         size_t _len, uint8_t *_data,
+EcoffObject::EcoffObject(const string &_filename, size_t _len, uint8_t *_data,
                          Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
+    : ObjectFile(_filename, _len, _data, _arch, _opSys)
 {
     execHdr = (ecoff_exechdr *)fileData;
     fileHdr = &(execHdr->f);

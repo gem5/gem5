@@ -56,7 +56,7 @@
 using namespace std;
 
 ObjectFile *
-ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
+ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
 {
     Elf *elf;
     GElf_Ehdr ehdr;
@@ -69,7 +69,6 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 
     // get a pointer to elf structure
     elf = elf_memory((char*)data,len);
-    // will only fail if fd is invalid
     assert(elf != NULL);
 
     // Check that we actually have a elf file
@@ -213,7 +212,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             } // while sections
         }
 
-        ElfObject * result = new ElfObject(fname, fd, len, data, arch, opSys);
+        ElfObject * result = new ElfObject(fname, len, data, arch, opSys);
 
         //The number of headers in the file
         result->_programHeaderCount = ehdr.e_phnum;
@@ -250,10 +249,9 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 }
 
 
-ElfObject::ElfObject(const string &_filename, int _fd,
-                     size_t _len, uint8_t *_data,
+ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys),
+    : ObjectFile(_filename, _len, _data, _arch, _opSys),
       _programHeaderTable(0), _programHeaderSize(0), _programHeaderCount(0)
 
 {
@@ -266,7 +264,6 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
     // get a pointer to elf structure
     elf = elf_memory((char*)fileData,len);
-    // will only fail if fd is invalid
     assert(elf != NULL);
 
     // Check that we actually have a elf file
