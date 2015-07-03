@@ -574,24 +574,22 @@ class DRAMCtrl : public AbstractMemory
      * controller is switching command type.
      *
      * @param queue Queued requests to consider
-     * @param switched_cmd_type Command type is changing
+     * @param extra_col_delay Any extra delay due to a read/write switch
      * @return true if a packet is scheduled to a rank which is available else
      * false
      */
-    bool chooseNext(std::deque<DRAMPacket*>& queue, bool switched_cmd_type);
+    bool chooseNext(std::deque<DRAMPacket*>& queue, Tick extra_col_delay);
 
     /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
-     * hits and earliest banks available in DRAM
-     * Prioritizes accesses to the same rank as previous burst unless
-     * controller is switching command type.
+     * hits and earliest bursts available in DRAM
      *
      * @param queue Queued requests to consider
-     * @param switched_cmd_type Command type is changing
+     * @param extra_col_delay Any extra delay due to a read/write switch
      * @return true if a packet is scheduled to a rank which is available else
      * false
      */
-    bool reorderQueue(std::deque<DRAMPacket*>& queue, bool switched_cmd_type);
+    bool reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay);
 
     /**
      * Find which are the earliest banks ready to issue an activate
@@ -599,11 +597,12 @@ class DRAMCtrl : public AbstractMemory
      * Also checks if the bank is already prepped.
      *
      * @param queue Queued requests to consider
-     * @param switched_cmd_type Command type is changing
+     * @param time of seamless burst command
      * @return One-hot encoded mask of bank indices
+     * @return boolean indicating burst can issue seamlessly, with no gaps
      */
-    uint64_t minBankPrep(const std::deque<DRAMPacket*>& queue,
-                         bool switched_cmd_type) const;
+    std::pair<uint64_t, bool> minBankPrep(const std::deque<DRAMPacket*>& queue,
+                                          Tick min_col_at) const;
 
     /**
      * Keep track of when row activations happen, in order to enforce
