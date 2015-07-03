@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -96,6 +96,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     // address decoding
     fatal_if(!isPowerOf2(ranksPerChannel), "DRAM rank count of %d is not "
              "allowed, must be a power of two\n", ranksPerChannel);
+
+    fatal_if(!isPowerOf2(burstSize), "DRAM burst size %d is not allowed, "
+             "must be a power of two\n", burstSize);
 
     for (int i = 0; i < ranksPerChannel; i++) {
         Rank* rank = new Rank(*this, p);
@@ -438,18 +441,22 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
         // First check write buffer to see if the data is already at
         // the controller
         bool foundInWrQ = false;
-        for (auto i = writeQueue.begin(); i != writeQueue.end(); ++i) {
-            // check if the read is subsumed in the write entry we are
-            // looking at
-            if ((*i)->addr <= addr &&
-                (addr + size) <= ((*i)->addr + (*i)->size)) {
-                foundInWrQ = true;
-                servicedByWrQ++;
-                pktsServicedByWrQ++;
-                DPRINTF(DRAM, "Read to addr %lld with size %d serviced by "
-                        "write queue\n", addr, size);
-                bytesReadWrQ += burstSize;
-                break;
+        Addr burst_addr = burstAlign(addr);
+        // if the burst address is not present then there is no need
+        // looking any further
+        if (isInWriteQueue.find(burst_addr) != isInWriteQueue.end()) {
+            for (const auto& p : writeQueue) {
+                // check if the read is subsumed in the write queue
+                // packet we are looking at
+                if (p->addr <= addr && (addr + size) <= (p->addr + p->size)) {
+                    foundInWrQ = true;
+                    servicedByWrQ++;
+                    pktsServicedByWrQ++;
+                    DPRINTF(DRAM, "Read to addr %lld with size %d serviced by "
+                            "write queue\n", addr, size);
+                    bytesReadWrQ += burstSize;
+                    break;
+                }
             }
         }
 
@@ -517,63 +524,9 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
         writeBursts++;
 
         // see if we can merge with an existing item in the write
-        // queue and keep track of whether we have merged or not so we
-        // can stop at that point and also avoid enqueueing a new
-        // request
-        bool merged = false;
-        auto w = writeQueue.begin();
-
-        while(!merged && w != writeQueue.end()) {
-            // either of the two could be first, if they are the same
-            // it does not matter which way we go
-            if ((*w)->addr >= addr) {
-                // the existing one starts after the new one, figure
-                // out where the new one ends with respect to the
-                // existing one
-                if ((addr + size) >= ((*w)->addr + (*w)->size)) {
-                    // check if the existing one is completely
-                    // subsumed in the new one
-                    DPRINTF(DRAM, "Merging write covering existing burst\n");
-                    merged = true;
-                    // update both the address and the size
-                    (*w)->addr = addr;
-                    (*w)->size = size;
-                } else if ((addr + size) >= (*w)->addr &&
-                           ((*w)->addr + (*w)->size - addr) <= burstSize) {
-                    // the new one is just before or partially
-                    // overlapping with the existing one, and together
-                    // they fit within a burst
-                    DPRINTF(DRAM, "Merging write before existing burst\n");
-                    merged = true;
-                    // the existing queue item needs to be adjusted with
-                    // respect to both address and size
-                    (*w)->size = (*w)->addr + (*w)->size - addr;
-                    (*w)->addr = addr;
-                }
-            } else {
-                // the new one starts after the current one, figure
-                // out where the existing one ends with respect to the
-                // new one
-                if (((*w)->addr + (*w)->size) >= (addr + size)) {
-                    // check if the new one is completely subsumed in the
-                    // existing one
-                    DPRINTF(DRAM, "Merging write into existing burst\n");
-                    merged = true;
-                    // no adjustments necessary
-                } else if (((*w)->addr + (*w)->size) >= addr &&
-                           (addr + size - (*w)->addr) <= burstSize) {
-                    // the existing one is just before or partially
-                    // overlapping with the new one, and together
-                    // they fit within a burst
-                    DPRINTF(DRAM, "Merging write after existing burst\n");
-                    merged = true;
-                    // the address is right, and only the size has
-                    // to be adjusted
-                    (*w)->size = addr + size - (*w)->addr;
-                }
-            }
-            ++w;
-        }
+        // queue and keep track of whether we have merged or not
+        bool merged = isInWriteQueue.find(burstAlign(addr)) !=
+            isInWriteQueue.end();
 
         // if the item was not merged we need to create a new write
         // and enqueue it
@@ -586,10 +539,14 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
             DPRINTF(DRAM, "Adding to write queue\n");
 
             writeQueue.push_back(dram_pkt);
+            isInWriteQueue.insert(burstAlign(addr));
+            assert(writeQueue.size() == isInWriteQueue.size());
 
             // Update stats
             avgWrQLen = writeQueue.size();
         } else {
+            DPRINTF(DRAM, "Merging write burst with existing queue entry\n");
+
             // keep track of the fact that this burst effectively
             // disappeared as it was merged with an existing one
             mergedWrBursts++;
@@ -1418,6 +1375,7 @@ DRAMCtrl::processNextReqEvent()
         doDRAMAccess(dram_pkt);
 
         writeQueue.pop_front();
+        isInWriteQueue.erase(burstAlign(dram_pkt->addr));
         delete dram_pkt;
 
         // If we emptied the write queue, or got sufficiently below the

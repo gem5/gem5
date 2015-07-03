@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,7 @@
 
 #include <deque>
 #include <string>
+#include <unordered_set>
 
 #include "base/statistics.hh"
 #include "enums/AddrMap.hh"
@@ -637,10 +638,28 @@ class DRAMCtrl : public AbstractMemory
     void printQs() const;
 
     /**
+     * Burst-align an address.
+     *
+     * @param addr The potentially unaligned address
+     *
+     * @return An address aligned to a DRAM burst
+     */
+    Addr burstAlign(Addr addr) const { return (addr & ~(Addr(burstSize - 1))); }
+
+    /**
      * The controller's main read and write queues
      */
     std::deque<DRAMPacket*> readQueue;
     std::deque<DRAMPacket*> writeQueue;
+
+    /**
+     * To avoid iterating over the write queue to check for
+     * overlapping transactions, maintain a set of burst addresses
+     * that are currently queued. Since we merge writes to the same
+     * location we never have more than one address to the same burst
+     * address.
+     */
+    std::unordered_set<Addr> isInWriteQueue;
 
     /**
      * Response queue where read packets wait after we're done working
