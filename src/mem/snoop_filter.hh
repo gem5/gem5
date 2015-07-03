@@ -50,6 +50,7 @@
 #include "base/hashmap.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
+#include "mem/qport.hh"
 #include "params/SnoopFilter.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
@@ -85,7 +86,7 @@
  */
 class SnoopFilter : public SimObject {
   public:
-    typedef std::vector<SlavePort*> SnoopList;
+    typedef std::vector<QueuedSlavePort*> SnoopList;
 
     SnoopFilter (const SnoopFilterParams *p) : SimObject(p),
         linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency)
@@ -98,7 +99,7 @@ class SnoopFilter : public SimObject {
      *
      * @param bus_slave_ports Vector of slave ports that the bus is attached to.
      */
-    void setSlavePorts(const std::vector<SlavePort*>& bus_slave_ports) {
+    void setSlavePorts(const SnoopList& bus_slave_ports) {
         slavePorts = bus_slave_ports;
     }
 

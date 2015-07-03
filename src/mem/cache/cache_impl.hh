@@ -1176,6 +1176,11 @@ Cache::recvTimingResp(PacketPtr pkt)
 {
     assert(pkt->isResponse());
 
+    // all header delay should be paid for by the crossbar, unless
+    // this is a prefetch response from above
+    panic_if(pkt->headerDelay != 0 && pkt->cmd != MemCmd::HardPFResp,
+             "%s saw a non-zero packet delay\n", name());
+
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
     bool is_error = pkt->isError();
 

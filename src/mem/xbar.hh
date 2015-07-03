@@ -57,6 +57,7 @@
 #include "base/hashmap.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
+#include "mem/qport.hh"
 #include "params/BaseXBar.hh"
 #include "sim/stats.hh"
 
@@ -427,7 +428,7 @@ class BaseXBar : public MemObject
     bool gotAllAddrRanges;
 
     /** The master and slave ports of the crossbar */
-    std::vector<SlavePort*> slavePorts;
+    std::vector<QueuedSlavePort*> slavePorts;
     std::vector<MasterPort*> masterPorts;
 
     /** Port that handles requests that don't match any of the interfaces.*/

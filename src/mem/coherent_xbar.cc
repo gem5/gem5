@@ -89,7 +89,7 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     // create the slave ports, once again starting at zero
     for (int i = 0; i < p->port_slave_connection_count; ++i) {
         std::string portName = csprintf("%s.slave[%d]", name(), i);
-        SlavePort* bp = new CoherentXBarSlavePort(portName, *this, i);
+        QueuedSlavePort* bp = new CoherentXBarSlavePort(portName, *this, i);
         slavePorts.push_back(bp);
         respLayers.push_back(new RespLayer(*bp, *this,
                                            csprintf(".respLayer%d", i)));
@@ -345,12 +345,11 @@ CoherentXBar::recvTimingResp(PacketPtr pkt, PortID master_port_id)
         snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
     }
 
-    // send the packet through the destination slave port
-    bool success M5_VAR_USED = slavePorts[slave_port_id]->sendTimingResp(pkt);
-
-    // currently it is illegal to block responses... can lead to
-    // deadlock
-    assert(success);
+    // send the packet through the destination slave port and pay for
+    // any outstanding header delay
+    Tick latency = pkt->headerDelay;
+    pkt->headerDelay = 0;
+    slavePorts[slave_port_id]->schedTimingResp(pkt, curTick() + latency);
 
     // remove the request from the routing table
     routeTo.erase(route_lookup);
@@ -517,18 +516,11 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
                 pkt->getAddr());
 
         // as a normal response, it should go back to a master through
-        // one of our slave ports, at this point we are ignoring the
-        // fact that the response layer could be busy and do not touch
-        // its state
-        bool success M5_VAR_USED =
-            slavePorts[dest_port_id]->sendTimingResp(pkt);
-
-        // @todo Put the response in an internal FIFO and pass it on
-        // to the response layer from there
-
-        // currently it is illegal to block responses... can lead
-        // to deadlock
-        assert(success);
+        // one of our slave ports, we also pay for any outstanding
+        // header latency
+        Tick latency = pkt->headerDelay;
+        pkt->headerDelay = 0;
+        slavePorts[dest_port_id]->schedTimingResp(pkt, curTick() + latency);
 
         respLayers[dest_port_id]->succeededTiming(packetFinishTime);
     }
@@ -546,7 +538,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
 
 void
 CoherentXBar::forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
-                           const std::vector<SlavePort*>& dests)
+                           const std::vector<QueuedSlavePort*>& dests)
 {
     DPRINTF(CoherentXBar, "%s for %s address %x size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -700,7 +692,7 @@ CoherentXBar::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
 std::pair<MemCmd, Tick>
 CoherentXBar::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id,
                            PortID source_master_port_id,
-                           const std::vector<SlavePort*>& dests)
+                           const std::vector<QueuedSlavePort*>& dests)
 {
     // the packet may be changed on snoops, record the original
     // command to enable us to restore it between snoops so that
@@ -787,6 +779,18 @@ CoherentXBar::recvFunctional(PacketPtr pkt, PortID slave_port_id)
     // there is no need to continue if the snooping has found what we
     // were looking for and the packet is already a response
     if (!pkt->isResponse()) {
+        // since our slave ports are queued ports we need to check them as well
+        for (const auto& p : slavePorts) {
+            // if we find a response that has the data, then the
+            // downstream caches/memories may be out of date, so simply stop
+            // here
+            if (p->checkFunctional(pkt)) {
+                if (pkt->needsResponse())
+                    pkt->makeResponse();
+                return;
+            }
+        }
+
         PortID dest_id = findPort(pkt->getAddr());
 
         masterPorts[dest_id]->sendFunctional(pkt);

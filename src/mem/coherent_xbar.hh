@@ -84,7 +84,7 @@ class CoherentXBar : public BaseXBar
      * be instantiated for each of the master ports connecting to the
      * crossbar.
      */
-    class CoherentXBarSlavePort : public SlavePort
+    class CoherentXBarSlavePort : public QueuedSlavePort
     {
 
       private:
@@ -92,11 +92,15 @@ class CoherentXBar : public BaseXBar
         /** A reference to the crossbar to which this port belongs. */
         CoherentXBar &xbar;
 
+        /** A normal packet queue used to store responses. */
+        RespPacketQueue queue;
+
       public:
 
         CoherentXBarSlavePort(const std::string &_name,
                              CoherentXBar &_xbar, PortID _id)
-            : SlavePort(_name, &_xbar, _id), xbar(_xbar)
+            : QueuedSlavePort(_name, &_xbar, queue, _id), xbar(_xbar),
+              queue(_xbar, *this)
         { }
 
       protected:
@@ -124,12 +128,6 @@ class CoherentXBar : public BaseXBar
          */
         virtual void recvFunctional(PacketPtr pkt)
         { xbar.recvFunctional(pkt, id); }
-
-        /**
-         * When receiving a retry, pass it to the crossbar.
-         */
-        virtual void recvRespRetry()
-        { panic("Crossbar slave ports should never retry.\n"); }
 
         /**
          * Return the union of all adress ranges seen by this crossbar.
@@ -215,14 +213,14 @@ class CoherentXBar : public BaseXBar
       private:
 
         /** The port which we mirror internally. */
-        SlavePort& slavePort;
+        QueuedSlavePort& slavePort;
 
       public:
 
         /**
          * Create a snoop response port that mirrors a given slave port.
          */
-        SnoopRespPort(SlavePort& slave_port, CoherentXBar& _xbar) :
+        SnoopRespPort(QueuedSlavePort& slave_port, CoherentXBar& _xbar) :
             MasterPort(slave_port.name() + ".snoopRespPort", &_xbar),
             slavePort(slave_port) { }
 
@@ -253,7 +251,7 @@ class CoherentXBar : public BaseXBar
 
     std::vector<SnoopRespPort*> snoopRespPorts;
 
-    std::vector<SlavePort*> snoopPorts;
+    std::vector<QueuedSlavePort*> snoopPorts;
 
     /**
      * Store the outstanding requests that we are expecting snoop
@@ -324,7 +322,7 @@ class CoherentXBar : public BaseXBar
      * @param dests Vector of destination ports for the forwarded pkt
      */
     void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
-                       const std::vector<SlavePort*>& dests);
+                       const std::vector<QueuedSlavePort*>& dests);
 
     /** Function called by the port when the crossbar is recieving a Atomic
       transaction.*/
@@ -347,7 +345,8 @@ class CoherentXBar : public BaseXBar
     std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
                                           PortID exclude_slave_port_id)
     {
-        return forwardAtomic(pkt, exclude_slave_port_id, InvalidPortID, snoopPorts);
+        return forwardAtomic(pkt, exclude_slave_port_id, InvalidPortID,
+                             snoopPorts);
     }
 
     /**
@@ -365,7 +364,8 @@ class CoherentXBar : public BaseXBar
     std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
                                           PortID exclude_slave_port_id,
                                           PortID source_master_port_id,
-                                          const std::vector<SlavePort*>& dests);
+                                          const std::vector<QueuedSlavePort*>&
+                                          dests);
 
     /** Function called by the port when the crossbar is recieving a Functional
         transaction.*/

@@ -84,18 +84,22 @@ class NoncoherentXBar : public BaseXBar
      * will be instantiated for each of the master ports connecting to
      * the crossbar.
      */
-    class NoncoherentXBarSlavePort : public SlavePort
+    class NoncoherentXBarSlavePort : public QueuedSlavePort
     {
       private:
 
         /** A reference to the crossbar to which this port belongs. */
         NoncoherentXBar &xbar;
 
+        /** A normal packet queue used to store responses. */
+        RespPacketQueue queue;
+
       public:
 
         NoncoherentXBarSlavePort(const std::string &_name,
                                 NoncoherentXBar &_xbar, PortID _id)
-            : SlavePort(_name, &_xbar, _id), xbar(_xbar)
+            : QueuedSlavePort(_name, &_xbar, queue, _id), xbar(_xbar),
+              queue(_xbar, *this)
         { }
 
       protected:
@@ -117,12 +121,6 @@ class NoncoherentXBar : public BaseXBar
          */
         virtual void recvFunctional(PacketPtr pkt)
         { xbar.recvFunctional(pkt, id); }
-
-        /**
-         * When receiving a retry, pass it to the crossbar.
-         */
-        virtual void recvRespRetry()
-        { panic("Crossbar slave ports should never retry.\n"); }
 
         /**
          * Return the union of all adress ranges seen by this crossbar.
