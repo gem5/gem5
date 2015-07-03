@@ -322,14 +322,20 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
 void
 AbstractMemory::access(PacketPtr pkt)
 {
-    assert(AddrRange(pkt->getAddr(),
-                     pkt->getAddr() + pkt->getSize() - 1).isSubset(range));
-
     if (pkt->memInhibitAsserted()) {
         DPRINTF(MemoryAccess, "mem inhibited on 0x%x: not responding\n",
                 pkt->getAddr());
         return;
     }
+
+    if (pkt->cmd == MemCmd::CleanEvict) {
+        DPRINTF(MemoryAccess, "CleanEvict  on 0x%x: not responding\n",
+                pkt->getAddr());
+      return;
+    }
+
+    assert(AddrRange(pkt->getAddr(),
+                     pkt->getAddr() + (pkt->getSize() - 1)).isSubset(range));
 
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 

@@ -87,6 +87,7 @@ class MemCmd
         WriteReq,
         WriteResp,
         Writeback,
+        CleanEvict,
         SoftPFReq,
         HardPFReq,
         SoftPFResp,
@@ -508,6 +509,7 @@ class Packet : public Printable
     bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }
     void setBlockCached()          { flags.set(BLOCK_CACHED); }
     bool isBlockCached() const     { return flags.isSet(BLOCK_CACHED); }
+    void clearBlockCached()        { flags.clear(BLOCK_CACHED); }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
@@ -934,6 +936,27 @@ class Packet : public Printable
                                other->getSize(),
                                other->hasData() ?
                                other->getPtr<uint8_t>() : NULL);
+    }
+
+    /**
+     * Is this request notification of a clean or dirty eviction from the cache.
+     **/
+    bool
+    evictingBlock() const
+    {
+        return (cmd == MemCmd::Writeback ||
+                cmd == MemCmd::CleanEvict);
+    }
+
+    /**
+     * Does the request need to check for cached copies of the same block
+     * in the memory hierarchy above.
+     **/
+    bool
+    mustCheckAbove() const
+    {
+        return (cmd == MemCmd::HardPFReq ||
+                evictingBlock());
     }
 
     /**

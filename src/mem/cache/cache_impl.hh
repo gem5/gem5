@@ -334,6 +334,36 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             pkt->getAddr(), pkt->getSize(), pkt->isSecure() ? "s" : "ns",
             blk ? "hit " + blk->print() : "miss");
 
+
+    if (pkt->evictingBlock()) {
+        // We check for presence of block in above caches before issuing
+        // Writeback or CleanEvict to write buffer. Therefore the only
+        // possible cases can be of a CleanEvict packet coming from above
+        // encountering a Writeback generated in this cache peer cache and
+        // waiting in the write buffer. Cases of upper level peer caches
+        // generating CleanEvict and Writeback or simply CleanEvict and
+        // CleanEvict almost simultaneously will be caught by snoops sent out
+        // by crossbar.
+        std::vector<MSHR *> outgoing;
+        if (writeBuffer.findMatches(pkt->getAddr(), pkt->isSecure(),
+                                   outgoing)) {
+            assert(outgoing.size() == 1);
+            PacketPtr wbPkt = outgoing[0]->getTarget()->pkt;
+            assert(pkt->cmd == MemCmd::CleanEvict &&
+                   wbPkt->cmd == MemCmd::Writeback);
+            // As the CleanEvict is coming from above, it would have snooped
+            // into other peer caches of the same level while traversing the
+            // crossbar. If a copy of the block had been found, the CleanEvict
+            // would have been deleted in the crossbar. Now that the
+            // CleanEvict is here we can be sure none of the other upper level
+            // caches connected to this cache have the block, so we can clear
+            // the BLOCK_CACHED flag in the Writeback if set and discard the
+            // CleanEvict by returning true.
+            wbPkt->clearBlockCached();
+            return true;
+        }
+    }
+
     // Writeback handling is special case.  We can write the block into
     // the cache without having a writeable copy (or any copy at all).
     if (pkt->cmd == MemCmd::Writeback) {
@@ -363,6 +393,19 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
         return true;
+    } else if (pkt->cmd == MemCmd::CleanEvict) {
+        if (blk != NULL) {
+            // Found the block in the tags, need to stop CleanEvict from
+            // propagating further down the hierarchy. Returning true will
+            // treat the CleanEvict like a satisfied write request and delete
+            // it.
+            return true;
+        }
+        // We didn't find the block here, propagate the CleanEvict further
+        // down the memory hierarchy. Returning false will treat the CleanEvict
+        // like a Writeback which could not find a replaceable block so has to
+        // go to next level.
+        return false;
     } else if ((blk != NULL) &&
                (pkt->needsExclusive() ? blk->isWritable()
                                       : blk->isReadable())) {
@@ -393,6 +436,41 @@ class ForwardResponseRecord : public Packet::SenderState
 
     ForwardResponseRecord() {}
 };
+
+void
+Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
+{
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        // We use forwardLatency here because we are copying writebacks to
+        // write buffer.  Call isCachedAbove for both Writebacks and
+        // CleanEvicts. If isCachedAbove returns true we set BLOCK_CACHED flag
+        // in Writebacks and discard CleanEvicts.
+        if (isCachedAbove(wbPkt)) {
+            if (wbPkt->cmd == MemCmd::CleanEvict) {
+                // Delete CleanEvict because cached copies exist above. The
+                // packet destructor will delete the request object because
+                // this is a non-snoop request packet which does not require a
+                // response.
+                delete wbPkt;
+            } else {
+                // Set BLOCK_CACHED flag in Writeback and send below, so that
+                // the Writeback does not reset the bit corresponding to this
+                // address in the snoop filter below.
+                wbPkt->setBlockCached();
+                allocateWriteBuffer(wbPkt, forward_time, true);
+            }
+        } else {
+            // If the block is not cached above, send packet below. Both
+            // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
+            // reset the bit corresponding to this address in the snoop filter
+            // below.
+            allocateWriteBuffer(wbPkt, forward_time, true);
+        }
+        writebacks.pop_front();
+    }
+}
+
 
 void
 Cache::recvTimingSnoopResp(PacketPtr pkt)
@@ -510,7 +588,7 @@ Cache::recvTimingReq(PacketPtr pkt)
 
         /// @todo nominally we should just delete the packet here,
         /// however, until 4-phase stuff we can't because sending
-        /// cache is still relying on it
+        /// cache is still relying on it.
         pendingDelete.push_back(pkt);
 
         // no need to take any action in this particular cache as the
@@ -537,13 +615,7 @@ Cache::recvTimingReq(PacketPtr pkt)
 
         // copy writebacks to write buffer here to ensure they logically
         // proceed anything happening below
-        while (!writebacks.empty()) {
-            PacketPtr wbPkt = writebacks.front();
-            // We use forwardLatency here because we are copying
-            // writebacks to write buffer.
-            allocateWriteBuffer(wbPkt, forward_time, true);
-            writebacks.pop_front();
-        }
+        doWritebacks(writebacks, forward_time);
     }
 
     // Here we charge the headerDelay that takes into account the latencies
@@ -591,8 +663,10 @@ Cache::recvTimingReq(PacketPtr pkt)
             cpuSidePort->schedTimingResp(pkt, request_time);
         } else {
             /// @todo nominally we should just delete the packet here,
-            /// however, until 4-phase stuff we can't because sending
-            /// cache is still relying on it
+            /// however, until 4-phase stuff we can't because sending cache is
+            /// still relying on it. If the block is found in access(),
+            /// CleanEvict and Writeback messages will be deleted here as
+            /// well.
             pendingDelete.push_back(pkt);
         }
     } else {
@@ -660,31 +734,38 @@ Cache::recvTimingReq(PacketPtr pkt)
 
             // Coalesce unless it was a software prefetch (see above).
             if (pkt) {
-                DPRINTF(Cache, "%s coalescing MSHR for %s addr %#llx size %d\n",
-                        __func__, pkt->cmdString(), pkt->getAddr(),
-                        pkt->getSize());
+                assert(pkt->cmd != MemCmd::Writeback);
+                // CleanEvicts corresponding to blocks which have outstanding
+                // requests in MSHRs can be deleted here.
+                if (pkt->cmd == MemCmd::CleanEvict) {
+                    pendingDelete.push_back(pkt);
+                } else {
+                    DPRINTF(Cache, "%s coalescing MSHR for %s addr %#llx size %d\n",
+                            __func__, pkt->cmdString(), pkt->getAddr(),
+                            pkt->getSize());
 
-                assert(pkt->req->masterId() < system->maxMasters());
-                mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
-                if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
-                    mshr->threadNum = -1;
+                    assert(pkt->req->masterId() < system->maxMasters());
+                    mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
+                    if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
+                        mshr->threadNum = -1;
+                    }
+                    // We use forward_time here because it is the same
+                    // considering new targets. We have multiple
+                    // requests for the same address here. It
+                    // specifies the latency to allocate an internal
+                    // buffer and to schedule an event to the queued
+                    // port and also takes into account the additional
+                    // delay of the xbar.
+                    mshr->allocateTarget(pkt, forward_time, order++);
+                    if (mshr->getNumTargets() == numTarget) {
+                        noTargetMSHR = mshr;
+                        setBlocked(Blocked_NoTargets);
+                        // need to be careful with this... if this mshr isn't
+                        // ready yet (i.e. time > curTick()), we don't want to
+                        // move it ahead of mshrs that are ready
+                        // mshrQueue.moveToFront(mshr);
+                    }
                 }
-                // We use forward_time here because it is the same
-                // considering new targets. We have multiple requests for the
-                // same address here. It specifies the latency to allocate an
-                // internal buffer and to schedule an event to the queued
-                // port and also takes into account the additional delay of
-                // the xbar.
-                mshr->allocateTarget(pkt, forward_time, order++);
-                if (mshr->getNumTargets() == numTarget) {
-                    noTargetMSHR = mshr;
-                    setBlocked(Blocked_NoTargets);
-                    // need to be careful with this... if this mshr isn't
-                    // ready yet (i.e. time > curTick()), we don't want to
-                    // move it ahead of mshrs that are ready
-                    // mshrQueue.moveToFront(mshr);
-                }
-
                 // We should call the prefetcher reguardless if the request is
                 // satisfied or not, reguardless if the request is in the MSHR or
                 // not.  The request could be a ReadReq hit, but still not
@@ -707,7 +788,7 @@ Cache::recvTimingReq(PacketPtr pkt)
                 mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
             }
 
-            if (pkt->cmd == MemCmd::Writeback ||
+            if (pkt->evictingBlock() ||
                 (pkt->req->isUncacheable() && pkt->isWrite())) {
                 // We use forward_time here because there is an
                 // uncached memory write, forwarded to WriteBuffer. It
@@ -782,7 +863,8 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     }
 
     if (!blkValid &&
-        (cpu_pkt->cmd == MemCmd::Writeback || cpu_pkt->isUpgrade())) {
+        (cpu_pkt->isUpgrade() ||
+         cpu_pkt->evictingBlock())) {
         // Writebacks that weren't allocated in access() and upgrades
         // from upper-level caches that missed completely just go
         // through.
@@ -834,8 +916,9 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     assert(pkt->getAddr() == blockAlign(pkt->getAddr()));
 
     pkt->allocate();
-    DPRINTF(Cache, "%s created %s addr %#llx size %d\n",
-            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+    DPRINTF(Cache, "%s created %s from %s for  addr %#llx size %d\n",
+            __func__, pkt->cmdString(), cpu_pkt->cmdString(), pkt->getAddr(),
+            pkt->getSize());
     return pkt;
 }
 
@@ -1302,19 +1385,28 @@ Cache::recvTimingResp(PacketPtr pkt)
     pkt->headerDelay = pkt->payloadDelay = 0;
 
     // copy writebacks to write buffer
-    while (!writebacks.empty()) {
-        PacketPtr wbPkt = writebacks.front();
-        allocateWriteBuffer(wbPkt, clockEdge(forwardLatency), true);
-        writebacks.pop_front();
-    }
-    // if we used temp block, clear it out
-    if (blk == tempBlock) {
+    doWritebacks(writebacks, forward_time);
+
+    // if we used temp block, check to see if its valid and then clear it out
+    if (blk == tempBlock && tempBlock->isValid()) {
+        // We use forwardLatency here because we are copying
+        // Writebacks/CleanEvicts to write buffer. It specifies the latency to
+        // allocate an internal buffer and to schedule an event to the
+        // queued port.
         if (blk->isDirty()) {
-            // We use forwardLatency here because we are copying
-            // writebacks to write buffer. It specifies the latency to
-            // allocate an internal buffer and to schedule an event to the
-            // queued port.
-            allocateWriteBuffer(writebackBlk(blk), forward_time, true);
+            PacketPtr wbPkt = writebackBlk(blk);
+            allocateWriteBuffer(wbPkt, forward_time, true);
+            // Set BLOCK_CACHED flag if cached above.
+            if (isCachedAbove(wbPkt))
+                wbPkt->setBlockCached();
+        } else {
+            PacketPtr wcPkt = cleanEvictBlk(blk);
+            // Check to see if block is cached above. If not allocate
+            // write buffer
+            if (isCachedAbove(wcPkt))
+                delete wcPkt;
+            else
+                allocateWriteBuffer(wcPkt, forward_time, true);
         }
         blk->invalidate();
     }
@@ -1350,6 +1442,30 @@ Cache::writebackBlk(CacheBlk *blk)
 
     blk->status &= ~BlkDirty;
     return writeback;
+}
+
+PacketPtr
+Cache::cleanEvictBlk(CacheBlk *blk)
+{
+    assert(blk && blk->isValid() && !blk->isDirty());
+    // Creating a zero sized write, a message to the snoop filter
+    Request *req =
+        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
+                    Request::wbMasterId);
+    if (blk->isSecure())
+        req->setFlags(Request::SECURE);
+
+    req->taskId(blk->task_id);
+    blk->task_id = ContextSwitchTaskId::Unknown;
+    blk->tickInserted = curTick();
+
+    PacketPtr pkt = new Packet(req, MemCmd::CleanEvict);
+    pkt->allocate();
+    DPRINTF(Cache, "%s%s %x Create CleanEvict\n", pkt->cmdString(),
+            pkt->req->isInstFetch() ? " (ifetch)" : "",
+            pkt->getAddr());
+
+    return pkt;
 }
 
 void
@@ -1434,9 +1550,13 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
                     addr, is_secure ? "s" : "ns",
                     blk->isDirty() ? "writeback" : "clean");
 
+            // Will send up Writeback/CleanEvict snoops via isCachedAbove
+            // when pushing this writeback list into the write buffer.
             if (blk->isDirty()) {
                 // Save writeback packet for handling by caller
                 writebacks.push_back(writebackBlk(blk));
+            } else {
+                writebacks.push_back(cleanEvictBlk(blk));
             }
         }
     }
@@ -1459,6 +1579,12 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
 #if TRACING_ON
     CacheBlk::State old_state = blk ? blk->status : 0;
 #endif
+
+    // When handling a fill, discard any CleanEvicts for the
+    // same address in write buffer.
+    Addr M5_VAR_USED blk_addr = blockAlign(pkt->getAddr());
+    std::vector<MSHR *> M5_VAR_USED wbs;
+    assert (!writeBuffer.findMatches(blk_addr, is_secure, wbs));
 
     if (blk == NULL) {
         // better have read new data...
@@ -1633,9 +1759,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             if (snoopPkt.sharedAsserted()) {
                 pkt->assertShared();
             }
-            // If this request is a prefetch or clean evict and an
-            // upper level signals block present, make sure to
-            // propagate the block presence to the requester.
+            // If this request is a prefetch or clean evict and an upper level
+            // signals block present, make sure to propagate the block
+            // presence to the requester.
             if (snoopPkt.isBlockCached()) {
                 pkt->setBlockCached();
             }
@@ -1674,9 +1800,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     // MemCmd::HardPFReq is only observed by upstream caches.  After missing
     // above and in it's own cache, a new MemCmd::ReadReq is created that
     // downstream caches observe.
-    if (pkt->cmd == MemCmd::HardPFReq) {
-        DPRINTF(Cache, "Squashing prefetch from lower cache %#x\n",
-                pkt->getAddr());
+    if (pkt->mustCheckAbove()) {
+        DPRINTF(Cache, "Found addr %#llx in upper level cache for snoop %s from"
+                " lower cache\n", pkt->getAddr(), pkt->cmdString());
         pkt->setBlockCached();
         return;
     }
@@ -1754,7 +1880,7 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     assert(!system->bypassCaches());
 
     // no need to snoop writebacks or requests that are not in range
-    if (pkt->cmd == MemCmd::Writeback || !inRange(pkt->getAddr())) {
+    if (!inRange(pkt->getAddr())) {
         return;
     }
 
@@ -1764,11 +1890,12 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     Addr blk_addr = blockAlign(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
-    // Squash any prefetch requests from below on MSHR hits
-    if (mshr && pkt->cmd == MemCmd::HardPFReq) {
-        DPRINTF(Cache, "Setting block present to squash prefetch from"
+    // Inform request(Prefetch, CleanEvict or Writeback) from below of
+    // MSHR hit, set setBlockCached.
+    if (mshr && pkt->mustCheckAbove()) {
+        DPRINTF(Cache, "Setting block cached for %s from"
                 "lower cache on mshr hit %#x\n",
-                pkt->getAddr());
+                pkt->cmdString(), pkt->getAddr());
         pkt->setBlockCached();
         return;
     }
@@ -1795,28 +1922,60 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
         // We should only ever find a single match
         assert(writebacks.size() == 1);
         MSHR *wb_entry = writebacks[0];
+        // Expect to see only Writebacks and/or CleanEvicts here, both of
+        // which should not be generated for uncacheable data.
         assert(!wb_entry->isUncacheable());
+        // There should only be a single request responsible for generating
+        // Writebacks/CleanEvicts.
         assert(wb_entry->getNumTargets() == 1);
         PacketPtr wb_pkt = wb_entry->getTarget()->pkt;
-        assert(wb_pkt->cmd == MemCmd::Writeback);
+        assert(wb_pkt->evictingBlock());
 
-        assert(!pkt->memInhibitAsserted());
-        pkt->assertMemInhibit();
-        if (!pkt->needsExclusive()) {
-            pkt->assertShared();
-            // the writeback is no longer the exclusive copy in the system
-            wb_pkt->clearSupplyExclusive();
-        } else {
-            // if we're not asserting the shared line, we need to
-            // invalidate our copy.  we'll do that below as long as
-            // the packet's invalidate flag is set...
-            assert(pkt->isInvalidate());
+        if (pkt->evictingBlock()) {
+            // if the block is found in the write queue, set the BLOCK_CACHED
+            // flag for Writeback/CleanEvict snoop. On return the snoop will
+            // propagate the BLOCK_CACHED flag in Writeback packets and prevent
+            // any CleanEvicts from travelling down the memory hierarchy.
+            pkt->setBlockCached();
+            DPRINTF(Cache, "Squashing %s from lower cache on writequeue hit"
+                    " %#x\n", pkt->cmdString(), pkt->getAddr());
+            return;
         }
-        doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
-                               false, false);
+
+        if (wb_pkt->cmd == MemCmd::Writeback) {
+            assert(!pkt->memInhibitAsserted());
+            pkt->assertMemInhibit();
+            if (!pkt->needsExclusive()) {
+                pkt->assertShared();
+                // the writeback is no longer the exclusive copy in
+                // the system
+                wb_pkt->clearSupplyExclusive();
+            } else {
+                // if we're not asserting the shared line, we need to
+                // invalidate our copy.  we'll do that below as long as
+                // the packet's invalidate flag is set...
+                assert(pkt->isInvalidate());
+            }
+            doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
+                                   false, false);
+        } else {
+            assert(wb_pkt->cmd == MemCmd::CleanEvict);
+            // The cache technically holds the block until the
+            // corresponding CleanEvict message reaches the crossbar
+            // below. Therefore when a snoop encounters a CleanEvict
+            // message we must set assertShared (just like when it
+            // encounters a Writeback) to avoid the snoop filter
+            // prematurely clearing the holder bit in the crossbar
+            // below
+            if (!pkt->needsExclusive())
+                pkt->assertShared();
+            else
+                assert(pkt->isInvalidate());
+        }
 
         if (pkt->isInvalidate()) {
             // Invalidation trumps our writeback... discard here
+            // Note: markInService will remove entry from writeback buffer.
             markInService(wb_entry, false);
             delete wb_pkt;
         }
@@ -1844,8 +2003,11 @@ Cache::recvAtomicSnoop(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
-    // no need to snoop writebacks or requests that are not in range
-    if (pkt->cmd == MemCmd::Writeback || !inRange(pkt->getAddr())) {
+    // no need to snoop writebacks or requests that are not in range. In
+    // atomic we have no Writebacks/CleanEvicts queued and no prefetches,
+    // hence there is no need to snoop upwards and determine if they are
+    // present above.
+    if (pkt->evictingBlock() || !inRange(pkt->getAddr())) {
         return 0;
     }
 
@@ -1938,6 +2100,29 @@ Cache::getNextMSHR()
     return NULL;
 }
 
+bool
+Cache::isCachedAbove(const PacketPtr pkt) const
+{
+    if (isTopLevel)
+        return false;
+    // Mirroring the flow of HardPFReqs, the cache sends CleanEvict and
+    // Writeback snoops into upper level caches to check for copies of the
+    // same block. Using the BLOCK_CACHED flag with the Writeback/CleanEvict
+    // packet, the cache can inform the crossbar below of presence or absence
+    // of the block.
+
+    Packet snoop_pkt(pkt, true, false);
+    snoop_pkt.setExpressSnoop();
+    // Assert that packet is either Writeback or CleanEvict and not a prefetch
+    // request because prefetch requests need an MSHR and may generate a snoop
+    // response.
+    assert(pkt->evictingBlock());
+    snoop_pkt.senderState = NULL;
+    cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
+    // Writeback/CleanEvict snoops do not generate a separate snoop response.
+    assert(!(snoop_pkt.memInhibitAsserted()));
+    return snoop_pkt.isBlockCached();
+}
 
 PacketPtr
 Cache::getTimingPacket()
@@ -1955,62 +2140,69 @@ Cache::getTimingPacket()
     DPRINTF(CachePort, "%s %s for addr %#llx size %d\n", __func__,
             tgt_pkt->cmdString(), tgt_pkt->getAddr(), tgt_pkt->getSize());
 
-    if (mshr->isForwardNoResponse()) {
-        // no response expected, just forward packet as it is
-        assert(tags->findBlock(mshr->blkAddr, mshr->isSecure) == NULL);
-        pkt = tgt_pkt;
-    } else {
-        CacheBlk *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
+    CacheBlk *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
 
-        if (tgt_pkt->cmd == MemCmd::HardPFReq && forwardSnoops) {
-            // We need to check the caches above us to verify that
-            // they don't have a copy of this block in the dirty state
-            // at the moment. Without this check we could get a stale
-            // copy from memory that might get used in place of the
-            // dirty one.
-            Packet snoop_pkt(tgt_pkt, true, false);
-            snoop_pkt.setExpressSnoop();
-            snoop_pkt.senderState = mshr;
-            cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
+    if (tgt_pkt->cmd == MemCmd::HardPFReq && forwardSnoops) {
+        // We need to check the caches above us to verify that
+        // they don't have a copy of this block in the dirty state
+        // at the moment. Without this check we could get a stale
+        // copy from memory that might get used in place of the
+        // dirty one.
+        Packet snoop_pkt(tgt_pkt, true, false);
+        snoop_pkt.setExpressSnoop();
+        snoop_pkt.senderState = mshr;
+        cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
 
-            // Check to see if the prefetch was squashed by an upper cache (to
-            // prevent us from grabbing the line) or if a Check to see if a
-            // writeback arrived between the time the prefetch was placed in
-            // the MSHRs and when it was selected to be sent or if the
-            // prefetch was squashed by an upper cache.
+        // Check to see if the prefetch was squashed by an upper cache (to
+        // prevent us from grabbing the line) or if a Check to see if a
+        // writeback arrived between the time the prefetch was placed in
+        // the MSHRs and when it was selected to be sent or if the
+        // prefetch was squashed by an upper cache.
 
-            // It is important to check msmInhibitAsserted before
-            // prefetchSquashed. If another cache has asserted MEM_INGIBIT, it
-            // will be sending a response which will arrive at the MSHR
-            // allocated ofr this request. Checking the prefetchSquash first
-            // may result in the MSHR being prematurely deallocated.
+        // It is important to check memInhibitAsserted before
+        // prefetchSquashed. If another cache has asserted MEM_INGIBIT, it
+        // will be sending a response which will arrive at the MSHR
+        // allocated ofr this request. Checking the prefetchSquash first
+        // may result in the MSHR being prematurely deallocated.
 
-            if (snoop_pkt.memInhibitAsserted()) {
-                // If we are getting a non-shared response it is dirty
-                bool pending_dirty_resp = !snoop_pkt.sharedAsserted();
-                markInService(mshr, pending_dirty_resp);
-                DPRINTF(Cache, "Upward snoop of prefetch for addr"
-                        " %#x (%s) hit\n",
-                        tgt_pkt->getAddr(), tgt_pkt->isSecure()? "s": "ns");
-                return NULL;
-            }
+        if (snoop_pkt.memInhibitAsserted()) {
+            // If we are getting a non-shared response it is dirty
+            bool pending_dirty_resp = !snoop_pkt.sharedAsserted();
+            markInService(mshr, pending_dirty_resp);
+            DPRINTF(Cache, "Upward snoop of prefetch for addr"
+                    " %#x (%s) hit\n",
+                    tgt_pkt->getAddr(), tgt_pkt->isSecure()? "s": "ns");
+            return NULL;
+        }
 
-            if (snoop_pkt.isBlockCached() || blk != NULL) {
-                DPRINTF(Cache, "Block present, prefetch squashed by cache.  "
-                               "Deallocating mshr target %#x.\n",
-                        mshr->blkAddr);
+        if (snoop_pkt.isBlockCached() || blk != NULL) {
+            DPRINTF(Cache, "Block present, prefetch squashed by cache.  "
+                    "Deallocating mshr target %#x.\n",
+                    mshr->blkAddr);
 
-                // Deallocate the mshr target
+            // Deallocate the mshr target
+            if (tgt_pkt->cmd != MemCmd::Writeback) {
                 if (mshr->queue->forceDeallocateTarget(mshr)) {
                     // Clear block if this deallocation resulted freed an
                     // mshr when all had previously been utilized
                     clearBlocked((BlockedCause)(mshr->queue->index));
                 }
                 return NULL;
+            } else {
+                // If this is a Writeback, and the snoops indicate that the blk
+                // is cached above, set the BLOCK_CACHED flag in the Writeback
+                // packet, so that it does not reset the bits corresponding to
+                // this block in the snoop filter below.
+                tgt_pkt->setBlockCached();
             }
-
         }
+    }
 
+    if (mshr->isForwardNoResponse()) {
+        // no response expected, just forward packet as it is
+        assert(tags->findBlock(mshr->blkAddr, mshr->isSecure) == NULL);
+        pkt = tgt_pkt;
+    } else {
         pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
 
         mshr->isForward = (pkt == NULL);

@@ -246,6 +246,11 @@ class Cache : public BaseCache
     bool recvTimingReq(PacketPtr pkt);
 
     /**
+     * Insert writebacks into the write buffer
+     */
+    void doWritebacks(PacketList& writebacks, Tick forward_time);
+
+    /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The response packet
      */
@@ -308,6 +313,13 @@ class Cache : public BaseCache
      */
     PacketPtr writebackBlk(CacheBlk *blk);
 
+    /**
+     * Create a CleanEvict request for the given block.
+     * @param blk The block to evict.
+     * @return The CleanEvict request for the block.
+     */
+    PacketPtr cleanEvictBlk(CacheBlk *blk);
+
 
     void memWriteback();
     void memInvalidate();
@@ -357,6 +369,12 @@ class Cache : public BaseCache
      * prioritizing among those sources on the fly.
      */
     MSHR *getNextMSHR();
+
+    /**
+     * Send up a snoop request and find cached copies. If cached copies are
+     * found, set the BLOCK_CACHED flag in pkt.
+     */
+    bool isCachedAbove(const PacketPtr pkt) const;
 
     /**
      * Selects an outstanding request to service.  Called when the

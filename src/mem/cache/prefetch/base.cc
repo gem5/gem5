@@ -93,6 +93,7 @@ BasePrefetcher::observeAccess(const PacketPtr &pkt) const
     if (!fetch && read && !onRead) return false;
     if (!fetch && !read && !onWrite) return false;
     if (!fetch && !read && inv) return false;
+    if (pkt->cmd == MemCmd::CleanEvict) return false;
 
     if (onMiss) {
         return !inCache(addr, is_secure) &&

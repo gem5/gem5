@@ -138,6 +138,12 @@ CoherentXBar::init()
 bool
 CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 {
+    // @todo temporary hack to deal with memory corruption issue until
+    // 4-phase transactions are complete
+    for (int x = 0; x < pendingDelete.size(); x++)
+        delete pendingDelete[x];
+    pendingDelete.clear();
+
     // determine the source port based on the id
     SlavePort *src_port = slavePorts[slave_port_id];
 
@@ -199,6 +205,19 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         } else {
             forwardTiming(pkt, slave_port_id);
         }
+    }
+
+    // forwardTiming snooped into peer caches of the sender, and if
+    // this is a clean evict, but the packet is found in a cache, do
+    // not forward it
+    if (pkt->cmd == MemCmd::CleanEvict && pkt->isBlockCached()) {
+        DPRINTF(CoherentXBar, "recvTimingReq: Clean evict 0x%x still cached, "
+                "not forwarding\n", pkt->getAddr());
+
+        // update the layer state and schedule an idle event
+        reqLayers[master_port_id]->succeededTiming(packetFinishTime);
+        pendingDelete.push_back(pkt);
+        return true;
     }
 
     // remember if the packet will generate a snoop response

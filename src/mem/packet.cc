@@ -86,6 +86,8 @@ MemCmd::commandInfo[] =
     /* Writeback */
     { SET4(IsWrite, NeedsExclusive, IsRequest, HasData),
             InvalidCmd, "Writeback" },
+    /* CleanEvict */
+    { SET2(IsWrite, IsRequest), InvalidCmd, "CleanEvict" },
     /* SoftPFReq */
     { SET4(IsRead, IsRequest, IsSWPrefetch, NeedsResponse),
             SoftPFResp, "SoftPFReq" },

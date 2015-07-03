@@ -134,7 +134,8 @@ SnoopFilter::updateRequest(const Packet* cpkt, const SlavePort& slave_port,
             // Writebacks -> the sender does not have the line anymore
             sf_item.holder &= ~req_port;
         } else {
-            assert(0 == "Handle non-writeback, here");
+            // @todo Add CleanEvicts
+            assert(cpkt->cmd == MemCmd::CleanEvict);
         }
         DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
                 __func__,  sf_item.requested, sf_item.holder);
@@ -174,8 +175,13 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
         else
             hitMultiSnoops++;
     }
-
-    assert(cpkt->isInvalidate() == cpkt->needsExclusive());
+    // ReadEx and Writes require both invalidation and exlusivity, while reads
+    // require neither. Writebacks on the other hand require exclusivity but
+    // not the invalidation. Previously Writebacks did not generate upward
+    // snoops so this was never an aissue. Now that Writebacks generate snoops
+    // we need to special case for Writebacks.
+    assert(cpkt->cmd == MemCmd::Writeback ||
+           (cpkt->isInvalidate() == cpkt->needsExclusive()));
     if (cpkt->isInvalidate() && !sf_item.requested) {
         // Early clear of the holder, if no other request is currently going on
         // @todo: This should possibly be updated even though we do not filter
