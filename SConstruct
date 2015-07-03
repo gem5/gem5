@@ -556,9 +556,8 @@ if main['GCC'] or main['CLANG']:
     # Enable -Wall and then disable the few warnings that we
     # consistently violate
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
-    # We always compile using C++11, but only gcc >= 4.7 and clang 3.1
-    # actually use that name, so we stick with c++0x
-    main.Append(CXXFLAGS=['-std=c++0x'])
+    # We always compile using C++11
+    main.Append(CXXFLAGS=['-std=c++11'])
     # Add selected sanity checks from -Wextra
     main.Append(CXXFLAGS=['-Wmissing-field-initializers',
                           '-Woverloaded-virtual'])
@@ -582,13 +581,12 @@ else:
     Exit(1)
 
 if main['GCC']:
-    # Check for a supported version of gcc. >= 4.6 is chosen for its
+    # Check for a supported version of gcc. >= 4.7 is chosen for its
     # level of c++11 support. See
-    # http://gcc.gnu.org/projects/cxx0x.html for details. 4.6 is also
-    # the first version with proper LTO support.
+    # http://gcc.gnu.org/projects/cxx0x.html for details.
     gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
-    if compareVersions(gcc_version, "4.6") < 0:
-        print 'Error: gcc version 4.6 or newer required.'
+    if compareVersions(gcc_version, "4.7") < 0:
+        print 'Error: gcc version 4.7 or newer required.'
         print '       Installed version:', gcc_version
         Exit(1)
 
@@ -642,15 +640,15 @@ if main['GCC']:
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
 elif main['CLANG']:
-    # Check for a supported version of clang, >= 3.0 is needed to
-    # support similar features as gcc 4.6. See
+    # Check for a supported version of clang, >= 3.1 is needed to
+    # support similar features as gcc 4.7. See
     # http://clang.llvm.org/cxx_status.html for details
     clang_version_re = re.compile(".* version (\d+\.\d+)")
     clang_version_match = clang_version_re.search(CXX_version)
     if (clang_version_match):
         clang_version = clang_version_match.groups()[0]
-        if compareVersions(clang_version, "3.0") < 0:
-            print 'Error: clang version 3.0 or newer required.'
+        if compareVersions(clang_version, "3.1") < 0:
+            print 'Error: clang version 3.1 or newer required.'
             print '       Installed version:', clang_version
             Exit(1)
     else:

@@ -1015,7 +1015,8 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
 
     # Add additional warnings here that should not be applied to
     # the SWIG generated code
-    new_env.Append(CXXFLAGS='-Wmissing-declarations')
+    new_env.Append(CXXFLAGS=['-Wmissing-declarations',
+                             '-Wdelete-non-virtual-dtor'])
 
     if env['GCC']:
         # Depending on the SWIG version, we also need to supress
@@ -1023,15 +1024,8 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         # initializers.
         swig_env.Append(CCFLAGS=['-Wno-uninitialized',
                                  '-Wno-missing-field-initializers',
-                                 '-Wno-unused-but-set-variable'])
-
-        # If gcc supports it, also warn for deletion of derived
-        # classes with non-virtual desctructors. For gcc >= 4.7 we
-        # also have to disable warnings about the SWIG code having
-        # potentially uninitialized variables.
-        if compareVersions(env['GCC_VERSION'], '4.7') >= 0:
-            new_env.Append(CXXFLAGS='-Wdelete-non-virtual-dtor')
-            swig_env.Append(CCFLAGS='-Wno-maybe-uninitialized')
+                                 '-Wno-unused-but-set-variable',
+                                 '-Wno-maybe-uninitialized'])
 
         # Only gcc >= 4.9 supports UBSan, so check both the version
         # and the command-line option before adding the compiler and
@@ -1042,10 +1036,6 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
             new_env.Append(LINKFLAGS='-fsanitize=undefined')
 
     if env['CLANG']:
-        # Always enable the warning for deletion of derived classes
-        # with non-virtual destructors
-        new_env.Append(CXXFLAGS=['-Wdelete-non-virtual-dtor'])
-
         swig_env.Append(CCFLAGS=[
                 # Some versions of SWIG can return uninitialized values
                 '-Wno-sometimes-uninitialized',
