@@ -304,11 +304,6 @@ class BaseCache : public MemObject
     /** Do we forward snoops from mem side port through to cpu side port? */
     const bool forwardSnoops;
 
-    /** Is this cache a toplevel cache (e.g. L1, I/O cache). If so we should
-     * never try to forward ownership and similar optimizations to the cpu
-     * side */
-    const bool isTopLevel;
-
     /**
      * Is this cache read only, for example the instruction cache, or
      * table-walker cache. A cache that is read only should never see

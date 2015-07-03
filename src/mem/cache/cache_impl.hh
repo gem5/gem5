@@ -179,7 +179,15 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
             blk->trackLoadLocked(pkt);
         }
         pkt->setDataFromBlock(blk->data, blkSize);
-        if (pkt->getSize() == blkSize) {
+        // determine if this read is from a (coherent) cache, or not
+        // by looking at the command type; we could potentially add a
+        // packet attribute such as 'FromCache' to make this check a
+        // bit cleaner
+        if (pkt->cmd == MemCmd::ReadExReq ||
+            pkt->cmd == MemCmd::ReadSharedReq ||
+            pkt->cmd == MemCmd::ReadCleanReq ||
+            pkt->cmd == MemCmd::SCUpgradeFailReq) {
+            assert(pkt->getSize() == blkSize);
             // special handling for coherent block requests from
             // upper-level caches
             if (pkt->needsExclusive()) {
@@ -211,7 +219,7 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
 
                 if (blk->isDirty()) {
                     // special considerations if we're owner:
-                    if (!deferred_response && !isTopLevel) {
+                    if (!deferred_response) {
                         // if we are responding immediately and can
                         // signal that we're transferring ownership
                         // along with exclusivity, do so
@@ -526,7 +534,6 @@ Cache::promoteWholeLineWrites(PacketPtr pkt)
         (pkt->getSize() == blkSize) && (pkt->getOffset(blkSize) == 0)) {
         pkt->cmd = MemCmd::WriteLineReq;
         DPRINTF(Cache, "packet promoted from Write to WriteLineReq\n");
-        assert(isTopLevel); // should only happen at L1 or I/O cache
     }
 }
 
@@ -696,7 +703,7 @@ Cache::recvTimingReq(PacketPtr pkt)
         // processing happens before any MSHR munging on the behalf of
         // this request because this new Request will be the one stored
         // into the MSHRs, not the original.
-        if (pkt->cmd.isSWPrefetch() && isTopLevel) {
+        if (pkt->cmd.isSWPrefetch()) {
             assert(needsResponse);
             assert(pkt->req->hasPaddr());
             assert(!pkt->req->isUncacheable());
@@ -905,7 +912,6 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // the line in exclusive state, and invalidates all other
         // copies
         cmd = MemCmd::InvalidateReq;
-        assert(isTopLevel);
     } else {
         // block is invalid
         cmd = needsExclusive ? MemCmd::ReadExReq :
@@ -1034,17 +1040,12 @@ Cache::recvAtomic(PacketPtr pkt)
                     pkt->makeAtomicResponse();
                     pkt->copyError(bus_pkt);
                 } else if (pkt->cmd == MemCmd::InvalidateReq) {
-                    assert(!isTopLevel);
                     if (blk) {
                         // invalidate response to a cache that received
                         // an invalidate request
                         satisfyCpuSideRequest(pkt, blk);
                     }
                 } else if (pkt->cmd == MemCmd::WriteLineReq) {
-                    // invalidate response to the cache that
-                    // received the original write-line request
-                    assert(isTopLevel);
-
                     // note the use of pkt, not bus_pkt here.
 
                     // write-line request to the cache that promoted
@@ -1256,7 +1257,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             completion_time = pkt->headerDelay;
 
             // Software prefetch handling for cache closest to core
-            if (tgt_pkt->cmd.isSWPrefetch() && isTopLevel) {
+            if (tgt_pkt->cmd.isSWPrefetch()) {
                 // a software prefetch would have already been ack'd immediately
                 // with dummy data so the core would be able to retire it.
                 // this request completes right here, so we deallocate it.
@@ -2148,7 +2149,7 @@ Cache::getNextMSHR()
 bool
 Cache::isCachedAbove(const PacketPtr pkt) const
 {
-    if (isTopLevel)
+    if (!forwardSnoops)
         return false;
     // Mirroring the flow of HardPFReqs, the cache sends CleanEvict and
     // Writeback snoops into upper level caches to check for copies of the

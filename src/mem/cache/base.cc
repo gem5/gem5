@@ -78,7 +78,6 @@ BaseCache::BaseCache(const Params *p)
       responseLatency(p->response_latency),
       numTarget(p->tgts_per_mshr),
       forwardSnoops(p->forward_snoops),
-      isTopLevel(p->is_top_level),
       isReadOnly(p->is_read_only),
       blocked(0),
       order(0),

@@ -52,7 +52,6 @@ class L1Cache(BaseCache):
     response_latency = 2
     mshrs = 4
     tgts_per_mshr = 20
-    is_top_level = True
 
 class L1_ICache(L1Cache):
     is_read_only = True
@@ -76,7 +75,6 @@ class IOCache(BaseCache):
     size = '1kB'
     tgts_per_mshr = 12
     forward_snoops = False
-    is_top_level = True
 
 class PageTableWalkerCache(BaseCache):
     assoc = 2
@@ -86,7 +84,6 @@ class PageTableWalkerCache(BaseCache):
     size = '1kB'
     tgts_per_mshr = 12
     forward_snoops = False
-    is_top_level = True
     # the x86 table walker actually writes to the table-walker cache
     if buildEnv['TARGET_ISA'] == 'x86':
         is_read_only = False

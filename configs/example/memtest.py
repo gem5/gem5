@@ -177,7 +177,7 @@ else:
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = BaseCache(size = '32kB', assoc = 4,
                      hit_latency = 1, response_latency = 1,
-                     tgts_per_mshr = 8, is_top_level = True)
+                     tgts_per_mshr = 8)
 
 if options.blocking:
      proto_l1.mshrs = 1
@@ -197,7 +197,6 @@ for scale in cachespec[:-1]:
      next.response_latency = prev.response_latency * 10
      next.assoc = prev.assoc * scale
      next.mshrs = prev.mshrs * scale
-     next.is_top_level = False
      cache_proto.insert(0, next)
 
 # Make a prototype for the tester to be used throughout
