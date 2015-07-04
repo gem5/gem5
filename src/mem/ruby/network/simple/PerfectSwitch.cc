@@ -35,7 +35,7 @@
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
-#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 using namespace std;
 
@@ -112,7 +112,7 @@ void
 PerfectSwitch::operateVnet(int vnet)
 {
     MsgPtr msg_ptr;
-    NetworkMessage* net_msg_ptr = NULL;
+    Message *net_msg_ptr = NULL;
 
     // This is for round-robin scheduling
     int incoming = m_round_robin_start;
@@ -149,12 +149,12 @@ PerfectSwitch::operateVnet(int vnet)
 
                 // Peek at message
                 msg_ptr = buffer->peekMsgPtr();
-                net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.get());
+                net_msg_ptr = msg_ptr.get();
                 DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));
 
                 output_links.clear();
                 output_link_destinations.clear();
-                NetDest msg_dsts = net_msg_ptr->getInternalDestination();
+                NetDest msg_dsts = net_msg_ptr->getDestination();
 
                 // Unfortunately, the token-protocol sends some
                 // zero-destination messages, so this assert isn't valid
@@ -264,8 +264,8 @@ PerfectSwitch::operateVnet(int vnet)
 
                     // Change the internal destination set of the message so it
                     // knows which destinations this link is responsible for.
-                    net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.get());
-                    net_msg_ptr->getInternalDestination() =
+                    net_msg_ptr = msg_ptr.get();
+                    net_msg_ptr->getDestination() =
                         output_link_destinations[i];
 
                     // Enqeue msg

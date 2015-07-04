@@ -34,6 +34,8 @@
 #include <stack>
 
 #include "mem/packet.hh"
+#include "mem/protocol/MessageSizeType.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 class Message;
 typedef std::shared_ptr<Message> MsgPtr;
@@ -58,8 +60,11 @@ class Message
 
     virtual MsgPtr clone() const = 0;
     virtual void print(std::ostream& out) const = 0;
-    virtual void setIncomingLink(int) {}
-    virtual void setVnet(int) {}
+
+    virtual const MessageSizeType& getMessageSize() const
+    { panic("MessageSizeType() called on wrong message!"); }
+    virtual MessageSizeType& getMessageSize()
+    { panic("MessageSizeType() called on wrong message!"); }
 
     /**
      * The two functions below are used for reading / writing the message
@@ -87,11 +92,26 @@ class Message
     void setMsgCounter(uint64_t c) { m_msg_counter = c; }
     uint64_t getMsgCounter() const { return m_msg_counter; }
 
+    // Functions related to network traversal
+    virtual const NetDest& getDestination() const
+    { panic("getDestination() called on wrong message!"); }
+    virtual NetDest& getDestination()
+    { panic("getDestination() called on wrong message!"); }
+
+    int getIncomingLink() const { return incoming_link; }
+    void setIncomingLink(int link) { incoming_link = link; }
+    int getVnet() const { return vnet; }
+    void setVnet(int net) { vnet = net; }
+
   private:
     const Tick m_time;
     Tick m_LastEnqueueTime; // my last enqueue time
     Tick m_DelayedTicks; // my delayed cycles
     uint64_t m_msg_counter; // FIXME, should this be a 64-bit value?
+
+    // Variables for required network traversal
+    int incoming_link;
+    int vnet;
 };
 
 inline bool

@@ -84,7 +84,7 @@ structure(TriggerMsg, desc="...", interface="Message") {
 }
 
 // RequestMsg (and also forwarded requests)
-structure(RequestMsg, desc="...", interface="NetworkMessage") {
+structure(RequestMsg, desc="...", interface="Message") {
   Address Addr,             desc="Physical address for this request";
   int Len,                     desc="Length of Request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
@@ -113,7 +113,7 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
 }
 
 // ResponseMsg (and also unblock requests)
-structure(ResponseMsg, desc="...", interface="NetworkMessage") {
+structure(ResponseMsg, desc="...", interface="Message") {
   Address Addr,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";

@@ -37,7 +37,7 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
-#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;
@@ -129,8 +129,8 @@ NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
 bool
 NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 {
-    NetworkMessage *net_msg_ptr = safe_cast<NetworkMessage *>(msg_ptr.get());
-    NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
+    Message *net_msg_ptr = msg_ptr.get();
+    NetDest net_msg_dest = net_msg_ptr->getDestination();
 
     // gets all the destinations associated with this message.
     vector<NodeID> dest_nodes = net_msg_dest.getAllDest();
@@ -152,8 +152,7 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         MsgPtr new_msg_ptr = msg_ptr->clone();
         NodeID destID = dest_nodes[ctr];
 
-        NetworkMessage *new_net_msg_ptr =
-            safe_cast<NetworkMessage *>(new_msg_ptr.get());
+        Message *new_net_msg_ptr = new_msg_ptr.get();
         if (dest_nodes.size() > 1) {
             NetDest personal_dest;
             for (int m = 0; m < (int) MachineType_NUM; m++) {
@@ -163,7 +162,7 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                     personal_dest.clear();
                     personal_dest.add((MachineID) {(MachineType) m, (destID -
                         MachineType_base_number((MachineType) m))});
-                    new_net_msg_ptr->getInternalDestination() = personal_dest;
+                    new_net_msg_ptr->getDestination() = personal_dest;
                     break;
                 }
             }
@@ -171,7 +170,7 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
             // removing the destination from the original message to reflect
             // that a message with this particular destination has been
             // flitisized and an output vc is acquired
-            net_msg_ptr->getInternalDestination().removeNetDest(personal_dest);
+            net_msg_ptr->getDestination().removeNetDest(personal_dest);
         }
 
         for (int i = 0; i < num_flits; i++) {

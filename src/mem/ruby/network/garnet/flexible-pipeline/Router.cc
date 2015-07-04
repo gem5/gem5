@@ -35,7 +35,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
-#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;
@@ -277,9 +277,8 @@ Router::routeCompute(flit *m_flit, int inport)
         scheduleEvent(Cycles(m_net_ptr->getNumPipeStages() - 1));
 
     if ((m_flit->get_type() == HEAD_) || (m_flit->get_type() == HEAD_TAIL_)) {
-        NetworkMessage *nm =
-            safe_cast<NetworkMessage*>(m_flit->get_msg_ptr().get());
-        NetDest destination = nm->getInternalDestination();
+        Message *nm = m_flit->get_msg_ptr().get();
+        NetDest destination = nm->getDestination();
 
         if (m_net_ptr->getNumPipeStages() > 1) {
             m_out_vc_state[outport][outvc]->setState(VC_AB_, curCycle() +

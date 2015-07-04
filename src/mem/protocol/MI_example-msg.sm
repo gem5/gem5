@@ -50,7 +50,7 @@ enumeration(CoherenceResponseType, desc="...") {
 }
 
 // RequestMsg (and also forwarded requests)
-structure(RequestMsg, desc="...", interface="NetworkMessage") {
+structure(RequestMsg, desc="...", interface="Message") {
   Address Addr,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
@@ -74,7 +74,7 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
 }
 
 // ResponseMsg (and also unblock requests)
-structure(ResponseMsg, desc="...", interface="NetworkMessage") {
+structure(ResponseMsg, desc="...", interface="Message") {
   Address Addr,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";
@@ -108,7 +108,7 @@ enumeration(DMAResponseType, desc="...", default="DMAResponseType_NULL") {
   NULL,          desc="Invalid";
 }
 
-structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
+structure(DMARequestMsg, desc="...", interface="Message") {
   DMARequestType Type,       desc="Request type (read/write)";
   Address PhysicalAddress,   desc="Physical address for this request";
   Address LineAddress,       desc="Line address for this request";
@@ -127,7 +127,7 @@ structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
   }
 }
 
-structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
+structure(DMAResponseMsg, desc="...", interface="Message") {
   DMAResponseType Type,      desc="Response type (DATA/ACK)";
   Address PhysicalAddress,   desc="Physical address for this request";
   Address LineAddress,       desc="Line address for this request";

@@ -61,10 +61,8 @@ class Type(Symbol):
         # check for interface that this Type implements
         if "interface" in self:
             interface = self["interface"]
-            if interface in ("Message", "NetworkMessage"):
+            if interface in ("Message"):
                 self["message"] = "yes"
-            if interface == "NetworkMessage":
-                self["networkmessage"] = "yes"
 
         # FIXME - all of the following id comparisons are fragile hacks
         if self.ident in ("CacheMemory"):
@@ -97,9 +95,7 @@ class Type(Symbol):
     @property
     def isPrimitive(self):
         return "primitive" in self
-    @property
-    def isNetworkMessage(self):
-        return "networkmessage" in self
+
     @property
     def isMessage(self):
         return "message" in self

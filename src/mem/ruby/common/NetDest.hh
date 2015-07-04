@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// NetDest specifies the network destination of a NetworkMessage
+// NetDest specifies the network destination of a Message
 // This is backward compatible with the Set class that was previously
 // used to specify network destinations.
 // NetDest supports both node networks and component networks

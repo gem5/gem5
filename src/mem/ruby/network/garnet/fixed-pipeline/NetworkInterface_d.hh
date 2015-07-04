@@ -43,7 +43,6 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "params/GarnetNetworkInterface_d.hh"
 
-class NetworkMessage;
 class MessageBuffer;
 class flitBuffer_d;
 

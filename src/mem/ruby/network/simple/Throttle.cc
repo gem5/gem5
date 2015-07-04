@@ -34,7 +34,7 @@
 #include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
@@ -44,7 +44,7 @@ const int MESSAGE_SIZE_MULTIPLIER = 1000;
 const int BROADCAST_SCALING = 1;
 const int PRIORITY_SWITCH_LIMIT = 128;
 
-static int network_message_to_size(NetworkMessage* net_msg_ptr);
+static int network_message_to_size(Message* net_msg_ptr);
 
 Throttle::Throttle(int sID, NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
@@ -121,8 +121,7 @@ Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
         if (m_units_remaining[vnet] == 0 && in->isReady()) {
             // Find the size of the message we are moving
             MsgPtr msg_ptr = in->peekMsgPtr();
-            NetworkMessage* net_msg_ptr =
-                safe_cast<NetworkMessage*>(msg_ptr.get());
+            Message *net_msg_ptr = msg_ptr.get();
             m_units_remaining[vnet] +=
                 network_message_to_size(net_msg_ptr);
 
@@ -257,7 +256,7 @@ Throttle::print(ostream& out) const
 }
 
 int
-network_message_to_size(NetworkMessage* net_msg_ptr)
+network_message_to_size(Message *net_msg_ptr)
 {
     assert(net_msg_ptr != NULL);
 
