@@ -129,11 +129,13 @@ ISA::readMiscRegNoEffect(int miscReg) const
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
     // attempt to read them directly.
-    assert( miscReg != MISCREG_CR1 &&
-            !(miscReg > MISCREG_CR4 &&
-              miscReg < MISCREG_CR8) &&
-            !(miscReg > MISCREG_CR8 &&
-              miscReg <= MISCREG_CR15));
+    assert(miscReg >= MISCREG_CR0 &&
+           miscReg < NUM_MISCREGS &&
+           miscReg != MISCREG_CR1 &&
+           !(miscReg > MISCREG_CR4 &&
+             miscReg < MISCREG_CR8) &&
+           !(miscReg > MISCREG_CR8 &&
+             miscReg <= MISCREG_CR15));
 
     return regVal[miscReg];
 }
@@ -160,11 +162,48 @@ ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
     // attempt to write to them directly.
-    assert( miscReg != MISCREG_CR1 &&
-            !(miscReg > MISCREG_CR4 &&
-              miscReg < MISCREG_CR8) &&
-            !(miscReg > MISCREG_CR8 &&
-              miscReg <= MISCREG_CR15));
+    assert(miscReg >= MISCREG_CR0 &&
+           miscReg < NUM_MISCREGS &&
+           miscReg != MISCREG_CR1 &&
+           !(miscReg > MISCREG_CR4 &&
+             miscReg < MISCREG_CR8) &&
+           !(miscReg > MISCREG_CR8 &&
+             miscReg <= MISCREG_CR15));
+
+    HandyM5Reg m5Reg = readMiscRegNoEffect(MISCREG_M5_REG);
+    switch (miscReg) {
+      case MISCREG_FSW:
+        val &= (1ULL << 16) - 1;
+        regVal[miscReg] = val;
+        miscReg = MISCREG_X87_TOP;
+        val <<= 11;
+      case MISCREG_X87_TOP:
+        val &= (1ULL << 3) - 1;
+        break;
+      case MISCREG_FTW:
+        val &= (1ULL << 8) - 1;
+        break;
+      case MISCREG_FCW:
+      case MISCREG_FOP:
+        val &= (1ULL << 16) - 1;
+        break;
+      case MISCREG_MXCSR:
+        val &= (1ULL << 32) - 1;
+        break;
+      case MISCREG_FISEG:
+      case MISCREG_FOSEG:
+        if (m5Reg.submode != SixtyFourBitMode)
+            val &= (1ULL << 16) - 1;
+        break;
+      case MISCREG_FIOFF:
+      case MISCREG_FOOFF:
+        if (m5Reg.submode != SixtyFourBitMode)
+            val &= (1ULL << 32) - 1;
+        break;
+      default:
+        break;
+    }
+
     regVal[miscReg] = val;
 }
 

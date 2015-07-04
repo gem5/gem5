@@ -122,9 +122,6 @@ fxrstorCommonTemplate = """
     # FSW includes TOP when read
     ld t1, seg, %(mode)s, "DISPLACEMENT + 2", dataSize=2
     wrval fsw, t1
-    srli t1, t1, 11, dataSize=2
-    andi t1, t1, 0x7, dataSize=2
-    wrval "InstRegIndex(MISCREG_X87_TOP)", t1
 
     # FTW
     ld t1, seg, %(mode)s, "DISPLACEMENT + 4", dataSize=1
