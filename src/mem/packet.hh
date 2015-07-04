@@ -613,7 +613,7 @@ class Packet : public Printable
      * less than that of the original packet.  In this case the new
      * packet should allocate its own data.
      */
-    Packet(PacketPtr pkt, bool clear_flags, bool alloc_data)
+    Packet(const PacketPtr pkt, bool clear_flags, bool alloc_data)
         :  cmd(pkt->cmd), req(pkt->req),
            data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
