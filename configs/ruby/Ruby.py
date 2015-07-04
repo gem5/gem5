@@ -66,7 +66,7 @@ def define_options(parser):
 
     # ruby network options
     parser.add_option("--topology", type="string", default="Crossbar",
-                 help="check src/mem/ruby/network/topologies for complete set")
+                      help="check configs/topologies for complete set")
     parser.add_option("--mesh-rows", type="int", default=1,
                       help="the number of rows in the mesh topology")
     parser.add_option("--garnet-network", type="choice",
