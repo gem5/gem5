@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/MessageBufferNode.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 #include "params/RubyWireBuffer.hh"
 #include "sim/sim_object.hh"
 
@@ -75,7 +75,6 @@ class WireBuffer : public SimObject
     void enqueue(MsgPtr message, Cycles latency);
     void dequeue();
     const Message* peek();
-    MessageBufferNode peekNode();
     void recycle();
     bool isReady();
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
@@ -93,7 +92,7 @@ class WireBuffer : public SimObject
     std::string m_description;
 
     // queues where memory requests live
-    std::vector<MessageBufferNode> m_message_queue;
+    std::vector<MsgPtr> m_message_queue;
 
 };
 

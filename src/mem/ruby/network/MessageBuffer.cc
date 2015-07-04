@@ -122,7 +122,7 @@ MessageBuffer::peek() const
     DPRINTF(RubyQueue, "Peeking at head of queue.\n");
     assert(isReady());
 
-    const Message* msg_ptr = m_prio_heap.front().m_msgptr.get();
+    const Message* msg_ptr = m_prio_heap.front().get();
     assert(msg_ptr);
 
     DPRINTF(RubyQueue, "Message: %s\n", (*msg_ptr));
@@ -204,12 +204,11 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 
     msg_ptr->updateDelayedTicks(m_sender->clockEdge());
     msg_ptr->setLastEnqueueTime(arrival_time);
+    msg_ptr->setMsgCounter(m_msg_counter);
 
     // Insert the message into the priority heap
-    MessageBufferNode thisNode(arrival_time, m_msg_counter, message);
-    m_prio_heap.push_back(thisNode);
-    push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-        greater<MessageBufferNode>());
+    m_prio_heap.push_back(message);
+    push_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
 
     DPRINTF(RubyQueue, "Enqueue arrival_time: %lld, Message: %s\n",
             arrival_time, *(message.get()));
@@ -227,7 +226,7 @@ MessageBuffer::dequeue()
     assert(isReady());
 
     // get MsgPtr of the message about to be dequeued
-    MsgPtr message = m_prio_heap.front().m_msgptr;
+    MsgPtr message = m_prio_heap.front();
 
     // get the delay cycles
     message->updateDelayedTicks(m_receiver->clockEdge());
@@ -242,7 +241,7 @@ MessageBuffer::dequeue()
     }
 
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
-        greater<MessageBufferNode>());
+        greater<MsgPtr>());
     m_prio_heap.pop_back();
 
     return delayCycles;
@@ -265,14 +264,12 @@ MessageBuffer::recycle()
 {
     DPRINTF(RubyQueue, "Recycling.\n");
     assert(isReady());
-    MessageBufferNode node = m_prio_heap.front();
-    pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
-        greater<MessageBufferNode>());
+    MsgPtr node = m_prio_heap.front();
+    pop_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
 
-    node.m_time = m_receiver->clockEdge(m_recycle_latency);
+    node->setLastEnqueueTime(m_receiver->clockEdge(m_recycle_latency));
     m_prio_heap.back() = node;
-    push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-        greater<MessageBufferNode>());
+    push_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
     m_consumer->
         scheduleEventAbsolute(m_receiver->clockEdge(m_recycle_latency));
 }
@@ -282,11 +279,13 @@ MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick nextTick)
 {
     while(!lt.empty()) {
         m_msg_counter++;
-        MessageBufferNode msgNode(nextTick, m_msg_counter, lt.front());
+        MsgPtr m = lt.front();
+        m->setLastEnqueueTime(nextTick);
+        m->setMsgCounter(m_msg_counter);
 
-        m_prio_heap.push_back(msgNode);
+        m_prio_heap.push_back(m);
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-                  greater<MessageBufferNode>());
+                  greater<MsgPtr>());
 
         m_consumer->scheduleEventAbsolute(nextTick);
         lt.pop_front();
@@ -331,7 +330,7 @@ MessageBuffer::stallMessage(const Address& addr)
     DPRINTF(RubyQueue, "Stalling due to %s\n", addr);
     assert(isReady());
     assert(addr.getOffset() == 0);
-    MsgPtr message = m_prio_heap.front().m_msgptr;
+    MsgPtr message = m_prio_heap.front();
 
     dequeue();
 
@@ -351,8 +350,8 @@ MessageBuffer::print(ostream& out) const
         ccprintf(out, " consumer-yes ");
     }
 
-    vector<MessageBufferNode> copy(m_prio_heap);
-    sort_heap(copy.begin(), copy.end(), greater<MessageBufferNode>());
+    vector<MsgPtr> copy(m_prio_heap);
+    sort_heap(copy.begin(), copy.end(), greater<MsgPtr>());
     ccprintf(out, "%s] %s", copy, m_name);
 }
 
@@ -360,7 +359,7 @@ bool
 MessageBuffer::isReady() const
 {
     return ((m_prio_heap.size() > 0) &&
-            (m_prio_heap.front().m_time <= m_receiver->clockEdge()));
+        (m_prio_heap.front()->getLastEnqueueTime() <= m_receiver->clockEdge()));
 }
 
 bool
@@ -369,7 +368,7 @@ MessageBuffer::functionalRead(Packet *pkt)
     // Check the priority heap and read any messages that may
     // correspond to the address in the packet.
     for (unsigned int i = 0; i < m_prio_heap.size(); ++i) {
-        Message *msg = m_prio_heap[i].m_msgptr.get();
+        Message *msg = m_prio_heap[i].get();
         if (msg->functionalRead(pkt)) return true;
     }
 
@@ -397,7 +396,7 @@ MessageBuffer::functionalWrite(Packet *pkt)
     // Check the priority heap and write any messages that may
     // correspond to the address in the packet.
     for (unsigned int i = 0; i < m_prio_heap.size(); ++i) {
-        Message *msg = m_prio_heap[i].m_msgptr.get();
+        Message *msg = m_prio_heap[i].get();
         if (msg->functionalWrite(pkt)) {
             num_functional_writes++;
         }

@@ -43,7 +43,6 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/MessageBufferNode.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/packet.hh"
 
@@ -67,11 +66,11 @@ class MessageBuffer
     void
     delayHead()
     {
-        MessageBufferNode node = m_prio_heap.front();
+        MsgPtr m = m_prio_heap.front();
         std::pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
-                      std::greater<MessageBufferNode>());
+                      std::greater<MsgPtr>());
         m_prio_heap.pop_back();
-        enqueue(node.m_msgptr, Cycles(1));
+        enqueue(m, Cycles(1));
     }
 
     bool areNSlotsAvailable(unsigned int n);
@@ -112,7 +111,7 @@ class MessageBuffer
     peekMsgPtr() const
     {
         assert(isReady());
-        return m_prio_heap.front().m_msgptr;
+        return m_prio_heap.front();
     }
 
     void enqueue(MsgPtr message) { enqueue(message, Cycles(1)); }
@@ -168,7 +167,7 @@ class MessageBuffer
 
     //! Consumer to signal a wakeup(), can be NULL
     Consumer* m_consumer;
-    std::vector<MessageBufferNode> m_prio_heap;
+    std::vector<MsgPtr> m_prio_heap;
 
     // use a std::map for the stalled messages as this container is
     // sorted and ensures a well-defined iteration order

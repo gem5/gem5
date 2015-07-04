@@ -44,13 +44,14 @@ class Message
     Message(Tick curTime)
         : m_time(curTime),
           m_LastEnqueueTime(curTime),
-          m_DelayedTicks(0)
+          m_DelayedTicks(0), m_msg_counter(0)
     { }
 
     Message(const Message &other)
         : m_time(other.m_time),
           m_LastEnqueueTime(other.m_LastEnqueueTime),
-          m_DelayedTicks(other.m_DelayedTicks)
+          m_DelayedTicks(other.m_DelayedTicks),
+          m_msg_counter(other.m_msg_counter)
     { }
 
     virtual ~Message() { }
@@ -68,9 +69,7 @@ class Message
      * implement these methods.
      */
     virtual bool functionalRead(Packet *pkt) = 0;
-    //{ fatal("Read functional access not implemented!"); }
     virtual bool functionalWrite(Packet *pkt) = 0;
-    //{ fatal("Write functional access not implemented!"); }
 
     //! Update the delay this message has experienced so far.
     void updateDelayedTicks(Tick curTime)
@@ -85,13 +84,28 @@ class Message
     const Tick getLastEnqueueTime() const {return m_LastEnqueueTime;}
 
     const Tick& getTime() const { return m_time; }
-    void setTime(const Tick& new_time) { m_time = new_time; }
+    void setMsgCounter(uint64_t c) { m_msg_counter = c; }
+    uint64_t getMsgCounter() const { return m_msg_counter; }
 
   private:
-    Tick m_time;
+    const Tick m_time;
     Tick m_LastEnqueueTime; // my last enqueue time
     Tick m_DelayedTicks; // my delayed cycles
+    uint64_t m_msg_counter; // FIXME, should this be a 64-bit value?
 };
+
+inline bool
+operator>(const MsgPtr &lhs, const MsgPtr &rhs)
+{
+    const Message *l = lhs.get();
+    const Message *r = rhs.get();
+
+    if (l->getLastEnqueueTime() == r->getLastEnqueueTime()) {
+        assert(l->getMsgCounter() != r->getMsgCounter());
+        return l->getMsgCounter() > r->getMsgCounter();
+    }
+    return l->getLastEnqueueTime() > r->getLastEnqueueTime();
+}
 
 inline std::ostream&
 operator<<(std::ostream& out, const Message& obj)
