@@ -551,7 +551,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           out_msg.Addr := address;
           out_msg.Class := CoherenceClass:INV;
           out_msg.Sender := machineID;
-          out_msg.Destination := createMachineID(MachineType:L0Cache, version);
+          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
           out_msg.MessageSize := MessageSizeType:Control;
       }
   }
@@ -606,7 +606,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           out_msg.Addr := address;
           out_msg.Class := CoherenceClass:DATA;
           out_msg.Sender := machineID;
-          out_msg.Destination := createMachineID(MachineType:L0Cache, version);
+          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
           out_msg.DataBlk := cache_entry.DataBlk;
           out_msg.Dirty := cache_entry.Dirty;
           out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -620,7 +620,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           out_msg.Addr := address;
           out_msg.Class := CoherenceClass:STALE_DATA;
           out_msg.Sender := machineID;
-          out_msg.Destination := createMachineID(MachineType:L0Cache, version);
+          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
           out_msg.DataBlk := cache_entry.DataBlk;
           out_msg.Dirty := cache_entry.Dirty;
           out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -634,7 +634,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           out_msg.Addr := address;
           out_msg.Class := CoherenceClass:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
-          out_msg.Destination := createMachineID(MachineType:L0Cache, version);
+          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
           out_msg.DataBlk := cache_entry.DataBlk;
           out_msg.Dirty := cache_entry.Dirty;
           out_msg.MessageSize := MessageSizeType:Response_Data;

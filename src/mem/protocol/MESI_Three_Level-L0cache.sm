@@ -257,7 +257,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   in_port(messgeBuffer_in, CoherenceMsg, bufferFromL1, rank = 1) {
     if (messgeBuffer_in.isReady()) {
       peek(messgeBuffer_in, CoherenceMsg, block_on="Addr") {
-        assert(in_msg.Destination == machineID);
+        assert(in_msg.Dest == machineID);
 
         Entry cache_entry := getCacheEntry(in_msg.Addr);
         TBE tbe := TBEs[in_msg.Addr];
@@ -368,9 +368,9 @@ machine(L0Cache, "MESI Directory L0 Cache")
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:GETS;
         out_msg.Sender := machineID;
-        out_msg.Destination := createMachineID(MachineType:L1Cache, version);
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
-                address, out_msg.Destination);
+                address, out_msg.Dest);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
       }
@@ -384,10 +384,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
         out_msg.Class := CoherenceClass:GETX;
         out_msg.Sender := machineID;
         DPRINTF(RubySlicc, "%s\n", machineID);
-        out_msg.Destination := createMachineID(MachineType:L1Cache, version);
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
 
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
-                address, out_msg.Destination);
+                address, out_msg.Dest);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
       }
@@ -400,10 +400,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:UPGRADE;
         out_msg.Sender := machineID;
-        out_msg.Destination := createMachineID(MachineType:L1Cache, version);
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
 
         DPRINTF(RubySlicc, "address: %s, destination: %s\n",
-                address, out_msg.Destination);
+                address, out_msg.Dest);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
       }
@@ -418,7 +418,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender := machineID;
-      out_msg.Destination := createMachineID(MachineType:L1Cache, version);
+      out_msg.Dest := createMachineID(MachineType:L1Cache, version);
       out_msg.MessageSize := MessageSizeType:Writeback_Data;
     }
   }
@@ -429,7 +429,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
         out_msg.Addr := address;
         out_msg.Class := CoherenceClass:INV_ACK;
         out_msg.Sender := machineID;
-        out_msg.Destination := createMachineID(MachineType:L1Cache, version);
+        out_msg.Dest := createMachineID(MachineType:L1Cache, version);
         out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
@@ -450,7 +450,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender:= machineID;
-      out_msg.Destination := createMachineID(MachineType:L1Cache, version);
+      out_msg.Dest := createMachineID(MachineType:L1Cache, version);
 
       if (cache_entry.Dirty) {
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
