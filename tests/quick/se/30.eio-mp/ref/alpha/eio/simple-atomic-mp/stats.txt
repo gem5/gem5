@@ -4,11 +4,11 @@ sim_seconds                                  0.000250                       # Nu
 sim_ticks                                   250015500                       # Number of ticks simulated
 final_tick                                  250015500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1548972                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1548948                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              193626740                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 235568                       # Number of bytes of host memory used
-host_seconds                                     1.29                       # Real time elapsed on the host
+host_inst_rate                                2352807                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2352743                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              294103962                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 298060                       # Number of bytes of host memory used
+host_seconds                                     0.85                       # Real time elapsed on the host
 sim_insts                                     2000004                       # Number of instructions simulated
 sim_ops                                       2000004                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -854,9 +854,9 @@ system.cpu3.icache.cache_copies                     0                       # nu
 system.cpu3.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.l2c.tags.replacements                        0                       # number of replacements
 system.l2c.tags.tagsinuse                 1962.780232                       # Cycle average of tags in use
-system.l2c.tags.total_refs                        332                       # Total number of references to valid blocks.
+system.l2c.tags.total_refs                       1068                       # Total number of references to valid blocks.
 system.l2c.tags.sampled_refs                     2932                       # Sample count of references to valid blocks.
-system.l2c.tags.avg_refs                     0.113233                       # Average number of references to valid blocks.
+system.l2c.tags.avg_refs                     0.364256                       # Average number of references to valid blocks.
 system.l2c.tags.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.l2c.tags.occ_blocks::writebacks      17.466765                       # Average occupied blocks per requestor
 system.l2c.tags.occ_blocks::cpu0.inst      267.152061                       # Average occupied blocks per requestor
@@ -882,19 +882,20 @@ system.l2c.tags.age_task_id_blocks_1024::0            8                       # 
 system.l2c.tags.age_task_id_blocks_1024::1         1088                       # Occupied blocks per task id
 system.l2c.tags.age_task_id_blocks_1024::2         1836                       # Occupied blocks per task id
 system.l2c.tags.occ_task_id_percent::1024     0.044739                       # Percentage of cache occupancy per task id
-system.l2c.tags.tag_accesses                    34048                       # Number of tag accesses
-system.l2c.tags.data_accesses                   34048                       # Number of data accesses
-system.l2c.ReadReq_hits::cpu0.inst                 60                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu0.data                  9                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu1.inst                 60                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu1.data                  9                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu2.inst                 60                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu2.data                  9                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu3.inst                 60                       # number of ReadReq hits
-system.l2c.ReadReq_hits::cpu3.data                  9                       # number of ReadReq hits
-system.l2c.ReadReq_hits::total                    276                       # number of ReadReq hits
+system.l2c.tags.tag_accesses                    39936                       # Number of tag accesses
+system.l2c.tags.data_accesses                   39936                       # Number of data accesses
 system.l2c.Writeback_hits::writebacks             116                       # number of Writeback hits
 system.l2c.Writeback_hits::total                  116                       # number of Writeback hits
+system.l2c.ReadCleanReq_hits::cpu0.inst            60                       # number of ReadCleanReq hits
+system.l2c.ReadCleanReq_hits::cpu1.inst            60                       # number of ReadCleanReq hits
+system.l2c.ReadCleanReq_hits::cpu2.inst            60                       # number of ReadCleanReq hits
+system.l2c.ReadCleanReq_hits::cpu3.inst            60                       # number of ReadCleanReq hits
+system.l2c.ReadCleanReq_hits::total               240                       # number of ReadCleanReq hits
+system.l2c.ReadSharedReq_hits::cpu0.data            9                       # number of ReadSharedReq hits
+system.l2c.ReadSharedReq_hits::cpu1.data            9                       # number of ReadSharedReq hits
+system.l2c.ReadSharedReq_hits::cpu2.data            9                       # number of ReadSharedReq hits
+system.l2c.ReadSharedReq_hits::cpu3.data            9                       # number of ReadSharedReq hits
+system.l2c.ReadSharedReq_hits::total               36                       # number of ReadSharedReq hits
 system.l2c.demand_hits::cpu0.inst                  60                       # number of demand (read+write) hits
 system.l2c.demand_hits::cpu0.data                   9                       # number of demand (read+write) hits
 system.l2c.demand_hits::cpu1.inst                  60                       # number of demand (read+write) hits
@@ -913,20 +914,21 @@ system.l2c.overall_hits::cpu2.data                  9                       # nu
 system.l2c.overall_hits::cpu3.inst                 60                       # number of overall hits
 system.l2c.overall_hits::cpu3.data                  9                       # number of overall hits
 system.l2c.overall_hits::total                    276                       # number of overall hits
-system.l2c.ReadReq_misses::cpu0.inst              403                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu0.data              315                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu1.inst              403                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu1.data              315                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu2.inst              403                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu2.data              315                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu3.inst              403                       # number of ReadReq misses
-system.l2c.ReadReq_misses::cpu3.data              315                       # number of ReadReq misses
-system.l2c.ReadReq_misses::total                 2872                       # number of ReadReq misses
 system.l2c.ReadExReq_misses::cpu0.data            139                       # number of ReadExReq misses
 system.l2c.ReadExReq_misses::cpu1.data            139                       # number of ReadExReq misses
 system.l2c.ReadExReq_misses::cpu2.data            139                       # number of ReadExReq misses
 system.l2c.ReadExReq_misses::cpu3.data            139                       # number of ReadExReq misses
 system.l2c.ReadExReq_misses::total                556                       # number of ReadExReq misses
+system.l2c.ReadCleanReq_misses::cpu0.inst          403                       # number of ReadCleanReq misses
+system.l2c.ReadCleanReq_misses::cpu1.inst          403                       # number of ReadCleanReq misses
+system.l2c.ReadCleanReq_misses::cpu2.inst          403                       # number of ReadCleanReq misses
+system.l2c.ReadCleanReq_misses::cpu3.inst          403                       # number of ReadCleanReq misses
+system.l2c.ReadCleanReq_misses::total            1612                       # number of ReadCleanReq misses
+system.l2c.ReadSharedReq_misses::cpu0.data          315                       # number of ReadSharedReq misses
+system.l2c.ReadSharedReq_misses::cpu1.data          315                       # number of ReadSharedReq misses
+system.l2c.ReadSharedReq_misses::cpu2.data          315                       # number of ReadSharedReq misses
+system.l2c.ReadSharedReq_misses::cpu3.data          315                       # number of ReadSharedReq misses
+system.l2c.ReadSharedReq_misses::total           1260                       # number of ReadSharedReq misses
 system.l2c.demand_misses::cpu0.inst               403                       # number of demand (read+write) misses
 system.l2c.demand_misses::cpu0.data               454                       # number of demand (read+write) misses
 system.l2c.demand_misses::cpu1.inst               403                       # number of demand (read+write) misses
@@ -945,15 +947,6 @@ system.l2c.overall_misses::cpu2.data              454                       # nu
 system.l2c.overall_misses::cpu3.inst              403                       # number of overall misses
 system.l2c.overall_misses::cpu3.data              454                       # number of overall misses
 system.l2c.overall_misses::total                 3428                       # number of overall misses
-system.l2c.ReadReq_accesses::cpu0.inst            463                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu0.data            324                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu1.inst            463                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu1.data            324                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu2.inst            463                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu2.data            324                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu3.inst            463                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::cpu3.data            324                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_accesses::total               3148                       # number of ReadReq accesses(hits+misses)
 system.l2c.Writeback_accesses::writebacks          116                       # number of Writeback accesses(hits+misses)
 system.l2c.Writeback_accesses::total              116                       # number of Writeback accesses(hits+misses)
 system.l2c.ReadExReq_accesses::cpu0.data          139                       # number of ReadExReq accesses(hits+misses)
@@ -961,6 +954,16 @@ system.l2c.ReadExReq_accesses::cpu1.data          139                       # nu
 system.l2c.ReadExReq_accesses::cpu2.data          139                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::cpu3.data          139                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::total              556                       # number of ReadExReq accesses(hits+misses)
+system.l2c.ReadCleanReq_accesses::cpu0.inst          463                       # number of ReadCleanReq accesses(hits+misses)
+system.l2c.ReadCleanReq_accesses::cpu1.inst          463                       # number of ReadCleanReq accesses(hits+misses)
+system.l2c.ReadCleanReq_accesses::cpu2.inst          463                       # number of ReadCleanReq accesses(hits+misses)
+system.l2c.ReadCleanReq_accesses::cpu3.inst          463                       # number of ReadCleanReq accesses(hits+misses)
+system.l2c.ReadCleanReq_accesses::total          1852                       # number of ReadCleanReq accesses(hits+misses)
+system.l2c.ReadSharedReq_accesses::cpu0.data          324                       # number of ReadSharedReq accesses(hits+misses)
+system.l2c.ReadSharedReq_accesses::cpu1.data          324                       # number of ReadSharedReq accesses(hits+misses)
+system.l2c.ReadSharedReq_accesses::cpu2.data          324                       # number of ReadSharedReq accesses(hits+misses)
+system.l2c.ReadSharedReq_accesses::cpu3.data          324                       # number of ReadSharedReq accesses(hits+misses)
+system.l2c.ReadSharedReq_accesses::total         1296                       # number of ReadSharedReq accesses(hits+misses)
 system.l2c.demand_accesses::cpu0.inst             463                       # number of demand (read+write) accesses
 system.l2c.demand_accesses::cpu0.data             463                       # number of demand (read+write) accesses
 system.l2c.demand_accesses::cpu1.inst             463                       # number of demand (read+write) accesses
@@ -979,20 +982,21 @@ system.l2c.overall_accesses::cpu2.data            463                       # nu
 system.l2c.overall_accesses::cpu3.inst            463                       # number of overall (read+write) accesses
 system.l2c.overall_accesses::cpu3.data            463                       # number of overall (read+write) accesses
 system.l2c.overall_accesses::total               3704                       # number of overall (read+write) accesses
-system.l2c.ReadReq_miss_rate::cpu0.inst      0.870410                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu0.data      0.972222                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu1.inst      0.870410                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu1.data      0.972222                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu2.inst      0.870410                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu2.data      0.972222                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu3.inst      0.870410                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::cpu3.data      0.972222                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_miss_rate::total          0.912325                       # miss rate for ReadReq accesses
 system.l2c.ReadExReq_miss_rate::cpu0.data            1                       # miss rate for ReadExReq accesses
 system.l2c.ReadExReq_miss_rate::cpu1.data            1                       # miss rate for ReadExReq accesses
 system.l2c.ReadExReq_miss_rate::cpu2.data            1                       # miss rate for ReadExReq accesses
 system.l2c.ReadExReq_miss_rate::cpu3.data            1                       # miss rate for ReadExReq accesses
 system.l2c.ReadExReq_miss_rate::total               1                       # miss rate for ReadExReq accesses
+system.l2c.ReadCleanReq_miss_rate::cpu0.inst     0.870410                       # miss rate for ReadCleanReq accesses
+system.l2c.ReadCleanReq_miss_rate::cpu1.inst     0.870410                       # miss rate for ReadCleanReq accesses
+system.l2c.ReadCleanReq_miss_rate::cpu2.inst     0.870410                       # miss rate for ReadCleanReq accesses
+system.l2c.ReadCleanReq_miss_rate::cpu3.inst     0.870410                       # miss rate for ReadCleanReq accesses
+system.l2c.ReadCleanReq_miss_rate::total     0.870410                       # miss rate for ReadCleanReq accesses
+system.l2c.ReadSharedReq_miss_rate::cpu0.data     0.972222                       # miss rate for ReadSharedReq accesses
+system.l2c.ReadSharedReq_miss_rate::cpu1.data     0.972222                       # miss rate for ReadSharedReq accesses
+system.l2c.ReadSharedReq_miss_rate::cpu2.data     0.972222                       # miss rate for ReadSharedReq accesses
+system.l2c.ReadSharedReq_miss_rate::cpu3.data     0.972222                       # miss rate for ReadSharedReq accesses
+system.l2c.ReadSharedReq_miss_rate::total     0.972222                       # miss rate for ReadSharedReq accesses
 system.l2c.demand_miss_rate::cpu0.inst       0.870410                       # miss rate for demand accesses
 system.l2c.demand_miss_rate::cpu0.data       0.980562                       # miss rate for demand accesses
 system.l2c.demand_miss_rate::cpu1.inst       0.870410                       # miss rate for demand accesses
@@ -1020,10 +1024,10 @@ system.l2c.avg_blocked_cycles::no_targets          nan                       # a
 system.l2c.fast_writes                              0                       # number of fast writes performed
 system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate
-system.membus.trans_dist::ReadReq                2872                       # Transaction distribution
 system.membus.trans_dist::ReadResp               2872                       # Transaction distribution
 system.membus.trans_dist::ReadExReq               556                       # Transaction distribution
 system.membus.trans_dist::ReadExResp              556                       # Transaction distribution
+system.membus.trans_dist::ReadSharedReq          2872                       # Transaction distribution
 system.membus.pkt_count_system.l2c.mem_side::system.physmem.port         6856                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count::total                   6856                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_size_system.l2c.mem_side::system.physmem.port       219392                       # Cumulative packet size per connected master and slave (bytes)
@@ -1039,20 +1043,22 @@ system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Re
 system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               0                       # Request fanout histogram
 system.membus.snoop_fanout::total                3428                       # Request fanout histogram
-system.toL2Bus.trans_dist::ReadReq               3148                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadResp              3148                       # Transaction distribution
 system.toL2Bus.trans_dist::Writeback              116                       # Transaction distribution
+system.toL2Bus.trans_dist::CleanEvict             736                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadExReq              556                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadExResp             556                       # Transaction distribution
-system.toL2Bus.pkt_count_system.cpu0.icache.mem_side::system.l2c.cpu_side          926                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu0.dcache.mem_side::system.l2c.cpu_side          955                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu1.icache.mem_side::system.l2c.cpu_side          926                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu1.dcache.mem_side::system.l2c.cpu_side          955                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu2.icache.mem_side::system.l2c.cpu_side          926                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu2.dcache.mem_side::system.l2c.cpu_side          955                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu3.icache.mem_side::system.l2c.cpu_side          926                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count_system.cpu3.dcache.mem_side::system.l2c.cpu_side          955                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_count::total                  7524                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.trans_dist::ReadCleanReq          1852                       # Transaction distribution
+system.toL2Bus.trans_dist::ReadSharedReq         1296                       # Transaction distribution
+system.toL2Bus.pkt_count_system.cpu0.icache.mem_side::system.l2c.cpu_side         1078                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu0.dcache.mem_side::system.l2c.cpu_side          987                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu1.icache.mem_side::system.l2c.cpu_side         1078                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu1.dcache.mem_side::system.l2c.cpu_side          987                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu2.icache.mem_side::system.l2c.cpu_side         1078                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu2.dcache.mem_side::system.l2c.cpu_side          987                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu3.icache.mem_side::system.l2c.cpu_side         1078                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count_system.cpu3.dcache.mem_side::system.l2c.cpu_side          987                       # Packet count per connected master and slave (bytes)
+system.toL2Bus.pkt_count::total                  8260                       # Packet count per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu0.icache.mem_side::system.l2c.cpu_side        29632                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu0.dcache.mem_side::system.l2c.cpu_side        31488                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu1.icache.mem_side::system.l2c.cpu_side        29632                       # Cumulative packet size per connected master and slave (bytes)
@@ -1063,7 +1069,7 @@ system.toL2Bus.pkt_size_system.cpu3.icache.mem_side::system.l2c.cpu_side        
 system.toL2Bus.pkt_size_system.cpu3.dcache.mem_side::system.l2c.cpu_side        31488                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size::total                 244480                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.snoops                               0                       # Total snoops (count)
-system.toL2Bus.snoop_fanout::samples             3820                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::samples             4556                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::mean                   7                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::stdev                  0                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
@@ -1074,11 +1080,11 @@ system.toL2Bus.snoop_fanout::3                      0      0.00%      0.00% # Re
 system.toL2Bus.snoop_fanout::4                      0      0.00%      0.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::5                      0      0.00%      0.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::6                      0      0.00%      0.00% # Request fanout histogram
-system.toL2Bus.snoop_fanout::7                   3820    100.00%    100.00% # Request fanout histogram
+system.toL2Bus.snoop_fanout::7                   4556    100.00%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::8                      0      0.00%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::min_value              7                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::max_value              7                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::total               3820                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::total               4556                       # Request fanout histogram
 
 ---------- End Simulation Statistics   ----------

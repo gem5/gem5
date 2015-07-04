@@ -41,9 +41,10 @@ Calibrating delay loop (skipped)... 3999.96 BogoMIPS preset
 Mount-cache hash table entries: 256
 CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
 CPU: L2 Cache: 1024K (64 bytes/line)
+using mwait in idle threads.
 Freeing SMP alternatives: 34k freed
 Using local APIC timer interrupts.
-result 7812509
+result 7812512
 Detected 7.812 MHz APIC timer.
 Booting processor 1/2 APIC 0x1
 Initializing CPU#1
@@ -131,8 +132,8 @@ TCP cubic registered
 NET: Registered protocol family 1
 NET: Registered protocol family 10
 IPv6 over IPv4 tunneling driver
-NET: Registered protocol family 17
 input: PS/2 Generic Mouse as /class/input/input1
+NET: Registered protocol family 17
 EXT2-fs warning: mounting unchecked fs, running e2fsck is recommended
 VFS: Mounted root (ext2 filesystem).
 Freeing unused kernel memory: 248k freed

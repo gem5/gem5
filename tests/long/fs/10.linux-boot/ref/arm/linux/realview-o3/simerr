@@ -8,6 +8,8 @@ warn: Not doing anything for write of miscreg ACTLR
 warn: The clidr register always reports 0 caches.
 warn: clidr LoUIS field of 0b001 to match current ARM implementations.
 warn: The csselr register isn't implemented.
+warn: CP14 unimplemented crn[0], opc1[6], crm[0], opc2[0]
+warn: CP14 unimplemented crn[0], opc1[6], crm[0], opc2[0]
 warn: 	instruction 'mcr dccmvau' unimplemented
 warn: 	instruction 'mcr icimvau' unimplemented
 warn: 	instruction 'mcr bpiallis' unimplemented
