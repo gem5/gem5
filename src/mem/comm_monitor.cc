@@ -52,12 +52,13 @@ CommMonitor::CommMonitor(Params* params)
       slavePort(name() + "-slave", *this),
       samplePeriodicEvent(this),
       samplePeriodTicks(params->sample_period),
+      samplePeriod(params->sample_period / SimClock::Float::s),
       readAddrMask(params->read_addr_mask),
       writeAddrMask(params->write_addr_mask),
-      stats(params),
       stackDistCalc(params->stack_dist_calc),
-      traceStream(NULL),
-      system(params->system)
+      system(params->system),
+      traceStream(nullptr),
+      stats(params)
 {
     // If we are using a trace file, then open the file
     if (params->trace_enable) {
@@ -98,12 +99,9 @@ CommMonitor::CommMonitor(Params* params)
         registerExitCallback(cb);
     }
 
-    // keep track of the sample period both in ticks and absolute time
-    samplePeriod.setTick(params->sample_period);
-
     DPRINTF(CommMonitor,
             "Created monitor %s with sample period %d ticks (%f ms)\n",
-            name(), samplePeriodTicks, samplePeriod.msec());
+            name(), samplePeriodTicks, samplePeriod * 1E3);
 }
 
 CommMonitor::~CommMonitor()
@@ -180,9 +178,9 @@ CommMonitor::recvAtomic(PacketPtr pkt)
     if (stackDistCalc)
         stackDistCalc->update(pkt->cmd, pkt->getAddr());
 
-   // if tracing enabled, store the packet information
-   // to the trace stream
-   if (traceStream != NULL) {
+    // if tracing enabled, store the packet information
+    // to the trace stream
+    if (traceStream != NULL) {
         ProtoMessage::Packet pkt_msg;
         pkt_msg.set_tick(curTick());
         pkt_msg.set_cmd(pkt->cmdToIndex());

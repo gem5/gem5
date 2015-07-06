@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -42,7 +42,6 @@
 #define __MEM_COMM_MONITOR_HH__
 
 #include "base/statistics.hh"
-#include "base/time.hh"
 #include "mem/mem_object.hh"
 #include "mem/stack_dist_calc.hh"
 #include "params/CommMonitor.hh"
@@ -63,7 +62,7 @@
 class CommMonitor : public MemObject
 {
 
-  public:
+  public: // Construction & SimObject interfaces
 
     /** Parameters of communication monitor */
     typedef CommMonitorParams Params;
@@ -80,22 +79,16 @@ class CommMonitor : public MemObject
     /** Destructor */
     ~CommMonitor();
 
-    /**
-     * Callback to flush and close all open output streams on exit. If
-     * we were calling the destructor it could be done there.
-     */
-    void closeStreams();
+    void init() M5_ATTR_OVERRIDE;
+    void regStats() M5_ATTR_OVERRIDE;
+    void startup() M5_ATTR_OVERRIDE;
 
-    virtual BaseMasterPort& getMasterPort(const std::string& if_name,
-                                          PortID idx = InvalidPortID);
+  public: // MemObject interfaces
+    BaseMasterPort& getMasterPort(const std::string& if_name,
+                                  PortID idx = InvalidPortID) M5_ATTR_OVERRIDE;
 
-    virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
-
-    virtual void init();
-
-    /** Register statistics */
-    void regStats();
+    BaseSlavePort& getSlavePort(const std::string& if_name,
+                                PortID idx = InvalidPortID) M5_ATTR_OVERRIDE;
 
   private:
 
@@ -397,33 +390,44 @@ class CommMonitor : public MemObject
     /** This function is called periodically at the end of each time bin */
     void samplePeriodic();
 
-    /** Schedule the first periodic event */
-    void startup();
+    /**
+     * Callback to flush and close all open output streams on exit. If
+     * we were calling the destructor it could be done there.
+     */
+    void closeStreams();
 
     /** Periodic event called at the end of each simulation time bin */
     EventWrapper<CommMonitor, &CommMonitor::samplePeriodic> samplePeriodicEvent;
 
+    /**
+     *@{
+     * @name Configuration
+     */
+
     /** Length of simulation time bin*/
-    Tick samplePeriodTicks;
-    Time samplePeriod;
+    const Tick samplePeriodTicks;
+    /** Sample period in seconds */
+    const double samplePeriod;
 
     /** Address mask for sources of read accesses to be captured */
-    Addr readAddrMask;
+    const Addr readAddrMask;
 
     /** Address mask for sources of write accesses to be captured */
-    Addr writeAddrMask;
+    const Addr writeAddrMask;
+
+    /** Optional stack distance calculator */
+    StackDistCalc *const stackDistCalc;
+
+    /** The system in which the monitor lives */
+    System *const system;
+
+    /** @} */
+
+    /** Output stream for a potential trace. */
+    ProtoOutputStream *traceStream;
 
     /** Instantiate stats */
     MonitorStats stats;
-
-    /** Optional stack distance calculator */
-    StackDistCalc* stackDistCalc;
-
-    /** Output stream for a potential trace. */
-    ProtoOutputStream* traceStream;
-
-    /** The system in which the monitor lives */
-    System *system;
 };
 
 #endif //__MEM_COMM_MONITOR_HH__
