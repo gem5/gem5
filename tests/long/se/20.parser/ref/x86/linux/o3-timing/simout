@@ -1,17 +1,19 @@
+Redirecting stdout to build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing/simout
+Redirecting stderr to build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 22 2015 08:10:29
-gem5 started Apr 22 2015 09:35:25
-gem5 executing on phenom
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing
+gem5 compiled Jul  5 2015 17:24:59
+gem5 started Jul  5 2015 17:25:16
+gem5 executing on ribera.cs.wisc.edu
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
- Reading the dictionary files: *******info: Increasing stack size by one page.
-**info: Increasing stack size by one page.
-**************************************info: Increasing stack size by one page.
+ Reading the dictionary files: *********info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+**********************************info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
@@ -23,7 +25,7 @@ info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
-**
+******
  58924 words stored in 3784810 bytes
 
 
@@ -35,16 +37,16 @@ Processing sentences in batch mode
 
 Echoing of input sentence turned on.
 * as had expected the party to be a success , it was a success 
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
 * do you know where John 's 
 * he said that , finding that it was impossible to get work as a waiter , he would work as a janitor 
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
 * how fast the program is it 
 * I am wondering whether to invite to the party 
 * I gave him for his birthday it 
@@ -89,4 +91,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 455715234500 because target called exit()
+Exiting @ tick 417250627500 because target called exit()
