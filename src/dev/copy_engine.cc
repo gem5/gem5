@@ -650,29 +650,10 @@ CopyEngine::CopyEngineChannel::drain(DrainManager *dm)
 {
     if (nextState == Idle || ce->getDrainState() != DrainState::Running)
         return 0;
-    unsigned int count = 1;
-    count += cePort.drain(dm);
 
     DPRINTF(Drain, "CopyEngineChannel not drained\n");
     this->drainManager = dm;
-    return count;
-}
-
-unsigned int
-CopyEngine::drain(DrainManager *dm)
-{
-    unsigned int count;
-    count = pioPort.drain(dm) + dmaPort.drain(dm) + configPort.drain(dm);
-    for (int x = 0;x < chan.size(); x++)
-        count += chan[x]->drain(dm);
-
-    if (count)
-        setDrainState(DrainState::Draining);
-    else
-        setDrainState(DrainState::Drained);
-
-    DPRINTF(Drain, "CopyEngine not drained\n");
-    return count;
+    return 1;
 }
 
 void
@@ -754,15 +735,6 @@ CopyEngine::CopyEngineChannel::restartStateMachine()
         panic("Unknown state for CopyEngineChannel\n");
     }
 }
-
-void
-CopyEngine::drainResume()
-{
-    Drainable::drainResume();
-    for (int x = 0;x < chan.size(); x++)
-        chan[x]->drainResume();
-}
-
 
 void
 CopyEngine::CopyEngineChannel::drainResume()

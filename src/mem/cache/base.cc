@@ -775,23 +775,6 @@ BaseCache::regStats()
 
 }
 
-unsigned int
-BaseCache::drain(DrainManager *dm)
-{
-    int count = memSidePort->drain(dm) + cpuSidePort->drain(dm) +
-        mshrQueue.drain(dm) + writeBuffer.drain(dm);
-
-    // Set status
-    if (count != 0) {
-        setDrainState(DrainState::Draining);
-        DPRINTF(Drain, "Cache not drained\n");
-        return count;
-    }
-
-    setDrainState(DrainState::Drained);
-    return 0;
-}
-
 BaseCache *
 BaseCacheParams::create()
 {

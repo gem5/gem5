@@ -46,21 +46,3 @@
 %nodefaultctor Drainable;
 
 %include "sim/drain.hh"
-
-%inline %{
-
-DrainManager *
-createDrainManager()
-{
-    return new DrainManager();
-}
-
-void
-cleanupDrainManager(DrainManager *drain_manager)
-{
-    assert(drain_manager);
-    assert(drain_manager->getCount() == 0);
-    delete drain_manager;
-}
-
-%}

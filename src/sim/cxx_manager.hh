@@ -283,7 +283,7 @@ class CxxConfigManager
     void startup();
 
     /** Drain all objects */
-    unsigned int drain(DrainManager *drain_manager);
+    unsigned int drain();
 
     /** Resume from drain */
     void drainResume();

@@ -93,18 +93,6 @@ PioDevice::getSlavePort(const std::string &if_name, PortID idx)
     return MemObject::getSlavePort(if_name, idx);
 }
 
-unsigned int
-PioDevice::drain(DrainManager *dm)
-{
-    unsigned int count;
-    count = pioPort.drain(dm);
-    if (count)
-        setDrainState(DrainState::Draining);
-    else
-        setDrainState(DrainState::Drained);
-    return count;
-}
-
 BasicPioDevice::BasicPioDevice(const Params *p, Addr size)
     : PioDevice(p), pioAddr(p->pio_addr), pioSize(size),
       pioDelay(p->pio_latency)

@@ -161,15 +161,6 @@ DMASequencer::testDrainComplete()
 }
 
 unsigned int
-DMASequencer::getChildDrainCount(DrainManager *dm)
-{
-    int count = 0;
-    count += slave_port.drain(dm);
-    DPRINTF(Config, "count after slave port check %d\n", count);
-    return count;
-}
-
-unsigned int
 DMASequencer::drain(DrainManager *dm)
 {
     if (isDeadlockEventScheduled()) {
@@ -181,11 +172,6 @@ DMASequencer::drain(DrainManager *dm)
     DPRINTF(Config, "outstanding count %d\n", outstandingCount());
     bool need_drain = outstandingCount() > 0;
 
-    //
-    // Also, get the number of child ports that will also need to clear
-    // their buffered requests before they call drainManager->signalDrainDone()
-    //
-    unsigned int child_drain_count = getChildDrainCount(dm);
 
     // Set status
     if (need_drain) {
@@ -193,12 +179,12 @@ DMASequencer::drain(DrainManager *dm)
 
         DPRINTF(Drain, "DMASequencer not drained\n");
         setDrainState(DrainState::Draining);
-        return child_drain_count + 1;
+        return 1;
     }
 
     drainManager = NULL;
     setDrainState(DrainState::Drained);
-    return child_drain_count;
+    return 0;
 }
 
 void

@@ -125,8 +125,6 @@ class PioDevice : public MemObject
 
     virtual void init();
 
-    unsigned int drain(DrainManager *drainManger);
-
     virtual BaseSlavePort &getSlavePort(const std::string &if_name,
                                         PortID idx = InvalidPortID);
 

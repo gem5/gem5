@@ -467,8 +467,6 @@ class BaseXBar : public MemObject
     BaseSlavePort& getSlavePort(const std::string& if_name,
                                 PortID idx = InvalidPortID);
 
-    virtual unsigned int drain(DrainManager *dm) = 0;
-
     virtual void regStats();
 
 };

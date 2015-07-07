@@ -66,6 +66,8 @@ _memory_modes = {
     "atomic_noncaching" : objects.params.atomic_noncaching,
     }
 
+_drain_manager = internal.drain.DrainManager.instance()
+
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(ckpt_dir=None):
@@ -129,10 +131,10 @@ def instantiate(ckpt_dir=None):
 
     # Restore checkpoint (if any)
     if ckpt_dir:
+        _drain_manager.preCheckpointRestore()
         ckpt = internal.core.getCheckpoint(ckpt_dir)
         internal.core.unserializeGlobals(ckpt);
         for obj in root.descendants(): obj.loadState(ckpt)
-        need_resume.append(root)
     else:
         for obj in root.descendants(): obj.initState()
 
@@ -140,10 +142,9 @@ def instantiate(ckpt_dir=None):
     # a checkpoint, If so, this call will shift them to be at a valid time.
     updateStatEvents()
 
-need_resume = []
 need_startup = True
 def simulate(*args, **kwargs):
-    global need_resume, need_startup
+    global need_startup
 
     if need_startup:
         root = objects.Root.getInstance()
@@ -160,9 +161,8 @@ def simulate(*args, **kwargs):
         # Reset to put the stats in a consistent state.
         stats.reset()
 
-    for root in need_resume:
-        resume(root)
-    need_resume = []
+    if _drain_manager.isDrained():
+        _drain_manager.resume()
 
     return internal.event.simulate(*args, **kwargs)
 
@@ -170,33 +170,40 @@ def simulate(*args, **kwargs):
 def curTick():
     return internal.core.curTick()
 
-# Drain the system in preparation of a checkpoint or memory mode
-# switch.
-def drain(root):
+def drain():
+    """Drain the simulator in preparation of a checkpoint or memory mode
+    switch.
+
+    This operation is a no-op if the simulator is already in the
+    Drained state.
+
+    """
+
     # Try to drain all objects. Draining might not be completed unless
     # all objects return that they are drained on the first call. This
     # is because as objects drain they may cause other objects to no
     # longer be drained.
     def _drain():
-        all_drained = False
-        dm = internal.drain.createDrainManager()
-        unready_objs = sum(obj.drain(dm) for obj in root.descendants())
-        # If we've got some objects that can't drain immediately, then simulate
-        if unready_objs > 0:
-            dm.setCount(unready_objs)
-            #WARNING: if a valid exit event occurs while draining, it will not
-            # get returned to the user script
-            exit_event = simulate()
-            while exit_event.getCause() != 'Finished drain':
-                exit_event = simulate()
-        else:
-            all_drained = True
-        internal.drain.cleanupDrainManager(dm)
-        return all_drained
+        # Try to drain the system. The drain is successful if all
+        # objects are done without simulation. We need to simulate
+        # more if not.
+        if _drain_manager.tryDrain():
+            return True
 
-    all_drained = _drain()
-    while (not all_drained):
-        all_drained = _drain()
+        # WARNING: if a valid exit event occurs while draining, it
+        # will not get returned to the user script
+        exit_event = internal.event.simulate()
+        while exit_event.getCause() != 'Finished drain':
+            exit_event = simulate()
+
+        return False
+
+    # Don't try to drain a system that is already drained
+    is_drained = _drain_manager.isDrained()
+    while not is_drained:
+        is_drained = _drain()
+
+    assert _drain_manager.isDrained(), "Drain state inconsistent"
 
 def memWriteback(root):
     for obj in root.descendants():
@@ -206,18 +213,15 @@ def memInvalidate(root):
     for obj in root.descendants():
         obj.memInvalidate()
 
-def resume(root):
-    for obj in root.descendants(): obj.drainResume()
-
 def checkpoint(dir):
     root = objects.Root.getInstance()
     if not isinstance(root, objects.Root):
         raise TypeError, "Checkpoint must be called on a root object."
-    drain(root)
+
+    drain()
     memWriteback(root)
     print "Writing checkpoint"
     internal.core.serializeAll(dir)
-    resume(root)
 
 def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
@@ -228,14 +232,8 @@ def _changeMemoryMode(system, mode):
     else:
         print "System already in target mode. Memory mode unchanged."
 
-def switchCpus(system, cpuList, do_drain=True, verbose=True):
+def switchCpus(system, cpuList, verbose=True):
     """Switch CPUs in a system.
-
-    By default, this method drains and resumes the system. This
-    behavior can be disabled by setting the keyword argument
-    'do_drain' to false, which might be desirable if multiple
-    operations requiring a drained system are going to be performed in
-    sequence.
 
     Note: This method may switch the memory mode of the system if that
     is required by the CPUs. It may also flush all caches in the
@@ -244,9 +242,6 @@ def switchCpus(system, cpuList, do_drain=True, verbose=True):
     Arguments:
       system -- Simulated system.
       cpuList -- (old_cpu, new_cpu) tuples
-
-    Keyword Arguments:
-      do_drain -- Perform a drain/resume of the system when switching.
     """
 
     if verbose:
@@ -292,8 +287,7 @@ def switchCpus(system, cpuList, do_drain=True, verbose=True):
     except KeyError:
         raise RuntimeError, "Invalid memory mode (%s)" % memory_mode_name
 
-    if do_drain:
-        drain(system)
+    drain()
 
     # Now all of the CPUs are ready to be switched out
     for old_cpu, new_cpu in cpuList:
@@ -313,8 +307,5 @@ def switchCpus(system, cpuList, do_drain=True, verbose=True):
 
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
-
-    if do_drain:
-        resume(system)
 
 from internal.core import disableAllListeners

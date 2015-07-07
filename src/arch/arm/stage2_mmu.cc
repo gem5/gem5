@@ -141,12 +141,6 @@ Stage2MMU::Stage2Translation::finish(const Fault &_fault, RequestPtr req,
     }
 }
 
-unsigned int
-Stage2MMU::drain(DrainManager *dm)
-{
-    return port.drain(dm);
-}
-
 ArmISA::Stage2MMU *
 ArmStage2MMUParams::create()
 {

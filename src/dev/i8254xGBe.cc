@@ -2058,8 +2058,7 @@ IGbE::restartClock()
 unsigned int
 IGbE::drain(DrainManager *dm)
 {
-    unsigned int count;
-    count = pioPort.drain(dm) + dmaPort.drain(dm);
+    unsigned int count(0);
     if (rxDescCache.hasOutstandingEvents() ||
         txDescCache.hasOutstandingEvents()) {
         count++;

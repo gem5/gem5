@@ -193,8 +193,6 @@ class RubyPort : public MemObject
         retryList.push_back(port);
     }
 
-    unsigned int getChildDrainCount(DrainManager *dm);
-
     PioMasterPort pioMasterPort;
     PioSlavePort pioSlavePort;
     MemMasterPort memMasterPort;

@@ -2319,26 +2319,16 @@ UFSHostDevice::unserialize(CheckpointIn &cp)
 unsigned int
 UFSHostDevice::drain(DrainManager *dm)
 {
-    unsigned int count = 0;
-
-    // check pio, dma port, and doorbells
-    count = pioPort.drain(dm) + dmaPort.drain(dm);
-
     if (UFSHCIMem.TRUTRLDBR) {
-        count += 1;
         drainManager = dm;
-    } else {
-        DPRINTF(UFSHostDevice, "UFSHostDevice in drained state\n");
-    }
-
-    if (count) {
         DPRINTF(UFSHostDevice, "UFSDevice is draining...\n");
         setDrainState(DrainState::Draining);
+        return 1;
     } else {
         DPRINTF(UFSHostDevice, "UFSDevice drained\n");
         setDrainState(DrainState::Drained);
+        return 0;
     }
-    return count;
 }
 
 /**

@@ -259,8 +259,6 @@ class PciDevice : public DmaDevice
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
 
-    virtual unsigned int drain(DrainManager *dm);
-
     virtual BaseSlavePort &getSlavePort(const std::string &if_name,
                                         PortID idx = InvalidPortID)
     {

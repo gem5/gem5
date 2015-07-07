@@ -255,18 +255,6 @@ PciDevice::init()
    DmaDevice::init();
 }
 
-unsigned int
-PciDevice::drain(DrainManager *dm)
-{
-    unsigned int count;
-    count = pioPort.drain(dm) + dmaPort.drain(dm) + configPort.drain(dm);
-    if (count)
-        setDrainState(DrainState::Draining);
-    else
-        setDrainState(DrainState::Drained);
-    return count;
-}
-
 Tick
 PciDevice::readConfig(PacketPtr pkt)
 {

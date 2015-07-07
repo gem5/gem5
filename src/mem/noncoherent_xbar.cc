@@ -313,18 +313,6 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID slave_port_id)
     masterPorts[dest_id]->sendFunctional(pkt);
 }
 
-unsigned int
-NoncoherentXBar::drain(DrainManager *dm)
-{
-    // sum up the individual layers
-    unsigned int total = 0;
-    for (auto l: reqLayers)
-        total += l->drain(dm);
-    for (auto l: respLayers)
-        total += l->drain(dm);
-    return total;
-}
-
 NoncoherentXBar*
 NoncoherentXBarParams::create()
 {

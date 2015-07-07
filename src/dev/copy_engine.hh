@@ -207,9 +207,6 @@ class CopyEngine : public PciDevice
 
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-
-    unsigned int drain(DrainManager *drainManger);
-    void drainResume();
 };
 
 #endif //__DEV_COPY_ENGINE_HH__

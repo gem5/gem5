@@ -126,17 +126,6 @@ DmaDevice::init()
 }
 
 unsigned int
-DmaDevice::drain(DrainManager *dm)
-{
-    unsigned int count = pioPort.drain(dm) + dmaPort.drain(dm);
-    if (count)
-        setDrainState(DrainState::Draining);
-    else
-        setDrainState(DrainState::Drained);
-    return count;
-}
-
-unsigned int
 DmaPort::drain(DrainManager *dm)
 {
     if (pendingCount == 0)

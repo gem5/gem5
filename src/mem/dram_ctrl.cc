@@ -2169,8 +2169,6 @@ DRAMCtrl::getSlavePort(const string &if_name, PortID idx)
 unsigned int
 DRAMCtrl::drain(DrainManager *dm)
 {
-    unsigned int count = port.drain(dm);
-
     // if there is anything in any of our internal queues, keep track
     // of that as well
     if (!(writeQueue.empty() && readQueue.empty() &&
@@ -2178,7 +2176,6 @@ DRAMCtrl::drain(DrainManager *dm)
         DPRINTF(Drain, "DRAM controller not drained, write: %d, read: %d,"
                 " resp: %d\n", writeQueue.size(), readQueue.size(),
                 respQueue.size());
-        ++count;
         drainManager = dm;
 
         // the only part that is not drained automatically over time
@@ -2186,13 +2183,12 @@ DRAMCtrl::drain(DrainManager *dm)
         if (!writeQueue.empty() && !nextReqEvent.scheduled()) {
             schedule(nextReqEvent, curTick());
         }
-    }
-
-    if (count)
         setDrainState(DrainState::Draining);
-    else
+        return 1;
+    } else {
         setDrainState(DrainState::Drained);
-    return count;
+        return 0;
+    }
 }
 
 void

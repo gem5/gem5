@@ -122,13 +122,12 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
             if verbose:
                 print "Switching CPUs..."
                 print "Next CPU: %s" % type(next_cpu)
-            m5.drain(system)
+            m5.drain()
             if current_cpu != next_cpu:
                 m5.switchCpus(system, [ (current_cpu, next_cpu) ],
-                              do_drain=False, verbose=verbose)
+                              verbose=verbose)
             else:
                 print "Source CPU and destination CPU are the same, skipping..."
-            m5.resume(system)
             current_cpu = next_cpu
         elif exit_cause == "target called exit()" or \
                 exit_cause == "m5_exit instruction encountered":

@@ -593,8 +593,6 @@ class BaseCache : public MemObject
         // interesting again.
     }
 
-    virtual unsigned int drain(DrainManager *dm);
-
     virtual bool inCache(Addr addr, bool is_secure) const = 0;
 
     virtual bool inMissQueue(Addr addr, bool is_secure) const = 0;

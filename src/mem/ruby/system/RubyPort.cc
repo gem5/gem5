@@ -400,31 +400,6 @@ RubyPort::testDrainComplete()
 }
 
 unsigned int
-RubyPort::getChildDrainCount(DrainManager *dm)
-{
-    int count = 0;
-
-    if (memMasterPort.isConnected()) {
-        count += memMasterPort.drain(dm);
-        DPRINTF(Config, "count after pio check %d\n", count);
-    }
-
-    for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
-        count += (*p)->drain(dm);
-        DPRINTF(Config, "count after slave port check %d\n", count);
-    }
-
-    for (std::vector<PioMasterPort *>::iterator p = master_ports.begin();
-         p != master_ports.end(); ++p) {
-        count += (*p)->drain(dm);
-        DPRINTF(Config, "count after master port check %d\n", count);
-    }
-
-    DPRINTF(Config, "final count %d\n", count);
-    return count;
-}
-
-unsigned int
 RubyPort::drain(DrainManager *dm)
 {
     if (isDeadlockEventScheduled()) {
@@ -438,24 +413,18 @@ RubyPort::drain(DrainManager *dm)
     DPRINTF(Config, "outstanding count %d\n", outstandingCount());
     bool need_drain = outstandingCount() > 0;
 
-    //
-    // Also, get the number of child ports that will also need to clear
-    // their buffered requests before they call drainManager->signalDrainDone()
-    //
-    unsigned int child_drain_count = getChildDrainCount(dm);
-
     // Set status
     if (need_drain) {
         drainManager = dm;
 
         DPRINTF(Drain, "RubyPort not drained\n");
         setDrainState(DrainState::Draining);
-        return child_drain_count + 1;
+        return 1;
     }
 
     drainManager = NULL;
     setDrainState(DrainState::Drained);
-    return child_drain_count;
+    return 0;
 }
 
 void

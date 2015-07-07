@@ -195,8 +195,6 @@ class NoncoherentXBar : public BaseXBar
 
     virtual ~NoncoherentXBar();
 
-    unsigned int drain(DrainManager *dm);
-
     /**
      * stats
      */

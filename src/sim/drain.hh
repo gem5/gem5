@@ -40,8 +40,9 @@
 #ifndef __SIM_DRAIN_HH__
 #define __SIM_DRAIN_HH__
 
-#include <cassert>
-#include <vector>
+#include <atomic>
+#include <mutex>
+#include <unordered_set>
 
 #include "base/flags.hh"
 
@@ -76,12 +77,12 @@ enum class DrainState {
 /**
  * This class coordinates draining of a System.
  *
- * When draining a System, we need to make sure that all SimObjects in
- * that system have drained their state before declaring the operation
- * to be successful. This class keeps track of how many objects are
- * still in the process of draining their state. Once it determines
- * that all objects have drained their state, it exits the simulation
- * loop.
+ * When draining the simulator, we need to make sure that all
+ * Drainable objects within the system have ended up in the drained
+ * state before declaring the operation to be successful. This class
+ * keeps track of how many objects are still in the process of
+ * draining. Once it determines that all objects have drained their
+ * state, it exits the simulation loop.
  *
  * @note A System might not be completely drained even though the
  * DrainManager has caused the simulation loop to exit. Draining needs
@@ -91,39 +92,92 @@ enum class DrainState {
  */
 class DrainManager
 {
-  public:
+  private:
     DrainManager();
-    virtual ~DrainManager();
+#ifndef SWIG
+    DrainManager(DrainManager &) = delete;
+#endif
+    ~DrainManager();
+
+  public:
+    /** Get the singleton DrainManager instance */
+    static DrainManager &instance() { return _instance; }
 
     /**
-     * Get the number of objects registered with this DrainManager
-     * that are currently draining their state.
+     * Try to drain the system.
      *
-     * @return Number of objects currently draining.
+     * Try to drain the system and return true if all objects are in a
+     * the Drained state at which point the whole simulator is in a
+     * consistent state and ready for checkpointing or CPU
+     * handover. The simulation script must continue simulating until
+     * the simulation loop returns "Finished drain", at which point
+     * this method should be called again. This cycle should continue
+     * until this method returns true.
+     *
+     * @return true if all objects were drained successfully, false if
+     * more simulation is needed.
      */
-    unsigned int getCount() const { return _count; }
+    bool tryDrain();
 
-    void setCount(int count) { _count = count; }
+    /**
+     * Resume normal simulation in a Drained system.
+     */
+    void resume();
+
+    /**
+     * Run state fixups before a checkpoint restore operation
+     *
+     * The drain state of an object isn't stored in a checkpoint since
+     * the whole system is always going to be in the Drained state
+     * when the checkpoint is created. When the checkpoint is restored
+     * at a later stage, recreated objects will be in the Running
+     * state since the state isn't stored in checkpoints. This method
+     * performs state fixups on all Drainable objects and the
+     * DrainManager itself.
+     */
+    void preCheckpointRestore();
+
+    /** Check if the system is drained */
+    bool isDrained() { return _state == DrainState::Drained; }
+
+    /** Get the simulators global drain state */
+    DrainState state() { return _state; }
 
     /**
      * Notify the DrainManager that a Drainable object has finished
      * draining.
      */
-    void signalDrainDone() {
-        assert(_count > 0);
-        if (--_count == 0)
-            drainCycleDone();
-    }
+    void signalDrainDone();
 
-  protected:
+  public:
+    void registerDrainable(Drainable *obj);
+    void unregisterDrainable(Drainable *obj);
+
+  private:
     /**
-     * Callback when all registered Drainable objects have completed a
-     * drain cycle.
+     * Thread-safe helper function to get the number of Drainable
+     * objects in a system.
      */
-    virtual void drainCycleDone();
+    size_t drainableCount() const;
 
-    /** Number of objects still draining. */
-    unsigned int _count;
+    /** Lock protecting the set of drainable objects */
+    mutable std::mutex globalLock;
+
+    /** Set of all drainable objects */
+    std::unordered_set<Drainable *> _allDrainable;
+
+    /**
+     * Number of objects still draining. This is flagged atomic since
+     * it can be manipulated by SimObjects living in different
+     * threads.
+     */
+    std::atomic_uint _count;
+
+    /** Global simulator drain state */
+    DrainState _state;
+
+    /** Singleton instance of the drain manager */
+    static DrainManager _instance;
 };
 
 /**
@@ -133,17 +187,11 @@ class DrainManager
  * An object's internal state needs to be drained when creating a
  * checkpoint, switching between CPU models, or switching between
  * timing models. Once the internal state has been drained from
- * <i>all</i> objects in the system, the objects are serialized to
+ * <i>all</i> objects in the simulator, the objects are serialized to
  * disc or the configuration change takes place. The process works as
  * follows (see simulate.py for details):
  *
  * <ol>
- * <li>An instance of a DrainManager is created to keep track of how
- *     many objects need to be drained. The object maintains an
- *     internal counter that is decreased every time its
- *     CountedDrainEvent::signalDrainDone() method is called. When the
- *     counter reaches zero, the simulation is stopped.
- *
  * <li>Call Drainable::drain() for every object in the
  *     system. Draining has completed if all of them return
  *     zero. Otherwise, the sum of the return values is loaded into
@@ -151,9 +199,9 @@ class DrainManager
  *     manager is passed as an argument to the drain() method.
  *
  * <li>Continue simulation. When an object has finished draining its
- *     internal state, it calls CountedDrainEvent::signalDrainDone()
- *     on the manager. When the counter in the manager reaches zero,
- *     the simulation stops.
+ *     internal state, it calls DrainManager::signalDrainDone() on the
+ *     manager. When the counter in the manager reaches zero, the
+ *     simulation stops.
  *
  * <li>Check if any object still needs draining, if so repeat the
  *     process above.
@@ -166,6 +214,8 @@ class DrainManager
  */
 class Drainable
 {
+    friend class DrainManager;
+
   public:
     Drainable();
     virtual ~Drainable();
@@ -210,10 +260,8 @@ class Drainable
     void setDrainState(DrainState new_state) { _drainState = new_state; }
 
   private:
+    DrainManager &_drainManager;
     DrainState _drainState;
 };
-
-DrainManager *createDrainManager();
-void cleanupDrainManager(DrainManager *drain_manager);
 
 #endif

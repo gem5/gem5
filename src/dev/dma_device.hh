@@ -51,7 +51,7 @@
 #include "sim/drain.hh"
 #include "sim/system.hh"
 
-class DmaPort : public MasterPort
+class DmaPort : public MasterPort, public Drainable
 {
   private:
 
@@ -175,8 +175,6 @@ class DmaDevice : public PioDevice
     bool dmaPending() const { return dmaPort.dmaPending(); }
 
     virtual void init();
-
-    unsigned int drain(DrainManager *drainManger);
 
     unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
 

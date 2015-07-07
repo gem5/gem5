@@ -834,20 +834,6 @@ CoherentXBar::forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id)
     }
 }
 
-unsigned int
-CoherentXBar::drain(DrainManager *dm)
-{
-    // sum up the individual layers
-    unsigned int total = 0;
-    for (auto l: reqLayers)
-        total += l->drain(dm);
-    for (auto l: respLayers)
-        total += l->drain(dm);
-    for (auto l: snoopLayers)
-        total += l->drain(dm);
-    return total;
-}
-
 void
 CoherentXBar::regStats()
 {

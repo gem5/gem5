@@ -95,8 +95,6 @@ class QueuedSlavePort : public SlavePort
      * functional request. */
     bool checkFunctional(PacketPtr pkt)
     { return respQueue.checkFunctional(pkt); }
-
-    unsigned int drain(DrainManager *dm) { return respQueue.drain(dm); }
 };
 
 /**
@@ -166,9 +164,6 @@ class QueuedMasterPort : public MasterPort
         return reqQueue.checkFunctional(pkt) ||
             snoopRespQueue.checkFunctional(pkt);
     }
-
-    unsigned int drain(DrainManager *dm)
-    { return reqQueue.drain(dm) + snoopRespQueue.drain(dm); }
 };
 
 #endif // __MEM_QPORT_HH__

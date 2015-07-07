@@ -396,8 +396,6 @@ class CoherentXBar : public BaseXBar
 
     virtual ~CoherentXBar();
 
-    unsigned int drain(DrainManager *dm);
-
     virtual void regStats();
 };
 
