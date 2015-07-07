@@ -186,6 +186,8 @@ void fromSimObject(T &t, SimObject *s)
         eventQueue()->checkpointReschedule(&event);     \
     } while(0)
 
+#define SERIALIZE_OBJ(obj) obj.serializeSection(cp, #obj)
+#define UNSERIALIZE_OBJ(obj) obj.unserializeSection(cp, #obj)
 
 #define SERIALIZE_OBJPTR(objptr)        paramOut(cp, #objptr, (objptr)->name())
 
