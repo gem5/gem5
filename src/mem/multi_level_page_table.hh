@@ -153,7 +153,7 @@ public:
     void unmap(Addr vaddr, int64_t size);
     bool isUnmapped(Addr vaddr, int64_t size);
     bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 #endif // __MEM_MULTI_LEVEL_PAGE_TABLE_HH__

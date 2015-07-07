@@ -272,14 +272,14 @@ class Interrupts : public SimObject
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const
     {
         SERIALIZE_ARRAY(interrupts, NumInterruptTypes);
         SERIALIZE_SCALAR(intStatus);
     }
 
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp)
     {
         UNSERIALIZE_ARRAY(interrupts, NumInterruptTypes);
         UNSERIALIZE_SCALAR(intStatus);

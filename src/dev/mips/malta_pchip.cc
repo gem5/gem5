@@ -312,7 +312,7 @@ MaltaPChip::calcConfigAddr(int bus, int dev, int func)
 
 
 void
-MaltaPChip::serialize(std::ostream &os)
+MaltaPChip::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(pctl);
     SERIALIZE_ARRAY(wsba, 4);
@@ -321,7 +321,7 @@ MaltaPChip::serialize(std::ostream &os)
 }
 
 void
-MaltaPChip::unserialize(Checkpoint *cp, const std::string &section)
+MaltaPChip::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(pctl);
     UNSERIALIZE_ARRAY(wsba, 4);

@@ -463,7 +463,7 @@ X86ISA::I8042::write(PacketPtr pkt)
 }
 
 void
-X86ISA::I8042::serialize(std::ostream &os)
+X86ISA::I8042::serializeOld(CheckpointOut &cp)
 {
     uint8_t statusRegData = statusReg.__data;
     uint8_t commandByteData = commandByte.__data;
@@ -474,12 +474,12 @@ X86ISA::I8042::serialize(std::ostream &os)
     SERIALIZE_SCALAR(commandByteData);
     SERIALIZE_SCALAR(dataReg);
     SERIALIZE_SCALAR(lastCommand);
-    mouse.serialize("mouse", os);
-    keyboard.serialize("keyboard", os);
+    mouse.serialize("mouse", cp);
+    keyboard.serialize("keyboard", cp);
 }
 
 void
-X86ISA::I8042::unserialize(Checkpoint *cp, const std::string &section)
+X86ISA::I8042::unserialize(CheckpointIn &cp)
 {
     uint8_t statusRegData;
     uint8_t commandByteData;
@@ -490,38 +490,37 @@ X86ISA::I8042::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(commandByteData);
     UNSERIALIZE_SCALAR(dataReg);
     UNSERIALIZE_SCALAR(lastCommand);
-    mouse.unserialize("mouse", cp, section);
-    keyboard.unserialize("keyboard", cp, section);
+    mouse.unserialize("mouse", cp);
+    keyboard.unserialize("keyboard", cp);
 
     statusReg.__data = statusRegData;
     commandByte.__data = commandByteData;
 }
 
 void
-X86ISA::PS2Keyboard::serialize(const std::string &base, std::ostream &os)
+X86ISA::PS2Keyboard::serialize(const std::string &base, CheckpointOut &cp)
 {
-    paramOut(os, base + ".lastCommand", lastCommand);
+    paramOut(cp, base + ".lastCommand", lastCommand);
     int bufferSize = outBuffer.size();
-    paramOut(os, base + ".outBuffer.size", bufferSize);
+    paramOut(cp, base + ".outBuffer.size", bufferSize);
     uint8_t *buffer = new uint8_t[bufferSize];
     for (int i = 0; i < bufferSize; ++i) {
         buffer[i] = outBuffer.front();
         outBuffer.pop();
     }
-    arrayParamOut(os, base + ".outBuffer.elts", buffer,
+    arrayParamOut(cp, base + ".outBuffer.elts", buffer,
             bufferSize*sizeof(uint8_t));
     delete[] buffer;
 }
 
 void
-X86ISA::PS2Keyboard::unserialize(const std::string &base, Checkpoint *cp,
-        const std::string &section)
+X86ISA::PS2Keyboard::unserialize(const std::string &base, CheckpointIn &cp)
 {
-    paramIn(cp, section, base + ".lastCommand", lastCommand);
+    paramIn(cp, base + ".lastCommand", lastCommand);
     int bufferSize;
-    paramIn(cp, section, base + ".outBuffer.size", bufferSize);
+    paramIn(cp, base + ".outBuffer.size", bufferSize);
     uint8_t *buffer = new uint8_t[bufferSize];
-    arrayParamIn(cp, section, base + ".outBuffer.elts", buffer,
+    arrayParamIn(cp, base + ".outBuffer.elts", buffer,
             bufferSize*sizeof(uint8_t));
     for (int i = 0; i < bufferSize; ++i) {
         outBuffer.push(buffer[i]);
@@ -530,43 +529,42 @@ X86ISA::PS2Keyboard::unserialize(const std::string &base, Checkpoint *cp,
 }
 
 void
-X86ISA::PS2Mouse::serialize(const std::string &base, std::ostream &os)
+X86ISA::PS2Mouse::serialize(const std::string &base, CheckpointOut &cp)
 {
     uint8_t statusData = status.__data;
-    paramOut(os, base + ".lastCommand", lastCommand);
+    paramOut(cp, base + ".lastCommand", lastCommand);
     int bufferSize = outBuffer.size();
-    paramOut(os, base + ".outBuffer.size", bufferSize);
+    paramOut(cp, base + ".outBuffer.size", bufferSize);
     uint8_t *buffer = new uint8_t[bufferSize];
     for (int i = 0; i < bufferSize; ++i) {
         buffer[i] = outBuffer.front();
         outBuffer.pop();
     }
-    arrayParamOut(os, base + ".outBuffer.elts", buffer,
+    arrayParamOut(cp, base + ".outBuffer.elts", buffer,
             bufferSize*sizeof(uint8_t));
     delete[] buffer;
-    paramOut(os, base + ".status", statusData);
-    paramOut(os, base + ".resolution", resolution);
-    paramOut(os, base + ".sampleRate", sampleRate);
+    paramOut(cp, base + ".status", statusData);
+    paramOut(cp, base + ".resolution", resolution);
+    paramOut(cp, base + ".sampleRate", sampleRate);
 }
 
 void
-X86ISA::PS2Mouse::unserialize(const std::string &base, Checkpoint *cp,
-        const std::string &section)
+X86ISA::PS2Mouse::unserialize(const std::string &base, CheckpointIn &cp)
 {
     uint8_t statusData;
-    paramIn(cp, section, base + ".lastCommand", lastCommand);
+    paramIn(cp, base + ".lastCommand", lastCommand);
     int bufferSize;
-    paramIn(cp, section, base + ".outBuffer.size", bufferSize);
+    paramIn(cp, base + ".outBuffer.size", bufferSize);
     uint8_t *buffer = new uint8_t[bufferSize];
-    arrayParamIn(cp, section, base + ".outBuffer.elts", buffer,
+    arrayParamIn(cp, base + ".outBuffer.elts", buffer,
             bufferSize*sizeof(uint8_t));
     for (int i = 0; i < bufferSize; ++i) {
         outBuffer.push(buffer[i]);
     }
     delete[] buffer;
-    paramIn(cp, section, base + ".status", statusData);
-    paramIn(cp, section, base + ".resolution", resolution);
-    paramIn(cp, section, base + ".sampleRate", sampleRate);
+    paramIn(cp, base + ".status", statusData);
+    paramIn(cp, base + ".resolution", resolution);
+    paramIn(cp, base + ".sampleRate", sampleRate);
 
     status.__data = statusData;
 }

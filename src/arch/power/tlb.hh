@@ -84,13 +84,13 @@ struct TlbEntry
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const
     {
         SERIALIZE_SCALAR(_pageStart);
     }
 
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp)
     {
         UNSERIALIZE_SCALAR(_pageStart);
     }
@@ -172,8 +172,9 @@ class TLB : public BaseTLB
     Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 
     // Checkpointing
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+
     void regStats();
 };
 

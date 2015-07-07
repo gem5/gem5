@@ -120,6 +120,8 @@ class Process : public SimObject
 
     virtual void initState();
 
+    unsigned int drain(DrainManager *dm) M5_ATTR_OVERRIDE;
+
   public:
 
     //This id is assigned by m5 and is used to keep process' tlb entries
@@ -133,7 +135,7 @@ class Process : public SimObject
 
     PageTableBase* pTable;
 
-    class FdMap
+    class FdMap : public Serializable
     {
       public:
         int fd;
@@ -150,8 +152,8 @@ class Process : public SimObject
               isPipe(false), readPipeSource(0), fileOffset(0), driver(NULL)
         { }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
 
   protected:
@@ -233,8 +235,8 @@ class Process : public SimObject
      */
     bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 //

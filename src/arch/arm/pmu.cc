@@ -513,7 +513,7 @@ PMU::raiseInterrupt()
 }
 
 void
-PMU::serialize(std::ostream &os)
+PMU::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm PMU\n");
 
@@ -525,17 +525,14 @@ PMU::serialize(std::ostream &os)
     SERIALIZE_SCALAR(reg_pmceid);
     SERIALIZE_SCALAR(clock_remainder);
 
-    for (size_t i = 0; i < counters.size(); ++i) {
-        nameOut(os, csprintf("%s.counters.%i", name(), i));
-        counters[i].serialize(os);
-    }
+    for (size_t i = 0; i < counters.size(); ++i)
+        counters[i].serializeSection(cp, csprintf("counters.%i", i));
 
-    nameOut(os, csprintf("%s.cycleCounter", name()));
-    cycleCounter.serialize(os);
+    cycleCounter.serializeSection(cp, "cycleCounter");
 }
 
 void
-PMU::unserialize(Checkpoint *cp, const std::string &section)
+PMU::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm PMU\n");
 
@@ -548,13 +545,13 @@ PMU::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(clock_remainder);
 
     for (size_t i = 0; i < counters.size(); ++i)
-        counters[i].unserialize(cp, csprintf("%s.counters.%i", section, i));
+        counters[i].unserializeSection(cp, csprintf("counters.%i", i));
 
-    cycleCounter.unserialize(cp, csprintf("%s.cycleCounter", section));
+    cycleCounter.unserializeSection(cp, "cycleCounter");
 }
 
 void
-PMU::CounterState::serialize(std::ostream &os)
+PMU::CounterState::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(eventId);
     SERIALIZE_SCALAR(value);
@@ -563,7 +560,7 @@ PMU::CounterState::serialize(std::ostream &os)
 }
 
 void
-PMU::CounterState::unserialize(Checkpoint *cp, const std::string &section)
+PMU::CounterState::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(eventId);
     UNSERIALIZE_SCALAR(value);

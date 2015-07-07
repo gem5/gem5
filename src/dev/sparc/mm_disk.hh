@@ -61,7 +61,7 @@ class MmDisk : public BasicPioDevice
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
 
-    virtual void serialize(std::ostream &os);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
 };
 
 #endif //__DEV_SPARC_MM_DISK_HH__

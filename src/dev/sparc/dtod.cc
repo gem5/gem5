@@ -79,13 +79,13 @@ DumbTOD::write(PacketPtr pkt)
 }
 
 void
-DumbTOD::serialize(std::ostream &os)
+DumbTOD::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(todTime);
 }
 
 void
-DumbTOD::unserialize(Checkpoint *cp, const std::string &section)
+DumbTOD::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(todTime);
 }

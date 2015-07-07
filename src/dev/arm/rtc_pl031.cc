@@ -192,7 +192,7 @@ PL031::counterMatch()
 }
 
 void
-PL031::serialize(std::ostream &os)
+PL031::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm PL031\n");
     SERIALIZE_SCALAR(timeVal);
@@ -214,7 +214,7 @@ PL031::serialize(std::ostream &os)
 }
 
 void
-PL031::unserialize(Checkpoint *cp, const std::string &section)
+PL031::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm PL031\n");
 

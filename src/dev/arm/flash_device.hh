@@ -64,8 +64,9 @@ class FlashDevice : public AbstractNVM
     /** Checkpoint functions*/
     unsigned int drain(DrainManager *dm);
     void checkDrain();
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   private:
     /** Defines the possible actions to the flash*/

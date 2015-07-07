@@ -216,7 +216,7 @@ EnergyCtrl::write(PacketPtr pkt)
 }
 
 void
-EnergyCtrl::serialize(std::ostream &os)
+EnergyCtrl::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(domainID);
     SERIALIZE_SCALAR(domainIDIndexToRead);
@@ -228,7 +228,7 @@ EnergyCtrl::serialize(std::ostream &os)
 }
 
 void
-EnergyCtrl::unserialize(Checkpoint *cp, const std::string &section)
+EnergyCtrl::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(domainID);
     UNSERIALIZE_SCALAR(domainIDIndexToRead);

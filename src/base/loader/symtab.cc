@@ -108,32 +108,31 @@ SymbolTable::load(const string &filename)
 }
 
 void
-SymbolTable::serialize(const string &base, ostream &os)
+SymbolTable::serialize(const string &base, CheckpointOut &cp) const
 {
-    paramOut(os, base + ".size", addrTable.size());
+    paramOut(cp, base + ".size", addrTable.size());
 
     int i = 0;
     ATable::const_iterator p, end = addrTable.end();
     for (p = addrTable.begin(); p != end; ++p) {
-        paramOut(os, csprintf("%s.addr_%d", base, i), p->first);
-        paramOut(os, csprintf("%s.symbol_%d", base, i), p->second);
+        paramOut(cp, csprintf("%s.addr_%d", base, i), p->first);
+        paramOut(cp, csprintf("%s.symbol_%d", base, i), p->second);
         ++i;
     }
 }
 
 void
-SymbolTable::unserialize(const string &base, Checkpoint *cp,
-                         const string &section)
+SymbolTable::unserialize(const string &base, CheckpointIn &cp)
 {
     clear();
     int size;
-    paramIn(cp, section, base + ".size", size);
+    paramIn(cp, base + ".size", size);
     for (int i = 0; i < size; ++i) {
         Addr addr;
         std::string symbol;
 
-        paramIn(cp, section, csprintf("%s.addr_%d", base, i), addr);
-        paramIn(cp, section, csprintf("%s.symbol_%d", base, i), symbol);
+        paramIn(cp, csprintf("%s.addr_%d", base, i), addr);
+        paramIn(cp, csprintf("%s.symbol_%d", base, i), symbol);
         insert(addr, symbol);
     }
 }

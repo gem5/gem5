@@ -308,13 +308,13 @@ SafeWriteSwap(ofstream &stream, const T &data)
     SafeWrite(stream, &swappeddata, sizeof(data));
 }
 void
-CowDiskImage::save()
+CowDiskImage::save() const
 {
     save(filename);
 }
 
 void
-CowDiskImage::save(const string &file)
+CowDiskImage::save(const string &file) const
 {
     if (!initialized)
         panic("RawDiskImage not initialized");
@@ -408,19 +408,19 @@ CowDiskImage::write(const uint8_t *data, std::streampos offset)
 }
 
 void
-CowDiskImage::serialize(ostream &os)
+CowDiskImage::serialize(CheckpointOut &cp) const
 {
     string cowFilename = name() + ".cow";
     SERIALIZE_SCALAR(cowFilename);
-    save(Checkpoint::dir() + "/" + cowFilename);
+    save(CheckpointIn::dir() + "/" + cowFilename);
 }
 
 void
-CowDiskImage::unserialize(Checkpoint *cp, const string &section)
+CowDiskImage::unserialize(CheckpointIn &cp)
 {
     string cowFilename;
     UNSERIALIZE_SCALAR(cowFilename);
-    cowFilename = cp->cptDir + "/" + cowFilename;
+    cowFilename = cp.cptDir + "/" + cowFilename;
     open(cowFilename);
 }
 

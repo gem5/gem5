@@ -640,7 +640,7 @@ BaseCPU::ProfileEvent::process()
 }
 
 void
-BaseCPU::serialize(std::ostream &os)
+BaseCPU::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(instCnt);
 
@@ -651,28 +651,30 @@ BaseCPU::serialize(std::ostream &os)
          * system. */
         SERIALIZE_SCALAR(_pid);
 
-        interrupts->serialize(os);
+        interrupts->serialize(cp);
 
         // Serialize the threads, this is done by the CPU implementation.
         for (ThreadID i = 0; i < numThreads; ++i) {
-            nameOut(os, csprintf("%s.xc.%i", name(), i));
-            serializeThread(os, i);
+            ScopedCheckpointSection sec(cp, csprintf("xc.%i", i));
+            serializeThread(cp, i);
         }
     }
 }
 
 void
-BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
+BaseCPU::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(instCnt);
 
     if (!_switchedOut) {
         UNSERIALIZE_SCALAR(_pid);
-        interrupts->unserialize(cp, section);
+        interrupts->unserialize(cp);
 
         // Unserialize the threads, this is done by the CPU implementation.
-        for (ThreadID i = 0; i < numThreads; ++i)
-            unserializeThread(cp, csprintf("%s.xc.%i", section, i), i);
+        for (ThreadID i = 0; i < numThreads; ++i) {
+            ScopedCheckpointSection sec(cp, csprintf("xc.%i", i));
+            unserializeThread(cp, i);
+        }
     }
 }
 

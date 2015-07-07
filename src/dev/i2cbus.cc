@@ -212,7 +212,7 @@ I2CBus::isEnd(PacketPtr pkt) const
     return scl && (msg & 2) && daddr == SB_CONTROLS;
 }
 void
-I2CBus::serialize(std::ostream &os)
+I2CBus::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing I2C bus.\n");
     SERIALIZE_SCALAR(scl);
@@ -224,7 +224,7 @@ I2CBus::serialize(std::ostream &os)
 }
 
 void
-I2CBus::unserialize(Checkpoint *cp, const std::string &section)
+I2CBus::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing I2C bus.\n");
     UNSERIALIZE_SCALAR(scl);

@@ -218,7 +218,7 @@ class IGbE : public EtherDevice
 
 
     template<class T>
-    class DescCache
+    class DescCache : public Serializable
     {
       protected:
         virtual Addr descBase() const = 0;
@@ -331,8 +331,9 @@ class IGbE : public EtherDevice
          * changed */
         void reset();
 
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
         virtual bool hasOutstandingEvents() {
             return wbEvent.scheduled() || fetchEvent.scheduled();
@@ -395,8 +396,8 @@ class IGbE : public EtherDevice
 
         virtual bool hasOutstandingEvents();
 
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
     friend class RxDescCache;
 
@@ -506,10 +507,10 @@ class IGbE : public EtherDevice
         }
         EventWrapper<TxDescCache, &TxDescCache::nullCallback> nullEvent;
 
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
+
     friend class TxDescCache;
 
     TxDescCache txDescCache;
@@ -537,8 +538,8 @@ class IGbE : public EtherDevice
     bool ethRxPkt(EthPacketPtr packet);
     void ethTxDone();
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     unsigned int drain(DrainManager *dm);
     void drainResume();

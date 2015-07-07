@@ -156,16 +156,16 @@ SrcClockDomain::perfLevel(PerfLevel perf_level)
 }
 
 void
-SrcClockDomain::serialize(std::ostream &os)
+SrcClockDomain::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(_perfLevel);
-    ClockDomain::serialize(os);
+    ClockDomain::serialize(cp);
 }
 
 void
-SrcClockDomain::unserialize(Checkpoint *cp, const std::string &section)
+SrcClockDomain::unserialize(CheckpointIn &cp)
 {
-    ClockDomain::unserialize(cp, section);
+    ClockDomain::unserialize(cp);
     UNSERIALIZE_SCALAR(_perfLevel);
 }
 

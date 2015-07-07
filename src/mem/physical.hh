@@ -197,7 +197,7 @@ class PhysicalMemory : public Serializable
      *
      * @param os stream to serialize to
      */
-    void serialize(std::ostream& os);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
 
     /**
      * Serialize a specific store.
@@ -206,20 +206,20 @@ class PhysicalMemory : public Serializable
      * @param range The address range of this backing store
      * @param pmem The host pointer to this backing store
      */
-    void serializeStore(std::ostream& os, unsigned int store_id,
-                        AddrRange range, uint8_t* pmem);
+    void serializeStore(CheckpointOut &cp, unsigned int store_id,
+                        AddrRange range, uint8_t* pmem) const;
 
     /**
      * Unserialize the memories in the system. As with the
      * serialization, this action is independent of how the address
      * ranges are mapped to logical memories in the guest system.
      */
-    void unserialize(Checkpoint* cp, const std::string& section);
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     /**
      * Unserialize a specific backing store, identified by a section.
      */
-    void unserializeStore(Checkpoint* cp, const std::string& section);
+    void unserializeStore(CheckpointIn &cp);
 
 };
 

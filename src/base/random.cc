@@ -70,7 +70,7 @@ Random::init(uint32_t s)
 }
 
 void
-Random::serialize(std::ostream &os)
+Random::serialize(CheckpointOut &cp) const
 {
     panic("Currently not used anywhere.\n");
 
@@ -78,11 +78,11 @@ Random::serialize(std::ostream &os)
     std::ostringstream oss;
     oss << gen;
     std::string state = oss.str();
-    paramOut(os, "mt_state", state);
+    paramOut(cp, "mt_state", state);
 }
 
 void
-Random::unserialize(Checkpoint *cp, const std::string &section)
+Random::unserialize(CheckpointIn &cp)
 {
     panic("Currently not used anywhere.\n");
 
@@ -90,7 +90,7 @@ Random::unserialize(Checkpoint *cp, const std::string &section)
     // checkpoint state, so be forgiving in the unserialization and
     // keep on going if the parameter is not there
     std::string state;
-    if (optParamIn(cp, section, "mt_state", state)) {
+    if (optParamIn(cp, "mt_state", state)) {
         std::istringstream iss(state);
         iss >> gen;
     }

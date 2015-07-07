@@ -111,9 +111,8 @@ class IdeController : public PciDevice
         Channel(std::string newName, Addr _cmdSize, Addr _ctrlSize);
         ~Channel();
 
-        void serialize(const std::string &base, std::ostream &os);
-        void unserialize(const std::string &base, Checkpoint *cp,
-            const std::string &section);
+        void serialize(const std::string &base, std::ostream &os) const;
+        void unserialize(const std::string &base, CheckpointIn &cp);
     };
 
     Channel primary;
@@ -155,7 +154,7 @@ class IdeController : public PciDevice
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 #endif // __IDE_CTRL_HH_

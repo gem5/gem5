@@ -37,6 +37,7 @@
  */
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "base/bitfield.hh"
@@ -196,44 +197,37 @@ PageTableBase::translate(RequestPtr req)
 }
 
 void
-FuncPageTable::serialize(std::ostream &os)
+FuncPageTable::serialize(CheckpointOut &cp) const
 {
-    paramOut(os, "ptable.size", pTable.size());
+    paramOut(cp, "ptable.size", pTable.size());
 
     PTable::size_type count = 0;
+    for (auto &pte : pTable) {
+        ScopedCheckpointSection sec(cp, csprintf("Entry%d", count++));
 
-    PTableItr iter = pTable.begin();
-    PTableItr end = pTable.end();
-    while (iter != end) {
-        os << "\n[" << csprintf("%s.Entry%d", name(), count) << "]\n";
-
-        paramOut(os, "vaddr", iter->first);
-        iter->second.serialize(os);
-
-        ++iter;
-        ++count;
+        paramOut(cp, "vaddr", pte.first);
+        pte.second.serialize(cp);
     }
     assert(count == pTable.size());
 }
 
 void
-FuncPageTable::unserialize(Checkpoint *cp, const std::string &section)
+FuncPageTable::unserialize(CheckpointIn &cp)
 {
-    int i = 0, count;
-    paramIn(cp, section, "ptable.size", count);
+    int count;
+    paramIn(cp, "ptable.size", count);
 
-    pTable.clear();
+    for (int i = 0; i < count; ++i) {
+        ScopedCheckpointSection sec(cp, csprintf("Entry%d", i));
 
-    while (i < count) {
-        TheISA::TlbEntry *entry;
+        std::unique_ptr<TheISA::TlbEntry> entry;
         Addr vaddr;
 
-        paramIn(cp, csprintf("%s.Entry%d", name(), i), "vaddr", vaddr);
-        entry = new TheISA::TlbEntry();
-        entry->unserialize(cp, csprintf("%s.Entry%d", name(), i));
+        paramIn(cp, "vaddr", vaddr);
+        entry.reset(new TheISA::TlbEntry());
+        entry->unserialize(cp);
+
         pTable[vaddr] = *entry;
-        delete entry;
-        ++i;
     }
 }
 

@@ -292,7 +292,7 @@ Uart8250::getAddrRanges() const
 }
 
 void
-Uart8250::serialize(ostream &os)
+Uart8250::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(IER);
@@ -314,7 +314,7 @@ Uart8250::serialize(ostream &os)
 }
 
 void
-Uart8250::unserialize(Checkpoint *cp, const std::string &section)
+Uart8250::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(status);
     UNSERIALIZE_SCALAR(IER);

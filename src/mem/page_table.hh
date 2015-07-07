@@ -53,7 +53,7 @@ class ThreadContext;
 /**
  * Declaration of base class for page table
  */
-class PageTableBase
+class PageTableBase : public Serializable
 {
   protected:
     struct cacheElement {
@@ -192,10 +192,6 @@ class PageTableBase
             pTableCache[2].valid = false;
         }
     }
-
-    virtual void serialize(std::ostream &os) = 0;
-
-    virtual void unserialize(Checkpoint *cp, const std::string &section) = 0;
 };
 
 /**
@@ -239,9 +235,8 @@ class FuncPageTable : public PageTableBase
      */
     bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
 
-    void serialize(std::ostream &os);
-
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 /**

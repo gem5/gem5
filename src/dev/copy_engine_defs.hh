@@ -100,18 +100,18 @@ struct Reg {
     bool operator==(T d) { return d == _data; }
     void operator()(T d) { _data = d; }
     Reg() { _data = 0; }
-    void serialize(std::ostream &os)
+    void serialize(CheckpointOut &cp) const
     {
         SERIALIZE_SCALAR(_data);
     }
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void unserialize(CheckpointIn &cp)
     {
         UNSERIALIZE_SCALAR(_data);
     }
 };
 
 
-struct Regs {
+struct Regs : public Serializable {
     uint8_t chanCount;
     uint8_t xferCap;
 
@@ -125,25 +125,25 @@ struct Regs {
 
     uint32_t attnStatus; // Read clears
 
-    void serialize(std::ostream &os)
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
         SERIALIZE_SCALAR(chanCount);
         SERIALIZE_SCALAR(xferCap);
-        paramOut(os, "intrctrl", intrctrl._data);
+        paramOut(cp, "intrctrl", intrctrl._data);
         SERIALIZE_SCALAR(attnStatus);
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
         UNSERIALIZE_SCALAR(chanCount);
         UNSERIALIZE_SCALAR(xferCap);
-        paramIn(cp, section, "intrctrl", intrctrl._data);
+        paramIn(cp, "intrctrl", intrctrl._data);
         UNSERIALIZE_SCALAR(attnStatus);
     }
 
 };
 
-struct ChanRegs {
+struct ChanRegs : public Serializable {
     struct CHANCTRL : public Reg<uint16_t> { // channelX + 0x00
         using Reg<uint16_t>::operator =;
         ADD_FIELD16(interrupt_disable,0,1);
@@ -197,24 +197,24 @@ struct ChanRegs {
     };
     CHANERR error;
 
-    void serialize(std::ostream &os)
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
-        paramOut(os, "ctrl", ctrl._data);
-        paramOut(os, "status", status._data);
+        paramOut(cp, "ctrl", ctrl._data);
+        paramOut(cp, "status", status._data);
         SERIALIZE_SCALAR(descChainAddr);
-        paramOut(os, "command", command._data);
+        paramOut(cp, "command", command._data);
         SERIALIZE_SCALAR(completionAddr);
-        paramOut(os, "error", error._data);
+        paramOut(cp, "error", error._data);
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
-        paramIn(cp, section, "ctrl", ctrl._data);
-        paramIn(cp, section, "status", status._data);
+        paramIn(cp, "ctrl", ctrl._data);
+        paramIn(cp, "status", status._data);
         UNSERIALIZE_SCALAR(descChainAddr);
-        paramIn(cp, section, "command", command._data);
+        paramIn(cp, "command", command._data);
         UNSERIALIZE_SCALAR(completionAddr);
-        paramIn(cp, section, "error", error._data);
+        paramIn(cp, "error", error._data);
     }
 
 

@@ -580,7 +580,7 @@ HDLcd::dmaDone(DmaDoneEvent *event)
 }
 
 void
-HDLcd::serialize(std::ostream &os)
+HDLcd::serialize(CheckpointOut &cp) const
 {
     DPRINTF(HDLcd, "Serializing ARM HDLCD\n");
 
@@ -641,7 +641,7 @@ HDLcd::serialize(std::ostream &os)
     SERIALIZE_SCALAR(dmaPendingNum);
     SERIALIZE_SCALAR(frameUnderrun);
 
-    arrayParamOut(os, "virtualDisplayBuffer", virtualDisplayBuffer);
+    arrayParamOut(cp, "virtualDisplayBuffer", virtualDisplayBuffer);
 
     SERIALIZE_SCALAR(pixelBufferSize);
     SERIALIZE_SCALAR(pixelIndex);
@@ -678,12 +678,12 @@ HDLcd::serialize(std::ostream &os)
         dma_done_event_burst_len[x] = dmaDoneEventAll[x].scheduled() ?
             dmaDoneEventAll[x].getTransactionSize() : 0;
     }
-    arrayParamOut(os, "dma_done_event_tick", dma_done_event_tick);
-    arrayParamOut(os, "dma_done_event_burst_length", dma_done_event_burst_len);
+    arrayParamOut(cp, "dma_done_event_tick", dma_done_event_tick);
+    arrayParamOut(cp, "dma_done_event_burst_length", dma_done_event_burst_len);
 }
 
 void
-HDLcd::unserialize(Checkpoint *cp, const std::string &section)
+HDLcd::unserialize(CheckpointIn &cp)
 {
     uint32_t version_serial, int_rawstat_serial, int_clear_serial,
             int_mask_serial, int_status_serial, fb_line_count_serial,
@@ -753,7 +753,7 @@ HDLcd::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(frameUnderrun);
     UNSERIALIZE_SCALAR(dmaBytesInFlight);
 
-    arrayParamIn(cp, section, "virtualDisplayBuffer", virtualDisplayBuffer);
+    arrayParamIn(cp, "virtualDisplayBuffer", virtualDisplayBuffer);
 
     UNSERIALIZE_SCALAR(pixelBufferSize);
     UNSERIALIZE_SCALAR(pixelIndex);
@@ -783,8 +783,8 @@ HDLcd::unserialize(Checkpoint *cp, const std::string &section)
 
     vector<Tick> dma_done_event_tick(MAX_OUTSTANDING_DMA_REQ_CAPACITY);
     vector<Tick> dma_done_event_burst_len(MAX_OUTSTANDING_DMA_REQ_CAPACITY);
-    arrayParamIn(cp, section, "dma_done_event_tick", dma_done_event_tick);
-    arrayParamIn(cp, section, "dma_done_event_burst_length", dma_done_event_burst_len);
+    arrayParamIn(cp, "dma_done_event_tick", dma_done_event_tick);
+    arrayParamIn(cp, "dma_done_event_burst_length", dma_done_event_burst_len);
     dmaDoneEventFree.clear();
     for (int x = 0; x < MAX_OUTSTANDING_DMA_REQ_CAPACITY; ++x) {
         if (dma_done_event_tick[x]) {

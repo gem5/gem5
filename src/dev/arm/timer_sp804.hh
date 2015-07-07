@@ -52,7 +52,7 @@ class BaseGic;
 class Sp804 : public AmbaPioDevice
 {
   protected:
-    class Timer
+    class Timer : public Serializable
     {
 
       public:
@@ -121,9 +121,8 @@ class Sp804 : public AmbaPioDevice
         /** Handle write for a single timer */
         void write(PacketPtr pkt, Addr daddr);
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
 
     /** Pointer to the GIC for causing an interrupt */
@@ -161,8 +160,8 @@ class Sp804 : public AmbaPioDevice
     virtual Tick write(PacketPtr pkt);
 
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 

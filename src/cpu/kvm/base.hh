@@ -84,9 +84,10 @@ class BaseKvmCPU : public BaseCPU
     void startup();
     void regStats();
 
-    void serializeThread(std::ostream &os, ThreadID tid);
-    void unserializeThread(Checkpoint *cp, const std::string &section,
-                           ThreadID tid);
+    void serializeThread(CheckpointOut &cp,
+                         ThreadID tid) const M5_ATTR_OVERRIDE;
+    void unserializeThread(CheckpointIn &cp,
+                           ThreadID tid) M5_ATTR_OVERRIDE;
 
     unsigned int drain(DrainManager *dm);
     void drainResume();
@@ -111,7 +112,7 @@ class BaseKvmCPU : public BaseCPU
     Counter totalOps() const;
 
     /** Dump the internal state to the terminal. */
-    virtual void dump();
+    virtual void dump() const;
 
     /**
      * Force an exit from KVM.

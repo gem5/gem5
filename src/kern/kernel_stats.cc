@@ -129,14 +129,14 @@ Statistics::swpipl(int ipl)
 }
 
 void
-Statistics::serialize(ostream &os)
+Statistics::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(iplLast);
     SERIALIZE_SCALAR(iplLastTick);
 }
 
 void
-Statistics::unserialize(Checkpoint *cp, const string &section)
+Statistics::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(iplLast);
     UNSERIALIZE_SCALAR(iplLastTick);

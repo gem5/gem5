@@ -167,9 +167,8 @@ class ISA : public SimObject
 
     void clear();
 
-    void serialize(std::ostream & os);
-
-    void unserialize(Checkpoint *cp, const std::string & section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     void startup(ThreadContext *tc) {}
 

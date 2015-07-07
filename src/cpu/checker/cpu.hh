@@ -189,8 +189,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
     Counter numLoad;
     Counter startNumLoad;
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.

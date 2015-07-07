@@ -305,21 +305,20 @@ BaseSimpleCPU::resetStats()
 }
 
 void
-BaseSimpleCPU::serializeThread(ostream &os, ThreadID tid)
+BaseSimpleCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
 {
     assert(_status == Idle || _status == Running);
     assert(tid == 0);
 
-    thread->serialize(os);
+    thread->serialize(cp);
 }
 
 void
-BaseSimpleCPU::unserializeThread(Checkpoint *cp, const string &section,
-                                 ThreadID tid)
+BaseSimpleCPU::unserializeThread(CheckpointIn &cp, ThreadID tid)
 {
     if (tid != 0)
         fatal("Trying to load more than one thread into a SimpleCPU\n");
-    thread->unserialize(cp, section);
+    thread->unserialize(cp);
 }
 
 void

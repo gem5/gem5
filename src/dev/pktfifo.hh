@@ -70,9 +70,8 @@ struct PacketFifoEntry
         priv = -1;
     }
 
-    void serialize(const std::string &base, std::ostream &os);
-    void unserialize(const std::string &base, Checkpoint *cp,
-                     const std::string &section);
+    void serialize(const std::string &base, CheckpointOut &cp) const;
+    void unserialize(const std::string &base, CheckpointIn &cp);
 };
 
 class PacketFifo
@@ -201,9 +200,8 @@ class PacketFifo
  * Serialization stuff
  */
   public:
-    void serialize(const std::string &base, std::ostream &os);
-    void unserialize(const std::string &base,
-                     Checkpoint *cp, const std::string &section);
+    void serialize(const std::string &base, CheckpointOut &cp) const;
+    void unserialize(const std::string &base, CheckpointIn &cp);
 };
 
 #endif // __DEV_PKTFIFO_HH__

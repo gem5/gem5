@@ -2123,10 +2123,10 @@ NSGigE::drainResume()
 //
 //
 void
-NSGigE::serialize(ostream &os)
+NSGigE::serialize(CheckpointOut &cp) const
 {
     // Serialize the PciDevice base class
-    PciDevice::serialize(os);
+    PciDevice::serialize(cp);
 
     /*
      * Finalize any DMA events now.
@@ -2179,8 +2179,8 @@ NSGigE::serialize(ostream &os)
     /*
      * Serialize the data Fifos
      */
-    rxFifo.serialize("rxFifo", os);
-    txFifo.serialize("txFifo", os);
+    rxFifo.serialize("rxFifo", cp);
+    txFifo.serialize("txFifo", cp);
 
     /*
      * Serialize the various helper variables
@@ -2189,7 +2189,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
         txPacket->length = txPacketBufPtr - txPacket->data;
-        txPacket->serialize("txPacket", os);
+        txPacket->serialize("txPacket", cp);
         uint32_t txPktBufPtr = (uint32_t) (txPacketBufPtr - txPacket->data);
         SERIALIZE_SCALAR(txPktBufPtr);
     }
@@ -2197,7 +2197,7 @@ NSGigE::serialize(ostream &os)
     bool rxPacketExists = rxPacket != nullptr;
     SERIALIZE_SCALAR(rxPacketExists);
     if (rxPacketExists) {
-        rxPacket->serialize("rxPacket", os);
+        rxPacket->serialize("rxPacket", cp);
         uint32_t rxPktBufPtr = (uint32_t) (rxPacketBufPtr - rxPacket->data);
         SERIALIZE_SCALAR(rxPktBufPtr);
     }
@@ -2295,10 +2295,10 @@ NSGigE::serialize(ostream &os)
 }
 
 void
-NSGigE::unserialize(Checkpoint *cp, const std::string &section)
+NSGigE::unserialize(CheckpointIn &cp)
 {
     // Unserialize the PciDevice base class
-    PciDevice::unserialize(cp, section);
+    PciDevice::unserialize(cp);
 
     UNSERIALIZE_SCALAR(regs.command);
     UNSERIALIZE_SCALAR(regs.config);
@@ -2343,8 +2343,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * unserialize the data fifos
      */
-    rxFifo.unserialize("rxFifo", cp, section);
-    txFifo.unserialize("txFifo", cp, section);
+    rxFifo.unserialize("rxFifo", cp);
+    txFifo.unserialize("txFifo", cp);
 
     /*
      * unserialize the various helper variables
@@ -2353,7 +2353,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
         txPacket = make_shared<EthPacketData>(16384);
-        txPacket->unserialize("txPacket", cp, section);
+        txPacket->unserialize("txPacket", cp);
         uint32_t txPktBufPtr;
         UNSERIALIZE_SCALAR(txPktBufPtr);
         txPacketBufPtr = (uint8_t *) txPacket->data + txPktBufPtr;
@@ -2365,7 +2365,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     rxPacket = 0;
     if (rxPacketExists) {
         rxPacket = make_shared<EthPacketData>(16384);
-        rxPacket->unserialize("rxPacket", cp, section);
+        rxPacket->unserialize("rxPacket", cp);
         uint32_t rxPktBufPtr;
         UNSERIALIZE_SCALAR(rxPktBufPtr);
         rxPacketBufPtr = (uint8_t *) rxPacket->data + rxPktBufPtr;

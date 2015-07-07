@@ -177,26 +177,26 @@ SparcSystem::~SparcSystem()
 }
 
 void
-SparcSystem::serializeSymtab(std::ostream &os)
+SparcSystem::serializeSymtab(CheckpointOut &cp) const
 {
-    resetSymtab->serialize("reset_symtab", os);
-    hypervisorSymtab->serialize("hypervisor_symtab", os);
-    openbootSymtab->serialize("openboot_symtab", os);
-    nvramSymtab->serialize("nvram_symtab", os);
-    hypervisorDescSymtab->serialize("hypervisor_desc_symtab", os);
-    partitionDescSymtab->serialize("partition_desc_symtab", os);
+    resetSymtab->serialize("reset_symtab", cp);
+    hypervisorSymtab->serialize("hypervisor_symtab", cp);
+    openbootSymtab->serialize("openboot_symtab", cp);
+    nvramSymtab->serialize("nvram_symtab", cp);
+    hypervisorDescSymtab->serialize("hypervisor_desc_symtab", cp);
+    partitionDescSymtab->serialize("partition_desc_symtab", cp);
 }
 
 
 void
-SparcSystem::unserializeSymtab(Checkpoint *cp, const std::string &section)
+SparcSystem::unserializeSymtab(CheckpointIn &cp)
 {
-    resetSymtab->unserialize("reset_symtab", cp, section);
-    hypervisorSymtab->unserialize("hypervisor_symtab", cp, section);
-    openbootSymtab->unserialize("openboot_symtab", cp, section);
-    nvramSymtab->unserialize("nvram_symtab", cp, section);
-    hypervisorDescSymtab->unserialize("hypervisor_desc_symtab", cp, section);
-    partitionDescSymtab->unserialize("partition_desc_symtab", cp, section);
+    resetSymtab->unserialize("reset_symtab", cp);
+    hypervisorSymtab->unserialize("hypervisor_symtab", cp);
+    openbootSymtab->unserialize("openboot_symtab", cp);
+    nvramSymtab->unserialize("nvram_symtab", cp);
+    hypervisorDescSymtab->unserialize("hypervisor_desc_symtab", cp);
+    partitionDescSymtab->unserialize("partition_desc_symtab", cp);
 }
 
 SparcSystem *

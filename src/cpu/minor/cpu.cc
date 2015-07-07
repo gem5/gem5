@@ -130,33 +130,32 @@ MinorCPU::regStats()
 }
 
 void
-MinorCPU::serializeThread(std::ostream &os, ThreadID thread_id)
+MinorCPU::serializeThread(CheckpointOut &cp, ThreadID thread_id) const
 {
-    threads[thread_id]->serialize(os);
+    threads[thread_id]->serialize(cp);
 }
 
 void
-MinorCPU::unserializeThread(Checkpoint *cp, const std::string &section,
-    ThreadID thread_id)
+MinorCPU::unserializeThread(CheckpointIn &cp, ThreadID thread_id)
 {
     if (thread_id != 0)
         fatal("Trying to load more than one thread into a MinorCPU\n");
 
-    threads[thread_id]->unserialize(cp, section);
+    threads[thread_id]->unserialize(cp);
 }
 
 void
-MinorCPU::serialize(std::ostream &os)
+MinorCPU::serialize(CheckpointOut &cp) const
 {
-    pipeline->serialize(os);
-    BaseCPU::serialize(os);
+    pipeline->serialize(cp);
+    BaseCPU::serialize(cp);
 }
 
 void
-MinorCPU::unserialize(Checkpoint *cp, const std::string &section)
+MinorCPU::unserialize(CheckpointIn &cp)
 {
-    pipeline->unserialize(cp, section);
-    BaseCPU::unserialize(cp, section);
+    pipeline->unserialize(cp);
+    BaseCPU::unserialize(cp);
 }
 
 Addr

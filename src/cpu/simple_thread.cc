@@ -131,18 +131,18 @@ SimpleThread::copyState(ThreadContext *oldContext)
 }
 
 void
-SimpleThread::serialize(ostream &os)
+SimpleThread::serialize(CheckpointOut &cp) const
 {
-    ThreadState::serialize(os);
-    ::serialize(*tc, os);
+    ThreadState::serialize(cp);
+    ::serialize(*tc, cp);
 }
 
 
 void
-SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
+SimpleThread::unserialize(CheckpointIn &cp)
 {
-    ThreadState::unserialize(cp, section);
-    ::unserialize(*tc, cp, section);
+    ThreadState::unserialize(cp);
+    ::unserialize(*tc, cp);
 }
 
 void

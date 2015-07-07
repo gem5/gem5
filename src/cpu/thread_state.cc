@@ -63,7 +63,7 @@ ThreadState::~ThreadState()
 }
 
 void
-ThreadState::serialize(std::ostream &os)
+ThreadState::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ENUM(_status);
     // thread_num and cpu_id are deterministic from the config
@@ -77,11 +77,11 @@ ThreadState::serialize(std::ostream &os)
         quiesceEndTick = quiesceEvent->when();
     SERIALIZE_SCALAR(quiesceEndTick);
     if (kernelStats)
-        kernelStats->serialize(os);
+        kernelStats->serialize(cp);
 }
 
 void
-ThreadState::unserialize(Checkpoint *cp, const std::string &section)
+ThreadState::unserialize(CheckpointIn &cp)
 {
 
     UNSERIALIZE_ENUM(_status);
@@ -96,7 +96,7 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
     if (quiesceEndTick)
         baseCpu->schedule(quiesceEvent, quiesceEndTick);
     if (kernelStats)
-        kernelStats->unserialize(cp, section);
+        kernelStats->unserialize(cp);
 }
 
 void

@@ -473,29 +473,29 @@ PciDevice::writeConfig(PacketPtr pkt)
 }
 
 void
-PciDevice::serialize(std::ostream &os)
+PciDevice::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
     SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
     SERIALIZE_ARRAY(config.data, sizeof(config.data) / sizeof(config.data[0]));
 
     // serialize the capability list registers
-    paramOut(os, csprintf("pmcap.pid"), uint16_t(pmcap.pid));
-    paramOut(os, csprintf("pmcap.pc"), uint16_t(pmcap.pc));
-    paramOut(os, csprintf("pmcap.pmcs"), uint16_t(pmcap.pmcs));
+    paramOut(cp, csprintf("pmcap.pid"), uint16_t(pmcap.pid));
+    paramOut(cp, csprintf("pmcap.pc"), uint16_t(pmcap.pc));
+    paramOut(cp, csprintf("pmcap.pmcs"), uint16_t(pmcap.pmcs));
 
-    paramOut(os, csprintf("msicap.mid"), uint16_t(msicap.mid));
-    paramOut(os, csprintf("msicap.mc"), uint16_t(msicap.mc));
-    paramOut(os, csprintf("msicap.ma"), uint32_t(msicap.ma));
+    paramOut(cp, csprintf("msicap.mid"), uint16_t(msicap.mid));
+    paramOut(cp, csprintf("msicap.mc"), uint16_t(msicap.mc));
+    paramOut(cp, csprintf("msicap.ma"), uint32_t(msicap.ma));
     SERIALIZE_SCALAR(msicap.mua);
-    paramOut(os, csprintf("msicap.md"), uint16_t(msicap.md));
+    paramOut(cp, csprintf("msicap.md"), uint16_t(msicap.md));
     SERIALIZE_SCALAR(msicap.mmask);
     SERIALIZE_SCALAR(msicap.mpend);
 
-    paramOut(os, csprintf("msixcap.mxid"), uint16_t(msixcap.mxid));
-    paramOut(os, csprintf("msixcap.mxc"), uint16_t(msixcap.mxc));
-    paramOut(os, csprintf("msixcap.mtab"), uint32_t(msixcap.mtab));
-    paramOut(os, csprintf("msixcap.mpba"), uint32_t(msixcap.mpba));
+    paramOut(cp, csprintf("msixcap.mxid"), uint16_t(msixcap.mxid));
+    paramOut(cp, csprintf("msixcap.mxc"), uint16_t(msixcap.mxc));
+    paramOut(cp, csprintf("msixcap.mtab"), uint32_t(msixcap.mtab));
+    paramOut(cp, csprintf("msixcap.mpba"), uint32_t(msixcap.mpba));
 
     // Only serialize if we have a non-zero base address
     if (MSIXCAP_BASE != 0x0) {
@@ -510,35 +510,35 @@ PciDevice::serialize(std::ostream &os)
         SERIALIZE_SCALAR(pba_array_size);
 
         for (int i = 0; i < msix_array_size; i++) {
-            paramOut(os, csprintf("msix_table[%d].addr_lo", i),
+            paramOut(cp, csprintf("msix_table[%d].addr_lo", i),
                      msix_table[i].fields.addr_lo);
-            paramOut(os, csprintf("msix_table[%d].addr_hi", i),
+            paramOut(cp, csprintf("msix_table[%d].addr_hi", i),
                      msix_table[i].fields.addr_hi);
-            paramOut(os, csprintf("msix_table[%d].msg_data", i),
+            paramOut(cp, csprintf("msix_table[%d].msg_data", i),
                      msix_table[i].fields.msg_data);
-            paramOut(os, csprintf("msix_table[%d].vec_ctrl", i),
+            paramOut(cp, csprintf("msix_table[%d].vec_ctrl", i),
                      msix_table[i].fields.vec_ctrl);
         }
         for (int i = 0; i < pba_array_size; i++) {
-            paramOut(os, csprintf("msix_pba[%d].bits", i),
+            paramOut(cp, csprintf("msix_pba[%d].bits", i),
                      msix_pba[i].bits);
         }
     }
 
-    paramOut(os, csprintf("pxcap.pxid"), uint16_t(pxcap.pxid));
-    paramOut(os, csprintf("pxcap.pxcap"), uint16_t(pxcap.pxcap));
-    paramOut(os, csprintf("pxcap.pxdcap"), uint32_t(pxcap.pxdcap));
-    paramOut(os, csprintf("pxcap.pxdc"), uint16_t(pxcap.pxdc));
-    paramOut(os, csprintf("pxcap.pxds"), uint16_t(pxcap.pxds));
-    paramOut(os, csprintf("pxcap.pxlcap"), uint32_t(pxcap.pxlcap));
-    paramOut(os, csprintf("pxcap.pxlc"), uint16_t(pxcap.pxlc));
-    paramOut(os, csprintf("pxcap.pxls"), uint16_t(pxcap.pxls));
-    paramOut(os, csprintf("pxcap.pxdcap2"), uint32_t(pxcap.pxdcap2));
-    paramOut(os, csprintf("pxcap.pxdc2"), uint32_t(pxcap.pxdc2));
+    paramOut(cp, csprintf("pxcap.pxid"), uint16_t(pxcap.pxid));
+    paramOut(cp, csprintf("pxcap.pxcap"), uint16_t(pxcap.pxcap));
+    paramOut(cp, csprintf("pxcap.pxdcap"), uint32_t(pxcap.pxdcap));
+    paramOut(cp, csprintf("pxcap.pxdc"), uint16_t(pxcap.pxdc));
+    paramOut(cp, csprintf("pxcap.pxds"), uint16_t(pxcap.pxds));
+    paramOut(cp, csprintf("pxcap.pxlcap"), uint32_t(pxcap.pxlcap));
+    paramOut(cp, csprintf("pxcap.pxlc"), uint16_t(pxcap.pxlc));
+    paramOut(cp, csprintf("pxcap.pxls"), uint16_t(pxcap.pxls));
+    paramOut(cp, csprintf("pxcap.pxdcap2"), uint32_t(pxcap.pxdcap2));
+    paramOut(cp, csprintf("pxcap.pxdc2"), uint32_t(pxcap.pxdc2));
 }
 
 void
-PciDevice::unserialize(Checkpoint *cp, const std::string &section)
+PciDevice::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
     UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
@@ -548,32 +548,32 @@ PciDevice::unserialize(Checkpoint *cp, const std::string &section)
     // unserialize the capability list registers
     uint16_t tmp16;
     uint32_t tmp32;
-    paramIn(cp, section, csprintf("pmcap.pid"), tmp16);
+    paramIn(cp, csprintf("pmcap.pid"), tmp16);
     pmcap.pid = tmp16;
-    paramIn(cp, section, csprintf("pmcap.pc"), tmp16);
+    paramIn(cp, csprintf("pmcap.pc"), tmp16);
     pmcap.pc = tmp16;
-    paramIn(cp, section, csprintf("pmcap.pmcs"), tmp16);
+    paramIn(cp, csprintf("pmcap.pmcs"), tmp16);
     pmcap.pmcs = tmp16;
 
-    paramIn(cp, section, csprintf("msicap.mid"), tmp16);
+    paramIn(cp, csprintf("msicap.mid"), tmp16);
     msicap.mid = tmp16;
-    paramIn(cp, section, csprintf("msicap.mc"), tmp16);
+    paramIn(cp, csprintf("msicap.mc"), tmp16);
     msicap.mc = tmp16;
-    paramIn(cp, section, csprintf("msicap.ma"), tmp32);
+    paramIn(cp, csprintf("msicap.ma"), tmp32);
     msicap.ma = tmp32;
     UNSERIALIZE_SCALAR(msicap.mua);
-    paramIn(cp, section, csprintf("msicap.md"), tmp16);;
+    paramIn(cp, csprintf("msicap.md"), tmp16);;
     msicap.md = tmp16;
     UNSERIALIZE_SCALAR(msicap.mmask);
     UNSERIALIZE_SCALAR(msicap.mpend);
 
-    paramIn(cp, section, csprintf("msixcap.mxid"), tmp16);
+    paramIn(cp, csprintf("msixcap.mxid"), tmp16);
     msixcap.mxid = tmp16;
-    paramIn(cp, section, csprintf("msixcap.mxc"), tmp16);
+    paramIn(cp, csprintf("msixcap.mxc"), tmp16);
     msixcap.mxc = tmp16;
-    paramIn(cp, section, csprintf("msixcap.mtab"), tmp32);
+    paramIn(cp, csprintf("msixcap.mtab"), tmp32);
     msixcap.mtab = tmp32;
-    paramIn(cp, section, csprintf("msixcap.mpba"), tmp32);
+    paramIn(cp, csprintf("msixcap.mpba"), tmp32);
     msixcap.mpba = tmp32;
 
     // Only allocate if MSIXCAP_BASE is not 0x0
@@ -591,40 +591,40 @@ PciDevice::unserialize(Checkpoint *cp, const std::string &section)
         msix_pba.resize(pba_array_size, tmp2);
 
         for (int i = 0; i < msix_array_size; i++) {
-            paramIn(cp, section, csprintf("msix_table[%d].addr_lo", i),
+            paramIn(cp, csprintf("msix_table[%d].addr_lo", i),
                     msix_table[i].fields.addr_lo);
-            paramIn(cp, section, csprintf("msix_table[%d].addr_hi", i),
+            paramIn(cp, csprintf("msix_table[%d].addr_hi", i),
                     msix_table[i].fields.addr_hi);
-            paramIn(cp, section, csprintf("msix_table[%d].msg_data", i),
+            paramIn(cp, csprintf("msix_table[%d].msg_data", i),
                     msix_table[i].fields.msg_data);
-            paramIn(cp, section, csprintf("msix_table[%d].vec_ctrl", i),
+            paramIn(cp, csprintf("msix_table[%d].vec_ctrl", i),
                     msix_table[i].fields.vec_ctrl);
         }
         for (int i = 0; i < pba_array_size; i++) {
-            paramIn(cp, section, csprintf("msix_pba[%d].bits", i),
+            paramIn(cp, csprintf("msix_pba[%d].bits", i),
                     msix_pba[i].bits);
         }
     }
 
-    paramIn(cp, section, csprintf("pxcap.pxid"), tmp16);
+    paramIn(cp, csprintf("pxcap.pxid"), tmp16);
     pxcap.pxid = tmp16;
-    paramIn(cp, section, csprintf("pxcap.pxcap"), tmp16);
+    paramIn(cp, csprintf("pxcap.pxcap"), tmp16);
     pxcap.pxcap = tmp16;
-    paramIn(cp, section, csprintf("pxcap.pxdcap"), tmp32);
+    paramIn(cp, csprintf("pxcap.pxdcap"), tmp32);
     pxcap.pxdcap = tmp32;
-    paramIn(cp, section, csprintf("pxcap.pxdc"), tmp16);
+    paramIn(cp, csprintf("pxcap.pxdc"), tmp16);
     pxcap.pxdc = tmp16;
-    paramIn(cp, section, csprintf("pxcap.pxds"), tmp16);
+    paramIn(cp, csprintf("pxcap.pxds"), tmp16);
     pxcap.pxds = tmp16;
-    paramIn(cp, section, csprintf("pxcap.pxlcap"), tmp32);
+    paramIn(cp, csprintf("pxcap.pxlcap"), tmp32);
     pxcap.pxlcap = tmp32;
-    paramIn(cp, section, csprintf("pxcap.pxlc"), tmp16);
+    paramIn(cp, csprintf("pxcap.pxlc"), tmp16);
     pxcap.pxlc = tmp16;
-    paramIn(cp, section, csprintf("pxcap.pxls"), tmp16);
+    paramIn(cp, csprintf("pxcap.pxls"), tmp16);
     pxcap.pxls = tmp16;
-    paramIn(cp, section, csprintf("pxcap.pxdcap2"), tmp32);
+    paramIn(cp, csprintf("pxcap.pxdcap2"), tmp32);
     pxcap.pxdcap2 = tmp32;
-    paramIn(cp, section, csprintf("pxcap.pxdc2"), tmp32);
+    paramIn(cp, csprintf("pxcap.pxdc2"), tmp32);
     pxcap.pxdc2 = tmp32;
     pioPort.sendRangeChange();
 }

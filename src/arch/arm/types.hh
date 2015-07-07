@@ -483,9 +483,9 @@ namespace ArmISA
         }
 
         void
-        serialize(std::ostream &os)
+        serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
         {
-            Base::serialize(os);
+            Base::serialize(cp);
             SERIALIZE_SCALAR(flags);
             SERIALIZE_SCALAR(_size);
             SERIALIZE_SCALAR(nextFlags);
@@ -494,9 +494,9 @@ namespace ArmISA
         }
 
         void
-        unserialize(Checkpoint *cp, const std::string &section)
+        unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
         {
-            Base::unserialize(cp, section);
+            Base::unserialize(cp);
             UNSERIALIZE_SCALAR(flags);
             UNSERIALIZE_SCALAR(_size);
             UNSERIALIZE_SCALAR(nextFlags);

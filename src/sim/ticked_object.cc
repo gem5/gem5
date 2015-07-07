@@ -72,15 +72,15 @@ Ticked::regStats()
 }
 
 void
-Ticked::serialize(std::ostream &os)
+Ticked::serialize(CheckpointOut &cp) const
 {
     uint64_t lastStoppedUint = lastStopped;
 
-    paramOut(os, "lastStopped", lastStoppedUint);
+    paramOut(cp, "lastStopped", lastStoppedUint);
 }
 
 void
-Ticked::unserialize(Checkpoint *cp, const std::string &section)
+Ticked::unserialize(CheckpointIn &cp)
 {
     uint64_t lastStoppedUint = 0;
 
@@ -90,7 +90,7 @@ Ticked::unserialize(Checkpoint *cp, const std::string &section)
      *  checkpointed object but not this one.
      *  An example would be a CPU model using Ticked restores from a
      *  simple CPU without without Ticked */
-    optParamIn(cp, section, "lastStopped", lastStoppedUint);
+    optParamIn(cp, "lastStopped", lastStoppedUint);
 
     lastStopped = Cycles(lastStoppedUint);
 }
@@ -109,14 +109,14 @@ TickedObject::regStats()
 }
 
 void
-TickedObject::serialize(std::ostream &os)
+TickedObject::serialize(CheckpointOut &cp) const
 {
-    Ticked::serialize(os);
-    ClockedObject::serialize(os);
+    Ticked::serialize(cp);
+    ClockedObject::serialize(cp);
 }
 void
-TickedObject::unserialize(Checkpoint *cp, const std::string &section)
+TickedObject::unserialize(CheckpointIn &cp)
 {
-    Ticked::unserialize(cp, section);
-    ClockedObject::unserialize(cp, section);
+    Ticked::unserialize(cp);
+    ClockedObject::unserialize(cp);
 }

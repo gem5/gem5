@@ -2292,7 +2292,7 @@ Cache::nextMSHRReadyTime() const
 }
 
 void
-Cache::serialize(std::ostream &os)
+Cache::serialize(CheckpointOut &cp) const
 {
     bool dirty(isDirty());
 
@@ -2312,7 +2312,7 @@ Cache::serialize(std::ostream &os)
 }
 
 void
-Cache::unserialize(Checkpoint *cp, const std::string &section)
+Cache::unserialize(CheckpointIn &cp)
 {
     bool bad_checkpoint;
     UNSERIALIZE_SCALAR(bad_checkpoint);

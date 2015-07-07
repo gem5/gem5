@@ -190,7 +190,7 @@ class CPA : SimObject
         }
 
     /* struct that is written to the annotation output file */
-    struct AnnotateData {
+    struct AnnotateData : public Serializable {
 
         Tick time;
         uint32_t data;
@@ -202,9 +202,8 @@ class CPA : SimObject
         uint8_t  cpu;
         bool dump;
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
 
     typedef std::shared_ptr<AnnotateData> AnnDataPtr;
@@ -541,9 +540,8 @@ class CPA : SimObject
     void dump(bool all);
     void dumpKey();
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 #endif // !CP_ANNOTATE
 

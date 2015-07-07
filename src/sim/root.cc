@@ -123,14 +123,14 @@ Root::initState()
 }
 
 void
-Root::loadState(Checkpoint *cp)
+Root::loadState(CheckpointIn &cp)
 {
     SimObject::loadState(cp);
     timeSyncEnable(params()->time_sync_enable);
 }
 
 void
-Root::serialize(std::ostream &os)
+Root::serialize(CheckpointOut &cp) const
 {
     uint64_t cpt_ver = gem5CheckpointVersion;
     SERIALIZE_SCALAR(cpt_ver);
@@ -140,7 +140,7 @@ Root::serialize(std::ostream &os)
 }
 
 void
-Root::unserialize(Checkpoint *cp, const std::string &section)
+Root::unserialize(CheckpointIn &cp)
 {
     uint64_t cpt_ver = 0;
     UNSERIALIZE_OPT_SCALAR(cpt_ver);

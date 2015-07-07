@@ -2283,11 +2283,11 @@ UFSHostDevice::readGarbage()
  */
 
 void
-UFSHostDevice::serialize(std::ostream &os)
+UFSHostDevice::serialize(CheckpointOut &cp) const
 {
-    DmaDevice::serialize(os);
+    DmaDevice::serialize(cp);
 
-    uint8_t* temp_HCI_mem = reinterpret_cast<uint8_t*>(&UFSHCIMem);
+    const uint8_t* temp_HCI_mem = reinterpret_cast<const uint8_t*>(&UFSHCIMem);
     SERIALIZE_ARRAY(temp_HCI_mem, sizeof(HCIMem));
 
     uint32_t lun_avail = lunAvail;
@@ -2300,9 +2300,9 @@ UFSHostDevice::serialize(std::ostream &os)
  */
 
 void
-UFSHostDevice::unserialize(Checkpoint *cp, const std::string &section)
+UFSHostDevice::unserialize(CheckpointIn &cp)
 {
-    DmaDevice::unserialize(cp, section);
+    DmaDevice::unserialize(cp);
     uint8_t* temp_HCI_mem = reinterpret_cast<uint8_t*>(&UFSHCIMem);
     UNSERIALIZE_ARRAY(temp_HCI_mem, sizeof(HCIMem));
 

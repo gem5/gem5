@@ -217,7 +217,7 @@ Sp804::Timer::counterAtZero()
 }
 
 void
-Sp804::Timer::serialize(std::ostream &os)
+Sp804::Timer::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm Sp804\n");
 
@@ -239,7 +239,7 @@ Sp804::Timer::serialize(std::ostream &os)
 }
 
 void
-Sp804::Timer::unserialize(Checkpoint *cp, const std::string &section)
+Sp804::Timer::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm Sp804\n");
 
@@ -264,19 +264,17 @@ Sp804::Timer::unserialize(Checkpoint *cp, const std::string &section)
 
 
 void
-Sp804::serialize(std::ostream &os)
+Sp804::serialize(CheckpointOut &cp) const
 {
-    nameOut(os, csprintf("%s.timer0", name()));
-    timer0.serialize(os);
-    nameOut(os, csprintf("%s.timer1", name()));
-    timer1.serialize(os);
+    timer0.serializeSection(cp, "timer0");
+    timer1.serializeSection(cp, "timer1");
 }
 
 void
-Sp804::unserialize(Checkpoint *cp, const std::string &section)
+Sp804::unserialize(CheckpointIn &cp)
 {
-    timer0.unserialize(cp, csprintf("%s.timer0", section));
-    timer1.unserialize(cp, csprintf("%s.timer1", section));
+    timer0.unserializeSection(cp, "timer0");
+    timer1.unserializeSection(cp, "timer1");
 }
 
 Sp804 *

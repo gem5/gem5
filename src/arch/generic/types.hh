@@ -41,7 +41,7 @@ namespace GenericISA
 {
 
 // The guaranteed interface.
-class PCStateBase
+class PCStateBase : public Serializable
 {
   protected:
     Addr _pc;
@@ -105,14 +105,14 @@ class PCStateBase
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
         SERIALIZE_SCALAR(_pc);
         SERIALIZE_SCALAR(_npc);
     }
 
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
         UNSERIALIZE_SCALAR(_pc);
         UNSERIALIZE_SCALAR(_npc);
@@ -248,17 +248,17 @@ class UPCState : public SimplePCState<MachInst>
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
-        Base::serialize(os);
+        Base::serialize(cp);
         SERIALIZE_SCALAR(_upc);
         SERIALIZE_SCALAR(_nupc);
     }
 
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
-        Base::unserialize(cp, section);
+        Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_upc);
         UNSERIALIZE_SCALAR(_nupc);
     }
@@ -329,16 +329,16 @@ class DelaySlotPCState : public SimplePCState<MachInst>
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
-        Base::serialize(os);
+        Base::serialize(cp);
         SERIALIZE_SCALAR(_nnpc);
     }
 
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
-        Base::unserialize(cp, section);
+        Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_nnpc);
     }
 };
@@ -426,17 +426,17 @@ class DelaySlotUPCState : public DelaySlotPCState<MachInst>
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
-        Base::serialize(os);
+        Base::serialize(cp);
         SERIALIZE_SCALAR(_upc);
         SERIALIZE_SCALAR(_nupc);
     }
 
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
-        Base::unserialize(cp, section);
+        Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_upc);
         UNSERIALIZE_SCALAR(_nupc);
     }

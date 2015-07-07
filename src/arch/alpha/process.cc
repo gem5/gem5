@@ -175,7 +175,7 @@ AlphaLiveProcess::setupASNReg()
 
 
 void
-AlphaLiveProcess::loadState(Checkpoint *cp)
+AlphaLiveProcess::loadState(CheckpointIn &cp)
 {
     LiveProcess::loadState(cp);
     // need to set up ASN after unserialization since M5_pid value may

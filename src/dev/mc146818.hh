@@ -170,7 +170,7 @@ class MC146818 : public EventManager
       * @param base The base name of the counter object.
       * @param os The stream to serialize to.
       */
-    void serialize(const std::string &base, std::ostream &os);
+    void serialize(const std::string &base, CheckpointOut &cp) const;
 
     /**
      * Reconstruct the state of this object from a checkpoint.
@@ -178,8 +178,7 @@ class MC146818 : public EventManager
      * @param cp The checkpoint use.
      * @param section The section name of this object
      */
-    void unserialize(const std::string &base, Checkpoint *cp,
-                     const std::string &section);
+    void unserialize(const std::string &base, CheckpointIn &cp);
 };
 
 #endif // __DEV_MC146818_HH__

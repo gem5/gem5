@@ -294,7 +294,7 @@ inline int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
     inline uint64_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
     inline void NAME(uint64_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
 
-struct Regs {
+struct Regs : public Serializable {
     template<class T>
     struct Reg {
         T _data;
@@ -303,11 +303,11 @@ struct Regs {
         bool operator==(T d) { return d == _data; }
         void operator()(T d) { _data = d; }
         Reg() { _data = 0; }
-        void serialize(std::ostream &os)
+        void serialize(CheckpointOut &cp) const
         {
             SERIALIZE_SCALAR(_data);
         }
-        void unserialize(Checkpoint *cp, const std::string &section)
+        void unserialize(CheckpointIn &cp)
         {
             UNSERIALIZE_SCALAR(_data);
         }
@@ -759,95 +759,95 @@ struct Regs {
 
     uint32_t sw_fw_sync;
 
-    void serialize(std::ostream &os)
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
-        paramOut(os, "ctrl", ctrl._data);
-        paramOut(os, "sts", sts._data);
-        paramOut(os, "eecd", eecd._data);
-        paramOut(os, "eerd", eerd._data);
-        paramOut(os, "ctrl_ext", ctrl_ext._data);
-        paramOut(os, "mdic", mdic._data);
-        paramOut(os, "icr", icr._data);
+        paramOut(cp, "ctrl", ctrl._data);
+        paramOut(cp, "sts", sts._data);
+        paramOut(cp, "eecd", eecd._data);
+        paramOut(cp, "eerd", eerd._data);
+        paramOut(cp, "ctrl_ext", ctrl_ext._data);
+        paramOut(cp, "mdic", mdic._data);
+        paramOut(cp, "icr", icr._data);
         SERIALIZE_SCALAR(imr);
-        paramOut(os, "itr", itr._data);
+        paramOut(cp, "itr", itr._data);
         SERIALIZE_SCALAR(iam);
-        paramOut(os, "rctl", rctl._data);
-        paramOut(os, "fcttv", fcttv._data);
-        paramOut(os, "tctl", tctl._data);
-        paramOut(os, "pba", pba._data);
-        paramOut(os, "fcrtl", fcrtl._data);
-        paramOut(os, "fcrth", fcrth._data);
-        paramOut(os, "rdba", rdba._data);
-        paramOut(os, "rdlen", rdlen._data);
-        paramOut(os, "srrctl", srrctl._data);
-        paramOut(os, "rdh", rdh._data);
-        paramOut(os, "rdt", rdt._data);
-        paramOut(os, "rdtr", rdtr._data);
-        paramOut(os, "rxdctl", rxdctl._data);
-        paramOut(os, "radv", radv._data);
-        paramOut(os, "rsrpd", rsrpd._data);
-        paramOut(os, "tdba", tdba._data);
-        paramOut(os, "tdlen", tdlen._data);
-        paramOut(os, "tdh", tdh._data);
-        paramOut(os, "txdca_ctl", txdca_ctl._data);
-        paramOut(os, "tdt", tdt._data);
-        paramOut(os, "tidv", tidv._data);
-        paramOut(os, "txdctl", txdctl._data);
-        paramOut(os, "tadv", tadv._data);
-        //paramOut(os, "tdwba", tdwba._data);
+        paramOut(cp, "rctl", rctl._data);
+        paramOut(cp, "fcttv", fcttv._data);
+        paramOut(cp, "tctl", tctl._data);
+        paramOut(cp, "pba", pba._data);
+        paramOut(cp, "fcrtl", fcrtl._data);
+        paramOut(cp, "fcrth", fcrth._data);
+        paramOut(cp, "rdba", rdba._data);
+        paramOut(cp, "rdlen", rdlen._data);
+        paramOut(cp, "srrctl", srrctl._data);
+        paramOut(cp, "rdh", rdh._data);
+        paramOut(cp, "rdt", rdt._data);
+        paramOut(cp, "rdtr", rdtr._data);
+        paramOut(cp, "rxdctl", rxdctl._data);
+        paramOut(cp, "radv", radv._data);
+        paramOut(cp, "rsrpd", rsrpd._data);
+        paramOut(cp, "tdba", tdba._data);
+        paramOut(cp, "tdlen", tdlen._data);
+        paramOut(cp, "tdh", tdh._data);
+        paramOut(cp, "txdca_ctl", txdca_ctl._data);
+        paramOut(cp, "tdt", tdt._data);
+        paramOut(cp, "tidv", tidv._data);
+        paramOut(cp, "txdctl", txdctl._data);
+        paramOut(cp, "tadv", tadv._data);
+        //paramOut(cp, "tdwba", tdwba._data);
         SERIALIZE_SCALAR(tdwba);
-        paramOut(os, "rxcsum", rxcsum._data);
+        paramOut(cp, "rxcsum", rxcsum._data);
         SERIALIZE_SCALAR(rlpml);
-        paramOut(os, "rfctl", rfctl._data);
-        paramOut(os, "manc", manc._data);
-        paramOut(os, "swsm", swsm._data);
-        paramOut(os, "fwsm", fwsm._data);
+        paramOut(cp, "rfctl", rfctl._data);
+        paramOut(cp, "manc", manc._data);
+        paramOut(cp, "swsm", swsm._data);
+        paramOut(cp, "fwsm", fwsm._data);
         SERIALIZE_SCALAR(sw_fw_sync);
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
-        paramIn(cp, section, "ctrl", ctrl._data);
-        paramIn(cp, section, "sts", sts._data);
-        paramIn(cp, section, "eecd", eecd._data);
-        paramIn(cp, section, "eerd", eerd._data);
-        paramIn(cp, section, "ctrl_ext", ctrl_ext._data);
-        paramIn(cp, section, "mdic", mdic._data);
-        paramIn(cp, section, "icr", icr._data);
+        paramIn(cp, "ctrl", ctrl._data);
+        paramIn(cp, "sts", sts._data);
+        paramIn(cp, "eecd", eecd._data);
+        paramIn(cp, "eerd", eerd._data);
+        paramIn(cp, "ctrl_ext", ctrl_ext._data);
+        paramIn(cp, "mdic", mdic._data);
+        paramIn(cp, "icr", icr._data);
         UNSERIALIZE_SCALAR(imr);
-        paramIn(cp, section, "itr", itr._data);
+        paramIn(cp, "itr", itr._data);
         UNSERIALIZE_SCALAR(iam);
-        paramIn(cp, section, "rctl", rctl._data);
-        paramIn(cp, section, "fcttv", fcttv._data);
-        paramIn(cp, section, "tctl", tctl._data);
-        paramIn(cp, section, "pba", pba._data);
-        paramIn(cp, section, "fcrtl", fcrtl._data);
-        paramIn(cp, section, "fcrth", fcrth._data);
-        paramIn(cp, section, "rdba", rdba._data);
-        paramIn(cp, section, "rdlen", rdlen._data);
-        paramIn(cp, section, "srrctl", srrctl._data);
-        paramIn(cp, section, "rdh", rdh._data);
-        paramIn(cp, section, "rdt", rdt._data);
-        paramIn(cp, section, "rdtr", rdtr._data);
-        paramIn(cp, section, "rxdctl", rxdctl._data);
-        paramIn(cp, section, "radv", radv._data);
-        paramIn(cp, section, "rsrpd", rsrpd._data);
-        paramIn(cp, section, "tdba", tdba._data);
-        paramIn(cp, section, "tdlen", tdlen._data);
-        paramIn(cp, section, "tdh", tdh._data);
-        paramIn(cp, section, "txdca_ctl", txdca_ctl._data);
-        paramIn(cp, section, "tdt", tdt._data);
-        paramIn(cp, section, "tidv", tidv._data);
-        paramIn(cp, section, "txdctl", txdctl._data);
-        paramIn(cp, section, "tadv", tadv._data);
+        paramIn(cp, "rctl", rctl._data);
+        paramIn(cp, "fcttv", fcttv._data);
+        paramIn(cp, "tctl", tctl._data);
+        paramIn(cp, "pba", pba._data);
+        paramIn(cp, "fcrtl", fcrtl._data);
+        paramIn(cp, "fcrth", fcrth._data);
+        paramIn(cp, "rdba", rdba._data);
+        paramIn(cp, "rdlen", rdlen._data);
+        paramIn(cp, "srrctl", srrctl._data);
+        paramIn(cp, "rdh", rdh._data);
+        paramIn(cp, "rdt", rdt._data);
+        paramIn(cp, "rdtr", rdtr._data);
+        paramIn(cp, "rxdctl", rxdctl._data);
+        paramIn(cp, "radv", radv._data);
+        paramIn(cp, "rsrpd", rsrpd._data);
+        paramIn(cp, "tdba", tdba._data);
+        paramIn(cp, "tdlen", tdlen._data);
+        paramIn(cp, "tdh", tdh._data);
+        paramIn(cp, "txdca_ctl", txdca_ctl._data);
+        paramIn(cp, "tdt", tdt._data);
+        paramIn(cp, "tidv", tidv._data);
+        paramIn(cp, "txdctl", txdctl._data);
+        paramIn(cp, "tadv", tadv._data);
         UNSERIALIZE_SCALAR(tdwba);
-        //paramIn(cp, section, "tdwba", tdwba._data);
-        paramIn(cp, section, "rxcsum", rxcsum._data);
+        //paramIn(cp, "tdwba", tdwba._data);
+        paramIn(cp, "rxcsum", rxcsum._data);
         UNSERIALIZE_SCALAR(rlpml);
-        paramIn(cp, section, "rfctl", rfctl._data);
-        paramIn(cp, section, "manc", manc._data);
-        paramIn(cp, section, "swsm", swsm._data);
-        paramIn(cp, section, "fwsm", fwsm._data);
+        paramIn(cp, "rfctl", rfctl._data);
+        paramIn(cp, "manc", manc._data);
+        paramIn(cp, "swsm", swsm._data);
+        paramIn(cp, "fwsm", fwsm._data);
         UNSERIALIZE_SCALAR(sw_fw_sync);
     }
 };

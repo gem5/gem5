@@ -96,8 +96,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     void addEventProbe(unsigned int id, SimObject *obj, const char *name);
 
   public: // SimObject and related interfaces
-    void serialize(std::ostream &os) M5_ATTR_OVERRIDE;
-    void unserialize(Checkpoint *cp, const std::string &sec) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     void drainResume() M5_ATTR_OVERRIDE;
 
@@ -321,7 +321,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     };
 
     /** State of a counter within the PMU. */
-    struct CounterState {
+    struct CounterState : public Serializable {
         CounterState()
             : eventId(0), filter(0), value(0), enabled(false),
               overflow64(false) {
@@ -329,8 +329,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
             listeners.reserve(4);
         }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp)  M5_ATTR_OVERRIDE;
 
         /**
          * Add an event count to the counter and check for overflow.

@@ -81,11 +81,13 @@ SimObject::init()
 }
 
 void
-SimObject::loadState(Checkpoint *cp)
+SimObject::loadState(CheckpointIn &cp)
 {
-    if (cp->sectionExists(name())) {
+    if (cp.sectionExists(name())) {
         DPRINTF(Checkpoint, "unserializing\n");
-        unserialize(cp, name());
+        // This works despite name() returning a fully qualified name
+        // since we are at the top level.
+        unserializeSection(cp, name());
     } else {
         DPRINTF(Checkpoint, "no checkpoint section found\n");
     }
@@ -140,15 +142,16 @@ SimObject::getProbeManager()
 // static function: serialize all SimObjects.
 //
 void
-SimObject::serializeAll(std::ostream &os)
+SimObject::serializeAll(CheckpointOut &cp)
 {
     SimObjectList::reverse_iterator ri = simObjectList.rbegin();
     SimObjectList::reverse_iterator rend = simObjectList.rend();
 
     for (; ri != rend; ++ri) {
         SimObject *obj = *ri;
-        obj->nameOut(os);
-        obj->serialize(os);
+        // This works despite name() returning a fully qualified name
+        // since we are at the top level.
+        obj->serializeSectionOld(cp, obj->name());
    }
 }
 

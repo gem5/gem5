@@ -99,9 +99,8 @@ class EtherLink : public EtherObject
         void setTxInt(Interface *i) { assert(!txint); txint = i; }
         void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
 
-        void serialize(const std::string &base, std::ostream &os);
-        void unserialize(const std::string &base, Checkpoint *cp,
-                                 const std::string &section);
+        void serialize(const std::string &base, CheckpointOut &cp) const;
+        void unserialize(const std::string &base, CheckpointIn &cp);
     };
 
     /*
@@ -135,8 +134,8 @@ class EtherLink : public EtherObject
 
     virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
 };
 

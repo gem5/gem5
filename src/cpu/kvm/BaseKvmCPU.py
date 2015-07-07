@@ -53,7 +53,7 @@ class BaseKvmCPU(BaseCPU):
     @classmethod
     def export_methods(cls, code):
         code('''
-      void dump();
+      void dump() const;
 ''')
 
     @classmethod

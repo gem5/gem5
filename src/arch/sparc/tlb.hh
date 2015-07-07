@@ -176,8 +176,8 @@ class TLB : public BaseTLB
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);
 
     // Checkpointing
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     /** Give an entry id, read that tlb entries' tte */
     uint64_t TteRead(int entry);

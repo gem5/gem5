@@ -350,15 +350,14 @@ class Event : public EventBase, public Serializable
     virtual BaseGlobalEvent *globalEvent() { return NULL; }
 
 #ifndef SWIG
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     //! This function is required to support restoring from checkpoints
     //! when running with multiple queues. Since we still have not thrashed
     //! out all the details on checkpointing, this function is most likely
     //! to be revisited in future.
-    virtual void unserialize(Checkpoint *cp, const std::string &section,
-                     EventQueue *eventq);
+    virtual void unserializeEvent(CheckpointIn &cp, EventQueue *eventq);
 #endif
 };
 
@@ -647,8 +646,8 @@ class EventQueue : public Serializable
     /**@}*/
 
 #ifndef SWIG
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 #endif
 
     virtual ~EventQueue() { }

@@ -676,27 +676,25 @@ CopyEngine::drain(DrainManager *dm)
 }
 
 void
-CopyEngine::serialize(std::ostream &os)
+CopyEngine::serialize(CheckpointOut &cp) const
 {
-    PciDevice::serialize(os);
-    regs.serialize(os);
-    for (int x =0; x < chan.size(); x++) {
-        nameOut(os, csprintf("%s.channel%d", name(), x));
-        chan[x]->serialize(os);
-    }
+    PciDevice::serialize(cp);
+    regs.serialize(cp);
+    for (int x =0; x < chan.size(); x++)
+        chan[x]->serializeSection(cp, csprintf("channel%d", x));
 }
 
 void
-CopyEngine::unserialize(Checkpoint *cp, const std::string &section)
+CopyEngine::unserialize(CheckpointIn &cp)
 {
-    PciDevice::unserialize(cp, section);
-    regs.unserialize(cp, section);
+    PciDevice::unserialize(cp);
+    regs.unserialize(cp);
     for (int x = 0; x < chan.size(); x++)
-        chan[x]->unserialize(cp, csprintf("%s.channel%d", section, x));
+        chan[x]->unserializeSection(cp, csprintf("channel%d", x));
 }
 
 void
-CopyEngine::CopyEngineChannel::serialize(std::ostream &os)
+CopyEngine::CopyEngineChannel::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(channelId);
     SERIALIZE_SCALAR(busy);
@@ -707,13 +705,13 @@ CopyEngine::CopyEngineChannel::serialize(std::ostream &os)
     SERIALIZE_SCALAR(fetchAddress);
     int nextState = this->nextState;
     SERIALIZE_SCALAR(nextState);
-    arrayParamOut(os, "curDmaDesc", (uint8_t*)curDmaDesc, sizeof(DmaDesc));
+    arrayParamOut(cp, "curDmaDesc", (uint8_t*)curDmaDesc, sizeof(DmaDesc));
     SERIALIZE_ARRAY(copyBuffer, ce->params()->XferCap);
-    cr.serialize(os);
+    cr.serialize(cp);
 
 }
 void
-CopyEngine::CopyEngineChannel::unserialize(Checkpoint *cp, const std::string &section)
+CopyEngine::CopyEngineChannel::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(channelId);
     UNSERIALIZE_SCALAR(busy);
@@ -725,9 +723,9 @@ CopyEngine::CopyEngineChannel::unserialize(Checkpoint *cp, const std::string &se
     int nextState;
     UNSERIALIZE_SCALAR(nextState);
     this->nextState = (ChannelState)nextState;
-    arrayParamIn(cp, section, "curDmaDesc", (uint8_t*)curDmaDesc, sizeof(DmaDesc));
+    arrayParamIn(cp, "curDmaDesc", (uint8_t*)curDmaDesc, sizeof(DmaDesc));
     UNSERIALIZE_ARRAY(copyBuffer, ce->params()->XferCap);
-    cr.unserialize(cp, section);
+    cr.unserialize(cp);
 
 }
 

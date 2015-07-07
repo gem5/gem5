@@ -129,12 +129,12 @@ CheckerCPU::setDcachePort(MasterPort *dcache_port)
 }
 
 void
-CheckerCPU::serialize(ostream &os)
+CheckerCPU::serialize(ostream &os) const
 {
 }
 
 void
-CheckerCPU::unserialize(Checkpoint *cp, const string &section)
+CheckerCPU::unserialize(CheckpointIn &cp)
 {
 }
 

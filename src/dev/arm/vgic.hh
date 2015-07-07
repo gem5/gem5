@@ -52,6 +52,9 @@
 #ifndef __DEV_ARM_VGIC_H__
 #define __DEV_ARM_VGIC_H__
 
+#include <algorithm>
+#include <array>
+
 #include "base/addr_range.hh"
 #include "base/bitunion.hh"
 #include "cpu/intr_control.hh"
@@ -162,8 +165,17 @@ class VGic : public PioDevice
     /* State per CPU.  EVERYTHING should be in this struct and simply replicated
      * N times.
      */
-    struct vcpuIntData {
-        ListReg LR[NUM_LR];
+    struct vcpuIntData : public Serializable {
+        vcpuIntData()
+            : vctrl(0), hcr(0), eisr(0), VMGrp0En(0), VMGrp1En(0),
+              VMAckCtl(0), VMFiqEn(0), VMCBPR(0), VEM(0), VMABP(0), VMBP(0),
+              VMPriMask(0)
+        {
+            std::fill(LR.begin(), LR.end(), 0);
+        }
+        virtual ~vcpuIntData() {}
+
+        std::array<ListReg, NUM_LR> LR;
         VCTLR vctrl;
 
         HCR hcr;
@@ -179,9 +191,12 @@ class VGic : public PioDevice
         uint8_t VMABP;
         uint8_t VMBP;
         uint8_t VMPriMask;
+
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
 
-    struct vcpuIntData vcpuData[VGIC_CPU_MAX];
+    struct std::array<vcpuIntData, VGIC_CPU_MAX>  vcpuData;
 
   public:
    typedef VGicParams Params;
@@ -197,8 +212,8 @@ class VGic : public PioDevice
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   private:
     Tick readVCpu(PacketPtr pkt);

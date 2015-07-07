@@ -60,7 +60,7 @@
 
 class CopyEngine : public PciDevice
 {
-    class CopyEngineChannel : public Drainable
+    class CopyEngineChannel : public Drainable, public Serializable
     {
       private:
         DmaPort cePort;
@@ -110,8 +110,8 @@ class CopyEngine : public PciDevice
         unsigned int drain(DrainManager *drainManger);
         void drainResume();
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
       private:
         void fetchDescriptor(Addr address);
@@ -205,8 +205,8 @@ class CopyEngine : public PciDevice
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     unsigned int drain(DrainManager *drainManger);
     void drainResume();

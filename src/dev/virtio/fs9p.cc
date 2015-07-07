@@ -214,13 +214,13 @@ VirtIO9PProxy::~VirtIO9PProxy()
 
 
 void
-VirtIO9PProxy::VirtIO9PProxy::serialize(std::ostream &os)
+VirtIO9PProxy::VirtIO9PProxy::serialize(CheckpointOut &cp) const
 {
     fatal("Can't checkpoint a system with a VirtIO 9p proxy!\n");
 }
 
 void
-VirtIO9PProxy::unserialize(Checkpoint *cp, const std::string &section)
+VirtIO9PProxy::unserialize(CheckpointIn &cp)
 {
     fatal("Can't checkpoint a system with a VirtIO 9p proxy!\n");
 }

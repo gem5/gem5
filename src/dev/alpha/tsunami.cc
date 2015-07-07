@@ -114,13 +114,13 @@ Tsunami::calcPciMemAddr(Addr addr)
 }
 
 void
-Tsunami::serialize(std::ostream &os)
+Tsunami::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
 }
 
 void
-Tsunami::unserialize(Checkpoint *cp, const std::string &section)
+Tsunami::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
 }

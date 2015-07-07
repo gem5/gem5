@@ -74,8 +74,8 @@ struct PTE
     int OffsetMask;
 
     bool Valid() { return (V0 | V1); };
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const;
+    void unserialize(CheckpointIn &cp);
 };
 
 // WARN: This particular TLB entry is not necessarily conformed to MIPS ISA
@@ -100,12 +100,12 @@ struct TlbEntry
     void
     updateVaddr(Addr new_vaddr) {}
 
-    void serialize(std::ostream &os)
+    void serialize(CheckpointOut &cp) const
     {
         SERIALIZE_SCALAR(_pageStart);
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void unserialize(CheckpointIn &cp)
     {
         UNSERIALIZE_SCALAR(_pageStart);
     }

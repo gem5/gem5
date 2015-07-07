@@ -259,6 +259,13 @@ Process::initState()
     pTable->initState(tc);
 }
 
+unsigned int
+Process::drain(DrainManager *dm)
+{
+    find_file_offsets();
+    return 0;
+}
+
 // map simulator fd sim_fd to target fd tgt_fd
 void
 Process::dup_fd(int sim_fd, int tgt_fd)
@@ -488,7 +495,7 @@ Process::setReadPipeSource(int read_pipe_fd, int source_fd)
 }
 
 void
-Process::FdMap::serialize(std::ostream &os)
+Process::FdMap::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(fd);
     SERIALIZE_SCALAR(isPipe);
@@ -499,7 +506,7 @@ Process::FdMap::serialize(std::ostream &os)
 }
 
 void
-Process::FdMap::unserialize(Checkpoint *cp, const std::string &section)
+Process::FdMap::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(fd);
     UNSERIALIZE_SCALAR(isPipe);
@@ -510,7 +517,7 @@ Process::FdMap::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-Process::serialize(std::ostream &os)
+Process::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(brk_point);
     SERIALIZE_SCALAR(stack_base);
@@ -521,18 +528,16 @@ Process::serialize(std::ostream &os)
     SERIALIZE_SCALAR(mmap_end);
     SERIALIZE_SCALAR(nxm_start);
     SERIALIZE_SCALAR(nxm_end);
-    find_file_offsets();
-    pTable->serialize(os);
+    pTable->serialize(cp);
     for (int x = 0; x <= MAX_FD; x++) {
-        nameOut(os, csprintf("%s.FdMap%d", name(), x));
-        fd_map[x].serialize(os);
+        fd_map[x].serializeSection(cp, csprintf("FdMap%d", x));
     }
     SERIALIZE_SCALAR(M5_pid);
 
 }
 
 void
-Process::unserialize(Checkpoint *cp, const std::string &section)
+Process::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(brk_point);
     UNSERIALIZE_SCALAR(stack_base);
@@ -543,9 +548,9 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(mmap_end);
     UNSERIALIZE_SCALAR(nxm_start);
     UNSERIALIZE_SCALAR(nxm_end);
-    pTable->unserialize(cp, section);
+    pTable->unserialize(cp);
     for (int x = 0; x <= MAX_FD; x++) {
-        fd_map[x].unserialize(cp, csprintf("%s.FdMap%d", section, x));
+        fd_map[x].unserializeSection(cp, csprintf("FdMap%d", x));
     }
     fix_file_offsets();
     UNSERIALIZE_OPT_SCALAR(M5_pid);

@@ -170,7 +170,7 @@ MmDisk::write(PacketPtr pkt)
 }
 
 void
-MmDisk::serialize(std::ostream &os)
+MmDisk::serialize(CheckpointOut &cp) const
 {
     // just write any dirty changes to the cow layer it will take care of
     // serialization

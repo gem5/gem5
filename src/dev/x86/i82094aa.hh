@@ -109,8 +109,8 @@ class I82094AA : public BasicPioDevice, public IntDevice
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 } // namespace X86ISA

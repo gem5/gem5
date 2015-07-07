@@ -115,8 +115,8 @@ class EtherTap : public EtherObject
     virtual bool recvPacket(EthPacketPtr packet);
     virtual void sendDone();
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 class EtherTapInt : public EtherInt

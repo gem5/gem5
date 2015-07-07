@@ -289,7 +289,7 @@ PhysicalMemory::functionalAccess(PacketPtr pkt)
 }
 
 void
-PhysicalMemory::serialize(ostream& os)
+PhysicalMemory::serialize(CheckpointOut &cp) const
 {
     // serialize all the locked addresses and their context ids
     vector<Addr> lal_addr;
@@ -303,8 +303,8 @@ PhysicalMemory::serialize(ostream& os)
         }
     }
 
-    arrayParamOut(os, "lal_addr", lal_addr);
-    arrayParamOut(os, "lal_cid", lal_cid);
+    SERIALIZE_CONTAINER(lal_addr);
+    SERIALIZE_CONTAINER(lal_cid);
 
     // serialize the backing stores
     unsigned int nbr_of_stores = backingStore.size();
@@ -313,14 +313,14 @@ PhysicalMemory::serialize(ostream& os)
     unsigned int store_id = 0;
     // store each backing store memory segment in a file
     for (auto& s : backingStore) {
-        nameOut(os, csprintf("%s.store%d", name(), store_id));
-        serializeStore(os, store_id++, s.first, s.second);
+        ScopedCheckpointSection sec(cp, csprintf("store%d", store_id));
+        serializeStore(cp, store_id++, s.first, s.second);
     }
 }
 
 void
-PhysicalMemory::serializeStore(ostream& os, unsigned int store_id,
-                               AddrRange range, uint8_t* pmem)
+PhysicalMemory::serializeStore(CheckpointOut &cp, unsigned int store_id,
+                               AddrRange range, uint8_t* pmem) const
 {
     // we cannot use the address range for the name as the
     // memories that are not part of the address map can overlap
@@ -335,7 +335,7 @@ PhysicalMemory::serializeStore(ostream& os, unsigned int store_id,
     SERIALIZE_SCALAR(range_size);
 
     // write memory file
-    string filepath = Checkpoint::dir() + "/" + filename.c_str();
+    string filepath = CheckpointIn::dir() + "/" + filename.c_str();
     gzFile compressed_mem = gzopen(filepath.c_str(), "wb");
     if (compressed_mem == NULL)
         fatal("Can't open physical memory checkpoint file '%s'\n",
@@ -365,14 +365,14 @@ PhysicalMemory::serializeStore(ostream& os, unsigned int store_id,
 }
 
 void
-PhysicalMemory::unserialize(Checkpoint* cp, const string& section)
+PhysicalMemory::unserialize(CheckpointIn &cp)
 {
     // unserialize the locked addresses and map them to the
     // appropriate memory controller
     vector<Addr> lal_addr;
     vector<int> lal_cid;
-    arrayParamIn(cp, section, "lal_addr", lal_addr);
-    arrayParamIn(cp, section, "lal_cid", lal_cid);
+    UNSERIALIZE_CONTAINER(lal_addr);
+    UNSERIALIZE_CONTAINER(lal_cid);
     for(size_t i = 0; i < lal_addr.size(); ++i) {
         const auto& m = addrMap.find(lal_addr[i]);
         m->second->addLockedAddr(LockedAddr(lal_addr[i], lal_cid[i]));
@@ -383,13 +383,14 @@ PhysicalMemory::unserialize(Checkpoint* cp, const string& section)
     UNSERIALIZE_SCALAR(nbr_of_stores);
 
     for (unsigned int i = 0; i < nbr_of_stores; ++i) {
-        unserializeStore(cp, csprintf("%s.store%d", section, i));
+        ScopedCheckpointSection sec(cp, csprintf("store%d", i));
+        unserializeStore(cp);
     }
 
 }
 
 void
-PhysicalMemory::unserializeStore(Checkpoint* cp, const string& section)
+PhysicalMemory::unserializeStore(CheckpointIn &cp)
 {
     const uint32_t chunk_size = 16384;
 
@@ -398,7 +399,7 @@ PhysicalMemory::unserializeStore(Checkpoint* cp, const string& section)
 
     string filename;
     UNSERIALIZE_SCALAR(filename);
-    string filepath = cp->cptDir + "/" + filename;
+    string filepath = cp.cptDir + "/" + filename;
 
     // mmap memoryfile
     gzFile compressed_mem = gzopen(filepath.c_str(), "rb");

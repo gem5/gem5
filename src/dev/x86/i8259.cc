@@ -305,7 +305,7 @@ X86ISA::I8259::getVector()
 }
 
 void
-X86ISA::I8259::serialize(std::ostream &os)
+X86ISA::I8259::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ARRAY(pinStates, NumLines);
     SERIALIZE_ENUM(mode);
@@ -323,7 +323,7 @@ X86ISA::I8259::serialize(std::ostream &os)
 }
 
 void
-X86ISA::I8259::unserialize(Checkpoint *cp, const std::string &section)
+X86ISA::I8259::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(pinStates, NumLines);
     UNSERIALIZE_ENUM(mode);

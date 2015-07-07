@@ -43,8 +43,7 @@
 #include <string>
 
 #include "base/types.hh"
-
-class Checkpoint;
+#include "sim/serialize.hh"
 
 class Time
 {
@@ -198,9 +197,8 @@ class Time
     std::string date(const std::string &format = "") const;
     std::string time() const;
 
-    void serialize(const std::string &base, std::ostream &os);
-    void unserialize(const std::string &base, Checkpoint *cp,
-                     const std::string &section);
+    void serialize(const std::string &base, CheckpointOut &cp) const;
+    void unserialize(const std::string &base, CheckpointIn &cp);
 };
 
 void sleep(const Time &time);

@@ -61,12 +61,12 @@ struct VAddr
 // ITB/DTB page table entry
 struct PTE
 {
-    void serialize(std::ostream &os)
+    void serialize(CheckpointOut &cp) const
     {
         panic("Need to implement PTE serialization\n");
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void unserialize(CheckpointIn &cp)
     {
         panic("Need to implement PTE serialization\n");
     }
@@ -83,7 +83,7 @@ enum LookupLevel {
 };
 
 // ITB/DTB table entry
-struct TlbEntry
+struct TlbEntry : public Serializable
 {
   public:
     enum class MemoryType : std::uint8_t {
@@ -284,7 +284,7 @@ struct TlbEntry
     }
 
     void
-    serialize(std::ostream &os)
+    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
     {
         SERIALIZE_SCALAR(longDescFormat);
         SERIALIZE_SCALAR(pfn);
@@ -311,10 +311,10 @@ struct TlbEntry
         SERIALIZE_SCALAR(ap);
         SERIALIZE_SCALAR(hap);
         uint8_t domain_ = static_cast<uint8_t>(domain);
-        paramOut(os, "domain", domain_);
+        paramOut(cp, "domain", domain_);
     }
     void
-    unserialize(Checkpoint *cp, const std::string &section)
+    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
     {
         UNSERIALIZE_SCALAR(longDescFormat);
         UNSERIALIZE_SCALAR(pfn);
@@ -341,7 +341,7 @@ struct TlbEntry
         UNSERIALIZE_SCALAR(ap);
         UNSERIALIZE_SCALAR(hap);
         uint8_t domain_;
-        paramIn(cp, section, "domain", domain_);
+        paramIn(cp, "domain", domain_);
         domain = static_cast<DomainType>(domain_);
     }
 

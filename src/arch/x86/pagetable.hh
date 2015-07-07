@@ -97,7 +97,7 @@ namespace X86ISA
     EndBitUnion(PageTableEntry)
 
 
-    struct TlbEntry
+    struct TlbEntry : public Serializable
     {
         // The base of the physical page.
         Addr paddr;
@@ -130,7 +130,7 @@ namespace X86ISA
 
         TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
                  bool uncacheable, bool read_only);
-        TlbEntry() {}
+        TlbEntry();
 
         void
         updateVaddr(Addr new_vaddr)
@@ -149,8 +149,8 @@ namespace X86ISA
             return (1 << logBytes);
         }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
 
     /** The size of each level of the page table expressed in base 2

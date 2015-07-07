@@ -1259,10 +1259,10 @@ Device::drainResume()
 //
 //
 void
-Base::serialize(std::ostream &os)
+Base::serialize(CheckpointOut &cp) const
 {
     // Serialize the PciDevice base class
-    PciDevice::serialize(os);
+    PciDevice::serialize(cp);
 
     SERIALIZE_SCALAR(rxEnable);
     SERIALIZE_SCALAR(txEnable);
@@ -1280,10 +1280,10 @@ Base::serialize(std::ostream &os)
 }
 
 void
-Base::unserialize(Checkpoint *cp, const std::string &section)
+Base::unserialize(CheckpointIn &cp)
 {
     // Unserialize the PciDevice base class
-    PciDevice::unserialize(cp, section);
+    PciDevice::unserialize(cp);
 
     UNSERIALIZE_SCALAR(rxEnable);
     UNSERIALIZE_SCALAR(txEnable);
@@ -1303,12 +1303,12 @@ Base::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-Device::serialize(std::ostream &os)
+Device::serializeOld(CheckpointOut &cp)
 {
     int count;
 
     // Serialize the PciDevice base class
-    Base::serialize(os);
+    Base::serialize(cp);
 
     if (rxState == rxCopy)
         panic("can't serialize with an in flight dma request rxState=%s",
@@ -1333,16 +1333,16 @@ Device::serialize(std::ostream &os)
     int virtualRegsSize = virtualRegs.size();
     SERIALIZE_SCALAR(virtualRegsSize);
     for (int i = 0; i < virtualRegsSize; ++i) {
-        VirtualReg *vnic = &virtualRegs[i];
+        const VirtualReg *vnic = &virtualRegs[i];
 
         std::string reg = csprintf("vnic%d", i);
-        paramOut(os, reg + ".RxData", vnic->RxData);
-        paramOut(os, reg + ".RxDone", vnic->RxDone);
-        paramOut(os, reg + ".TxData", vnic->TxData);
-        paramOut(os, reg + ".TxDone", vnic->TxDone);
+        paramOut(cp, reg + ".RxData", vnic->RxData);
+        paramOut(cp, reg + ".RxDone", vnic->RxDone);
+        paramOut(cp, reg + ".TxData", vnic->TxData);
+        paramOut(cp, reg + ".TxDone", vnic->TxDone);
 
         bool rxPacketExists = vnic->rxIndex != rxFifo.end();
-        paramOut(os, reg + ".rxPacketExists", rxPacketExists);
+        paramOut(cp, reg + ".rxPacketExists", rxPacketExists);
         if (rxPacketExists) {
             int rxPacket = 0;
             PacketFifo::iterator i = rxFifo.begin();
@@ -1352,11 +1352,11 @@ Device::serialize(std::ostream &os)
                 ++rxPacket;
             }
 
-            paramOut(os, reg + ".rxPacket", rxPacket);
-            paramOut(os, reg + ".rxPacketOffset", vnic->rxPacketOffset);
-            paramOut(os, reg + ".rxPacketBytes", vnic->rxPacketBytes);
+            paramOut(cp, reg + ".rxPacket", rxPacket);
+            paramOut(cp, reg + ".rxPacketOffset", vnic->rxPacketOffset);
+            paramOut(cp, reg + ".rxPacketBytes", vnic->rxPacketBytes);
         }
-        paramOut(os, reg + ".rxDoneData", vnic->rxDoneData);
+        paramOut(cp, reg + ".rxDoneData", vnic->rxDoneData);
     }
 
     int rxFifoPtr = -1;
@@ -1371,17 +1371,17 @@ Device::serialize(std::ostream &os)
 
     VirtualList::iterator i, end;
     for (count = 0, i = rxList.begin(), end = rxList.end(); i != end; ++i)
-        paramOut(os, csprintf("rxList%d", count++), *i);
+        paramOut(cp, csprintf("rxList%d", count++), *i);
     int rxListSize = count;
     SERIALIZE_SCALAR(rxListSize);
 
     for (count = 0, i = rxBusy.begin(), end = rxBusy.end(); i != end; ++i)
-        paramOut(os, csprintf("rxBusy%d", count++), *i);
+        paramOut(cp, csprintf("rxBusy%d", count++), *i);
     int rxBusySize = count;
     SERIALIZE_SCALAR(rxBusySize);
 
     for (count = 0, i = txList.begin(), end = txList.end(); i != end; ++i)
-        paramOut(os, csprintf("txList%d", count++), *i);
+        paramOut(cp, csprintf("txList%d", count++), *i);
     int txListSize = count;
     SERIALIZE_SCALAR(txListSize);
 
@@ -1392,7 +1392,7 @@ Device::serialize(std::ostream &os)
     SERIALIZE_SCALAR(rxState);
     SERIALIZE_SCALAR(rxEmpty);
     SERIALIZE_SCALAR(rxLow);
-    rxFifo.serialize("rxFifo", os);
+    rxFifo.serialize("rxFifo", cp);
 
     /*
      * Serialize tx state machine
@@ -1400,11 +1400,11 @@ Device::serialize(std::ostream &os)
     int txState = this->txState;
     SERIALIZE_SCALAR(txState);
     SERIALIZE_SCALAR(txFull);
-    txFifo.serialize("txFifo", os);
+    txFifo.serialize("txFifo", cp);
     bool txPacketExists = txPacket != nullptr;
     SERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
-        txPacket->serialize("txPacket", os);
+        txPacket->serialize("txPacket", cp);
         SERIALIZE_SCALAR(txPacketOffset);
         SERIALIZE_SCALAR(txPacketBytes);
     }
@@ -1418,10 +1418,10 @@ Device::serialize(std::ostream &os)
 }
 
 void
-Device::unserialize(Checkpoint *cp, const std::string &section)
+Device::unserialize(CheckpointIn &cp)
 {
     // Unserialize the PciDevice base class
-    Base::unserialize(cp, section);
+    Base::unserialize(cp);
 
     /*
      * Unserialize the device registers that may have been written by the OS.
@@ -1442,7 +1442,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     rxList.clear();
     for (int i = 0; i < rxListSize; ++i) {
         int value;
-        paramIn(cp, section, csprintf("rxList%d", i), value);
+        paramIn(cp, csprintf("rxList%d", i), value);
         rxList.push_back(value);
     }
 
@@ -1451,7 +1451,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     rxBusy.clear();
     for (int i = 0; i < rxBusySize; ++i) {
         int value;
-        paramIn(cp, section, csprintf("rxBusy%d", i), value);
+        paramIn(cp, csprintf("rxBusy%d", i), value);
         rxBusy.push_back(value);
     }
 
@@ -1460,7 +1460,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     txList.clear();
     for (int i = 0; i < txListSize; ++i) {
         int value;
-        paramIn(cp, section, csprintf("txList%d", i), value);
+        paramIn(cp, csprintf("txList%d", i), value);
         txList.push_back(value);
     }
 
@@ -1472,7 +1472,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxEmpty);
     UNSERIALIZE_SCALAR(rxLow);
     this->rxState = (RxState) rxState;
-    rxFifo.unserialize("rxFifo", cp, section);
+    rxFifo.unserialize("rxFifo", cp);
 
     int rxFifoPtr;
     UNSERIALIZE_SCALAR(rxFifoPtr);
@@ -1491,13 +1491,13 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(txState);
     UNSERIALIZE_SCALAR(txFull);
     this->txState = (TxState) txState;
-    txFifo.unserialize("txFifo", cp, section);
+    txFifo.unserialize("txFifo", cp);
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
     txPacket = 0;
     if (txPacketExists) {
         txPacket = make_shared<EthPacketData>(16384);
-        txPacket->unserialize("txPacket", cp, section);
+        txPacket->unserialize("txPacket", cp);
         UNSERIALIZE_SCALAR(txPacketOffset);
         UNSERIALIZE_SCALAR(txPacketBytes);
     }
@@ -1516,30 +1516,30 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
         VirtualReg *vnic = &virtualRegs[i];
         std::string reg = csprintf("vnic%d", i);
 
-        paramIn(cp, section, reg + ".RxData", vnic->RxData);
-        paramIn(cp, section, reg + ".RxDone", vnic->RxDone);
-        paramIn(cp, section, reg + ".TxData", vnic->TxData);
-        paramIn(cp, section, reg + ".TxDone", vnic->TxDone);
+        paramIn(cp, reg + ".RxData", vnic->RxData);
+        paramIn(cp, reg + ".RxDone", vnic->RxDone);
+        paramIn(cp, reg + ".TxData", vnic->TxData);
+        paramIn(cp, reg + ".TxDone", vnic->TxDone);
 
         vnic->rxUnique = rxUnique++;
         vnic->txUnique = txUnique++;
 
         bool rxPacketExists;
-        paramIn(cp, section, reg + ".rxPacketExists", rxPacketExists);
+        paramIn(cp, reg + ".rxPacketExists", rxPacketExists);
         if (rxPacketExists) {
             int rxPacket;
-            paramIn(cp, section, reg + ".rxPacket", rxPacket);
+            paramIn(cp, reg + ".rxPacket", rxPacket);
             vnic->rxIndex = rxFifo.begin();
             while (rxPacket--)
                 ++vnic->rxIndex;
 
-            paramIn(cp, section, reg + ".rxPacketOffset",
+            paramIn(cp, reg + ".rxPacketOffset",
                     vnic->rxPacketOffset);
-            paramIn(cp, section, reg + ".rxPacketBytes", vnic->rxPacketBytes);
+            paramIn(cp, reg + ".rxPacketBytes", vnic->rxPacketBytes);
         } else {
             vnic->rxIndex = rxFifo.end();
         }
-        paramIn(cp, section, reg + ".rxDoneData", vnic->rxDoneData);
+        paramIn(cp, reg + ".rxDoneData", vnic->rxDoneData);
     }
 
     /*

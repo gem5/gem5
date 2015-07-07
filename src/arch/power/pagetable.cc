@@ -42,7 +42,7 @@ namespace PowerISA
 {
 
 void
-PTE::serialize(std::ostream &os)
+PTE::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(Mask);
     SERIALIZE_SCALAR(VPN);
@@ -61,7 +61,7 @@ PTE::serialize(std::ostream &os)
 }
 
 void
-PTE::unserialize(Checkpoint *cp, const std::string &section)
+PTE::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(Mask);
     UNSERIALIZE_SCALAR(VPN);

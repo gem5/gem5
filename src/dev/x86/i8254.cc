@@ -78,15 +78,15 @@ X86ISA::I8254::write(PacketPtr pkt)
 }
 
 void
-X86ISA::I8254::serialize(std::ostream &os)
+X86ISA::I8254::serialize(CheckpointOut &cp) const
 {
-    pit.serialize("pit", os);
+    pit.serialize("pit", cp);
 }
 
 void
-X86ISA::I8254::unserialize(Checkpoint *cp, const std::string &section)
+X86ISA::I8254::unserialize(CheckpointIn &cp)
 {
-    pit.unserialize("pit", cp, section);
+    pit.unserialize("pit", cp);
 }
 
 void

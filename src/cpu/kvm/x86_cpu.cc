@@ -562,7 +562,7 @@ X86KvmCPU::startup()
 }
 
 void
-X86KvmCPU::dump()
+X86KvmCPU::dump() const
 {
     dumpIntRegs();
     if (useXSave)

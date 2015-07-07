@@ -518,7 +518,7 @@ FlashDevice::regStats()
  */
 
 void
-FlashDevice::serialize(std::ostream &os)
+FlashDevice::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(planeMask);
 
@@ -551,7 +551,7 @@ FlashDevice::serialize(std::ostream &os)
  */
 
 void
-FlashDevice::unserialize(Checkpoint *cp, const std::string &section)
+FlashDevice::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(planeMask);
 

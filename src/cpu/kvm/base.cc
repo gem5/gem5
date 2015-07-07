@@ -259,7 +259,7 @@ BaseKvmCPU::regStats()
 }
 
 void
-BaseKvmCPU::serializeThread(std::ostream &os, ThreadID tid)
+BaseKvmCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
 {
     if (DTRACE(Checkpoint)) {
         DPRINTF(Checkpoint, "KVM: Serializing thread %i:\n", tid);
@@ -268,18 +268,17 @@ BaseKvmCPU::serializeThread(std::ostream &os, ThreadID tid)
 
     assert(tid == 0);
     assert(_status == Idle);
-    thread->serialize(os);
+    thread->serialize(cp);
 }
 
 void
-BaseKvmCPU::unserializeThread(Checkpoint *cp, const std::string &section,
-                              ThreadID tid)
+BaseKvmCPU::unserializeThread(CheckpointIn &cp, ThreadID tid)
 {
     DPRINTF(Checkpoint, "KVM: Unserialize thread %i:\n", tid);
 
     assert(tid == 0);
     assert(_status == Idle);
-    thread->unserialize(cp, section);
+    thread->unserialize(cp);
     threadContextDirty = true;
 }
 
@@ -511,7 +510,7 @@ BaseKvmCPU::totalOps() const
 }
 
 void
-BaseKvmCPU::dump()
+BaseKvmCPU::dump() const
 {
     inform("State dumping not implemented.");
 }

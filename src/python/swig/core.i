@@ -86,8 +86,8 @@ Tick curTick();
 class Checkpoint;
 
 void serializeAll(const std::string &cpt_dir);
-Checkpoint *getCheckpoint(const std::string &cpt_dir);
-void unserializeGlobals(Checkpoint *cp);
+CheckpointIn *getCheckpoint(const std::string &cpt_dir);
+void unserializeGlobals(CheckpointIn &cp);
 
 bool want_warn, warn_verbose;
 bool want_info, info_verbose;

@@ -335,7 +335,7 @@ CpuLocalTimer::Timer::watchdogAtZero()
 }
 
 void
-CpuLocalTimer::Timer::serialize(std::ostream &os)
+CpuLocalTimer::Timer::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm CpuLocalTimer\n");
     SERIALIZE_SCALAR(intNumTimer);
@@ -373,7 +373,7 @@ CpuLocalTimer::Timer::serialize(std::ostream &os)
 }
 
 void
-CpuLocalTimer::Timer::unserialize(Checkpoint *cp, const std::string &section)
+CpuLocalTimer::Timer::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm CpuLocalTimer\n");
 
@@ -416,20 +416,17 @@ CpuLocalTimer::Timer::unserialize(Checkpoint *cp, const std::string &section)
 
 
 void
-CpuLocalTimer::serialize(std::ostream &os)
+CpuLocalTimer::serialize(CheckpointOut &cp) const
 {
-    for (int i = 0; i < CPU_MAX; i++) {
-        nameOut(os, csprintf("%s.timer%d", name(), i));
-        localTimer[i].serialize(os);
-    }
+    for (int i = 0; i < CPU_MAX; i++)
+        localTimer[i].serializeSection(cp, csprintf("timer%d", i));
 }
 
 void
-CpuLocalTimer::unserialize(Checkpoint *cp, const std::string &section)
+CpuLocalTimer::unserialize(CheckpointIn &cp)
 {
-    for (int i = 0; i < CPU_MAX; i++) {
-        localTimer[i].unserialize(cp, csprintf("%s.timer%d", section, i));
-    }
+    for (int i = 0; i < CPU_MAX; i++)
+        localTimer[i].unserializeSection(cp, csprintf("timer%d", i));
 }
 
 CpuLocalTimer *

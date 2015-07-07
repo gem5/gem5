@@ -37,17 +37,16 @@
 using namespace std;
 
 void
-EthPacketData::serialize(const string &base, ostream &os)
+EthPacketData::serialize(const string &base, CheckpointOut &cp) const
 {
-    paramOut(os, base + ".length", length);
-    arrayParamOut(os, base + ".data", data, length);
+    paramOut(cp, base + ".length", length);
+    arrayParamOut(cp, base + ".data", data, length);
 }
 
 void
-EthPacketData::unserialize(const string &base, Checkpoint *cp,
-                        const string &section)
+EthPacketData::unserialize(const string &base, CheckpointIn &cp)
 {
-    paramIn(cp, section, base + ".length", length);
+    paramIn(cp, base + ".length", length);
     if (length)
-        arrayParamIn(cp, section, base + ".data", data, length);
+        arrayParamIn(cp, base + ".data", data, length);
 }

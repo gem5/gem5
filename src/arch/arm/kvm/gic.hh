@@ -79,7 +79,7 @@ class KvmGic : public BaseGic
     void startup() M5_ATTR_OVERRIDE { verifyMemoryMode(); }
     void drainResume() M5_ATTR_OVERRIDE { verifyMemoryMode(); }
 
-    void serialize(std::ostream &os) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(Checkpoint *cp, const std::string &sec)  M5_ATTR_OVERRIDE;
 
   public: // PioDevice

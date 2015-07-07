@@ -278,9 +278,9 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     // instruction mix histogram by OpClass
     Stats::Vector statExecutedInstType;
 
-    void serializeThread(std::ostream &os, ThreadID tid);
-    void unserializeThread(Checkpoint *cp, const std::string &section,
-                           ThreadID tid);
+    void serializeThread(CheckpointOut &cp,
+                         ThreadID tid) const M5_ATTR_OVERRIDE;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) M5_ATTR_OVERRIDE;
 
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.

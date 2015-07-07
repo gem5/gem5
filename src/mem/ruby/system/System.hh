@@ -92,8 +92,8 @@ class RubySystem : public ClockedObject
     void collateStats() { m_profiler->collateStats(); }
     void resetStats();
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serializeOld(CheckpointOut &cp) M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     void process();
     void startup();
     bool functionalRead(Packet *ptr);

@@ -98,7 +98,7 @@ namespace X86ISA
       protected:
         uint32_t size;
 
-        TlbEntry * tlb;
+        std::vector<TlbEntry> tlb;
 
         EntryList freeList;
 
@@ -148,8 +148,8 @@ namespace X86ISA
         TlbEntry * insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
         /**
          * Get the table walker master port. This is used for

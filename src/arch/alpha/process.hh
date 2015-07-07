@@ -42,7 +42,7 @@ class AlphaLiveProcess : public LiveProcess
   protected:
     AlphaLiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
-    void loadState(Checkpoint *cp);
+    void loadState(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     void initState();
 
     void argsInit(int intSize, int pageSize);

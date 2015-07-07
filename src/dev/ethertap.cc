@@ -294,7 +294,7 @@ EtherTap::getEthPort(const std::string &if_name, int idx)
 //=====================================================================
 
 void
-EtherTap::serialize(ostream &os)
+EtherTap::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(socket);
     SERIALIZE_SCALAR(buflen);
@@ -307,7 +307,7 @@ EtherTap::serialize(ostream &os)
     if (event) {
         tapevent_present = true;
         SERIALIZE_SCALAR(tapevent_present);
-        event->serialize(os);
+        event->serialize(cp);
     }
     else {
         SERIALIZE_SCALAR(tapevent_present);
@@ -315,7 +315,7 @@ EtherTap::serialize(ostream &os)
 }
 
 void
-EtherTap::unserialize(Checkpoint *cp, const std::string &section)
+EtherTap::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(socket);
     UNSERIALIZE_SCALAR(buflen);
@@ -329,7 +329,7 @@ EtherTap::unserialize(Checkpoint *cp, const std::string &section)
     if (tapevent_present) {
         event = new TapEvent(this, socket, POLLIN|POLLERR);
 
-        event->unserialize(cp,section);
+        event->unserialize(cp);
 
         if (event->queued()) {
             pollQueue.schedule(event);

@@ -248,13 +248,13 @@ RealViewCtrl::write(PacketPtr pkt)
 }
 
 void
-RealViewCtrl::serialize(std::ostream &os)
+RealViewCtrl::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(flags);
 }
 
 void
-RealViewCtrl::unserialize(Checkpoint *cp, const std::string &section)
+RealViewCtrl::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(flags);
 }

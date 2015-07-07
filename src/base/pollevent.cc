@@ -88,7 +88,7 @@ PollEvent::enable()
 }
 
 void
-PollEvent::serialize(ostream &os)
+PollEvent::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(pfd.fd);
     SERIALIZE_SCALAR(pfd.events);
@@ -96,7 +96,7 @@ PollEvent::serialize(ostream &os)
 }
 
 void
-PollEvent::unserialize(Checkpoint *cp, const std::string &section)
+PollEvent::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(pfd.fd);
     UNSERIALIZE_SCALAR(pfd.events);

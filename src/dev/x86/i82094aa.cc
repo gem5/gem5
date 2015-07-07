@@ -260,7 +260,7 @@ X86ISA::I82094AA::lowerInterruptPin(int number)
 }
 
 void
-X86ISA::I82094AA::serialize(std::ostream &os)
+X86ISA::I82094AA::serialize(CheckpointOut &cp) const
 {
     uint64_t* redirTableArray = (uint64_t*)redirTable;
     SERIALIZE_SCALAR(regSel);
@@ -273,7 +273,7 @@ X86ISA::I82094AA::serialize(std::ostream &os)
 }
 
 void
-X86ISA::I82094AA::unserialize(Checkpoint *cp, const std::string &section)
+X86ISA::I82094AA::unserialize(CheckpointIn &cp)
 {
     uint64_t redirTableArray[TableSize];
     UNSERIALIZE_SCALAR(regSel);

@@ -35,7 +35,7 @@ namespace SparcISA
 {
 
 void
-TlbEntry::serialize(std::ostream &os)
+TlbEntry::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(range.va);
     SERIALIZE_SCALAR(range.size);
@@ -52,7 +52,7 @@ TlbEntry::serialize(std::ostream &os)
 
 
 void
-TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
+TlbEntry::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(range.va);
     UNSERIALIZE_SCALAR(range.size);

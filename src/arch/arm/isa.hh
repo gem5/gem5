@@ -402,7 +402,7 @@ namespace ArmISA
             return flat_idx;
         }
 
-        void serialize(std::ostream &os)
+        void serialize(CheckpointOut &cp) const
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
             SERIALIZE_ARRAY(miscRegs, NumMiscRegs);
@@ -413,7 +413,7 @@ namespace ArmISA
             SERIALIZE_SCALAR(haveLargeAsid64);
             SERIALIZE_SCALAR(physAddrRange64);
         }
-        void unserialize(Checkpoint *cp, const std::string &section)
+        void unserialize(CheckpointIn &cp)
         {
             DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
             UNSERIALIZE_ARRAY(miscRegs, NumMiscRegs);

@@ -324,7 +324,7 @@ TsunamiPChip::calcMemAddr(Addr addr)
 }
 
 void
-TsunamiPChip::serialize(std::ostream &os)
+TsunamiPChip::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(pctl);
     SERIALIZE_ARRAY(wsba, 4);
@@ -333,7 +333,7 @@ TsunamiPChip::serialize(std::ostream &os)
 }
 
 void
-TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiPChip::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(pctl);
     UNSERIALIZE_ARRAY(wsba, 4);

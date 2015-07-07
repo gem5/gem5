@@ -300,8 +300,8 @@ class Pl390 : public BaseGic
     void driveIrqEn(bool state);
     /** @} */
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   protected:
     /** Handle a read to the distributor poriton of the GIC

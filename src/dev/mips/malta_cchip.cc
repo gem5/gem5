@@ -501,7 +501,7 @@ MaltaCChip::clearIntr(uint32_t interrupt)
 
 
 void
-MaltaCChip::serialize(std::ostream &os)
+MaltaCChip::serialize(CheckpointOut &cp) const
 {
    // SERIALIZE_ARRAY(dim, Malta::Max_CPUs);
     //SERIALIZE_ARRAY(dir, Malta::Max_CPUs);
@@ -511,7 +511,7 @@ MaltaCChip::serialize(std::ostream &os)
 }
 
 void
-MaltaCChip::unserialize(Checkpoint *cp, const std::string &section)
+MaltaCChip::unserialize(CheckpointIn &cp)
 {
     //UNSERIALIZE_ARRAY(dim, Malta::Max_CPUs);
     //UNSERIALIZE_ARRAY(dir, Malta::Max_CPUs);

@@ -66,13 +66,13 @@ KvmGic::~KvmGic()
 }
 
 void
-KvmGic::serialize(std::ostream &os)
+KvmGic::serialize(CheckpointOut &cp) const
 {
     panic("Checkpointing unsupported\n");
 }
 
 void
-KvmGic::unserialize(Checkpoint *cp, const std::string &sec)
+KvmGic::unserialize(CheckpointIn &cp)
 {
     panic("Checkpointing unsupported\n");
 }

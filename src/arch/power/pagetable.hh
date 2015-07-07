@@ -146,9 +146,8 @@ struct PTE
         return (V0 | V1);
     };
 
-    void serialize(std::ostream &os);
-
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const;
+    void unserialize(CheckpointIn &cp);
 };
 
 } // namespace PowerISA

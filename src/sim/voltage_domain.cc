@@ -142,12 +142,14 @@ VoltageDomainParams::create()
 }
 
 void
-VoltageDomain::serialize(std::ostream &os) {
+VoltageDomain::serialize(CheckpointOut &cp) const
+{
     SERIALIZE_SCALAR(_perfLevel);
 }
 
 void
-VoltageDomain::unserialize(Checkpoint *cp, const std::string &section) {
+VoltageDomain::unserialize(CheckpointIn &cp)
+{
     UNSERIALIZE_SCALAR(_perfLevel);
     perfLevel(_perfLevel);
 }

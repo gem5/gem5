@@ -276,16 +276,16 @@ namespace X86ISA
         }
 
         void
-        serialize(std::ostream &os)
+        serialize(CheckpointOut &cp) const
         {
-            Base::serialize(os);
+            Base::serialize(cp);
             SERIALIZE_SCALAR(_size);
         }
 
         void
-        unserialize(Checkpoint *cp, const std::string &section)
+        unserialize(CheckpointIn &cp)
         {
-            Base::unserialize(cp, section);
+            Base::unserialize(cp);
             UNSERIALIZE_SCALAR(_size);
         }
     };
@@ -314,11 +314,11 @@ __hash_namespace_end
 // and UNSERIALIZE_SCALAR.
 template <>
 void
-paramOut(std::ostream &os, const std::string &name,
+paramOut(CheckpointOut &cp, const std::string &name,
          const X86ISA::ExtMachInst &machInst);
 template <>
 void
-paramIn(Checkpoint *cp, const std::string &section,
-        const std::string &name, X86ISA::ExtMachInst &machInst);
+paramIn(CheckpointIn &cp, const std::string &name,
+        X86ISA::ExtMachInst &machInst);
 
 #endif // __ARCH_X86_TYPES_HH__

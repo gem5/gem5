@@ -272,7 +272,7 @@ Pl011::setInterrupts(uint16_t ints, uint16_t mask)
 
 
 void
-Pl011::serialize(std::ostream &os)
+Pl011::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm PL011\n");
     SERIALIZE_SCALAR(control);
@@ -282,12 +282,12 @@ Pl011::serialize(std::ostream &os)
     SERIALIZE_SCALAR(ifls);
 
     // Preserve backwards compatibility by giving these silly names.
-    paramOut(os, "imsc_serial", imsc);
-    paramOut(os, "rawInt_serial", rawInt);
+    paramOut(cp, "imsc_serial", imsc);
+    paramOut(cp, "rawInt_serial", rawInt);
 }
 
 void
-Pl011::unserialize(Checkpoint *cp, const std::string &section)
+Pl011::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm PL011\n");
 
@@ -298,8 +298,8 @@ Pl011::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(ifls);
 
     // Preserve backwards compatibility by giving these silly names.
-    paramIn(cp, section, "imsc_serial", imsc);
-    paramIn(cp, section, "rawInt_serial", rawInt);
+    paramIn(cp, "imsc_serial", imsc);
+    paramIn(cp, "rawInt_serial", rawInt);
 }
 
 Pl011 *

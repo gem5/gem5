@@ -74,11 +74,10 @@ class TLB : public BaseTLB
     typedef std::multimap<Addr, int> PageTable;
     PageTable lookupTable;  // Quick lookup into page table
 
-    TlbEntry *table;        // the Page Table
-    int size;               // TLB Size
+    std::vector<TlbEntry> table; // the Page Table
     int nlu;                // not last used entry (for replacement)
 
-    void nextnlu() { if (++nlu >= size) nlu = 0; }
+    void nextnlu() { if (++nlu >= table.size()) nlu = 0; }
     TlbEntry *lookup(Addr vpn, uint8_t asn);
 
   public:
@@ -90,7 +89,7 @@ class TLB : public BaseTLB
 
     virtual void regStats();
 
-    int getsize() const { return size; }
+    int getsize() const { return table.size(); }
 
     TlbEntry &index(bool advance = true);
     void insert(Addr vaddr, TlbEntry &entry);
@@ -118,8 +117,8 @@ class TLB : public BaseTLB
     static Fault checkCacheability(RequestPtr &req, bool itb = false);
 
     // Checkpointing
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     // Most recently used page table entries
     TlbEntry *EntryCache[3];

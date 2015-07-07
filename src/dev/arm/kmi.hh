@@ -157,8 +157,8 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
     virtual void mouseAt(uint16_t x, uint16_t y, uint8_t buttons);
     virtual void keyPress(uint32_t key, bool down);
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 #endif // __DEV_ARM_PL050_HH__

@@ -638,7 +638,7 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
 }
 
 void
-ISA::serialize(std::ostream &os)
+ISA::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tick);
@@ -714,7 +714,7 @@ ISA::serialize(std::ostream &os)
 }
 
 void
-ISA::unserialize(Checkpoint *cp, const std::string &section)
+ISA::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(asi);
     UNSERIALIZE_SCALAR(tick);

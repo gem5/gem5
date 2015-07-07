@@ -390,7 +390,7 @@ class BaseCPU : public MemObject
      *
      * @param os The stream to serialize to.
      */
-    virtual void serialize(std::ostream &os);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
 
     /**
      * Reconstruct the state of this object from a checkpoint.
@@ -403,7 +403,7 @@ class BaseCPU : public MemObject
      * @param cp The checkpoint use.
      * @param section The section name of this object.
      */
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     /**
      * Serialize a single thread.
@@ -411,7 +411,7 @@ class BaseCPU : public MemObject
      * @param os The stream to serialize to.
      * @param tid ID of the current thread.
      */
-    virtual void serializeThread(std::ostream &os, ThreadID tid) {};
+    virtual void serializeThread(CheckpointOut &cp, ThreadID tid) const {};
 
     /**
      * Unserialize one thread.
@@ -420,8 +420,7 @@ class BaseCPU : public MemObject
      * @param section The section name of this thread.
      * @param tid ID of the current thread.
      */
-    virtual void unserializeThread(Checkpoint *cp, const std::string &section,
-                                   ThreadID tid) {};
+    virtual void unserializeThread(CheckpointIn &cp, ThreadID tid) {};
 
     virtual Counter totalInsts() const = 0;
 

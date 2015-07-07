@@ -1117,7 +1117,7 @@ IGbE::DescCache<T>::reset()
 
 template<class T>
 void
-IGbE::DescCache<T>::serialize(std::ostream &os)
+IGbE::DescCache<T>::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(cachePnt);
     SERIALIZE_SCALAR(curFetching);
@@ -1128,14 +1128,14 @@ IGbE::DescCache<T>::serialize(std::ostream &os)
     typename CacheType::size_type usedCacheSize = usedCache.size();
     SERIALIZE_SCALAR(usedCacheSize);
     for (typename CacheType::size_type x = 0; x < usedCacheSize; x++) {
-        arrayParamOut(os, csprintf("usedCache_%d", x),
+        arrayParamOut(cp, csprintf("usedCache_%d", x),
                       (uint8_t*)usedCache[x],sizeof(T));
     }
 
     typename CacheType::size_type unusedCacheSize = unusedCache.size();
     SERIALIZE_SCALAR(unusedCacheSize);
     for (typename CacheType::size_type x = 0; x < unusedCacheSize; x++) {
-        arrayParamOut(os, csprintf("unusedCache_%d", x),
+        arrayParamOut(cp, csprintf("unusedCache_%d", x),
                       (uint8_t*)unusedCache[x],sizeof(T));
     }
 
@@ -1152,7 +1152,7 @@ IGbE::DescCache<T>::serialize(std::ostream &os)
 
 template<class T>
 void
-IGbE::DescCache<T>::unserialize(Checkpoint *cp, const std::string &section)
+IGbE::DescCache<T>::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(cachePnt);
     UNSERIALIZE_SCALAR(curFetching);
@@ -1165,7 +1165,7 @@ IGbE::DescCache<T>::unserialize(Checkpoint *cp, const std::string &section)
     T *temp;
     for (typename CacheType::size_type x = 0; x < usedCacheSize; x++) {
         temp = new T;
-        arrayParamIn(cp, section, csprintf("usedCache_%d", x),
+        arrayParamIn(cp, csprintf("usedCache_%d", x),
                      (uint8_t*)temp,sizeof(T));
         usedCache.push_back(temp);
     }
@@ -1174,7 +1174,7 @@ IGbE::DescCache<T>::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(unusedCacheSize);
     for (typename CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         temp = new T;
-        arrayParamIn(cp, section, csprintf("unusedCache_%d", x),
+        arrayParamIn(cp, csprintf("unusedCache_%d", x),
                      (uint8_t*)temp,sizeof(T));
         unusedCache.push_back(temp);
     }
@@ -1518,18 +1518,18 @@ IGbE::RxDescCache::hasOutstandingEvents()
 }
 
 void
-IGbE::RxDescCache::serialize(std::ostream &os)
+IGbE::RxDescCache::serialize(CheckpointOut &cp) const
 {
-    DescCache<RxDesc>::serialize(os);
+    DescCache<RxDesc>::serialize(cp);
     SERIALIZE_SCALAR(pktDone);
     SERIALIZE_SCALAR(splitCount);
     SERIALIZE_SCALAR(bytesCopied);
 }
 
 void
-IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
+IGbE::RxDescCache::unserialize(CheckpointIn &cp)
 {
-    DescCache<RxDesc>::unserialize(cp, section);
+    DescCache<RxDesc>::unserialize(cp);
     UNSERIALIZE_SCALAR(pktDone);
     UNSERIALIZE_SCALAR(splitCount);
     UNSERIALIZE_SCALAR(bytesCopied);
@@ -1961,9 +1961,10 @@ IGbE::TxDescCache::actionAfterWb()
 }
 
 void
-IGbE::TxDescCache::serialize(std::ostream &os)
+IGbE::TxDescCache::serialize(CheckpointOut &cp) const
 {
-    DescCache<TxDesc>::serialize(os);
+    DescCache<TxDesc>::serialize(cp);
+
     SERIALIZE_SCALAR(pktDone);
     SERIALIZE_SCALAR(isTcp);
     SERIALIZE_SCALAR(pktWaiting);
@@ -1989,9 +1990,10 @@ IGbE::TxDescCache::serialize(std::ostream &os)
 }
 
 void
-IGbE::TxDescCache::unserialize(Checkpoint *cp, const std::string &section)
+IGbE::TxDescCache::unserialize(CheckpointIn &cp)
 {
-    DescCache<TxDesc>::unserialize(cp, section);
+    DescCache<TxDesc>::unserialize(cp);
+
     UNSERIALIZE_SCALAR(pktDone);
     UNSERIALIZE_SCALAR(isTcp);
     UNSERIALIZE_SCALAR(pktWaiting);
@@ -2452,11 +2454,11 @@ IGbE::ethTxDone()
 }
 
 void
-IGbE::serialize(std::ostream &os)
+IGbE::serialize(CheckpointOut &cp) const
 {
-    PciDevice::serialize(os);
+    PciDevice::serialize(cp);
 
-    regs.serialize(os);
+    regs.serialize(cp);
     SERIALIZE_SCALAR(eeOpBits);
     SERIALIZE_SCALAR(eeAddrBits);
     SERIALIZE_SCALAR(eeDataBits);
@@ -2465,13 +2467,13 @@ IGbE::serialize(std::ostream &os)
     SERIALIZE_SCALAR(lastInterrupt);
     SERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
 
-    rxFifo.serialize("rxfifo", os);
-    txFifo.serialize("txfifo", os);
+    rxFifo.serialize("rxfifo", cp);
+    txFifo.serialize("txfifo", cp);
 
     bool txPktExists = txPacket != nullptr;
     SERIALIZE_SCALAR(txPktExists);
     if (txPktExists)
-        txPacket->serialize("txpacket", os);
+        txPacket->serialize("txpacket", cp);
 
     Tick rdtr_time = 0, radv_time = 0, tidv_time = 0, tadv_time = 0,
         inter_time = 0;
@@ -2498,19 +2500,16 @@ IGbE::serialize(std::ostream &os)
 
     SERIALIZE_SCALAR(pktOffset);
 
-    nameOut(os, csprintf("%s.TxDescCache", name()));
-    txDescCache.serialize(os);
-
-    nameOut(os, csprintf("%s.RxDescCache", name()));
-    rxDescCache.serialize(os);
+    txDescCache.serializeSection(cp, "TxDescCache");
+    rxDescCache.serializeSection(cp, "RxDescCache");
 }
 
 void
-IGbE::unserialize(Checkpoint *cp, const std::string &section)
+IGbE::unserialize(CheckpointIn &cp)
 {
-    PciDevice::unserialize(cp, section);
+    PciDevice::unserialize(cp);
 
-    regs.unserialize(cp, section);
+    regs.unserialize(cp);
     UNSERIALIZE_SCALAR(eeOpBits);
     UNSERIALIZE_SCALAR(eeAddrBits);
     UNSERIALIZE_SCALAR(eeDataBits);
@@ -2519,14 +2518,14 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(lastInterrupt);
     UNSERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
 
-    rxFifo.unserialize("rxfifo", cp, section);
-    txFifo.unserialize("txfifo", cp, section);
+    rxFifo.unserialize("rxfifo", cp);
+    txFifo.unserialize("txfifo", cp);
 
     bool txPktExists;
     UNSERIALIZE_SCALAR(txPktExists);
     if (txPktExists) {
         txPacket = std::make_shared<EthPacketData>(16384);
-        txPacket->unserialize("txpacket", cp, section);
+        txPacket->unserialize("txpacket", cp);
     }
 
     rxTick = true;
@@ -2557,9 +2556,8 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
 
     UNSERIALIZE_SCALAR(pktOffset);
 
-    txDescCache.unserialize(cp, csprintf("%s.TxDescCache", section));
-
-    rxDescCache.unserialize(cp, csprintf("%s.RxDescCache", section));
+    txDescCache.unserializeSection(cp, "TxDescCache");
+    rxDescCache.unserializeSection(cp, "RxDescCache");
 }
 
 IGbE *

@@ -194,9 +194,9 @@ Statistics::callpal(int code, ThreadContext *tc)
 }
 
 void
-Statistics::serialize(ostream &os)
+Statistics::serialize(CheckpointOut &cp) const
 {
-    ::Kernel::Statistics::serialize(os);
+    ::Kernel::Statistics::serialize(cp);
     int exemode = themode;
     SERIALIZE_SCALAR(exemode);
     SERIALIZE_SCALAR(idleProcess);
@@ -204,9 +204,9 @@ Statistics::serialize(ostream &os)
 }
 
 void
-Statistics::unserialize(Checkpoint *cp, const string &section)
+Statistics::unserialize(CheckpointIn &cp)
 {
-    ::Kernel::Statistics::unserialize(cp, section);
+    ::Kernel::Statistics::unserialize(cp);
     int exemode;
     UNSERIALIZE_SCALAR(exemode);
     UNSERIALIZE_SCALAR(idleProcess);

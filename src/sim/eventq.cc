@@ -242,7 +242,7 @@ EventQueue::serviceOne()
 }
 
 void
-Event::serialize(std::ostream &os)
+Event::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(_when);
     SERIALIZE_SCALAR(_priority);
@@ -251,12 +251,12 @@ Event::serialize(std::ostream &os)
 }
 
 void
-Event::unserialize(Checkpoint *cp, const string &section)
+Event::unserialize(CheckpointIn &cp)
 {
 }
 
 void
-Event::unserialize(Checkpoint *cp, const string &section, EventQueue *eventq)
+Event::unserializeEvent(CheckpointIn &cp, EventQueue *eventq)
 {
     if (scheduled())
         eventq->deschedule(this);
@@ -290,7 +290,7 @@ Event::unserialize(Checkpoint *cp, const string &section, EventQueue *eventq)
 }
 
 void
-EventQueue::serialize(ostream &os)
+EventQueue::serialize(CheckpointOut &cp) const
 {
     std::list<Event *> eventPtrs;
 
@@ -302,7 +302,7 @@ EventQueue::serialize(ostream &os)
         while (nextInBin) {
             if (nextInBin->flags.isSet(Event::AutoSerialize)) {
                 eventPtrs.push_back(nextInBin);
-                paramOut(os, csprintf("event%d", numEvents++),
+                paramOut(cp, csprintf("event%d", numEvents++),
                          nextInBin->name());
             }
             nextInBin = nextInBin->nextInBin;
@@ -313,15 +313,12 @@ EventQueue::serialize(ostream &os)
 
     SERIALIZE_SCALAR(numEvents);
 
-    for (std::list<Event *>::iterator it = eventPtrs.begin();
-         it != eventPtrs.end(); ++it) {
-        (*it)->nameOut(os);
-        (*it)->serialize(os);
-    }
+    for (Event *ev : eventPtrs)
+        ev->serializeSection(cp, ev->name());
 }
 
 void
-EventQueue::unserialize(Checkpoint *cp, const std::string &section)
+EventQueue::unserialize(CheckpointIn &cp)
 {
     int numEvents;
     UNSERIALIZE_SCALAR(numEvents);
@@ -329,7 +326,7 @@ EventQueue::unserialize(Checkpoint *cp, const std::string &section)
     std::string eventName;
     for (int i = 0; i < numEvents; i++) {
         // get the pointer value associated with the event
-        paramIn(cp, section, csprintf("event%d", i), eventName);
+        paramIn(cp, csprintf("event%d", i), eventName);
 
         // create the event based on its pointer value
         Serializable::create(cp, eventName);

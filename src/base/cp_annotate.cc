@@ -1063,7 +1063,7 @@ CPA::doDq(System *sys, int flags, int cpuid, int sm,
 
 
 void
-CPA::serialize(std::ostream &os)
+CPA::serialize(CheckpointOut &cp) const
 {
 
     SERIALIZE_SCALAR(numSm);
@@ -1076,8 +1076,6 @@ CPA::serialize(std::ostream &os)
     arrayParamOut(os, "qSize", qSize);
     arrayParamOut(os, "qSize", qSize);
     arrayParamOut(os, "qBytes", qBytes);
-
-    std::list<AnnDataPtr>::iterator ai;
 
     SCache::iterator i;
     int x = 0, y = 0;
@@ -1211,36 +1209,33 @@ CPA::serialize(std::ostream &os)
         if (!qData[x].size())
             continue;
         y = 0;
-        ai = qData[x].begin();
-        while (ai != qData[x].end()) {
-            nameOut(os, csprintf("%s.Q%d_%d", name(), x, y));
-            (*ai)->serialize(os);
-            ai++;
+        for (auto &ann : qData[x]) {
+            ann->serializeSection(os, csprintf("Q%d_%d", x, y));
             y++;
         }
     }
 }
 
 void
-CPA::unserialize(Checkpoint *cp, const std::string &section)
+CPA::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(numSm);
     UNSERIALIZE_SCALAR(numSmt);
-    arrayParamIn(cp, section, "numSt", numSt);
-    arrayParamIn(cp, section, "numQ", numQ);
+    UNSERIALIZE_CONTAINER(numSt);
+    UNSERIALIZE_CONTAINER(numQ);
     UNSERIALIZE_SCALAR(numSys);
     UNSERIALIZE_SCALAR(numQs);
     UNSERIALIZE_SCALAR(conId);
-    arrayParamIn(cp, section, "qSize", qSize);
-    arrayParamIn(cp, section, "qBytes", qBytes);
+    UNSERIALIZE_CONTAINER(qSize);
+    UNSERIALIZE_CONTAINER(qBytes);
 
 
     // smtCache (SCache
     string str;
     int smi;
     for (int x = 0;  x < numSmt; x++) {
-        paramIn(cp, section, csprintf("smtCache%d.str", x), str);
-        paramIn(cp, section, csprintf("smtCache%d.int", x), smi);
+        paramIn(cp, csprintf("smtCache%d.str", x), str);
+        paramIn(cp, csprintf("smtCache%d.int", x), smi);
         smtCache[str] = smi;
     }
 
@@ -1248,8 +1243,8 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
     stCache.resize(numSmt);
     for (int x = 0;  x < numSmt; x++) {
         for (int y = 0; y < numSt[x]; y++) {
-            paramIn(cp, section, csprintf("stCache%d_%d.str", x,y), str);
-            paramIn(cp, section, csprintf("stCache%d_%d.int", x,y), smi);
+            paramIn(cp, csprintf("stCache%d_%d.str", x,y), str);
+            paramIn(cp, csprintf("stCache%d_%d.int", x,y), smi);
             stCache[x][str] = smi;
         }
     }
@@ -1259,9 +1254,9 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
     qCache.resize(numSys);
     for (int x = 0;  x < numSys; x++) {
         for (int y = 0; y < numQ[x]; y++) {
-            paramIn(cp, section, csprintf("qCache%d_%d.str", x,y), str);
-            paramIn(cp, section, csprintf("qCache%d_%d.id", x,y), id);
-            paramIn(cp, section, csprintf("qCache%d_%d.int", x,y), smi);
+            paramIn(cp, csprintf("qCache%d_%d.str", x,y), str);
+            paramIn(cp, csprintf("qCache%d_%d.id", x,y), id);
+            paramIn(cp, csprintf("qCache%d_%d.int", x,y), smi);
             qCache[x][Id(str,id)] = smi;
         }
     }
@@ -1270,11 +1265,11 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
     smCache.resize(numSys);
     for (int x = 0;  x < numSys; x++) {
         int size;
-        paramIn(cp, section, csprintf("smCache%d", x), size);
+        paramIn(cp, csprintf("smCache%d", x), size);
         for (int y = 0; y < size; y++) {
-            paramIn(cp, section, csprintf("smCache%d_%d.str", x,y), str);
-            paramIn(cp, section, csprintf("smCache%d_%d.id", x,y), id);
-            paramIn(cp, section, csprintf("smCache%d_%d.int", x,y), smi);
+            paramIn(cp, csprintf("smCache%d_%d.str", x,y), str);
+            paramIn(cp, csprintf("smCache%d_%d.id", x,y), id);
+            paramIn(cp, csprintf("smCache%d_%d.int", x,y), smi);
             smCache[x][Id(str,id)] = smi;
         }
     }
@@ -1290,27 +1285,27 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
         string str;
         int sysi;
 
-        objParamIn(cp, section, csprintf("nameCache%d.name", x), sptr);
+        objParamIn(cp, csprintf("nameCache%d.name", x), sptr);
         sys = dynamic_cast<System*>(sptr);
 
-        paramIn(cp, section, csprintf("nameCache%d.str", x), str);
-        paramIn(cp, section, csprintf("nameCache%d.int", x), sysi);
+        paramIn(cp, csprintf("nameCache%d.str", x), str);
+        paramIn(cp, csprintf("nameCache%d.int", x), sysi);
         nameCache[sys] = std::make_pair(str, sysi);
     }
 
     //smStack (SmStack)
     int smStack_size;
-    paramIn(cp, section, "smStackIdCount", smStack_size);
+    paramIn(cp, "smStackIdCount", smStack_size);
     for (int x = 0; x < smStack_size; x++) {
         int sysi;
         uint64_t frame;
         int count;
-        paramIn(cp, section, csprintf("smStackId%d.sys", x), sysi);
-        paramIn(cp, section, csprintf("smStackId%d.frame", x), frame);
-        paramIn(cp, section, csprintf("smStackId%d.count", x), count);
+        paramIn(cp, csprintf("smStackId%d.sys", x), sysi);
+        paramIn(cp, csprintf("smStackId%d.frame", x), frame);
+        paramIn(cp, csprintf("smStackId%d.count", x), count);
         StackId sid = StackId(sysi, frame);
         for (int y = 0; y < count; y++) {
-            paramIn(cp, section, csprintf("smStackId%d_%d", x, y), smi);
+            paramIn(cp, csprintf("smStackId%d_%d", x, y), smi);
             smStack[sid].push_back(smi);
         }
     }
@@ -1318,23 +1313,23 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
     // lnMap (LinkMap)
     int lsmi;
     int lnMap_size;
-    paramIn(cp, section, "lnMapSize", lnMap_size);
+    paramIn(cp, "lnMapSize", lnMap_size);
     for (int x = 0;  x < lnMap_size; x++) {
-        paramIn(cp, section, csprintf("lnMap%d.smi", x), smi);
-        paramIn(cp, section, csprintf("lnMap%d.lsmi", x), lsmi);
+        paramIn(cp, csprintf("lnMap%d.smi", x), smi);
+        paramIn(cp, csprintf("lnMap%d.lsmi", x), lsmi);
         lnMap[smi] = lsmi;
     }
 
     // swExpl (vector)
     int swExpl_size;
-    paramIn(cp, section, "swExplCount", swExpl_size);
+    paramIn(cp, "swExplCount", swExpl_size);
     for (int x = 0; x < swExpl_size; x++) {
         int sysi;
         uint64_t frame;
         bool b;
-        paramIn(cp, section, csprintf("swExpl%d.sys", x), sysi);
-        paramIn(cp, section, csprintf("swExpl%d.frame", x), frame);
-        paramIn(cp, section, csprintf("swExpl%d.swexpl", x), b);
+        paramIn(cp, csprintf("swExpl%d.sys", x), sysi);
+        paramIn(cp, csprintf("swExpl%d.frame", x), frame);
+        paramIn(cp, csprintf("swExpl%d.swexpl", x), b);
         StackId sid = StackId(sysi, frame);
         swExpl[sid] = b;
     }
@@ -1342,10 +1337,10 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
     // lastState (IMap)
     int sti;
     int lastState_size;
-    paramIn(cp, section, "lastStateSize", lastState_size);
+    paramIn(cp, "lastStateSize", lastState_size);
     for (int x = 0;  x < lastState_size; x++) {
-        paramIn(cp, section, csprintf("lastState%d.smi", x), smi);
-        paramIn(cp, section, csprintf("lastState%d.sti", x), sti);
+        paramIn(cp, csprintf("lastState%d.smi", x), smi);
+        paramIn(cp, csprintf("lastState%d.sti", x), sti);
         lastState[smi] = sti;
     }
 
@@ -1353,17 +1348,17 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
     //smMap (IdMap)
     smMap.resize(numSm);
     for (int x = 0; x < smMap.size(); x++) {
-        paramIn(cp, section, csprintf("smMap%d.sys", x), smMap[x].first);
-        paramIn(cp, section, csprintf("smMap%d.smname", x), smMap[x].second.first);
-        paramIn(cp, section, csprintf("smMap%d.id", x), smMap[x].second.second);
+        paramIn(cp, csprintf("smMap%d.sys", x), smMap[x].first);
+        paramIn(cp, csprintf("smMap%d.smname", x), smMap[x].second.first);
+        paramIn(cp, csprintf("smMap%d.id", x), smMap[x].second.second);
     }
 
     //qMap (IdMap)
     qMap.resize(numQs);
     for (int x = 0; x < qMap.size(); x++) {
-        paramIn(cp, section, csprintf("qMap%d.sys", x), qMap[x].first);
-        paramIn(cp, section, csprintf("qMap%d.qname", x), qMap[x].second.first);
-        paramIn(cp, section, csprintf("qMap%d.id", x), qMap[x].second.second);
+        paramIn(cp, csprintf("qMap%d.sys", x), qMap[x].first);
+        paramIn(cp, csprintf("qMap%d.qname", x), qMap[x].second.first);
+        paramIn(cp, csprintf("qMap%d.id", x), qMap[x].second.second);
     }
 
 
@@ -1374,7 +1369,7 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
             continue;
         for (int y = 0; y < qSize[x]; y++) {
             AnnDataPtr a = std::make_shared<AnnotateData>();
-            a->unserialize(cp, csprintf("%s.Q%d_%d", section, x, y));
+            a->unserializeSection(cp, csprintf("Q%d_%d", x, y));
             data.push_back(a);
             qData[x].push_back(a);
         }
@@ -1382,7 +1377,7 @@ CPA::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-CPA::AnnotateData::serialize(std::ostream &os)
+CPA::AnnotateData::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(time);
     SERIALIZE_SCALAR(data);
@@ -1394,7 +1389,7 @@ CPA::AnnotateData::serialize(std::ostream &os)
 }
 
 void
-CPA::AnnotateData::unserialize(Checkpoint *cp, const std::string &section)
+CPA::AnnotateData::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(time);
     UNSERIALIZE_SCALAR(data);

@@ -192,8 +192,8 @@ PythonSimObjectResolver::resolveSimObject(const string &name)
     return obj;
 }
 
-Checkpoint *
+CheckpointIn *
 getCheckpoint(const std::string &cpt_dir)
 {
-    return new Checkpoint(cpt_dir, pythonSimObjectResolver);
+    return new CheckpointIn(cpt_dir, pythonSimObjectResolver);
 }

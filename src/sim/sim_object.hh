@@ -126,7 +126,7 @@ class SimObject : public EventManager, public Serializable, public Drainable
      *
      * @param cp Checkpoint to restore the state from.
      */
-    virtual void loadState(Checkpoint *cp);
+    virtual void loadState(CheckpointIn &cp);
 
     /**
      * initState() is called on each SimObject when *not* restoring
@@ -175,10 +175,14 @@ class SimObject : public EventManager, public Serializable, public Drainable
      */
     unsigned int drain(DrainManager *drainManger);
 
+
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE {};
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE {};
+
     /**
      * Serialize all SimObjects in the system.
      */
-    static void serializeAll(std::ostream &os);
+    static void serializeAll(CheckpointOut &cp);
 
 #ifdef DEBUG
   public:

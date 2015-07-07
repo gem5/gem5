@@ -56,9 +56,6 @@ VGic::VGic(const Params *p)
         maintIntPosted[x] = false;
         vIntPosted[x] = false;
     }
-    for (int c = 0; c < VGIC_CPU_MAX; c++) {
-        memset(&vcpuData[c], 0, sizeof(struct vcpuIntData));
-    }
     assert(sys->numRunningContexts() <= VGIC_CPU_MAX);
 }
 
@@ -437,7 +434,7 @@ VGic::getAddrRanges() const
 }
 
 void
-VGic::serialize(std::ostream &os)
+VGic::serialize(CheckpointOut &cp) const
 {
     Tick interrupt_time[VGIC_CPU_MAX];
     for (uint32_t cpu = 0; cpu < VGIC_CPU_MAX; cpu++) {
@@ -457,42 +454,45 @@ VGic::serialize(std::ostream &os)
     SERIALIZE_SCALAR(pioDelay);
     SERIALIZE_SCALAR(maintInt);
 
-    for (uint32_t cpu = 0; cpu < VGIC_CPU_MAX; cpu++) {
-        nameOut(os, csprintf("%s.vcpuData%d", name(), cpu));
-        uint32_t vctrl_val = vcpuData[cpu].vctrl;
-        SERIALIZE_SCALAR(vctrl_val);
-        uint32_t hcr_val = vcpuData[cpu].hcr;
-        SERIALIZE_SCALAR(hcr_val);
-        uint64_t eisr_val = vcpuData[cpu].eisr;
-        SERIALIZE_SCALAR(eisr_val);
-        uint8_t VMGrp0En_val = vcpuData[cpu].VMGrp0En;
-        SERIALIZE_SCALAR(VMGrp0En_val);
-        uint8_t VMGrp1En_val = vcpuData[cpu].VMGrp1En;
-        SERIALIZE_SCALAR(VMGrp1En_val);
-        uint8_t VMAckCtl_val = vcpuData[cpu].VMAckCtl;
-        SERIALIZE_SCALAR(VMAckCtl_val);
-        uint8_t VMFiqEn_val = vcpuData[cpu].VMFiqEn;
-        SERIALIZE_SCALAR(VMFiqEn_val);
-        uint8_t VMCBPR_val = vcpuData[cpu].VMCBPR;
-        SERIALIZE_SCALAR(VMCBPR_val);
-        uint8_t VEM_val = vcpuData[cpu].VEM;
-        SERIALIZE_SCALAR(VEM_val);
-        uint8_t VMABP_val = vcpuData[cpu].VMABP;
-        SERIALIZE_SCALAR(VMABP_val);
-        uint8_t VMBP_val = vcpuData[cpu].VMBP;
-        SERIALIZE_SCALAR(VMBP_val);
-        uint8_t VMPriMask_val = vcpuData[cpu].VMPriMask;
-        SERIALIZE_SCALAR(VMPriMask_val);
+    for (uint32_t cpu = 0; cpu < VGIC_CPU_MAX; cpu++)
+        vcpuData[cpu].serializeSection(cp, csprintf("vcpuData%d", cpu));
+}
 
-        for (int i = 0; i < NUM_LR; i++) {
-            uint32_t lr = vcpuData[cpu].LR[i];
-            nameOut(os, csprintf("%s.vcpuData%d.LR%d", name(), cpu, i));
-            SERIALIZE_SCALAR(lr);
-        }
+void
+VGic::vcpuIntData::serialize(CheckpointOut &cp) const
+{
+    uint32_t vctrl_val = vctrl;
+    SERIALIZE_SCALAR(vctrl_val);
+    uint32_t hcr_val = hcr;
+    SERIALIZE_SCALAR(hcr_val);
+    uint64_t eisr_val = eisr;
+    SERIALIZE_SCALAR(eisr_val);
+    uint8_t VMGrp0En_val = VMGrp0En;
+    SERIALIZE_SCALAR(VMGrp0En_val);
+    uint8_t VMGrp1En_val = VMGrp1En;
+    SERIALIZE_SCALAR(VMGrp1En_val);
+    uint8_t VMAckCtl_val = VMAckCtl;
+    SERIALIZE_SCALAR(VMAckCtl_val);
+    uint8_t VMFiqEn_val = VMFiqEn;
+    SERIALIZE_SCALAR(VMFiqEn_val);
+    uint8_t VMCBPR_val = VMCBPR;
+    SERIALIZE_SCALAR(VMCBPR_val);
+    uint8_t VEM_val = VEM;
+    SERIALIZE_SCALAR(VEM_val);
+    uint8_t VMABP_val = VMABP;
+    SERIALIZE_SCALAR(VMABP_val);
+    uint8_t VMBP_val = VMBP;
+    SERIALIZE_SCALAR(VMBP_val);
+    uint8_t VMPriMask_val = VMPriMask;
+    SERIALIZE_SCALAR(VMPriMask_val);
+
+    for (int i = 0; i < NUM_LR; i++) {
+        ScopedCheckpointSection sec_lr(cp, csprintf("LR%d", i));
+        paramOut(cp, "lr", LR[i]);
     }
 }
 
-void VGic::unserialize(Checkpoint *cp, const std::string &section)
+void VGic::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
 
@@ -502,37 +502,7 @@ void VGic::unserialize(Checkpoint *cp, const std::string &section)
         if (interrupt_time[cpu])
             schedule(postVIntEvent[cpu], interrupt_time[cpu]);
 
-        uint32_t tmp;
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "vctrl_val", tmp);
-        vcpuData[cpu].vctrl = tmp;
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "hcr_val", tmp);
-        vcpuData[cpu].hcr = tmp;
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "eisr_val", vcpuData[cpu].eisr);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMGrp0En_val", vcpuData[cpu].VMGrp0En);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMGrp1En_val", vcpuData[cpu].VMGrp1En);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMAckCtl_val", vcpuData[cpu].VMAckCtl);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMFiqEn_val", vcpuData[cpu].VMFiqEn);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMCBPR_val", vcpuData[cpu].VMCBPR);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VEM_val", vcpuData[cpu].VEM);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMABP_val", vcpuData[cpu].VMABP);
-        paramIn(cp, csprintf("%s.vcpuData%d", section, cpu),
-                "VMPriMask_val", vcpuData[cpu].VMPriMask);
-
-        for (int i = 0; i < NUM_LR; i++) {
-            paramIn(cp, csprintf("%s.vcpuData%d.LR%d", section, cpu, i),
-                    "lr", tmp);
-            vcpuData[cpu].LR[i] = tmp;
-        }
+        vcpuData[cpu].unserializeSection(cp, csprintf("vcpuData%d", cpu));
     }
     UNSERIALIZE_ARRAY(maintIntPosted, VGIC_CPU_MAX);
     UNSERIALIZE_ARRAY(vIntPosted, VGIC_CPU_MAX);
@@ -540,6 +510,27 @@ void VGic::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(hvAddr);
     UNSERIALIZE_SCALAR(pioDelay);
     UNSERIALIZE_SCALAR(maintInt);
+}
+
+void
+VGic::vcpuIntData::unserialize(CheckpointIn &cp)
+{
+    paramIn(cp, "vctrl_val", vctrl);
+    paramIn(cp, "hcr_val", hcr);
+    paramIn(cp, "eisr_val", eisr);
+    paramIn(cp, "VMGrp0En_val", VMGrp0En);
+    paramIn(cp, "VMGrp1En_val", VMGrp1En);
+    paramIn(cp, "VMAckCtl_val", VMAckCtl);
+    paramIn(cp, "VMFiqEn_val", VMFiqEn);
+    paramIn(cp, "VMCBPR_val", VMCBPR);
+    paramIn(cp, "VEM_val", VEM);
+    paramIn(cp, "VMABP_val", VMABP);
+    paramIn(cp, "VMPriMask_val", VMPriMask);
+
+    for (int i = 0; i < NUM_LR; i++) {
+        ScopedCheckpointSection sec_lr(cp, csprintf("LR%d", i));
+        paramIn(cp, "lr", LR[i]);
+    }
 }
 
 VGic *

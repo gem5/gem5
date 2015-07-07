@@ -90,7 +90,7 @@ struct PageTableEntry
 };
 
 // ITB/DTB table entry
-struct TlbEntry
+struct TlbEntry : public Serializable
 {
     Addr tag;               // virtual page number tag
     Addr ppn;               // physical page number
@@ -124,7 +124,10 @@ struct TlbEntry
     }
 
     TlbEntry()
-    {}
+        : tag(0), ppn(0), xre(0), xwe(0), asn(0),
+          asma(false), fonr(0), fonw(0), valid(0)
+    {
+    }
 
     void
     updateVaddr(Addr new_vaddr)
@@ -139,8 +142,8 @@ struct TlbEntry
         return ppn << PageShift;
     }
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 } // namespace AlphaISA

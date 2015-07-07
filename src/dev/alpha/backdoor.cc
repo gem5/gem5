@@ -252,7 +252,7 @@ AlphaBackdoor::write(PacketPtr pkt)
 }
 
 void
-AlphaBackdoor::Access::serialize(ostream &os)
+AlphaBackdoor::Access::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(last_offset);
     SERIALIZE_SCALAR(version);
@@ -274,7 +274,7 @@ AlphaBackdoor::Access::serialize(ostream &os)
 }
 
 void
-AlphaBackdoor::Access::unserialize(Checkpoint *cp, const std::string &section)
+AlphaBackdoor::Access::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(last_offset);
     UNSERIALIZE_SCALAR(version);
@@ -296,15 +296,15 @@ AlphaBackdoor::Access::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-AlphaBackdoor::serialize(ostream &os)
+AlphaBackdoor::serialize(CheckpointOut &cp) const
 {
-    alphaAccess->serialize(os);
+    alphaAccess->serialize(cp);
 }
 
 void
-AlphaBackdoor::unserialize(Checkpoint *cp, const std::string &section)
+AlphaBackdoor::unserialize(CheckpointIn &cp)
 {
-    alphaAccess->unserialize(cp, section);
+    alphaAccess->unserialize(cp);
 }
 
 AlphaBackdoor *

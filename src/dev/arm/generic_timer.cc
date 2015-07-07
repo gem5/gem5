@@ -66,7 +66,7 @@ SystemCounter::setFreq(uint32_t freq)
 }
 
 void
-SystemCounter::serialize(std::ostream &os) const
+SystemCounter::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(_regCntkctl);
     SERIALIZE_SCALAR(_freq);
@@ -75,8 +75,7 @@ SystemCounter::serialize(std::ostream &os) const
 }
 
 void
-SystemCounter::unserialize(Checkpoint *cp,
-                           const std::string &section)
+SystemCounter::unserialize(CheckpointIn &cp)
 {
     // We didn't handle CNTKCTL in this class before, assume it's zero
     // if it isn't present.
@@ -175,9 +174,9 @@ ArchTimer::value() const
 }
 
 void
-ArchTimer::serialize(std::ostream &os) const
+ArchTimer::serialize(CheckpointOut &cp) const
 {
-    paramOut(os, "control_serial", _control);
+    paramOut(cp, "control_serial", _control);
     SERIALIZE_SCALAR(_counterLimit);
     SERIALIZE_SCALAR(_offset);
 
@@ -190,10 +189,9 @@ ArchTimer::serialize(std::ostream &os) const
 }
 
 void
-ArchTimer::unserialize(Checkpoint *cp,
-                                         const std::string &section)
+ArchTimer::unserialize(CheckpointIn &cp)
 {
-    paramIn(cp, section, "control_serial", _control);
+    paramIn(cp, "control_serial", _control);
     // We didn't serialize an offset before we added support for the
     // virtual timer. Consider it optional to maintain backwards
     // compatibility.
@@ -240,28 +238,26 @@ GenericTimer::GenericTimer(GenericTimerParams *p)
 }
 
 void
-GenericTimer::serialize(std::ostream &os)
+GenericTimer::serialize(CheckpointOut &cp) const
 {
-    paramOut(os, "cpu_count", timers.size());
+    paramOut(cp, "cpu_count", timers.size());
 
-    nameOut(os, csprintf("%s.sys_counter", name()));
-    systemCounter.serialize(os);
+    systemCounter.serializeSection(cp, "sys_counter");
 
     for (int i = 0; i < timers.size(); ++i) {
-        CoreTimers &core(getTimers(i));
+        const CoreTimers &core(*timers[i]);
 
-        nameOut(os, core.phys.name());
-        core.phys.serialize(os);
-
-        nameOut(os, core.virt.name());
-        core.virt.serialize(os);
+        // This should really be phys_timerN, but we are stuck with
+        // arch_timer for backwards compatibility.
+        core.phys.serializeSection(cp, csprintf("arch_timer%d", i));
+        core.virt.serializeSection(cp, csprintf("virt_timer%d", i));
     }
 }
 
 void
-GenericTimer::unserialize(Checkpoint *cp, const std::string &section)
+GenericTimer::unserialize(CheckpointIn &cp)
 {
-    systemCounter.unserialize(cp, csprintf("%s.sys_counter", section));
+    systemCounter.unserializeSection(cp, "sys_counter");
 
     // Try to unserialize the CPU count. Old versions of the timer
     // model assumed a 8 CPUs, so we fall back to that if the field
@@ -278,8 +274,8 @@ GenericTimer::unserialize(Checkpoint *cp, const std::string &section)
         CoreTimers &core(getTimers(i));
         // This should really be phys_timerN, but we are stuck with
         // arch_timer for backwards compatibility.
-        core.phys.unserialize(cp, csprintf("%s.arch_timer%d", section, i));
-        core.virt.unserialize(cp, csprintf("%s.virt_timer%d", section, i));
+        core.phys.unserializeSection(cp, csprintf("arch_timer%d", i));
+        core.virt.unserializeSection(cp, csprintf("virt_timer%d", i));
     }
 }
 
@@ -498,24 +494,20 @@ GenericTimerMem::GenericTimerMem(GenericTimerMemParams *p)
 }
 
 void
-GenericTimerMem::serialize(std::ostream &os)
+GenericTimerMem::serialize(CheckpointOut &cp) const
 {
-    paramOut(os, "timer_count", 1);
+    paramOut(cp, "timer_count", 1);
 
-    nameOut(os, csprintf("%s.sys_counter", name()));
-    systemCounter.serialize(os);
+    systemCounter.serializeSection(cp, "sys_counter");
 
-    nameOut(os, physTimer.name());
-    physTimer.serialize(os);
-
-    nameOut(os, virtTimer.name());
-    virtTimer.serialize(os);
+    physTimer.serializeSection(cp, "phys_timer0");
+    virtTimer.serializeSection(cp, "virt_timer0");
 }
 
 void
-GenericTimerMem::unserialize(Checkpoint *cp, const std::string &section)
+GenericTimerMem::unserialize(CheckpointIn &cp)
 {
-    systemCounter.unserialize(cp, csprintf("%s.sys_counter", section));
+    systemCounter.unserializeSection(cp, "sys_counter");
 
     unsigned timer_count;
     UNSERIALIZE_SCALAR(timer_count);
@@ -524,8 +516,8 @@ GenericTimerMem::unserialize(Checkpoint *cp, const std::string &section)
     if (timer_count != 1)
         panic("Incompatible checkpoint: Only one set of timers supported");
 
-    physTimer.unserialize(cp, csprintf("%s.phys_timer0", section));
-    virtTimer.unserialize(cp, csprintf("%s.virt_timer0", section));
+    physTimer.unserializeSection(cp, "phys_timer0");
+    virtTimer.unserializeSection(cp, "virt_timer0");
 }
 
 Tick

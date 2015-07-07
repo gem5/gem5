@@ -312,16 +312,15 @@ class VirtDescriptor
  * @note Queues must be registered with
  * VirtIODeviceBase::registerQueue() to be active.
  */
-class VirtQueue {
+class VirtQueue : public Serializable {
 public:
     virtual ~VirtQueue() {};
 
     /** @{
      * @name Checkpointing Interface
      */
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-    /** @} */
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     /** @{
      * @name Low-level Device Interface
@@ -596,10 +595,8 @@ class VirtIODeviceBase : public SimObject
     /** @{
      * @name SimObject Interfaces
      */
-
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     /** @} */
 
 

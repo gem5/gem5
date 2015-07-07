@@ -729,7 +729,7 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
 }
 
 void
-X86ISA::Interrupts::serialize(std::ostream &os)
+X86ISA::Interrupts::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ARRAY(regs, NUM_APIC_REGS);
     SERIALIZE_SCALAR(pendingSmi);
@@ -754,7 +754,7 @@ X86ISA::Interrupts::serialize(std::ostream &os)
 }
 
 void
-X86ISA::Interrupts::unserialize(Checkpoint *cp, const std::string &section)
+X86ISA::Interrupts::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(regs, NUM_APIC_REGS);
     UNSERIALIZE_SCALAR(pendingSmi);

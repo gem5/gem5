@@ -370,31 +370,30 @@ System::drainResume()
 }
 
 void
-System::serialize(ostream &os)
+System::serialize(CheckpointOut &cp) const
 {
     if (FullSystem)
-        kernelSymtab->serialize("kernel_symtab", os);
+        kernelSymtab->serialize("kernel_symtab", cp);
     SERIALIZE_SCALAR(pagePtr);
     SERIALIZE_SCALAR(nextPID);
-    serializeSymtab(os);
+    serializeSymtab(cp);
 
     // also serialize the memories in the system
-    nameOut(os, csprintf("%s.physmem", name()));
-    physmem.serialize(os);
+    physmem.serializeSection(cp, "physmem");
 }
 
 
 void
-System::unserialize(Checkpoint *cp, const string &section)
+System::unserialize(CheckpointIn &cp)
 {
     if (FullSystem)
-        kernelSymtab->unserialize("kernel_symtab", cp, section);
+        kernelSymtab->unserialize("kernel_symtab", cp);
     UNSERIALIZE_SCALAR(pagePtr);
     UNSERIALIZE_SCALAR(nextPID);
-    unserializeSymtab(cp, section);
+    unserializeSymtab(cp);
 
     // also unserialize the memories in the system
-    physmem.unserialize(cp, csprintf("%s.physmem", name()));
+    physmem.unserializeSection(cp, "physmem");
 }
 
 void

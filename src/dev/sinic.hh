@@ -73,8 +73,8 @@ class Base : public EtherDevBase
  * Serialization stuff
  */
   public:
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
 /**
  * Construction/Destruction/Parameters
@@ -297,8 +297,8 @@ class Device : public Base
  * Serialization stuff
  */
   public:
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serializeOld(CheckpointOut &cp) M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   public:
     Device(const Params *p);

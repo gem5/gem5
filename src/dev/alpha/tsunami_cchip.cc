@@ -507,7 +507,7 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
 
 
 void
-TsunamiCChip::serialize(std::ostream &os)
+TsunamiCChip::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
     SERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
@@ -517,7 +517,7 @@ TsunamiCChip::serialize(std::ostream &os)
 }
 
 void
-TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiCChip::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
     UNSERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);

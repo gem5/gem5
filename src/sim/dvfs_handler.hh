@@ -198,8 +198,8 @@ class DVFSHandler : public SimObject
      */
     bool isEnabled() const { return enableHandler; }
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   private:
     typedef std::map<DomainID, SrcClockDomain*> Domains;

@@ -107,17 +107,17 @@ EtherLink::Link::Link(const string &name, EtherLink *p, int num,
 { }
 
 void
-EtherLink::serialize(ostream &os)
+EtherLink::serialize(CheckpointOut &cp) const
 {
-    link[0]->serialize("link0", os);
-    link[1]->serialize("link1", os);
+    link[0]->serialize("link0", cp);
+    link[1]->serialize("link1", cp);
 }
 
 void
-EtherLink::unserialize(Checkpoint *cp, const string &section)
+EtherLink::unserialize(CheckpointIn &cp)
 {
-    link[0]->unserialize("link0", cp, section);
-    link[1]->unserialize("link1", cp, section);
+    link[0]->unserialize("link0", cp);
+    link[1]->unserialize("link1", cp);
 }
 
 void
@@ -141,11 +141,11 @@ class LinkDelayEvent : public Event
 
     void process();
 
-    virtual void serialize(ostream &os);
-    void unserialize(Checkpoint *cp, const string &section) {}
-    void unserialize(Checkpoint *cp, const string &section,
-                     EventQueue *eventq);
-    static Serializable *createForUnserialize(Checkpoint *cp,
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE {}
+    void unserializeEvent(CheckpointIn &cp,
+                          EventQueue *eventq) M5_ATTR_OVERRIDE;
+    static Serializable *createForUnserialize(CheckpointIn &cp,
                                               const string &section);
 };
 
@@ -193,38 +193,37 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
 }
 
 void
-EtherLink::Link::serialize(const string &base, ostream &os)
+EtherLink::Link::serialize(const string &base, CheckpointOut &cp) const
 {
     bool packet_exists = packet != nullptr;
-    paramOut(os, base + ".packet_exists", packet_exists);
+    paramOut(cp, base + ".packet_exists", packet_exists);
     if (packet_exists)
-        packet->serialize(base + ".packet", os);
+        packet->serialize(base + ".packet", cp);
 
     bool event_scheduled = doneEvent.scheduled();
-    paramOut(os, base + ".event_scheduled", event_scheduled);
+    paramOut(cp, base + ".event_scheduled", event_scheduled);
     if (event_scheduled) {
         Tick event_time = doneEvent.when();
-        paramOut(os, base + ".event_time", event_time);
+        paramOut(cp, base + ".event_time", event_time);
     }
 
 }
 
 void
-EtherLink::Link::unserialize(const string &base, Checkpoint *cp,
-                             const string &section)
+EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
 {
     bool packet_exists;
-    paramIn(cp, section, base + ".packet_exists", packet_exists);
+    paramIn(cp, base + ".packet_exists", packet_exists);
     if (packet_exists) {
         packet = make_shared<EthPacketData>(16384);
-        packet->unserialize(base + ".packet", cp, section);
+        packet->unserialize(base + ".packet", cp);
     }
 
     bool event_scheduled;
-    paramIn(cp, section, base + ".event_scheduled", event_scheduled);
+    paramIn(cp, base + ".event_scheduled", event_scheduled);
     if (event_scheduled) {
         Tick event_time;
-        paramIn(cp, section, base + ".event_time", event_time);
+        paramIn(cp, base + ".event_time", event_time);
         parent->schedule(doneEvent, event_time);
     }
 }
@@ -246,25 +245,24 @@ LinkDelayEvent::process()
 }
 
 void
-LinkDelayEvent::serialize(ostream &os)
+LinkDelayEvent::serialize(CheckpointOut &cp) const
 {
-    paramOut(os, "type", string("LinkDelayEvent"));
-    Event::serialize(os);
+    paramOut(cp, "type", string("LinkDelayEvent"));
+    Event::serialize(cp);
 
     EtherLink *parent = link->parent;
     bool number = link->number;
     SERIALIZE_OBJPTR(parent);
     SERIALIZE_SCALAR(number);
 
-    packet->serialize("packet", os);
+    packet->serialize("packet", cp);
 }
 
 
 void
-LinkDelayEvent::unserialize(Checkpoint *cp, const string &section,
-                            EventQueue *eventq)
+LinkDelayEvent::unserializeEvent(CheckpointIn &cp, EventQueue *eventq)
 {
-    Event::unserialize(cp, section, eventq);
+    Event::unserializeEvent(cp, eventq);
 
     EtherLink *parent;
     bool number;
@@ -274,12 +272,12 @@ LinkDelayEvent::unserialize(Checkpoint *cp, const string &section,
     link = parent->link[number];
 
     packet = make_shared<EthPacketData>(16384);
-    packet->unserialize("packet", cp, section);
+    packet->unserialize("packet", cp);
 }
 
 
 Serializable *
-LinkDelayEvent::createForUnserialize(Checkpoint *cp, const string &section)
+LinkDelayEvent::createForUnserialize(CheckpointIn &cp, const string &section)
 {
     return new LinkDelayEvent();
 }

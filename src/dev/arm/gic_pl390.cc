@@ -741,7 +741,7 @@ Pl390::getAddrRanges() const
 
 
 void
-Pl390::serialize(std::ostream &os)
+Pl390::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm GIC\n");
 
@@ -781,7 +781,7 @@ Pl390::serialize(std::ostream &os)
 }
 
 void
-Pl390::unserialize(Checkpoint *cp, const std::string &section)
+Pl390::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
 

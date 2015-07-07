@@ -547,7 +547,7 @@ Pl111::dmaDone()
 }
 
 void
-Pl111::serialize(std::ostream &os)
+Pl111::serialize(CheckpointOut &cp) const
 {
     DPRINTF(PL111, "Serializing ARM PL111\n");
 
@@ -633,11 +633,11 @@ Pl111::serialize(std::ostream &os)
         dma_done_event_tick[x] = dmaDoneEventAll[x].scheduled() ?
             dmaDoneEventAll[x].when() : 0;
     }
-    arrayParamOut(os, "dma_done_event_tick", dma_done_event_tick);
+    SERIALIZE_CONTAINER(dma_done_event_tick);
 }
 
 void
-Pl111::unserialize(Checkpoint *cp, const std::string &section)
+Pl111::unserialize(CheckpointIn &cp)
 {
     DPRINTF(PL111, "Unserializing ARM PL111\n");
 
@@ -731,7 +731,7 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
 
     vector<Tick> dma_done_event_tick;
     dma_done_event_tick.resize(maxOutstandingDma);
-    arrayParamIn(cp, section, "dma_done_event_tick", dma_done_event_tick);
+    UNSERIALIZE_CONTAINER(dma_done_event_tick);
     dmaDoneEventFree.clear();
     for (int x = 0; x < maxOutstandingDma; x++) {
         if (dma_done_event_tick[x])

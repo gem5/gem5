@@ -986,17 +986,16 @@ FullO3CPU<Impl>::syscall(int64_t callnum, ThreadID tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::serializeThread(std::ostream &os, ThreadID tid)
+FullO3CPU<Impl>::serializeThread(CheckpointOut &cp, ThreadID tid) const
 {
-    thread[tid]->serialize(os);
+    thread[tid]->serialize(cp);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::unserializeThread(Checkpoint *cp, const std::string &section,
-                                   ThreadID tid)
+FullO3CPU<Impl>::unserializeThread(CheckpointIn &cp, ThreadID tid)
 {
-    thread[tid]->unserialize(cp, section);
+    thread[tid]->unserialize(cp);
 }
 
 template <class Impl>

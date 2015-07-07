@@ -65,58 +65,51 @@ PacketFifo::copyout(void *dest, unsigned offset, unsigned len)
 
 
 void
-PacketFifoEntry::serialize(const string &base, ostream &os)
+PacketFifoEntry::serialize(const string &base, CheckpointOut &cp) const
 {
-    packet->serialize(base + ".packet", os);
-    paramOut(os, base + ".slack", slack);
-    paramOut(os, base + ".number", number);
-    paramOut(os, base + ".priv", priv);
+    packet->serialize(base + ".packet", cp);
+    paramOut(cp, base + ".slack", slack);
+    paramOut(cp, base + ".number", number);
+    paramOut(cp, base + ".priv", priv);
 }
 
 void
-PacketFifoEntry::unserialize(const string &base, Checkpoint *cp,
-                             const string &section)
+PacketFifoEntry::unserialize(const string &base, CheckpointIn &cp)
 {
     packet = make_shared<EthPacketData>(16384);
-    packet->unserialize(base + ".packet", cp, section);
-    paramIn(cp, section, base + ".slack", slack);
-    paramIn(cp, section, base + ".number", number);
-    paramIn(cp, section, base + ".priv", priv);
+    packet->unserialize(base + ".packet", cp);
+    paramIn(cp, base + ".slack", slack);
+    paramIn(cp, base + ".number", number);
+    paramIn(cp, base + ".priv", priv);
 }
 
 void
-PacketFifo::serialize(const string &base, ostream &os)
+PacketFifo::serialize(const string &base, CheckpointOut &cp) const
 {
-    paramOut(os, base + ".size", _size);
-    paramOut(os, base + ".maxsize", _maxsize);
-    paramOut(os, base + ".reserved", _reserved);
-    paramOut(os, base + ".packets", fifo.size());
+    paramOut(cp, base + ".size", _size);
+    paramOut(cp, base + ".maxsize", _maxsize);
+    paramOut(cp, base + ".reserved", _reserved);
+    paramOut(cp, base + ".packets", fifo.size());
 
     int i = 0;
-    iterator entry = fifo.begin();
-    iterator end = fifo.end();
-    while (entry != end) {
-        entry->serialize(csprintf("%s.entry%d", base, i), os);
-        ++entry;
-        ++i;
-    }
+    for (const auto &entry : fifo)
+        entry.serialize(csprintf("%s.entry%d", base, i++), cp);
 }
 
 void
-PacketFifo::unserialize(const string &base, Checkpoint *cp,
-                        const string &section)
+PacketFifo::unserialize(const string &base, CheckpointIn &cp)
 {
-    paramIn(cp, section, base + ".size", _size);
-//  paramIn(cp, section, base + ".maxsize", _maxsize);
-    paramIn(cp, section, base + ".reserved", _reserved);
+    paramIn(cp, base + ".size", _size);
+//  paramIn(cp, base + ".maxsize", _maxsize);
+    paramIn(cp, base + ".reserved", _reserved);
     int fifosize;
-    paramIn(cp, section, base + ".packets", fifosize);
+    paramIn(cp, base + ".packets", fifosize);
 
     fifo.clear();
 
     for (int i = 0; i < fifosize; ++i) {
         PacketFifoEntry entry;
-        entry.unserialize(csprintf("%s.entry%d", base, i), cp, section);
+        entry.unserialize(csprintf("%s.entry%d", base, i), cp);
         fifo.push_back(entry);
     }
 }

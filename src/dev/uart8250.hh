@@ -113,9 +113,8 @@ class Uart8250 : public Uart
      */
     virtual bool intStatus() { return status ? true : false; }
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 #endif // __TSUNAMI_UART_HH__

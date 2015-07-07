@@ -314,19 +314,18 @@ MultiLevelPageTable<ISAOps>::lookup(Addr vaddr, TlbEntry &entry)
 
 template <class ISAOps>
 void
-MultiLevelPageTable<ISAOps>::serialize(std::ostream &os)
+MultiLevelPageTable<ISAOps>::serialize(CheckpointOut &cp) const
 {
     /** Since, the page table is stored in system memory
      * which is serialized separately, we will serialize
      * just the base pointer
      */
-    paramOut(os, "ptable.pointer", basePtr);
+    paramOut(cp, "ptable.pointer", basePtr);
 }
 
 template <class ISAOps>
 void
-MultiLevelPageTable<ISAOps>::unserialize(Checkpoint *cp,
-                                         const std::string &section)
+MultiLevelPageTable<ISAOps>::unserialize(CheckpointIn &cp)
 {
-    paramIn(cp, section, "ptable.pointer", basePtr);
+    paramIn(cp, "ptable.pointer", basePtr);
 }

@@ -37,8 +37,8 @@
 #include <string>
 
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
-class Checkpoint;
 class SymbolTable
 {
   public:
@@ -76,9 +76,8 @@ class SymbolTable
     const STable &getSymbolTable() const { return symbolTable; }
 
   public:
-    void serialize(const std::string &base, std::ostream &os);
-    void unserialize(const std::string &base, Checkpoint *cp,
-                     const std::string &section);
+    void serialize(const std::string &base, CheckpointOut &cp) const;
+    void unserialize(const std::string &base, CheckpointIn &cp);
 
   public:
     bool

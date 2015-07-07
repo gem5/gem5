@@ -41,11 +41,11 @@
 #include <memory>
 
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
 /*
  * Reference counted class containing ethernet packet data
  */
-class Checkpoint;
 class EthPacketData
 {
   public:
@@ -71,9 +71,8 @@ class EthPacketData
     ~EthPacketData() { if (data) delete [] data; }
 
   public:
-    void serialize(const std::string &base, std::ostream &os);
-    void unserialize(const std::string &base, Checkpoint *cp,
-                     const std::string &section);
+    void serialize(const std::string &base, CheckpointOut &cp) const;
+    void unserialize(const std::string &base, CheckpointIn &cp);
 };
 
 typedef std::shared_ptr<EthPacketData> EthPacketPtr;

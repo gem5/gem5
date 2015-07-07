@@ -499,8 +499,8 @@ class ProxyThreadContext : public ThreadContext
  * be confusing when the ThreadContext is exported via a proxy.
  */
 
-void serialize(ThreadContext &tc, std::ostream &os);
-void unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section);
+void serialize(ThreadContext &tc, CheckpointOut &cp);
+void unserialize(ThreadContext &tc, CheckpointIn &cp);
 
 /** @} */
 

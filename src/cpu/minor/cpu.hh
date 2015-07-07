@@ -146,13 +146,13 @@ class MinorCPU : public BaseCPU
     Counter totalInsts() const;
     Counter totalOps() const;
 
-    void serializeThread(std::ostream &os, ThreadID thread_id);
-    void unserializeThread(Checkpoint *cp, const std::string &section,
-        ThreadID thread_id);
+    void serializeThread(CheckpointOut &cp,
+                         ThreadID tid) const M5_ATTR_OVERRIDE;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) M5_ATTR_OVERRIDE;
 
     /** Serialize pipeline data */
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const;
+    void unserialize(CheckpointIn &cp);
 
     /** Drain interface */
     unsigned int drain(DrainManager *drain_manager);

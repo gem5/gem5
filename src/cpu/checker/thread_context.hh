@@ -180,10 +180,6 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->regStats(name);
     }
 
-    void serialize(std::ostream &os) { actualTC->serialize(os); }
-    void unserialize(Checkpoint *cp, const std::string &section)
-    { actualTC->unserialize(cp, section); }
-
     EndQuiesceEvent *getQuiesceEvent() { return actualTC->getQuiesceEvent(); }
 
     Tick readLastActivate() { return actualTC->readLastActivate(); }

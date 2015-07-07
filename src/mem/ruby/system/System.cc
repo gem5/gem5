@@ -109,7 +109,7 @@ RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
                                  uint64 uncompressed_trace_size)
 {
     // Create the checkpoint file for the memory
-    string thefile = Checkpoint::dir() + "/" + filename.c_str();
+    string thefile = CheckpointIn::dir() + "/" + filename.c_str();
 
     int fd = creat(thefile.c_str(), 0664);
     if (fd < 0) {
@@ -134,7 +134,7 @@ RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
 }
 
 void
-RubySystem::serialize(std::ostream &os)
+RubySystem::serializeOld(CheckpointOut &cp)
 {
     m_cooldown_enabled = true;
     vector<Sequencer*> sequencer_map;
@@ -234,7 +234,7 @@ RubySystem::readCompressedTrace(string filename, uint8_t *&raw_data,
 }
 
 void
-RubySystem::unserialize(Checkpoint *cp, const string &section)
+RubySystem::unserialize(CheckpointIn &cp)
 {
     uint8_t *uncompressed_trace = NULL;
 
@@ -249,7 +249,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
 
     UNSERIALIZE_SCALAR(cache_trace_file);
     UNSERIALIZE_SCALAR(cache_trace_size);
-    cache_trace_file = cp->cptDir + "/" + cache_trace_file;
+    cache_trace_file = cp.cptDir + "/" + cache_trace_file;
 
     readCompressedTrace(cache_trace_file, uncompressed_trace,
                         cache_trace_size);

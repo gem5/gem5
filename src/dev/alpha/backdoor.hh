@@ -74,10 +74,10 @@ class SimpleDisk;
 class AlphaBackdoor : public BasicPioDevice
 {
   protected:
-    struct Access : public AlphaAccess
+    struct Access : public AlphaAccess, public Serializable
     {
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     };
 
     union {
@@ -118,8 +118,8 @@ class AlphaBackdoor : public BasicPioDevice
     /**
      * standard serialization routines for checkpointing
      */
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 #endif // __DEV_ALPHA_BACKDOOR_HH__

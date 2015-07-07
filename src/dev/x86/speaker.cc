@@ -74,14 +74,14 @@ X86ISA::Speaker::write(PacketPtr pkt)
 }
 
 void
-X86ISA::Speaker::serialize(std::ostream &os)
+X86ISA::Speaker::serialize(CheckpointOut &cp) const
 {
     uint8_t controlValData = controlVal.__data;
     SERIALIZE_SCALAR(controlValData);
 }
 
 void
-X86ISA::Speaker::unserialize(Checkpoint *cp, const std::string &section)
+X86ISA::Speaker::unserialize(CheckpointIn &cp)
 {
     uint8_t controlValData;
     UNSERIALIZE_SCALAR(controlValData);

@@ -60,8 +60,8 @@ class Pl011 : public Uart, public AmbaDevice
   public:
     Pl011(const Pl011Params *p);
 
-    void serialize(std::ostream &os) M5_ATTR_OVERRIDE;
-    void unserialize(Checkpoint *cp, const std::string &sec) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   public: // PioDevice
     Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;

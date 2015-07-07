@@ -104,7 +104,7 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 }
 
 void
-serialize(ThreadContext &tc, std::ostream &os)
+serialize(ThreadContext &tc, CheckpointOut &cp)
 {
     using namespace TheISA;
 
@@ -113,7 +113,7 @@ serialize(ThreadContext &tc, std::ostream &os)
         floatRegs[i] = tc.readFloatRegBitsFlat(i);
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
-    arrayParamOut(os, "floatRegs.i", floatRegs, NumFloatRegs);
+    arrayParamOut(cp, "floatRegs.i", floatRegs, NumFloatRegs);
 
     IntReg intRegs[NumIntRegs];
     for (int i = 0; i < NumIntRegs; ++i)
@@ -127,20 +127,20 @@ serialize(ThreadContext &tc, std::ostream &os)
     SERIALIZE_ARRAY(ccRegs, NumCCRegs);
 #endif
 
-    tc.pcState().serialize(os);
+    tc.pcState().serialize(cp);
 
     // thread_num and cpu_id are deterministic from the config
 }
 
 void
-unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section)
+unserialize(ThreadContext &tc, CheckpointIn &cp)
 {
     using namespace TheISA;
 
     FloatRegBits floatRegs[NumFloatRegs];
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
-    arrayParamIn(cp, section, "floatRegs.i", floatRegs, NumFloatRegs);
+    arrayParamIn(cp, "floatRegs.i", floatRegs, NumFloatRegs);
     for (int i = 0; i < NumFloatRegs; ++i)
         tc.setFloatRegBitsFlat(i, floatRegs[i]);
 
@@ -157,7 +157,7 @@ unserialize(ThreadContext &tc, Checkpoint *cp, const std::string &section)
 #endif
 
     PCState pcState;
-    pcState.unserialize(cp, section);
+    pcState.unserialize(cp);
     tc.pcState(pcState);
 
     // thread_num and cpu_id are deterministic from the config

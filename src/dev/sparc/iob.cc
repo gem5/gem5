@@ -334,41 +334,43 @@ Iob::getAddrRanges() const
 
 
 void
-Iob::serialize(std::ostream &os)
+Iob::serialize(CheckpointOut &cp) const
 {
 
     SERIALIZE_SCALAR(jIntVec);
     SERIALIZE_ARRAY(jBusData0, MaxNiagaraProcs);
     SERIALIZE_ARRAY(jBusData1, MaxNiagaraProcs);
     for (int x = 0; x < NumDeviceIds; x++) {
-        nameOut(os, csprintf("%s.Int%d", name(), x));
-        paramOut(os, "cpu", intMan[x].cpu);
-        paramOut(os, "vector", intMan[x].vector);
-        paramOut(os, "mask", intCtl[x].mask);
-        paramOut(os, "pend", intCtl[x].pend);
+        ScopedCheckpointSection sec(cp, csprintf("Int%d", x));
+        paramOut(cp, "cpu", intMan[x].cpu);
+        paramOut(cp, "vector", intMan[x].vector);
+        paramOut(cp, "mask", intCtl[x].mask);
+        paramOut(cp, "pend", intCtl[x].pend);
     };
     for (int x = 0; x < MaxNiagaraProcs; x++) {
-        nameOut(os, csprintf("%s.jIntBusy%d", name(), x));
-        paramOut(os, "busy", jIntBusy[x].busy);
-        paramOut(os, "source", jIntBusy[x].source);
+        ScopedCheckpointSection sec(cp, csprintf("jIntBusy%d", x));
+        paramOut(cp, "busy", jIntBusy[x].busy);
+        paramOut(cp, "source", jIntBusy[x].source);
     };
 }
 
 void
-Iob::unserialize(Checkpoint *cp, const std::string &section)
+Iob::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(jIntVec);
     UNSERIALIZE_ARRAY(jBusData0, MaxNiagaraProcs);
     UNSERIALIZE_ARRAY(jBusData1, MaxNiagaraProcs);
     for (int x = 0; x < NumDeviceIds; x++) {
-        paramIn(cp, csprintf("%s.Int%d", name(), x), "cpu", intMan[x].cpu);
-        paramIn(cp, csprintf("%s.Int%d", name(), x), "vector", intMan[x].vector);
-        paramIn(cp, csprintf("%s.Int%d", name(), x), "mask", intCtl[x].mask);
-        paramIn(cp, csprintf("%s.Int%d", name(), x), "pend", intCtl[x].pend);
+        ScopedCheckpointSection sec(cp, csprintf("Int%d", x));
+        paramIn(cp, "cpu", intMan[x].cpu);
+        paramIn(cp, "vector", intMan[x].vector);
+        paramIn(cp, "mask", intCtl[x].mask);
+        paramIn(cp, "pend", intCtl[x].pend);
     };
     for (int x = 0; x < MaxNiagaraProcs; x++) {
-        paramIn(cp, csprintf("%s.jIntBusy%d", name(), x), "busy", jIntBusy[x].busy);
-        paramIn(cp, csprintf("%s.jIntBusy%d", name(), x), "source", jIntBusy[x].source);
+        ScopedCheckpointSection sec(cp, csprintf("jIntBusy%d", x));
+        paramIn(cp, "busy", jIntBusy[x].busy);
+        paramIn(cp, "source", jIntBusy[x].source);
     };
 }
 

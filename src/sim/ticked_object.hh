@@ -56,7 +56,7 @@
  *
  *  Ticked is not a ClockedObject but can be attached to one by
  *  inheritance and by calling regStats, serialize/unserialize */
-class Ticked
+class Ticked : public Serializable
 {
   protected:
     /** An event to call process periodically */
@@ -164,8 +164,8 @@ class Ticked
     }
 
     /** Checkpoint lastStopped */
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     /** Action to call on the clock tick */
     virtual void evaluate() = 0;
@@ -199,8 +199,8 @@ class TickedObject : public ClockedObject, public Ticked
 
     /** Pass on regStats, serialize etc. onto Ticked */
     void regStats();
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 #endif /* __SIM_TICKED_OBJECT_HH__ */

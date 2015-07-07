@@ -671,7 +671,7 @@ CxxConfigManager::serialize(std::ostream &os)
 }
 
 void
-CxxConfigManager::loadState(Checkpoint *checkpoint)
+CxxConfigManager::loadState(CheckpointIn &checkpoint)
 {
     for (auto i = objectsInOrder.begin(); i != objectsInOrder.end(); ++ i)
         (*i)->loadState(checkpoint);

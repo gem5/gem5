@@ -170,7 +170,7 @@ DVFSHandler::UpdateEvent::updatePerfLevel()
 }
 
 void
-DVFSHandler::serialize(std::ostream &os)
+DVFSHandler::serialize(CheckpointOut &cp) const
 {
     //This is to ensure that the handler status is maintained during the
     //entire simulation run and not changed from command line during checkpoint
@@ -182,23 +182,22 @@ DVFSHandler::serialize(std::ostream &os)
     std::vector<DomainID> domain_ids;
     std::vector<PerfLevel> perf_levels;
     std::vector<Tick> whens;
-    for (auto it = updatePerfLevelEvents.begin();
-         it != updatePerfLevelEvents.end(); ++it) {
-        DomainID id = it->first;
-        UpdateEvent *event = &it->second;
+    for (const auto &ev_pair : updatePerfLevelEvents) {
+        DomainID id = ev_pair.first;
+        const UpdateEvent *event = &ev_pair.second;
 
         assert(id == event->domainIDToSet);
         domain_ids.push_back(id);
         perf_levels.push_back(event->perfLevelToSet);
         whens.push_back(event->scheduled() ? event->when() : 0);
     }
-    arrayParamOut(os, "domain_ids", domain_ids);
-    arrayParamOut(os, "perf_levels", perf_levels);
-    arrayParamOut(os, "whens", whens);
+    SERIALIZE_CONTAINER(domain_ids);
+    SERIALIZE_CONTAINER(perf_levels);
+    SERIALIZE_CONTAINER(whens);
 }
 
 void
-DVFSHandler::unserialize(Checkpoint *cp, const std::string &section)
+DVFSHandler::unserialize(CheckpointIn &cp)
 {
     bool temp = enableHandler;
 
@@ -213,9 +212,9 @@ DVFSHandler::unserialize(Checkpoint *cp, const std::string &section)
     std::vector<DomainID> domain_ids;
     std::vector<PerfLevel> perf_levels;
     std::vector<Tick> whens;
-    arrayParamIn(cp, section, "domain_ids", domain_ids);
-    arrayParamIn(cp, section, "perf_levels", perf_levels);
-    arrayParamIn(cp, section, "whens", whens);
+    UNSERIALIZE_CONTAINER(domain_ids);
+    UNSERIALIZE_CONTAINER(perf_levels);
+    UNSERIALIZE_CONTAINER(whens);
 
     for (size_t i = 0; i < domain_ids.size(); ++i) {;
         UpdateEvent *event = &updatePerfLevelEvents[domain_ids[i]];

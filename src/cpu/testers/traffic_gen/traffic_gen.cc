@@ -139,7 +139,7 @@ TrafficGen::drain(DrainManager *dm)
 }
 
 void
-TrafficGen::serialize(ostream &os)
+TrafficGen::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing TrafficGen\n");
 
@@ -158,7 +158,7 @@ TrafficGen::serialize(ostream &os)
 }
 
 void
-TrafficGen::unserialize(Checkpoint* cp, const string& section)
+TrafficGen::unserialize(CheckpointIn &cp)
 {
     // restore scheduled events
     Tick nextEvent;

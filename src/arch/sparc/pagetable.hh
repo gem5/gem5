@@ -277,8 +277,8 @@ struct TlbEntry
         range.va = new_vaddr;
     }
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const;
+    void unserialize(CheckpointIn &cp);
 };
 
 } // namespace SparcISA

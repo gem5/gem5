@@ -233,18 +233,18 @@ VirtQueue::VirtQueue(PortProxy &proxy, uint16_t size)
 }
 
 void
-VirtQueue::serialize(std::ostream &os)
+VirtQueue::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(_address);
     SERIALIZE_SCALAR(_last_avail);
 }
 
 void
-VirtQueue::unserialize(Checkpoint *cp, const std::string &section)
+VirtQueue::unserialize(CheckpointIn &cp)
 {
     Addr addr_in;
 
-    paramIn(cp, section, "_address", addr_in);
+    paramIn(cp, "_address", addr_in);
     UNSERIALIZE_SCALAR(_last_avail);
 
     // Use the address setter to ensure that the ring buffer addresses
@@ -336,27 +336,23 @@ VirtIODeviceBase::~VirtIODeviceBase()
 }
 
 void
-VirtIODeviceBase::serialize(std::ostream &os)
+VirtIODeviceBase::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(guestFeatures);
-    paramOut(os, "_deviceStatus", (uint8_t)_deviceStatus);
+    SERIALIZE_SCALAR(_deviceStatus);
     SERIALIZE_SCALAR(_queueSelect);
-    for (QueueID i = 0; i < _queues.size(); ++i) {
-        nameOut(os, csprintf("%s._queues.%i", name(), i));
-        _queues[i]->serialize(os);
-    }
+    for (QueueID i = 0; i < _queues.size(); ++i)
+        _queues[i]->serializeSection(cp, csprintf("_queues.%i", i));
 }
 
 void
-VirtIODeviceBase::unserialize(Checkpoint *cp, const std::string &section)
+VirtIODeviceBase::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(guestFeatures);
-    uint8_t status;
-    paramIn(cp, section, "_deviceStatus", status);
-    _deviceStatus = status;
+    UNSERIALIZE_SCALAR(_deviceStatus);
     UNSERIALIZE_SCALAR(_queueSelect);
     for (QueueID i = 0; i < _queues.size(); ++i)
-        _queues[i]->unserialize(cp, csprintf("%s._queues.%i", section, i));
+        _queues[i]->unserializeSection(cp, csprintf("_queues.%i", i));
 }
 
 void

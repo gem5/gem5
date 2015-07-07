@@ -117,10 +117,10 @@ LocalSimLoopExitEvent::description() const
 }
 
 void
-LocalSimLoopExitEvent::serialize(ostream &os)
+LocalSimLoopExitEvent::serialize(CheckpointOut &cp) const
 {
-    paramOut(os, "type", string("SimLoopExitEvent"));
-    Event::serialize(os);
+    paramOut(cp, "type", string("SimLoopExitEvent"));
+    Event::serialize(cp);
 
     SERIALIZE_SCALAR(cause);
     SERIALIZE_SCALAR(code);
@@ -128,9 +128,9 @@ LocalSimLoopExitEvent::serialize(ostream &os)
 }
 
 void
-LocalSimLoopExitEvent::unserialize(Checkpoint *cp, const string &section)
+LocalSimLoopExitEvent::unserialize(CheckpointIn &cp)
 {
-    Event::unserialize(cp, section);
+    Event::unserialize(cp);
 
     UNSERIALIZE_SCALAR(cause);
     UNSERIALIZE_SCALAR(code);
@@ -138,10 +138,9 @@ LocalSimLoopExitEvent::unserialize(Checkpoint *cp, const string &section)
 }
 
 void
-LocalSimLoopExitEvent::unserialize(Checkpoint *cp, const string &section,
-                                   EventQueue *eventq)
+LocalSimLoopExitEvent::unserializeEvent(CheckpointIn &cp, EventQueue *eventq)
 {
-    Event::unserialize(cp, section, eventq);
+    Event::unserializeEvent(cp, eventq);
 
     UNSERIALIZE_SCALAR(cause);
     UNSERIALIZE_SCALAR(code);
@@ -149,7 +148,7 @@ LocalSimLoopExitEvent::unserialize(Checkpoint *cp, const string &section,
 }
 
 Serializable *
-LocalSimLoopExitEvent::createForUnserialize(Checkpoint *cp,
+LocalSimLoopExitEvent::createForUnserialize(CheckpointIn &cp,
                                             const string &section)
 {
     return new LocalSimLoopExitEvent();

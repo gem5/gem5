@@ -58,7 +58,7 @@ class GenericTimerMemParams;
 
 /// Global system counter.  It is shared by the architected timers.
 /// @todo: implement memory-mapped controls
-class SystemCounter
+class SystemCounter : public Serializable
 {
   protected:
     /// Counter frequency (as specified by CNTFRQ).
@@ -93,8 +93,8 @@ class SystemCounter
     void setKernelControl(uint32_t val) { _regCntkctl = val; }
     uint32_t getKernelControl() { return _regCntkctl; }
 
-    void serialize(std::ostream &os) const;
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   private:
     // Disable copying
@@ -102,7 +102,7 @@ class SystemCounter
 };
 
 /// Per-CPU architected timer.
-class ArchTimer
+class ArchTimer : public Serializable
 {
   public:
     class Interrupt
@@ -189,8 +189,8 @@ class ArchTimer
     /// Returns the value of the counter which this timer relies on.
     uint64_t value() const;
 
-    void serialize(std::ostream &os) const;
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   private:
     // Disable copying
@@ -202,8 +202,8 @@ class GenericTimer : public SimObject
   public:
     GenericTimer(GenericTimerParams *p);
 
-    void serialize(std::ostream &os) M5_ATTR_OVERRIDE;
-    void unserialize(Checkpoint *cp, const std::string &sec) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   public:
     void setMiscReg(int misc_reg, unsigned cpu, ArmISA::MiscReg val);
@@ -279,8 +279,8 @@ class GenericTimerMem : public PioDevice
   public:
     GenericTimerMem(GenericTimerMemParams *p);
 
-    void serialize(std::ostream &os) M5_ATTR_OVERRIDE;
-    void unserialize(Checkpoint *cp, const std::string &sec) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
   public: // PioDevice
     AddrRangeList getAddrRanges() const M5_ATTR_OVERRIDE { return addrRanges; }
