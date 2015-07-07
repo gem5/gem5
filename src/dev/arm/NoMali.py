@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009, 2012-2013 ARM Limited
+# Copyright (c) 2014-2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,50 +33,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ali Saidi
+# Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from Device import BasicPioDevice
+from Gic import *
 
-if env['TARGET_ISA'] == 'arm':
-    SimObject('AbstractNVM.py')
-    SimObject('FlashDevice.py')
-    SimObject('Gic.py')
-    SimObject('RealView.py')
-    SimObject('UFSHostDevice.py')
-    SimObject('EnergyCtrl.py')
-    SimObject('NoMali.py')
+class NoMaliGpuType(Enum): vals = [
+    'T60x',
+    'T62x',
+    'T760',
+    ]
 
-    Source('a9scu.cc')
-    Source('amba_device.cc')
-    Source('amba_fake.cc')
-    Source('base_gic.cc')
-    Source('flash_device.cc')
-    Source('generic_timer.cc')
-    Source('gic_pl390.cc')
-    Source('gic_v2m.cc')
-    Source('pl011.cc')
-    Source('pl111.cc')
-    Source('hdlcd.cc')
-    Source('kmi.cc')
-    Source('timer_sp804.cc')
-    Source('gpu_nomali.cc')
-    Source('rv_ctrl.cc')
-    Source('realview.cc')
-    Source('rtc_pl031.cc')
-    Source('timer_cpulocal.cc')
-    Source('vgic.cc')
-    Source('ufs_device.cc')
-    Source('energy_ctrl.cc')
+class NoMaliGpu(PioDevice):
+    type = 'NoMaliGpu'
+    cxx_header = "dev/arm/gpu_nomali.hh"
 
-    DebugFlag('AMBA')
-    DebugFlag('FlashDevice')
-    DebugFlag('HDLcd')
-    DebugFlag('PL111')
-    DebugFlag('GICV2M')
-    DebugFlag('Pl050')
-    DebugFlag('GIC')
-    DebugFlag('RVCTRL')
-    DebugFlag('EnergyCtrl')
-    DebugFlag('UFSHostDevice')
-    DebugFlag('VGIC')
-    DebugFlag('NoMali')
+    pio_addr = Param.Addr("Device base address")
+
+    platform = Param.RealView(Parent.any, "Platform this device is part of.")
+
+    gpu_type = Param.NoMaliGpuType("T760", "GPU type")
+    ver_maj = Param.UInt32(0, "GPU Version (Major)")
+    ver_min = Param.UInt32(0, "GPU Version (Minor)")
+    ver_status = Param.UInt32(0, "GPU Version (Status)")
+
+    int_gpu = Param.UInt32("Interrupt number for GPU interrupts")
+    int_job = Param.UInt32("Interrupt number for JOB interrupts")
+    int_mmu = Param.UInt32("Interrupt number for MMU interrupts")
