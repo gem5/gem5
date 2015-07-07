@@ -204,29 +204,6 @@ class Drainable
      */
     virtual void drainResume();
 
-    /**
-     * Write back dirty buffers to memory using functional writes.
-     *
-     * After returning, an object implementing this method should have
-     * written all its dirty data back to memory. This method is
-     * typically used to prepare a system with caches for
-     * checkpointing.
-     */
-    virtual void memWriteback() {};
-
-    /**
-     * Invalidate the contents of memory buffers.
-     *
-     * When the switching to hardware virtualized CPU models, we need
-     * to make sure that we don't have any cached state in the system
-     * that might become stale when we return. This method is used to
-     * flush all such state back to main memory.
-     *
-     * @warn This does <i>not</i> cause any dirty state to be written
-     * back to memory.
-     */
-    virtual void memInvalidate() {};
-
     DrainState getDrainState() const { return _drainState; }
 
   protected:

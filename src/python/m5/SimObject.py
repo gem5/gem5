@@ -922,6 +922,8 @@ class SimObject(object):
     void init();
     void loadState(CheckpointIn &cp);
     void initState();
+    void memInvalidate();
+    void memWriteback();
     void regStats();
     void resetStats();
     void regProbePoints();

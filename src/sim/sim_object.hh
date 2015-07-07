@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -175,6 +187,28 @@ class SimObject : public EventManager, public Serializable, public Drainable
      */
     unsigned int drain(DrainManager *drainManger);
 
+    /**
+     * Write back dirty buffers to memory using functional writes.
+     *
+     * After returning, an object implementing this method should have
+     * written all its dirty data back to memory. This method is
+     * typically used to prepare a system with caches for
+     * checkpointing.
+     */
+    virtual void memWriteback() {};
+
+    /**
+     * Invalidate the contents of memory buffers.
+     *
+     * When the switching to hardware virtualized CPU models, we need
+     * to make sure that we don't have any cached state in the system
+     * that might become stale when we return. This method is used to
+     * flush all such state back to main memory.
+     *
+     * @warn This does <i>not</i> cause any dirty state to be written
+     * back to memory.
+     */
+    virtual void memInvalidate() {};
 
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE {};
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE {};
