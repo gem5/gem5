@@ -160,6 +160,12 @@ void fromSimObject(T &t, SimObject *s)
 #define UNSERIALIZE_ARRAY(member, size)         \
         arrayParamIn(cp, section, #member, member, size)
 
+#define SERIALIZE_CONTAINER(member)             \
+        arrayParamOut(os, #member, member)
+
+#define UNSERIALIZE_CONTAINER(member)           \
+        arrayParamIn(cp, section, #member, member)
+
 #define SERIALIZE_OBJPTR(objptr)        paramOut(os, #objptr, (objptr)->name())
 
 #define UNSERIALIZE_OBJPTR(objptr)                      \
