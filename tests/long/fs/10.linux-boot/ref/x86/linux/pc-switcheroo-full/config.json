@@ -2,7 +2,7 @@
     "name": null, 
     "sim_quantum": 0, 
     "system": {
-        "kernel": "/home/stever/m5/m5_system_2.0b3/binaries/x86_64-vmlinux-2.6.22.9", 
+        "kernel": "/work/gem5/dist/binaries/x86_64-vmlinux-2.6.22.9", 
         "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "bridge": {
@@ -103,7 +103,10 @@
         }, 
         "symbolfile": "", 
         "l2c": {
-            "is_top_level": false, 
+            "cpu_side": {
+                "peer": "system.toL2Bus.master[0]", 
+                "role": "SLAVE"
+            }, 
             "prefetcher": null, 
             "clk_domain": "system.cpu_clk_domain", 
             "write_buffers": 8, 
@@ -138,19 +141,15 @@
             "addr_ranges": [
                 "0:18446744073709551615"
             ], 
-            "assoc": 8, 
+            "is_read_only": false, 
             "prefetch_on_access": false, 
             "path": "system.l2c", 
             "name": "l2c", 
             "type": "BaseCache", 
             "sequential_access": false, 
-            "cpu_side": {
-                "peer": "system.toL2Bus.master[0]", 
-                "role": "SLAVE"
-            }, 
-            "two_queue": false
+            "assoc": 8
         }, 
-        "readfile": "/home/stever/hg/m5sim.org/gem5/tests/halt.sh", 
+        "readfile": "/work/gem5/outgoing/gem5/tests/halt.sh", 
         "intel_mp_table": {
             "oem_table_addr": 0, 
             "name": "intel_mp_table", 
@@ -631,7 +630,10 @@
         "cxx_class": "LinuxX86System", 
         "load_offset": 0, 
         "iocache": {
-            "is_top_level": true, 
+            "cpu_side": {
+                "peer": "system.iobus.master[19]", 
+                "role": "SLAVE"
+            }, 
             "prefetcher": null, 
             "clk_domain": "system.clk_domain", 
             "write_buffers": 8, 
@@ -666,17 +668,13 @@
             "addr_ranges": [
                 "0:134217727"
             ], 
-            "assoc": 8, 
+            "is_read_only": false, 
             "prefetch_on_access": false, 
             "path": "system.iocache", 
             "name": "iocache", 
             "type": "BaseCache", 
             "sequential_access": false, 
-            "cpu_side": {
-                "peer": "system.iobus.master[19]", 
-                "role": "SLAVE"
-            }, 
-            "two_queue": false
+            "assoc": 8
         }, 
         "intel_mp_pointer": {
             "imcr_present": true, 
@@ -1185,7 +1183,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks0.image.child", 
-                                    "image_file": "/home/stever/m5/m5_system_2.0b3/disks/linux-x86.img", 
+                                    "image_file": "/work/gem5/dist/disks/linux-x86.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks0.image", 
@@ -1213,7 +1211,7 @@
                                     "eventq_index": 0, 
                                     "cxx_class": "RawDiskImage", 
                                     "path": "system.pc.south_bridge.ide.disks1.image.child", 
-                                    "image_file": "/home/stever/m5/m5_system_2.0b3/disks/linux-bigswap2.img", 
+                                    "image_file": "/work/gem5/dist/disks/linux-bigswap2.img", 
                                     "type": "RawDiskImage"
                                 }, 
                                 "path": "system.pc.south_bridge.ide.disks1.image", 
@@ -1791,7 +1789,10 @@
                     "role": "MASTER"
                 }, 
                 "icache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu0.icache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -1826,17 +1827,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 1, 
+                    "is_read_only": true, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu0.icache", 
                     "name": "icache", 
                     "type": "BaseCache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu0.icache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 1
                 }, 
                 "interrupts": {
                     "int_master": {
@@ -1901,7 +1898,10 @@
                 "progress_interval": 0, 
                 "branchPred": null, 
                 "dcache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu0.dcache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -1936,17 +1936,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 4, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu0.dcache", 
                     "name": "dcache", 
                     "type": "BaseCache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu0.dcache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 4
                 }, 
                 "isa": [
                     {
@@ -2109,11 +2105,11 @@
                             "count": 6, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "IntAlu", 
                                     "opLat": 1, 
                                     "name": "opList", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "IntAlu", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList0.opList", 
                                     "type": "OpDesc"
@@ -2129,21 +2125,21 @@
                             "count": 2, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "IntMult", 
                                     "opLat": 3, 
                                     "name": "opList0", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "IntMult", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList1.opList0", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 19, 
-                                    "opLat": 20, 
-                                    "name": "opList1", 
-                                    "eventq_index": 0, 
                                     "opClass": "IntDiv", 
+                                    "opLat": 1, 
+                                    "name": "opList1", 
+                                    "pipelined": false, 
+                                    "eventq_index": 0, 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList1.opList1", 
                                     "type": "OpDesc"
@@ -2159,31 +2155,31 @@
                             "count": 4, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "FloatAdd", 
                                     "opLat": 2, 
                                     "name": "opList0", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "FloatAdd", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList2.opList0", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "FloatCmp", 
                                     "opLat": 2, 
                                     "name": "opList1", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "FloatCmp", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList2.opList1", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "FloatCvt", 
                                     "opLat": 2, 
                                     "name": "opList2", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "FloatCvt", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList2.opList2", 
                                     "type": "OpDesc"
@@ -2199,31 +2195,31 @@
                             "count": 2, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "FloatMult", 
                                     "opLat": 4, 
                                     "name": "opList0", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "FloatMult", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList3.opList0", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 12, 
+                                    "opClass": "FloatDiv", 
                                     "opLat": 12, 
                                     "name": "opList1", 
+                                    "pipelined": false, 
                                     "eventq_index": 0, 
-                                    "opClass": "FloatDiv", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList3.opList1", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 24, 
+                                    "opClass": "FloatSqrt", 
                                     "opLat": 24, 
                                     "name": "opList2", 
+                                    "pipelined": false, 
                                     "eventq_index": 0, 
-                                    "opClass": "FloatSqrt", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList3.opList2", 
                                     "type": "OpDesc"
@@ -2239,11 +2235,11 @@
                             "count": 0, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "MemRead", 
                                     "opLat": 1, 
                                     "name": "opList", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "MemRead", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList4.opList", 
                                     "type": "OpDesc"
@@ -2259,201 +2255,201 @@
                             "count": 4, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdAdd", 
                                     "opLat": 1, 
                                     "name": "opList00", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdAdd", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList00", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdAddAcc", 
                                     "opLat": 1, 
                                     "name": "opList01", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdAddAcc", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList01", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdAlu", 
                                     "opLat": 1, 
                                     "name": "opList02", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdAlu", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList02", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdCmp", 
                                     "opLat": 1, 
                                     "name": "opList03", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdCmp", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList03", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdCvt", 
                                     "opLat": 1, 
                                     "name": "opList04", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdCvt", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList04", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdMisc", 
                                     "opLat": 1, 
                                     "name": "opList05", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdMisc", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList05", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdMult", 
                                     "opLat": 1, 
                                     "name": "opList06", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdMult", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList06", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdMultAcc", 
                                     "opLat": 1, 
                                     "name": "opList07", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdMultAcc", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList07", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdShift", 
                                     "opLat": 1, 
                                     "name": "opList08", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdShift", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList08", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdShiftAcc", 
                                     "opLat": 1, 
                                     "name": "opList09", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdShiftAcc", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList09", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdSqrt", 
                                     "opLat": 1, 
                                     "name": "opList10", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdSqrt", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList10", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatAdd", 
                                     "opLat": 1, 
                                     "name": "opList11", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatAdd", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList11", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatAlu", 
                                     "opLat": 1, 
                                     "name": "opList12", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatAlu", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList12", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatCmp", 
                                     "opLat": 1, 
                                     "name": "opList13", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatCmp", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList13", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatCvt", 
                                     "opLat": 1, 
                                     "name": "opList14", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatCvt", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList14", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatDiv", 
                                     "opLat": 1, 
                                     "name": "opList15", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatDiv", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList15", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatMisc", 
                                     "opLat": 1, 
                                     "name": "opList16", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatMisc", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList16", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatMult", 
                                     "opLat": 1, 
                                     "name": "opList17", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatMult", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList17", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatMultAcc", 
                                     "opLat": 1, 
                                     "name": "opList18", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatMultAcc", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList18", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "SimdFloatSqrt", 
                                     "opLat": 1, 
                                     "name": "opList19", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "SimdFloatSqrt", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList5.opList19", 
                                     "type": "OpDesc"
@@ -2469,11 +2465,11 @@
                             "count": 0, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "MemWrite", 
                                     "opLat": 1, 
                                     "name": "opList", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "MemWrite", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList6.opList", 
                                     "type": "OpDesc"
@@ -2489,21 +2485,21 @@
                             "count": 4, 
                             "opList": [
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "MemRead", 
                                     "opLat": 1, 
                                     "name": "opList0", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "MemRead", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList7.opList0", 
                                     "type": "OpDesc"
                                 }, 
                                 {
-                                    "issueLat": 1, 
+                                    "opClass": "MemWrite", 
                                     "opLat": 1, 
                                     "name": "opList1", 
+                                    "pipelined": true, 
                                     "eventq_index": 0, 
-                                    "opClass": "MemWrite", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList7.opList1", 
                                     "type": "OpDesc"
@@ -2519,11 +2515,11 @@
                             "count": 1, 
                             "opList": [
                                 {
-                                    "issueLat": 3, 
+                                    "opClass": "IprAccess", 
                                     "opLat": 3, 
                                     "name": "opList", 
+                                    "pipelined": false, 
                                     "eventq_index": 0, 
-                                    "opClass": "IprAccess", 
                                     "cxx_class": "OpDesc", 
                                     "path": "system.cpu2.fuPool.FUList8.opList", 
                                     "type": "OpDesc"
