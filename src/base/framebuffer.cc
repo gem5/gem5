@@ -122,6 +122,23 @@ FrameBuffer::~FrameBuffer()
 {
 }
 
+
+void
+FrameBuffer::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(_width);
+    SERIALIZE_SCALAR(_height);
+    SERIALIZE_CONTAINER(pixels);
+}
+
+void
+FrameBuffer::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(_width);
+    UNSERIALIZE_SCALAR(_height);
+    UNSERIALIZE_CONTAINER(pixels);
+}
+
 void
 FrameBuffer::resize(unsigned width, unsigned height)
 {

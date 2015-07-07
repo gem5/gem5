@@ -43,9 +43,14 @@
 #include <cmath>
 #include <cstdint>
 
+#include <string>
 #include <vector>
 
+#include "base/compiler.hh"
+#include "base/cprintf.hh"
+#include "base/str.hh"
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
 /**
  * Internal gem5 representation of a Pixel.
@@ -72,7 +77,6 @@ operator==(const Pixel &lhs, const Pixel &rhs)
         lhs.blue == rhs.blue &&
         lhs.padding == rhs.padding;
 }
-
 
 /**
  * Configurable RGB pixel converter.
@@ -208,6 +212,24 @@ class PixelConverter
     static const PixelConverter rgb565_be;
 };
 
+inline bool
+to_number(const std::string &value, Pixel &retval)
+{
+    uint32_t num;
+    if (!to_number(value, num))
+        return false;
+
+    retval = PixelConverter::rgba8888_le.toPixel(num);
+    return true;
+}
+
+inline std::ostream &
+operator<<(std::ostream &os, const Pixel &pxl)
+{
+    os << csprintf("0x%.08x", PixelConverter::rgba8888_le.fromPixel(pxl));
+    return os;
+}
+
 /**
  * Internal gem5 representation of a frame buffer
  *
@@ -219,7 +241,7 @@ class PixelConverter
  * corner. The backing store is a linear vector of Pixels ordered left
  * to right starting in the upper left corner.
  */
-class FrameBuffer
+class FrameBuffer : public Serializable
 {
   public:
     /**
@@ -233,6 +255,9 @@ class FrameBuffer
     FrameBuffer();
 
     virtual ~FrameBuffer();
+
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
     /**
      * Resize the frame buffer.

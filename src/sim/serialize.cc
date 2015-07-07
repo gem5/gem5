@@ -55,6 +55,7 @@
 #include <string>
 #include <vector>
 
+#include "base/framebuffer.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -418,6 +419,7 @@ INSTANTIATE_PARAM_TEMPLATES(bool)
 INSTANTIATE_PARAM_TEMPLATES(float)
 INSTANTIATE_PARAM_TEMPLATES(double)
 INSTANTIATE_PARAM_TEMPLATES(string)
+INSTANTIATE_PARAM_TEMPLATES(Pixel)
 
 
 /////////////////////////////
