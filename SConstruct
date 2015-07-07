@@ -1202,6 +1202,10 @@ main.SConscript('ext/dramsim2/SConscript',
 main.SConscript('ext/drampower/SConscript',
                 variant_dir = joinpath(build_root, 'drampower'))
 
+# nomali build is shared across all configs in the build root.
+main.SConscript('ext/nomali/SConscript',
+                variant_dir = joinpath(build_root, 'nomali'))
+
 ###################################################
 #
 # This function is used to set up a directory with switching headers
