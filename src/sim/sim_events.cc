@@ -137,16 +137,6 @@ LocalSimLoopExitEvent::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(repeat);
 }
 
-void
-LocalSimLoopExitEvent::unserializeEvent(CheckpointIn &cp, EventQueue *eventq)
-{
-    Event::unserializeEvent(cp, eventq);
-
-    UNSERIALIZE_SCALAR(cause);
-    UNSERIALIZE_SCALAR(code);
-    UNSERIALIZE_SCALAR(repeat);
-}
-
 Serializable *
 LocalSimLoopExitEvent::createForUnserialize(CheckpointIn &cp,
                                             const string &section)

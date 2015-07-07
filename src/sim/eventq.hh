@@ -352,12 +352,6 @@ class Event : public EventBase, public Serializable
 #ifndef SWIG
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-
-    //! This function is required to support restoring from checkpoints
-    //! when running with multiple queues. Since we still have not thrashed
-    //! out all the details on checkpointing, this function is most likely
-    //! to be revisited in future.
-    virtual void unserializeEvent(CheckpointIn &cp, EventQueue *eventq);
 #endif
 };
 
@@ -649,6 +643,19 @@ class EventQueue : public Serializable
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 #endif
+
+    /**
+     * Reschedule an event after a checkpoint.
+     *
+     * Since events don't know which event queue they belong to,
+     * parent objects need to reschedule events themselves. This
+     * method conditionally schedules an event that has the Scheduled
+     * flag set. It should be called by parent objects after
+     * unserializing an object.
+     *
+     * @warn Only use this method after unserializing an Event.
+     */
+    void checkpointReschedule(Event *event);
 
     virtual ~EventQueue() { }
 };

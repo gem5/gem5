@@ -178,6 +178,15 @@ void fromSimObject(T &t, SimObject *s)
 #define UNSERIALIZE_CONTAINER(member)           \
         arrayParamIn(cp, #member, member)
 
+#define SERIALIZE_EVENT(event) event.serializeSection(cp, #event);
+
+#define UNSERIALIZE_EVENT(event)                        \
+    do {                                                \
+        event.unserializeSection(cp, #event);           \
+        eventQueue()->checkpointReschedule(&event);     \
+    } while(0)
+
+
 #define SERIALIZE_OBJPTR(objptr)        paramOut(cp, #objptr, (objptr)->name())
 
 #define UNSERIALIZE_OBJPTR(objptr)                      \
