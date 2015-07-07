@@ -99,9 +99,9 @@ PioDevice::drain(DrainManager *dm)
     unsigned int count;
     count = pioPort.drain(dm);
     if (count)
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
     else
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
     return count;
 }
 

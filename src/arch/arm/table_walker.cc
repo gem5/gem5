@@ -139,7 +139,7 @@ TableWalker::completeDrain()
 {
     if (drainManager && stateQueues[L1].empty() && stateQueues[L2].empty() &&
         pendingQueue.empty()) {
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
         DPRINTF(Drain, "TableWalker done draining, processing drain event\n");
         drainManager->signalDrainDone();
         drainManager = NULL;
@@ -160,13 +160,13 @@ TableWalker::drain(DrainManager *dm)
 
     if (state_queues_not_empty || pendingQueue.size()) {
         drainManager = dm;
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
         DPRINTF(Drain, "TableWalker not drained\n");
 
         // return port drain count plus the table walker itself needs to drain
         return 1;
     } else {
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
         DPRINTF(Drain, "TableWalker free, no need to drain\n");
 
         // table walker is drained, but its ports may still need to be drained

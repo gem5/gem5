@@ -186,7 +186,7 @@ MSHRQueue::deallocateOne(MSHR *mshr)
         DPRINTF(Drain, "MSHRQueue now empty, signalling drained\n");
         drainManager->signalDrainDone();
         drainManager = NULL;
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
     }
     return retval;
 }
@@ -269,11 +269,11 @@ unsigned int
 MSHRQueue::drain(DrainManager *dm)
 {
     if (allocated == 0) {
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
         return 0;
     } else {
         drainManager = dm;
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
         return 1;
     }
 }

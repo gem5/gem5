@@ -601,10 +601,10 @@ FlashDevice::drain(DrainManager *dm)
 
     if (count) {
         DPRINTF(Drain, "Flash device is draining...\n");
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
     } else {
         DPRINTF(Drain, "Flash device drained\n");
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
     }
     return count;
 }

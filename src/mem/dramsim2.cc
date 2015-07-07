@@ -362,11 +362,11 @@ DRAMSim2::drain(DrainManager* dm)
     // check our outstanding reads and writes and if any they need to
     // drain
     if (nbrOutstanding() != 0) {
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
         drainManager = dm;
         return 1;
     } else {
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
         return 0;
     }
 }

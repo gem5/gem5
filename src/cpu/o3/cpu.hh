@@ -336,7 +336,7 @@ class FullO3CPU : public BaseO3CPU
     void updateThreadPriority();
 
     /** Is the CPU draining? */
-    bool isDraining() const { return getDrainState() == Drainable::Draining; }
+    bool isDraining() const { return getDrainState() == DrainState::Draining; }
 
     void serializeThread(CheckpointOut &cp,
                          ThreadID tid) const M5_ATTR_OVERRIDE;

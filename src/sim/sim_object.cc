@@ -183,7 +183,7 @@ debugObjectBreak(const char *objs)
 unsigned int
 SimObject::drain(DrainManager *drain_manager)
 {
-    setDrainState(Drained);
+    setDrainState(DrainState::Drained);
     return 0;
 }
 

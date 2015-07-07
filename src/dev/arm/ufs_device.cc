@@ -2333,10 +2333,10 @@ UFSHostDevice::drain(DrainManager *dm)
 
     if (count) {
         DPRINTF(UFSHostDevice, "UFSDevice is draining...\n");
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
     } else {
         DPRINTF(UFSHostDevice, "UFSDevice drained\n");
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
     }
     return count;
 }

@@ -586,7 +586,7 @@ IGbE::write(PacketPtr pkt)
       case REG_RDT:
         regs.rdt = val;
         DPRINTF(EthernetSM, "RXS: RDT Updated.\n");
-        if (getDrainState() == Drainable::Running) {
+        if (getDrainState() == DrainState::Running) {
             DPRINTF(EthernetSM, "RXS: RDT Fetching Descriptors!\n");
             rxDescCache.fetchDescriptors();
         } else {
@@ -626,7 +626,7 @@ IGbE::write(PacketPtr pkt)
       case REG_TDT:
         regs.tdt = val;
         DPRINTF(EthernetSM, "TXS: TX Tail pointer updated\n");
-        if (getDrainState() == Drainable::Running) {
+        if (getDrainState() == DrainState::Running) {
             DPRINTF(EthernetSM, "TXS: TDT Fetching Descriptors!\n");
             txDescCache.fetchDescriptors();
         } else {
@@ -905,7 +905,7 @@ void
 IGbE::DescCache<T>::writeback1()
 {
     // If we're draining delay issuing this DMA
-    if (igbe->getDrainState() != Drainable::Running) {
+    if (igbe->getDrainState() != DrainState::Running) {
         igbe->schedule(wbDelayEvent, curTick() + igbe->wbDelay);
         return;
     }
@@ -986,7 +986,7 @@ void
 IGbE::DescCache<T>::fetchDescriptors1()
 {
     // If we're draining delay issuing this DMA
-    if (igbe->getDrainState() != Drainable::Running) {
+    if (igbe->getDrainState() != DrainState::Running) {
         igbe->schedule(fetchDelayEvent, curTick() + igbe->fetchDelay);
         return;
     }
@@ -2051,7 +2051,7 @@ void
 IGbE::restartClock()
 {
     if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) &&
-        getDrainState() == Drainable::Running)
+        getDrainState() == DrainState::Running)
         schedule(tickEvent, clockEdge(Cycles(1)));
 }
 
@@ -2075,9 +2075,9 @@ IGbE::drain(DrainManager *dm)
 
     if (count) {
         DPRINTF(Drain, "IGbE not drained\n");
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
     } else
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
 
     return count;
 }

@@ -140,12 +140,12 @@ CopyEngine::CopyEngineChannel::recvCommand()
         cr.status.dma_transfer_status(0);
         nextState = DescriptorFetch;
         fetchAddress = cr.descChainAddr;
-        if (ce->getDrainState() == Drainable::Running)
+        if (ce->getDrainState() == DrainState::Running)
             fetchDescriptor(cr.descChainAddr);
     } else if (cr.command.append_dma()) {
         if (!busy) {
             nextState = AddressFetch;
-            if (ce->getDrainState() == Drainable::Running)
+            if (ce->getDrainState() == DrainState::Running)
                 fetchNextAddr(lastDescriptorAddr);
         } else
             refreshNext = true;
@@ -635,20 +635,20 @@ CopyEngine::CopyEngineChannel::fetchAddrComplete()
 bool
 CopyEngine::CopyEngineChannel::inDrain()
 {
-    if (ce->getDrainState() == Drainable::Draining) {
+    if (ce->getDrainState() == DrainState::Draining) {
         DPRINTF(Drain, "CopyEngine done draining, processing drain event\n");
         assert(drainManager);
         drainManager->signalDrainDone();
         drainManager = NULL;
     }
 
-    return ce->getDrainState() != Drainable::Running;
+    return ce->getDrainState() != DrainState::Running;
 }
 
 unsigned int
 CopyEngine::CopyEngineChannel::drain(DrainManager *dm)
 {
-    if (nextState == Idle || ce->getDrainState() != Drainable::Running)
+    if (nextState == Idle || ce->getDrainState() != DrainState::Running)
         return 0;
     unsigned int count = 1;
     count += cePort.drain(dm);
@@ -667,9 +667,9 @@ CopyEngine::drain(DrainManager *dm)
         count += chan[x]->drain(dm);
 
     if (count)
-        setDrainState(Draining);
+        setDrainState(DrainState::Draining);
     else
-        setDrainState(Drained);
+        setDrainState(DrainState::Drained);
 
     DPRINTF(Drain, "CopyEngine not drained\n");
     return count;

@@ -539,7 +539,7 @@ FullO3CPU<Impl>::tick()
 {
     DPRINTF(O3CPU, "\n\nFullO3CPU: Ticking main, FullO3CPU.\n");
     assert(!switchedOut());
-    assert(getDrainState() != Drainable::Drained);
+    assert(getDrainState() != DrainState::Drained);
 
     ++numCycles;
     ppCycles->notify(1);
@@ -712,7 +712,7 @@ FullO3CPU<Impl>::activateContext(ThreadID tid)
     // We don't want to wake the CPU if it is drained. In that case,
     // we just want to flag the thread as active and schedule the tick
     // event from drainResume() instead.
-    if (getDrainState() == Drainable::Drained)
+    if (getDrainState() == DrainState::Drained)
         return;
 
     // If we are time 0 or if the last activation time is in the past,
@@ -1004,12 +1004,12 @@ FullO3CPU<Impl>::drain(DrainManager *drain_manager)
 {
     // If the CPU isn't doing anything, then return immediately.
     if (switchedOut()) {
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
         return 0;
     }
 
     DPRINTF(Drain, "Draining...\n");
-    setDrainState(Drainable::Draining);
+    setDrainState(DrainState::Draining);
 
     // We only need to signal a drain to the commit stage as this
     // initiates squashing controls the draining. Once the commit
@@ -1031,7 +1031,7 @@ FullO3CPU<Impl>::drain(DrainManager *drain_manager)
 
         return 1;
     } else {
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
         DPRINTF(Drain, "CPU is already drained\n");
         if (tickEvent.scheduled())
             deschedule(tickEvent);
@@ -1132,7 +1132,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::drainResume()
 {
-    setDrainState(Drainable::Running);
+    setDrainState(DrainState::Running);
     if (switchedOut())
         return;
 

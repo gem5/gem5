@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,7 +58,7 @@ DrainManager::drainCycleDone()
 
 
 Drainable::Drainable()
-    : _drainState(Running)
+    : _drainState(DrainState::Running)
 {
 }
 
@@ -69,5 +69,5 @@ Drainable::~Drainable()
 void
 Drainable::drainResume()
 {
-    _drainState = Running;
+    _drainState = DrainState::Running;
 }

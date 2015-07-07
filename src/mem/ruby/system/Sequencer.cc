@@ -77,7 +77,7 @@ Sequencer::~Sequencer()
 void
 Sequencer::wakeup()
 {
-    assert(getDrainState() != Drainable::Draining);
+    assert(getDrainState() != DrainState::Draining);
 
     // Check for deadlock of any of the requests
     Cycles current_time = curCycle();
@@ -215,7 +215,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
 
     // See if we should schedule a deadlock check
     if (!deadlockCheckEvent.scheduled() &&
-        getDrainState() != Drainable::Draining) {
+        getDrainState() != DrainState::Draining) {
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
     }
 

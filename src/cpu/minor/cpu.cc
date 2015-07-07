@@ -217,7 +217,7 @@ void
 MinorCPU::signalDrainDone()
 {
     DPRINTF(Drain, "MinorCPU drain done\n");
-    setDrainState(Drainable::Drained);
+    setDrainState(DrainState::Drained);
     drainManager->signalDrainDone();
     drainManager = NULL;
 }
@@ -225,8 +225,8 @@ MinorCPU::signalDrainDone()
 void
 MinorCPU::drainResume()
 {
-    assert(getDrainState() == Drainable::Drained ||
-        getDrainState() == Drainable::Running);
+    assert(getDrainState() == DrainState::Drained ||
+        getDrainState() == DrainState::Running);
 
     if (switchedOut()) {
         DPRINTF(Drain, "drainResume while switched out.  Ignoring\n");
@@ -243,7 +243,7 @@ MinorCPU::drainResume()
     wakeup();
     pipeline->drainResume();
 
-    setDrainState(Drainable::Running);
+    setDrainState(DrainState::Running);
 }
 
 void

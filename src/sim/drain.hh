@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,7 +45,33 @@
 
 #include "base/flags.hh"
 
-class Event;
+class Drainable;
+
+#ifndef SWIG // SWIG doesn't support strongly typed enums
+/**
+ * Object drain/handover states
+ *
+ * An object starts out in the Running state. When the simulator
+ * prepares to take a snapshot or prepares a CPU for handover, it
+ * calls the drain() method to transfer the object into the Draining
+ * or Drained state. If any object enters the Draining state
+ * (Drainable::drain() returning >0), simulation continues until it
+ * all objects have entered the Drained state.
+ *
+ * Before resuming simulation, the simulator calls resume() to
+ * transfer the object to the Running state.
+ *
+ * \note Even though the state of an object (visible to the rest of
+ * the world through Drainable::getState()) could be used to determine
+ * if all objects have entered the Drained state, the protocol is
+ * actually a bit more elaborate. See Drainable::drain() for details.
+ */
+enum class DrainState {
+    Running,  /** Running normally */
+    Draining, /** Draining buffers pending serialization/handover */
+    Drained   /** Buffers drained, ready for serialization/handover */
+};
+#endif
 
 /**
  * This class coordinates draining of a System.
@@ -141,30 +167,6 @@ class DrainManager
 class Drainable
 {
   public:
-    /**
-     * Object drain/handover states
-     *
-     * An object starts out in the Running state. When the simulator
-     * prepares to take a snapshot or prepares a CPU for handover, it
-     * calls the drain() method to transfer the object into the
-     * Draining or Drained state. If any object enters the Draining
-     * state (drain() returning >0), simulation continues until it all
-     * objects have entered the Drained state.
-     *
-     * Before resuming simulation, the simulator calls resume() to
-     * transfer the object to the Running state.
-     *
-     * \note Even though the state of an object (visible to the rest
-     * of the world through getState()) could be used to determine if
-     * all objects have entered the Drained state, the protocol is
-     * actually a bit more elaborate. See drain() for details.
-     */
-    enum State {
-        Running,  /** Running normally */
-        Draining, /** Draining buffers pending serialization/handover */
-        Drained   /** Buffers drained, ready for serialization/handover */
-    };
-
     Drainable();
     virtual ~Drainable();
 
@@ -225,15 +227,13 @@ class Drainable
      */
     virtual void memInvalidate() {};
 
-    State getDrainState() const { return _drainState; }
+    DrainState getDrainState() const { return _drainState; }
 
   protected:
-    void setDrainState(State new_state) { _drainState = new_state; }
-
+    void setDrainState(DrainState new_state) { _drainState = new_state; }
 
   private:
-    State _drainState;
-
+    DrainState _drainState;
 };
 
 DrainManager *createDrainManager();

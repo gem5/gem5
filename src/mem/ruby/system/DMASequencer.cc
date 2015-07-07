@@ -192,12 +192,12 @@ DMASequencer::drain(DrainManager *dm)
         drainManager = dm;
 
         DPRINTF(Drain, "DMASequencer not drained\n");
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
         return child_drain_count + 1;
     }
 
     drainManager = NULL;
-    setDrainState(Drainable::Drained);
+    setDrainState(DrainState::Drained);
     return child_drain_count;
 }
 

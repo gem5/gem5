@@ -352,7 +352,7 @@ class IGbE : public EtherDevice
         virtual void updateHead(long h) { igbe->regs.rdh(h); }
         virtual void enableSm();
         virtual void fetchAfterWb() {
-            if (!igbe->rxTick && igbe->getDrainState() == Drainable::Running)
+            if (!igbe->rxTick && igbe->getDrainState() == DrainState::Running)
                 fetchDescriptors();
         }
 
@@ -414,7 +414,7 @@ class IGbE : public EtherDevice
         virtual void enableSm();
         virtual void actionAfterWb();
         virtual void fetchAfterWb() {
-            if (!igbe->txTick && igbe->getDrainState() == Drainable::Running)
+            if (!igbe->txTick && igbe->getDrainState() == DrainState::Running)
                 fetchDescriptors();
         }
         

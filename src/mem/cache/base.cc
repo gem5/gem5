@@ -783,12 +783,12 @@ BaseCache::drain(DrainManager *dm)
 
     // Set status
     if (count != 0) {
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
         DPRINTF(Drain, "Cache not drained\n");
         return count;
     }
 
-    setDrainState(Drainable::Drained);
+    setDrainState(DrainState::Drained);
     return 0;
 }
 

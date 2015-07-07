@@ -246,9 +246,9 @@ SimpleMemory::drain(DrainManager *dm)
      }
 
     if (count)
-        setDrainState(Drainable::Draining);
+        setDrainState(DrainState::Draining);
     else
-        setDrainState(Drainable::Drained);
+        setDrainState(DrainState::Drained);
     return count;
 }
 
