@@ -120,7 +120,7 @@ class Process : public SimObject
 
     virtual void initState();
 
-    unsigned int drain(DrainManager *dm) M5_ATTR_OVERRIDE;
+    DrainState drain() M5_ATTR_OVERRIDE;
 
   public:
 

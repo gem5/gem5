@@ -191,7 +191,7 @@ System::getMasterPort(const std::string &if_name, PortID idx)
 void
 System::setMemoryMode(Enums::MemoryMode mode)
 {
-    assert(getDrainState() == DrainState::Drained);
+    assert(drainState() == DrainState::Drained);
     memoryMode = mode;
 }
 
@@ -355,17 +355,9 @@ System::isMemAddr(Addr addr) const
     return physmem.isMemAddr(addr);
 }
 
-unsigned int
-System::drain(DrainManager *dm)
-{
-    setDrainState(DrainState::Drained);
-    return 0;
-}
-
 void
 System::drainResume()
 {
-    Drainable::drainResume();
     totalNumInsts = 0;
 }
 

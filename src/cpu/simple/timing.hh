@@ -270,8 +270,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
   public:
 
-    unsigned int drain(DrainManager *drain_manager);
-    void drainResume();
+    DrainState drain() M5_ATTR_OVERRIDE;
+    void drainResume() M5_ATTR_OVERRIDE;
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
@@ -351,13 +351,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * @returns true if the CPU is drained, false otherwise.
      */
     bool tryCompleteDrain();
-
-    /**
-     * Drain manager to use when signaling drain completion
-     *
-     * This pointer is non-NULL when draining and NULL otherwise.
-     */
-    DrainManager *drainManager;
 };
 
 #endif // __CPU_SIMPLE_TIMING_HH__

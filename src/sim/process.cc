@@ -259,11 +259,11 @@ Process::initState()
     pTable->initState(tc);
 }
 
-unsigned int
-Process::drain(DrainManager *dm)
+DrainState
+Process::drain()
 {
     find_file_offsets();
-    return 0;
+    return DrainState::Drained;
 }
 
 // map simulator fd sim_fd to target fd tgt_fd

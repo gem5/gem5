@@ -162,7 +162,7 @@ class RubyPort : public MemObject
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
     uint32_t getId() { return m_version; }
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
   protected:
     void ruby_hit_callback(PacketPtr pkt);
@@ -203,8 +203,6 @@ class RubyPort : public MemObject
     typedef std::vector<MemSlavePort *>::iterator CpuPortIter;
     std::vector<MemSlavePort *> slave_ports;
     std::vector<PioMasterPort *> master_ports;
-
-    DrainManager *drainManager;
 
     //
     // Based on similar code in the M5 bus.  Stores pointers to those ports

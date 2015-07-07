@@ -59,7 +59,7 @@ RubyPort::RubyPort(const Params *p)
       memMasterPort(csprintf("%s.mem-master-port", name()), this),
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
           p->ruby_system, p->ruby_system->getAccessBackingStore(), -1),
-      gotAddrRanges(p->port_master_connection_count), drainManager(NULL)
+      gotAddrRanges(p->port_master_connection_count)
 {
     assert(m_version != -1);
 
@@ -387,20 +387,18 @@ void
 RubyPort::testDrainComplete()
 {
     //If we weren't able to drain before, we might be able to now.
-    if (drainManager != NULL) {
+    if (drainState() == DrainState::Draining) {
         unsigned int drainCount = outstandingCount();
         DPRINTF(Drain, "Drain count: %u\n", drainCount);
         if (drainCount == 0) {
             DPRINTF(Drain, "RubyPort done draining, signaling drain done\n");
-            drainManager->signalDrainDone();
-            // Clear the drain manager once we're done with it.
-            drainManager = NULL;
+            signalDrainDone();
         }
     }
 }
 
-unsigned int
-RubyPort::drain(DrainManager *dm)
+DrainState
+RubyPort::drain()
 {
     if (isDeadlockEventScheduled()) {
         descheduleDeadlockEvent();
@@ -408,23 +406,15 @@ RubyPort::drain(DrainManager *dm)
 
     //
     // If the RubyPort is not empty, then it needs to clear all outstanding
-    // requests before it should call drainManager->signalDrainDone()
+    // requests before it should call signalDrainDone()
     //
     DPRINTF(Config, "outstanding count %d\n", outstandingCount());
-    bool need_drain = outstandingCount() > 0;
-
-    // Set status
-    if (need_drain) {
-        drainManager = dm;
-
+    if (outstandingCount() > 0) {
         DPRINTF(Drain, "RubyPort not drained\n");
-        setDrainState(DrainState::Draining);
-        return 1;
+        return DrainState::Draining;
+    } else {
+        return DrainState::Drained;
     }
-
-    drainManager = NULL;
-    setDrainState(DrainState::Drained);
-    return 0;
 }
 
 void

@@ -671,12 +671,6 @@ class DRAMCtrl : public AbstractMemory
     std::deque<DRAMPacket*> respQueue;
 
     /**
-     * If we need to drain, keep the drain manager around until we're
-     * done here.
-     */
-    DrainManager *drainManager;
-
-    /**
      * Vector of ranks
      */
     std::vector<Rank*> ranks;
@@ -878,7 +872,7 @@ class DRAMCtrl : public AbstractMemory
 
     DRAMCtrl(const DRAMCtrlParams* p);
 
-    unsigned int drain(DrainManager* dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);

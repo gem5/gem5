@@ -180,14 +180,6 @@ debugObjectBreak(const char *objs)
 }
 #endif
 
-unsigned int
-SimObject::drain(DrainManager *drain_manager)
-{
-    setDrainState(DrainState::Drained);
-    return 0;
-}
-
-
 SimObject *
 SimObject::find(const char *name)
 {

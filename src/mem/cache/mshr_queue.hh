@@ -92,9 +92,6 @@ class MSHRQueue : public Drainable
     /** Holds non allocated entries. */
     MSHR::List freeList;
 
-    /** Drain manager to inform of a completed drain */
-    DrainManager *drainManager;
-
     MSHR::Iterator addToReadyList(MSHR *mshr);
 
 
@@ -258,7 +255,7 @@ class MSHRQueue : public Drainable
         return readyList.empty() ? MaxTick : readyList.front()->readyTime;
     }
 
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 };
 
 #endif //__MEM_CACHE_MSHR_QUEUE_HH__

@@ -132,12 +132,6 @@ class DRAMSim2 : public AbstractMemory
      */
     std::deque<PacketPtr> responseQueue;
 
-    /**
-     * If we need to drain, keep the drain manager around until we're
-     * done here.
-     */
-    DrainManager *drainManager;
-
     unsigned int nbrOutstanding() const;
 
     /**
@@ -195,7 +189,7 @@ class DRAMSim2 : public AbstractMemory
      */
     void writeComplete(unsigned id, uint64_t addr, uint64_t cycle);
 
-    unsigned int drain(DrainManager* dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);

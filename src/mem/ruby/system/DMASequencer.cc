@@ -42,7 +42,7 @@ DMASequencer::DMASequencer(const Params *p)
       m_mandatory_q_ptr(NULL), m_usingRubyTester(p->using_ruby_tester),
       slave_port(csprintf("%s.slave", name()), this, 0, p->ruby_system,
                  p->ruby_system->getAccessBackingStore()),
-      drainManager(NULL), system(p->system), retry(false)
+      system(p->system), retry(false)
 {
     assert(m_version != -1);
 }
@@ -148,43 +148,34 @@ void
 DMASequencer::testDrainComplete()
 {
     //If we weren't able to drain before, we might be able to now.
-    if (drainManager != NULL) {
+    if (drainState() == DrainState::Draining) {
         unsigned int drainCount = outstandingCount();
         DPRINTF(Drain, "Drain count: %u\n", drainCount);
         if (drainCount == 0) {
             DPRINTF(Drain, "DMASequencer done draining, signaling drain done\n");
-            drainManager->signalDrainDone();
-            // Clear the drain manager once we're done with it.
-            drainManager = NULL;
+            signalDrainDone();
         }
     }
 }
 
-unsigned int
-DMASequencer::drain(DrainManager *dm)
+DrainState
+DMASequencer::drain()
 {
     if (isDeadlockEventScheduled()) {
         descheduleDeadlockEvent();
     }
 
     // If the DMASequencer is not empty, then it needs to clear all outstanding
-    // requests before it should call drainManager->signalDrainDone()
+    // requests before it should call signalDrainDone()
     DPRINTF(Config, "outstanding count %d\n", outstandingCount());
-    bool need_drain = outstandingCount() > 0;
-
 
     // Set status
-    if (need_drain) {
-        drainManager = dm;
-
+    if (outstandingCount() > 0) {
         DPRINTF(Drain, "DMASequencer not drained\n");
-        setDrainState(DrainState::Draining);
-        return 1;
+        return DrainState::Draining;
+    } else {
+        return DrainState::Drained;
     }
-
-    drainManager = NULL;
-    setDrainState(DrainState::Drained);
-    return 0;
 }
 
 void

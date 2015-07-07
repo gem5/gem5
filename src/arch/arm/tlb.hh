@@ -284,7 +284,7 @@ class TLB : public BaseTLB
             bool callFromS2);
     Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
 
-    void drainResume();
+    void drainResume() M5_ATTR_OVERRIDE;
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;

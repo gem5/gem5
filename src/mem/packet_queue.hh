@@ -89,10 +89,6 @@ class PacketQueue : public Drainable
     /** Event used to call processSendEvent. */
     EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
 
-    /** If we need to drain, keep the drain manager around until we're done
-     * here.*/
-    DrainManager *drainManager;
-
   protected:
 
     /** Label to use for print request packets label stack. */
@@ -192,7 +188,7 @@ class PacketQueue : public Drainable
      */
     void retry();
 
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 };
 
 class ReqPacketQueue : public PacketQueue

@@ -78,7 +78,6 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       activeInstPeriod(0),
       perfControlledByTimer(params->usePerfOverflow),
       hostFactor(params->hostFactor),
-      drainManager(NULL),
       ctrInsts(0)
 {
     if (pageSize == -1)
@@ -282,11 +281,11 @@ BaseKvmCPU::unserializeThread(CheckpointIn &cp, ThreadID tid)
     threadContextDirty = true;
 }
 
-unsigned int
-BaseKvmCPU::drain(DrainManager *dm)
+DrainState
+BaseKvmCPU::drain()
 {
     if (switchedOut())
-        return 0;
+        return DrainState::Drained;
 
     DPRINTF(Drain, "BaseKvmCPU::drain\n");
     switch (_status) {
@@ -296,10 +295,8 @@ BaseKvmCPU::drain(DrainManager *dm)
         // of a different opinion. This may happen when the CPU been
         // notified of an event that hasn't been accepted by the vCPU
         // yet.
-        if (!archIsDrained()) {
-            drainManager = dm;
-            return 1;
-        }
+        if (!archIsDrained())
+            return DrainState::Draining;
 
         // The state of the CPU is consistent, so we don't need to do
         // anything special to drain it. We simply de-schedule the
@@ -318,7 +315,7 @@ BaseKvmCPU::drain(DrainManager *dm)
         // switch CPUs or checkpoint the CPU.
         syncThreadContext();
 
-        return 0;
+        return DrainState::Drained;
 
       case RunningServiceCompletion:
         // The CPU has just requested a service that was handled in
@@ -327,22 +324,18 @@ BaseKvmCPU::drain(DrainManager *dm)
         // update the register state ourselves instead of letting KVM
         // handle it, but that would be tricky. Instead, we enter KVM
         // and let it do its stuff.
-        drainManager = dm;
-
         DPRINTF(Drain, "KVM CPU is waiting for service completion, "
                 "requesting drain.\n");
-        return 1;
+        return DrainState::Draining;
 
       case RunningService:
         // We need to drain since the CPU is waiting for service (e.g., MMIOs)
-        drainManager = dm;
-
         DPRINTF(Drain, "KVM CPU is waiting for service, requesting drain.\n");
-        return 1;
+        return DrainState::Draining;
 
       default:
         panic("KVM: Unhandled CPU state in drain()\n");
-        return 0;
+        return DrainState::Drained;
     }
 }
 
@@ -551,7 +544,7 @@ BaseKvmCPU::tick()
               setupInstStop();
 
           DPRINTF(KvmRun, "Entering KVM...\n");
-          if (drainManager) {
+          if (drainState() == DrainState::Draining) {
               // Force an immediate exit from KVM after completing
               // pending operations. The architecture-specific code
               // takes care to run until it is in a state where it can
@@ -1198,7 +1191,7 @@ BaseKvmCPU::setupCounters()
 bool
 BaseKvmCPU::tryDrain()
 {
-    if (!drainManager)
+    if (drainState() != DrainState::Draining)
         return false;
 
     if (!archIsDrained()) {
@@ -1209,8 +1202,7 @@ BaseKvmCPU::tryDrain()
     if (_status == Idle || _status == Running) {
         DPRINTF(Drain,
                 "tryDrain: CPU transitioned into the Idle state, drain done\n");
-        drainManager->signalDrainDone();
-        drainManager = NULL;
+        signalDrainDone();
         return true;
     } else {
         DPRINTF(Drain, "tryDrain: CPU not ready.\n");

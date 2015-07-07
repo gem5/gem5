@@ -74,13 +74,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     const bool simulate_data_stalls;
     const bool simulate_inst_stalls;
 
-    /**
-     * Drain manager to use when signaling drain completion
-     *
-     * This pointer is non-NULL when draining and NULL otherwise.
-     */
-    DrainManager *drain_manager;
-
     // main simulation loop (one cycle)
     void tick();
 
@@ -192,8 +185,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
   public:
 
-    unsigned int drain(DrainManager *drain_manager);
-    void drainResume();
+    DrainState drain() M5_ATTR_OVERRIDE;
+    void drainResume() M5_ATTR_OVERRIDE;
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);

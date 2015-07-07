@@ -176,9 +176,6 @@ class TrafficGen : public MemObject
     /** Event for scheduling updates */
     EventWrapper<TrafficGen, &TrafficGen::update> updateEvent;
 
-    /** Manager to signal when drained */
-    DrainManager* drainManager;
-
     /** Count the number of generated packets. */
     Stats::Scalar numPackets;
 
@@ -201,7 +198,7 @@ class TrafficGen : public MemObject
 
     void initState();
 
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;

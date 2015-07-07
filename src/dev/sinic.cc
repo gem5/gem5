@@ -868,7 +868,7 @@ Device::rxKick()
         break;
 
       case rxBeginCopy:
-        if (dmaPending() || getDrainState() != DrainState::Running)
+        if (dmaPending() || drainState() != DrainState::Running)
             goto exit;
 
         rxDmaAddr = params()->platform->pciToDma(
@@ -1068,7 +1068,7 @@ Device::txKick()
         break;
 
       case txBeginCopy:
-        if (dmaPending() || getDrainState() != DrainState::Running)
+        if (dmaPending() || drainState() != DrainState::Running)
             goto exit;
 
         txDmaAddr = params()->platform->pciToDma(

@@ -232,7 +232,7 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /**
-     * Check if the pipeline has drained and signal the DrainManager.
+     * Check if the pipeline has drained and signal drain done.
      *
      * This method checks if a drain has been requested and if the CPU
      * has drained successfully (i.e., there are no instructions in
@@ -336,7 +336,7 @@ class FullO3CPU : public BaseO3CPU
     void updateThreadPriority();
 
     /** Is the CPU draining? */
-    bool isDraining() const { return getDrainState() == DrainState::Draining; }
+    bool isDraining() const { return drainState() == DrainState::Draining; }
 
     void serializeThread(CheckpointOut &cp,
                          ThreadID tid) const M5_ATTR_OVERRIDE;
@@ -350,10 +350,10 @@ class FullO3CPU : public BaseO3CPU
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
-    unsigned int drain(DrainManager *drain_manager);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
     /** Resumes execution after a drain. */
-    void drainResume();
+    void drainResume() M5_ATTR_OVERRIDE;
 
     /**
      * Commit has reached a safe point to drain a thread.
@@ -664,9 +664,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Pointer to the system. */
     System *system;
-
-    /** DrainManager to notify when draining has completed. */
-    DrainManager *drainManager;
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;

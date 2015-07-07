@@ -123,10 +123,6 @@ class DmaPort : public MasterPort, public Drainable
     /** Number of outstanding packets the dma port has. */
     uint32_t pendingCount;
 
-    /** If we need to drain, keep the drain event around until we're done
-     * here.*/
-    DrainManager *drainManager;
-
     /** If the port is currently waiting for a retry before it can
      * send whatever it is that it's sending. */
     bool inRetry;
@@ -147,7 +143,7 @@ class DmaPort : public MasterPort, public Drainable
 
     bool dmaPending() const { return pendingCount > 0; }
 
-    unsigned int drain(DrainManager *drainManger);
+    DrainState drain() M5_ATTR_OVERRIDE;
 };
 
 class DmaDevice : public PioDevice

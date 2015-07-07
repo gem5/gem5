@@ -86,7 +86,6 @@ FlashDevice::FlashDevice(const FlashDeviceParams* p):
     pagesPerDisk(0),
     blocksPerDisk(0),
     planeMask(numPlanes - 1),
-    drainManager(NULL),
     planeEventQueue(numPlanes),
     planeEvent(this)
 {
@@ -587,26 +586,16 @@ FlashDevice::unserialize(CheckpointIn &cp)
  * Drain; needed to enable checkpoints
  */
 
-unsigned int
-FlashDevice::drain(DrainManager *dm)
+DrainState
+FlashDevice::drain()
 {
-    unsigned int count = 0;
-
     if (planeEvent.scheduled()) {
-        count = 1;
-        drainManager = dm;
+        DPRINTF(Drain, "Flash device is draining...\n");
+        return DrainState::Draining;
     } else {
         DPRINTF(Drain, "Flash device in drained state\n");
+        return DrainState::Drained;
     }
-
-    if (count) {
-        DPRINTF(Drain, "Flash device is draining...\n");
-        setDrainState(DrainState::Draining);
-    } else {
-        DPRINTF(Drain, "Flash device drained\n");
-        setDrainState(DrainState::Drained);
-    }
-    return count;
 }
 
 /**
@@ -616,15 +605,13 @@ FlashDevice::drain(DrainManager *dm)
 void
 FlashDevice::checkDrain()
 {
-    if (drainManager == NULL) {
+    if (drainState() == DrainState::Draining)
         return;
-    }
 
     if (planeEvent.when() > curTick()) {
         DPRINTF(Drain, "Flash device is still draining\n");
     } else {
         DPRINTF(Drain, "Flash device is done draining\n");
-        drainManager->signalDrainDone();
-        drainManager = NULL;
+        signalDrainDone();
     }
 }

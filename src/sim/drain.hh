@@ -192,23 +192,26 @@ class DrainManager
  * follows (see simulate.py for details):
  *
  * <ol>
- * <li>Call Drainable::drain() for every object in the
- *     system. Draining has completed if all of them return
- *     zero. Otherwise, the sum of the return values is loaded into
- *     the counter of the DrainManager. A pointer to the drain
- *     manager is passed as an argument to the drain() method.
+ * <li>DrainManager::tryDrain() calls Drainable::drain() for every
+ *     object in the system. Draining has completed if all of them
+ *     return true. Otherwise, the drain manager keeps track of the
+ *     objects that requested draining and waits for them to signal
+ *     that they are done draining using the signalDrainDone() method.
  *
  * <li>Continue simulation. When an object has finished draining its
  *     internal state, it calls DrainManager::signalDrainDone() on the
- *     manager. When the counter in the manager reaches zero, the
- *     simulation stops.
+ *     manager. The drain manager keeps track of the objects that
+ *     haven't drained yet, simulation stops when the set of
+ *     non-drained objects becomes empty.
  *
- * <li>Check if any object still needs draining, if so repeat the
- *     process above.
+ * <li>Check if any object still needs draining
+ *     (DrainManager::tryDrain()), if so repeat the process above.
  *
  * <li>Serialize objects, switch CPU model, or change timing model.
  *
- * <li>Call Drainable::drainResume() and continue the simulation.
+ * <li>Call DrainManager::resume(), which intern calls
+ *     Drainable::drainResume() for all objects, and continue the
+ *     simulation.
  * </ol>
  *
  */
@@ -216,7 +219,7 @@ class Drainable
 {
     friend class DrainManager;
 
-  public:
+  protected:
     Drainable();
     virtual ~Drainable();
 
@@ -224,44 +227,67 @@ class Drainable
      * Determine if an object needs draining and register a
      * DrainManager.
      *
-     * When draining the state of an object, the simulator calls drain
-     * with a pointer to a drain manager. If the object does not need
-     * further simulation to drain internal buffers, it switched to
-     * the Drained state and returns 0, otherwise it switches to the
-     * Draining state and returns the number of times that it will
-     * call Event::process() on the drain event. Most objects are
-     * expected to return either 0 or 1.
+     * If the object does not need further simulation to drain
+     * internal buffers, it returns true and automatically switches to
+     * the Drained state, otherwise it switches to the Draining state.
      *
      * @note An object that has entered the Drained state can be
      * disturbed by other objects in the system and consequently be
-     * forced to enter the Draining state again. The simulator
-     * therefore repeats the draining process until all objects return
-     * 0 on the first call to drain().
+     * being drained. These perturbations are not visible in the
+     * drain state. The simulator therefore repeats the draining
+     * process until all objects return DrainState::Drained on the
+     * first call to drain().
      *
-     * @param drainManager DrainManager to use to inform the simulator
-     * when draining has completed.
-     *
-     * @return 0 if the object is ready for serialization now, >0 if
-     * it needs further simulation.
+     * @return DrainState::Drained if the object is ready for
+     * serialization now, DrainState::Draining if it needs further
+     * simulation.
      */
-    virtual unsigned int drain(DrainManager *drainManager) = 0;
+    virtual DrainState drain() = 0;
 
     /**
      * Resume execution after a successful drain.
-     *
-     * @note This method is normally only called from the simulation
-     * scripts.
      */
-    virtual void drainResume();
+    virtual void drainResume() {};
 
-    DrainState getDrainState() const { return _drainState; }
+    /**
+     * Signal that an object is drained
+     *
+     * This method is designed to be called whenever an object enters
+     * into a state where it is ready to be drained. The method is
+     * safe to call multiple times and there is no need to check that
+     * draining has been requested before calling this method.
+     */
+    void signalDrainDone() const {
+        switch (_drainState) {
+          case DrainState::Running:
+          case DrainState::Drained:
+            return;
+          case DrainState::Draining:
+            _drainState = DrainState::Drained;
+            _drainManager.signalDrainDone();
+            return;
+        }
+    }
 
-  protected:
-    void setDrainState(DrainState new_state) { _drainState = new_state; }
+  public:
+    /** Return the current drain state of an object. */
+    DrainState drainState() const { return _drainState; }
 
   private:
+    /** DrainManager interface to request a drain operation */
+    DrainState dmDrain();
+    /** DrainManager interface to request a resume operation */
+    void dmDrainResume();
+
+    /** Convenience reference to the drain manager */
     DrainManager &_drainManager;
-    DrainState _drainState;
+
+    /**
+     * Current drain state of the object. Needs to be mutable since
+     * objects need to be able to signal that they have transitioned
+     * into a Drained state even if the calling method is const.
+     */
+    mutable DrainState _drainState;
 };
 
 #endif

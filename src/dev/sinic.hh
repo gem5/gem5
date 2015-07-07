@@ -271,7 +271,7 @@ class Device : public Base
   public:
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
-    virtual void drainResume();
+    virtual void drainResume() M5_ATTR_OVERRIDE;
 
     void prepareIO(int cpu, int index);
     void prepareRead(int cpu, int index);

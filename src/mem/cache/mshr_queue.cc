@@ -56,7 +56,7 @@ MSHRQueue::MSHRQueue(const std::string &_label,
                      int _index)
     : label(_label), numEntries(num_entries + reserve - 1),
       numReserve(reserve), demandReserve(demand_reserve),
-      registers(numEntries), drainManager(NULL), allocated(0),
+      registers(numEntries), allocated(0),
       inServiceEntries(0), index(_index)
 {
     for (int i = 0; i < numEntries; ++i) {
@@ -180,13 +180,11 @@ MSHRQueue::deallocateOne(MSHR *mshr)
         readyList.erase(mshr->readyIter);
     }
     mshr->deallocate();
-    if (drainManager && allocated == 0) {
+    if (drainState() == DrainState::Draining && allocated == 0) {
         // Notify the drain manager that we have completed draining if
         // there are no other outstanding requests in this MSHR queue.
         DPRINTF(Drain, "MSHRQueue now empty, signalling drained\n");
-        drainManager->signalDrainDone();
-        drainManager = NULL;
-        setDrainState(DrainState::Drained);
+        signalDrainDone();
     }
     return retval;
 }
@@ -265,15 +263,8 @@ MSHRQueue::squash(int threadNum)
     }
 }
 
-unsigned int
-MSHRQueue::drain(DrainManager *dm)
+DrainState
+MSHRQueue::drain()
 {
-    if (allocated == 0) {
-        setDrainState(DrainState::Drained);
-        return 0;
-    } else {
-        drainManager = dm;
-        setDrainState(DrainState::Draining);
-        return 1;
-    }
+    return allocated == 0 ? DrainState::Drained : DrainState::Draining;
 }

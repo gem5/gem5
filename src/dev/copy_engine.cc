@@ -82,7 +82,7 @@ CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
       ce(_ce), channelId(cid), busy(false), underReset(false),
     refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
     latAfterCompletion(ce->params()->latAfterCompletion),
-    completionDataReg(0), nextState(Idle), drainManager(NULL),
+    completionDataReg(0), nextState(Idle),
     fetchCompleteEvent(this), addrCompleteEvent(this),
     readCompleteEvent(this), writeCompleteEvent(this),
     statusCompleteEvent(this)
@@ -140,12 +140,12 @@ CopyEngine::CopyEngineChannel::recvCommand()
         cr.status.dma_transfer_status(0);
         nextState = DescriptorFetch;
         fetchAddress = cr.descChainAddr;
-        if (ce->getDrainState() == DrainState::Running)
+        if (ce->drainState() == DrainState::Running)
             fetchDescriptor(cr.descChainAddr);
     } else if (cr.command.append_dma()) {
         if (!busy) {
             nextState = AddressFetch;
-            if (ce->getDrainState() == DrainState::Running)
+            if (ce->drainState() == DrainState::Running)
                 fetchNextAddr(lastDescriptorAddr);
         } else
             refreshNext = true;
@@ -635,25 +635,23 @@ CopyEngine::CopyEngineChannel::fetchAddrComplete()
 bool
 CopyEngine::CopyEngineChannel::inDrain()
 {
-    if (ce->getDrainState() == DrainState::Draining) {
+    if (drainState() == DrainState::Draining) {
         DPRINTF(Drain, "CopyEngine done draining, processing drain event\n");
-        assert(drainManager);
-        drainManager->signalDrainDone();
-        drainManager = NULL;
+        signalDrainDone();
     }
 
-    return ce->getDrainState() != DrainState::Running;
+    return ce->drainState() != DrainState::Running;
 }
 
-unsigned int
-CopyEngine::CopyEngineChannel::drain(DrainManager *dm)
+DrainState
+CopyEngine::CopyEngineChannel::drain()
 {
-    if (nextState == Idle || ce->getDrainState() != DrainState::Running)
-        return 0;
-
-    DPRINTF(Drain, "CopyEngineChannel not drained\n");
-    this->drainManager = dm;
-    return 1;
+    if (nextState == Idle || ce->drainState() != DrainState::Running) {
+        return DrainState::Drained;
+    } else {
+        DPRINTF(Drain, "CopyEngineChannel not drained\n");
+        return DrainState::Draining;
+    }
 }
 
 void

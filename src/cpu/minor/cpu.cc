@@ -47,8 +47,7 @@
 #include "debug/Quiesce.hh"
 
 MinorCPU::MinorCPU(MinorCPUParams *params) :
-    BaseCPU(params),
-    drainManager(NULL)
+    BaseCPU(params)
 {
     /* This is only written for one thread at the moment */
     Minor::MinorThread *thread;
@@ -194,39 +193,33 @@ MinorCPU::startup()
     activateContext(0);
 }
 
-unsigned int
-MinorCPU::drain(DrainManager *drain_manager)
+DrainState
+MinorCPU::drain()
 {
     DPRINTF(Drain, "MinorCPU drain\n");
 
-    drainManager = drain_manager;
-
     /* Need to suspend all threads and wait for Execute to idle.
      * Tell Fetch1 not to fetch */
-    unsigned int ret = pipeline->drain(drain_manager);
-
-    if (ret == 0)
+    if (pipeline->drain()) {
         DPRINTF(Drain, "MinorCPU drained\n");
-    else
+        return DrainState::Drained;
+    } else {
         DPRINTF(Drain, "MinorCPU not finished draining\n");
-
-    return ret;
+        return DrainState::Draining;
+    }
 }
 
 void
 MinorCPU::signalDrainDone()
 {
     DPRINTF(Drain, "MinorCPU drain done\n");
-    setDrainState(DrainState::Drained);
-    drainManager->signalDrainDone();
-    drainManager = NULL;
+    signalDrainDone();
 }
 
 void
 MinorCPU::drainResume()
 {
-    assert(getDrainState() == DrainState::Drained ||
-        getDrainState() == DrainState::Running);
+    assert(drainState() == DrainState::Drained);
 
     if (switchedOut()) {
         DPRINTF(Drain, "drainResume while switched out.  Ignoring\n");
@@ -242,8 +235,6 @@ MinorCPU::drainResume()
 
     wakeup();
     pipeline->drainResume();
-
-    setDrainState(DrainState::Running);
 }
 
 void

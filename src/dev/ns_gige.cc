@@ -1068,7 +1068,7 @@ NSGigE::doRxDmaRead()
     assert(rxDmaState == dmaIdle || rxDmaState == dmaReadWaiting);
     rxDmaState = dmaReading;
 
-    if (dmaPending() || getDrainState() != DrainState::Running)
+    if (dmaPending() || drainState() != DrainState::Running)
         rxDmaState = dmaReadWaiting;
     else
         dmaRead(rxDmaAddr, rxDmaLen, &rxDmaReadEvent, (uint8_t*)rxDmaData);
@@ -1099,7 +1099,7 @@ NSGigE::doRxDmaWrite()
     assert(rxDmaState == dmaIdle || rxDmaState == dmaWriteWaiting);
     rxDmaState = dmaWriting;
 
-    if (dmaPending() || getDrainState() != DrainState::Running)
+    if (dmaPending() || drainState() != DrainState::Running)
         rxDmaState = dmaWriteWaiting;
     else
         dmaWrite(rxDmaAddr, rxDmaLen, &rxDmaWriteEvent, (uint8_t*)rxDmaData);
@@ -1515,7 +1515,7 @@ NSGigE::doTxDmaRead()
     assert(txDmaState == dmaIdle || txDmaState == dmaReadWaiting);
     txDmaState = dmaReading;
 
-    if (dmaPending() || getDrainState() != DrainState::Running)
+    if (dmaPending() || drainState() != DrainState::Running)
         txDmaState = dmaReadWaiting;
     else
         dmaRead(txDmaAddr, txDmaLen, &txDmaReadEvent, (uint8_t*)txDmaData);
@@ -1546,7 +1546,7 @@ NSGigE::doTxDmaWrite()
     assert(txDmaState == dmaIdle || txDmaState == dmaWriteWaiting);
     txDmaState = dmaWriting;
 
-    if (dmaPending() || getDrainState() != DrainState::Running)
+    if (dmaPending() || drainState() != DrainState::Running)
         txDmaState = dmaWriteWaiting;
     else
         dmaWrite(txDmaAddr, txDmaLen, &txDmaWriteEvent, (uint8_t*)txDmaData);

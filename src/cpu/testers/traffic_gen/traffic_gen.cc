@@ -63,8 +63,7 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       port(name() + ".port", *this),
       retryPkt(NULL),
       retryPktTick(0),
-      updateEvent(this),
-      drainManager(NULL)
+      updateEvent(this)
 {
 }
 
@@ -118,12 +117,12 @@ TrafficGen::initState()
     }
 }
 
-unsigned int
-TrafficGen::drain(DrainManager *dm)
+DrainState
+TrafficGen::drain()
 {
     if (!updateEvent.scheduled()) {
         // no event has been scheduled yet (e.g. switched from atomic mode)
-        return 0;
+        return DrainState::Drained;
     }
 
     if (retryPkt == NULL) {
@@ -131,10 +130,9 @@ TrafficGen::drain(DrainManager *dm)
         nextPacketTick = MaxTick;
         nextTransitionTick = MaxTick;
         deschedule(updateEvent);
-        return 0;
+        return DrainState::Drained;
     } else {
-        drainManager = dm;
-        return 1;
+        return DrainState::Draining;
     }
 }
 
@@ -488,7 +486,7 @@ TrafficGen::recvReqRetry()
         retryPktTick = 0;
         retryTicks += delay;
 
-        if (drainManager == NULL) {
+        if (drainState() != DrainState::Draining) {
             // packet is sent, so find out when the next one is due
             nextPacketTick = states[currState]->nextPacketTick(elasticReq,
                                                                delay);
@@ -498,9 +496,7 @@ TrafficGen::recvReqRetry()
             // shut things down
             nextPacketTick = MaxTick;
             nextTransitionTick = MaxTick;
-            drainManager->signalDrainDone();
-            // Clear the drain event once we're done with it.
-            drainManager = NULL;
+            signalDrainDone();
         }
     }
 }

@@ -115,7 +115,7 @@ class Pipeline : public Ticked
     void wakeupFetch();
 
     /** Try to drain the CPU */
-    unsigned int drain(DrainManager *manager);
+    bool drain();
 
     void drainResume();
 

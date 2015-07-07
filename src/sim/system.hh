@@ -520,8 +520,7 @@ class System : public MemObject
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
-    unsigned int drain(DrainManager *dm);
-    void drainResume();
+    void drainResume() M5_ATTR_OVERRIDE;
 
   public:
     Counter totalNumInsts;

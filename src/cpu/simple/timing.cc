@@ -91,7 +91,7 @@ TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
     : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
       dcachePort(this), ifetch_pkt(NULL), dcache_pkt(NULL), previousCycle(0),
-      fetchEvent(this), drainManager(NULL)
+      fetchEvent(this)
 {
     _status = Idle;
 }
@@ -102,19 +102,17 @@ TimingSimpleCPU::~TimingSimpleCPU()
 {
 }
 
-unsigned int
-TimingSimpleCPU::drain(DrainManager *drain_manager)
+DrainState
+TimingSimpleCPU::drain()
 {
-    assert(!drainManager);
     if (switchedOut())
-        return 0;
+        return DrainState::Drained;
 
     if (_status == Idle ||
         (_status == BaseSimpleCPU::Running && isDrained())) {
         DPRINTF(Drain, "No need to drain.\n");
-        return 0;
+        return DrainState::Drained;
     } else {
-        drainManager = drain_manager;
         DPRINTF(Drain, "Requesting drain: %s\n", pcState());
 
         // The fetch event can become descheduled if a drain didn't
@@ -123,7 +121,7 @@ TimingSimpleCPU::drain(DrainManager *drain_manager)
         if (_status == BaseSimpleCPU::Running && !fetchEvent.scheduled())
             schedule(fetchEvent, clockEdge());
 
-        return 1;
+        return DrainState::Draining;
     }
 }
 
@@ -131,7 +129,6 @@ void
 TimingSimpleCPU::drainResume()
 {
     assert(!fetchEvent.scheduled());
-    assert(!drainManager);
     if (switchedOut())
         return;
 
@@ -155,7 +152,7 @@ TimingSimpleCPU::drainResume()
 bool
 TimingSimpleCPU::tryCompleteDrain()
 {
-    if (!drainManager)
+    if (drainState() != DrainState::Draining)
         return false;
 
     DPRINTF(Drain, "tryCompleteDrain: %s\n", pcState());
@@ -163,8 +160,7 @@ TimingSimpleCPU::tryCompleteDrain()
         return false;
 
     DPRINTF(Drain, "CPU done draining, processing drain event\n");
-    drainManager->signalDrainDone();
-    drainManager = NULL;
+    signalDrainDone();
 
     return true;
 }

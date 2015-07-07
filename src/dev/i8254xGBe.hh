@@ -67,9 +67,6 @@ class IGbE : public EtherDevice
     uint8_t eeOpcode, eeAddr;
     uint16_t flash[iGbReg::EEPROM_SIZE];
 
-    // The drain event if we have one
-    DrainManager *drainManager;
-
     // packet fifos
     PacketFifo rxFifo;
     PacketFifo txFifo;
@@ -352,7 +349,7 @@ class IGbE : public EtherDevice
         virtual void updateHead(long h) { igbe->regs.rdh(h); }
         virtual void enableSm();
         virtual void fetchAfterWb() {
-            if (!igbe->rxTick && igbe->getDrainState() == DrainState::Running)
+            if (!igbe->rxTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
 
@@ -414,7 +411,7 @@ class IGbE : public EtherDevice
         virtual void enableSm();
         virtual void actionAfterWb();
         virtual void fetchAfterWb() {
-            if (!igbe->txTick && igbe->getDrainState() == DrainState::Running)
+            if (!igbe->txTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
         
@@ -541,8 +538,8 @@ class IGbE : public EtherDevice
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
-    unsigned int drain(DrainManager *dm);
-    void drainResume();
+    DrainState drain() M5_ATTR_OVERRIDE;
+    void drainResume() M5_ATTR_OVERRIDE;
 
 };
 

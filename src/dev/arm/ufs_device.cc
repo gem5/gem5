@@ -733,7 +733,6 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams* p) :
     transferTrack(0),
     taskCommandTrack(0),
     idlePhaseStart(0),
-    drainManager(NULL),
     SCSIResumeEvent(this),
     UTPEvent(this)
 {
@@ -2316,18 +2315,15 @@ UFSHostDevice::unserialize(CheckpointIn &cp)
  * Drain; needed to enable checkpoints
  */
 
-unsigned int
-UFSHostDevice::drain(DrainManager *dm)
+DrainState
+UFSHostDevice::drain()
 {
     if (UFSHCIMem.TRUTRLDBR) {
-        drainManager = dm;
         DPRINTF(UFSHostDevice, "UFSDevice is draining...\n");
-        setDrainState(DrainState::Draining);
-        return 1;
+        return DrainState::Draining;
     } else {
         DPRINTF(UFSHostDevice, "UFSDevice drained\n");
-        setDrainState(DrainState::Drained);
-        return 0;
+        return DrainState::Drained;
     }
 }
 
@@ -2338,16 +2334,14 @@ UFSHostDevice::drain(DrainManager *dm)
 void
 UFSHostDevice::checkDrain()
 {
-    if (drainManager == NULL) {
+    if (drainState() != DrainState::Draining)
         return;
-    }
 
     if (UFSHCIMem.TRUTRLDBR) {
         DPRINTF(UFSHostDevice, "UFSDevice is still draining; with %d active"
             " doorbells\n", activeDoorbells);
     } else {
         DPRINTF(UFSHostDevice, "UFSDevice is done draining\n");
-        drainManager->signalDrainDone();
-        drainManager = NULL;
+        signalDrainDone();
     }
 }

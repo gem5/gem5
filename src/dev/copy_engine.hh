@@ -92,7 +92,6 @@ class CopyEngine : public PciDevice
 
         ChannelState nextState;
 
-        DrainManager *drainManager;
       public:
         CopyEngineChannel(CopyEngine *_ce, int cid);
         virtual ~CopyEngineChannel();
@@ -107,8 +106,8 @@ class CopyEngine : public PciDevice
         void channelRead(PacketPtr pkt, Addr daddr, int size);
         void channelWrite(PacketPtr pkt, Addr daddr, int size);
 
-        unsigned int drain(DrainManager *drainManger);
-        void drainResume();
+        DrainState drain() M5_ATTR_OVERRIDE;
+        void drainResume() M5_ATTR_OVERRIDE;
 
         void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
         void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;

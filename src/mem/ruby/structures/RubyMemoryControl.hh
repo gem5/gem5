@@ -61,7 +61,7 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
     void wakeup();
 
     void setDescription(const std::string& name) { m_description = name; };

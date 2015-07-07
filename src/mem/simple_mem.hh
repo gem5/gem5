@@ -181,17 +181,11 @@ class SimpleMemory : public AbstractMemory
      */
     std::vector<PacketPtr> pendingDelete;
 
-    /**
-     * If we need to drain, keep the drain manager around until we're
-     * done here.
-     */
-    DrainManager *drainManager;
-
   public:
 
     SimpleMemory(const SimpleMemoryParams *p);
 
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
     BaseSlavePort& getSlavePort(const std::string& if_name,
                                 PortID idx = InvalidPortID);

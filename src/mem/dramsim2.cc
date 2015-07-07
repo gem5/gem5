@@ -52,7 +52,6 @@ DRAMSim2::DRAMSim2(const Params* p) :
             p->traceFile, p->range.size() / 1024 / 1024, p->enableDebug),
     retryReq(false), retryResp(false), startTick(0),
     nbrOutstandingReads(0), nbrOutstandingWrites(0),
-    drainManager(NULL),
     sendResponseEvent(this), tickEvent(this)
 {
     DPRINTF(DRAMSim2,
@@ -118,11 +117,8 @@ DRAMSim2::sendResponse()
         if (!responseQueue.empty() && !sendResponseEvent.scheduled())
             schedule(sendResponseEvent, curTick());
 
-        // check if we were asked to drain and if we are now done
-        if (drainManager && nbrOutstanding() == 0) {
-            drainManager->signalDrainDone();
-            drainManager = NULL;
-        }
+        if (nbrOutstanding() == 0)
+            signalDrainDone();
     } else {
         retryResp = true;
 
@@ -339,11 +335,8 @@ void DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
     assert(nbrOutstandingWrites != 0);
     --nbrOutstandingWrites;
 
-    // check if we were asked to drain and if we are now done
-    if (drainManager && nbrOutstanding() == 0) {
-        drainManager->signalDrainDone();
-        drainManager = NULL;
-    }
+    if (nbrOutstanding() == 0)
+        signalDrainDone();
 }
 
 BaseSlavePort&
@@ -357,18 +350,11 @@ DRAMSim2::getSlavePort(const std::string &if_name, PortID idx)
 }
 
 unsigned int
-DRAMSim2::drain(DrainManager* dm)
+DRAMSim2::drain()
 {
     // check our outstanding reads and writes and if any they need to
     // drain
-    if (nbrOutstanding() != 0) {
-        setDrainState(DrainState::Draining);
-        drainManager = dm;
-        return 1;
-    } else {
-        setDrainState(DrainState::Drained);
-        return 0;
-    }
+    return nbrOutstanding() != 0 ? DrainState::Draining : DrainState::Drained;
 }
 
 DRAMSim2::MemoryPort::MemoryPort(const std::string& _name,

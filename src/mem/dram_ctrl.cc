@@ -61,7 +61,6 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     retryRdReq(false), retryWrReq(false),
     busState(READ),
     nextReqEvent(this), respondEvent(this),
-    drainManager(NULL),
     deviceSize(p->device_size),
     deviceBusWidth(p->device_bus_width), burstLength(p->burst_length),
     deviceRowBufferSize(p->device_rowbuffer_size),
@@ -694,11 +693,11 @@ DRAMCtrl::processRespondEvent()
         schedule(respondEvent, respQueue.front()->readyTime);
     } else {
         // if there is nothing left in any queue, signal a drain
-        if (writeQueue.empty() && readQueue.empty() &&
-            drainManager) {
+        if (drainState() == DrainState::Draining &&
+            writeQueue.empty() && readQueue.empty()) {
+
             DPRINTF(Drain, "DRAM controller done draining\n");
-            drainManager->signalDrainDone();
-            drainManager = NULL;
+            signalDrainDone();
         }
     }
 
@@ -1296,15 +1295,17 @@ DRAMCtrl::processNextReqEvent()
             // trigger writes if we have passed the low threshold (or
             // if we are draining)
             if (!writeQueue.empty() &&
-                (drainManager || writeQueue.size() > writeLowThreshold)) {
+                (drainState() == DrainState::Draining ||
+                 writeQueue.size() > writeLowThreshold)) {
 
                 switch_to_writes = true;
             } else {
                 // check if we are drained
-                if (respQueue.empty () && drainManager) {
+                if (drainState() == DrainState::Draining &&
+                    respQueue.empty()) {
+
                     DPRINTF(Drain, "DRAM controller done draining\n");
-                    drainManager->signalDrainDone();
-                    drainManager = NULL;
+                    signalDrainDone();
                 }
 
                 // nothing to do, not even any point in scheduling an
@@ -1416,7 +1417,7 @@ DRAMCtrl::processNextReqEvent()
         // writes, then switch to reads.
         if (writeQueue.empty() ||
             (writeQueue.size() + minWritesPerSwitch < writeLowThreshold &&
-             !drainManager) ||
+             drainState() != DrainState::Draining) ||
             (!readQueue.empty() && writesThisTime >= minWritesPerSwitch)) {
             // turn the bus back around for reads again
             busState = WRITE_TO_READ;
@@ -2166,28 +2167,24 @@ DRAMCtrl::getSlavePort(const string &if_name, PortID idx)
     }
 }
 
-unsigned int
-DRAMCtrl::drain(DrainManager *dm)
+DrainState
+DRAMCtrl::drain()
 {
     // if there is anything in any of our internal queues, keep track
     // of that as well
-    if (!(writeQueue.empty() && readQueue.empty() &&
-          respQueue.empty())) {
+    if (!(writeQueue.empty() && readQueue.empty() && respQueue.empty())) {
         DPRINTF(Drain, "DRAM controller not drained, write: %d, read: %d,"
                 " resp: %d\n", writeQueue.size(), readQueue.size(),
                 respQueue.size());
-        drainManager = dm;
 
         // the only part that is not drained automatically over time
         // is the write queue, thus kick things into action if needed
         if (!writeQueue.empty() && !nextReqEvent.scheduled()) {
             schedule(nextReqEvent, curTick());
         }
-        setDrainState(DrainState::Draining);
-        return 1;
+        return DrainState::Draining;
     } else {
-        setDrainState(DrainState::Drained);
-        return 0;
+        return DrainState::Drained;
     }
 }
 

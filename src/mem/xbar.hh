@@ -114,7 +114,7 @@ class BaseXBar : public MemObject
          *
          * @return 1 if busy or waiting to retry, or 0 if idle
          */
-        unsigned int drain(DrainManager *dm);
+        DrainState drain() M5_ATTR_OVERRIDE;
 
         /**
          * Get the crossbar layer's name
@@ -216,9 +216,6 @@ class BaseXBar : public MemObject
 
         /** track the state of the layer */
         State state;
-
-        /** manager to signal when drained */
-        DrainManager *drainManager;
 
         /**
          * A deque of ports that retry should be called on because

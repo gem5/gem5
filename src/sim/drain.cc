@@ -68,7 +68,7 @@ DrainManager::tryDrain()
     DPRINTF(Drain, "Trying to drain %u objects.\n", drainableCount());
     _state = DrainState::Draining;
     for (auto *obj : _allDrainable)
-        _count += obj->drain(&_instance);
+        _count += obj->dmDrain() == DrainState::Drained ? 0 : 1;
 
     if (_count == 0) {
         DPRINTF(Drain, "Drain done.\n");
@@ -98,7 +98,7 @@ DrainManager::resume()
     DPRINTF(Drain, "Resuming %u objects.\n", drainableCount());
     _state = DrainState::Running;
     for (auto *obj : _allDrainable)
-        obj->drainResume();
+        obj->dmDrainResume();
 }
 
 void
@@ -160,8 +160,23 @@ Drainable::~Drainable()
     _drainManager.unregisterDrainable(this);
 }
 
-void
-Drainable::drainResume()
+DrainState
+Drainable::dmDrain()
 {
+    _drainState = DrainState::Draining;
+    _drainState = drain();
+    assert(_drainState == DrainState::Draining ||
+           _drainState == DrainState::Drained);
+
+    return _drainState;
+}
+
+void
+Drainable::dmDrainResume()
+{
+    panic_if(_drainState != DrainState::Drained,
+             "Trying to resume an object that hasn't been drained\n");
+
     _drainState = DrainState::Running;
+    drainResume();
 }

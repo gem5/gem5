@@ -192,8 +192,8 @@ Pipeline::wakeupFetch()
     execute.wakeupFetch();
 }
 
-unsigned int
-Pipeline::drain(DrainManager *manager)
+bool
+Pipeline::drain()
 {
     DPRINTF(MinorCPU, "Draining pipeline by halting inst fetches. "
         " Execution should drain naturally\n");
@@ -205,7 +205,7 @@ Pipeline::drain(DrainManager *manager)
     bool drained = isDrained();
     needToSignalDrained = !drained;
 
-    return (drained ? 0 : 1);
+    return drained;
 }
 
 void

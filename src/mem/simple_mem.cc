@@ -53,7 +53,7 @@ SimpleMemory::SimpleMemory(const SimpleMemoryParams* p) :
     port(name() + ".port", *this), latency(p->latency),
     latency_var(p->latency_var), bandwidth(p->bandwidth), isBusy(false),
     retryReq(false), retryResp(false),
-    releaseEvent(this), dequeueEvent(this), drainManager(NULL)
+    releaseEvent(this), dequeueEvent(this)
 {
 }
 
@@ -200,10 +200,9 @@ SimpleMemory::dequeue()
             // already have an event scheduled, so use re-schedule
             reschedule(dequeueEvent,
                        std::max(packetQueue.front().tick, curTick()), true);
-        } else if (drainManager) {
-            DPRINTF(Drain, "Drainng of SimpleMemory complete\n");
-            drainManager->signalDrainDone();
-            drainManager = NULL;
+        } else if (drainState() == DrainState::Draining) {
+            DPRINTF(Drain, "Draining of SimpleMemory complete\n");
+            signalDrainDone();
         }
     }
 }
@@ -233,23 +232,15 @@ SimpleMemory::getSlavePort(const std::string &if_name, PortID idx)
     }
 }
 
-unsigned int
-SimpleMemory::drain(DrainManager *dm)
+DrainState
+SimpleMemory::drain()
 {
-    int count = 0;
-
-    // also track our internal queue
     if (!packetQueue.empty()) {
-        count += 1;
-        drainManager = dm;
         DPRINTF(Drain, "SimpleMemory Queue has requests, waiting to drain\n");
-     }
-
-    if (count)
-        setDrainState(DrainState::Draining);
-    else
-        setDrainState(DrainState::Drained);
-    return count;
+        return DrainState::Draining;
+    } else {
+        return DrainState::Drained;
+    }
 }
 
 SimpleMemory::MemoryPort::MemoryPort(const std::string& _name,

@@ -49,7 +49,7 @@
 using namespace std;
 
 PacketQueue::PacketQueue(EventManager& _em, const std::string& _label)
-    : em(_em), sendEvent(this), drainManager(NULL), label(_label),
+    : em(_em), sendEvent(this), label(_label),
       waitingOnRetry(false)
 {
 }
@@ -198,11 +198,12 @@ PacketQueue::schedSendEvent(Tick when)
     } else {
         // we get a MaxTick when there is no more to send, so if we're
         // draining, we may be done at this point
-        if (drainManager && transmitList.empty() && !sendEvent.scheduled()) {
+        if (drainState() == DrainState::Draining &&
+            transmitList.empty() && !sendEvent.scheduled()) {
+
             DPRINTF(Drain, "PacketQueue done draining,"
                     "processing drain event\n");
-            drainManager->signalDrainDone();
-            drainManager = NULL;
+            signalDrainDone();
         }
     }
 }
@@ -244,14 +245,15 @@ PacketQueue::processSendEvent()
     sendDeferredPacket();
 }
 
-unsigned int
-PacketQueue::drain(DrainManager *dm)
+DrainState
+PacketQueue::drain()
 {
-    if (transmitList.empty())
-        return 0;
-    DPRINTF(Drain, "PacketQueue not drained\n");
-    drainManager = dm;
-    return 1;
+    if (transmitList.empty()) {
+        return DrainState::Drained;
+    } else {
+        DPRINTF(Drain, "PacketQueue not drained\n");
+        return DrainState::Draining;
+    }
 }
 
 ReqPacketQueue::ReqPacketQueue(EventManager& _em, MasterPort& _masterPort,

@@ -640,14 +640,14 @@ RubyMemoryControl::executeCycle()
     }
 }
 
-unsigned int
-RubyMemoryControl::drain(DrainManager *dm)
+DrainState
+RubyMemoryControl::drain()
 {
     DPRINTF(RubyMemory, "MemoryController drain\n");
     if(m_event.scheduled()) {
         deschedule(m_event);
     }
-    return 0;
+    return DrainState::Drained;
 }
 
 // wakeup:  This function is called once per memory controller clock cycle.

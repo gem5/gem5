@@ -107,7 +107,7 @@ class DMASequencer : public MemObject
     // A pointer to the controller is needed for atomic support.
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
     uint32_t getId() { return m_version; }
-    unsigned int drain(DrainManager *dm);
+    DrainState drain() M5_ATTR_OVERRIDE;
 
     /* SLICC callback */
     void dataCallback(const DataBlock & dblk);
@@ -129,7 +129,7 @@ class DMASequencer : public MemObject
      * @return Whether successfully sent
      */
     bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
-    unsigned int getChildDrainCount(DrainManager *dm);
+    unsigned int getChildDrainCount();
 
   private:
     uint32_t m_version;
@@ -139,7 +139,6 @@ class DMASequencer : public MemObject
 
     MemSlavePort slave_port;
 
-    DrainManager *drainManager;
     System* system;
 
     bool retry;

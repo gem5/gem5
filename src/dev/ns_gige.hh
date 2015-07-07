@@ -369,7 +369,7 @@ class NSGigE : public EtherDevBase
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
-    void drainResume();
+    void drainResume() M5_ATTR_OVERRIDE;
 };
 
 /*

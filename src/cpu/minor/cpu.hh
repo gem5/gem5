@@ -112,10 +112,6 @@ class MinorCPU : public BaseCPU
         virtual void recvTimingSnoopReq(PacketPtr pkt) { }
     };
 
-    /** The DrainManager passed into drain that needs be signalled when
-     *  draining is complete */
-    DrainManager *drainManager;
-
   protected:
      /** Return a reference to the data port. */
     MasterPort &getDataPort();
@@ -155,10 +151,10 @@ class MinorCPU : public BaseCPU
     void unserialize(CheckpointIn &cp);
 
     /** Drain interface */
-    unsigned int drain(DrainManager *drain_manager);
-    void drainResume();
-    /** Signal from Pipeline that MinorCPU should signal the DrainManager
-     *  that a drain is complete and set its drainState */
+    DrainState drain() M5_ATTR_OVERRIDE;
+    void drainResume() M5_ATTR_OVERRIDE;
+    /** Signal from Pipeline that MinorCPU should signal that a drain
+     *  is complete and set its drainState */
     void signalDrainDone();
     void memWriteback();
 

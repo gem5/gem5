@@ -108,7 +108,6 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
     : BaseSimpleCPU(p), tickEvent(this), width(p->width), locked(false),
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
-      drain_manager(NULL),
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
@@ -125,23 +124,21 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
     }
 }
 
-unsigned int
-AtomicSimpleCPU::drain(DrainManager *dm)
+DrainState
+AtomicSimpleCPU::drain()
 {
-    assert(!drain_manager);
     if (switchedOut())
-        return 0;
+        return DrainState::Drained;
 
     if (!isDrained()) {
         DPRINTF(Drain, "Requesting drain: %s\n", pcState());
-        drain_manager = dm;
-        return 1;
+        return DrainState::Draining;
     } else {
         if (tickEvent.scheduled())
             deschedule(tickEvent);
 
         DPRINTF(Drain, "Not executing microcode, no need to drain.\n");
-        return 0;
+        return DrainState::Drained;
     }
 }
 
@@ -149,7 +146,6 @@ void
 AtomicSimpleCPU::drainResume()
 {
     assert(!tickEvent.scheduled());
-    assert(!drain_manager);
     if (switchedOut())
         return;
 
@@ -173,7 +169,7 @@ AtomicSimpleCPU::drainResume()
 bool
 AtomicSimpleCPU::tryCompleteDrain()
 {
-    if (!drain_manager)
+    if (drainState() != DrainState::Draining)
         return false;
 
     DPRINTF(Drain, "tryCompleteDrain: %s\n", pcState());
@@ -181,8 +177,7 @@ AtomicSimpleCPU::tryCompleteDrain()
         return false;
 
     DPRINTF(Drain, "CPU done draining, processing drain event\n");
-    drain_manager->signalDrainDone();
-    drain_manager = NULL;
+    signalDrainDone();
 
     return true;
 }

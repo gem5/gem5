@@ -145,7 +145,7 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 template <typename SrcType, typename DstType>
 BaseXBar::Layer<SrcType,DstType>::Layer(DstType& _port, BaseXBar& _xbar,
                                        const std::string& _name) :
-    port(_port), xbar(_xbar), _name(_name), state(IDLE), drainManager(NULL),
+    port(_port), xbar(_xbar), _name(_name), state(IDLE),
     waitingForPeer(NULL), releaseEvent(this)
 {
 }
@@ -252,12 +252,10 @@ BaseXBar::Layer<SrcType,DstType>::releaseLayer()
         // waiting for the peer
         if (waitingForPeer == NULL)
             retryWaiting();
-    } else if (waitingForPeer == NULL && drainManager) {
+    } else if (waitingForPeer == NULL && drainState() == DrainState::Draining) {
         DPRINTF(Drain, "Crossbar done draining, signaling drain manager\n");
         //If we weren't able to drain before, do it now.
-        drainManager->signalDrainDone();
-        // Clear the drain event once we're done with it.
-        drainManager = NULL;
+        signalDrainDone();
     }
 }
 
@@ -587,18 +585,18 @@ BaseXBar::regStats()
 }
 
 template <typename SrcType, typename DstType>
-unsigned int
-BaseXBar::Layer<SrcType,DstType>::drain(DrainManager *dm)
+DrainState
+BaseXBar::Layer<SrcType,DstType>::drain()
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
     if (state != IDLE) {
         DPRINTF(Drain, "Crossbar not drained\n");
-        drainManager = dm;
-        return 1;
+        return DrainState::Draining;
+    } else {
+        return DrainState::Drained;
     }
-    return 0;
 }
 
 template <typename SrcType, typename DstType>

@@ -181,11 +181,10 @@ class SimObject : public EventManager, public Serializable, public Drainable
     virtual void startup();
 
     /**
-     * Provide a default implementation of the drain interface that
-     * simply returns 0 (draining completed) and sets the drain state
-     * to Drained.
+     * Provide a default implementation of the drain interface for
+     * objects that don't need draining.
      */
-    unsigned int drain(DrainManager *drainManger);
+    DrainState drain() M5_ATTR_OVERRIDE { return DrainState::Drained; }
 
     /**
      * Write back dirty buffers to memory using functional writes.
