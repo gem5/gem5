@@ -224,7 +224,6 @@ def _changeMemoryMode(system, mode):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
     if system.getMemoryMode() != mode:
-        drain(system)
         system.setMemoryMode(mode)
     else:
         print "System already in target mode. Memory mode unchanged."
