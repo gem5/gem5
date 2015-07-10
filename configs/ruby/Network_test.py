@@ -43,7 +43,7 @@ def define_options(parser):
     return
 
 def create_system(options, full_system, system, dma_ports, ruby_system):
-    
+
     if buildEnv['PROTOCOL'] != 'Network_test':
         panic("This script requires the Network_test protocol to be built.")
 
@@ -53,7 +53,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     # The Garnet tester protocol does not support fs nor dma
     #
     assert(dma_ports == [])
-    
+
     #
     # The ruby network creation expects the list of nodes in the system to be
     # consistent with the NetDest list.  Therefore the l1 controller nodes must be

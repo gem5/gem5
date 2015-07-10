@@ -225,7 +225,7 @@ class $py_ident(RubyController):
                            "in StateMachine.py", param.type_ast.type.c_ident)
         code.dedent()
         code.write(path, '%s.py' % py_ident)
-        
+
 
     def printControllerHH(self, path):
         '''Output the method declarations for the class declaration'''
@@ -509,7 +509,7 @@ $c_ident::$c_ident(const Params *p)
 
             if re.compile("sequencer").search(param.ident):
                 code('m_${{param.ident}}_ptr->setController(this);')
-            
+
         for var in self.objects:
             if var.ident.find("mandatoryQueue") >= 0:
                 code('''
@@ -1501,7 +1501,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 </TR>
 ''')
         code('''
-<!- Column footer->     
+<!- Column footer->
 <TR>
   <TH> </TH>
 ''')

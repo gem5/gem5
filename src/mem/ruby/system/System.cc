@@ -86,16 +86,16 @@ RubySystem::RubySystem(const Params *p)
 void
 RubySystem::registerNetwork(Network* network_ptr)
 {
-  m_network = network_ptr;
+    m_network = network_ptr;
 }
 
 void
 RubySystem::registerAbstractController(AbstractController* cntrl)
 {
-  m_abs_cntrl_vec.push_back(cntrl);
+    m_abs_cntrl_vec.push_back(cntrl);
 
-  MachineID id = cntrl->getMachineID();
-  g_abs_controls[id.getType()][id.getNum()] = cntrl;
+    MachineID id = cntrl->getMachineID();
+    g_abs_controls[id.getType()][id.getNum()] = cntrl;
 }
 
 RubySystem::~RubySystem()
@@ -189,7 +189,7 @@ RubySystem::serializeOld(CheckpointOut &cp)
     // Restore curTick
     setCurTick(curtick_original);
 
-    // Aggergate the trace entries together into a single array
+    // Aggregate the trace entries together into a single array
     uint8_t *raw_data = new uint8_t[4096];
     uint64 cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
                                                                  4096);

@@ -470,8 +470,8 @@ enum ${{self.c_ident}} {
         # For each field
         for i,(ident,enum) in enumerate(self.enums.iteritems()):
             desc = enum.get("desc", "No description avaliable")
-            if i == 0: 
-                init = ' = %s_FIRST' % self.c_ident 
+            if i == 0:
+                init = ' = %s_FIRST' % self.c_ident
             else:
                 init = ''
             code('${{self.c_ident}}_${{enum.ident}}$init, /**< $desc */')

@@ -363,7 +363,7 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
     if (!retryList.empty()) {
         //
         // Record the current list of ports to retry on a temporary list before
-        // calling sendRetry on those ports.  sendRetry will cause an 
+        // calling sendRetry on those ports.  sendRetry will cause an
         // immediate retry, which may result in the ports being put back on the
         // list. Therefore we want to clear the retryList before calling
         // sendRetry.
@@ -422,7 +422,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
 {
     bool needsResponse = pkt->needsResponse();
 
-    // Unless specified at configuraiton, all responses except failed SC 
+    // Unless specified at configuraiton, all responses except failed SC
     // and Flush operations access M5 physical memory.
     bool accessPhysMem = access_backing_store;
 

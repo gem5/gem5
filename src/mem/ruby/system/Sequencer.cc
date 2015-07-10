@@ -347,7 +347,7 @@ Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
         } else {
             //
             // For successful SC requests, indicate the success to the cpu by
-            // setting the extra data to one.  
+            // setting the extra data to one.
             //
             request->pkt->req->setExtraData(1);
         }

@@ -61,7 +61,8 @@ class BankedArray
     unsigned int mapIndexToBank(int64 idx);
 
   public:
-    BankedArray(unsigned int banks, Cycles accessLatency, unsigned int startIndexBit);
+    BankedArray(unsigned int banks, Cycles accessLatency,
+                unsigned int startIndexBit);
 
     // Note: We try the access based on the cache index, not the address
     // This is so we don't get aliasing on blocks being replaced

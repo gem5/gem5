@@ -180,7 +180,7 @@ class MessageBuffer
     Cycles m_time_last_time_size_checked;
     unsigned int m_size_last_time_size_checked;
 
-    // variables used so enqueues appear to happen imediately, while
+    // variables used so enqueues appear to happen immediately, while
     // pop happen the next cycle
     Cycles m_time_last_time_enqueue;
     Tick m_time_last_time_pop;

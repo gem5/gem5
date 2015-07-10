@@ -55,9 +55,9 @@ def define_options(parser):
           help="Token_CMP: disable dyanimc timeouts, use fixed latency instead")
     parser.add_option("--allow-atomic-migration", action="store_true",
           help="allow migratory sharing for atomic only accessed blocks")
-    
+
 def create_system(options, full_system, system, dma_ports, ruby_system):
-    
+
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_token':
         panic("This script requires the MOESI_CMP_token protocol to be built.")
 
@@ -68,7 +68,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     n_tokens = options.num_cpus + 1
 
     cpu_sequencers = []
-    
+
     #
     # The ruby network creation expects the list of nodes in the system to be
     # consistent with the NetDest list.  Therefore the l1 controller nodes must be
@@ -85,7 +85,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     #
     l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
-    
+
     for i in xrange(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
@@ -153,7 +153,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                                       N_tokens = n_tokens,
                                       transitions_per_cycle = options.ports,
                                       ruby_system = ruby_system)
-        
+
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
 
@@ -212,7 +212,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         dma_seq = DMASequencer(version = i,
                                ruby_system = ruby_system,
                                slave = dma_port)
-        
+
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq,
                                    transitions_per_cycle = options.ports,

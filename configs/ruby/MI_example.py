@@ -44,12 +44,12 @@ def define_options(parser):
     return
 
 def create_system(options, full_system, system, dma_ports, ruby_system):
-    
+
     if buildEnv['PROTOCOL'] != 'MI_example':
         panic("This script requires the MI_example protocol to be built.")
 
     cpu_sequencers = []
-    
+
     #
     # The ruby network creation expects the list of nodes in the system to be
     # consistent with the NetDest list.  Therefore the l1 controller nodes must be
@@ -143,7 +143,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         #
         dma_seq = DMASequencer(version = i,
                                ruby_system = ruby_system)
-        
+
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq,
                                    transitions_per_cycle = options.ports,
