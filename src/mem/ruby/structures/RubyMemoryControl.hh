@@ -37,7 +37,6 @@
 #include "mem/abstract_mem.hh"
 #include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/structures/MemoryNode.hh"
 #include "mem/ruby/system/System.hh"

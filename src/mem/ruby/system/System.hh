@@ -45,6 +45,7 @@
 #include "sim/clocked_object.hh"
 
 class Network;
+class AbstractController;
 
 class RubySystem : public ClockedObject
 {
@@ -142,6 +143,7 @@ class RubySystem : public ClockedObject
   public:
     Profiler* m_profiler;
     CacheRecorder* m_cache_recorder;
+    std::vector<std::map<uint32_t, AbstractController *> > m_abstract_controls;
 };
 
 class RubyStatsCallback : public Callback

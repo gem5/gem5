@@ -56,7 +56,6 @@
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "params/RubySystem.hh"
 
@@ -66,8 +65,10 @@ class AddressProfiler;
 class Profiler
 {
   public:
-    Profiler(const RubySystemParams *params);
+    Profiler(const RubySystemParams *params, RubySystem *rs);
     ~Profiler();
+
+    RubySystem *m_ruby_system;
 
     void wakeup();
     void regStats(const std::string &name);

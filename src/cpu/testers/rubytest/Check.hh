@@ -36,7 +36,6 @@
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/TesterStatus.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 
 class SubBlock;
 

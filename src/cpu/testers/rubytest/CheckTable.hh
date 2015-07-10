@@ -35,7 +35,6 @@
 
 #include "base/hashmap.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 
 class Check;
 class RubyTester;

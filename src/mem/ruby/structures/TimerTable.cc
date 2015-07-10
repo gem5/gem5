@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/structures/TimerTable.hh"
 #include "mem/ruby/system/System.hh"
 

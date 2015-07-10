@@ -47,7 +47,6 @@
 #include <vector>
 
 #include "cpu/testers/rubytest/CheckTable.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "mem/mem_object.hh"

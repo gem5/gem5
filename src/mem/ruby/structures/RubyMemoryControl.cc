@@ -110,7 +110,6 @@
 #include "base/random.hh"
 #include "debug/RubyMemory.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"

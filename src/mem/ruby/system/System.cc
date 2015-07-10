@@ -68,12 +68,12 @@ RubySystem::RubySystem(const Params *p)
     m_memory_size_bits = p->memory_size_bits;
 
     // Resize to the size of different machine types
-    g_abs_controls.resize(MachineType_NUM);
+    m_abstract_controls.resize(MachineType_NUM);
 
     // Collate the statistics before they are printed.
     Stats::registerDumpCallback(new RubyStatsCallback(this));
     // Create the profiler
-    m_profiler = new Profiler(p);
+    m_profiler = new Profiler(p, this);
     m_phys_mem = p->phys_mem;
 }
 
@@ -89,7 +89,7 @@ RubySystem::registerAbstractController(AbstractController* cntrl)
     m_abs_cntrl_vec.push_back(cntrl);
 
     MachineID id = cntrl->getMachineID();
-    g_abs_controls[id.getType()][id.getNum()] = cntrl;
+    m_abstract_controls[id.getType()][id.getNum()] = cntrl;
 }
 
 RubySystem::~RubySystem()

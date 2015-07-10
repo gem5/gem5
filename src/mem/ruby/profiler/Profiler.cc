@@ -60,7 +60,8 @@
 using namespace std;
 using m5::stl_helpers::operator<<;
 
-Profiler::Profiler(const RubySystemParams *p)
+Profiler::Profiler(const RubySystemParams *p, RubySystem *rs)
+    : m_ruby_system(rs)
 {
     m_hot_lines = p->hot_lines;
     m_all_instructions = p->all_instructions;
@@ -253,8 +254,8 @@ Profiler::collateStats()
     uint32_t numVNets = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
         for (map<uint32_t, AbstractController*>::iterator it =
-                  g_abs_controls[i].begin();
-             it != g_abs_controls[i].end(); ++it) {
+                  m_ruby_system->m_abstract_controls[i].begin();
+             it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
             AbstractController *ctr = (*it).second;
             delayHistogram.add(ctr->getDelayHist());
@@ -267,8 +268,8 @@ Profiler::collateStats()
 
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
         for (map<uint32_t, AbstractController*>::iterator it =
-                g_abs_controls[i].begin();
-                it != g_abs_controls[i].end(); ++it) {
+                m_ruby_system->m_abstract_controls[i].begin();
+                it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
             AbstractController *ctr = (*it).second;
             Sequencer *seq = ctr->getSequencer();
@@ -280,8 +281,8 @@ Profiler::collateStats()
 
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
         for (map<uint32_t, AbstractController*>::iterator it =
-                g_abs_controls[i].begin();
-                it != g_abs_controls[i].end(); ++it) {
+                m_ruby_system->m_abstract_controls[i].begin();
+                it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
             AbstractController *ctr = (*it).second;
             Sequencer *seq = ctr->getSequencer();
