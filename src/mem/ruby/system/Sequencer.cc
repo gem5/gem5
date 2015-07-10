@@ -160,7 +160,7 @@ Sequencer::printProgress(ostream& out) const
 #if 0
     int total_demand = 0;
     out << "Sequencer Stats Version " << m_version << endl;
-    out << "Current time = " << g_system_ptr->getTime() << endl;
+    out << "Current time = " << m_ruby_system->getTime() << endl;
     out << "---------------" << endl;
     out << "outstanding requests" << endl;
 
@@ -557,14 +557,15 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
 
     delete srequest;
 
+    RubySystem *rs = m_ruby_system;
     if (RubySystem::getWarmupEnabled()) {
         assert(pkt->req);
         delete pkt->req;
         delete pkt;
-        g_system_ptr->m_cache_recorder->enqueueNextFetchRequest();
+        rs->m_cache_recorder->enqueueNextFetchRequest();
     } else if (RubySystem::getCooldownEnabled()) {
         delete pkt;
-        g_system_ptr->m_cache_recorder->enqueueNextFlushRequest();
+        rs->m_cache_recorder->enqueueNextFlushRequest();
     } else {
         ruby_hit_callback(pkt);
     }
@@ -737,7 +738,7 @@ void
 Sequencer::checkCoherence(const Address& addr)
 {
 #ifdef CHECK_COHERENCE
-    g_system_ptr->checkGlobalCoherenceInvariant(addr);
+    m_ruby_system->checkGlobalCoherenceInvariant(addr);
 #endif
 }
 

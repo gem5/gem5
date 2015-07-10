@@ -27,9 +27,11 @@
 # Author: Lisa Hsu
 
 from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
 
 class RubyWireBuffer(SimObject):
     type = 'RubyWireBuffer'
     cxx_class = 'WireBuffer'
     cxx_header = "mem/ruby/structures/WireBuffer.hh"
+    ruby_system = Param.RubySystem(Parent.any, "")

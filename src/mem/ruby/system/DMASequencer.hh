@@ -32,12 +32,12 @@
 #include <memory>
 #include <ostream>
 
+#include "mem/mem_object.hh"
 #include "mem/protocol/DMASequencerRequestType.hh"
 #include "mem/protocol/RequestStatus.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/mem_object.hh"
 #include "mem/simple_mem.hh"
 #include "mem/tport.hh"
 #include "params/DMASequencer.hh"
@@ -61,13 +61,14 @@ class DMASequencer : public MemObject
     typedef DMASequencerParams Params;
     DMASequencer(const Params *);
     void init();
+    RubySystem *m_ruby_system;
 
   public:
     class MemSlavePort : public QueuedSlavePort
     {
       private:
         RespPacketQueue queue;
-        RubySystem* ruby_system;
+        RubySystem* m_ruby_system;
         bool access_backing_store;
 
       public:

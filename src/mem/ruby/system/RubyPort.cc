@@ -51,14 +51,14 @@
 #include "sim/system.hh"
 
 RubyPort::RubyPort(const Params *p)
-    : MemObject(p), m_version(p->version), m_controller(NULL),
-      m_mandatory_q_ptr(NULL), m_usingRubyTester(p->using_ruby_tester),
-      system(p->system),
+    : MemObject(p), m_ruby_system(p->ruby_system), m_version(p->version),
+      m_controller(NULL), m_mandatory_q_ptr(NULL),
+      m_usingRubyTester(p->using_ruby_tester), system(p->system),
       pioMasterPort(csprintf("%s.pio-master-port", name()), this),
       pioSlavePort(csprintf("%s.pio-slave-port", name()), this),
       memMasterPort(csprintf("%s.mem-master-port", name()), this),
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
-          p->ruby_system, p->ruby_system->getAccessBackingStore(), -1),
+                   p->ruby_system->getAccessBackingStore(), -1),
       gotAddrRanges(p->port_master_connection_count)
 {
     assert(m_version != -1);
@@ -66,8 +66,7 @@ RubyPort::RubyPort(const Params *p)
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
         slave_ports.push_back(new MemSlavePort(csprintf("%s.slave%d", name(),
-            i), this, p->ruby_system,
-            p->ruby_system->getAccessBackingStore(), i));
+            i), this, p->ruby_system->getAccessBackingStore(), i));
     }
 
     // create the master ports based on the number of connected ports
@@ -158,10 +157,9 @@ RubyPort::MemMasterPort::MemMasterPort(const std::string &_name,
 }
 
 RubyPort::MemSlavePort::MemSlavePort(const std::string &_name, RubyPort *_port,
-                                     RubySystem *_system,
                                      bool _access_backing_store, PortID id)
     : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this),
-      ruby_system(_system), access_backing_store(_access_backing_store)
+      access_backing_store(_access_backing_store)
 {
     DPRINTF(RubyPort, "Created slave memport on ruby sequencer %s\n", _name);
 }
@@ -169,12 +167,12 @@ RubyPort::MemSlavePort::MemSlavePort(const std::string &_name, RubyPort *_port,
 bool
 RubyPort::PioMasterPort::recvTimingResp(PacketPtr pkt)
 {
-    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    RubyPort *rp = static_cast<RubyPort *>(&owner);
     DPRINTF(RubyPort, "Response for address: 0x%#x\n", pkt->getAddr());
 
     // send next cycle
-    ruby_port->pioSlavePort.schedTimingResp(
-            pkt, curTick() + g_system_ptr->clockPeriod());
+    rp->pioSlavePort.schedTimingResp(
+            pkt, curTick() + rp->m_ruby_system->clockPeriod());
     return true;
 }
 
@@ -196,7 +194,8 @@ bool RubyPort::MemMasterPort::recvTimingResp(PacketPtr pkt)
             pkt->getAddr(), port->name());
 
     // attempt to send the response in the next cycle
-    port->schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
+    RubyPort *rp = static_cast<RubyPort *>(&owner);
+    port->schedTimingResp(pkt, curTick() + rp->m_ruby_system->clockPeriod());
 
     return true;
 }
@@ -244,8 +243,9 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         pkt->pushSenderState(new SenderState(this));
 
         // send next cycle
+        RubySystem *rs = ruby_port->m_ruby_system;
         ruby_port->memMasterPort.schedTimingReq(pkt,
-            curTick() + g_system_ptr->clockPeriod());
+            curTick() + rs->clockPeriod());
         return true;
     }
 
@@ -269,7 +269,7 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     }
 
     //
-    // Unless one is using the ruby tester, record the stalled M5 port for 
+    // Unless one is using the ruby tester, record the stalled M5 port for
     // later retry when the sequencer becomes free.
     //
     if (!ruby_port->m_usingRubyTester) {
@@ -287,11 +287,13 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
 {
     DPRINTF(RubyPort, "Functional access for address: %#x\n", pkt->getAddr());
 
+    RubyPort *rp M5_VAR_USED = static_cast<RubyPort *>(&owner);
+    RubySystem *rs = rp->m_ruby_system;
+
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
-        RubyPort *ruby_port M5_VAR_USED = static_cast<RubyPort *>(&owner);
-        assert(ruby_port->memMasterPort.isConnected());
+        assert(rp->memMasterPort.isConnected());
         DPRINTF(RubyPort, "Pio Request for address: 0x%#x\n", pkt->getAddr());
         panic("RubyPort::PioMasterPort::recvFunctional() not implemented!\n");
     }
@@ -305,16 +307,16 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
         // The following command performs the real functional access.
         // This line should be removed once Ruby supplies the official version
         // of data.
-        ruby_system->getPhysMem()->functionalAccess(pkt);
+        rs->getPhysMem()->functionalAccess(pkt);
     } else {
         bool accessSucceeded = false;
         bool needsResponse = pkt->needsResponse();
 
         // Do the functional access on ruby memory
         if (pkt->isRead()) {
-            accessSucceeded = ruby_system->functionalRead(pkt);
+            accessSucceeded = rs->functionalRead(pkt);
         } else if (pkt->isWrite()) {
-            accessSucceeded = ruby_system->functionalWrite(pkt);
+            accessSucceeded = rs->functionalWrite(pkt);
         } else {
             panic("Unsupported functional command %s\n", pkt->cmdString());
         }
@@ -456,8 +458,10 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
 
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    RubySystem *rs = ruby_port->m_ruby_system;
     if (accessPhysMem) {
-        ruby_system->getPhysMem()->access(pkt);
+        rs->getPhysMem()->access(pkt);
     } else if (needsResponse) {
         pkt->makeResponse();
     }
@@ -466,7 +470,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     if (needsResponse) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
         // send next cycle
-        schedTimingResp(pkt, curTick() + g_system_ptr->clockPeriod());
+        schedTimingResp(pkt, curTick() + rs->clockPeriod());
     } else {
         delete pkt;
     }

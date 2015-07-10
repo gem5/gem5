@@ -35,9 +35,9 @@
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
+#include "mem/ruby/profiler/Profiler.hh"
 
 class Set;
 
@@ -47,7 +47,7 @@ class AddressProfiler
     typedef m5::hash_map<Address, AccessTraceForAddress> AddressMap;
 
   public:
-    AddressProfiler(int num_of_sequencers);
+    AddressProfiler(int num_of_sequencers, Profiler *profiler);
     ~AddressProfiler();
 
     void printStats(std::ostream& out) const;
@@ -87,6 +87,8 @@ class AddressProfiler
     Histogram m_getx_sharing_histogram;
     Histogram m_gets_sharing_histogram;
 
+    Profiler *m_profiler;
+
     //added by SS
     bool m_hot_lines;
     bool m_all_instructions;
@@ -100,7 +102,7 @@ AccessTraceForAddress& lookupTraceForAddress(const Address& addr,
 
 void printSorted(std::ostream& out, int num_of_sequencers,
                  const AddressProfiler::AddressMap &record_map,
-                 std::string description);
+                 std::string description, Profiler *profiler);
 
 inline std::ostream&
 operator<<(std::ostream& out, const AddressProfiler& obj)

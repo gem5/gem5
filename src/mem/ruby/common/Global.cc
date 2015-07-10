@@ -30,5 +30,4 @@
 
 using namespace std;
 
-RubySystem* g_system_ptr = 0;
 vector<map<uint32_t, AbstractController *> > g_abs_controls;

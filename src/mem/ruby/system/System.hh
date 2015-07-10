@@ -54,12 +54,12 @@ class RubySystem : public ClockedObject
       public:
         RubyEvent(RubySystem* _ruby_system)
         {
-            ruby_system = _ruby_system;
+            m_ruby_system = _ruby_system;
         }
       private:
         void process();
 
-        RubySystem* ruby_system;
+        RubySystem* m_ruby_system;
     };
 
     friend class RubyEvent;
@@ -128,6 +128,7 @@ class RubySystem : public ClockedObject
     static uint32_t m_block_size_bytes;
     static uint32_t m_block_size_bits;
     static uint32_t m_memory_size_bits;
+
     static bool m_warmup_enabled;
     static unsigned m_systems_to_warmup;
     static bool m_cooldown_enabled;
@@ -146,12 +147,12 @@ class RubySystem : public ClockedObject
 class RubyStatsCallback : public Callback
 {
   private:
-    RubySystem *ruby_system;
+    RubySystem *m_ruby_system;
 
   public:
     virtual ~RubyStatsCallback() {}
-    RubyStatsCallback(RubySystem *system) : ruby_system(system) {}
-    void process() { ruby_system->collateStats(); }
+    RubyStatsCallback(RubySystem *system) : m_ruby_system(system) {}
+    void process() { m_ruby_system->collateStats(); }
 };
 
 #endif // __MEM_RUBY_SYSTEM_SYSTEM_HH__

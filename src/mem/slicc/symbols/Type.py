@@ -418,8 +418,6 @@ ${{self.c_ident}}::print(ostream& out) const
         for dm in self.data_members.values():
             code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";''')
 
-        if self.isMessage:
-            code('out << "Time = " << g_system_ptr->clockPeriod() * getTime() << " ";')
         code.dedent()
 
         # Trailer

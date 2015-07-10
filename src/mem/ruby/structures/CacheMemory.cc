@@ -53,8 +53,10 @@ RubyCacheParams::create()
 
 CacheMemory::CacheMemory(const Params *p)
     : SimObject(p),
-    dataArray(p->dataArrayBanks, p->dataAccessLatency, p->start_index_bit),
-    tagArray(p->tagArrayBanks, p->tagAccessLatency, p->start_index_bit)
+    dataArray(p->dataArrayBanks, p->dataAccessLatency,
+              p->start_index_bit, p->ruby_system),
+    tagArray(p->tagArrayBanks, p->tagAccessLatency,
+             p->start_index_bit, p->ruby_system)
 {
     m_cache_size = p->size;
     m_latency = p->latency;

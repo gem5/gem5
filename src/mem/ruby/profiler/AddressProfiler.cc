@@ -32,7 +32,6 @@
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/system/System.hh"
 
 using namespace std;
 typedef AddressProfiler::AddressMap AddressMap;
@@ -64,7 +63,7 @@ lookupTraceForAddress(const Address& addr, AddressMap& record_map)
 
 void
 printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
-            string description)
+            string description, Profiler *profiler)
 {
     const int records_printed = 100;
 
@@ -82,7 +81,7 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
 
     out << "Total_entries_" << description << ": " << record_map.size()
         << endl;
-    if (g_system_ptr->getProfiler()->getAllInstructions())
+    if (profiler->getAllInstructions())
         out << "Total_Instructions_" << description << ": " << misses << endl;
     else
         out << "Total_data_misses_" << description << ": " << misses << endl;
@@ -143,7 +142,8 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
         << endl;
 }
 
-AddressProfiler::AddressProfiler(int num_of_sequencers)
+AddressProfiler::AddressProfiler(int num_of_sequencers, Profiler *profiler)
+    : m_profiler(profiler)
 {
     m_num_of_sequencers = num_of_sequencers;
     clearStats();
@@ -183,20 +183,20 @@ AddressProfiler::printStats(ostream& out) const
         out << "---------------" << endl;
         out << endl;
         printSorted(out, m_num_of_sequencers, m_dataAccessTrace,
-                    "block_address");
+                    "block_address", m_profiler);
 
         out << endl;
         out << "Hot MacroData Blocks" << endl;
         out << "--------------------" << endl;
         out << endl;
         printSorted(out, m_num_of_sequencers, m_macroBlockAccessTrace,
-                    "macroblock_address");
+                    "macroblock_address", m_profiler);
 
         out << "Hot Instructions" << endl;
         out << "----------------" << endl;
         out << endl;
         printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
-                    "pc_address");
+                    "pc_address", m_profiler);
     }
 
     if (m_all_instructions) {
@@ -205,7 +205,7 @@ AddressProfiler::printStats(ostream& out) const
         out << "-------------------------" << endl;
         out << endl;
         printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
-                    "pc_address");
+                    "pc_address", m_profiler);
         out << endl;
     }
 
@@ -222,7 +222,7 @@ AddressProfiler::printStats(ostream& out) const
         out << endl;
 
         printSorted(out, m_num_of_sequencers, m_retryProfileMap,
-                    "block_address");
+                    "block_address", m_profiler);
         out << endl;
     }
 }

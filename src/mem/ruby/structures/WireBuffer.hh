@@ -94,6 +94,8 @@ class WireBuffer : public SimObject
     // queues where memory requests live
     std::vector<MsgPtr> m_message_queue;
 
+    RubySystem * m_ruby_system;
+
 };
 
 std::ostream& operator<<(std::ostream& out, const WireBuffer& obj);

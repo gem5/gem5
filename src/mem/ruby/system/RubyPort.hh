@@ -75,12 +75,11 @@ class RubyPort : public MemObject
     {
       private:
         RespPacketQueue queue;
-        RubySystem* ruby_system;
         bool access_backing_store;
 
       public:
         MemSlavePort(const std::string &_name, RubyPort *_port,
-               RubySystem*_system, bool _access_backing_store, PortID id);
+                     bool _access_backing_store, PortID id);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(const Address& address);
 
@@ -179,6 +178,7 @@ class RubyPort : public MemObject
      */
     bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
 
+    RubySystem *m_ruby_system;
     uint32_t m_version;
     AbstractController* m_controller;
     MessageBuffer* m_mandatory_q_ptr;

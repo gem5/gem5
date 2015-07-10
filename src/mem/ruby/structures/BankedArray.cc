@@ -34,7 +34,8 @@
 #include "mem/ruby/system/System.hh"
 
 BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
-                         unsigned int startIndexBit)
+                         unsigned int startIndexBit, RubySystem *rs)
+    : m_ruby_system(rs)
 {
     this->banks = banks;
     this->accessLatency = accessLatency;
@@ -70,7 +71,7 @@ BankedArray::tryAccess(int64 idx)
     busyBanks[bank].idx = idx;
     busyBanks[bank].startAccess = curTick();
     busyBanks[bank].endAccess = curTick() +
-        (accessLatency-1) * g_system_ptr->clockPeriod();
+        (accessLatency-1) * m_ruby_system->clockPeriod();
 
     return true;
 }

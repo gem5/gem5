@@ -34,7 +34,6 @@
 
 #include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/structures/WireBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
@@ -58,6 +57,7 @@ WireBuffer::WireBuffer(const Params *p)
     : SimObject(p)
 {
     m_msg_counter = 0;
+    m_ruby_system = p->ruby_system;
 }
 
 void
@@ -73,7 +73,7 @@ void
 WireBuffer::enqueue(MsgPtr message, Cycles latency)
 {
     m_msg_counter++;
-    Cycles current_time = g_system_ptr->curCycle();
+    Cycles current_time = m_ruby_system->curCycle();
     Cycles arrival_time = current_time + latency;
     assert(arrival_time > current_time);
 
@@ -82,7 +82,7 @@ WireBuffer::enqueue(MsgPtr message, Cycles latency)
     m_message_queue.push_back(message);
     if (m_consumer_ptr != NULL) {
         m_consumer_ptr->
-            scheduleEventAbsolute(g_system_ptr->clockPeriod() * arrival_time);
+            scheduleEventAbsolute(m_ruby_system->clockPeriod() * arrival_time);
     } else {
         panic("No Consumer for WireBuffer! %s\n", *this);
     }
@@ -116,12 +116,12 @@ WireBuffer::recycle()
     MsgPtr node = m_message_queue.front();
     pop_heap(m_message_queue.begin(), m_message_queue.end(), greater<MsgPtr>());
 
-    node->setLastEnqueueTime(g_system_ptr->curCycle() + Cycles(1));
+    node->setLastEnqueueTime(m_ruby_system->curCycle() + Cycles(1));
     m_message_queue.back() = node;
     push_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MsgPtr>());
     m_consumer_ptr->
-        scheduleEventAbsolute(g_system_ptr->curCycle() + Cycles(1));
+        scheduleEventAbsolute(m_ruby_system->curCycle() + Cycles(1));
 }
 
 bool
@@ -129,7 +129,7 @@ WireBuffer::isReady()
 {
     return ((!m_message_queue.empty()) &&
             (m_message_queue.front()->getLastEnqueueTime() <=
-                    g_system_ptr->curCycle()));
+                    m_ruby_system->curCycle()));
 }
 
 void

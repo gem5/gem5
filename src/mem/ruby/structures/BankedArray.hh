@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/system/System.hh"
 #include "sim/core.hh"
 
 class BankedArray
@@ -44,6 +45,7 @@ class BankedArray
     Cycles accessLatency;
     unsigned int bankBits;
     unsigned int startIndexBit;
+    RubySystem *m_ruby_system;
 
     class AccessRecord
     {
@@ -62,7 +64,7 @@ class BankedArray
 
   public:
     BankedArray(unsigned int banks, Cycles accessLatency,
-                unsigned int startIndexBit);
+                unsigned int startIndexBit, RubySystem *rs);
 
     // Note: We try the access based on the cache index, not the address
     // This is so we don't get aliasing on blocks being replaced

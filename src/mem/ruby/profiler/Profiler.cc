@@ -56,7 +56,6 @@
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/System.hh"
 
 using namespace std;
 using m5::stl_helpers::operator<<;
@@ -66,12 +65,12 @@ Profiler::Profiler(const RubySystemParams *p)
     m_hot_lines = p->hot_lines;
     m_all_instructions = p->all_instructions;
 
-    m_address_profiler_ptr = new AddressProfiler(p->num_of_sequencers);
+    m_address_profiler_ptr = new AddressProfiler(p->num_of_sequencers, this);
     m_address_profiler_ptr->setHotLines(m_hot_lines);
     m_address_profiler_ptr->setAllInstructions(m_all_instructions);
 
     if (m_all_instructions) {
-        m_inst_profiler_ptr = new AddressProfiler(p->num_of_sequencers);
+        m_inst_profiler_ptr = new AddressProfiler(p->num_of_sequencers, this);
         m_inst_profiler_ptr->setHotLines(m_hot_lines);
         m_inst_profiler_ptr->setAllInstructions(m_all_instructions);
     }

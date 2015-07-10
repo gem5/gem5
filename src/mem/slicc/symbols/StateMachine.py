@@ -735,7 +735,7 @@ $c_ident::regStats()
              event < ${ident}_Event_NUM; ++event) {
             Stats::Vector *t = new Stats::Vector();
             t->init(m_num_controllers);
-            t->name(g_system_ptr->name() + ".${c_ident}." +
+            t->name(params()->ruby_system->name() + ".${c_ident}." +
                 ${ident}_Event_to_string(event));
             t->flags(Stats::pdf | Stats::total | Stats::oneline |
                      Stats::nozero);
@@ -753,7 +753,7 @@ $c_ident::regStats()
 
                 Stats::Vector *t = new Stats::Vector();
                 t->init(m_num_controllers);
-                t->name(g_system_ptr->name() + ".${c_ident}." +
+                t->name(params()->ruby_system->name() + ".${c_ident}." +
                         ${ident}_State_to_string(state) +
                         "." + ${ident}_Event_to_string(event));
 

@@ -28,6 +28,7 @@
 #          Brad Beckmann
 
 from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
 
 class RubyCache(SimObject):
@@ -46,3 +47,4 @@ class RubyCache(SimObject):
     dataAccessLatency = Param.Cycles(1, "cycles for a data array access")
     tagAccessLatency = Param.Cycles(1, "cycles for a tag array access")
     resourceStalls = Param.Bool(False, "stall if there is a resource failure")
+    ruby_system = Param.RubySystem(Parent.any, "")

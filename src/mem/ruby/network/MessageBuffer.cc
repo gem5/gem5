@@ -41,7 +41,7 @@ using m5::stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const string &name)
     : m_time_last_time_size_checked(0), m_time_last_time_enqueue(0),
-    m_time_last_time_pop(0), m_last_arrival_time(0)
+      m_time_last_time_pop(0), m_last_arrival_time(0)
 {
     m_msg_counter = 0;
     m_consumer = NULL;

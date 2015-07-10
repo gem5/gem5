@@ -66,7 +66,7 @@ class AddressProfiler;
 class Profiler
 {
   public:
-    Profiler(const RubySystemParams *);
+    Profiler(const RubySystemParams *params);
     ~Profiler();
 
     void wakeup();

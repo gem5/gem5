@@ -58,9 +58,6 @@ bool RubySystem::m_cooldown_enabled = false;
 RubySystem::RubySystem(const Params *p)
     : ClockedObject(p), m_access_backing_store(p->access_backing_store)
 {
-    if (g_system_ptr != NULL)
-        fatal("Only one RubySystem object currently allowed.\n");
-
     m_random_seed = p->random_seed;
     srandom(m_random_seed);
     m_randomization = p->randomization;
@@ -69,9 +66,6 @@ RubySystem::RubySystem(const Params *p)
     assert(isPowerOf2(m_block_size_bytes));
     m_block_size_bits = floorLog2(m_block_size_bytes);
     m_memory_size_bits = p->memory_size_bits;
-
-    // Setup the global variables used in Ruby
-    g_system_ptr = this;
 
     // Resize to the size of different machine types
     g_abs_controls.resize(MachineType_NUM);
@@ -329,9 +323,9 @@ void
 RubySystem::RubyEvent::process()
 {
     if (RubySystem::getWarmupEnabled()) {
-        ruby_system->m_cache_recorder->enqueueNextFetchRequest();
+        m_ruby_system->m_cache_recorder->enqueueNextFetchRequest();
     } else if (RubySystem::getCooldownEnabled()) {
-        ruby_system->m_cache_recorder->enqueueNextFlushRequest();
+        m_ruby_system->m_cache_recorder->enqueueNextFlushRequest();
     }
 }
 

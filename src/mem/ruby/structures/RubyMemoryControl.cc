@@ -310,12 +310,6 @@ RubyMemoryControl::enqueueMemRef(MemoryNode *memRef)
     physical_address_t addr = memRef->m_addr;
     int bank = getBank(addr);
 
-    DPRINTF(RubyMemory,
-            "New memory request%7d: %#08x %c arrived at %10d bank = %3x sched %c\n",
-            m_msg_counter, addr, memRef->m_is_mem_read ? 'R':'W',
-            memRef->m_time * g_system_ptr->clockPeriod(),
-            bank, m_event.scheduled() ? 'Y':'N');
-
     m_profiler_ptr->profileMemReq(bank);
     m_input_queue.push_back(memRef);
 

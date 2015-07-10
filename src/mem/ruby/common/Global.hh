@@ -35,9 +35,6 @@
 #include "base/str.hh"
 #include "base/types.hh"
 
-class RubySystem;
-extern RubySystem* g_system_ptr;
-
 class AbstractController;
 extern std::vector<std::map<uint32_t, AbstractController *> > g_abs_controls;
 

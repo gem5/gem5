@@ -45,7 +45,7 @@ class RubyPort(MemObject):
     mem_slave_port = SlavePort("Ruby memory port")
 
     using_ruby_tester = Param.Bool(False, "")
-    ruby_system = Param.RubySystem("")
+    ruby_system = Param.RubySystem(Parent.any, "")
     system = Param.System(Parent.any, "system object")
     support_data_reqs = Param.Bool(True, "data cache requests supported")
     support_inst_reqs = Param.Bool(True, "inst cache requests supported")
@@ -53,7 +53,7 @@ class RubyPort(MemObject):
 class RubyPortProxy(RubyPort):
     type = 'RubyPortProxy'
     cxx_header = "mem/ruby/system/RubyPortProxy.hh"
-    
+
 class RubySequencer(RubyPort):
     type = 'RubySequencer'
     cxx_class = 'Sequencer'
