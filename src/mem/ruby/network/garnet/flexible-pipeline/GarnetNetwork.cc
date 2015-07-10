@@ -40,6 +40,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkInterface.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
+#include "mem/ruby/system/System.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;
@@ -227,10 +228,12 @@ GarnetNetwork::regStats()
 void
 GarnetNetwork::collateStats()
 {
+    RubySystem *rs = params()->ruby_system;
+    double time_delta = double(curCycle() - rs->getStartCycle());
+
     for (int i = 0; i < m_links.size(); i++) {
         m_average_link_utilization +=
-            (double(m_links[i]->getLinkUtilization())) /
-            (double(curCycle() - g_ruby_start));
+            (double(m_links[i]->getLinkUtilization())) / time_delta;
 
         vector<unsigned int> vc_load = m_links[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {

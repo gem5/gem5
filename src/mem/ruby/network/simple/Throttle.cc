@@ -46,19 +46,19 @@ const int PRIORITY_SWITCH_LIMIT = 128;
 
 static int network_message_to_size(Message* net_msg_ptr);
 
-Throttle::Throttle(int sID, NodeID node, Cycles link_latency,
+Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
                    ClockedObject *em)
-    : Consumer(em)
+    : Consumer(em), m_ruby_system(rs)
 {
     init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
     m_sID = sID;
 }
 
-Throttle::Throttle(NodeID node, Cycles link_latency,
+Throttle::Throttle(RubySystem *rs, NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
                    ClockedObject *em)
-    : Consumer(em)
+    : Consumer(em), m_ruby_system(rs)
 {
     init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
     m_sID = 0;
@@ -245,8 +245,10 @@ Throttle::clearStats()
 void
 Throttle::collateStats()
 {
-    m_link_utilization = 100.0 * m_link_utilization_proxy
-        / (double(g_system_ptr->curCycle() - g_ruby_start));
+    double time_delta = double(m_ruby_system->curCycle() -
+                               m_ruby_system->getStartCycle());
+
+    m_link_utilization = 100.0 * m_link_utilization_proxy / time_delta;
 }
 
 void

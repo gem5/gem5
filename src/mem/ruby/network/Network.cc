@@ -65,7 +65,7 @@ Network::Network(const Params *p)
         m_ordered[i] = false;
     }
 
-    p->ruby_system->registerNetwork(this);
+    params()->ruby_system->registerNetwork(this);
 
     // Initialize the controller's network pointers
     for (std::vector<BasicExtLink*>::const_iterator i = p->ext_links.begin();

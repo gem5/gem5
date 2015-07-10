@@ -338,7 +338,7 @@ RubySystem::RubyEvent::process()
 void
 RubySystem::resetStats()
 {
-    g_ruby_start = curCycle();
+    m_start_cycle = curCycle();
 }
 
 bool

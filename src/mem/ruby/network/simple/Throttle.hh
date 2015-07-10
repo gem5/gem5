@@ -52,11 +52,12 @@ class MessageBuffer;
 class Throttle : public Consumer
 {
   public:
-    Throttle(int sID, NodeID node, Cycles link_latency,
+    Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
              int link_bandwidth_multiplier, int endpoint_bandwidth,
              ClockedObject *em);
-    Throttle(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
-             int endpoint_bandwidth, ClockedObject *em);
+    Throttle(RubySystem *rs, NodeID node, Cycles link_latency,
+             int link_bandwidth_multiplier, int endpoint_bandwidth,
+             ClockedObject *em);
     ~Throttle() {}
 
     std::string name()
@@ -103,6 +104,7 @@ class Throttle : public Consumer
     Cycles m_link_latency;
     int m_wakeups_wo_switch;
     int m_endpoint_bandwidth;
+    RubySystem *m_ruby_system;
 
     // Statistical variables
     Stats::Scalar m_link_utilization;

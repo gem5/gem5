@@ -78,6 +78,7 @@ class RubySystem : public ClockedObject
     static bool getCooldownEnabled() { return m_cooldown_enabled; }
 
     SimpleMemory *getPhysMem() { return m_phys_mem; }
+    Cycles getStartCycle() { return m_start_cycle; }
     const bool getAccessBackingStore() { return m_access_backing_store; }
 
     // Public Methods
@@ -135,6 +136,7 @@ class RubySystem : public ClockedObject
 
     Network* m_network;
     std::vector<AbstractController *> m_abs_cntrl_vec;
+    Cycles m_start_cycle;
 
   public:
     Profiler* m_profiler;

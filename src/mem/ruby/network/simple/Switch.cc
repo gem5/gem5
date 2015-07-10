@@ -81,7 +81,8 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
                    Cycles link_latency, int bw_multiplier)
 {
     // Create a throttle
-    Throttle* throttle_ptr = new Throttle(m_id, m_throttles.size(),
+    RubySystem *rs = m_network_ptr->params()->ruby_system;
+    Throttle* throttle_ptr = new Throttle(m_id, rs, m_throttles.size(),
                                           link_latency, bw_multiplier,
                                           m_network_ptr->getEndpointBandwidth(),
                                           this);
