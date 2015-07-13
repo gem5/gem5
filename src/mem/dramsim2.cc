@@ -349,7 +349,7 @@ DRAMSim2::getSlavePort(const std::string &if_name, PortID idx)
     }
 }
 
-unsigned int
+DrainState
 DRAMSim2::drain()
 {
     // check our outstanding reads and writes and if any they need to
