@@ -104,7 +104,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         }
     }
 
-    emplace_back(Target(pkt, readyTime, order, source, markPending));
+    emplace_back(pkt, readyTime, order, source, markPending);
 }
 
 

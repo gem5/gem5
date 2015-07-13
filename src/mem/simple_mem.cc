@@ -161,7 +161,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         // to keep things simple (and in order), we put the packet at
         // the end even if the latency suggests it should be sent
         // before the packet(s) before it
-        packetQueue.emplace_back(DeferredPacket(pkt, curTick() + getLatency()));
+        packetQueue.emplace_back(pkt, curTick() + getLatency());
         if (!retryResp && !dequeueEvent.scheduled())
             schedule(dequeueEvent, packetQueue.back().tick);
     } else {

@@ -142,7 +142,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool force_order)
         // note that currently we ignore a potentially outstanding retry
         // and could in theory put a new packet at the head of the
         // transmit list before retrying the existing packet
-        transmitList.emplace_front(DeferredPacket(when, pkt));
+        transmitList.emplace_front(when, pkt);
         schedSendEvent(when);
         return;
     }
@@ -157,7 +157,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool force_order)
 
     // list is non-empty and this belongs at the end
     if (when >= transmitList.back().tick) {
-        transmitList.emplace_back(DeferredPacket(when, pkt));
+        transmitList.emplace_back(when, pkt);
         return;
     }
 
@@ -169,7 +169,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool force_order)
     ++i; // already checked for insertion at front
     while (i != transmitList.end() && when >= i->tick)
         ++i;
-    transmitList.emplace(i, DeferredPacket(when, pkt));
+    transmitList.emplace(i, when, pkt);
 }
 
 void
