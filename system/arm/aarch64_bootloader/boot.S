@@ -34,8 +34,12 @@ _start:
          * registers.
          */
         mrs	x0, mpidr_el1
-        tst	x0, #15
-        b.ne	1f				// secondary CPU
+        // ARM MPIDR_EL1 bytes: Aff3 (AArch64), Stuff, Aff2, Aff1, Aff0
+        // Test the the MPIDR_EL1 register against 0xff00ffffff to
+        // extract the primary CPU.
+        ldr x1, =0xff00ffffff
+        tst x0, x1                    // check for cpuid==zero
+        b.ne	1f				      // secondary CPU
 
         ldr	x1, =GIC_DIST_BASE		// GICD_CTLR
         mov	w0, #3				// EnableGrp0 | EnableGrp1
@@ -77,8 +81,13 @@ start_ns:
         mov	x3, xzr
 
         mrs	x4, mpidr_el1
-        tst	x4, #15
-        b.eq	2f
+        // ARM MPIDR_EL1 bytes: Aff3 (AArch64), Stuff, Aff2, Aff1, Aff0
+        // Test the the MPIDR_EL1 register against 0xff00ffffff to
+        // extract the primary CPU.
+        ldr x1, =0xff00ffffff
+        tst x4, x1                    // check for cpuid==zero
+        mov x1, xzr                   // load previous 'xzr' value back to x1
+        b.eq	2f				      // secondary CPU
 
         /*
          * Secondary CPUs
