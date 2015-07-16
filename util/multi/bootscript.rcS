@@ -1,0 +1,122 @@
+#!/bin/bash
+
+
+#
+# Copyright (c) 2015 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Gabor Dozsa
+#
+#
+# This is an example boot script to use for muti gem5 runs. The important
+# task here is to extract the rank and size information from the kernel
+# boot args and use those to configure MAC/IP addresses and hostname.
+# Then we can kick off our (parallel) workload ...
+#
+# You are expected to costumize this scipt for your needs (e.g. change
+# the command at the end of the scipt to run your tests/workloads.
+
+source /root/.bashrc
+echo "bootscript.rcS is running"
+
+m='GEM5\_RANK=([0-9]+) GEM5\_SIZE=([0-9]+)'
+if [[ $(cat /proc/cmdline) =~ $m ]]
+then
+    MY_RANK=${BASH_REMATCH[1]}
+    MY_SIZE=${BASH_REMATCH[2]}
+else
+    echo "(E) GEM5_RANK/GEM5_SIZE was not defined in bootargs, exiting ..."
+    /sbin/m5 abort
+fi
+
+/bin/hostname node${MY_RANK}
+
+# Keep MAC address assignment simple for now ...
+(($MY_RANK>97)) && { echo "(E) Rank must be less than 98"; /sbin/m5 abort; }
+((MY_ADDR=MY_RANK+2))
+if (($MY_ADDR<10))
+then
+    MY_ADDR_PADDED=0${MY_ADDR}
+else
+    MY_ADDR_PADDED=${MY_ADDR}
+fi
+
+/sbin/ifconfig eth0 hw ether 00:90:00:00:00:${MY_ADDR_PADDED}
+/sbin/ifconfig eth0 192.168.0.${MY_ADDR} netmask 255.255.255.0 up
+
+/sbin/ifconfig -a
+
+# Prepare host lists for mpirun
+MY_MPI_HOSTS="192.168.0.2"
+for ((i=1; i<MY_SIZE; i++))
+do
+    MY_MPI_HOSTS+=",192.168.0.$((i+2))"
+done
+
+# Check that Ethernet links work, then take a checkpoint
+if  [ "$MY_RANK" == "0" ]
+then
+    OLDIFS=$IFS
+    IFS=","
+    for i in $MY_MPI_HOSTS
+    do
+        ping -c 1  $i || { echo "ping $i failed, exiting ..."; exit -1; }
+        ssh $i hostname || { echo "ssh $i failed, exiting ..."; exit -1; }
+    done
+    IFS=$OLDIFS
+    /sbin/m5 checkpoint
+fi
+
+# --------------------------------------------
+#  ------ Start your tests below ... ---------
+# --------------------------------------------
+
+if [ "$MY_RANK" == "0" ]
+then
+    echo "MPI test"
+    #mpirun -H 192.168.0.3,192.168.0.2 hostname
+    cd /benchmarks
+    mpirun -H $MY_MPI_HOSTS lulesh/lulesh2.0-mpi -s 5
+else
+    # This is to avoid other (rank!=0) gem5 processes exiting
+    # before the test (started by rank 0) completes. When rank 0 completes the
+    # test it will exit and that will trigger a notification to all the peer 
+    # gem5 peocesses to stop the simulation.
+    echo "sleep forever..."
+    while /bin/true
+    do
+        sleep 5
+    done
+fi

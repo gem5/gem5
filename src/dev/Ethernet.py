@@ -1,3 +1,15 @@
+# Copyright (c) 2015 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -45,6 +57,20 @@ class EtherLink(EtherObject):
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
+
+class MultiEtherLink(EtherObject):
+    type = 'MultiEtherLink'
+    cxx_header = "dev/multi_etherlink.hh"
+    int0 = SlavePort("interface 0")
+    delay = Param.Latency('0us', "packet transmit delay")
+    delay_var = Param.Latency('0ns', "packet transmit delay variability")
+    speed = Param.NetworkBandwidth('1Gbps', "link speed")
+    dump = Param.EtherDump(NULL, "dump object")
+    multi_rank  =  Param.UInt32('0', "Rank of the this gem5 process (multi run)")
+    sync_start  = Param.Latency('5200000000000t', "first multi sync barrier")
+    sync_repeat = Param.Latency('10us', "multi sync barrier repeat")
+    server_name = Param.String('localhost', "Message server name")
+    server_port = Param.UInt32('2200', "Message server port")
 
 class EtherBus(EtherObject):
     type = 'EtherBus'
