@@ -64,6 +64,7 @@ class Decoder
     static ByteTable ImmediateTypeTwoByte;
     static ByteTable ImmediateTypeThreeByte0F38;
     static ByteTable ImmediateTypeThreeByte0F3A;
+    static ByteTable ImmediateTypeVex[10];
 
   protected:
     struct InstBytes
@@ -175,6 +176,9 @@ class Decoder
         ResetState,
         FromCacheState,
         PrefixState,
+        TwoByteVexState,
+        ThreeByteVexFirstState,
+        ThreeByteVexSecondState,
         OneByteOpcodeState,
         TwoByteOpcodeState,
         ThreeByte0F38OpcodeState,
@@ -193,6 +197,9 @@ class Decoder
     State doResetState();
     State doFromCacheState();
     State doPrefixState(uint8_t);
+    State doTwoByteVexState(uint8_t);
+    State doThreeByteVexFirstState(uint8_t);
+    State doThreeByteVexSecondState(uint8_t);
     State doOneByteOpcodeState(uint8_t);
     State doTwoByteOpcodeState(uint8_t);
     State doThreeByte0F38OpcodeState(uint8_t);
@@ -205,6 +212,8 @@ class Decoder
     //Process the actual opcode found earlier, using the supplied tables.
     State processOpcode(ByteTable &immTable, ByteTable &modrmTable,
                         bool addrSizedImm = false);
+    // Process the opcode found with VEX / XOP prefix.
+    State processExtendedOpcode(ByteTable &immTable);
 
   protected:
     /// Caching for decoded instruction objects.

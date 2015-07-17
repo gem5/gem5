@@ -87,3 +87,12 @@ def bitfield STACKSIZE stackSize;
 def bitfield MODE mode;
 def bitfield MODE_MODE mode.mode;
 def bitfield MODE_SUBMODE mode.submode;
+
+def bitfield VEX_R vex.first.r;
+def bitfield VEX_X vex.first.x;
+def bitfield VEX_B vex.first.b;
+def bitfield VEX_MAP vex.first.map_select;
+def bitfield VEX_W vex.second.w;
+def bitfield VEX_VVVV vex.second.vvvv;
+def bitfield VEX_L vex.second.l;
+def bitfield VEX_PP vex.second.pp;

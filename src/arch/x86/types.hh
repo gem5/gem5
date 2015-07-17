@@ -67,7 +67,10 @@ namespace X86ISA
         AddressSizeOverride,
         Lock,
         Rep,
-        Repne
+        Repne,
+        Vex2Prefix,
+        Vex3Prefix,
+        XopPrefix,
     };
 
     BitUnion8(LegacyPrefixVector)
@@ -104,12 +107,55 @@ namespace X86ISA
         Bitfield<0> b;
     EndBitUnion(Rex)
 
+    BitUnion(uint32_t, ThreeByteVex)
+        Bitfield<7,0> zero;
+        SubBitUnion(first, 15, 8)
+            // Inverted one-bit extension of ModRM reg field
+            Bitfield<15> r;
+            // Inverted one-bit extension of SIB index field
+            Bitfield<14> x;
+            // Inverted one-bit extension, r/m field or SIB base field
+            Bitfield<13> b;
+            // Opcode map select
+            Bitfield<12, 8> map_select;
+        EndSubBitUnion(first)
+        SubBitUnion(second, 23, 16)
+            // Default operand size override for a general purpose register to
+            // 64-bit size in 64-bit mode; operand configuration specifier for
+            // certain YMM/XMM-based operations.
+            Bitfield<23> w;
+            // Source or destination register selector, in ones' complement
+            // format
+            Bitfield<22, 19>  vvvv;
+            // Vector length specifier
+            Bitfield<18> l;
+            // Implied 66, F2, or F3 opcode extension
+            Bitfield<17, 16> pp;
+        EndSubBitUnion(second)
+    EndBitUnion(ThreeByteVex)
+
+    BitUnion16(TwoByteVex)
+        Bitfield<7,0> zero;
+        SubBitUnion(first, 15, 8)
+            // Inverted one-bit extension of ModRM reg field
+            Bitfield<15> r;
+            // Source or destination register selector, in ones' complement
+            // format
+            Bitfield<14, 11>  vvvv;
+            // Vector length specifier
+            Bitfield<10> l;
+            // Implied 66, F2, or F3 opcode extension
+            Bitfield<9, 8> pp;
+        EndSubBitUnion(first)
+    EndBitUnion(TwoByteVex)
+
     enum OpcodeType {
         BadOpcode,
         OneByteOpcode,
         TwoByteOpcode,
         ThreeByte0F38Opcode,
-        ThreeByte0F3AOpcode
+        ThreeByte0F3AOpcode,
+        Vex,
     };
 
     static inline const char *
@@ -126,6 +172,8 @@ namespace X86ISA
             return "three byte 0f38";
           case ThreeByte0F3AOpcode:
             return "three byte 0f3a";
+          case Vex:
+            return "vex";
           default:
             return "unrecognized!";
         }
@@ -160,6 +208,10 @@ namespace X86ISA
         //Prefixes
         LegacyPrefixVector legacy;
         Rex rex;
+        // We use the following field for encoding both two byte and three byte
+        // escape sequences
+        ThreeByteVex vex;
+
         //This holds all of the bytes of the opcode
         struct
         {
@@ -191,11 +243,13 @@ namespace X86ISA
         operator << (std::ostream & os, const ExtMachInst & emi)
     {
         ccprintf(os, "\n{\n\tleg = %#x,\n\trex = %#x,\n\t"
+                     "vex/xop = %#x,\n\t"
                      "op = {\n\t\ttype = %s,\n\t\top = %#x,\n\t\t},\n\t"
                      "modRM = %#x,\n\tsib = %#x,\n\t"
                      "immediate = %#x,\n\tdisplacement = %#x\n\t"
                      "dispSize = %d}\n",
                      (uint8_t)emi.legacy, (uint8_t)emi.rex,
+                     (uint32_t)emi.vex,
                      opcodeTypeToStr(emi.opcode.type), (uint8_t)emi.opcode.op,
                      (uint8_t)emi.modRM, (uint8_t)emi.sib,
                      emi.immediate, emi.displacement, emi.dispSize);

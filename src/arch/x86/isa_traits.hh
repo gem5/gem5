@@ -71,7 +71,8 @@ namespace X86ISA
     const ExtMachInst NoopMachInst M5_VAR_USED = {
         0x0,                            // No legacy prefixes.
         0x0,                            // No rex prefix.
-        { OneByteOpcode, 0x90 },          // One opcode byte, 0x90.
+        0x0,                            // No two / three byte escape sequence
+        { OneByteOpcode, 0x90 },        // One opcode byte, 0x90.
         0x0, 0x0,                       // No modrm or sib.
         0, 0,                           // No immediate or displacement.
         8, 8, 8,                        // All sizes are 8.

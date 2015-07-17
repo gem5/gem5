@@ -1,0 +1,1431 @@
+// Copyright (c) 2015 Mark D. Hill and David A. Wood
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Nilay Vaish
+
+////////////////////////////////////////////////////////////////////
+//
+// Decode the opcodes with vex prefix.
+//
+format WarnUnimpl {
+    'X86ISA::Vex': decode VEX_MAP {
+        0x01: decode OPCODE_OP_TOP5 {
+            0x02: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: vmovups();
+                        default: Inst::UD2();
+                    }
+                    0x1: decode VEX_VVVV {
+                        0x15: vmovups();
+                        default: Inst::UD2();
+                    }
+                    0x2: decode VEX_L {
+                        0x0: decode MODRM_MOD {
+                            0x03: vmovhlps();
+                            default: decode VEX_VVVV {
+                                0x15: vmovlps();
+                                default: Inst::UD2();
+                            }
+                        }
+                        default: Inst::UD2();
+                    }
+                    0x3: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: vmovlps();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    0x4: vunpcklps();
+                    0x5: vunpckhps();
+                    0x6: decode VEX_L {
+                        0x0: decode MODRM_MOD {
+                            0x03: vmovlhps();
+                            0x0: vmovhps();
+                        }
+                        default: Inst::UD2();
+                    }
+                    0x7: decode VEX_L {
+                        0x0: vmovhps();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: vmovupd();
+                        default: Inst::UD2();
+                    }
+                    0x1: decode VEX_VVVV {
+                        0x15: vmovupd();
+                        default: Inst::UD2();
+                    }
+                    0x2: decode VEX_L {
+                        0x0: vmovlpd();
+                        default: Inst::UD2();
+                    }
+                    0x3: decode VEX_L {
+                        0x0: vmovlpd();
+                        default: Inst::UD2();
+                    }
+                    0x4: vunpcklpd();
+                    0x5: vunpckhpd();
+                    0x6: decode VEX_L {
+                        0x0: vmovhpd();
+                        default: Inst::UD2();
+                    }
+                    0x7: decode VEX_L {
+                        0x0: vmovhpd();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode MODRM_MOD {
+                        0x03: vmovss();
+                        default: vmovss();
+                    }
+                    0x1: decode MODRM_MOD {
+                        0x03: vmovss();
+                        default: vmovss();
+                    }
+                    0x2: decode VEX_VVVV {
+                        0x15: vmovsldup();
+                        default: Inst::UD2();
+                    }
+                    0x6: decode VEX_VVVV {
+                        0x15: vmovshdup();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode MODRM_MOD {
+                        0x03: vmovsd();
+                        default: vmovsd();
+                    }
+                    0x1: decode MODRM_MOD {
+                        0x03: vmovsd();
+                        default: vmovsd();
+                    }
+                    0x2: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: vmovddup();
+                            default: vmovddup();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0A: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: vmovmskps();
+                        default: Inst::UD2();
+                    }
+                    0x1: decode VEX_VVVV {
+                        0x015: vsqrtps();
+                        default: Inst::UD2();
+                    }
+                    0x2: decode VEX_VVVV {
+                        0x15: vrsqrtps();
+                        default: Inst::UD2();
+                    }
+                    0x3: decode VEX_VVVV {
+                        0x15: vrcpps();
+                        default: Inst::UD2();
+                    }
+                    0x4: vandps();
+                    0x5: vandnps();
+                    0x6: vorps();
+                    0x7: vxorps();
+                    default: Inst::UD2();
+                }
+
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: vmovmskpd();
+                        default: Inst::UD2();
+                    }
+                    0x1: decode VEX_VVVV {
+                        0x15: vsqrtpd();
+                        default: Inst::UD2();
+                    }
+                    0x4: vandpd();
+                    0x5: vandnpd();
+                    0x6: vorpd();
+                    0x7: vxorpd();
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x1: vsqrtss();
+                    0x2: vrsqrtss();
+                    0x3: vrcpss();
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x1: vsqrtsd();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0C: decode VEX_PP {
+                0x1: decode VEX_L {
+                    0x0: decode OPCODE_OP_BOTTOM3 {
+                        0x0: vpunpcklbw();
+                        0x1: vpunpcklwd();
+                        0x2: vpunpckldq();
+                        0x3: vpacksswb();
+                        0x4: vpcmpgtb();
+                        0x5: vpcmpgtw();
+                        0x6: vpcmpgtd();
+                        0x7: vpackuswb();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
+            }
+
+            0x0E: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x7: decode VEX_L {
+                        0x0: vzeroupper();
+                        0x1: vzeroall();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: vpshufd();
+                        default: Inst::UD2();
+                    }
+                    0x1: decode VEX_L {
+                        0x0: decode MODRM_REG {
+                            0x2: vpsrlw();
+                            0x4: vpsraw();
+                            0x6: vpsllw();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_L {
+                        0x0: decode MODRM_REG {
+                            0x2: vpsrld();
+                            0x4: vpsrad();
+                            0x6: vpslld();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+
+                    0x3: decode VEX_L {
+                        0x0: decode MODRM_REG {
+                            0x2: vpsrlq();
+                            0x3: vpsrldq();
+                            0x6: vpsllq();
+                            0x7: vpslldq();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_L {
+                        0x0: vpcmpeqb();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_L {
+                        0x0: vpcmpeqw();
+                        default: Inst::UD2();
+                    }
+                    0x6: decode VEX_L {
+                        0x0: vpcmpeqd();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: vpshufhw();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: vpshuflw();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
+            }
+
+            0x18: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vcmpccps();
+                    0x6: vshufps();
+                    default: Inst::UD2();
+                }
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vcmpccpd();
+                    0x4: decode MODRM_MOD {
+                        0x03: vpinsrw();
+                        default: vpinsrw();
+                    }
+                    0x5: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: vpextrw();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    0x6: vshufpd();
+                    default: Inst::UD2();
+                }
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vcmpccss();
+                    default: Inst::UD2();
+                }
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vcmpccsd();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
+            }
+
+            0x1A: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vaddsubpd();
+                    0x1: decode VEX_L {
+                        0x0: vpsrlw();
+                        default: Inst::UD2();
+                    }
+                    0x2: decode VEX_L {
+                        0x0: vpsrld();
+                        default: Inst::UD2();
+                    }
+                    0x3: decode VEX_L {
+                        0x0: vpsrlq();
+                        default: Inst::UD2();
+                    }
+                    0x4: decode VEX_L {
+                        0x0: vpaddq();
+                        default: Inst::UD2();
+                    }
+                    0x5: decode VEX_L {
+                        0x0: vpmullw();
+                        default: Inst::UD2();
+                    }
+                    0x6: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: vmovq();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    0x7: decode VEX_VVVV {
+                        0x15: vpmovmskb();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vaddsubps();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
+            }
+
+            0x1C: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_L {
+                        0x0: vpavgb();
+                        default: Inst::UD2();
+                    }
+                    0x1: vpsraw();
+                    0x2: vpsrad();
+                    0x3: decode VEX_L {
+                        0x0: vpavgw();
+                        default: Inst::UD2();
+                    }
+                    0x4: vpmulhuw();
+                    0x5: vpmulhw();
+                    0x6: vcvttpd2dq();
+                    0x7: decode VEX_VVVV {
+                        0x015: decode VEX_L {
+                            0x0: vmovntdq();
+                            default: vmovntdq();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x6: vcvtdq2pd();
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x6: vcvtpd2dq();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x1E: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x1: vpsllw();
+                    0x2: vpslld();
+                    0x3: vpsllq();
+                    0x4: vpmuludq();
+                    0x5: vpmaddwd();
+                    0x6: vpsadbw();
+                    0x7: decode VEX_L {
+                        0x0: vmaskmovdqu();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_L {
+                        0x0: vlddqu();
+                        default: vlddqu();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x05: decode VEX_PP {
+                0x0: decode VEX_VVVV {
+                    0x15: decode OPCODE_OP_BOTTOM3 {
+                        0x0: vmovaps();
+                        0x1: vmovaps();
+                        0x3: vmovntps();
+                        0x6: vucomiss();
+                        0x7: vcomiss();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x1: decode VEX_VVVV {
+                    0x15: decode OPCODE_OP_BOTTOM3 {
+                        0x0: vmovapd();
+                        0x1: vmovapd();
+                        0x3: vmovntpd();
+                        0x6: vucomisd();
+                        0x7: vcomisd();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vcvtsi2ss();
+                    0x4: vcvttss2si();
+                    0x5: vcvtss2si();
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vcvtsi2sd();
+                    0x4: vcvttsd2si();
+                    0x5: vcvtsd2si();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0B: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vaddps();
+                    0x1: vmulps();
+                    0x2: vcvtps2pd();
+                    0x3: vcvtdq2ps();
+                    0x4: vsubps();
+                    0x5: vminps();
+                    0x6: vdivps();
+                    0x7: vmaxps();
+                    default: Inst::UD2();
+                }
+
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vaddpd();
+                    0x1: vmulpd();
+                    0x2: vcvtpd2ps();
+                    0x3: vcvtps2dq();
+                    0x4: vsubpd();
+                    0x5: vminpd();
+                    0x6: vdivpd();
+                    0x7: vmaxpd();
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vaddss();
+                    0x1: vmulss();
+                    0x2: vcvtss2sd();
+                    0x3: vcvttps2dq();
+                    0x4: vsubss();
+                    0x5: vminss();
+                    0x6: vdivss();
+                    0x7: vmaxss();
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vaddsd();
+                    0x1: vmulsd();
+                    0x2: vcvtsd2ss();
+                    0x4: vsubsd();
+                    0x5: vminsd();
+                    0x6: vdivsd();
+                    0x7: vmaxsd();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0D: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpunpckhbw();
+                    0x1: vpunpckhbd();
+                    0x2: vpunpckhdq();
+                    0x3: decode VEX_L {
+                        0x0: vpackssdw();
+                        default: Inst::UD2();
+                    }
+                    0x4: vpunpcklqdq();
+                    0x5: vpunpckhqdq();
+                    0x6: decode VEX_L {
+                        0x0: vmovdvmovq();
+                        default: Inst::UD2();
+                    }
+                    0x7: decode VEX_VVVV {
+                        0x15: vmovdqa();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x7: vmovdqu();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0F: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x4: vhaddpd();
+                    0x5: vhsubpd();
+                    0x6: decode VEX_L {
+                        0x1: vmovdvmovq();
+                        default: Inst::UD2();
+                    }
+                    0x7: decode VEX_VVVV {
+                        0x15: vmovdqa();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x6: decode VEX_L {
+                        0x0: vmovq();
+                        default: Inst::UD2();
+                    }
+                    0x7: vmovdqu();
+                    default: Inst::UD2();
+                }
+
+                0x3: decode OPCODE_OP_BOTTOM3 {
+                    0x4: vhaddps();
+                    0x5: vhsubps();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x15: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x6: decode MODRM_REG {
+                        0x2: vldmxcsr();
+                        0x3: vstmxcsr();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
+            }
+
+            0x1B: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpsubusb();
+                    0x1: vpsubusw();
+                    0x2: vpminub();
+                    0x3: decode VEX_L {
+                        0x0: vpand();
+                        default: Inst::UD2();
+                    }
+                    0x4: vpaddusb();
+                    0x5: decode VEX_L {
+                        0x0: vpaddusw();
+                        default: Inst::UD2();
+                    }
+                    0x6: vpmaxub();
+                    0x7: decode VEX_L {
+                        0x0: vpandn();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x1D: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpsubsb();
+                    0x1: vpsubsw();
+                    0x2: vpminsw();
+                    0x3: vpor();
+                    0x4: decode VEX_L {
+                        0x0: vpaddsb();
+                        default: Inst::UD2();
+                    }
+                    0x5: decode VEX_L {
+                        0x0: vpaddsw();
+                        default: Inst::UD2();
+                    }
+                    0x6: vpmaxsw();
+                    0x7: vpxor();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x1F: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpsubb();
+                    0x1: vpsubw();
+                    0x2: vpsubd();
+                    0x3: vpsubq();
+                    0x4: vpaddb();
+                    0x5: decode VEX_L {
+                        0x0: vpaddw();
+                        default: Inst::UD2();
+                    }
+                    0x6: decode VEX_L {
+                        0x0: vpaddd();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            default: Inst::UD2();
+        }
+
+        0x02: decode OPCODE_OP_TOP5 {
+            0x00: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpshufb();
+                    0x1: vphaddw();
+                    0x2: vphaddd();
+                    0x3: vphaddsw();
+                    0x4: vpmaddubsw();
+                    0x5: vphsubw();
+                    0x6: vphsubd();
+                    0x7: vphsubsw();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x02: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x3: vcvtph2ps();
+                    0x7: vptest();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x04: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpmovsxbw();
+                    0x1: vpmovsxbd();
+                    0x2: vpmovsxbq();
+                    0x3: vpmovsxwd();
+                    0x4: vpmovsxwq();
+                    0x5: vpmovsxdq();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x06: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpmovzxbw();
+                    0x1: vpmovzxbd();
+                    0x2: vpmovzxbq();
+                    0x3: vpmovzxwd();
+                    0x4: vpmovzxwq();
+                    0x5: vpmovzxdq();
+                    0x7: vpcmpgtq();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x08: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpmulld();
+                    0x1: vphminposuw();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x12: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x6: decode VEX_W {
+                        0x0: vfmaddsub132ps();
+                        0x1: vfmaddsub132pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfmsubadd132ps();
+                        0x1: vfmaddsub132pd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x14: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x6: decode VEX_W {
+                        0x0: vfmaddsub213ps();
+                        0x1: vfmaddsub213pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfmsubadd213ps();
+                        0x1: vfmaddsub213pd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x16: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x6: decode VEX_W {
+                        0x0: vfmaddsub231ps();
+                        0x1: vfmaddsub231pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfmsubadd231ps();
+                        0x1: vfmaddsub231pd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x1E: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x2: andn();
+                    0x3: decode MODRM_REG {
+                        0x1: blsr();
+                        0x2: blsmsk();
+                        0x3: blsi();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: bextr();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x01: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpsignb();
+                    0x1: vpsignw();
+                    0x2: vpsignd();
+                    0x3: vpmulhrsw();
+                    0x4: vpermilps();
+                    0x5: vpermilpd();
+                    0x6: vtestps();
+                    0x7: vtestpd();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x03: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vbroadcastss();
+                    0x1: decode VEX_L {
+                        0x1: vbroadcastsd();
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_L {
+                        0x1: vbroadcastF128();
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_L {
+                        0x0: vpabsb();
+                        default: Inst::UD2();
+                    }
+                    0x5: decode VEX_L {
+                        0x0: vpabsw();
+                        default: Inst::UD2();
+                    }
+                    0x6: decode VEX_L {
+                        0x0: vpabsd();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x05: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpmuldq();
+                    0x1: vpcmpeqq();
+                    0x2: decode VEX_VVVV {
+                        0x15: vmovntdqa();
+                        default: Inst::UD2();
+                    }
+                    0x3: decode VEX_L {
+                        0x0: vpackusdw();
+                        default: Inst::UD2();
+                    }
+                    0x4: vmaskmovps();
+                    0x5: vmaskmovpd();
+                    0x6: vmaskmovps();
+                    0x7: vmaskmovpd();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x07: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpminsb();
+                    0x1: vpminsd();
+                    0x2: vpminuw();
+                    0x3: vpminud();
+                    0x4: vpmaxsb();
+                    0x5: vpmaxsd();
+                    0x6: vpmaxuw();
+                    0x7: vpmaxud();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0B: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x2: vbroadcasti128();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x13: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_W {
+                        0x0: vfmadd132ps();
+                        0x1: vfmadd132pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x1: decode VEX_W {
+                        0x0: vfmadd132ss();
+                        0x1: vfmadd132sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_W {
+                        0x0: vfmsub132ps();
+                        0x1: vfmsub132pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x3: decode VEX_W {
+                        0x0: vfmsub132ss();
+                        0x1: vfmsub132sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_W {
+                        0x0: vfnmadd132ps();
+                        0x1: vfnmadd132pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_W {
+                        0x0: vfnmadd132ss();
+                        0x1: vfnmadd132sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x6: decode VEX_W {
+                        0x0: vfnsub132ps();
+                        0x1: vfnsub132pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfnsub132ss();
+                        0x1: vfnsub132sd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x15: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_W {
+                        0x0: vfmadd213ps();
+                        0x1: vfmadd213pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x1: decode VEX_W {
+                        0x0: vfmadd213ss();
+                        0x1: vfmadd213sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_W {
+                        0x0: vfmsub213ps();
+                        0x1: vfmsub213pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x3: decode VEX_W {
+                        0x0: vfmsub213ss();
+                        0x1: vfmsub213sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_W {
+                        0x0: vfnmadd213ps();
+                        0x1: vfnmadd213pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_W {
+                        0x0: vfnmadd213ss();
+                        0x1: vfnmadd213sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x6: decode VEX_W {
+                        0x0: vfnsub213ps();
+                        0x1: vfnsub213pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfnsub213ss();
+                        0x1: vfnsub213sd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x17: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_W {
+                        0x0: vfmadd231ps();
+                        0x1: vfmadd231pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x1: decode VEX_W {
+                        0x0: vfmadd231ss();
+                        0x1: vfmadd231sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_W {
+                        0x0: vfmsub231ps();
+                        0x1: vfmsub231pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x3: decode VEX_W {
+                        0x0: vfmsub231ss();
+                        0x1: vfmsub231sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_W {
+                        0x0: vfnmadd231ps();
+                        0x1: vfnmadd231pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_W {
+                        0x0: vfnmadd231ss();
+                        0x1: vfnmadd231sd();
+                        default: Inst::UD2();
+                    }
+
+                    0x6: decode VEX_W {
+                        0x0: vfnsub231ps();
+                        0x1: vfnsub231pd();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfnsub231ss();
+                        0x1: vfnsub231sd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x1B: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x3: vaesimc();
+                    0x4: vaesenc();
+                    0x5: vaesenclast();
+                    0x6: vaesdec();
+                    0x7: vaesdeclast();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            default: Inst::UD2();
+        }
+
+        0x03: decode OPCODE_OP_TOP5 {
+            0x00: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x4: vpermilps();
+                    0x5: vpermilpd();
+                    0x6: vperm2f128();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x02: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x4: decode MODRM_MOD {
+                        0x03: vpextrb();
+                        default: vpextrb();
+                    }
+
+                    0x5: decode VEX_VVVV {
+                        0x15: decode VEX_L {
+                            0x0: decode MODRM_MOD {
+                                0x03: vpextrw();
+                                default: vpextrw();
+                            }
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    0x6: decode VEX_W {
+                        0x0: vpextrd();
+                        0x1: vpextrq();
+                        default: Inst::UD2();
+                    }
+                    0x7: decode MODRM_MOD {
+                        0x03: vextractps();
+                        default: vextractps();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x04: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode MODRM_MOD {
+                        0x03: vpinsrb();
+                        default: vpinsrb();
+                    }
+                    0x1: decode MODRM_MOD {
+                        0x03: vinsertps();
+                        default: vinsertps();
+                    }
+                    0x2: decode VEX_W {
+                        0x0: vpinsrd();
+                        0x1: vpinsrq();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x08: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vdpps();
+                    0x1: vdppd();
+                    0x2: decode VEX_L {
+                        0x0: vmpsadbw();
+                        default: Inst::UD2();
+                    }
+                    0x4: vpclmulqdq();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0C: decode VEX_PP {
+                0x1: decode VEX_L {
+                    0x0: decode OPCODE_OP_BOTTOM3 {
+                        0x0: decode VEX_VVVV {
+                            0x15: vpcmpestrm();
+                            default: Inst::UD2();
+                        }
+                        0x1: decode VEX_VVVV {
+                            0x15: vpcmpestri();
+                            default: Inst::UD2();
+                        }
+                        0x2: vpcmpistrm();
+                        0x3: vpcmpistri();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x01: decode VEX_PP {
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x7: palignr();
+                    default: Inst::UD2();
+                }
+
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_VVVV {
+                        0x15: vroundps();
+                        default: Inst::UD2();
+                    }
+                    0x1: decode VEX_VVVV {
+                        0x15: vroundpd();
+                        default: Inst::UD2();
+                    }
+                    0x2: vroundss();
+                    0x3: vroundsd();
+                    0x4: vblendps();
+                    0x5: vblendpd();
+                    0x6: decode VEX_L {
+                        0x0: vpblendw();
+                        default: Inst::UD2();
+                    }
+                    0x7: decode VEX_L {
+                        0x0: vpalignr();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x03: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vinsertf128();
+                    0x1: vextractf128();
+                    0x5: vcvtps2ph();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x09: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vpermil2ps();
+                    0x1: vpermil2pd();
+                    0x2: vblendvps();
+                    0x3: vblendvpd();
+                    0x4: decode VEX_L {
+                        0x0: decode VEX_W {
+                            0x0: vpblendvb();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0B: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x4: decode VEX_W {
+                        0x0: vfmaddsubps();
+                        0x1: vfmaddsubps();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_W {
+                        0x0: vfmaddsubpd();
+                        0x1: vfmaddsubpd();
+                        default: Inst::UD2();
+                    }
+
+                    0x6: decode VEX_W {
+                        0x0: vfmsubaddps();
+                        0x1: vfmsubaddps();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfmsubaddpd();
+                        0x1: vfmsubaddpd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0D: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_W {
+                        0x0: vfmaddps();
+                        0x1: vfmaddps();
+                        default: Inst::UD2();
+                    }
+
+                    0x1: decode VEX_W {
+                        0x0: vfmaddpd();
+                        0x1: vfmaddpd();
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_W {
+                        0x0: vfmaddss();
+                        0x1: vfmaddss();
+                        default: Inst::UD2();
+                    }
+
+                    0x3: decode VEX_W {
+                        0x0: vfmaddsd();
+                        0x1: vfmaddsd();
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_W {
+                        0x0: vfmsubps();
+                        0x1: vfmsubps();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_W {
+                        0x0: vfmsubpd();
+                        0x1: vfmsubpd();
+                        default: Inst::UD2();
+                    }
+
+                    0x6: decode VEX_W {
+                        0x0: vfmsubss();
+                        0x1: vfmsubss();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfmsubsd();
+                        0x1: vfmsubsd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x0F: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: decode VEX_W {
+                        0x0: vfnmaddps();
+                        0x1: vfnmaddps();
+                        default: Inst::UD2();
+                    }
+
+                    0x1: decode VEX_W {
+                        0x0: vfnmaddpd();
+                        0x1: vfnmaddpd();
+                        default: Inst::UD2();
+                    }
+
+                    0x2: decode VEX_W {
+                        0x0: vfnmaddss();
+                        0x1: vfnmaddss();
+                        default: Inst::UD2();
+                    }
+
+                    0x3: decode VEX_W {
+                        0x0: vfnmaddsd();
+                        0x1: vfnmaddsd();
+                        default: Inst::UD2();
+                    }
+
+                    0x4: decode VEX_W {
+                        0x0: vfnmsubps();
+                        0x1: vfnmsubps();
+                        default: Inst::UD2();
+                    }
+
+                    0x5: decode VEX_W {
+                        0x0: vfnmsubpd();
+                        0x1: vfnmsubpd();
+                        default: Inst::UD2();
+                    }
+
+                    0x6: decode VEX_W {
+                        0x0: vfnmsubss();
+                        0x1: vfnmsubss();
+                        default: Inst::UD2();
+                    }
+
+                    0x7: decode VEX_W {
+                        0x0: vfnmsubsd();
+                        0x1: vfnmsubsd();
+                        default: Inst::UD2();
+                    }
+
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            0x1B: decode VEX_PP {
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x7: vaeskeygenassist();
+                    default: Inst::UD2();
+                }
+
+                default: Inst::UD2();
+            }
+
+            default: Inst::UD2();
+        }
+
+        default: Inst::UD2();
+    }
+}

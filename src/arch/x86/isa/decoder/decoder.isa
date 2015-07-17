@@ -49,6 +49,7 @@ decode LEGACY_LOCK default Unknown::unknown()
         ##include "two_byte_opcodes.isa"
         ##include "three_byte_0f38_opcodes.isa"
         ##include "three_byte_0f3a_opcodes.isa"
+        ##include "vex_opcodes.isa"
     }
     //Lock prefix
     ##include "locked_opcodes.isa"

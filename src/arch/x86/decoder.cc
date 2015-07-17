@@ -48,6 +48,8 @@ Decoder::doResetState()
 
     emi.rex = 0;
     emi.legacy = 0;
+    emi.vex = 0;
+
     emi.opcode.type = BadOpcode;
     emi.opcode.op = 0;
 
@@ -93,6 +95,19 @@ Decoder::process()
           case PrefixState:
             state = doPrefixState(nextByte);
             break;
+
+          case TwoByteVexState:
+            state = doTwoByteVexState(nextByte);
+            break;
+
+          case ThreeByteVexFirstState:
+            state = doThreeByteVexFirstState(nextByte);
+            break;
+
+          case ThreeByteVexSecondState:
+            state = doThreeByteVexSecondState(nextByte);
+            break;
+
           case OneByteOpcodeState:
             state = doOneByteOpcodeState(nextByte);
             break;
@@ -206,13 +221,66 @@ Decoder::doPrefixState(uint8_t nextByte)
         DPRINTF(Decoder, "Found Rex prefix %#x.\n", nextByte);
         emi.rex = nextByte;
         break;
+
+      case Vex2Prefix:
+        DPRINTF(Decoder, "Found VEX two-byte prefix %#x.\n", nextByte);
+        emi.vex.zero = nextByte;
+        nextState = TwoByteVexState;
+        break;
+
+      case Vex3Prefix:
+        DPRINTF(Decoder, "Found VEX three-byte prefix %#x.\n", nextByte);
+        emi.vex.zero = nextByte;
+        nextState = ThreeByteVexFirstState;
+        break;
+
       case 0:
         nextState = OneByteOpcodeState;
         break;
+
       default:
         panic("Unrecognized prefix %#x\n", nextByte);
     }
     return nextState;
+}
+
+Decoder::State
+Decoder::doTwoByteVexState(uint8_t nextByte)
+{
+    assert(emi.vex.zero == 0xc5);
+    consumeByte();
+    TwoByteVex tbe = 0;
+    tbe.first = nextByte;
+
+    emi.vex.first.r = tbe.first.r;
+    emi.vex.first.x = 1;
+    emi.vex.first.b = 1;
+    emi.vex.first.map_select = 1;
+
+    emi.vex.second.w = 0;
+    emi.vex.second.vvvv = tbe.first.vvvv;
+    emi.vex.second.l = tbe.first.l;
+    emi.vex.second.pp = tbe.first.pp;
+
+    emi.opcode.type = Vex;
+    return OneByteOpcodeState;
+}
+
+Decoder::State
+Decoder::doThreeByteVexFirstState(uint8_t nextByte)
+{
+    consumeByte();
+    emi.vex.first = nextByte;
+    return ThreeByteVexSecondState;
+}
+
+Decoder::State
+Decoder::doThreeByteVexSecondState(uint8_t nextByte)
+{
+    consumeByte();
+    emi.vex.second = nextByte;
+    emi.opcode.type = Vex;
+    return OneByteOpcodeState;
 }
 
 // Load the first opcode byte. Determine if there are more opcode bytes, and
@@ -222,7 +290,13 @@ Decoder::doOneByteOpcodeState(uint8_t nextByte)
 {
     State nextState = ErrorState;
     consumeByte();
-    if (nextByte == 0x0f) {
+
+    if (emi.vex.zero != 0) {
+        DPRINTF(Decoder, "Found VEX opcode %#x.\n", nextByte);
+        emi.opcode.op = nextByte;
+        const uint8_t opcode_map = emi.vex.first.map_select;
+        nextState = processExtendedOpcode(ImmediateTypeVex[opcode_map]);
+    } else if (nextByte == 0x0f) {
         nextState = TwoByteOpcodeState;
         DPRINTF(Decoder, "Found opcode escape byte %#x.\n", nextByte);
     } else {
@@ -346,6 +420,54 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     return nextState;
 }
 
+Decoder::State
+Decoder::processExtendedOpcode(ByteTable &immTable)
+{
+    //Figure out the effective operand size. This can be overriden to
+    //a fixed value at the decoder level.
+    int logOpSize;
+    if (emi.vex.second.w)
+        logOpSize = 3; // 64 bit operand size
+    else if (emi.vex.second.pp == 1)
+        logOpSize = altOp;
+    else
+        logOpSize = defOp;
+
+    //Set the actual op size
+    emi.opSize = 1 << logOpSize;
+
+    //Figure out the effective address size. This can be overriden to
+    //a fixed value at the decoder level.
+    int logAddrSize;
+    if(emi.legacy.addr)
+        logAddrSize = altAddr;
+    else
+        logAddrSize = defAddr;
+
+    //Set the actual address size
+    emi.addrSize = 1 << logAddrSize;
+
+    //Figure out the effective stack width. This can be overriden to
+    //a fixed value at the decoder level.
+    emi.stackSize = 1 << stack;
+
+    //Figure out how big of an immediate we'll retreive based
+    //on the opcode.
+    const uint8_t opcode = emi.opcode.op;
+
+    if (emi.vex.zero == 0xc5 || emi.vex.zero == 0xc4) {
+        int immType = immTable[opcode];
+        // Assume 64-bit mode;
+        immediateSize = SizeTypeToSize[2][immType];
+    }
+
+    if (opcode == 0x77) {
+        instDone = true;
+        return ResetState;
+    }
+    return ModRMState;
+}
+
 //Get the ModRM byte and determine what displacement, if any, there is.
 //Also determine whether or not to get the SIB byte, displacement, or
 //immediate next.
@@ -353,8 +475,7 @@ Decoder::State
 Decoder::doModRMState(uint8_t nextByte)
 {
     State nextState = ErrorState;
-    ModRM modRM;
-    modRM = nextByte;
+    ModRM modRM = nextByte;
     DPRINTF(Decoder, "Found modrm byte %#x.\n", nextByte);
     if (defOp == 1) {
         //figure out 16 bit displacement size
