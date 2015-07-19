@@ -876,8 +876,14 @@ TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
         }
     }
 
-    for (auto &t_info : cpu->threadInfo) {
-        TheISA::handleLockedSnoop(t_info->thread, pkt, cacheBlockMask);
+    // Making it uniform across all CPUs:
+    // The CPUs need to be woken up only on an invalidation packet (when using caches)
+    // or on an incoming write packet (when not using caches)
+    // It is not necessary to wake up the processor on all incoming packets
+    if (pkt->isInvalidate() || pkt->isWrite()) {
+        for (auto &t_info : cpu->threadInfo) {
+            TheISA::handleLockedSnoop(t_info->thread, pkt, cacheBlockMask);
+        }
     }
 }
 

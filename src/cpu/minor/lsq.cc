@@ -1617,7 +1617,9 @@ LSQ::recvTimingSnoopReq(PacketPtr pkt)
      * this action on snoops. */
 
     /* THREAD */
-    TheISA::handleLockedSnoop(cpu.getContext(0), pkt, cacheBlockMask);
+    if (pkt->isInvalidate() || pkt->isWrite()) {
+        TheISA::handleLockedSnoop(cpu.getContext(0), pkt, cacheBlockMask);
+    }
 }
 
 }

@@ -292,7 +292,10 @@ AtomicSimpleCPU::AtomicCPUDPort::recvAtomicSnoop(PacketPtr pkt)
     }
 
     // if snoop invalidates, release any associated locks
-    if (pkt->isInvalidate()) {
+    // When run without caches, Invalidation packets will not be received
+    // hence we must check if the incoming packets are writes and wakeup
+    // the processor accordingly
+    if (pkt->isInvalidate() || pkt->isWrite()) {
         DPRINTF(SimpleCPU, "received invalidation for addr:%#x\n",
                 pkt->getAddr());
         for (auto &t_info : cpu->threadInfo) {
