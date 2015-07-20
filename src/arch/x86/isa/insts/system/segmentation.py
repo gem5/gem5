@@ -1,4 +1,5 @@
 # Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2012-2013 AMD
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -78,7 +79,7 @@ def macroop LGDT_16_M
     # Get the base
     ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
     zexti t2, t2, 23, dataSize=8
-    wrbase tsg, t2
+    wrbase tsg, t2, dataSize=8
     wrlimit tsg, t1
 };
 
@@ -139,7 +140,7 @@ def macroop LIDT_16_M
     # Get the base
     ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
     zexti t2, t2, 23, dataSize=8
-    wrbase idtr, t2
+    wrbase idtr, t2, dataSize=8
     wrlimit idtr, t1
 };
 
