@@ -144,10 +144,13 @@ class StateMachine(Symbol):
             self.TBEType = type
 
         elif "interface" in type and "AbstractCacheEntry" == type["interface"]:
-            if self.EntryType != None:
-                self.error("Multiple AbstractCacheEntry types in a " \
-                           "single machine.");
-            self.EntryType = type
+            if "main" in type and "false" == type["main"].lower():
+                pass # this isn't the EntryType
+            else:
+                if self.EntryType != None:
+                    self.error("Multiple AbstractCacheEntry types in a " \
+                               "single machine.");
+                self.EntryType = type
 
     # Needs to be called before accessing the table
     def buildTable(self):
