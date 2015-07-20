@@ -1,4 +1,5 @@
 #
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
 # Copyright (c) 2011 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -42,6 +43,14 @@ class LocalVariableAST(StatementAST):
     @property
     def name(self):
         return self.var_name
+
+    def inline(self, get_type=False):
+        code = self.slicc.codeFormatter(fix_newlines=False)
+        return_type = self.generate(code)
+        if get_type:
+            return return_type, code
+        else:
+            return code
 
     def generate(self, code):
         type = self.type_ast.type;
