@@ -259,11 +259,11 @@ class SLICC(Grammar):
         p[0] = self.parse_file(filename)
 
     def p_decl__machine0(self, p):
-        "decl : MACHINE '(' idents ')' ':' obj_decls '{' decls '}'"
+        "decl : MACHINE '(' ident ')' ':' obj_decls '{' decls '}'"
         p[0] = ast.MachineAST(self, p[3], [], p[7], p[9])
 
     def p_decl__machine1(self, p):
-        "decl : MACHINE '(' idents pairs ')' ':' obj_decls '{' decls '}'"
+        "decl : MACHINE '(' ident pairs ')' ':' obj_decls '{' decls '}'"
         p[0] = ast.MachineAST(self, p[3], p[4], p[7], p[9])
 
     def p_decl__action(self, p):

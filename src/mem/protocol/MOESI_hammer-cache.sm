@@ -33,7 +33,7 @@
  *          Brad Beckmann
  */
 
-machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
+machine(L1Cache, "AMD Hammer-like protocol")
     : Sequencer * sequencer;
       CacheMemory * L1Icache;
       CacheMemory * L1Dcache;
