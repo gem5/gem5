@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2012-2013 AMD
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1371,6 +1372,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         } while ((curMacroop || decoder[tid]->instReady()) &&
                  numInst < fetchWidth &&
                  fetchQueue[tid].size() < fetchQueueSize);
+
+        // Re-evaluate whether the next instruction to fetch is in micro-op ROM
+        // or not.
+        inRom = isRomMicroPC(thisPC.microPC());
     }
 
     if (predictedBranch) {
