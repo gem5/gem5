@@ -70,7 +70,7 @@ class SymbolTable(object):
 
         for sym_map in self.sym_map_vec:
             if id in sym_map:
-                if type(self.sym_map_vec[0][id]) != type(sym):
+                if type(sym_map[id]) != type(sym):
                     sym.error("Conflicting declaration of Symbol '%s'", id)
 
         # FIXME - warn on masking of a declaration in a previous frame
