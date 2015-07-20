@@ -491,6 +491,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
         rs->m_cache_recorder->enqueueNextFlushRequest();
     } else {
         ruby_hit_callback(pkt);
+        testDrainComplete();
     }
 }
 

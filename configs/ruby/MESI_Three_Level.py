@@ -1,5 +1,5 @@
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
-# Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2009,2015 Advanced Micro Devices, Inc.
 # Copyright (c) 2013 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -44,22 +44,24 @@ class L1Cache(RubyCache): pass
 class L2Cache(RubyCache): pass
 
 def define_options(parser):
-    parser.add_option("--num-clusters", type="int", default=1,
-            help="number of clusters in a design in which there are shared\
+    parser.add_option("--num-clusters", type = "int", default = 1,
+            help = "number of clusters in a design in which there are shared\
             caches private to clusters")
     return
 
 def create_system(options, full_system, system, dma_ports, ruby_system):
 
     if buildEnv['PROTOCOL'] != 'MESI_Three_Level':
-        fatal("This script requires the MESI_Three_Level protocol to be built.")
+        fatal("This script requires the MESI_Three_Level protocol to be\
+               built.")
 
     cpu_sequencers = []
 
     #
     # The ruby network creation expects the list of nodes in the system to be
-    # consistent with the NetDest list.  Therefore the l1 controller nodes must be
-    # listed before the directory nodes and directory nodes before dma nodes, etc.
+    # consistent with the NetDest list.  Therefore the l1 controller nodes
+    # must be listed before the directory nodes and directory nodes before
+    # dma nodes, etc.
     #
     l0_cntrl_nodes = []
     l1_cntrl_nodes = []
@@ -94,30 +96,45 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                 start_index_bit = block_size_bits,
                 replacement_policy = LRUReplacementPolicy())
 
-            l0_cntrl = L0Cache_Controller(version = i*num_cpus_per_cluster + j,
-                          Icache = l0i_cache, Dcache = l0d_cache,
-                          send_evictions = send_evicts(options),
-                          clk_domain=system.cpu[i].clk_domain,
-                          ruby_system = ruby_system)
+            # the ruby random tester reuses num_cpus to specify the
+            # number of cpu ports connected to the tester object, which
+            # is stored in system.cpu. because there is only ever one
+            # tester object, num_cpus is not necessarily equal to the
+            # size of system.cpu; therefore if len(system.cpu) == 1
+            # we use system.cpu[0] to set the clk_domain, thereby ensuring
+            # we don't index off the end of the cpu list.
+            if len(system.cpu) == 1:
+                clk_domain = system.cpu[0].clk_domain
+            else:
+                clk_domain = system.cpu[i].clk_domain
+
+            l0_cntrl = L0Cache_Controller(
+                   version = i * num_cpus_per_cluster + j, Icache = l0i_cache,
+                   Dcache = l0d_cache, send_evictions = send_evicts(options),
+                   clk_domain = clk_domain, ruby_system = ruby_system)
 
             cpu_seq = RubySequencer(version = i * num_cpus_per_cluster + j,
-                        icache = l0i_cache,
-                        clk_domain=system.cpu[i].clk_domain,
-                        dcache = l0d_cache, ruby_system = ruby_system)
+                                    icache = l0i_cache,
+                                    clk_domain = clk_domain,
+                                    dcache = l0d_cache,
+                                    ruby_system = ruby_system)
 
             l0_cntrl.sequencer = cpu_seq
 
-            l1_cache = L1Cache(size = options.l1d_size, assoc = options.l1d_assoc,
-                            start_index_bit = block_size_bits, is_icache = False)
+            l1_cache = L1Cache(size = options.l1d_size,
+                               assoc = options.l1d_assoc,
+                               start_index_bit = block_size_bits,
+                               is_icache = False)
 
-            l1_cntrl = L1Cache_Controller(version = i*num_cpus_per_cluster+j,
-                          cache = l1_cache, l2_select_num_bits = l2_bits,
-                          cluster_id = i, ruby_system = ruby_system)
+            l1_cntrl = L1Cache_Controller(
+                    version = i * num_cpus_per_cluster + j,
+                    cache = l1_cache, l2_select_num_bits = l2_bits,
+                    cluster_id = i, ruby_system = ruby_system)
 
-            exec("ruby_system.l0_cntrl%d = l0_cntrl" % (
-                        i*num_cpus_per_cluster+j))
-            exec("ruby_system.l1_cntrl%d = l1_cntrl" % (
-                        i*num_cpus_per_cluster+j))
+            exec("ruby_system.l0_cntrl%d = l0_cntrl"
+                 % ( i * num_cpus_per_cluster + j))
+            exec("ruby_system.l1_cntrl%d = l1_cntrl"
+                 % ( i * num_cpus_per_cluster + j))
 
             #
             # Add controllers and sequencers to the appropriate lists
@@ -155,11 +172,11 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
             l2_cntrl = L2Cache_Controller(
                         version = i * num_l2caches_per_cluster + j,
                         L2cache = l2_cache, cluster_id = i,
-                        transitions_per_cycle=options.ports,
+                        transitions_per_cycle = options.ports,
                         ruby_system = ruby_system)
 
-            exec("ruby_system.l2_cntrl%d = l2_cntrl" % (
-                        i * num_l2caches_per_cluster + j))
+            exec("ruby_system.l2_cntrl%d = l2_cntrl"
+                 % (i * num_l2caches_per_cluster + j))
             l2_cntrl_nodes.append(l2_cntrl)
 
             # Connect the L2 controllers and the network
@@ -185,8 +202,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     # the ruby system
     # clk_divider value is a fix to pass regression.
     ruby_system.memctrl_clk_domain = DerivedClockDomain(
-                                          clk_domain=ruby_system.clk_domain,
-                                          clk_divider=3)
+            clk_domain = ruby_system.clk_domain, clk_divider = 3)
 
     for i in xrange(options.num_dirs):
         #
@@ -196,10 +212,9 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         dir_size.value = mem_module_size
 
         dir_cntrl = Directory_Controller(version = i,
-                                         directory = RubyDirectoryMemory(
-                                             version = i, size = dir_size),
-                                         transitions_per_cycle = options.ports,
-                                         ruby_system = ruby_system)
+                directory = RubyDirectoryMemory(version = i, size = dir_size),
+                transitions_per_cycle = options.ports,
+                ruby_system = ruby_system)
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
@@ -217,8 +232,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         #
         # Create the Ruby objects associated with the dma controller
         #
-        dma_seq = DMASequencer(version = i,
-                               ruby_system = ruby_system)
+        dma_seq = DMASequencer(version = i, ruby_system = ruby_system)
 
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq,

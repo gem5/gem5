@@ -60,6 +60,8 @@ class RubyTester : public MemObject
     {
       private:
         RubyTester *tester;
+        // index for m_last_progress_vector and hitCallback
+        PortID globalIdx;
 
       public:
         //
@@ -68,8 +70,10 @@ class RubyTester : public MemObject
         // RubyPorts that support both types of requests, separate InstOnly
         // and DataOnly CpuPorts will map to that RubyPort
 
-        CpuPort(const std::string &_name, RubyTester *_tester, PortID _id)
-            : MasterPort(_name, _tester, _id), tester(_tester)
+        CpuPort(const std::string &_name, RubyTester *_tester, PortID _id,
+                PortID _index)
+            : MasterPort(_name, _tester, _id), tester(_tester),
+              globalIdx(_index)
         {}
 
       protected:
@@ -93,7 +97,8 @@ class RubyTester : public MemObject
     virtual BaseMasterPort &getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);
 
-    bool isInstReadableCpuPort(int idx);
+    bool isInstOnlyCpuPort(int idx);
+    bool isInstDataCpuPort(int idx);
 
     MasterPort* getReadableCpuPort(int idx);
     MasterPort* getWritableCpuPort(int idx);
@@ -152,7 +157,8 @@ class RubyTester : public MemObject
     int m_num_readers;
     int m_wakeup_frequency;
     bool m_check_flush;
-    int m_num_inst_ports;
+    int m_num_inst_only_ports;
+    int m_num_inst_data_ports;
 };
 
 inline std::ostream&

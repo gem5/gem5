@@ -42,6 +42,7 @@ CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
     const int size1 = 32;
     const int size2 = 100;
 
+    DPRINTF(RubyTest, "Adding false sharing checks\n");
     // The first set is to get some false sharing
     physical = 1000;
     for (int i = 0; i < size1; i++) {
@@ -50,6 +51,7 @@ CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
         physical += CHECK_SIZE;
     }
 
+    DPRINTF(RubyTest, "Adding cache conflict checks\n");
     // The next two sets are to get some limited false sharing and
     // cache conflicts
     physical = 1000;
@@ -59,6 +61,7 @@ CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
         physical += 256;
     }
 
+    DPRINTF(RubyTest, "Adding cache conflict checks2\n");
     physical = 1000 + CHECK_SIZE;
     for (int i = 0; i < size2; i++) {
         // Setup linear addresses
@@ -91,6 +94,8 @@ CheckTable::addCheck(Addr address)
         }
     }
 
+    DPRINTF(RubyTest, "Adding check for address: %s\n", address);
+
     Check* check_ptr = new Check(address, 100 + m_check_vector.size(),
                                  m_num_writers, m_num_readers, m_tester_ptr);
     for (int i = 0; i < CHECK_SIZE; i++) {
@@ -110,7 +115,7 @@ CheckTable::getRandomCheck()
 Check*
 CheckTable::getCheck(const Addr address)
 {
-    DPRINTF(RubyTest, "Looking for check by address: %s", address);
+    DPRINTF(RubyTest, "Looking for check by address: %s\n", address);
 
     auto i = m_lookup_map.find(address);
 

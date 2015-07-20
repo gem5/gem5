@@ -82,22 +82,32 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
         prefetcher = RubyPrefetcher.Prefetcher()
 
-        l1_cntrl = L1Cache_Controller(version = i,
-                                      L1Icache = l1i_cache,
+        # the ruby random tester reuses num_cpus to specify the
+        # number of cpu ports connected to the tester object, which
+        # is stored in system.cpu. because there is only ever one
+        # tester object, num_cpus is not necessarily equal to the
+        # size of system.cpu; therefore if len(system.cpu) == 1
+        # we use system.cpu[0] to set the clk_domain, thereby ensuring
+        # we don't index off the end of the cpu list.
+        if len(system.cpu) == 1:
+            clk_domain = system.cpu[0].clk_domain
+        else:
+            clk_domain = system.cpu[i].clk_domain
+
+        l1_cntrl = L1Cache_Controller(version = i, L1Icache = l1i_cache,
                                       L1Dcache = l1d_cache,
                                       l2_select_num_bits = l2_bits,
                                       send_evictions = send_evicts(options),
                                       prefetcher = prefetcher,
                                       ruby_system = ruby_system,
-                                      clk_domain=system.cpu[i].clk_domain,
-                                      transitions_per_cycle=options.ports,
+                                      clk_domain = clk_domain,
+                                      transitions_per_cycle = options.ports,
                                       enable_prefetch = False)
 
-        cpu_seq = RubySequencer(version = i,
-                                icache = l1i_cache,
-                                dcache = l1d_cache,
-                                clk_domain=system.cpu[i].clk_domain,
+        cpu_seq = RubySequencer(version = i, icache = l1i_cache,
+                                dcache = l1d_cache, clk_domain = clk_domain,
                                 ruby_system = ruby_system)
+
 
         l1_cntrl.sequencer = cpu_seq
         exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
@@ -135,7 +145,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       L2cache = l2_cache,
-                                      transitions_per_cycle=options.ports,
+                                      transitions_per_cycle = options.ports,
                                       ruby_system = ruby_system)
 
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
@@ -166,18 +176,17 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     # the ruby system
     # clk_divider value is a fix to pass regression.
     ruby_system.memctrl_clk_domain = DerivedClockDomain(
-                                          clk_domain=ruby_system.clk_domain,
-                                          clk_divider=3)
+                                          clk_domain = ruby_system.clk_domain,
+                                          clk_divider = 3)
 
     for i in xrange(options.num_dirs):
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size
 
         dir_cntrl = Directory_Controller(version = i,
-                                         directory = RubyDirectoryMemory(
-                                             version = i, size = dir_size),
-                                         transitions_per_cycle = options.ports,
-                                         ruby_system = ruby_system)
+                directory = RubyDirectoryMemory(version = i, size = dir_size),
+                transitions_per_cycle = options.ports,
+                ruby_system = ruby_system)
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
@@ -194,12 +203,10 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
     for i, dma_port in enumerate(dma_ports):
         # Create the Ruby objects associated with the dma controller
-        dma_seq = DMASequencer(version = i,
-                               ruby_system = ruby_system,
+        dma_seq = DMASequencer(version = i, ruby_system = ruby_system,
                                slave = dma_port)
 
-        dma_cntrl = DMA_Controller(version = i,
-                                   dma_sequencer = dma_seq,
+        dma_cntrl = DMA_Controller(version = i, dma_sequencer = dma_seq,
                                    transitions_per_cycle = options.ports,
                                    ruby_system = ruby_system)
 
@@ -220,7 +227,8 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
     # Create the io controller and the sequencer
     if full_system:
-        io_seq = DMASequencer(version=len(dma_ports), ruby_system=ruby_system)
+        io_seq = DMASequencer(version = len(dma_ports),
+                              ruby_system = ruby_system)
         ruby_system._io_port = io_seq
         io_controller = DMA_Controller(version = len(dma_ports),
                                        dma_sequencer = io_seq,

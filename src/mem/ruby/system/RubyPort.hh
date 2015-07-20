@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2009-2013 Advanced Micro Devices, Inc.
  * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -76,10 +76,12 @@ class RubyPort : public MemObject
       private:
         RespPacketQueue queue;
         bool access_backing_store;
+        bool no_retry_on_stall;
 
       public:
         MemSlavePort(const std::string &_name, RubyPort *_port,
-                     bool _access_backing_store, PortID id);
+                     bool _access_backing_store,
+                     PortID id, bool _no_retry_on_stall);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(Addr address);
 
@@ -93,6 +95,8 @@ class RubyPort : public MemObject
 
         AddrRangeList getAddrRanges() const
         { AddrRangeList ranges; return ranges; }
+
+        void addToRetryList();
 
       private:
         bool isPhysMemAddress(Addr addr) const;
@@ -164,6 +168,7 @@ class RubyPort : public MemObject
     DrainState drain() override;
 
   protected:
+    void trySendRetries();
     void ruby_hit_callback(PacketPtr pkt);
     void testDrainComplete();
     void ruby_eviction_callback(Addr address);
@@ -186,10 +191,14 @@ class RubyPort : public MemObject
     System* system;
 
   private:
+    bool onRetryList(MemSlavePort * port)
+    {
+        return (std::find(retryList.begin(), retryList.end(), port) !=
+                retryList.end());
+    }
     void addToRetryList(MemSlavePort * port)
     {
-        if (std::find(retryList.begin(), retryList.end(), port) !=
-               retryList.end()) return;
+        if (onRetryList(port)) return;
         retryList.push_back(port);
     }
 

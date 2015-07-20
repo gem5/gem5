@@ -94,7 +94,9 @@ Check::initiatePrefetch()
         cmd = MemCmd::ReadReq;
 
         // if necessary, make the request an instruction fetch
-        if (m_tester_ptr->isInstReadableCpuPort(index)) {
+        if (m_tester_ptr->isInstOnlyCpuPort(index) ||
+            (m_tester_ptr->isInstDataCpuPort(index) &&
+             (random_mt.random(0, 0x1)))) {
             flags.set(Request::INST_FETCH);
         }
     } else {
@@ -193,7 +195,7 @@ Check::initiateAction()
     *writeData = m_value + m_store_count;
     pkt->dataDynamic(writeData);
 
-    DPRINTF(RubyTest, "data 0x%x check 0x%x\n",
+    DPRINTF(RubyTest, "Seq write: index %d data 0x%x check 0x%x\n", index,
             *(pkt->getConstPtr<uint8_t>()), *writeData);
 
     // push the subblock onto the sender state.  The sequencer will
@@ -205,6 +207,7 @@ Check::initiateAction()
         DPRINTF(RubyTest, "status before action update: %s\n",
                 (TesterStatus_to_string(m_status)).c_str());
         m_status = TesterStatus_Action_Pending;
+        DPRINTF(RubyTest, "Check %s, State=Action_Pending\n", m_address);
     } else {
         // If the packet did not issue, must delete
         // Note: No need to delete the data, the packet destructor
@@ -232,7 +235,9 @@ Check::initiateCheck()
     Request::Flags flags;
 
     // If necessary, make the request an instruction fetch
-    if (m_tester_ptr->isInstReadableCpuPort(index)) {
+    if (m_tester_ptr->isInstOnlyCpuPort(index) ||
+        (m_tester_ptr->isInstDataCpuPort(index) &&
+         (random_mt.random(0, 0x1)))) {
         flags.set(Request::INST_FETCH);
     }
 
@@ -245,6 +250,8 @@ Check::initiateCheck()
     uint8_t *dataArray = new uint8_t[CHECK_SIZE];
     pkt->dataDynamic(dataArray);
 
+    DPRINTF(RubyTest, "Seq read: index %d\n", index);
+
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
     pkt->senderState = new SenderState(m_address, req->getSize());
@@ -254,6 +261,7 @@ Check::initiateCheck()
         DPRINTF(RubyTest, "status before check update: %s\n",
                 TesterStatus_to_string(m_status).c_str());
         m_status = TesterStatus_Check_Pending;
+        DPRINTF(RubyTest, "Check %s, State=Check_Pending\n", m_address);
     } else {
         // If the packet did not issue, must delete
         // Note: No need to delete the data, the packet destructor
@@ -291,8 +299,11 @@ Check::performCallback(NodeID proc, SubBlock* data, Cycles curTime)
         m_store_count++;
         if (m_store_count == CHECK_SIZE) {
             m_status = TesterStatus_Ready;
+            DPRINTF(RubyTest, "Check %s, State=Ready\n", m_address);
         } else {
             m_status = TesterStatus_Idle;
+            DPRINTF(RubyTest, "Check %s, State=Idle store_count: %d\n",
+                    m_address, m_store_count);
         }
         DPRINTF(RubyTest, "Action callback return data now %d\n",
                 data->getByte(0));
@@ -316,6 +327,7 @@ Check::performCallback(NodeID proc, SubBlock* data, Cycles curTime)
         m_tester_ptr->incrementCheckCompletions();
 
         m_status = TesterStatus_Idle;
+        DPRINTF(RubyTest, "Check %s, State=Idle\n", m_address);
         pickValue();
 
     } else {
@@ -335,6 +347,7 @@ Check::changeAddress(Addr address)
     assert(m_status == TesterStatus_Idle || m_status == TesterStatus_Ready);
     m_status = TesterStatus_Idle;
     m_address = address;
+    DPRINTF(RubyTest, "Check %s, State=Idle\n", m_address);
     m_store_count = 0;
 }
 
@@ -342,7 +355,6 @@ void
 Check::pickValue()
 {
     assert(m_status == TesterStatus_Idle);
-    m_status = TesterStatus_Idle;
     m_value = random_mt.random(0, 0xff); // One byte
     m_store_count = 0;
 }
@@ -353,7 +365,8 @@ Check::pickInitiatingNode()
     assert(m_status == TesterStatus_Idle || m_status == TesterStatus_Ready);
     m_status = TesterStatus_Idle;
     m_initiatingNode = (random_mt.random(0, m_num_writers - 1));
-    DPRINTF(RubyTest, "picked initiating node %d\n", m_initiatingNode);
+    DPRINTF(RubyTest, "Check %s, State=Idle, picked initiating node %d\n",
+            m_address, m_initiatingNode);
     m_store_count = 0;
 }
 

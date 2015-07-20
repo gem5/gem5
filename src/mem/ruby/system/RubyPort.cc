@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2009-2013 Advanced Micro Devices, Inc.
  * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -58,7 +58,8 @@ RubyPort::RubyPort(const Params *p)
       pioSlavePort(csprintf("%s.pio-slave-port", name()), this),
       memMasterPort(csprintf("%s.mem-master-port", name()), this),
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
-                   p->ruby_system->getAccessBackingStore(), -1),
+                   p->ruby_system->getAccessBackingStore(), -1,
+                   p->no_retry_on_stall),
       gotAddrRanges(p->port_master_connection_count)
 {
     assert(m_version != -1);
@@ -66,7 +67,8 @@ RubyPort::RubyPort(const Params *p)
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
         slave_ports.push_back(new MemSlavePort(csprintf("%s.slave%d", name(),
-            i), this, p->ruby_system->getAccessBackingStore(), i));
+            i), this, p->ruby_system->getAccessBackingStore(),
+            i, p->no_retry_on_stall));
     }
 
     // create the master ports based on the number of connected ports
@@ -156,9 +158,11 @@ RubyPort::MemMasterPort::MemMasterPort(const std::string &_name,
 }
 
 RubyPort::MemSlavePort::MemSlavePort(const std::string &_name, RubyPort *_port,
-                                     bool _access_backing_store, PortID id)
+                                     bool _access_backing_store, PortID id,
+                                     bool _no_retry_on_stall)
     : QueuedSlavePort(_name, _port, queue, id), queue(*_port, *this),
-      access_backing_store(_access_backing_store)
+      access_backing_store(_access_backing_store),
+      no_retry_on_stall(_no_retry_on_stall)
 {
     DPRINTF(RubyPort, "Created slave memport on ruby sequencer %s\n", _name);
 }
@@ -267,18 +271,28 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         return true;
     }
 
-    //
-    // Unless one is using the ruby tester, record the stalled M5 port for
-    // later retry when the sequencer becomes free.
-    //
-    if (!ruby_port->m_usingRubyTester) {
-        ruby_port->addToRetryList(this);
-    }
 
     DPRINTF(RubyPort, "Request for address %#x did not issued because %s\n",
             pkt->getAddr(), RequestStatus_to_string(requestStatus));
 
+    addToRetryList();
+
     return false;
+}
+
+void
+RubyPort::MemSlavePort::addToRetryList()
+{
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+
+    //
+    // Unless the requestor do not want retries (e.g., the Ruby tester),
+    // record the stalled M5 port for later retry when the sequencer
+    // becomes free.
+    //
+    if (!no_retry_on_stall && !ruby_port->onRetryList(this)) {
+        ruby_port->addToRetryList(this);
+    }
 }
 
 void
@@ -356,31 +370,33 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
 
     port->hitCallback(pkt);
 
+    trySendRetries();
+}
+
+void
+RubyPort::trySendRetries()
+{
     //
     // If we had to stall the MemSlavePorts, wake them up because the sequencer
     // likely has free resources now.
     //
     if (!retryList.empty()) {
-        //
-        // Record the current list of ports to retry on a temporary list before
-        // calling sendRetry on those ports.  sendRetry will cause an
-        // immediate retry, which may result in the ports being put back on the
-        // list. Therefore we want to clear the retryList before calling
-        // sendRetry.
-        //
+        // Record the current list of ports to retry on a temporary list
+        // before calling sendRetryReq on those ports. sendRetryReq will cause
+        // an immediate retry, which may result in the ports being put back on
+        // the list. Therefore we want to clear the retryList before calling
+        // sendRetryReq.
         std::vector<MemSlavePort *> curRetryList(retryList);
 
         retryList.clear();
 
         for (auto i = curRetryList.begin(); i != curRetryList.end(); ++i) {
             DPRINTF(RubyPort,
-                    "Sequencer may now be free.  SendRetry to port %s\n",
+                    "Sequencer may now be free. SendRetry to port %s\n",
                     (*i)->name());
             (*i)->sendRetryReq();
         }
     }
-
-    testDrainComplete();
 }
 
 void
