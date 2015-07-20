@@ -230,7 +230,7 @@ SyscallReturn fchownFunc(SyscallDesc *desc, int num,
 SyscallReturn dupFunc(SyscallDesc *desc, int num,
                       Process *process, ThreadContext *tc);
 
-/// Target fnctl() handler.
+/// Target fcntl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
                         Process *process, ThreadContext *tc);
 

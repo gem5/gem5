@@ -620,47 +620,46 @@ dupFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     return (result == -1) ? -local_errno : p->fds->allocFD(new_fdep);
 }
 
-
 SyscallReturn
 fcntlFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
+    int arg;
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
+    int cmd = p->getSyscallArg(tc, index);
 
     auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
     if (!hbfdp)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
 
-    int cmd = p->getSyscallArg(tc, index);
+    int coe = hbfdp->getCOE();
+
     switch (cmd) {
-      case 0: // F_DUPFD
-        // if we really wanted to support this, we'd need to do it
-        // in the target fd space.
-        warn("fcntl(%d, F_DUPFD) not supported, error returned\n", tgt_fd);
-        return -EMFILE;
+      case F_GETFD:
+        return coe & FD_CLOEXEC;
 
-      case 1: // F_GETFD (get close-on-exec flag)
-      case 2: // F_SETFD (set close-on-exec flag)
+      case F_SETFD: {
+        arg = p->getSyscallArg(tc, index);
+        arg ? hbfdp->setCOE(true) : hbfdp->setCOE(false);
         return 0;
+      }
 
-      case 3: // F_GETFL (get file flags)
-      case 4: // F_SETFL (set file flags)
-        // not sure if this is totally valid, but we'll pass it through
-        // to the underlying OS
-        warn("fcntl(%d, %d) passed through to host\n", tgt_fd, cmd);
-        return fcntl(sim_fd, cmd);
-        // return 0;
-
-      case 7: // F_GETLK  (get lock)
-      case 8: // F_SETLK  (set lock)
-      case 9: // F_SETLKW (set lock and wait)
-        // don't mess with file locking... just act like it's OK
-        warn("File lock call (fcntl(%d, %d)) ignored.\n", tgt_fd, cmd);
-        return 0;
+      // Rely on the host to maintain the file status flags for this file
+      // description rather than maintain it ourselves. Admittedly, this
+      // is suboptimal (and possibly error prone), but it is difficult to
+      // maintain the flags by tracking them across the different descriptors
+      // (that refer to this file description) caused by clone, dup, and
+      // subsequent fcntls.
+      case F_GETFL:
+      case F_SETFL: {
+        arg = p->getSyscallArg(tc, index);
+        int rv = fcntl(sim_fd, cmd, arg);
+        return (rv == -1) ? -errno : rv;
+      }
 
       default:
-        warn("Unknown fcntl command %d\n", cmd);
+        warn("fcntl: unsupported command %d\n", cmd);
         return 0;
     }
 }

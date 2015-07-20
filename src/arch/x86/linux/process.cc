@@ -598,7 +598,7 @@ static SyscallDesc syscallDescs32[] = {
     /*  52 */ SyscallDesc("umount2", unimplementedFunc),
     /*  53 */ SyscallDesc("lock", unimplementedFunc),
     /*  54 */ SyscallDesc("ioctl", ioctlFunc<X86Linux32>),
-    /*  55 */ SyscallDesc("fcntl", unimplementedFunc),
+    /*  55 */ SyscallDesc("fcntl", fcntlFunc),
     /*  56 */ SyscallDesc("mpx", unimplementedFunc),
     /*  57 */ SyscallDesc("setpgid", unimplementedFunc),
     /*  58 */ SyscallDesc("ulimit", unimplementedFunc),
