@@ -31,7 +31,7 @@
  */
 
 
-machine(Directory, "Network_test Directory")
+machine(MachineType:Directory, "Network_test Directory")
     : MessageBuffer * requestToDir, network="From", virtual_network="0",
             vnet_type = "request";
       MessageBuffer * forwardToDir, network="From", virtual_network="1",

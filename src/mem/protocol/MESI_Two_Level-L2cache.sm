@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(L2Cache, "MESI Directory L2 Cache CMP")
+machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
  : CacheMemory * L2cache;
    Cycles l2_request_latency := 2;
    Cycles l2_response_latency := 2;

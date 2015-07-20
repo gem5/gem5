@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(L1Cache, "MESI Directory L1 Cache CMP")
+machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
  : CacheMemory * cache;
    int l2_select_num_bits;
    Cycles l1_request_latency := 2;

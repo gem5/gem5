@@ -173,6 +173,24 @@ enumeration(MemoryControlRequestType, desc="...", default="MemoryControlRequestT
   Default,    desc="Replace this with access_types passed to the DMA Ruby object";
 }
 
+
+// These are statically defined types of states machines that we can have.
+// If you want to add a new machine type, edit this enum.  It is not necessary
+// for a protocol to have state machines defined for the all types here.  But
+// you cannot use anything other than the ones defined here.  Also, a protocol
+// can have only one state machine for a given type.
+enumeration(MachineType, desc="...", default="MachineType_NULL") {
+    L1Cache,     desc="L1 Cache Mach";
+    L2Cache,     desc="L2 Cache Mach";
+    L3Cache,     desc="L3 Cache Mach";
+    Directory,   desc="Directory Mach";
+    DMA,         desc="DMA Mach";
+    Collector,   desc="Collector Mach";
+    L1Cache_wCC, desc="L1 Cache Mach to track cache-to-cache transfer (used for miss latency profile)";
+    L2Cache_wCC, desc="L2 Cache Mach to track cache-to-cache transfer (used for miss latency profile)";
+    NULL,        desc="null mach type";
+}
+
 // MessageSizeType
 enumeration(MessageSizeType, desc="...") {
   Control,    desc="Control Message";

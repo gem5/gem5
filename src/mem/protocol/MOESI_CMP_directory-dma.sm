@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(DMA, "DMA Controller")
+machine(MachineType:DMA, "DMA Controller")
     : DMASequencer * dma_sequencer;
       Cycles request_latency := 14;
       Cycles response_latency := 14;

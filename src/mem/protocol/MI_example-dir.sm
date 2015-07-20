@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(Directory, "Directory protocol") 
+machine(MachineType:Directory, "Directory protocol") 
     : DirectoryMemory * directory;
       Cycles directory_latency := 12;
       Cycles to_memory_controller_latency := 1;

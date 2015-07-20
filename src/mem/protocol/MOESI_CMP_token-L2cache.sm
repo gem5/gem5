@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(L2Cache, "Token protocol")
+machine(MachineType:L2Cache, "Token protocol")
  : CacheMemory * L2cache;
    int N_tokens;
    Cycles l2_request_latency := 5;

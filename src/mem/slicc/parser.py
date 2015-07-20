@@ -62,7 +62,6 @@ class SLICC(Grammar):
         return code
 
     def process(self):
-        self.decl_list.findMachines()
         self.decl_list.generate()
 
     def writeCodeFiles(self, code_path, includes):
@@ -72,10 +71,7 @@ class SLICC(Grammar):
         self.symtab.writeHTMLFiles(html_path)
 
     def files(self):
-        f = set([
-            'MachineType.cc',
-            'MachineType.hh',
-            'Types.hh' ])
+        f = set(['Types.hh'])
 
         f |= self.decl_list.files()
 
@@ -259,11 +255,11 @@ class SLICC(Grammar):
         p[0] = self.parse_file(filename)
 
     def p_decl__machine0(self, p):
-        "decl : MACHINE '(' ident ')' ':' obj_decls '{' decls '}'"
+        "decl : MACHINE '(' enumeration ')' ':' obj_decls '{' decls '}'"
         p[0] = ast.MachineAST(self, p[3], [], p[7], p[9])
 
     def p_decl__machine1(self, p):
-        "decl : MACHINE '(' ident pairs ')' ':' obj_decls '{' decls '}'"
+        "decl : MACHINE '(' enumeration pairs ')' ':' obj_decls '{' decls '}'"
         p[0] = ast.MachineAST(self, p[3], p[4], p[7], p[9])
 
     def p_decl__action(self, p):

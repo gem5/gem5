@@ -46,8 +46,5 @@ class DeclListAST(AST):
 
     def generate(self):
         for decl in self.decls:
-            decl.generate()
-
-    def findMachines(self):
-        for decl in self.decls:
             decl.findMachines()
+            decl.generate()

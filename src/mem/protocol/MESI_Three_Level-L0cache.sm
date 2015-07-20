@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(L0Cache, "MESI Directory L0 Cache")
+machine(MachineType:L0Cache, "MESI Directory L0 Cache")
  : Sequencer * sequencer;
    CacheMemory * Icache;
    CacheMemory * Dcache;

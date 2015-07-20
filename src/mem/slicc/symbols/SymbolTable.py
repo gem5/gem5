@@ -41,12 +41,6 @@ class SymbolTable(object):
         self.machine_components = {}
 
         pairs = {}
-        pairs["enumeration"] = "yes"
-        location = Location("init", 0, no_warning=not slicc.verbose)
-        MachineType = Type(self, "MachineType", location, pairs)
-        self.newSymbol(MachineType)
-
-        pairs = {}
         pairs["primitive"] = "yes"
         pairs["external"] = "yes"
         location = Location("init", 0, no_warning=not slicc.verbose)

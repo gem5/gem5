@@ -31,7 +31,7 @@
  */
 
 
-machine(L1Cache, "Network_test L1 Cache")
+machine(MachineType:L1Cache, "Network_test L1 Cache")
     : Sequencer * sequencer;
       Cycles issue_latency := 2;
 

@@ -31,7 +31,7 @@
  *
  */
 
-machine(L1Cache, "Token protocol")
+machine(MachineType:L1Cache, "Token protocol")
  : Sequencer * sequencer;
    CacheMemory * L1Icache;
    CacheMemory * L1Dcache;

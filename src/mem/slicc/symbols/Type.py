@@ -42,6 +42,7 @@ class Enumeration(PairContainer):
     def __init__(self, ident, pairs):
         super(Enumeration, self).__init__(pairs)
         self.ident = ident
+        self.primary = False
 
 class Type(Symbol):
     def __init__(self, table, ident, location, pairs, machine=None):
@@ -164,6 +165,14 @@ class Type(Symbol):
             self["default"] = "%s_NUM" % self.c_ident
 
         return True
+
+    ## Used to check if an enum has been already used and therefore
+    ## should not be used again.
+    def checkEnum(self, ident):
+        if ident in self.enums and not self.enums[ident].primary:
+            self.enums[ident].primary = True
+            return True
+        return False
 
     def writeCodeFiles(self, path, includes):
         if self.isExternal:
@@ -567,7 +576,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 
         if self.isMachineType:
             for enum in self.enums.itervalues():
-                if enum.get("Primary"):
+                if enum.primary:
                     code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
             code('#include "mem/ruby/common/MachineID.hh"')
 
@@ -706,7 +715,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             code('  case ${{self.c_ident}}_NUM:')
             for enum in reversed(self.enums.values()):
                 # Check if there is a defined machine with this type
-                if enum.get("Primary"):
+                if enum.primary:
                     code('    base += ${{enum.ident}}_Controller::getNumControllers();')
                 else:
                     code('    base += 0;')
@@ -734,7 +743,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
             # For each field
             for enum in self.enums.itervalues():
                 code('case ${{self.c_ident}}_${{enum.ident}}:')
-                if enum.get("Primary"):
+                if enum.primary:
                     code('return ${{enum.ident}}_Controller::getNumControllers();')
                 else:
                     code('return 0;')

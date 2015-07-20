@@ -33,7 +33,7 @@
  *          Brad Beckmann
  */
 
-machine(Directory, "AMD Hammer-like protocol") 
+machine(MachineType:Directory, "AMD Hammer-like protocol") 
     : DirectoryMemory * directory;
       CacheMemory * probeFilter;
       Cycles from_memory_controller_latency := 2;
