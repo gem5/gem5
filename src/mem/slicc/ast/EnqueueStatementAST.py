@@ -1,3 +1,4 @@
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -54,8 +55,8 @@ class EnqueueStatementAST(StatementAST):
         self.symtab.newSymbol(v)
 
         # Declare message
-        code("std::shared_ptr<${{msg_type.ident}}> out_msg = "\
-             "std::make_shared<${{msg_type.ident}}>(clockEdge());")
+        code("std::shared_ptr<${{msg_type.c_ident}}> out_msg = "\
+             "std::make_shared<${{msg_type.c_ident}}>(clockEdge());")
 
         # The other statements
         t = self.statements.generate(code, None)
