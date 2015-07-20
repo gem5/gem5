@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -130,6 +131,10 @@ class CacheMemory : public SimObject
 
     Stats::Scalar numTagArrayStalls;
     Stats::Scalar numDataArrayStalls;
+
+    int getCacheSize() const { return m_cache_size; }
+    int getNumBlocks() const { return m_cache_num_sets * m_cache_assoc; }
+    Address getAddressAtIdx(int idx) const;
 
   private:
     // convert a Address to its location in the cache

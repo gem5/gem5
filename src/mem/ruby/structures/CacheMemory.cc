@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,6 +133,29 @@ CacheMemory::findTagInSetIgnorePermissions(int64 cacheSet,
     if (it != m_tag_index.end())
         return it->second;
     return -1; // Not found
+}
+
+// Given an unique cache block identifier (idx): return the valid address
+// stored by the cache block.  If the block is invalid/notpresent, the
+// function returns the 0 address
+Address
+CacheMemory::getAddressAtIdx(int idx) const
+{
+    Address tmp(0);
+
+    int set = idx / m_cache_assoc;
+    assert(set < m_cache_num_sets);
+
+    int way = idx - set * m_cache_assoc;
+    assert (way < m_cache_assoc);
+
+    AbstractCacheEntry* entry = m_cache[set][way];
+    if (entry == NULL ||
+        entry->m_Permission == AccessPermission_Invalid ||
+        entry->m_Permission == AccessPermission_NotPresent) {
+        return tmp;
+    }
+    return entry->m_Address;
 }
 
 bool
