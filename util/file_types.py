@@ -3,6 +3,7 @@ import os
 # lanuage type for each file extension
 lang_types = {
     '.c'     : "C",
+    '.cl'    : "C",
     '.h'     : "C",
     '.cc'    : "C++",
     '.hh'    : "C++",
