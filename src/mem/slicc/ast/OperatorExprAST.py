@@ -107,8 +107,22 @@ class PrefixOperatorExprAST(ExprAST):
         opcode = self.slicc.codeFormatter()
         optype = self.operand.generate(opcode)
 
+        # Figure out what the input and output types should be
+        opmap = {"!": "bool", "-": "int", "++": "Scalar"}
+        if self.op in opmap:
+            output = opmap[self.op]
+            type_in_symtab = self.symtab.find(opmap[self.op], Type)
+            if (optype != type_in_symtab):
+                self.error("Type mismatch: right operand of " +
+                           "unary operator '%s' must be of type '%s'. ",
+                           self.op, type_in_symtab)
+        else:
+            self.error("Invalid prefix operator '%s'",
+                       self.op)
+
+        # All is well
         fix = code.nofix()
         code("(${{self.op}} $opcode)")
         code.fix(fix)
 
-        return self.symtab.find("void", Type)
+        return self.symtab.find(output, Type)
