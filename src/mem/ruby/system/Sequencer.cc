@@ -536,9 +536,11 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             memcpy(pkt->getPtr<uint8_t>(),
                    data.getData(request_address.getOffset(), pkt->getSize()),
                    pkt->getSize());
+            DPRINTF(RubySequencer, "read data %s\n", data);
         } else {
             data.setData(pkt->getConstPtr<uint8_t>(),
                          request_address.getOffset(), pkt->getSize());
+            DPRINTF(RubySequencer, "set data %s\n", data);
         }
     }
 
