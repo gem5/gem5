@@ -85,8 +85,8 @@ class SymbolTable(object):
 
             if types is not None:
                 if not isinstance(symbol, types):
-                    symbol.error("Symbol '%s' is not of types '%s'.",
-                                 symbol, types)
+                    continue # there could be a name clash with other symbol
+                             # so rather than producing an error, keep trying
 
             return symbol
 
