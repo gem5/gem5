@@ -295,7 +295,7 @@ MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 void
 MessageBuffer::reanalyzeMessages(const Address& addr)
 {
-    DPRINTF(RubyQueue, "ReanalyzeMessages\n");
+    DPRINTF(RubyQueue, "ReanalyzeMessages %s\n", addr);
     assert(m_stall_msg_map.count(addr) > 0);
     Tick curTick = m_receiver->clockEdge();
 

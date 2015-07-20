@@ -26,8 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+
+#include "debug/RubyQueue.hh"
+#include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 #include "sim/system.hh"
@@ -103,6 +105,9 @@ AbstractController::stallBuffer(MessageBuffer* buf, Address addr)
         msgVec->resize(m_in_ports, NULL);
         m_waiting_buffers[addr] = msgVec;
     }
+    DPRINTF(RubyQueue, "stalling %s port %d addr %s\n", buf, m_cur_in_port,
+            addr);
+    assert(m_in_ports > m_cur_in_port);
     (*(m_waiting_buffers[addr]))[m_cur_in_port] = buf;
 }
 
