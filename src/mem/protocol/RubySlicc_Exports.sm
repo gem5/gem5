@@ -116,6 +116,7 @@ enumeration(TransitionResult, desc="...") {
   Valid,         desc="Valid transition";
   ResourceStall, desc="Stalled due to insufficient resources";
   ProtocolStall, desc="Protocol specified stall";
+  Reject,        desc="Rejected because of a type mismatch";
 }
 
 // RubyRequestType

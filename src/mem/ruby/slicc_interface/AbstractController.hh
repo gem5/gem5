@@ -29,6 +29,7 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__
 
+#include <exception>
 #include <iostream>
 #include <string>
 
@@ -48,6 +49,13 @@
 #include "mem/mem_object.hh"
 
 class Network;
+
+// used to communicate that an in_port peeked the wrong message type
+class RejectException: public std::exception
+{
+    virtual const char* what() const throw()
+    { return "Port rejected message based on type"; }
+};
 
 class AbstractController : public MemObject, public Consumer
 {

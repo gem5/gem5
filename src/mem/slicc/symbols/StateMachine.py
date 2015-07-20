@@ -179,6 +179,21 @@ class StateMachine(Symbol):
                 action.warning(error_msg)
         self.table = table
 
+    # determine the port->msg buffer mappings
+    def getBufferMaps(self, ident):
+        msg_bufs = []
+        port_to_buf_map = {}
+        in_msg_bufs = {}
+        for port in self.in_ports:
+            buf_name = "m_%s_ptr" % port.buffer_expr.name
+            msg_bufs.append(buf_name)
+            port_to_buf_map[port] = msg_bufs.index(buf_name)
+            if buf_name not in in_msg_bufs:
+                in_msg_bufs[buf_name] = [port]
+            else:
+                in_msg_bufs[buf_name].append(port)
+        return port_to_buf_map, in_msg_bufs, msg_bufs
+
     def writeCodeFiles(self, path, includes):
         self.printControllerPython(path)
         self.printControllerHH(path)
@@ -423,6 +438,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
  */
 
 #include <sys/types.h>
+#include <typeinfo>
 #include <unistd.h>
 
 #include <cassert>
@@ -935,7 +951,13 @@ void
 $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
 {
     DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
-    ${{action["c_code"]}}
+    try {
+       ${{action["c_code"]}}
+    } catch (const RejectException & e) {
+       fatal("Error in action ${{ident}}:${{action.ident}}: "
+             "executed a peek statement with the wrong message "
+             "type specified. ");
+    }
 }
 
 ''')
@@ -1028,6 +1050,7 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 // ${ident}: ${{self.short}}
 
 #include <sys/types.h>
+#include <typeinfo>
 #include <unistd.h>
 
 #include <cassert>
@@ -1051,6 +1074,8 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
         for include_path in includes:
             code('#include "${{include_path}}"')
 
+        port_to_buf_map, in_msg_bufs, msg_bufs = self.getBufferMaps(ident)
+
         code('''
 
 using namespace std;
@@ -1060,6 +1085,8 @@ ${ident}_Controller::wakeup()
 {
     int counter = 0;
     while (true) {
+        unsigned char rejected[${{len(msg_bufs)}}];
+        memset(rejected, 0, sizeof(unsigned char)*${{len(msg_bufs)}});
         // Some cases will put us into an infinite loop without this limit
         assert(counter <= m_transitions_per_cycle);
         if (counter == m_transitions_per_cycle) {
@@ -1084,15 +1111,43 @@ ${ident}_Controller::wakeup()
                 code('m_cur_in_port = ${{port.pairs["rank"]}};')
             else:
                 code('m_cur_in_port = 0;')
+            if port in port_to_buf_map:
+                code('try {')
+                code.indent()
             code('${{port["c_code_in_port"]}}')
-            code.dedent()
 
+            if port in port_to_buf_map:
+                code.dedent()
+                code('''
+            } catch (const RejectException & e) {
+                rejected[${{port_to_buf_map[port]}}]++;
+            }
+''')
+            code.dedent()
             code('')
 
         code.dedent()
         code.dedent()
         code('''
-        break;  // If we got this far, we have nothing left todo
+        // If we got this far, we have nothing left todo or something went
+        // wrong''')
+        for buf_name, ports in in_msg_bufs.items():
+            if len(ports) > 1:
+                # only produce checks when a buffer is shared by multiple ports
+                code('''
+        if (${{buf_name}}->isReady() && rejected[${{port_to_buf_map[ports[0]]}}] == ${{len(ports)}})
+        {
+            // no port claimed the message on the top of this buffer
+            panic("Runtime Error at Ruby Time: %d. "
+                  "All ports rejected a message. "
+                  "You are probably sending a message type to this controller "
+                  "over a virtual network that do not define an in_port for "
+                  "the incoming message type.\\n",
+                  Cycles(1));
+        }
+''')
+        code('''
+        break;
     }
 }
 ''')
@@ -1169,6 +1224,8 @@ TransitionResult result =
             code('doTransitionWorker(event, state, next_state, m_cache_entry_ptr, addr);')
         else:
             code('doTransitionWorker(event, state, next_state, addr);')
+
+        port_to_buf_map, in_msg_bufs, msg_bufs = self.getBufferMaps(ident)
 
         code('''
 

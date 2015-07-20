@@ -62,7 +62,12 @@ class PeekStatementAST(StatementAST):
     // Declare message
     const $mtid* in_msg_ptr M5_VAR_USED;
     in_msg_ptr = dynamic_cast<const $mtid *>(($qcode).${{self.method}}());
-    assert(in_msg_ptr != NULL); // Check the cast result
+    if (in_msg_ptr == NULL) {
+        // If the cast fails, this is the wrong inport (wrong message type).
+        // Throw an exception, and the caller will decide to either try a
+        // different inport or punt.
+        throw RejectException();
+    }
 ''')
 
         if self.pairs.has_key("block_on"):

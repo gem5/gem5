@@ -59,7 +59,7 @@ class InPortDeclAST(DeclAST):
 
         type = self.queue_type.type
         in_port = Var(self.symtab, self.ident, self.location, type, str(code),
-                      self.pairs)
+                      self.pairs, machine, self.var_expr)
         symtab.newSymbol(in_port)
 
         symtab.pushFrame()
