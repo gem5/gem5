@@ -34,6 +34,8 @@
 #include "params/ReplacementPolicy.hh"
 #include "sim/sim_object.hh"
 
+class CacheMemory;
+
 class AbstractReplacementPolicy : public SimObject
 {
   public:
@@ -51,6 +53,9 @@ class AbstractReplacementPolicy : public SimObject
     Tick getLastAccess(int64 set, int64 way);
 
     virtual bool useOccupancy() const { return false; }
+
+    void setCache(CacheMemory * pCache) {m_cache = pCache;}
+    CacheMemory * m_cache;
 
   protected:
     unsigned m_num_sets;       /** total number of sets */

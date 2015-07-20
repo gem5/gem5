@@ -63,6 +63,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_latency = p->latency;
     m_cache_assoc = p->assoc;
     m_replacementPolicy_ptr = p->replacement_policy;
+    m_replacementPolicy_ptr->setCache(this);
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
     m_resource_stalls = p->resourceStalls;
@@ -591,4 +592,16 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Address addr)
         assert(false);
         return true;
     }
+}
+
+bool
+CacheMemory::isBlockInvalid(int64 cache_set, int64 loc)
+{
+  return (m_cache[cache_set][loc]->m_Permission == AccessPermission_Invalid);
+}
+
+bool
+CacheMemory::isBlockNotBusy(int64 cache_set, int64 loc)
+{
+  return (m_cache[cache_set][loc]->m_Permission != AccessPermission_Busy);
 }

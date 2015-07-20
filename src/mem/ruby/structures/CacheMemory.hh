@@ -100,6 +100,8 @@ class CacheMemory : public SimObject
     Cycles getTagLatency() const { return tagArray.getLatency(); }
     Cycles getDataLatency() const { return dataArray.getLatency(); }
 
+    bool isBlockInvalid(int64 cache_set, int64 loc);
+    bool isBlockNotBusy(int64 cache_set, int64 loc);
 
     // Hook for checkpointing the contents of the cache
     void recordCacheContents(int cntrl, CacheRecorder* tr) const;
