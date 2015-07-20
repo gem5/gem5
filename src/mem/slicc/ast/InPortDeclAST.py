@@ -89,6 +89,12 @@ class InPortDeclAST(DeclAST):
                     param_types, [], "", pairs)
         symtab.newSymbol(func)
 
+        # Add the stallPort method - this hacks reschedules the controller
+        # for stalled messages that don't trigger events
+        func = Func(self.symtab, "stallPort", self.location, void_type, [],
+                    [], "", pairs)
+        symtab.newSymbol(func)
+
         param_types = []
         # Check for Event2
         type = symtab.find("Event", Type)

@@ -113,6 +113,7 @@ class SLICC(Grammar):
         'stall_and_wait' : 'STALL_AND_WAIT',
         'enqueue' : 'ENQUEUE',
         'check_allocate' : 'CHECK_ALLOCATE',
+        'check_next_cycle' : 'CHECK_NEXT_CYCLE',
         'check_stop_slots' : 'CHECK_STOP_SLOTS',
         'static_cast' : 'STATIC_CAST',
         'if' : 'IF',
@@ -596,6 +597,10 @@ class SLICC(Grammar):
     def p_statement__check_allocate(self, p):
         "statement : CHECK_ALLOCATE '(' var ')' SEMI"
         p[0] = ast.CheckAllocateStatementAST(self, p[3])
+
+    def p_statement__check_next_cycle(self, p):
+        "statement : CHECK_NEXT_CYCLE '(' ')' SEMI"
+        p[0] = ast.CheckNextCycleAST(self)
 
     def p_statement__check_stop(self, p):
         "statement : CHECK_STOP_SLOTS '(' var ',' STRING ',' STRING ')' SEMI"

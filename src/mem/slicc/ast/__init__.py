@@ -30,6 +30,7 @@ from slicc.ast.AST import *
 from slicc.ast.ActionDeclAST import *
 from slicc.ast.AssignStatementAST import *
 from slicc.ast.CheckAllocateStatementAST import *
+from slicc.ast.CheckNextCycleAST import *
 from slicc.ast.DeclAST import *
 from slicc.ast.DeclListAST import *
 from slicc.ast.EnqueueStatementAST import *

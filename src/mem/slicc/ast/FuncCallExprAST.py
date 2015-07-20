@@ -145,7 +145,8 @@ class FuncCallExprAST(ExprAST):
         continue; // Check the first port again
     }
 
-    if (result == TransitionResult_ResourceStall) {
+    if (result == TransitionResult_ResourceStall ||
+        result == TransitionResult_ProtocolStall) {
         scheduleEvent(Cycles(1));
 
         // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
@@ -172,6 +173,8 @@ if (!(${{cvec[0]}})) {
             code("set_tbe(m_tbe_ptr, %s);" %(cvec[0]));
         elif self.proc_name == "unset_tbe":
             code("unset_tbe(m_tbe_ptr);");
+        elif self.proc_name == "stallPort":
+            code("scheduleEvent(Cycles(1));")
 
         else:
             # Normal function
