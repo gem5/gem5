@@ -469,8 +469,10 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
-        // send next cycle
-        schedTimingResp(pkt, curTick() + rs->clockPeriod());
+        // Send a response in the same cycle. There is no need to delay the
+        // response because the response latency is already incurred in the
+        // Ruby protocol.
+        schedTimingResp(pkt, curTick());
     } else {
         delete pkt;
     }
