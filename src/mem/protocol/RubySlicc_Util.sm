@@ -35,6 +35,7 @@ int random(int number);
 Cycles zero_time();
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);
+int addressToInt(Address addr);
 void procProfileCoherenceRequest(NodeID node, bool needCLB);
 void dirProfileCoherenceRequest(NodeID node, bool needCLB);
 int max_tokens();

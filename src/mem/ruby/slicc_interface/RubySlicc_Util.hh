@@ -56,6 +56,14 @@ IDToInt(NodeID id)
     return nodenum;
 }
 
+inline int
+addressToInt(Address addr)
+{
+    assert(!(addr.getAddress() & 0xffffffff00000000));
+
+    return (int)addr.getAddress();
+}
+
 // Appends an offset to an address
 inline Address
 setOffset(Address addr, int offset)
