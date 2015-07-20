@@ -74,10 +74,16 @@ class CacheMemory : public SimObject
     bool cacheAvail(const Address& address) const;
 
     // find an unused entry and sets the tag appropriate for the address
-    AbstractCacheEntry* allocate(const Address& address, AbstractCacheEntry* new_entry);
+    AbstractCacheEntry* allocate(const Address& address,
+                                 AbstractCacheEntry* new_entry, bool touch);
+    AbstractCacheEntry* allocate(const Address& address,
+                                 AbstractCacheEntry* new_entry)
+    {
+        return allocate(address, new_entry, true);
+    }
     void allocateVoid(const Address& address, AbstractCacheEntry* new_entry)
     {
-        allocate(address, new_entry);
+        allocate(address, new_entry, true);
     }
 
     // Explicitly free up this address

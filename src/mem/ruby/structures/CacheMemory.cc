@@ -251,7 +251,7 @@ CacheMemory::cacheAvail(const Address& address) const
 }
 
 AbstractCacheEntry*
-CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
+CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry, bool touch)
 {
     assert(address == line_address(address));
     assert(!isTagPresent(address));
@@ -271,7 +271,9 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
 
-            m_replacementPolicy_ptr->touch(cacheSet, i, curTick());
+            if (touch) {
+                m_replacementPolicy_ptr->touch(cacheSet, i, curTick());
+            }
 
             return entry;
         }

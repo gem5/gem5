@@ -146,6 +146,7 @@ structure (CacheMemory, external = "yes") {
   bool cacheAvail(Address);
   Address cacheProbe(Address);
   AbstractCacheEntry allocate(Address, AbstractCacheEntry);
+  AbstractCacheEntry allocate(Address, AbstractCacheEntry, bool);
   void allocateVoid(Address, AbstractCacheEntry);
   void deallocate(Address);
   AbstractCacheEntry lookup(Address);
