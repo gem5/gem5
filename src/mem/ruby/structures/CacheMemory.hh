@@ -117,7 +117,7 @@ class CacheMemory : public SimObject
 
     void regStats();
     bool checkResourceAvailable(CacheResourceType res, Address addr);
-    void recordRequestType(CacheRequestType requestType);
+    void recordRequestType(CacheRequestType requestType, Address addr);
 
   public:
     Stats::Scalar m_demand_hits;

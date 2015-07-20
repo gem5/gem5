@@ -528,22 +528,32 @@ CacheMemory::regStats()
         ;
 }
 
+// assumption: SLICC generated files will only call this function
+// once **all** resources are granted
 void
-CacheMemory::recordRequestType(CacheRequestType requestType)
+CacheMemory::recordRequestType(CacheRequestType requestType, Address addr)
 {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             CacheRequestType_to_string(requestType));
     switch(requestType) {
     case CacheRequestType_DataArrayRead:
+        if (m_resource_stalls)
+            dataArray.reserve(addressToCacheSet(addr));
         numDataArrayReads++;
         return;
     case CacheRequestType_DataArrayWrite:
+        if (m_resource_stalls)
+            dataArray.reserve(addressToCacheSet(addr));
         numDataArrayWrites++;
         return;
     case CacheRequestType_TagArrayRead:
+        if (m_resource_stalls)
+            tagArray.reserve(addressToCacheSet(addr));
         numTagArrayReads++;
         return;
     case CacheRequestType_TagArrayWrite:
+        if (m_resource_stalls)
+            tagArray.reserve(addressToCacheSet(addr));
         numTagArrayWrites++;
         return;
     default:

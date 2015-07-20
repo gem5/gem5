@@ -58,13 +58,29 @@ BankedArray::tryAccess(int64 idx)
     assert(bank < banks);
 
     if (busyBanks[bank].endAccess >= curTick()) {
-        if (!(busyBanks[bank].startAccess == curTick() &&
-            busyBanks[bank].idx == idx)) {
             return false;
+    }
+
+    return true;
+}
+
+void
+BankedArray::reserve(int64 idx)
+{
+    if (accessLatency == 0)
+        return;
+
+    unsigned int bank = mapIndexToBank(idx);
+    assert(bank < banks);
+
+    if(busyBanks[bank].endAccess >= curTick()) {
+        if (busyBanks[bank].startAccess == curTick() &&
+             busyBanks[bank].idx == idx) {
+            // this is the same reservation (can happen when
+            // e.g., reserve the same resource for read and write)
+            return; // OK
         } else {
-            // We tried to allocate resources twice
-            // in the same cycle for the same addr
-            return true;
+            panic("BankedArray reservation error");
         }
     }
 
@@ -72,8 +88,6 @@ BankedArray::tryAccess(int64 idx)
     busyBanks[bank].startAccess = curTick();
     busyBanks[bank].endAccess = curTick() +
         (accessLatency-1) * m_ruby_system->clockPeriod();
-
-    return true;
 }
 
 unsigned int
