@@ -40,7 +40,7 @@ class Transition(Symbol):
             # check to make sure there is a getNextState function declared
             found = False
             for func in machine.functions:
-                if func.c_ident == 'getNextState':
+                if func.c_ident == 'getNextState_Address':
                     found = True
                     break
             if found == False:

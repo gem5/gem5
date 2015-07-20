@@ -65,7 +65,8 @@ class EnumDeclAST(DeclAST):
         func_id = "%s_to_string" % t.c_ident
 
         pairs = { "external" : "yes" }
-        func = Func(self.symtab, func_id, self.location,
+        func = Func(self.symtab, func_id + "_" + t.c_ident,
+                    func_id, self.location,
                     self.symtab.find("std::string", Type), [ t ], [], "",
                     pairs)
         self.symtab.newSymbol(func)

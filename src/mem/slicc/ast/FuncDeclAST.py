@@ -74,9 +74,20 @@ class FuncDeclAST(DeclAST):
 
         self.symtab.popFrame()
 
+        func_name_args = self.ident
+
+        if parent is None:
+            for arg in self.formals:
+                from slicc.ast import FormalParamAST
+                if isinstance(arg, FormalParamAST):
+                    arg_name = arg.type_ast.ident
+                else:
+                    arg_name = arg
+                func_name_args += "_" + str(arg_name)
+
         machine = self.state_machine
-        func = Func(self.symtab, self.ident, self.location, return_type,
-                    types, params, str(body), self.pairs)
+        func = Func(self.symtab, func_name_args, self.ident, self.location,
+                    return_type, types, params, str(body), self.pairs)
 
         if parent is not None:
             if not parent.addFunc(func):

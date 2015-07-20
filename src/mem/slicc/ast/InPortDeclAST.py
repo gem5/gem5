@@ -85,14 +85,17 @@ class InPortDeclAST(DeclAST):
 
         # Add the trigger method - FIXME, this is a bit dirty
         pairs = { "external" : "yes" }
-        func = Func(self.symtab, "trigger", self.location, void_type,
-                    param_types, [], "", pairs)
+        trigger_func_name = "trigger"
+        for param in param_types:
+            trigger_func_name += "_" + param.ident
+        func = Func(self.symtab, trigger_func_name, "trigger", self.location,
+                    void_type, param_types, [], "", pairs)
         symtab.newSymbol(func)
 
         # Add the stallPort method - this hacks reschedules the controller
         # for stalled messages that don't trigger events
-        func = Func(self.symtab, "stallPort", self.location, void_type, [],
-                    [], "", pairs)
+        func = Func(self.symtab, "stallPort", "stallPort", self.location,
+                    void_type, [], [], "", pairs)
         symtab.newSymbol(func)
 
         param_types = []

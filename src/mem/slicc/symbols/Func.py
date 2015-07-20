@@ -29,7 +29,7 @@ from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Type import Type
 
 class Func(Symbol):
-    def __init__(self, table, ident, location, return_type, param_types,
+    def __init__(self, table, ident, name, location, return_type, param_types,
                  param_strings, body, pairs):
         super(Func, self).__init__(table, ident, location, pairs)
         self.return_type = return_type
@@ -38,6 +38,7 @@ class Func(Symbol):
         self.body = body
         self.isInternalMachineFunc = False
         self.c_ident = ident
+        self.c_name = name
         self.class_name = ""
 
     def __repr__(self):
@@ -55,7 +56,7 @@ class Func(Symbol):
         elif "return_by_pointer" in self and self.return_type != void_type:
             return_type += "*"
 
-        return "%s %s(%s);" % (return_type, self.c_ident,
+        return "%s %s(%s);" % (return_type, self.c_name,
                                ", ".join(self.param_strings))
 
     def writeCodeFiles(self, path, includes):
@@ -80,7 +81,7 @@ class Func(Symbol):
 
         code('''
 $return_type
-${{self.class_name}}::${{self.c_ident}}($params)
+${{self.class_name}}::${{self.c_name}}($params)
 {
 ${{self.body}}
 }

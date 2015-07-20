@@ -31,6 +31,8 @@
 
 int machineCount(MachineType machType);
 MachineID mapAddressToRange(Address addr, MachineType type,
+                            int low, int high);
+MachineID mapAddressToRange(Address addr, MachineType type,
                             int low, int high, NodeID n);
 NetDest broadcast(MachineType type);
 MachineID map_Address_to_DMA(Address addr);

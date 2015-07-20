@@ -80,12 +80,18 @@ class FuncCallExprAST(ExprAST):
             code("APPEND_TRANSITION_COMMENT($0)", self.exprs[0].inline())
             return self.symtab.find("void", Type)
 
+        func_name_args = self.proc_name
+
+        for expr in self.exprs:
+            actual_type,param_code = expr.inline(True)
+            func_name_args += "_" + str(actual_type.ident)
+
         # Look up the function in the symbol table
-        func = self.symtab.find(self.proc_name, Func)
+        func = self.symtab.find(func_name_args, Func)
 
         # Check the types and get the code for the parameters
         if func is None:
-            self.error("Unrecognized function name: '%s'", self.proc_name)
+            self.error("Unrecognized function name: '%s'", func_name_args)
 
         if len(self.exprs) != len(func.param_types):
             self.error("Wrong number of arguments passed to function : '%s'" +\
@@ -193,7 +199,7 @@ if (!(${{cvec[0]}})) {
                     params += str(param_code);
 
             fix = code.nofix()
-            code('(${{func.c_ident}}($params))')
+            code('(${{func.c_name}}($params))')
             code.fix(fix)
 
         return func.return_type

@@ -64,7 +64,8 @@ class StateDeclAST(DeclAST):
         func_id = "%s_to_string" % t.c_ident
 
         pairs = { "external" : "yes" }
-        func = Func(self.symtab, func_id, self.location,
+        func = Func(self.symtab, func_id + "_" +
+                    t.ident, func_id, self.location,
                     self.symtab.find("std::string", Type), [ t ], [], "",
                     pairs)
         self.symtab.newSymbol(func)
@@ -73,7 +74,8 @@ class StateDeclAST(DeclAST):
         func_id = "%s_to_permission" % t.c_ident
 
         pairs = { "external" : "yes" }
-        func = Func(self.symtab, func_id, self.location,
+        func = Func(self.symtab, func_id + "_" +
+                    t.ident, func_id, self.location,
                     self.symtab.find("AccessPermission", Type), [ t ], [], "",
                     pairs)
         self.symtab.newSymbol(func)
