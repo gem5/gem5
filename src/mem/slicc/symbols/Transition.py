@@ -26,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.symbols.Symbol import Symbol
+from slicc.symbols.State import WildcardState
 
 class Transition(Symbol):
     def __init__(self, table, machine, state, event, nextState, actions,
@@ -35,7 +36,19 @@ class Transition(Symbol):
 
         self.state = machine.states[state]
         self.event = machine.events[event]
-        self.nextState = machine.states[nextState]
+        if nextState == '*':
+            # check to make sure there is a getNextState function declared
+            found = False
+            for func in machine.functions:
+                if func.c_ident == 'getNextState':
+                    found = True
+                    break
+            if found == False:
+                fatal("Machine uses a wildcard transition without getNextState defined")
+            self.nextState = WildcardState(machine.symtab,
+                                           '*', location)
+        else:
+            self.nextState = machine.states[nextState]
         self.actions = [ machine.actions[a] for a in actions ]
         self.request_types = [ machine.request_types[s] for s in request_types ]
         self.resources = {}

@@ -1310,8 +1310,17 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
             case = self.symtab.codeFormatter()
             # Only set next_state if it changes
             if trans.state != trans.nextState:
-                ns_ident = trans.nextState.ident
-                case('next_state = ${ident}_State_${ns_ident};')
+                if trans.nextState.isWildcard():
+                    # When * is encountered as an end state of a transition,
+                    # the next state is determined by calling the
+                    # machine-specific getNextState function. The next state
+                    # is determined before any actions of the transition
+                    # execute, and therefore the next state calculation cannot
+                    # depend on any of the transitionactions.
+                    case('next_state = getNextState(addr);')
+                else:
+                    ns_ident = trans.nextState.ident
+                    case('next_state = ${ident}_State_${ns_ident};')
 
             actions = trans.actions
             request_types = trans.request_types

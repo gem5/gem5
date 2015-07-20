@@ -278,7 +278,7 @@ class SLICC(Grammar):
         p[0] = ast.OutPortDeclAST(self, p[3], p[5], p[7], p[8])
 
     def p_decl__trans0(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident ')' idents"
+        "decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents"
         p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[9])
 
     def p_decl__trans1(self, p):
@@ -286,7 +286,7 @@ class SLICC(Grammar):
         p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[7])
 
     def p_decl__trans2(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident ')' idents idents"
+        "decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents idents"
         p[0] = ast.TransitionDeclAST(self, p[9], p[3], p[5], p[7], p[10])
 
     def p_decl__trans3(self, p):
@@ -504,6 +504,11 @@ class SLICC(Grammar):
 
     def p_ident(self, p):
         "ident : IDENT"
+        p[0] = p[1]
+
+    def p_ident_or_star(self, p):
+        """ident_or_star : ident
+                         | STAR"""
         p[0] = p[1]
 
     # Pair and pair lists
