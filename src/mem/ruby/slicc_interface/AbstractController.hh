@@ -150,6 +150,7 @@ class AbstractController : public MemObject, public Consumer
     std::map<Address, MessageBuffer*> m_block_map;
 
     typedef std::vector<MessageBuffer*> MsgVecType;
+    typedef std::set<MessageBuffer*> MsgBufType;
     typedef std::map< Address, MsgVecType* > WaitingBufType;
     WaitingBufType m_waiting_buffers;
 

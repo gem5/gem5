@@ -86,7 +86,7 @@ MessageBuffer::areNSlotsAvailable(unsigned int n)
 
     // determine the correct size for the current cycle
     // pop operations shouldn't effect the network's visible size
-    // until next cycle, but enqueue operations effect the visible
+    // until schd cycle, but enqueue operations effect the visible
     // size immediately
     unsigned int current_size = 0;
 
@@ -234,7 +234,7 @@ MessageBuffer::dequeue()
         m_receiver->ticksToCycles(message->getDelayedTicks());
 
     // record previous size and time so the current buffer size isn't
-    // adjusted until next cycle
+    // adjusted until schd cycle
     if (m_time_last_time_pop < m_receiver->clockEdge()) {
         m_size_at_cycle_start = m_prio_heap.size();
         m_time_last_time_pop = m_receiver->clockEdge();
@@ -275,19 +275,19 @@ MessageBuffer::recycle()
 }
 
 void
-MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick nextTick)
+MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 {
     while(!lt.empty()) {
         m_msg_counter++;
         MsgPtr m = lt.front();
-        m->setLastEnqueueTime(nextTick);
+        m->setLastEnqueueTime(schdTick);
         m->setMsgCounter(m_msg_counter);
 
         m_prio_heap.push_back(m);
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                   greater<MsgPtr>());
 
-        m_consumer->scheduleEventAbsolute(nextTick);
+        m_consumer->scheduleEventAbsolute(schdTick);
         lt.pop_front();
     }
 }
@@ -297,13 +297,15 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages\n");
     assert(m_stall_msg_map.count(addr) > 0);
-    Tick nextTick = m_receiver->clockEdge(Cycles(1));
+    Tick curTick = m_receiver->clockEdge();
 
     //
     // Put all stalled messages associated with this address back on the
-    // prio heap
+    // prio heap.  The reanalyzeList call will make sure the consumer is
+    // scheduled for the current cycle so that the previously stalled messages
+    // will be observed before any younger messages that may arrive this cycle
     //
-    reanalyzeList(m_stall_msg_map[addr], nextTick);
+    reanalyzeList(m_stall_msg_map[addr], curTick);
     m_stall_msg_map.erase(addr);
 }
 
@@ -311,15 +313,17 @@ void
 MessageBuffer::reanalyzeAllMessages()
 {
     DPRINTF(RubyQueue, "ReanalyzeAllMessages\n");
-    Tick nextTick = m_receiver->clockEdge(Cycles(1));
+    Tick curTick = m_receiver->clockEdge();
 
     //
     // Put all stalled messages associated with this address back on the
-    // prio heap
+    // prio heap.  The reanalyzeList call will make sure the consumer is
+    // scheduled for the current cycle so that the previously stalled messages
+    // will be observed before any younger messages that may arrive this cycle.
     //
     for (StallMsgMapType::iterator map_iter = m_stall_msg_map.begin();
          map_iter != m_stall_msg_map.end(); ++map_iter) {
-        reanalyzeList(map_iter->second, nextTick);
+        reanalyzeList(map_iter->second, curTick);
     }
     m_stall_msg_map.clear();
 }

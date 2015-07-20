@@ -154,6 +154,7 @@ AbstractController::wakeUpAllBuffers()
     //
 
     std::vector<MsgVecType*> wokeUpMsgVecs;
+    MsgBufType wokeUpMsgBufs;
 
     if(m_waiting_buffers.size() > 0) {
         for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
@@ -162,8 +163,13 @@ AbstractController::wakeUpAllBuffers()
              for (MsgVecType::iterator vec_iter = buf_iter->second->begin();
                   vec_iter != buf_iter->second->end();
                   ++vec_iter) {
-                  if (*vec_iter != NULL) {
+                  //
+                  // Make sure the MessageBuffer has not already be reanalyzed
+                  //
+                  if (*vec_iter != NULL &&
+                      (wokeUpMsgBufs.count(*vec_iter) == 0)) {
                       (*vec_iter)->reanalyzeAllMessages();
+                      wokeUpMsgBufs.insert(*vec_iter);
                   }
              }
              wokeUpMsgVecs.push_back(buf_iter->second);
