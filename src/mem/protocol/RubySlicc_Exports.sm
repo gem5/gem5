@@ -41,7 +41,7 @@ external_type(Tick, primitive="yes", default="0");
 
 structure(DataBlock, external = "yes", desc="..."){
   void clear();
-  void copyPartial(DataBlock, int, int);
+  void atomicPartial(DataBlock, WriteMask);
 }
 
 bool testAndRead(Addr addr, DataBlock datablk, Packet *pkt);
@@ -77,6 +77,26 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   Invalid,    desc="block is in an Invalid base state";
   NotPresent, desc="block is NotPresent";
   Busy,       desc="block is in a transient state, currently invalid";
+}
+//HSA scopes
+enumeration(HSAScope, desc="...", default="HSAScope_UNSPECIFIED") {
+  UNSPECIFIED, desc="Unspecified scope";
+  NOSCOPE,     desc="Explictly unscoped";
+  WAVEFRONT,   desc="Wavefront scope";
+  WORKGROUP,   desc="Workgroup scope";
+  DEVICE,      desc="Device scope";
+  SYSTEM,      desc="System scope";
+}
+
+// HSA segment types
+enumeration(HSASegment, desc="...", default="HSASegment_GLOBAL") {
+  GLOBAL,   desc="Global segment";
+  GROUP,    desc="Group segment";
+  PRIVATE,  desc="Private segment";
+  KERNARG,  desc="Kernarg segment";
+  READONLY, desc="Readonly segment";
+  SPILL,    desc="Spill segment";
+  ARG,      desc="Arg segment";
 }
 
 // TesterStatus
@@ -143,9 +163,10 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
 }
 
 enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {
-  Default,    desc="Replace this with access_types passed to the DMA Ruby object";
+  Default,     desc="Replace this with access_types passed to the DMA Ruby object";
   LD,          desc="Load";
   ST,          desc="Store";
+  FLUSH,       desc="Flush request type";
   NULL,        desc="Invalid request type";
 }
 

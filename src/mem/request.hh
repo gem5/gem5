@@ -160,6 +160,12 @@ class Request
         /** The request should be marked with RELEASE. */
         RELEASE                     = 0x00040000,
 
+        /** The request should be marked with KERNEL.
+          * Used to indicate the synchronization associated with a GPU kernel
+          * launch or completion.
+          */
+        KERNEL                      = 0x00001000,
+
         /**
          * The request should be handled by the generic IPR code (only
          * valid together with MMAPPED_IPR)
@@ -197,6 +203,37 @@ class Request
         invldMasterId = std::numeric_limits<MasterID>::max()
     };
     /** @} */
+
+    typedef uint32_t MemSpaceConfigFlagsType;
+    typedef ::Flags<MemSpaceConfigFlagsType> MemSpaceConfigFlags;
+
+    enum : MemSpaceConfigFlagsType {
+        /** Has a synchronization scope been set? */
+        SCOPE_VALID            = 0x00000001,
+        /** Access has Wavefront scope visibility */
+        WAVEFRONT_SCOPE        = 0x00000002,
+        /** Access has Workgroup scope visibility */
+        WORKGROUP_SCOPE        = 0x00000004,
+        /** Access has Device (e.g., GPU) scope visibility */
+        DEVICE_SCOPE           = 0x00000008,
+        /** Access has System (e.g., CPU + GPU) scope visibility */
+        SYSTEM_SCOPE           = 0x00000010,
+
+        /** Global Segment */
+        GLOBAL_SEGMENT         = 0x00000020,
+        /** Group Segment */
+        GROUP_SEGMENT          = 0x00000040,
+        /** Private Segment */
+        PRIVATE_SEGMENT        = 0x00000080,
+        /** Kergarg Segment */
+        KERNARG_SEGMENT        = 0x00000100,
+        /** Readonly Segment */
+        READONLY_SEGMENT       = 0x00000200,
+        /** Spill Segment */
+        SPILL_SEGMENT          = 0x00000400,
+        /** Arg Segment */
+        ARG_SEGMENT            = 0x00000800,
+    };
 
   private:
     typedef uint8_t PrivateFlagsType;
@@ -267,6 +304,9 @@ class Request
 
     /** Flag structure for the request. */
     Flags _flags;
+
+    /** Memory space configuraiton flag structure for the request. */
+    MemSpaceConfigFlags _memSpaceConfigFlags;
 
     /** Private flags for field validity checking. */
     PrivateFlags privateFlags;
@@ -520,6 +560,13 @@ class Request
         _flags.set(flags);
     }
 
+    void
+    setMemSpaceConfigFlags(MemSpaceConfigFlags extraFlags)
+    {
+        assert(privateFlags.isSet(VALID_PADDR | VALID_VADDR));
+        _memSpaceConfigFlags.set(extraFlags);
+    }
+
     /** Accessor function for vaddr.*/
     bool
     hasVaddr() const
@@ -685,7 +732,7 @@ class Request
         _reqInstSeqNum = seq_num;
     }
 
-    /** Accessor functions for flags.  Note that these are for testing
+    /** Accessor functions for flags. Note that these are for testing
         only; setting flags should be done via setFlags(). */
     bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
     bool isStrictlyOrdered() const { return _flags.isSet(STRICT_ORDER); }
@@ -701,6 +748,88 @@ class Request
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
     bool isAcquire() const { return _flags.isSet(ACQUIRE); }
     bool isRelease() const { return _flags.isSet(RELEASE); }
+    bool isKernel() const { return _flags.isSet(KERNEL); }
+
+    /**
+     * Accessor functions for the memory space configuration flags and used by
+     * GPU ISAs such as the Heterogeneous System Architecture (HSA). Note that
+     * these are for testing only; setting extraFlags should be done via
+     * setMemSpaceConfigFlags().
+     */
+    bool isScoped() const { return _memSpaceConfigFlags.isSet(SCOPE_VALID); }
+
+    bool
+    isWavefrontScope() const
+    {
+        assert(isScoped());
+        return _memSpaceConfigFlags.isSet(WAVEFRONT_SCOPE);
+    }
+
+    bool
+    isWorkgroupScope() const
+    {
+        assert(isScoped());
+        return _memSpaceConfigFlags.isSet(WORKGROUP_SCOPE);
+    }
+
+    bool
+    isDeviceScope() const
+    {
+        assert(isScoped());
+        return _memSpaceConfigFlags.isSet(DEVICE_SCOPE);
+    }
+
+    bool
+    isSystemScope() const
+    {
+        assert(isScoped());
+        return _memSpaceConfigFlags.isSet(SYSTEM_SCOPE);
+    }
+
+    bool
+    isGlobalSegment() const
+    {
+        return _memSpaceConfigFlags.isSet(GLOBAL_SEGMENT) ||
+               (!isGroupSegment() && !isPrivateSegment() &&
+                !isKernargSegment() && !isReadonlySegment() &&
+                !isSpillSegment() && !isArgSegment());
+    }
+
+    bool
+    isGroupSegment() const
+    {
+        return _memSpaceConfigFlags.isSet(GROUP_SEGMENT);
+    }
+
+    bool
+    isPrivateSegment() const
+    {
+        return _memSpaceConfigFlags.isSet(PRIVATE_SEGMENT);
+    }
+
+    bool
+    isKernargSegment() const
+    {
+        return _memSpaceConfigFlags.isSet(KERNARG_SEGMENT);
+    }
+
+    bool
+    isReadonlySegment() const
+    {
+        return _memSpaceConfigFlags.isSet(READONLY_SEGMENT);
+    }
+
+    bool
+    isSpillSegment() const
+    {
+        return _memSpaceConfigFlags.isSet(SPILL_SEGMENT);
+    }
+
+    bool
+    isArgSegment() const
+    {
+        return _memSpaceConfigFlags.isSet(ARG_SEGMENT);
+    }
 };
 
 #endif // __MEM_REQUEST_HH__

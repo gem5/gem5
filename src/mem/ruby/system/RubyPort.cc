@@ -237,24 +237,26 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
 
     // Check for pio requests and directly send them to the dedicated
     // pio port.
-    if (!isPhysMemAddress(pkt->getAddr())) {
-        assert(ruby_port->memMasterPort.isConnected());
-        DPRINTF(RubyPort, "Request address %#x assumed to be a pio address\n",
-                pkt->getAddr());
+    if (pkt->cmd != MemCmd::MemFenceReq) {
+        if (!isPhysMemAddress(pkt->getAddr())) {
+            assert(ruby_port->memMasterPort.isConnected());
+            DPRINTF(RubyPort, "Request address %#x assumed to be a "
+                    "pio address\n", pkt->getAddr());
 
-        // Save the port in the sender state object to be used later to
-        // route the response
-        pkt->pushSenderState(new SenderState(this));
+            // Save the port in the sender state object to be used later to
+            // route the response
+            pkt->pushSenderState(new SenderState(this));
 
-        // send next cycle
-        RubySystem *rs = ruby_port->m_ruby_system;
-        ruby_port->memMasterPort.schedTimingReq(pkt,
-            curTick() + rs->clockPeriod());
-        return true;
+            // send next cycle
+            RubySystem *rs = ruby_port->m_ruby_system;
+            ruby_port->memMasterPort.schedTimingReq(pkt,
+                curTick() + rs->clockPeriod());
+            return true;
+        }
+
+        assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
+               RubySystem::getBlockSizeBytes());
     }
-
-    assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
-           RubySystem::getBlockSizeBytes());
 
     // Submit the ruby request
     RequestStatus requestStatus = ruby_port->makeRequest(pkt);
@@ -272,9 +274,11 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         return true;
     }
 
-
-    DPRINTF(RubyPort, "Request for address %#x did not issued because %s\n",
-            pkt->getAddr(), RequestStatus_to_string(requestStatus));
+    if (pkt->cmd != MemCmd::MemFenceReq) {
+        DPRINTF(RubyPort,
+                "Request for address %#x did not issued because %s\n",
+                pkt->getAddr(), RequestStatus_to_string(requestStatus));
+    }
 
     addToRetryList();
 
@@ -466,9 +470,14 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
         }
     }
 
-    // Flush requests don't access physical memory
-    if (pkt->isFlush()) {
+    // Flush, acquire, release requests don't access physical memory
+    if (pkt->isFlush() || pkt->cmd == MemCmd::MemFenceReq) {
         accessPhysMem = false;
+    }
+
+    if (pkt->req->isKernel()) {
+        accessPhysMem = false;
+        needsResponse = true;
     }
 
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);

@@ -30,12 +30,16 @@
 #define __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
 
 #include <ostream>
+#include <vector>
 
+#include "mem/protocol/HSAScope.hh"
+#include "mem/protocol/HSASegment.hh"
 #include "mem/protocol/Message.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/DataBlock.hh"
 
 class RubyRequest : public Message
 {
@@ -50,11 +54,17 @@ class RubyRequest : public Message
     uint8_t* data;
     PacketPtr pkt;
     ContextID m_contextId;
+    int m_wfid;
+    HSAScope m_scope;
+    HSASegment m_segment;
+
 
     RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
         PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
-        ContextID _proc_id = 100)
+        ContextID _proc_id = 100, ContextID _core_id = 99,
+        HSAScope _scope = HSAScope_UNSPECIFIED,
+        HSASegment _segment = HSASegment_GLOBAL)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -64,10 +74,64 @@ class RubyRequest : public Message
           m_Prefetch(_pb),
           data(_data),
           pkt(_pkt),
-          m_contextId(_proc_id)
+          m_contextId(_core_id),
+          m_scope(_scope),
+          m_segment(_segment)
     {
-      m_LineAddress = makeLineAddress(m_PhysicalAddress);
+        m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
+
+    RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
+        uint64_t _pc, RubyRequestType _type,
+        RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
+        unsigned _proc_id, unsigned _core_id,
+        int _wm_size, std::vector<bool> & _wm_mask,
+        DataBlock & _Data,
+        HSAScope _scope = HSAScope_UNSPECIFIED,
+        HSASegment _segment = HSASegment_GLOBAL)
+        : Message(curTime),
+          m_PhysicalAddress(_paddr),
+          m_Type(_type),
+          m_ProgramCounter(_pc),
+          m_AccessMode(_access_mode),
+          m_Size(_len),
+          m_Prefetch(_pb),
+          data(_data),
+          pkt(_pkt),
+          m_contextId(_core_id),
+          m_wfid(_proc_id),
+          m_scope(_scope),
+          m_segment(_segment)
+    {
+        m_LineAddress = makeLineAddress(m_PhysicalAddress);
+    }
+
+    RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
+        uint64_t _pc, RubyRequestType _type,
+        RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
+        unsigned _proc_id, unsigned _core_id,
+        int _wm_size, std::vector<bool> & _wm_mask,
+        DataBlock & _Data,
+        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps,
+        HSAScope _scope = HSAScope_UNSPECIFIED,
+        HSASegment _segment = HSASegment_GLOBAL)
+        : Message(curTime),
+          m_PhysicalAddress(_paddr),
+          m_Type(_type),
+          m_ProgramCounter(_pc),
+          m_AccessMode(_access_mode),
+          m_Size(_len),
+          m_Prefetch(_pb),
+          data(_data),
+          pkt(_pkt),
+          m_contextId(_core_id),
+          m_wfid(_proc_id),
+          m_scope(_scope),
+          m_segment(_segment)
+    {
+        m_LineAddress = makeLineAddress(m_PhysicalAddress);
+    }
+
 
     RubyRequest(Tick curTime) : Message(curTime) {}
     MsgPtr clone() const
