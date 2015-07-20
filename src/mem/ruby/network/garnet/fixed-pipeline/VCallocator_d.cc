@@ -117,6 +117,7 @@ VCallocator_d::wakeup()
 
     clear_request_vector();
     check_for_wakeup();
+    m_router->call_sw_alloc();
 }
 
 bool
@@ -236,7 +237,6 @@ VCallocator_d::arbitrate_outvcs()
                         m_router->curCycle());
                     m_output_unit[outport_iter]->update_vc(
                         outvc_iter, inport, invc);
-                    m_router->swarb_req();
                     break;
                 }
             }
@@ -261,7 +261,7 @@ VCallocator_d::check_for_wakeup()
     for (int i = 0; i < m_num_inports; i++) {
         for (int j = 0; j < m_num_vcs; j++) {
             if (m_input_unit[i]->need_stage(j, VC_AB_, VA_, nextCycle)) {
-                scheduleEvent(Cycles(1));
+                m_router->vcarb_req();
                 return;
             }
         }

@@ -81,8 +81,14 @@ InputUnit_d::wakeup()
 
             m_vcs[vc]->set_enqueue_time(m_router->curCycle());
         } else {
-            t_flit->advance_stage(SA_, m_router->curCycle() + Cycles(1));
-            m_router->swarb_req();
+            t_flit->advance_stage(SA_, m_router->curCycle());
+            // Changing router latency to 2 cycles. Input Unit takes 1 cycle for wakeup.
+            // VCalloc, SWalloc, Sw-Xfer and output scheduling takes 1 cycle. The original
+            // design schedules VCallocator for head flit, and Swalloc for non-head flit.
+            // VCalloc now calls SWalloc directly instead of scheduling it for the next cycle,
+            // hence we should not allocate SWalloc, otherwise it might get called twice, once
+            // by the scheduler and once by VCalloc.
+            m_router->vcarb_req();
         }
         // write flit into input buffer
         m_vcs[vc]->insertFlit(t_flit);

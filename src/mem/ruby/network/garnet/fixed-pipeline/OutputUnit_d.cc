@@ -102,7 +102,7 @@ OutputUnit_d::set_credit_link(CreditLink_d *credit_link)
 void
 OutputUnit_d::update_vc(int vc, int in_port, int in_vc)
 {
-    m_outvc_state[vc]->setState(ACTIVE_, m_router->curCycle() + Cycles(1));
+  m_outvc_state[vc]->setState(ACTIVE_, m_router->curCycle());
     m_outvc_state[vc]->set_inport(in_port);
     m_outvc_state[vc]->set_invc(in_vc);
     m_router->update_incredit(in_port, in_vc,

@@ -70,7 +70,7 @@ class OutputUnit_d : public Consumer
     inline void
     set_vc_state(VC_state_type state, int vc, Cycles curTime)
     {
-        m_outvc_state[vc]->setState(state, curTime + Cycles(1));
+      m_outvc_state[vc]->setState(state, curTime);
     }
 
     inline bool

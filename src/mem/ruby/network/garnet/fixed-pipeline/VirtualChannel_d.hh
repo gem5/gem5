@@ -70,7 +70,7 @@ class VirtualChannel_d
     set_state(VC_state_type m_state, Cycles curTime)
     {
         m_vc_state.first = m_state;
-        m_vc_state.second = curTime + Cycles(1);
+        m_vc_state.second = curTime;
     }
 
     inline flit_d*

@@ -131,6 +131,18 @@ Router_d::swarb_req()
 }
 
 void
+Router_d::call_sw_alloc()
+{
+    m_sw_alloc->wakeup();
+}
+
+void
+Router_d::call_switch()
+{
+    m_switch->wakeup();
+}
+
+void
 Router_d::update_incredit(int in_port, int in_vc, int credit)
 {
     m_input_unit[in_port]->update_credit(in_vc, credit);
