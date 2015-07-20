@@ -1,5 +1,6 @@
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

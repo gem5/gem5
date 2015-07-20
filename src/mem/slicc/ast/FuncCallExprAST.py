@@ -1,5 +1,6 @@
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -53,6 +54,8 @@ class FuncCallExprAST(ExprAST):
             # handled differently. Hence the check whether or not
             # the str_list is empty.
 
+            dflag = "%s" % (self.exprs[0].name)
+            machine.addDebugFlag(dflag)
             format = "%s" % (self.exprs[1].inline())
             format_length = len(format)
             str_list = []
@@ -61,10 +64,11 @@ class FuncCallExprAST(ExprAST):
                 str_list.append("%s" % self.exprs[i].inline())
 
             if len(str_list) == 0:
-                code('DPRINTF(RubySlicc, "$0: $1")',
-                     self.exprs[0].location, format[2:format_length-2])
+                code('DPRINTF($0, "$1: $2")',
+                     dflag, self.exprs[0].location, format[2:format_length-2])
             else:
-                code('DPRINTF(RubySlicc, "$0: $1", $2)',
+                code('DPRINTF($0, "$1: $2", $3)',
+                     dflag,
                      self.exprs[0].location, format[2:format_length-2],
                      ', '.join(str_list))
 

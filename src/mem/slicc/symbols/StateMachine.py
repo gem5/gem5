@@ -1,5 +1,6 @@
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2013 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -86,6 +87,9 @@ class StateMachine(Symbol):
         self.objects = []
         self.TBEType   = None
         self.EntryType = None
+        self.debug_flags = set()
+        self.debug_flags.add('RubyGenerated')
+        self.debug_flags.add('RubySlicc')
 
     def __repr__(self):
         return "[StateMachine: %s]" % self.ident
@@ -113,6 +117,9 @@ class StateMachine(Symbol):
                 action.error("    shorthand = %s" % action.short)
 
         self.actions[action.ident] = action
+
+    def addDebugFlag(self, flag):
+        self.debug_flags.add(flag)
 
     def addRequestType(self, request_type):
         assert self.table is None
@@ -270,6 +277,7 @@ class $py_ident(RubyController):
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "params/$c_ident.hh"
+
 ''')
 
         seen_types = set()
@@ -441,22 +449,26 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
  */
 
 #include <sys/types.h>
-#include <typeinfo>
 #include <unistd.h>
 
 #include <cassert>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
-#include "debug/RubyGenerated.hh"
-#include "debug/RubySlicc.hh"
+
+''')
+        for f in self.debug_flags:
+            code('#include "debug/${{f}}.hh"')
+        code('''
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/system/System.hh"
+
 ''')
         for include_path in includes:
             code('#include "${{include_path}}"')
@@ -1053,16 +1065,21 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 // ${ident}: ${{self.short}}
 
 #include <sys/types.h>
-#include <typeinfo>
 #include <unistd.h>
 
 #include <cassert>
+#include <typeinfo>
 
 #include "base/misc.hh"
-#include "debug/RubySlicc.hh"
+
+''')
+        for f in self.debug_flags:
+            code('#include "debug/${{f}}.hh"')
+        code('''
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
+
 ''')
 
         if outputRequest_types:
@@ -1071,6 +1088,7 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
         code('''
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/system/System.hh"
+
 ''')
 
 
