@@ -155,6 +155,10 @@ class Request
         PF_EXCLUSIVE                = 0x02000000,
         /** The request should be marked as LRU. */
         EVICT_NEXT                  = 0x04000000,
+        /** The request should be marked with ACQUIRE. */
+        ACQUIRE                     = 0x00020000,
+        /** The request should be marked with RELEASE. */
+        RELEASE                     = 0x00040000,
 
         /**
          * The request should be handled by the generic IPR code (only
@@ -696,6 +700,8 @@ class Request
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
+    bool isAcquire() const { return _flags.isSet(ACQUIRE); }
+    bool isRelease() const { return _flags.isSet(RELEASE); }
 };
 
 #endif // __MEM_REQUEST_HH__
