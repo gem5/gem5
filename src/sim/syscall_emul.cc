@@ -365,12 +365,10 @@ getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         }
         strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
         result = cwd.length();
-    }
-    else {
+    } else {
         if (getcwd((char *)buf.bufferPtr(), size) != NULL) {
             result = strlen((char *)buf.bufferPtr());
-        }
-        else {
+        } else {
             result = -1;
         }
     }
@@ -405,7 +403,30 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
 
     BufferArg buf(bufPtr, bufsiz);
 
-    int result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
+    int result = -1;
+    if (path != "/proc/self/exe") {
+        result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
+    } else {
+        // readlink() will return the path of the binary given
+        // with the -c option, however it is possible that this
+        // will still result in incorrect behavior if one binary
+        // runs another, e.g., -c time -o "my_binary" where
+        // my_binary calls readlink(). this is a very unlikely case,
+        // so we issue a warning.
+        warn_once("readlink may yield unexpected results if multiple "
+                  "binaries are used\n");
+        if (strlen(p->progName()) > bufsiz) {
+            // readlink will truncate the contents of the
+            // path to ensure it is no more than bufsiz
+            strncpy((char*)buf.bufferPtr(), p->progName(), bufsiz);
+            result = bufsiz;
+        } else {
+            // return the program's working path rather
+            // than the one for the gem5 binary itself.
+            strcpy((char*)buf.bufferPtr(), p->progName());
+            result = strlen((char*)buf.bufferPtr());
+        }
+    }
 
     buf.copyOut(tc->getMemProxy());
 
