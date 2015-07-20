@@ -41,13 +41,6 @@ class ThreadContext;
 typedef const char * FaultName;
 typedef Stats::Scalar FaultStat;
 
-// Each class has it's name statically define in _name,
-// and has a virtual function to access it's name.
-// The function is necessary because otherwise, all objects
-// which are being accessed cast as a FaultBase * (namely
-// all faults returned using the Fault type) will use the
-// generic FaultBase name.
-
 class FaultBase
 {
   public:
@@ -65,7 +58,7 @@ class UnimpFault : public FaultBase
         : panicStr(_str)
     { }
 
-    FaultName name() const {return "Unimplemented simulator feature";}
+    FaultName name() const { return "Unimplemented simulator feature"; }
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
 };
@@ -73,7 +66,7 @@ class UnimpFault : public FaultBase
 class ReExec : public FaultBase
 {
   public:
-    virtual FaultName name() const { return "Re-execution fault";}
+    virtual FaultName name() const { return "Re-execution fault"; }
     ReExec() {}
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
@@ -84,7 +77,7 @@ class GenericPageTableFault : public FaultBase
   private:
     Addr vaddr;
   public:
-    FaultName name() const {return "Generic page table fault";}
+    FaultName name() const { return "Generic page table fault"; }
     GenericPageTableFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
@@ -95,7 +88,7 @@ class GenericAlignmentFault : public FaultBase
   private:
     Addr vaddr;
   public:
-    FaultName name() const {return "Generic alignment fault";}
+    FaultName name() const { return "Generic alignment fault"; }
     GenericAlignmentFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);
