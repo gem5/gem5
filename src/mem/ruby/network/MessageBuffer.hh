@@ -123,6 +123,8 @@ class MessageBuffer
 
     void recycle();
     bool isEmpty() const { return m_prio_heap.size() == 0; }
+    bool isStallMapEmpty() { return m_stall_msg_map.size() == 0; }
+    unsigned int getStallMapSize() { return m_stall_msg_map.size(); }
 
     void
     setOrdering(bool order)

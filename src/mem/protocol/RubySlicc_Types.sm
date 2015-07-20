@@ -45,6 +45,8 @@ structure(InPort, external = "yes", primitive="yes") {
   Cycles dequeue();
   void recycle();
   bool isEmpty();
+  bool isStallMapEmpty();
+  int getStallMapSize();
 }
 
 external_type(NodeID, default="0", primitive="yes");
