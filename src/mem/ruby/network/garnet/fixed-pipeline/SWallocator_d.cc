@@ -178,7 +178,7 @@ SWallocator_d::arbitrate_outports()
 
                 // remove flit from Input Unit
                 flit_d *t_flit = m_input_unit[inport]->getTopFlit(invc);
-                t_flit->advance_stage(ST_, m_router->curCycle());
+                t_flit->advance_stage(ST_, m_router->curCycle() + Cycles(1));
                 t_flit->set_vc(outvc);
                 t_flit->set_outport(outport);
                 t_flit->set_time(m_router->curCycle() + Cycles(1));

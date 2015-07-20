@@ -66,10 +66,10 @@ class flit_d
     }
 
     void
-    advance_stage(flit_stage t_stage, Cycles curTime)
+    advance_stage(flit_stage t_stage, Cycles newTime)
     {
         m_stage.first = t_stage;
-        m_stage.second = curTime + Cycles(1);
+        m_stage.second = newTime;
     }
 
     std::pair<flit_stage, Cycles> get_stage() { return m_stage; }

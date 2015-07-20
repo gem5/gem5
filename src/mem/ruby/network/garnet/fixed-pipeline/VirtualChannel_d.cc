@@ -57,7 +57,7 @@ VirtualChannel_d::grant_vc(int out_vc, Cycles curTime)
     m_vc_state.first = ACTIVE_;
     m_vc_state.second = curTime + Cycles(1);
     flit_d *t_flit = m_input_buffer->peekTopFlit();
-    t_flit->advance_stage(SA_, curTime);
+    t_flit->advance_stage(SA_, curTime + Cycles(1));
 }
 
 bool

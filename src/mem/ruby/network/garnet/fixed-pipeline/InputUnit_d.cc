@@ -81,7 +81,7 @@ InputUnit_d::wakeup()
 
             m_vcs[vc]->set_enqueue_time(m_router->curCycle());
         } else {
-            t_flit->advance_stage(SA_, m_router->curCycle());
+            t_flit->advance_stage(SA_, m_router->curCycle() + Cycles(1));
             m_router->swarb_req();
         }
         // write flit into input buffer

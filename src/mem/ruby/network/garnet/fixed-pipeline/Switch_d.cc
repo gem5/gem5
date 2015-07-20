@@ -73,7 +73,7 @@ Switch_d::wakeup()
         flit_d *t_flit = m_switch_buffer[inport]->peekTopFlit();
         if (t_flit->is_stage(ST_, m_router->curCycle())) {
             int outport = t_flit->get_outport();
-            t_flit->advance_stage(LT_, m_router->curCycle());
+            t_flit->advance_stage(LT_, m_router->curCycle() + Cycles(1));
             t_flit->set_time(m_router->curCycle() + Cycles(1));
 
             // This will take care of waking up the Network Link
