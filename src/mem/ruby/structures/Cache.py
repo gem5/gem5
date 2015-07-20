@@ -29,6 +29,7 @@
 
 from m5.params import *
 from m5.proxy import *
+from PseudoLRUReplacementPolicy import PseudoLRUReplacementPolicy
 from m5.SimObject import SimObject
 
 class RubyCache(SimObject):
@@ -38,7 +39,8 @@ class RubyCache(SimObject):
     size = Param.MemorySize("capacity in bytes");
     latency = Param.Cycles("");
     assoc = Param.Int("");
-    replacement_policy = Param.String("PSEUDO_LRU", "");
+    replacement_policy = Param.ReplacementPolicy(PseudoLRUReplacementPolicy(),
+                         "")
     start_index_bit = Param.Int(6, "index start, default 6 for 64-byte line");
     is_icache = Param.Bool(False, "is instruction only cache");
 

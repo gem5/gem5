@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +31,7 @@
 #define __MEM_RUBY_STRUCTURES_PSEUDOLRUPOLICY_HH__
 
 #include "mem/ruby/structures/AbstractReplacementPolicy.hh"
+#include "params/PseudoLRUReplacementPolicy.hh"
 
 /**
  * Implementation of tree-based pseudo-LRU replacement
@@ -47,7 +49,8 @@
 class PseudoLRUPolicy : public AbstractReplacementPolicy
 {
   public:
-    PseudoLRUPolicy(int64 num_sets, int64 assoc);
+    typedef PseudoLRUReplacementPolicyParams Params;
+    PseudoLRUPolicy(const Params * p);
     ~PseudoLRUPolicy();
 
     void touch(int64 set, int64 way, Tick time);
@@ -59,79 +62,5 @@ class PseudoLRUPolicy : public AbstractReplacementPolicy
     uint64* m_trees;                   /** bit representation of the
                                         * trees, one for each set */
 };
-
-inline
-PseudoLRUPolicy::PseudoLRUPolicy(int64 num_sets, int64 assoc)
-    : AbstractReplacementPolicy(num_sets, assoc)
-{
-    // associativity cannot exceed capacity of tree representation
-    assert(num_sets > 0 && assoc > 1 && assoc <= sizeof(uint64)*4);
-
-    m_trees = NULL;
-    m_num_levels = 0;
-
-    m_effective_assoc = 1;
-    while (m_effective_assoc < assoc) {
-        // effective associativity is ceiling power of 2
-        m_effective_assoc <<= 1;
-    }
-    assoc = m_effective_assoc;
-    while (true) {
-        assoc /= 2;
-        if(!assoc) break;
-        m_num_levels++;
-    }
-    assert(m_num_levels < sizeof(unsigned int)*4);
-    m_trees = new uint64[m_num_sets];
-    for (unsigned i = 0; i < m_num_sets; i++) {
-        m_trees[i] = 0;
-    }
-}
-
-inline
-PseudoLRUPolicy::~PseudoLRUPolicy()
-{
-    if (m_trees != NULL)
-        delete[] m_trees;
-}
-
-inline void
-PseudoLRUPolicy::touch(int64 set, int64 index, Tick time)
-{
-    assert(index >= 0 && index < m_assoc);
-    assert(set >= 0 && set < m_num_sets);
-
-    int tree_index = 0;
-    int node_val;
-    for (int i = m_num_levels - 1; i >= 0; i--) {
-        node_val = (index >> i)&1;
-        if (node_val)
-            m_trees[set] |= node_val << tree_index;
-        else
-            m_trees[set] &= ~(1 << tree_index);
-        tree_index = node_val ? (tree_index*2)+2 : (tree_index*2)+1;
-    }
-    m_last_ref_ptr[set][index] = time;
-}
-
-inline int64
-PseudoLRUPolicy::getVictim(int64 set) const
-{
-    // assert(m_assoc != 0);
-    int64 index = 0;
-
-    int tree_index = 0;
-    int node_val;
-    for (unsigned i = 0; i < m_num_levels; i++){
-        node_val = (m_trees[set] >> tree_index) & 1;
-        index += node_val ? 0 : (m_effective_assoc >> (i + 1));
-        tree_index = node_val ? (tree_index * 2) + 1 : (tree_index * 2) + 2;
-    }
-    assert(index >= 0 && index < m_effective_assoc);
-
-    /* return either the found index or the max possible index */
-    /* NOTE: this is not a fair replacement when assoc is not a power of 2 */
-    return (index > (m_assoc - 1)) ? m_assoc - 1 : index;
-}
 
 #endif // __MEM_RUBY_STRUCTURES_PSEUDOLRUPOLICY_HH__

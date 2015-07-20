@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,49 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Derek Hower
  */
 
-#ifndef __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
-#define __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
-
 #include "mem/ruby/structures/AbstractReplacementPolicy.hh"
-#include "params/LRUReplacementPolicy.hh"
 
-/* Simple true LRU replacement policy */
-
-class LRUPolicy : public AbstractReplacementPolicy
+AbstractReplacementPolicy::AbstractReplacementPolicy(const Params * p)
+  : SimObject(p)
 {
-  public:
-    typedef LRUReplacementPolicyParams Params;
-    LRUPolicy(const Params * p);
-    ~LRUPolicy();
+    m_num_sets = p->size/p->block_size/p->assoc;
+    m_assoc = p->assoc;
+    m_last_ref_ptr = new Tick*[m_num_sets];
+    for(unsigned i = 0; i < m_num_sets; i++){
+        m_last_ref_ptr[i] = new Tick[m_assoc];
+        for(unsigned j = 0; j < m_assoc; j++){
+            m_last_ref_ptr[i][j] = 0;
+        }
+    }
+}
 
-    void touch(int64 set, int64 way, Tick time);
-    int64 getVictim(int64 set) const;
-};
+AbstractReplacementPolicy *
+ReplacementPolicyParams::create()
+{
+    fatal("Cannot create an AbstractReplacementPolicy");
+    return NULL;
+}
 
-#endif // __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
+
+
+AbstractReplacementPolicy::~AbstractReplacementPolicy()
+{
+    if (m_last_ref_ptr != NULL){
+        for (unsigned i = 0; i < m_num_sets; i++){
+            if (m_last_ref_ptr[i] != NULL){
+                delete[] m_last_ref_ptr[i];
+            }
+        }
+        delete[] m_last_ref_ptr;
+    }
+}
+
+Tick
+AbstractReplacementPolicy::getLastAccess(int64 set, int64 way)
+{
+    return m_last_ref_ptr[set][way];
+}

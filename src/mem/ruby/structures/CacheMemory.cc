@@ -61,7 +61,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_cache_size = p->size;
     m_latency = p->latency;
     m_cache_assoc = p->assoc;
-    m_policy = p->replacement_policy;
+    m_replacementPolicy_ptr = p->replacement_policy;
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
     m_resource_stalls = p->resourceStalls;
@@ -75,15 +75,6 @@ CacheMemory::init()
     assert(m_cache_num_sets > 1);
     m_cache_num_set_bits = floorLog2(m_cache_num_sets);
     assert(m_cache_num_set_bits > 0);
-
-    if (m_policy == "PSEUDO_LRU")
-        m_replacementPolicy_ptr =
-            new PseudoLRUPolicy(m_cache_num_sets, m_cache_assoc);
-    else if (m_policy == "LRU")
-        m_replacementPolicy_ptr =
-            new LRUPolicy(m_cache_num_sets, m_cache_assoc);
-    else
-        assert(false);
 
     m_cache.resize(m_cache_num_sets);
     for (int i = 0; i < m_cache_num_sets; i++) {

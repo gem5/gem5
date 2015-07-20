@@ -40,9 +40,8 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 #include "mem/ruby/structures/BankedArray.hh"
-#include "mem/ruby/structures/LRUPolicy.hh"
-#include "mem/ruby/structures/PseudoLRUPolicy.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "params/RubyCache.hh"
 #include "sim/sim_object.hh"
@@ -163,7 +162,6 @@ class CacheMemory : public SimObject
     BankedArray tagArray;
 
     int m_cache_size;
-    std::string m_policy;
     int m_cache_num_sets;
     int m_cache_num_set_bits;
     int m_cache_assoc;

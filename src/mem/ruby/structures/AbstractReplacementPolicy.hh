@@ -30,11 +30,15 @@
 #define __MEM_RUBY_STRUCTURES_ABSTRACTREPLACEMENTPOLICY_HH__
 
 #include "base/types.hh"
+#include "mem/ruby/common/TypeDefines.hh"
+#include "params/ReplacementPolicy.hh"
+#include "sim/sim_object.hh"
 
-class AbstractReplacementPolicy
+class AbstractReplacementPolicy : public SimObject
 {
   public:
-    AbstractReplacementPolicy(int64 num_sets, int64 assoc);
+    typedef ReplacementPolicyParams Params;
+    AbstractReplacementPolicy(const Params * p);
     virtual ~AbstractReplacementPolicy();
 
     /* touch a block. a.k.a. update timestamp */
@@ -46,44 +50,12 @@ class AbstractReplacementPolicy
     /* get the time of the last access */
     Tick getLastAccess(int64 set, int64 way);
 
+    virtual bool useOccupancy() const { return false; }
+
   protected:
     unsigned m_num_sets;       /** total number of sets */
     unsigned m_assoc;          /** set associativity */
     Tick **m_last_ref_ptr;         /** timestamp of last reference */
 };
-
-inline
-AbstractReplacementPolicy::AbstractReplacementPolicy(int64 num_sets,
-                                                     int64 assoc)
-{
-    m_num_sets = num_sets;
-    m_assoc = assoc;
-    m_last_ref_ptr = new Tick*[m_num_sets];
-    for(unsigned i = 0; i < m_num_sets; i++){
-        m_last_ref_ptr[i] = new Tick[m_assoc];
-        for(unsigned j = 0; j < m_assoc; j++){
-            m_last_ref_ptr[i][j] = 0;
-        }
-    }
-}
-
-inline
-AbstractReplacementPolicy::~AbstractReplacementPolicy()
-{
-    if (m_last_ref_ptr != NULL){
-        for (unsigned i = 0; i < m_num_sets; i++){
-            if (m_last_ref_ptr[i] != NULL){
-                delete[] m_last_ref_ptr[i];
-            }
-        }
-        delete[] m_last_ref_ptr;
-    }
-}
-
-inline Tick
-AbstractReplacementPolicy::getLastAccess(int64 set, int64 way)
-{
-    return m_last_ref_ptr[set][way];
-}
 
 #endif // __MEM_RUBY_STRUCTURES_ABSTRACTREPLACEMENTPOLICY_HH__

@@ -95,10 +95,12 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
             # First create the Ruby objects associated with this cpu
             #
             l0i_cache = L0Cache(size = '4096B', assoc = 1, is_icache = True,
-                start_index_bit = block_size_bits, replacement_policy="LRU")
+                start_index_bit = block_size_bits,
+                replacement_policy = LRUReplacementPolicy())
 
             l0d_cache = L0Cache(size = '4096B', assoc = 1, is_icache = False,
-                start_index_bit = block_size_bits, replacement_policy="LRU")
+                start_index_bit = block_size_bits,
+                replacement_policy = LRUReplacementPolicy())
 
             l0_cntrl = L0Cache_Controller(version = i*num_cpus_per_cluster + j,
                           Icache = l0i_cache, Dcache = l0d_cache,

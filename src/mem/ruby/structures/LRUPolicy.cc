@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,57 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Derek Hower
  */
 
-#ifndef __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
-#define __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
+#include "mem/ruby/structures/LRUPolicy.hh"
 
-#include "mem/ruby/structures/AbstractReplacementPolicy.hh"
-#include "params/LRUReplacementPolicy.hh"
 
-/* Simple true LRU replacement policy */
 
-class LRUPolicy : public AbstractReplacementPolicy
+LRUPolicy::LRUPolicy(const Params * p)
+    : AbstractReplacementPolicy(p)
 {
-  public:
-    typedef LRUReplacementPolicyParams Params;
-    LRUPolicy(const Params * p);
-    ~LRUPolicy();
+}
 
-    void touch(int64 set, int64 way, Tick time);
-    int64 getVictim(int64 set) const;
-};
 
-#endif // __MEM_RUBY_STRUCTURES_LRUPOLICY_HH__
+LRUPolicy::~LRUPolicy()
+{
+}
+
+LRUPolicy *
+LRUReplacementPolicyParams::create()
+{
+    return new LRUPolicy(this);
+}
+
+
+void
+LRUPolicy::touch(int64 set, int64 index, Tick time)
+{
+    assert(index >= 0 && index < m_assoc);
+    assert(set >= 0 && set < m_num_sets);
+
+    m_last_ref_ptr[set][index] = time;
+}
+
+int64
+LRUPolicy::getVictim(int64 set) const
+{
+    Tick time, smallest_time;
+    int64 smallest_index;
+
+    smallest_index = 0;
+    smallest_time = m_last_ref_ptr[set][0];
+
+    for (unsigned i = 0; i < m_assoc; i++) {
+        time = m_last_ref_ptr[set][i];
+
+        if (time < smallest_time) {
+            smallest_index = i;
+            smallest_time = time;
+        }
+    }
+
+    return smallest_index;
+}

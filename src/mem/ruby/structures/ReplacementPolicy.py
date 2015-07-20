@@ -1,6 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2012 Mark D. Hill and David A. Wood
+#
+# Copyright (c) 2013 Advanced Micro Devices, Inc
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,31 +25,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nilay Vaish
+# Author: Derek Hower
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import SimObject
 
-if env['PROTOCOL'] == 'None':
-    Return()
+class ReplacementPolicy(SimObject):
+    type = 'ReplacementPolicy'
+    cxx_class = 'AbstractReplacementPolicy'
+    cxx_header = 'mem/ruby/structures/AbstractReplacementPolicy.hh'
 
-SimObject('Cache.py')
-SimObject('DirectoryMemory.py')
-SimObject('LRUReplacementPolicy.py')
-SimObject('PseudoLRUReplacementPolicy.py')
-SimObject('ReplacementPolicy.py')
-SimObject('RubyMemoryControl.py')
-SimObject('RubyPrefetcher.py')
-SimObject('WireBuffer.py')
+    block_size = Param.Int(Parent.cache_line_size, "block size in bytes")
 
-Source('AbstractReplacementPolicy.cc')
-Source('DirectoryMemory.cc')
-Source('CacheMemory.cc')
-Source('LRUPolicy.cc')
-Source('PseudoLRUPolicy.cc')
-Source('WireBuffer.cc')
-Source('RubyMemoryControl.cc')
-Source('MemoryNode.cc')
-Source('PersistentTable.cc')
-Source('Prefetcher.cc')
-Source('TimerTable.cc')
-Source('BankedArray.cc')
+    size = Param.MemorySize(Parent.size, "capacity in bytes")
+
+    assoc = Param.Int(Parent.assoc, "associativity")
