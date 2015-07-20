@@ -12,7 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2010 Advanced Micro Devices, Inc.
+ * Copyright (c) 2010,2015 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,6 +110,10 @@ class MemCmd
         SwapResp,
         MessageReq,
         MessageResp,
+        ReleaseReq,
+        ReleaseResp,
+        AcquireReq,
+        AcquireResp,
         // Error responses
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards
@@ -147,6 +151,8 @@ class MemCmd
         IsError,        //!< Error response
         IsPrint,        //!< Print state matching address (for debugging)
         IsFlush,        //!< Flush the address from caches
+        IsAcquire,      //!< Acquire operation
+        IsRelease,      //!< Release operation
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -203,6 +209,8 @@ class MemCmd
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
+    bool isAcquire() const      { return testCmdAttrib(IsAcquire); }
+    bool isRelease() const      { return testCmdAttrib(IsRelease); }
 
     const Command
     responseCommand() const
@@ -484,6 +492,8 @@ class Packet : public Printable
     bool isError() const             { return cmd.isError(); }
     bool isPrint() const             { return cmd.isPrint(); }
     bool isFlush() const             { return cmd.isFlush(); }
+    bool isAcquire() const           { return cmd.isAcquire(); }
+    bool isRelease() const           { return cmd.isRelease(); }
 
     // Snoop flags
     void assertMemInhibit()

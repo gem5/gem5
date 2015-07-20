@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010,2015 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,7 +86,7 @@ typedef uint16_t MasterID;
 class Request
 {
   public:
-    typedef uint32_t FlagsType;
+    typedef uint64_t FlagsType;
     typedef uint8_t ArchFlagsType;
     typedef ::Flags<FlagsType> Flags;
 
@@ -97,11 +98,11 @@ class Request
          * architecture-specific code. For example, SPARC uses them to
          * represent ASIs.
          */
-        ARCH_BITS                   = 0x000000FF,
+        ARCH_BITS                   = 0x00000000000000FF,
         /** The request was an instruction fetch. */
-        INST_FETCH                  = 0x00000100,
+        INST_FETCH                  = 0x0000000000000100,
         /** The virtual address is also the physical address. */
-        PHYSICAL                    = 0x00000200,
+        PHYSICAL                    = 0x0000000000000200,
         /**
          * The request is to an uncacheable address.
          *
@@ -109,7 +110,7 @@ class Request
          * STRICT_ORDER flag should be set if such reordering is
          * undesirable.
          */
-        UNCACHEABLE                = 0x00000400,
+        UNCACHEABLE                = 0x0000000000000400,
         /**
          * The request is required to be strictly ordered by <i>CPU
          * models</i> and is non-speculative.
@@ -119,22 +120,22 @@ class Request
          * memory system may still reorder requests in caches unless
          * the UNCACHEABLE flag is set as well.
          */
-        STRICT_ORDER                = 0x00000800,
+        STRICT_ORDER                = 0x0000000000000800,
         /** This request is to a memory mapped register. */
-        MMAPPED_IPR                 = 0x00002000,
+        MMAPPED_IPR                 = 0x0000000000001000,
         /** This request is a clear exclusive. */
-        CLEAR_LL                    = 0x00004000,
+        CLEAR_LL                    = 0x0000000000002000,
         /** This request is made in privileged mode. */
-        PRIVILEGED                  = 0x00008000,
+        PRIVILEGED                  = 0x0000000000004000,
 
         /**
          * This is a write that is targeted and zeroing an entire
          * cache block.  There is no need for a read/modify/write
          */
-        CACHE_BLOCK_ZERO            = 0x00010000,
+        CACHE_BLOCK_ZERO            = 0x0000000000008000,
 
         /** The request should not cause a memory access. */
-        NO_ACCESS                   = 0x00080000,
+        NO_ACCESS                   = 0x0000000000100000,
         /**
          * This request will lock or unlock the accessed memory. When
          * used with a load, the access locks the particular chunk of
@@ -142,30 +143,34 @@ class Request
          * that locked accesses have to be made up of a locked load,
          * some operation on the data, and then a locked store.
          */
-        LOCKED_RMW                  = 0x00100000,
+        LOCKED_RMW                  = 0x0000000000200000,
         /** The request is a Load locked/store conditional. */
-        LLSC                        = 0x00200000,
+        LLSC                        = 0x0000000000400000,
         /** This request is for a memory swap. */
-        MEM_SWAP                    = 0x00400000,
-        MEM_SWAP_COND               = 0x00800000,
+        MEM_SWAP                    = 0x0000000000800000,
+        MEM_SWAP_COND               = 0x0000000001000000,
 
         /** The request is a prefetch. */
-        PREFETCH                    = 0x01000000,
+        PREFETCH                    = 0x0000000002000000,
         /** The request should be prefetched into the exclusive state. */
-        PF_EXCLUSIVE                = 0x02000000,
+        PF_EXCLUSIVE                = 0x0000000004000000,
         /** The request should be marked as LRU. */
-        EVICT_NEXT                  = 0x04000000,
+        EVICT_NEXT                  = 0x0000000008000000,
+        /** The request should be marked with ACQUIRE. */
+        ACQUIRE                     = 0x0000000001000000,
+        /** The request should be marked with RELEASE. */
+        RELEASE                     = 0x0000000002000000,
 
         /**
          * The request should be handled by the generic IPR code (only
          * valid together with MMAPPED_IPR)
          */
-        GENERIC_IPR                 = 0x08000000,
+        GENERIC_IPR                 = 0x0000000004000000,
 
         /** The request targets the secure memory space. */
-        SECURE                      = 0x10000000,
+        SECURE                      = 0x0000000008000000,
         /** The request is a page table walk */
-        PT_WALK                     = 0x20000000,
+        PT_WALK                     = 0x0000000010000000,
 
         /**
          * These flags are *not* cleared when a Request object is
@@ -655,12 +660,19 @@ class Request
     bool isLLSC() const { return _flags.isSet(LLSC); }
     bool isPriv() const { return _flags.isSet(PRIVILEGED); }
     bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
+    bool isAcquire() const { return _flags.isSet(ACQUIRE); }
+    bool isRelease() const { return _flags.isSet(RELEASE); }
+    bool isAcquireRelease() const {
+        return _flags.isSet(RELEASE | ACQUIRE);
+    }
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
+    void setAcquire() { _flags.set(ACQUIRE); }
+    void setRelease() { _flags.set(RELEASE); }
 };
 
 #endif // __MEM_REQUEST_HH__

@@ -136,6 +136,9 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   COMMIT,            desc="Commit version";
   NULL,              desc="Invalid request type";
   FLUSH,             desc="Flush request type";
+  Release,           desc="Release operation";
+  Acquire,           desc="Acquire opertion";
+  AcquireRelease,    desc="Acquire and Release opertion";
 }
 
 enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {
