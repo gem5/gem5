@@ -70,6 +70,7 @@ class BankedArray
     // This is so we don't get aliasing on blocks being replaced
     bool tryAccess(int64 idx);
 
+    Cycles getLatency() const { return accessLatency; }
 };
 
 #endif

@@ -91,6 +91,9 @@ class CacheMemory : public SimObject
     const AbstractCacheEntry* lookup(const Address& address) const;
 
     Cycles getLatency() const { return m_latency; }
+    Cycles getTagLatency() const { return tagArray.getLatency(); }
+    Cycles getDataLatency() const { return dataArray.getLatency(); }
+
 
     // Hook for checkpointing the contents of the cache
     void recordCacheContents(int cntrl, CacheRecorder* tr) const;
