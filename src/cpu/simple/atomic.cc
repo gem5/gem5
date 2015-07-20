@@ -628,6 +628,7 @@ AtomicSimpleCPU::tick()
 
             preExecute();
 
+            Tick stall_ticks = 0;
             if (curStaticInst) {
                 fault = curStaticInst->execute(&t_info, traceData);
 
@@ -641,6 +642,13 @@ AtomicSimpleCPU::tick()
                     traceData = NULL;
                 }
 
+                if (dynamic_pointer_cast<SyscallRetryFault>(fault)) {
+                    // Retry execution of system calls after a delay.
+                    // Prevents immediate re-execution since conditions which
+                    // caused the retry are unlikely to change every tick.
+                    stall_ticks += clockEdge(syscallRetryLatency) - curTick();
+                }
+
                 postExecute();
             }
 
@@ -649,7 +657,6 @@ AtomicSimpleCPU::tick()
                         curStaticInst->isFirstMicroop()))
                 instCnt++;
 
-            Tick stall_ticks = 0;
             if (simulate_inst_stalls && icache_access)
                 stall_ticks += icache_latency;
 

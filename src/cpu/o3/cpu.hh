@@ -344,7 +344,7 @@ class FullO3CPU : public BaseO3CPU
     /** Executes a syscall.
      * @todo: Determine if this needs to be virtual.
      */
-    void syscall(int64_t callnum, ThreadID tid);
+    void syscall(int64_t callnum, ThreadID tid, Fault *fault);
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */

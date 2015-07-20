@@ -269,7 +269,7 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 }
 
 void
-Process::syscall(int64_t callnum, ThreadContext *tc)
+Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
 {
     num_syscalls++;
 
@@ -277,7 +277,7 @@ Process::syscall(int64_t callnum, ThreadContext *tc)
     if (desc == NULL)
         fatal("Syscall %d out of range", callnum);
 
-    desc->doSyscall(callnum, this, tc);
+    desc->doSyscall(callnum, this, tc, fault);
 }
 
 IntReg

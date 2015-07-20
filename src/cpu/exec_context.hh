@@ -228,7 +228,7 @@ class ExecContext {
     /**
      * Executes a syscall specified by the callnum.
      */
-    virtual void syscall(int64_t callnum) = 0;
+    virtual void syscall(int64_t callnum, Fault *fault) = 0;
 
     /** @} */
 

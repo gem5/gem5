@@ -235,8 +235,9 @@
                 }
             }
             0x05: decode FullSystemInt {
-                0: SyscallInst::syscall('xc->syscall(Rax)',
-                        IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                0: SyscallInst::syscall('xc->syscall(Rax, &fault)',
+                                        IsSyscall, IsNonSpeculative,
+                                        IsSerializeAfter);
                 default: decode MODE_MODE {
                     0x0: decode MODE_SUBMODE {
                         0x0: Inst::SYSCALL_64();
@@ -422,8 +423,9 @@
             0x2: Inst::RDMSR();
             0x3: rdpmc();
             0x4: decode FullSystemInt {
-                0: SyscallInst::sysenter('xc->syscall(Rax)',
-                        IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                0: SyscallInst::sysenter('xc->syscall(Rax, &fault)',
+                                         IsSyscall, IsNonSpeculative,
+                                         IsSerializeAfter);
                 default: sysenter();
             }
             0x5: sysexit();

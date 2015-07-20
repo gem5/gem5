@@ -811,7 +811,8 @@ TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
     assert(sp);
 
-    sp->handleTrap(_n, tc);
+    Fault fault;
+    sp->handleTrap(_n, tc, &fault);
 
     // We need to explicitly advance the pc, since that's not done for us
     // on a faulting instruction

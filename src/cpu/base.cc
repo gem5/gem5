@@ -135,7 +135,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       numThreads(p->numThreads), system(p->system),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
-      addressMonitor(p->numThreads)
+      addressMonitor(p->numThreads),
+      syscallRetryLatency(p->syscallRetryLatency)
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {

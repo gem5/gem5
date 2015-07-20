@@ -59,6 +59,11 @@ void ReExec::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->pcState(tc->pcState());
 }
 
+void SyscallRetryFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    tc->pcState(tc->pcState());
+}
+
 void GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     bool handled = false;

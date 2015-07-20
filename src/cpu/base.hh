@@ -588,6 +588,8 @@ class BaseCPU : public MemObject
         assert(tid < numThreads);
         return &addressMonitor[tid];
     }
+
+    Cycles syscallRetryLatency;
 };
 
 #endif // THE_ISA == NULL_ISA

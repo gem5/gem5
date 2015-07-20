@@ -134,7 +134,7 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
 }
 
 void
-I386Process::syscall(int64_t callnum, ThreadContext *tc)
+I386Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
 {
     TheISA::PCState pc = tc->pcState();
     Addr eip = pc.pc();
@@ -143,7 +143,7 @@ I386Process::syscall(int64_t callnum, ThreadContext *tc)
         pc.npc(vsyscallPage.base + vsyscallPage.vsysexitOffset);
         tc->pcState(pc);
     }
-    X86Process::syscall(callnum, tc);
+    X86Process::syscall(callnum, tc, fault);
 }
 
 

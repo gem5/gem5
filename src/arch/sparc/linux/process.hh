@@ -70,7 +70,7 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32Process
         return SparcLinuxProcess::getDesc32(callnum);
     }
 
-    void handleTrap(int trapNum, ThreadContext *tc);
+    void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
 };
 
 /// A process with emulated 32 bit SPARC/Linux syscalls.
@@ -86,7 +86,7 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64Process
         return SparcLinuxProcess::getDesc(callnum);
     }
 
-    void handleTrap(int trapNum, ThreadContext *tc);
+    void handleTrap(int trapNum, ThreadContext *tc, Fault *fault);
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, int num,

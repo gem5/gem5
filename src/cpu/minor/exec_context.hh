@@ -241,12 +241,12 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    syscall(int64_t callnum) override
+    syscall(int64_t callnum, Fault *fault) override
      {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.\n");
 
-        thread.syscall(callnum);
+        thread.syscall(callnum, fault);
     }
 
     ThreadContext *tcBase() override { return thread.getTC(); }

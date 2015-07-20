@@ -48,6 +48,8 @@
 
 #include <string>
 
+#include "base/types.hh"
+
 class Process;
 class SyscallReturn;
 class ThreadContext;
@@ -91,7 +93,8 @@ class SyscallDesc {
      * @param proc Handle for the owning Process to pass information
      * @param tc Handle for owning ThreadContext to pass information
      */
-    void doSyscall(int callnum, Process *proc, ThreadContext *tc);
+    void doSyscall(int callnum, Process *proc, ThreadContext *tc,
+                   Fault *fault);
 
     /**
      * Return false if WarnOnce is set and a warning has already been issued.

@@ -323,12 +323,12 @@ class SimpleExecContext : public ExecContext {
     /**
      * Executes a syscall specified by the callnum.
      */
-    void syscall(int64_t callnum) override
+    void syscall(int64_t callnum, Fault *fault) override
     {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.");
 
-        thread->syscall(callnum);
+        thread->syscall(callnum, fault);
     }
 
     /** Returns a pointer to the ThreadContext. */

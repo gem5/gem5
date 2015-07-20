@@ -130,7 +130,7 @@ namespace X86ISA
         void argsInit(int intSize, int pageSize);
         void initState();
 
-        void syscall(int64_t callnum, ThreadContext *tc);
+        void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);

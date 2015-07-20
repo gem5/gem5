@@ -670,9 +670,15 @@ TimingSimpleCPU::advanceInst(const Fault &fault)
         return;
 
     if (fault != NoFault) {
-        advancePC(fault);
         DPRINTF(SimpleCPU, "Fault occured, scheduling fetch event\n");
-        reschedule(fetchEvent, clockEdge(), true);
+
+        advancePC(fault);
+
+        Tick stall = dynamic_pointer_cast<SyscallRetryFault>(fault) ?
+                     clockEdge(syscallRetryLatency) : clockEdge();
+
+        reschedule(fetchEvent, stall, true);
+
         _status = Faulting;
         return;
     }

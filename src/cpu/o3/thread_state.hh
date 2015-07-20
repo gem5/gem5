@@ -140,7 +140,10 @@ struct O3ThreadState : public ThreadState {
     ThreadContext *getTC() { return tc; }
 
     /** Handles the syscall. */
-    void syscall(int64_t callnum) { process->syscall(callnum, tc); }
+    void syscall(int64_t callnum, Fault *fault)
+    {
+        process->syscall(callnum, tc, fault);
+    }
 
     void dumpFuncProfile()
     {

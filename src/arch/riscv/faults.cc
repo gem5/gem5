@@ -87,5 +87,6 @@ BreakpointFault::invoke_se(ThreadContext *tc, const StaticInstPtr &inst)
 void
 SyscallFault::invoke_se(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    tc->syscall(tc->readIntReg(SyscallNumReg));
+    Fault *fault = NoFault;
+    tc->syscall(tc->readIntReg(SyscallNumReg), fault);
 }

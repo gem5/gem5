@@ -71,7 +71,7 @@ SparcProcess::SparcProcess(ProcessParams * params, ObjectFile *objFile,
 }
 
 void
-SparcProcess::handleTrap(int trapNum, ThreadContext *tc)
+SparcProcess::handleTrap(int trapNum, ThreadContext *tc, Fault *fault)
 {
     PCState pc = tc->pcState();
     switch (trapNum) {

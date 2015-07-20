@@ -258,8 +258,8 @@ class O3ThreadContext : public ThreadContext
     { thread->storeCondFailures = sc_failures; }
 
     /** Executes a syscall in SE mode. */
-    virtual void syscall(int64_t callnum)
-    { return cpu->syscall(callnum, thread->threadId()); }
+    virtual void syscall(int64_t callnum, Fault *fault)
+    { return cpu->syscall(callnum, thread->threadId(), fault); }
 
     /** Reads the funcExeInst counter. */
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }

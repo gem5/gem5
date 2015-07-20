@@ -784,7 +784,8 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         callNum = tc->readIntReg(INTREG_X8);
     else
         callNum = tc->readIntReg(INTREG_R7);
-    tc->syscall(callNum);
+    Fault fault;
+    tc->syscall(callNum, &fault);
 
     // Advance the PC since that won't happen automatically.
     PCState pc = tc->pcState();

@@ -146,8 +146,8 @@ class CheckerThreadContext : public ThreadContext
     SETranslatingPortProxy &getMemProxy() { return actualTC->getMemProxy(); }
 
     /** Executes a syscall in SE mode. */
-    void syscall(int64_t callnum)
-    { return actualTC->syscall(callnum); }
+    void syscall(int64_t callnum, Fault *fault)
+    { return actualTC->syscall(callnum, fault); }
 
     Status status() const { return actualTC->status(); }
 

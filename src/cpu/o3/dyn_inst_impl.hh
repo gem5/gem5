@@ -242,7 +242,7 @@ BaseO3DynInst<Impl>::simPalCheck(int palFunc)
 
 template <class Impl>
 void
-BaseO3DynInst<Impl>::syscall(int64_t callnum)
+BaseO3DynInst<Impl>::syscall(int64_t callnum, Fault *fault)
 {
     if (FullSystem)
         panic("Syscall emulation isn't available in FS mode.\n");
@@ -251,7 +251,7 @@ BaseO3DynInst<Impl>::syscall(int64_t callnum)
     // changes, update this instruction's nextPC because the syscall
     // must have changed the nextPC.
     TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
-    this->cpu->syscall(callnum, this->threadNumber);
+    this->cpu->syscall(callnum, this->threadNumber, fault);
     TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
     if (!(curPC == newPC)) {
         this->pcState(newPC);

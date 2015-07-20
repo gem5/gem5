@@ -142,6 +142,8 @@ class BaseCPU(MemObject):
 
     checker = Param.BaseCPU(NULL, "checker CPU")
 
+    syscallRetryLatency = Param.Cycles(10000, "Cycles to wait until retry")
+
     do_checkpoint_insts = Param.Bool(True,
         "enable checkpoint pseudo instructions")
     do_statistics_insts = Param.Bool(True,

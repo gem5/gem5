@@ -526,13 +526,16 @@ DefaultCommit<Impl>::numROBFreeEntries(ThreadID tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::generateTrapEvent(ThreadID tid)
+DefaultCommit<Impl>::generateTrapEvent(ThreadID tid, Fault inst_fault)
 {
     DPRINTF(Commit, "Generating trap event for [tid:%i]\n", tid);
 
     TrapEvent *trap = new TrapEvent(this, tid);
 
-    cpu->schedule(trap, cpu->clockEdge(trapLatency));
+    Cycles latency = dynamic_pointer_cast<SyscallRetryFault>(inst_fault) ?
+                     cpu->syscallRetryLatency : trapLatency;
+
+    cpu->schedule(trap, cpu->clockEdge(latency));
     trapInFlight[tid] = true;
     thread[tid]->trapPending = true;
 }
@@ -767,10 +770,11 @@ DefaultCommit<Impl>::handleInterrupt()
 
         commitStatus[0] = TrapPending;
 
-        // Generate trap squash event.
-        generateTrapEvent(0);
-
         interrupt = NoFault;
+
+        // Generate trap squash event.
+        generateTrapEvent(0, interrupt);
+
         avoidQuiesceLiveLock = false;
     } else {
         DPRINTF(Commit, "Interrupt pending: instruction is %sin "
@@ -1240,7 +1244,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         }
 
         // Generate trap squash event.
-        generateTrapEvent(tid);
+        generateTrapEvent(tid, inst_fault);
         return false;
     }
 
