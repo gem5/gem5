@@ -89,6 +89,13 @@ class PacketQueue : public Drainable
     /** Event used to call processSendEvent. */
     EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
 
+     /*
+      * Optionally disable the sanity check
+      * on the size of the transmitList. The
+      * sanity check will be enabled by default.
+      */
+    bool _disableSanityCheck;
+
   protected:
 
     /** Label to use for print request packets label stack. */
@@ -123,8 +130,11 @@ class PacketQueue : public Drainable
      *
      * @param _em Event manager used for scheduling this queue
      * @param _label Label to push on the label stack for print request packets
+     * @param disable_sanity_check Flag used to disable the sanity check
+     *        on the size of the transmitList. The check is enabled by default.
      */
-    PacketQueue(EventManager& _em, const std::string& _label);
+    PacketQueue(EventManager& _em, const std::string& _label,
+                bool disable_sanity_check = false);
 
     /**
      * Virtual desctructor since the class may be used as a base class.
@@ -186,6 +196,14 @@ class PacketQueue : public Drainable
      * earlier time stamp.
      */
     void retry();
+
+    /**
+      * This allows a user to explicitly disable the sanity check
+      * on the size of the transmitList, which is enabled by default.
+      * Users must use this function to explicitly disable the sanity
+      * check.
+      */
+    void disableSanityCheck() { _disableSanityCheck = true; }
 
     DrainState drain() override;
 };

@@ -48,9 +48,10 @@
 
 using namespace std;
 
-PacketQueue::PacketQueue(EventManager& _em, const std::string& _label)
-    : em(_em), sendEvent(this), label(_label),
-      waitingOnRetry(false)
+PacketQueue::PacketQueue(EventManager& _em, const std::string& _label,
+                         bool disable_sanity_check)
+    : em(_em), sendEvent(this), _disableSanityCheck(disable_sanity_check),
+      label(_label), waitingOnRetry(false)
 {
 }
 
@@ -114,7 +115,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool force_order)
 
     // add a very basic sanity check on the port to ensure the
     // invisible buffer is not growing beyond reasonable limits
-    if (transmitList.size() > 100) {
+    if (!_disableSanityCheck && transmitList.size() > 100) {
         panic("Packet queue %s has grown beyond 100 packets\n",
               name());
     }
