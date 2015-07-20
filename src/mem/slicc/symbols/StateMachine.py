@@ -310,6 +310,7 @@ class $c_ident : public AbstractController
 
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
     Sequencer* getCPUSequencer() const;
+    GPUCoalescer* getGPUCoalescer() const;
 
     int functionalWriteBuffers(PacketPtr&);
 
@@ -680,6 +681,12 @@ $c_ident::init()
                 assert(param.pointer)
                 seq_ident = "m_%s_ptr" % param.ident
 
+        coal_ident = "NULL"
+        for param in self.config_parameters:
+            if param.ident == "coalescer":
+                assert(param.pointer)
+                coal_ident = "m_%s_ptr" % param.ident
+
         if seq_ident != "NULL":
             code('''
 Sequencer*
@@ -697,6 +704,28 @@ $c_ident::getCPUSequencer() const
 
 Sequencer*
 $c_ident::getCPUSequencer() const
+{
+    return NULL;
+}
+''')
+
+        if coal_ident != "NULL":
+            code('''
+GPUCoalescer*
+$c_ident::getGPUCoalescer() const
+{
+    if (NULL != $coal_ident && !$coal_ident->isCPUSequencer()) {
+        return $coal_ident;
+    } else {
+        return NULL;
+    }
+}
+''')
+        else:
+            code('''
+
+GPUCoalescer*
+$c_ident::getGPUCoalescer() const
 {
     return NULL;
 }

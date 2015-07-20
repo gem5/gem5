@@ -49,6 +49,7 @@
 #include "mem/mem_object.hh"
 
 class Network;
+class GPUCoalescer;
 
 // used to communicate that an in_port peeked the wrong message type
 class RejectException: public std::exception
@@ -86,6 +87,7 @@ class AbstractController : public MemObject, public Consumer
 
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getCPUSequencer() const = 0;
+    virtual GPUCoalescer* getGPUCoalescer() const = 0;
 
     //! These functions are used by ruby system to read/write the data blocks
     //! that exist with in the controller.
