@@ -103,8 +103,7 @@ cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts,
          for i in xrange(options.num_cpus) ]
 
 # create the desired simulated system
-system = System(cpu = cpus, physmem = SimpleMemory(),
-                mem_ranges = [AddrRange(options.mem_size)])
+system = System(cpu = cpus, mem_ranges = [AddrRange(options.mem_size)])
 
 
 # Create a top-level voltage domain and clock domain
@@ -131,7 +130,7 @@ for ruby_port in system.ruby._cpu_ports:
 # run simulation
 # -----------------------
 
-root = Root( full_system = False, system = system )
+root = Root(full_system = False, system = system)
 root.system.mem_mode = 'timing'
 
 # Not much point in this being higher than the L1 latency
