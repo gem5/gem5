@@ -43,7 +43,7 @@
 
 class GarnetNetwork;
 
-class NetworkLink : public ClockedObject, public FlexibleConsumer
+class NetworkLink : public ClockedObject, public Consumer
 {
   public:
     typedef NetworkLinkParams Params;
