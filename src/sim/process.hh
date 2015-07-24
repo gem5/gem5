@@ -161,10 +161,10 @@ class Process : public SimObject
     SETranslatingPortProxy initVirtMem;
 
   private:
-    // file descriptor remapping support
-    static const int MAX_FD = 256;    // max legal fd value
-    FdMap fd_map[MAX_FD+1];
+    static const int NUM_FDS = 1024;
 
+    // File descriptor remapping support.
+    FdMap *fd_map;
 
   public:
     // static helper functions to generate file descriptors for constructor
@@ -187,21 +187,25 @@ class Process : public SimObject
     // provide program name for debug messages
     virtual const char *progName() const { return "<unknown>"; }
 
-    // map simulator fd sim_fd to target fd tgt_fd
-    void dup_fd(int sim_fd, int tgt_fd);
-
     // generate new target fd for sim_fd
     int alloc_fd(int sim_fd, const std::string& filename, int flags, int mode,
                  bool pipe);
 
-    // free target fd (e.g., after close)
-    void free_fd(int tgt_fd);
+    // disassociate target fd with simulator fd and cleanup subsidiary fields
+    void free_fdmap_entry(int tgt_fd);
 
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);
 
     // look up simulator fd_map object for a given target fd
     FdMap *sim_fd_obj(int tgt_fd);
+
+    // look up target fd for given host fd
+    // Assumes a 1:1 mapping between target file descriptor and host file
+    // descriptor. Given the current API, this must be true given that it's
+    // not possible to map multiple target file descriptors to the same host
+    // file descriptor
+    int tgt_fd(int sim_fd);
 
     // fix all offsets for currently open files and save them
     void fix_file_offsets();

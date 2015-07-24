@@ -115,7 +115,8 @@ Process::Process(ProcessParams * params)
         static_cast<PageTableBase *>(new ArchPageTable(name(), M5_pid, system)) :
         static_cast<PageTableBase *>(new FuncPageTable(name(), M5_pid)) ),
       initVirtMem(system->getSystemPort(), this,
-                  SETranslatingPortProxy::Always)
+                  SETranslatingPortProxy::Always),
+      fd_map(new FdMap[NUM_FDS])
 {
     string in = params->input;
     string out = params->output;
@@ -175,7 +176,7 @@ Process::Process(ProcessParams * params)
 
 
     // mark remaining fds as free
-    for (int i = 3; i <= MAX_FD; ++i) {
+    for (int i = 3; i < NUM_FDS; ++i) {
         fdo = &fd_map[i];
         fdo->fd = -1;
     }
@@ -200,6 +201,7 @@ Process::regStats()
 //
 // static helper functions
 //
+
 int
 Process::openInputFile(const string &filename)
 {
@@ -232,14 +234,10 @@ Process::openOutputFile(const string &filename)
 ThreadContext *
 Process::findFreeContext()
 {
-    int size = contextIds.size();
-    ThreadContext *tc;
-    for (int i = 0; i < size; ++i) {
-        tc = system->getThreadContext(contextIds[i]);
-        if (tc->status() == ThreadContext::Halted) {
-            // inactive context, free to use
+    for (int id : contextIds) {
+        ThreadContext *tc = system->getThreadContext(id);
+        if (tc->status() == ThreadContext::Halted)
             return tc;
-        }
     }
     return NULL;
 }
@@ -266,19 +264,6 @@ Process::drain()
     return DrainState::Drained;
 }
 
-// map simulator fd sim_fd to target fd tgt_fd
-void
-Process::dup_fd(int sim_fd, int tgt_fd)
-{
-    if (tgt_fd < 0 || tgt_fd > MAX_FD)
-        panic("Process::dup_fd tried to dup past MAX_FD (%d)", tgt_fd);
-
-    Process::FdMap *fdo = &fd_map[tgt_fd];
-    fdo->fd = sim_fd;
-}
-
-
-// generate new target fd for sim_fd
 int
 Process::alloc_fd(int sim_fd, const string& filename, int flags, int mode,
                   bool pipe)
@@ -288,7 +273,7 @@ Process::alloc_fd(int sim_fd, const string& filename, int flags, int mode,
         return -1;
 
     // find first free target fd
-    for (int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
+    for (int free_fd = 0; free_fd < NUM_FDS; ++free_fd) {
         Process::FdMap *fdo = &fd_map[free_fd];
         if (fdo->fd == -1 && fdo->driver == NULL) {
             fdo->fd = sim_fd;
@@ -305,14 +290,11 @@ Process::alloc_fd(int sim_fd, const string& filename, int flags, int mode,
     panic("Process::alloc_fd: out of file descriptors!");
 }
 
-
-// free target fd (e.g., after close)
 void
-Process::free_fd(int tgt_fd)
+Process::free_fdmap_entry(int tgt_fd)
 {
     Process::FdMap *fdo = &fd_map[tgt_fd];
-    if (fdo->fd == -1)
-        warn("Process::free_fd: request to free unused fd %d", tgt_fd);
+    assert(fd_map[tgt_fd].fd > -1);
 
     fdo->fd = -1;
     fdo->filename = "NULL";
@@ -324,24 +306,28 @@ Process::free_fd(int tgt_fd)
     fdo->driver = NULL;
 }
 
-
-// look up simulator fd for given target fd
 int
 Process::sim_fd(int tgt_fd)
 {
-    if (tgt_fd < 0 || tgt_fd > MAX_FD)
-        return -1;
-
-    return fd_map[tgt_fd].fd;
+    FdMap *obj = sim_fd_obj(tgt_fd);
+    return obj ? obj->fd : -1;
 }
 
 Process::FdMap *
 Process::sim_fd_obj(int tgt_fd)
 {
-    if (tgt_fd < 0 || tgt_fd > MAX_FD)
+    if (tgt_fd < 0 || tgt_fd >= NUM_FDS)
         return NULL;
-
     return &fd_map[tgt_fd];
+}
+
+int
+Process::tgt_fd(int sim_fd)
+{
+    for (int index = 0; index < NUM_FDS; ++index)
+        if (fd_map[index].fd == sim_fd)
+            return index;
+    return -1;
 }
 
 void
@@ -433,7 +419,7 @@ Process::fix_file_offsets()
     fdo_stderr->fd = stderr_fd;
 
 
-    for (int free_fd = 3; free_fd <= MAX_FD; ++free_fd) {
+    for (int free_fd = 3; free_fd < NUM_FDS; ++free_fd) {
         Process::FdMap *fdo = &fd_map[free_fd];
         if (fdo->fd != -1) {
             if (fdo->isPipe){
@@ -476,7 +462,7 @@ Process::fix_file_offsets()
 void
 Process::find_file_offsets()
 {
-    for (int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
+    for (int free_fd = 0; free_fd < NUM_FDS; ++free_fd) {
         Process::FdMap *fdo = &fd_map[free_fd];
         if (fdo->fd != -1) {
             fdo->fileOffset = lseek(fdo->fd, 0, SEEK_CUR);
@@ -529,7 +515,7 @@ Process::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(nxm_start);
     SERIALIZE_SCALAR(nxm_end);
     pTable->serialize(cp);
-    for (int x = 0; x <= MAX_FD; x++) {
+    for (int x = 0; x < NUM_FDS; x++) {
         fd_map[x].serializeSection(cp, csprintf("FdMap%d", x));
     }
     SERIALIZE_SCALAR(M5_pid);
@@ -549,7 +535,7 @@ Process::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(nxm_start);
     UNSERIALIZE_SCALAR(nxm_end);
     pTable->unserialize(cp);
-    for (int x = 0; x <= MAX_FD; x++) {
+    for (int x = 0; x < NUM_FDS; x++) {
         fd_map[x].unserializeSection(cp, csprintf("FdMap%d", x));
     }
     fix_file_offsets();
@@ -557,7 +543,7 @@ Process::unserialize(CheckpointIn &cp)
     // The above returns a bool so that you could do something if you don't
     // find the param in the checkpoint if you wanted to, like set a default
     // but in this case we'll just stick with the instantianted value if not
-    // found.   
+    // found.
 }
 
 

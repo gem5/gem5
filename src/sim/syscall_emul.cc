@@ -216,7 +216,7 @@ closeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     if (sim_fd > 2)
         status = close(sim_fd);
     if (status >= 0)
-        p->free_fd(target_fd);
+        p->free_fdmap_entry(target_fd);
     return status;
 }
 
