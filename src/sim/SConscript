@@ -72,6 +72,7 @@ if env['TARGET_ISA'] != 'null':
     SimObject('Process.py')
     Source('faults.cc')
     Source('process.cc')
+    Source('fd_entry.cc')
     Source('pseudo_inst.cc')
     Source('syscall_emul.cc')
 

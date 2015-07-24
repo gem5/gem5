@@ -553,20 +553,20 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->getSyscallArg(tc, index);
+    int tgt_fd = process->getSyscallArg(tc, index);
     unsigned req = process->getSyscallArg(tc, index);
 
-    DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
+    DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", tgt_fd, req);
 
-    Process::FdMap *fdObj = process->sim_fd_obj(fd);
+    FDEntry *fde = process->get_fd_entry(tgt_fd);
 
-    if (fdObj == NULL) {
+    if (fde == NULL) {
         // doesn't map to any simulator fd: not a valid target fd
         return -EBADF;
     }
 
-    if (fdObj->driver != NULL) {
-        return fdObj->driver->ioctl(process, tc, req);
+    if (fde->driver != NULL) {
+        return fde->driver->ioctl(process, tc, req);
     }
 
     if (OS::isTtyReq(req)) {
@@ -574,7 +574,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     }
 
     warn("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ \n",
-         fd, req, tc->pcState());
+         tgt_fd, req, tc->pcState());
     return -ENOTTY;
 }
 
@@ -1235,18 +1235,18 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         warn("mmap length argument %#x is unreasonably large.\n", length);
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
-        Process::FdMap *fd_map = p->sim_fd_obj(tgt_fd);
-        if (!fd_map || fd_map->fd < 0) {
+        FDEntry *fde = p->get_fd_entry(tgt_fd);
+        if (!fde || fde->fd < 0) {
             warn("mmap failing: target fd %d is not valid\n", tgt_fd);
             return -EBADF;
         }
 
-        if (fd_map->filename != "/dev/zero") {
+        if (fde->filename != "/dev/zero") {
             // This is very likely broken, but leave a warning here
             // (rather than panic) in case /dev/zero is known by
             // another name on some platform
             warn("allowing mmap of file %s; mmap not supported on files"
-                 " other than /dev/zero\n", fd_map->filename);
+                 " other than /dev/zero\n", fde->filename);
         }
     }
 

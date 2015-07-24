@@ -216,7 +216,7 @@ closeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     if (sim_fd > 2)
         status = close(sim_fd);
     if (status >= 0)
-        p->free_fdmap_entry(target_fd);
+        p->reset_fd_entry(target_fd);
     return status;
 }
 
@@ -597,11 +597,11 @@ dupFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
     if (sim_fd < 0)
         return -EBADF;
 
-    Process::FdMap *fdo = process->sim_fd_obj(tgt_fd);
+    FDEntry *fde = process->get_fd_entry(tgt_fd);
 
     int result = dup(sim_fd);
     return (result == -1) ? -errno :
-        process->alloc_fd(result, fdo->filename, fdo->flags, fdo->mode, false);
+        process->alloc_fd(result, fde->filename, fde->flags, fde->mode, false);
 }
 
 

@@ -33,6 +33,7 @@
 #ifndef __PROCESS_HH__
 #define __PROCESS_HH__
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "mem/se_translating_port_proxy.hh"
+#include "sim/fd_entry.hh"
 #include "sim/sim_object.hh"
 #include "sim/syscallreturn.hh"
 
@@ -135,27 +137,6 @@ class Process : public SimObject
 
     PageTableBase* pTable;
 
-    class FdMap : public Serializable
-    {
-      public:
-        int fd;
-        std::string filename;
-        int mode;
-        int flags;
-        bool isPipe;
-        int readPipeSource;
-        uint64_t fileOffset;
-        EmulatedDriver *driver;
-
-        FdMap()
-            : fd(-1), filename("NULL"), mode(0), flags(0),
-              isPipe(false), readPipeSource(0), fileOffset(0), driver(NULL)
-        { }
-
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-    };
-
   protected:
     /// Memory proxy for initialization (image loading)
     SETranslatingPortProxy initVirtMem;
@@ -164,12 +145,15 @@ class Process : public SimObject
     static const int NUM_FDS = 1024;
 
     // File descriptor remapping support.
-    FdMap *fd_map;
+    std::shared_ptr<std::array<FDEntry, NUM_FDS>> fd_array;
+
+    // Standard file descriptor options for initialization and checkpoints.
+    std::map<std::string, int> imap;
+    std::map<std::string, int> oemap;
 
   public:
-    // static helper functions to generate file descriptors for constructor
-    static int openInputFile(const std::string &filename);
-    static int openOutputFile(const std::string &filename);
+    // inherit file descriptor map from another process (necessary for clone)
+    void inheritFdArray(Process *p);
 
     // override of virtual SimObject method: register statistics
     virtual void regStats();
@@ -192,13 +176,13 @@ class Process : public SimObject
                  bool pipe);
 
     // disassociate target fd with simulator fd and cleanup subsidiary fields
-    void free_fdmap_entry(int tgt_fd);
+    void reset_fd_entry(int tgt_fd);
 
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);
 
-    // look up simulator fd_map object for a given target fd
-    FdMap *sim_fd_obj(int tgt_fd);
+    // look up fd entry for a given target fd
+    FDEntry *get_fd_entry(int tgt_fd);
 
     // look up target fd for given host fd
     // Assumes a 1:1 mapping between target file descriptor and host file
