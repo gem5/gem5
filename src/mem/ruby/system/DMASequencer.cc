@@ -299,9 +299,6 @@ DMASequencer::issueNext()
         msg->getDataBlk().
             setData(&active_request.data[active_request.bytes_completed],
                     0, msg->getLen());
-        msg->getType() = SequencerRequestType_ST;
-    } else {
-        msg->getType() = SequencerRequestType_LD;
     }
 
     assert(m_mandatory_q_ptr != NULL);
