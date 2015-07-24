@@ -212,7 +212,7 @@ closeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->sim_fd(tgt_fd);
+    int sim_fd = p->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -220,7 +220,7 @@ closeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     if (sim_fd > 2)
         status = close(sim_fd);
     if (status >= 0)
-        p->reset_fd_entry(tgt_fd);
+        p->resetFDEntry(tgt_fd);
     return status;
 }
 
@@ -234,7 +234,7 @@ readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int nbytes = p->getSyscallArg(tc, index);
     BufferArg bufArg(bufPtr, nbytes);
 
-    int sim_fd = p->sim_fd(tgt_fd);
+    int sim_fd = p->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -255,7 +255,7 @@ writeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int nbytes = p->getSyscallArg(tc, index);
     BufferArg bufArg(bufPtr, nbytes);
 
-    int sim_fd = p->sim_fd(tgt_fd);
+    int sim_fd = p->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -277,7 +277,7 @@ lseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     uint64_t offs = p->getSyscallArg(tc, index);
     int whence = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->sim_fd(tgt_fd);
+    int sim_fd = p->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -297,7 +297,7 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     Addr result_ptr = p->getSyscallArg(tc, index);
     int whence = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->sim_fd(tgt_fd);
+    int sim_fd = p->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -501,7 +501,7 @@ ftruncateFunc(SyscallDesc *desc, int num,
     int tgt_fd = process->getSyscallArg(tc, index);
     off_t length = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -540,7 +540,7 @@ ftruncate64Func(SyscallDesc *desc, int num,
     int tgt_fd = process->getSyscallArg(tc, index);
     int64_t length = process->getSyscallArg(tc, index, 64);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -591,7 +591,7 @@ fchownFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
     int index = 0;
     int tgt_fd = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -612,15 +612,15 @@ dupFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
     int index = 0;
     int tgt_fd = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
-    FDEntry *fde = process->get_fd_entry(tgt_fd);
+    FDEntry *fde = process->getFDEntry(tgt_fd);
 
     int result = dup(sim_fd);
     return (result == -1) ? -errno :
-        process->alloc_fd(result, fde->filename, fde->flags, fde->mode, false);
+        process->allocFD(result, fde->filename, fde->flags, fde->mode, false);
 }
 
 
@@ -631,7 +631,7 @@ fcntlFunc(SyscallDesc *desc, int num, LiveProcess *process,
     int index = 0;
     int tgt_fd = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -675,7 +675,7 @@ fcntl64Func(SyscallDesc *desc, int num, LiveProcess *process,
     int index = 0;
     int tgt_fd = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -712,8 +712,8 @@ pipePseudoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return pipe_retval;
     }
 
-    sim_fds[0] = process->alloc_fd(fds[0], "PIPE-READ", O_WRONLY, -1, true);
-    sim_fds[1] = process->alloc_fd(fds[1], "PIPE-WRITE", O_RDONLY, -1, true);
+    sim_fds[0] = process->allocFD(fds[0], "PIPE-READ", O_WRONLY, -1, true);
+    sim_fds[1] = process->allocFD(fds[1], "PIPE-WRITE", O_RDONLY, -1, true);
 
     process->setReadPipeSource(sim_fds[0], sim_fds[1]);
     // Alpha Linux convention for pipe() is that fd[0] is returned as

@@ -438,7 +438,7 @@ class Tru64 : public OperatingSystem
         panic("getdirent not implemented on cygwin!");
 #else
         int index = 0;
-        int fd = process->sim_fd(process->getSyscallArg(tc, index));
+        int fd = process->getSimFD(process->getSyscallArg(tc, index));
         Addr tgt_buf = process->getSyscallArg(tc, index);
         int tgt_nbytes = process->getSyscallArg(tc, index);
         Addr tgt_basep = process->getSyscallArg(tc, index);

@@ -95,6 +95,7 @@ using namespace TheISA;
 int num_processes = 0;
 
 template<class IntType>
+
 AuxVector<IntType>::AuxVector(IntType type, IntType val)
 {
     a_type = TheISA::htog(type);
@@ -153,7 +154,7 @@ Process::Process(ProcessParams * params)
 
     // Search through the input options and set fd if match is found;
     // otherwise, open an input file and seek to location.
-    FDEntry *fde_stdin = get_fd_entry(STDIN_FILENO);
+    FDEntry *fde_stdin = getFDEntry(STDIN_FILENO);
     if ((it = imap.find(params->input)) != imap.end())
         sim_fd = it->second;
     else
@@ -162,7 +163,7 @@ Process::Process(ProcessParams * params)
 
     // Search through the output/error options and set fd if match is found;
     // otherwise, open an output file and seek to location.
-    FDEntry *fde_stdout = get_fd_entry(STDOUT_FILENO);
+    FDEntry *fde_stdout = getFDEntry(STDOUT_FILENO);
     if ((it = oemap.find(params->output)) != oemap.end())
         sim_fd = it->second;
     else
@@ -170,7 +171,7 @@ Process::Process(ProcessParams * params)
     fde_stdout->set(sim_fd, params->output, O_WRONLY | O_CREAT | O_TRUNC,
                     0664, false);
 
-    FDEntry *fde_stderr = get_fd_entry(STDERR_FILENO);
+    FDEntry *fde_stderr = getFDEntry(STDERR_FILENO);
     if (params->output == params->errout)
         // Reuse the same file descriptor if these match.
         sim_fd = fde_stdout->fd;
@@ -199,7 +200,7 @@ Process::regStats()
 }
 
 void
-Process::inheritFdArray(Process *p)
+Process::inheritFDArray(Process *p)
 {
     fd_array = p->fd_array;
 }
@@ -233,19 +234,19 @@ Process::initState()
 DrainState
 Process::drain()
 {
-    find_file_offsets();
+    findFileOffsets();
     return DrainState::Drained;
 }
 
 int
-Process::alloc_fd(int sim_fd, const string& filename, int flags, int mode,
-                  bool pipe)
+Process::allocFD(int sim_fd, const string& filename, int flags, int mode,
+                 bool pipe)
 {
     if (sim_fd == -1)
         return -1;
 
     for (int free_fd = 0; free_fd < fd_array->size(); free_fd++) {
-        FDEntry *fde = get_fd_entry(free_fd);
+        FDEntry *fde = getFDEntry(free_fd);
         if (fde->isFree()) {
             fde->set(sim_fd, filename, flags, mode, pipe);
             return free_fd;
@@ -256,30 +257,30 @@ Process::alloc_fd(int sim_fd, const string& filename, int flags, int mode,
 }
 
 void
-Process::reset_fd_entry(int tgt_fd)
+Process::resetFDEntry(int tgt_fd)
 {
-    FDEntry *fde = get_fd_entry(tgt_fd);
+    FDEntry *fde = getFDEntry(tgt_fd);
     assert(fde->fd > -1);
 
     fde->reset();
 }
 
 int
-Process::sim_fd(int tgt_fd)
+Process::getSimFD(int tgt_fd)
 {
-    FDEntry *entry = get_fd_entry(tgt_fd);
+    FDEntry *entry = getFDEntry(tgt_fd);
     return entry ? entry->fd : -1;
 }
 
 FDEntry *
-Process::get_fd_entry(int tgt_fd)
+Process::getFDEntry(int tgt_fd)
 {
     assert(0 <= tgt_fd && tgt_fd < fd_array->size());
     return &(*fd_array)[tgt_fd];
 }
 
 int
-Process::tgt_fd(int sim_fd)
+Process::getTgtFD(int sim_fd)
 {
     for (int index = 0; index < fd_array->size(); index++)
         if ((*fd_array)[index].fd == sim_fd)
@@ -321,7 +322,7 @@ Process::fixupStackFault(Addr vaddr)
 }
 
 void
-Process::fix_file_offsets()
+Process::fixFileOffsets()
 {
     auto seek = [] (FDEntry *fde)
     {
@@ -333,7 +334,7 @@ Process::fix_file_offsets()
 
     // Search through the input options and set fd if match is found;
     // otherwise, open an input file and seek to location.
-    FDEntry *fde_stdin = get_fd_entry(STDIN_FILENO);
+    FDEntry *fde_stdin = getFDEntry(STDIN_FILENO);
     if ((it = imap.find(fde_stdin->filename)) != imap.end()) {
         fde_stdin->fd = it->second;
     } else {
@@ -343,7 +344,7 @@ Process::fix_file_offsets()
 
     // Search through the output/error options and set fd if match is found;
     // otherwise, open an output file and seek to location.
-    FDEntry *fde_stdout = get_fd_entry(STDOUT_FILENO);
+    FDEntry *fde_stdout = getFDEntry(STDOUT_FILENO);
     if ((it = oemap.find(fde_stdout->filename)) != oemap.end()) {
         fde_stdout->fd = it->second;
     } else {
@@ -351,7 +352,7 @@ Process::fix_file_offsets()
         seek(fde_stdout);
     }
 
-    FDEntry *fde_stderr = get_fd_entry(STDERR_FILENO);
+    FDEntry *fde_stderr = getFDEntry(STDERR_FILENO);
     if (fde_stdout->filename == fde_stderr->filename) {
         // Reuse the same file descriptor if these match.
         fde_stderr->fd = fde_stdout->fd;
@@ -363,7 +364,7 @@ Process::fix_file_offsets()
     }
 
     for (int tgt_fd = 3; tgt_fd < fd_array->size(); tgt_fd++) {
-        FDEntry *fde = get_fd_entry(tgt_fd);
+        FDEntry *fde = getFDEntry(tgt_fd);
         if (fde->fd == -1)
             continue;
 
@@ -378,8 +379,9 @@ Process::fix_file_offsets()
 
             fde->fd = fds[0];
 
-            FDEntry *fde_write = get_fd_entry(fde->readPipeSource);
-            assert(fde_write->filename == "PIPE-WRITE");
+            FDEntry *fde_write = getFDEntry(fde->readPipeSource);
+            assert(
+                    fde_write->filename == "PIPE-WRITE");
             fde_write->fd = fds[1];
         } else {
             fde->fd = openFile(fde->filename.c_str(), fde->flags, fde->mode);
@@ -389,7 +391,7 @@ Process::fix_file_offsets()
 }
 
 void
-Process::find_file_offsets()
+Process::findFileOffsets()
 {
     for (auto& fde : *fd_array) {
         if (fde.fd != -1)
@@ -400,7 +402,7 @@ Process::find_file_offsets()
 void
 Process::setReadPipeSource(int read_pipe_fd, int source_fd)
 {
-    FDEntry *fde = get_fd_entry(read_pipe_fd);
+    FDEntry *fde = getFDEntry(read_pipe_fd);
     assert(source_fd >= -1);
     fde->readPipeSource = source_fd;
 }
@@ -439,10 +441,10 @@ Process::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(nxm_end);
     pTable->unserialize(cp);
     for (int x = 0; x < fd_array->size(); x++) {
-        FDEntry *fde = get_fd_entry(x);
+        FDEntry *fde = getFDEntry(x);
         fde->unserializeSection(cp, csprintf("FDEntry%d", x));
     }
-    fix_file_offsets();
+    fixFileOffsets();
     UNSERIALIZE_OPT_SCALAR(M5_pid);
     // The above returns a bool so that you could do something if you don't
     // find the param in the checkpoint if you wanted to, like set a default

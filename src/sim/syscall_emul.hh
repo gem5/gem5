@@ -558,7 +558,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", tgt_fd, req);
 
-    FDEntry *fde = process->get_fd_entry(tgt_fd);
+    FDEntry *fde = process->getFDEntry(tgt_fd);
 
     if (fde == NULL) {
         // doesn't map to any simulator fd: not a valid target fd
@@ -650,7 +650,7 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (fd == -1)
         return -local_errno;
 
-    return process->alloc_fd(fd, path.c_str(), hostFlags, mode, false);
+    return process->allocFD(fd, path.c_str(), hostFlags, mode, false);
 }
 
 /// Target open() handler.
@@ -812,7 +812,7 @@ fchmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int tgt_fd = process->getSyscallArg(tc, index);
     uint32_t mode = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -1006,7 +1006,7 @@ fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     int tgt_fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -1102,7 +1102,7 @@ fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     DPRINTF(SyscallVerbose, "fstat(%d, ...)\n", tgt_fd);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -1158,7 +1158,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int tgt_fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -1183,7 +1183,7 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int index = 0;
     int tgt_fd = process->getSyscallArg(tc, index);
 
-    int sim_fd = process->sim_fd(tgt_fd);
+    int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)
         return -EBADF;
 
@@ -1237,7 +1237,7 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         warn("mmap length argument %#x is unreasonably large.\n", length);
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
-        FDEntry *fde = p->get_fd_entry(tgt_fd);
+        FDEntry *fde = p->getFDEntry(tgt_fd);
         if (!fde || fde->fd < 0) {
             warn("mmap failing: target fd %d is not valid\n", tgt_fd);
             return -EBADF;
