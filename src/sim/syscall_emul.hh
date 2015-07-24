@@ -809,20 +809,20 @@ fchmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->getSyscallArg(tc, index);
-    if (fd < 0 || process->sim_fd(fd) < 0) {
-        // doesn't map to any simulator fd: not a valid target fd
-        return -EBADF;
-    }
-
+    int tgt_fd = process->getSyscallArg(tc, index);
     uint32_t mode = process->getSyscallArg(tc, index);
+
+    int sim_fd = process->sim_fd(tgt_fd);
+    if (sim_fd < 0)
+        return -EBADF;
+
     mode_t hostMode = 0;
 
     // XXX translate mode flags via OS::someting???
     hostMode = mode;
 
     // do the fchmod
-    int result = fchmod(process->sim_fd(fd), hostMode);
+    int result = fchmod(sim_fd, hostMode);
     if (result < 0)
         return -errno;
 
@@ -1003,25 +1003,25 @@ fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->getSyscallArg(tc, index);
+    int tgt_fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
-    if (fd < 0 || process->sim_fd(fd) < 0) {
-        // doesn't map to any simulator fd: not a valid target fd
+
+    int sim_fd = process->sim_fd(tgt_fd);
+    if (sim_fd < 0)
         return -EBADF;
-    }
 
 #if NO_STAT64
     struct stat  hostBuf;
-    int result = fstat(process->sim_fd(fd), &hostBuf);
+    int result = fstat(sim_fd, &hostBuf);
 #else
     struct stat64  hostBuf;
-    int result = fstat64(process->sim_fd(fd), &hostBuf);
+    int result = fstat64(sim_fd, &hostBuf);
 #endif
 
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (fd == 1));
+    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (sim_fd == 1));
 
     return 0;
 }
@@ -1097,21 +1097,22 @@ fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->sim_fd(process->getSyscallArg(tc, index));
+    int tgt_fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
 
-    DPRINTF(SyscallVerbose, "fstat(%d, ...)\n", fd);
+    DPRINTF(SyscallVerbose, "fstat(%d, ...)\n", tgt_fd);
 
-    if (fd < 0)
+    int sim_fd = process->sim_fd(tgt_fd);
+    if (sim_fd < 0)
         return -EBADF;
 
     struct stat hostBuf;
-    int result = fstat(fd, &hostBuf);
+    int result = fstat(sim_fd, &hostBuf);
 
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (fd == 1));
+    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (sim_fd == 1));
 
     return 0;
 }
@@ -1154,14 +1155,15 @@ fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->sim_fd(process->getSyscallArg(tc, index));
+    int tgt_fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
 
-    if (fd < 0)
+    int sim_fd = process->sim_fd(tgt_fd);
+    if (sim_fd < 0)
         return -EBADF;
 
     struct statfs hostBuf;
-    int result = fstatfs(fd, &hostBuf);
+    int result = fstatfs(sim_fd, &hostBuf);
 
     if (result < 0)
         return -errno;
@@ -1179,11 +1181,11 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int index = 0;
-    int fd = process->getSyscallArg(tc, index);
-    if (fd < 0 || process->sim_fd(fd) < 0) {
-        // doesn't map to any simulator fd: not a valid target fd
+    int tgt_fd = process->getSyscallArg(tc, index);
+
+    int sim_fd = process->sim_fd(tgt_fd);
+    if (sim_fd < 0)
         return -EBADF;
-    }
 
     SETranslatingPortProxy &p = tc->getMemProxy();
     uint64_t tiov_base = process->getSyscallArg(tc, index);
@@ -1200,7 +1202,7 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    hiov[i].iov_len);
     }
 
-    int result = writev(process->sim_fd(fd), hiov, count);
+    int result = writev(sim_fd, hiov, count);
 
     for (size_t i = 0; i < count; ++i)
         delete [] (char *)hiov[i].iov_base;
