@@ -156,6 +156,9 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int i = 0; i < NumCCRegs; i++)
         dest->setCCReg(i, src->readCCReg(i));
 
+    // Copy vector registers when vector registers put to use.
+    assert(NumVectorRegs == 0);
+
     for (int i = 0; i < NumMiscRegs; i++)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 

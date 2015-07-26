@@ -178,6 +178,9 @@ class UnifiedRenameMap
     /** The condition-code register rename map */
     SimpleRenameMap ccMap;
 
+    /** The vector register rename map */
+    SimpleRenameMap vectorMap;
+
   public:
     typedef TheISA::RegIndex RegIndex;
 
@@ -240,6 +243,17 @@ class UnifiedRenameMap
     }
 
     /**
+     * Perform rename() on a vector register, given a relative vector register
+     * index.
+     */
+    RenameInfo renameVector(RegIndex rel_arch_reg)
+    {
+        RenameInfo info = vectorMap.rename(rel_arch_reg);
+        assert(regFile->isVectorPhysReg(info.first));
+        return info;
+    }
+
+    /**
      * Perform rename() on a misc register, given a relative
      * misc register index.
      */
@@ -297,6 +311,17 @@ class UnifiedRenameMap
     }
 
     /**
+     * Perform lookup() on a vector register, given a relative
+     * vector register index.
+     */
+    PhysRegIndex lookupVector(RegIndex rel_arch_reg) const
+    {
+        PhysRegIndex phys_reg = vectorMap.lookup(rel_arch_reg);
+        assert(regFile->isVectorPhysReg(phys_reg));
+        return phys_reg;
+    }
+
+    /**
      * Perform lookup() on a misc register, given a relative
      * misc register index.
      */
@@ -349,6 +374,16 @@ class UnifiedRenameMap
     }
 
     /**
+     * Perform setEntry() on a vector register, given a relative vector
+     * register index.
+     */
+    void setVectorEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
+    {
+        assert(regFile->isVectorPhysReg(phys_reg));
+        vectorMap.setEntry(arch_reg, phys_reg);
+    }
+
+    /**
      * Return the minimum number of free entries across all of the
      * register classes.  The minimum is used so we guarantee that
      * this number of entries is available regardless of which class
@@ -362,11 +397,13 @@ class UnifiedRenameMap
     /**
      * Return whether there are enough registers to serve the request.
      */
-    bool canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t ccRegs) const
+    bool canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t ccRegs,
+                   uint32_t vectorRegs) const
     {
         return intRegs <= intMap.numFreeEntries() &&
             floatRegs <= floatMap.numFreeEntries() &&
-            ccRegs <= ccMap.numFreeEntries();
+            ccRegs <= ccMap.numFreeEntries() &&
+            vectorRegs <= vectorMap.numFreeEntries();
     }
 
 };

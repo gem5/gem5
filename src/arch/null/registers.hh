@@ -49,6 +49,8 @@ typedef uint32_t FloatRegBits;
 typedef float FloatReg;
 typedef uint8_t CCReg;
 typedef uint64_t MiscReg;
+typedef uint64_t VectorRegElement;
+typedef std::array<VectorRegElement, 0> VectorReg;
 
 }
 

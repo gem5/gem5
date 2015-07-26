@@ -189,6 +189,10 @@ class O3ThreadContext : public ThreadContext
         return readCCRegFlat(flattenCCIndex(reg_idx));
     }
 
+    virtual const VectorReg &readVectorReg(int reg_idx) {
+        return readVectorRegFlat(flattenVectorIndex(reg_idx));
+    }
+
     /** Sets an integer register to a value. */
     virtual void setIntReg(int reg_idx, uint64_t val) {
         setIntRegFlat(flattenIntIndex(reg_idx), val);
@@ -204,6 +208,10 @@ class O3ThreadContext : public ThreadContext
 
     virtual void setCCReg(int reg_idx, CCReg val) {
         setCCRegFlat(flattenCCIndex(reg_idx), val);
+    }
+
+    virtual void setVectorReg(int reg_idx, const VectorReg &val) {
+        setVectorRegFlat(flattenVectorIndex(reg_idx), val);
     }
 
     /** Reads this thread's PC state. */
@@ -246,6 +254,7 @@ class O3ThreadContext : public ThreadContext
     virtual int flattenIntIndex(int reg);
     virtual int flattenFloatIndex(int reg);
     virtual int flattenCCIndex(int reg);
+    virtual int flattenVectorIndex(int reg);
     virtual int flattenMiscIndex(int reg);
 
     /** Returns the number of consecutive store conditional failures. */
@@ -291,6 +300,9 @@ class O3ThreadContext : public ThreadContext
 
     virtual CCReg readCCRegFlat(int idx);
     virtual void setCCRegFlat(int idx, CCReg val);
+
+    virtual const VectorReg &readVectorRegFlat(int idx);
+    virtual void setVectorRegFlat(int idx, const VectorReg &val);
 };
 
 #endif

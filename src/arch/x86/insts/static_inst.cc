@@ -225,12 +225,19 @@ namespace X86ISA
             ccprintf(os, "%%cc%d", rel_reg);
             break;
 
+          case VectorRegClass:
+            ccprintf(os, "%%cc%d", rel_reg);
+            break;
+
           case MiscRegClass:
             switch (rel_reg) {
               default:
                 ccprintf(os, "%%ctrl%d", rel_reg);
             }
             break;
+
+          default:
+            panic("Invalid register class!\n");
         }
     }
 

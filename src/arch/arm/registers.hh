@@ -72,6 +72,12 @@ typedef uint64_t MiscReg;
 // condition code register; must be at least 32 bits for FpCondCodes
 typedef uint64_t CCReg;
 
+// vector register file entry type
+typedef uint64_t VectorRegElement;
+const int NumVectorRegElements = 0;
+const int VectorRegBytes = NumVectorRegElements * sizeof(VectorRegElement);
+typedef std::array<VectorRegElement, NumVectorRegElements> VectorReg;
+
 // Constants Related to the number of registers
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
 // The number of single precision floating point registers
@@ -82,6 +88,7 @@ const int NumFloatSpecialRegs = 32;
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
 const int NumCCRegs = NUM_CCREGS;
+const int NumVectorRegs = 0;
 const int NumMiscRegs = NUM_MISCREGS;
 
 #define ISA_HAS_CC_REGS
@@ -112,7 +119,8 @@ const int SyscallSuccessReg = ReturnValueReg;
 // These help enumerate all the registers for dependence tracking.
 const int FP_Reg_Base = NumIntRegs * (MODE_MAXMODE + 1);
 const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs;
+const int Vector_Reg_Base = CC_Reg_Base + NumCCRegs;
+const int Misc_Reg_Base = Vector_Reg_Base + NumVectorRegs;
 const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 typedef union {

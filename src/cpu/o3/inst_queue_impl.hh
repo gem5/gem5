@@ -99,7 +99,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
 
     // Set the number of total physical registers
     numPhysRegs = params->numPhysIntRegs + params->numPhysFloatRegs +
-        params->numPhysCCRegs;
+        params->numPhysCCRegs + params->numPhysVectorRegs;
 
     //Create an entry for each physical register within the
     //dependency graph.

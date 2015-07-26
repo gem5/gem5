@@ -99,10 +99,19 @@ class BaseDynInst : public ExecContext, public RefCounted
     union Result {
         uint64_t integer;
         double dbl;
+
+        // I am assuming that vector register type is different from the two
+        // types used above.  Else it seems useless to have a separate typedef
+        // for vector registers.
+        VectorReg vector;
+
         void set(uint64_t i) { integer = i; }
         void set(double d) { dbl = d; }
+        void set(const VectorReg &v) { vector = v; }
+
         void get(uint64_t& i) { i = integer; }
         void get(double& d) { d = dbl; }
+        void get(VectorReg& v) { v = vector; }
     };
 
   protected:
@@ -521,6 +530,9 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
     bool isInteger()      const { return staticInst->isInteger(); }
     bool isFloating()     const { return staticInst->isFloating(); }
+    bool isVector()       const { return staticInst->isVector(); }
+    bool isCC()           const { return staticInst->isCC(); }
+
     bool isControl()      const { return staticInst->isControl(); }
     bool isCall()         const { return staticInst->isCall(); }
     bool isReturn()       const { return staticInst->isReturn(); }
@@ -549,6 +561,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isLastMicroop() const { return staticInst->isLastMicroop(); }
     bool isFirstMicroop() const { return staticInst->isFirstMicroop(); }
     bool isMicroBranch() const { return staticInst->isMicroBranch(); }
+
+    void printFlags(std::ostream &outs, const std::string &separator) const
+    { staticInst->printFlags(outs, separator); }
+
+    std::string getName() const { return staticInst->getName(); }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
     void setSerializeBefore() { status.set(SerializeBefore); }
@@ -596,6 +613,8 @@ class BaseDynInst : public ExecContext, public RefCounted
     int8_t numFPDestRegs()  const { return staticInst->numFPDestRegs(); }
     int8_t numIntDestRegs() const { return staticInst->numIntDestRegs(); }
     int8_t numCCDestRegs() const { return staticInst->numCCDestRegs(); }
+    int8_t numVectorDestRegs() const
+    { return staticInst->numVectorDestRegs(); }
 
     /** Returns the logical register index of the i'th destination register. */
     RegIndex destRegIdx(int i) const { return staticInst->destRegIdx(i); }
@@ -653,6 +672,13 @@ class BaseDynInst : public ExecContext, public RefCounted
     void setFloatRegOperandBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         setResult<uint64_t>(val);
+    }
+
+    /** Records a vector register being set to a value. */
+    void setVectorRegOperand(const StaticInst *si, int idx,
+                             const VectorReg &val)
+    {
+        setResult<const VectorReg &>(val);
     }
 
     /** Records that one of the source registers is ready. */

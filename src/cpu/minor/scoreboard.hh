@@ -60,11 +60,13 @@ class Scoreboard : public Named
 {
   public:
     /** The number of registers in the Scoreboard.  These
-     *  are just the integer, CC and float registers packed
+     *  are just the integer, CC, float and vector registers packed
      *  together with integer regs in the range [0,NumIntRegs-1],
-     *  CC regs in the range [NumIntRegs, NumIntRegs+NumCCRegs-1]
-     *  and float regs in the range
-     *  [NumIntRegs+NumCCRegs, NumFloatRegs+NumIntRegs+NumCCRegs-1] */
+     *  CC regs in the range [NumIntRegs, NumIntRegs + NumCCRegs - 1],
+     *  float regs in the range
+     *  [NumIntRegs + NumCCRegs, NumFloatRegs + NumIntRegs + NumCCRegs - 1]
+     *  and vector regs in the range [NumFloatRegs + NumIntRegs + NumCCRegs,
+     *  NumFloatRegs + NumIntRegs + NumCCRegs + NumVectorRegs - 1]*/
     const unsigned numRegs;
 
     /** Type to use for thread context registers */
@@ -97,7 +99,7 @@ class Scoreboard : public Named
     Scoreboard(const std::string &name) :
         Named(name),
         numRegs(TheISA::NumIntRegs + TheISA::NumCCRegs +
-            TheISA::NumFloatRegs),
+            TheISA::NumFloatRegs + TheISA::NumVectorRegs),
         numResults(numRegs, 0),
         numUnpredictableResults(numRegs, 0),
         fuIndices(numRegs, 0),

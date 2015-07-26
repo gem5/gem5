@@ -57,6 +57,8 @@ PowerStaticInst::printReg(std::ostream &os, int reg) const
         }
       case CCRegClass:
         panic("printReg: POWER does not implement CCRegClass\n");
+      case VectorRegClass:
+        panic("printReg: POWER does not implement VectorRegClass\n");
     }
 }
 

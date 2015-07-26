@@ -92,6 +92,12 @@ namespace X86ISA
         }
 
         int
+        flattenVectorIndex(int reg) const
+        {
+            return reg;
+        }
+
+        int
         flattenMiscIndex(int reg) const
         {
             return reg;

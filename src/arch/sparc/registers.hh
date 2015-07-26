@@ -51,6 +51,11 @@ typedef uint32_t FloatRegBits;
 
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;
+// vector register file entry type
+typedef uint64_t VectorRegElement;
+const int NumVectorRegElements = 0;
+const int VectorRegBytes = NumVectorRegElements * sizeof(VectorRegElement);
+typedef std::array<VectorRegElement, NumVectorRegElements> VectorReg;
 
 typedef union
 {
@@ -75,6 +80,7 @@ const int SyscallPseudoReturnReg = 9;
 const int NumIntArchRegs = 32;
 const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 const int NumCCRegs = 0;
+const int NumVectorRegs = 0;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
@@ -82,7 +88,8 @@ const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 enum DependenceTags {
     FP_Reg_Base = NumIntRegs,
     CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
+    Vector_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
+    Misc_Reg_Base = Vector_Reg_Base + NumVectorRegs, // NumVectorRegs == 0
     Max_Reg_Index = Misc_Reg_Base + NumMiscRegs,
 };
 

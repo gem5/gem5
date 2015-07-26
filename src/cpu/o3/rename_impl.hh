@@ -69,7 +69,7 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
       commitWidth(params->commitWidth),
       numThreads(params->numThreads),
       maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs
-                      + params->numPhysCCRegs)
+                      + params->numPhysCCRegs + params->numPhysVectorRegs)
 {
     if (renameWidth > Impl::MaxWidth)
         fatal("renameWidth (%d) is larger than compiled limit (%d),\n"
@@ -635,7 +635,8 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         // to rename to.  Otherwise block.
         if (!renameMap[tid]->canRename(inst->numIntDestRegs(),
                                        inst->numFPDestRegs(),
-                                       inst->numCCDestRegs())) {
+                                       inst->numCCDestRegs(),
+                                       inst->numVectorDestRegs())) {
             DPRINTF(Rename, "Blocking due to lack of free "
                     "physical registers to rename to.\n");
             blockThisCycle = true;
@@ -1016,6 +1017,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
             renamed_reg = map->lookupCC(flat_rel_src_reg);
             break;
 
+          case VectorRegClass:
+            flat_rel_src_reg = tc->flattenVectorIndex(rel_src_reg);
+            renamed_reg = map->lookupVector(flat_rel_src_reg);
+            break;
+
           case MiscRegClass:
             // misc regs don't get flattened
             flat_rel_src_reg = rel_src_reg;
@@ -1080,6 +1086,12 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
             flat_rel_dest_reg = tc->flattenCCIndex(rel_dest_reg);
             rename_result = map->renameCC(flat_rel_dest_reg);
             flat_uni_dest_reg = flat_rel_dest_reg + TheISA::CC_Reg_Base;
+            break;
+
+          case VectorRegClass:
+            flat_rel_dest_reg = tc->flattenVectorIndex(rel_dest_reg);
+            rename_result = map->renameVector(flat_rel_dest_reg);
+            flat_uni_dest_reg = flat_rel_dest_reg + TheISA::Vector_Reg_Base;
             break;
 
           case MiscRegClass:
@@ -1156,7 +1168,7 @@ inline int
 DefaultRename<Impl>::calcFreeLQEntries(ThreadID tid)
 {
         int num_free = freeEntries[tid].lqEntries -
-                                  (loadsInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToLQ);
+                  (loadsInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToLQ);
         DPRINTF(Rename, "calcFreeLQEntries: free lqEntries: %d, loadsInProgress: %d, "
                 "loads dispatchedToLQ: %d\n", freeEntries[tid].lqEntries,
                 loadsInProgress[tid], fromIEW->iewInfo[tid].dispatchedToLQ);
@@ -1168,7 +1180,7 @@ inline int
 DefaultRename<Impl>::calcFreeSQEntries(ThreadID tid)
 {
         int num_free = freeEntries[tid].sqEntries -
-                                  (storesInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToSQ);
+              (storesInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToSQ);
         DPRINTF(Rename, "calcFreeSQEntries: free sqEntries: %d, storesInProgress: %d, "
                 "stores dispatchedToSQ: %d\n", freeEntries[tid].sqEntries,
                 storesInProgress[tid], fromIEW->iewInfo[tid].dispatchedToSQ);

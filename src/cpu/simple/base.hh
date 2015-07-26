@@ -87,6 +87,7 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
+    typedef TheISA::VectorReg VectorReg;
 
     BPredUnit *branchPred;
 
@@ -239,6 +240,10 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
     Stats::Scalar numCCRegReads;
     Stats::Scalar numCCRegWrites;
 
+    //number of vector register file accesses
+    Stats::Scalar numVectorRegReads;
+    Stats::Scalar numVectorRegWrites;
+
     // number of simulated memory references
     Stats::Scalar numMemRefs;
     Stats::Scalar numLoadInsts;
@@ -325,6 +330,13 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
         return thread->readCCReg(reg_idx);
     }
 
+    const VectorReg &readVectorRegOperand(const StaticInst *si, int idx)
+    {
+        numVectorRegReads++;
+        int reg_idx = si->srcRegIdx(idx) - TheISA::Vector_Reg_Base;
+        return thread->readVectorReg(reg_idx);
+    }
+
     void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
         numIntRegWrites++;
@@ -351,6 +363,14 @@ class BaseSimpleCPU : public BaseCPU, public ExecContext
         numCCRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
         thread->setCCReg(reg_idx, val);
+    }
+
+    void setVectorRegOperand(const StaticInst *si, int idx,
+                             const VectorReg &val)
+    {
+        numVectorRegWrites++;
+        int reg_idx = si->destRegIdx(idx) - TheISA::Vector_Reg_Base;
+        thread->setVectorReg(reg_idx, val);
     }
 
     bool readPredicate() { return thread->readPredicate(); }

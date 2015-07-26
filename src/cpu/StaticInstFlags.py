@@ -55,8 +55,8 @@ class StaticInstFlags(Enum):
     vals = [
         'IsNop',            # Is a no-op (no effect at all).
 
-        'IsInteger',        # References integer regs.
-        'IsFloating',       # References FP regs.
+        'IsInteger',        # References scalar integer regs.
+        'IsFloating',       # References scalar FP regs.
         'IsCC',             # References CC regs.
 
         'IsMemRef',         # References memory (load, store, or prefetch)
@@ -108,5 +108,6 @@ class StaticInstFlags(Enum):
         'IsMicroBranch',    # This microop branches within the microcode for
                             # a macroop
         'IsDspOp',
-        'IsSquashAfter'     # Squash all uncommitted state after executed
+        'IsSquashAfter',     # Squash all uncommitted state after executed
+        'IsVector',         # References vector register.
         ]

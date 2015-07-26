@@ -57,6 +57,7 @@ const int NumMiscRegs = NUM_MISCREGS;
 const int NumIntArchRegs = NUM_INTREGS;
 const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs + NumImplicitIntRegs;
 const int NumCCRegs = NUM_CCREGS;
+const int NumVectorRegs = 0;
 
 #define ISA_HAS_CC_REGS
 
@@ -72,7 +73,8 @@ enum DependenceTags {
     // we just start at (1 << 7) == 128.
     FP_Reg_Base = 128,
     CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs,
+    Vector_Reg_Base = CC_Reg_Base + NumCCRegs,
+    Misc_Reg_Base = Vector_Reg_Base + NumVectorRegs,
     Max_Reg_Index = Misc_Reg_Base + NumMiscRegs
 };
 
@@ -91,6 +93,13 @@ const int SyscallPseudoReturnReg = INTREG_RDX;
 
 typedef uint64_t IntReg;
 typedef uint64_t CCReg;
+
+// vector register file entry type
+typedef uint64_t VectorRegElement;
+const int NumVectorRegElements = 0;
+const int VectorRegBytes = NumVectorRegElements * sizeof(VectorRegElement);
+typedef std::array<VectorRegElement, NumVectorRegElements> VectorReg;
+
 //XXX Should this be a 128 bit structure for XMM memory ops?
 typedef uint64_t LargestRead;
 typedef uint64_t MiscReg;

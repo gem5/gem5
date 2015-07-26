@@ -37,20 +37,32 @@
 
 PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalFloatRegs,
-                         unsigned _numPhysicalCCRegs)
+                         unsigned _numPhysicalCCRegs,
+                         unsigned _numPhysicalVectorRegs)
     : intRegFile(_numPhysicalIntRegs),
       floatRegFile(_numPhysicalFloatRegs),
       ccRegFile(_numPhysicalCCRegs),
+      vectorRegFile(_numPhysicalVectorRegs),
       baseFloatRegIndex(_numPhysicalIntRegs),
       baseCCRegIndex(_numPhysicalIntRegs + _numPhysicalFloatRegs),
+      baseVectorRegIndex(_numPhysicalIntRegs + _numPhysicalFloatRegs
+              + _numPhysicalCCRegs),
       totalNumRegs(_numPhysicalIntRegs
                    + _numPhysicalFloatRegs
-                   + _numPhysicalCCRegs)
+                   + _numPhysicalCCRegs
+                   + _numPhysicalVectorRegs)
 {
     if (TheISA::NumCCRegs == 0 && _numPhysicalCCRegs != 0) {
         // Just make this a warning and go ahead and allocate them
         // anyway, to keep from having to add checks everywhere
         warn("Non-zero number of physical CC regs specified, even though\n"
+             "    ISA does not use them.\n");
+    }
+
+    if (TheISA::NumVectorRegs == 0 && _numPhysicalVectorRegs != 0) {
+        // Just make this a warning and go ahead and allocate them
+        // anyway, to keep from having to add checks everywhere
+        warn("Non-zero number of physical vector regs specified, even though\n"
              "    ISA does not use them.\n");
     }
 }
@@ -73,9 +85,15 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
         freeList->addFloatReg(reg_idx++);
     }
 
-    // The rest of the registers are the condition-code physical
+    // The next batch of registers are the condition-code physical
     // registers; put them onto the condition-code free list.
-    while (reg_idx < totalNumRegs) {
+    while (reg_idx < baseVectorRegIndex) {
         freeList->addCCReg(reg_idx++);
+    }
+
+    // The rest of the registers are the vector physical
+    // registers; put them onto the vector free list.
+    while (reg_idx < totalNumRegs) {
+        freeList->addVectorReg(reg_idx++);
     }
 }

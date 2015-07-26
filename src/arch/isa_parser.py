@@ -515,6 +515,9 @@ class Operand(object):
     def isCCReg(self):
         return 0
 
+    def isVectorReg(self):
+        return 0
+
     def isControlReg(self):
         return 0
 
@@ -751,6 +754,106 @@ class CCRegOperand(Operand):
 
         return wb
 
+class VectorRegOperand(Operand):
+    def isReg(self):
+        return 1
+
+    def isVectorReg(self):
+        return 1
+
+    def __init__(self, parser, full_name, ext, is_src, is_dest):
+        ## Vector registers are always treated as source registers since
+        ## not the whole of them might be written, in which case we need
+        ## to retain the earlier value.
+        super(VectorRegOperand, self).__init__(parser, full_name, ext,
+                                               True, is_dest)
+        self.size = 0
+
+    def finalize(self, predRead, predWrite):
+        self.flags = self.getFlags()
+        self.constructor = self.makeConstructor(predRead, predWrite)
+        self.op_decl = self.makeDecl()
+
+        if self.is_src:
+            self.op_rd = self.makeRead(predRead)
+            self.op_src_decl = self.makeDecl()
+        else:
+            self.op_rd = ''
+            self.op_src_decl = ''
+
+        if self.is_dest:
+            self.op_wb = self.makeWrite(predWrite)
+            self.op_dest_decl = self.makeDecl()
+        else:
+            self.op_wb = ''
+            self.op_dest_decl = ''
+
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
+
+        if self.is_src:
+            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + Vector_Reg_Base;' % \
+                    (self.reg_spec)
+            if self.hasReadPred():
+                c_src = '\n\tif (%s) {%s\n\t}' % \
+                        (self.read_predicate, c_src)
+
+        if self.is_dest:
+            c_dest = '\n\t_destRegIdx[_numDestRegs++] = %s + Vector_Reg_Base;' % \
+                    (self.reg_spec)
+            c_dest += '\n\t_numVectorDestRegs++;'
+            if self.hasWritePred():
+                c_dest = '\n\tif (%s) {%s\n\t}' % \
+                         (self.write_predicate, c_dest)
+
+        return c_src + c_dest
+
+    def makeRead(self, predRead):
+        if self.read_code != None:
+            return self.buildReadCode('readVectorRegOperand')
+
+        vector_reg_val = ''
+        if predRead:
+            vector_reg_val = 'xc->readVectorRegOperand(this, _sourceIndex++)'
+            if self.hasReadPred():
+                vector_reg_val = '(%s) ? %s : 0' % \
+                              (self.read_predicate, vector_reg_val)
+        else:
+            vector_reg_val = 'xc->readVectorRegOperand(this, %d)' % \
+                             self.src_reg_idx
+
+        return '%s = %s;\n' % (self.base_name, vector_reg_val)
+
+    def makeWrite(self, predWrite):
+        if self.write_code != None:
+            return self.buildWriteCode('setVectorRegOperand')
+
+        if predWrite:
+            wp = 'true'
+            if self.hasWritePred():
+                wp = self.write_predicate
+
+            wcond = 'if (%s)' % (wp)
+            windex = '_destIndex++'
+        else:
+            wcond = ''
+            windex = '%d' % self.dest_reg_idx
+
+        wb = '''
+        %s
+        {
+            TheISA::VectorReg final_val = %s;
+            xc->setVectorRegOperand(this, %s, final_val);\n
+            if (traceData) { traceData->setData(final_val); }
+        }''' % (wcond, self.base_name, windex)
+
+        return wb
+
+    def makeDecl(self):
+        ctype = 'TheISA::VectorReg'
+        return '%s %s;\n' % (ctype, self.base_name)
+
 class ControlRegOperand(Operand):
     def isReg(self):
         return 1
@@ -818,7 +921,10 @@ class MemOperand(Operand):
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
-        return '%s %s = 0;\n' % (self.ctype, self.base_name)
+        if 'IsVector' in self.flags:
+            return 'TheISA::VectorReg %s;\n' % self.base_name
+        else:
+            return '%s %s = 0;\n' % (self.ctype, self.base_name)
 
     def makeRead(self, predRead):
         if self.read_code != None:
@@ -909,6 +1015,7 @@ class OperandList(object):
         self.numFPDestRegs = 0
         self.numIntDestRegs = 0
         self.numCCDestRegs = 0
+        self.numVectorDestRegs = 0
         self.numMiscDestRegs = 0
         self.memOperand = None
 
@@ -931,6 +1038,8 @@ class OperandList(object):
                         self.numIntDestRegs += 1
                     elif op_desc.isCCReg():
                         self.numCCDestRegs += 1
+                    elif op_desc.isVectorReg():
+                        self.numVectorDestRegs += 1
                     elif op_desc.isControlReg():
                         self.numMiscDestRegs += 1
             elif op_desc.isMem():
@@ -1127,6 +1236,7 @@ class InstObjParams(object):
         header += '\n\t_numFPDestRegs = 0;'
         header += '\n\t_numIntDestRegs = 0;'
         header += '\n\t_numCCDestRegs = 0;'
+        header += '\n\t_numVectorDestRegs = 0;'
 
         self.constructor = header + \
                            self.operands.concatAttrStrings('constructor')
@@ -2292,7 +2402,8 @@ StaticInstPtr
 
         operandsREString = r'''
         (?<!\w)      # neg. lookbehind assertion: prevent partial matches
-        ((%s)(?:_(%s))?)   # match: operand with optional '_' then suffix
+        ((%s)(?:_(%s))?(?:\[\w+\])?)   # match: operand with optional '_'
+        # then suffix, and then an optional array index.
         (?!\w)       # neg. lookahead assertion: prevent partial matches
         ''' % (string.join(operands, '|'), string.join(extensions, '|'))
 

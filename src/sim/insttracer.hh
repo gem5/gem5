@@ -58,6 +58,8 @@ namespace Trace {
 class InstRecord
 {
   protected:
+    typedef TheISA::VectorReg VectorReg;
+
     Tick when;
 
     // The following fields are initialized by the constructor and
@@ -97,6 +99,7 @@ class InstRecord
     union {
         uint64_t as_int;
         double as_double;
+        VectorReg as_vector;
     } data;
 
     /** @defgroup fetch_seq
@@ -120,7 +123,8 @@ class InstRecord
         DataInt16 = 2,
         DataInt32 = 4,
         DataInt64 = 8,
-        DataDouble = 3
+        DataDouble = 3,
+        DataVector = sizeof(VectorReg),
     } data_status;
 
     /** @ingroup memory
@@ -173,6 +177,8 @@ class InstRecord
     void setData(int8_t d)  { setData((uint8_t)d); }
 
     void setData(double d) { data.as_double = d; data_status = DataDouble; }
+    void setData(const VectorReg& v)
+    { data.as_vector = v; data_status = DataVector; }
 
     void setFetchSeq(InstSeqNum seq)
     { fetch_seq = seq; fetch_seq_valid = true; }
@@ -198,6 +204,7 @@ class InstRecord
 
     uint64_t getIntData() const { return data.as_int; }
     double getFloatData() const { return data.as_double; }
+    const VectorReg &getVectorData() const { return data.as_vector; }
     int getDataStatus() const { return data_status; }
 
     InstSeqNum getFetchSeq() const { return fetch_seq; }

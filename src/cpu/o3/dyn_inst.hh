@@ -74,6 +74,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg   CCReg;
+    typedef TheISA::VectorReg VectorReg;
 
     /** Misc register index type. */
     typedef TheISA::MiscReg  MiscReg;
@@ -206,7 +207,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     void forwardOldRegs()
     {
-
         for (int idx = 0; idx < this->numDestRegs(); idx++) {
             PhysRegIndex prev_phys_reg = this->prevDestRegIdx(idx);
             TheISA::RegIndex original_dest_reg =
@@ -224,6 +224,11 @@ class BaseO3DynInst : public BaseDynInst<Impl>
                 this->setCCRegOperand(this->staticInst.get(), idx,
                                       this->cpu->readCCReg(prev_phys_reg));
                 break;
+              case VectorRegClass:
+                this->setVectorRegOperand(this->staticInst.get(), idx,
+                        this->cpu->readVectorReg(prev_phys_reg));
+                break;
+
               case MiscRegClass:
                 // no need to forward misc reg values
                 break;
@@ -272,6 +277,11 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->readCCReg(this->_srcRegIdx[idx]);
     }
 
+    const VectorReg &readVectorRegOperand(const StaticInst *si, int idx)
+    {
+        return this->cpu->readVectorReg(this->_srcRegIdx[idx]);
+    }
+
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
@@ -298,6 +308,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     {
         this->cpu->setCCReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setCCRegOperand(si, idx, val);
+    }
+
+    void setVectorRegOperand(const StaticInst *si, int idx,
+                             const VectorReg &val)
+    {
+        this->cpu->setVectorReg(this->_destRegIdx[idx], val);
+        BaseDynInst<Impl>::setVectorRegOperand(si, idx, val);
     }
 
 #if THE_ISA == MIPS_ISA
