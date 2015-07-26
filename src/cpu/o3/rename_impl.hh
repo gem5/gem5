@@ -591,21 +591,21 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         //For store instruction, check SQ size and take into account the inflight stores
 
         if (inst->isLoad()) {
-                if(calcFreeLQEntries(tid) <= 0) {
-                        DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free LQ\n");
-                        source = LQ;
-                        incrFullStat(source);
-                        break;
-                }
+            if (calcFreeLQEntries(tid) <= 0) {
+                DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free LQ\n");
+                source = LQ;
+                incrFullStat(source);
+                break;
+            }
         }
 
         if (inst->isStore()) {
-                if(calcFreeSQEntries(tid) <= 0) {
-                        DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free SQ\n");
-                        source = SQ;
-                        incrFullStat(source);
-                        break;
-                }
+            if (calcFreeSQEntries(tid) <= 0) {
+                DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free SQ\n");
+                source = SQ;
+                incrFullStat(source);
+                break;
+            }
         }
 
         insts_to_rename.pop_front();
