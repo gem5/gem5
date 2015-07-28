@@ -216,13 +216,6 @@ O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
 }
 
 template <class Impl>
-const TheISA::VectorReg &
-O3ThreadContext<Impl>::readVectorRegFlat(int reg_idx)
-{
-    return cpu->readArchVectorReg(reg_idx, thread->threadId());
-}
-
-template <class Impl>
 void
 O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
 {
@@ -255,15 +248,6 @@ O3ThreadContext<Impl>::setCCRegFlat(int reg_idx, TheISA::CCReg val)
 {
     cpu->setArchCCReg(reg_idx, val, thread->threadId());
 
-    conditionalSquash();
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setVectorRegFlat(int reg_idx,
-                                        const TheISA::VectorReg &val)
-{
-    cpu->setArchVectorReg(reg_idx, val, thread->threadId());
     conditionalSquash();
 }
 
@@ -304,13 +288,6 @@ int
 O3ThreadContext<Impl>::flattenCCIndex(int reg)
 {
     return cpu->isa[thread->threadId()]->flattenCCIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenVectorIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenVectorIndex(reg);
 }
 
 template <class Impl>

@@ -99,9 +99,6 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
     floatMap.init(TheISA::NumFloatRegs, &(freeList->floatList), _floatZeroReg);
 
     ccMap.init(TheISA::NumCCRegs, &(freeList->ccList), (RegIndex)-1);
-
-    vectorMap.init(TheISA::NumVectorRegs, &(freeList->vectorList),
-                   (RegIndex)-1);
 }
 
 
@@ -119,9 +116,6 @@ UnifiedRenameMap::rename(RegIndex arch_reg)
 
       case CCRegClass:
         return renameCC(rel_arch_reg);
-
-      case VectorRegClass:
-        return renameVector(rel_arch_reg);
 
       case MiscRegClass:
         return renameMisc(rel_arch_reg);
@@ -148,9 +142,6 @@ UnifiedRenameMap::lookup(RegIndex arch_reg) const
       case CCRegClass:
         return lookupCC(rel_arch_reg);
 
-      case VectorRegClass:
-        return lookupVector(rel_arch_reg);
-
       case MiscRegClass:
         return lookupMisc(rel_arch_reg);
 
@@ -174,9 +165,6 @@ UnifiedRenameMap::setEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
 
       case CCRegClass:
         return setCCEntry(rel_arch_reg, phys_reg);
-
-      case VectorRegClass:
-        return setVectorEntry(rel_arch_reg, phys_reg);
 
       case MiscRegClass:
         // Misc registers do not actually rename, so don't change

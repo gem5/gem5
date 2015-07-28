@@ -288,13 +288,6 @@ namespace ArmISA
         }
 
         int
-        flattenVectorIndex(int reg) const
-        {
-            assert(reg >= 0);
-            return reg;
-        }
-
-        int
         flattenMiscIndex(int reg) const
         {
             assert(reg >= 0);

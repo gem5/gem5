@@ -216,9 +216,6 @@ class CheckerThreadContext : public ThreadContext
     CCReg readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
-    const VectorReg &readVectorReg(int reg_idx)
-    { return actualTC->readVectorReg(reg_idx); }
-
     void setIntReg(int reg_idx, uint64_t val)
     {
         actualTC->setIntReg(reg_idx, val);
@@ -241,12 +238,6 @@ class CheckerThreadContext : public ThreadContext
     {
         actualTC->setCCReg(reg_idx, val);
         checkerTC->setCCReg(reg_idx, val);
-    }
-
-    void setVectorReg(int reg_idx, const VectorReg &val)
-    {
-        actualTC->setVectorReg(reg_idx, val);
-        checkerTC->setVectorReg(reg_idx, val);
     }
 
     /** Reads this thread's PC state. */
@@ -305,7 +296,6 @@ class CheckerThreadContext : public ThreadContext
     int flattenIntIndex(int reg) { return actualTC->flattenIntIndex(reg); }
     int flattenFloatIndex(int reg) { return actualTC->flattenFloatIndex(reg); }
     int flattenCCIndex(int reg) { return actualTC->flattenCCIndex(reg); }
-    int flattenVectorIndex(int reg) { return actualTC->flattenVectorIndex(reg); }
     int flattenMiscIndex(int reg) { return actualTC->flattenMiscIndex(reg); }
 
     unsigned readStCondFailures()
@@ -341,12 +331,6 @@ class CheckerThreadContext : public ThreadContext
 
     void setCCRegFlat(int idx, CCReg val)
     { actualTC->setCCRegFlat(idx, val); }
-
-    const VectorReg &readVectorRegFlat(int idx)
-    { return actualTC->readVectorRegFlat(idx); }
-
-    void setVectorRegFlat(int idx, const VectorReg &val)
-    { actualTC->setVectorRegFlat(idx, val); }
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

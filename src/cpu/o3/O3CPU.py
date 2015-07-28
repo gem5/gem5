@@ -114,7 +114,6 @@ class DerivO3CPU(BaseCPU):
     numPhysIntRegs = Param.Unsigned(256, "Number of physical integer registers")
     numPhysFloatRegs = Param.Unsigned(256, "Number of physical floating point "
                                       "registers")
-
     # most ISAs don't use condition-code regs, so default is 0
     _defaultNumPhysCCRegs = 0
     if buildEnv['TARGET_ISA'] in ('arm','x86'):
@@ -127,12 +126,6 @@ class DerivO3CPU(BaseCPU):
         _defaultNumPhysCCRegs = Self.numPhysIntRegs * 5
     numPhysCCRegs = Param.Unsigned(_defaultNumPhysCCRegs,
                                    "Number of physical cc registers")
-
-    # most ISAs don't use vector regs, so default is 0
-    _defaultNumPhysVectorRegs = 0
-    numPhysVectorRegs = Param.Unsigned(_defaultNumPhysVectorRegs,
-                                   "Number of physical vector registers")
-
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 

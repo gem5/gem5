@@ -140,20 +140,6 @@ class ExecContext : public ::ExecContext
         return thread.readFloatRegBits(reg_idx);
     }
 
-    TheISA::CCReg
-    readCCRegOperand(const StaticInst *si, int idx)
-    {
-        int reg_idx = si->srcRegIdx(idx) - TheISA::CC_Reg_Base;
-        return thread.readCCReg(reg_idx);
-    }
-
-    const TheISA::VectorReg &
-    readVectorRegOperand(const StaticInst *si, int idx)
-    {
-        int reg_idx = si->srcRegIdx(idx) - TheISA::Vector_Reg_Base;
-        return thread.readVectorReg(reg_idx);
-    }
-
     void
     setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
@@ -174,21 +160,6 @@ class ExecContext : public ::ExecContext
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Reg_Base;
         thread.setFloatRegBits(reg_idx, val);
-    }
-
-    void
-    setCCRegOperand(const StaticInst *si, int idx, TheISA::CCReg val)
-    {
-        int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
-        thread.setCCReg(reg_idx, val);
-    }
-
-    void
-    setVectorRegOperand(const StaticInst *si, int idx,
-                        const TheISA::VectorReg &val)
-    {
-        int reg_idx = si->destRegIdx(idx) - TheISA::Vector_Reg_Base;
-        thread.setVectorReg(reg_idx, val);
     }
 
     bool
@@ -292,6 +263,20 @@ class ExecContext : public ::ExecContext
     {
         thread.getITBPtr()->demapPage(vaddr, asn);
         thread.getDTBPtr()->demapPage(vaddr, asn);
+    }
+
+    TheISA::CCReg
+    readCCRegOperand(const StaticInst *si, int idx)
+    {
+        int reg_idx = si->srcRegIdx(idx) - TheISA::CC_Reg_Base;
+        return thread.readCCReg(reg_idx);
+    }
+
+    void
+    setCCRegOperand(const StaticInst *si, int idx, TheISA::CCReg val)
+    {
+        int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
+        thread.setCCReg(reg_idx, val);
     }
 
     void

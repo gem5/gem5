@@ -58,7 +58,6 @@
 #include "debug/CCRegs.hh"
 #include "debug/FloatRegs.hh"
 #include "debug/IntRegs.hh"
-#include "debug/VectorRegs.hh"
 #include "mem/page_table.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -103,8 +102,6 @@ class SimpleThread : public ThreadState
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
-    typedef TheISA::VectorReg VectorReg;
-
   public:
     typedef ThreadContext::Status Status;
 
@@ -114,15 +111,9 @@ class SimpleThread : public ThreadState
         FloatRegBits i[TheISA::NumFloatRegs];
     } floatRegs;
     TheISA::IntReg intRegs[TheISA::NumIntRegs];
-
 #ifdef ISA_HAS_CC_REGS
     TheISA::CCReg ccRegs[TheISA::NumCCRegs];
 #endif
-
-#ifdef ISA_HAS_VECTOR_REGS
-    TheISA::VectorReg vectorRegs[TheISA::NumVectorRegs];
-#endif
-
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
     TheISA::PCState _pcState;
@@ -291,16 +282,6 @@ class SimpleThread : public ThreadState
 #endif
     }
 
-    const VectorReg &readVectorReg(int reg_idx)
-    {
-        int flatIndex = isa->flattenVectorIndex(reg_idx);
-        assert(0 <= flatIndex);
-        assert(flatIndex < TheISA::NumVectorRegs);
-        DPRINTF(VectorRegs, "Reading vector reg %d (%d).\n",
-                reg_idx, flatIndex);
-        return readVectorRegFlat(flatIndex);
-    }
-
     void setIntReg(int reg_idx, uint64_t val)
     {
         int flatIndex = isa->flattenIntIndex(reg_idx);
@@ -341,19 +322,6 @@ class SimpleThread : public ThreadState
         setCCRegFlat(flatIndex, val);
 #else
         panic("Tried to set a CC register.");
-#endif
-    }
-
-    void setVectorReg(int reg_idx, const VectorReg &val)
-    {
-#ifdef ISA_HAS_VECTOR_REGS
-        int flatIndex = isa->flattenVectorIndex(reg_idx);
-        assert(flatIndex < TheISA::NumVectorRegs);
-        DPRINTF(VectorRegs, "Setting vector reg %d (%d).\n",
-                reg_idx, flatIndex);
-        setVectorRegFlat(flatIndex, val);
-#else
-        panic("Tried to set a vector register.");
 #endif
     }
 
@@ -446,12 +414,6 @@ class SimpleThread : public ThreadState
     }
 
     int
-    flattenVectorIndex(int reg)
-    {
-        return isa->flattenVectorIndex(reg);
-    }
-
-    int
     flattenMiscIndex(int reg)
     {
         return isa->flattenMiscIndex(reg);
@@ -487,18 +449,6 @@ class SimpleThread : public ThreadState
 
     void setCCRegFlat(int idx, CCReg val)
     { panic("setCCRegFlat w/no CC regs!\n"); }
-#endif
-
-#ifdef ISA_HAS_VECTOR_REGS
-    const VectorReg &readVectorRegFlat(int idx) { return vectorRegs[idx]; }
-    void setVectorRegFlat(int idx, const VectorReg &val)
-    { vectorRegs[idx] = val; }
-#else
-    const VectorReg &readVectorRegFlat(int idx)
-    { panic("readVectorRegFlat w/no Vector regs!\n"); }
-
-    void setVectorRegFlat(int idx, const VectorReg &val)
-    { panic("setVectorRegFlat w/no Vector regs!\n"); }
 #endif
 };
 

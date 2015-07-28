@@ -88,15 +88,6 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
             panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
     }
-
-    // loop through the Vector registers.
-    for (int i = 0; i < TheISA::NumVectorRegs; ++i) {
-        const TheISA::VectorReg &t1 = one->readVectorReg(i);
-        const TheISA::VectorReg &t2 = two->readVectorReg(i);
-        if (t1 != t2)
-            panic("Vector reg idx %d doesn't match", i);
-    }
-
     if (!(one->pcState() == two->pcState()))
         panic("PC state doesn't match.");
     int id1 = one->cpuId();
@@ -136,16 +127,6 @@ serialize(ThreadContext &tc, CheckpointOut &cp)
     SERIALIZE_ARRAY(ccRegs, NumCCRegs);
 #endif
 
-#ifdef ISA_HAS_VECTOR_REGS
-    VectorRegElement vectorRegs[NumVectorRegs * NumVectorRegElements];
-    for (int i = 0; i < NumVectorRegs; ++i) {
-        const VectorReg &v = tc.readVectorRegFlat(i);
-        for (int j = 0; i < NumVectorRegElements; ++j)
-            vectorRegs[i * NumVectorRegElements + j] = v[j];
-    }
-    SERIALIZE_ARRAY(vectorRegs, NumVectorRegs * NumVectorRegElements);
-#endif
-
     tc.pcState().serialize(cp);
 
     // thread_num and cpu_id are deterministic from the config
@@ -173,17 +154,6 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     UNSERIALIZE_ARRAY(ccRegs, NumCCRegs);
     for (int i = 0; i < NumCCRegs; ++i)
         tc.setCCRegFlat(i, ccRegs[i]);
-#endif
-
-#ifdef ISA_HAS_VECTOR_REGS
-    VectorRegElement vectorRegs[NumVectorRegs * NumVectorRegElements];
-    UNSERIALIZE_ARRAY(vectorRegs, NumVectorRegs * NumVectorRegElements);
-    for (int i = 0; i < NumVectorRegs; ++i) {
-        VectorReg v;
-        for (int j = 0; i < NumVectorRegElements; ++j)
-            v[j] = vectorRegs[i * NumVectorRegElements + j];
-        tc.setVectorRegFlat(i, v);
-    }
 #endif
 
     PCState pcState;

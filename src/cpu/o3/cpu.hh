@@ -427,8 +427,6 @@ class FullO3CPU : public BaseO3CPU
 
     TheISA::CCReg readCCReg(int reg_idx);
 
-    const TheISA::VectorReg &readVectorReg(int reg_idx);
-
     void setIntReg(int reg_idx, uint64_t val);
 
     void setFloatReg(int reg_idx, TheISA::FloatReg val);
@@ -437,8 +435,6 @@ class FullO3CPU : public BaseO3CPU
 
     void setCCReg(int reg_idx, TheISA::CCReg val);
 
-    void setVectorReg(int reg_idx, const TheISA::VectorReg &val);
-
     uint64_t readArchIntReg(int reg_idx, ThreadID tid);
 
     float readArchFloatReg(int reg_idx, ThreadID tid);
@@ -446,8 +442,6 @@ class FullO3CPU : public BaseO3CPU
     uint64_t readArchFloatRegInt(int reg_idx, ThreadID tid);
 
     TheISA::CCReg readArchCCReg(int reg_idx, ThreadID tid);
-
-    const TheISA::VectorReg &readArchVectorReg(int reg_idx, ThreadID tid);
 
     /** Architectural register accessors.  Looks up in the commit
      * rename table to obtain the true physical index of the
@@ -461,9 +455,6 @@ class FullO3CPU : public BaseO3CPU
     void setArchFloatRegInt(int reg_idx, uint64_t val, ThreadID tid);
 
     void setArchCCReg(int reg_idx, TheISA::CCReg val, ThreadID tid);
-
-    void setArchVectorReg(int reg_idx, const TheISA::VectorReg &val,
-                          ThreadID tid);
 
     /** Sets the commit PC state of a specific thread. */
     void pcState(const TheISA::PCState &newPCState, ThreadID tid);
@@ -743,9 +734,6 @@ class FullO3CPU : public BaseO3CPU
     //number of CC register file accesses
     Stats::Scalar ccRegfileReads;
     Stats::Scalar ccRegfileWrites;
-    //number of integer register file accesses
-    Stats::Scalar vectorRegfileReads;
-    Stats::Scalar vectorRegfileWrites;
     //number of misc
     Stats::Scalar miscRegfileReads;
     Stats::Scalar miscRegfileWrites;

@@ -34,6 +34,5 @@ const char *RegClassStrings[] = {
     "IntRegClass",
     "FloatRegClass",
     "CCRegClass",
-    "VectorRegClass",
     "MiscRegClass"
 };

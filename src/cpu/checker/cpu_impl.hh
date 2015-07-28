@@ -491,9 +491,7 @@ Checker<Impl>::validateExecution(DynInstPtr &inst)
         // Unverifiable instructions assume they were executed
         // properly by the CPU. Grab the result from the
         // instruction and write it to the register.
-        Result r;
-        r.integer = 0;
-        copyResult(inst, r, idx);
+        copyResult(inst, 0, idx);
     } else if (inst->numDestRegs() > 0 && !result.empty()) {
         DPRINTF(Checker, "Dest regs %d, number of checker dest regs %d\n",
                          inst->numDestRegs(), result.size());
@@ -527,9 +525,7 @@ Checker<Impl>::validateExecution(DynInstPtr &inst)
         // The load/store queue in Detailed CPU can also cause problems
         // if load/store forwarding is allowed.
         if (inst->isLoad() && warnOnlyOnLoadError) {
-            Result r;
-            r.integer = inst_val;
-            copyResult(inst, r, idx);
+            copyResult(inst, inst_val, idx);
         } else {
             handleError(inst);
         }
@@ -594,7 +590,7 @@ Checker<Impl>::validateState()
 
 template <class Impl>
 void
-Checker<Impl>::copyResult(DynInstPtr &inst, Result mismatch_val,
+Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
                           int start_idx)
 {
     // We've already popped one dest off the queue,
@@ -603,65 +599,39 @@ Checker<Impl>::copyResult(DynInstPtr &inst, Result mismatch_val,
         RegIndex idx = inst->destRegIdx(start_idx);
         switch (regIdxToClass(idx)) {
           case IntRegClass:
-            thread->setIntReg(idx, mismatch_val.integer);
+            thread->setIntReg(idx, mismatch_val);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base,
-                    mismatch_val.integer);
+            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, mismatch_val);
             break;
           case CCRegClass:
-            thread->setCCReg(idx - TheISA::CC_Reg_Base, mismatch_val.integer);
-            break;
-          case VectorRegClass:
-            thread->setVectorReg(idx - TheISA::Vector_Reg_Base,
-                    mismatch_val.vector);
+            thread->setCCReg(idx - TheISA::CC_Reg_Base, mismatch_val);
             break;
           case MiscRegClass:
             thread->setMiscReg(idx - TheISA::Misc_Reg_Base,
-                               mismatch_val.integer);
+                               mismatch_val);
             break;
         }
     }
-
     start_idx++;
+    uint64_t res = 0;
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
         RegIndex idx = inst->destRegIdx(i);
+        inst->template popResult<uint64_t>(res);
         switch (regIdxToClass(idx)) {
-          case IntRegClass: {
-              uint64_t res = 0;
-              inst->template popResult<uint64_t>(res);
-              thread->setIntReg(idx, res);
-          }
-          break;
-
-          case FloatRegClass: {
-              uint64_t res = 0;
-              inst->template popResult<uint64_t>(res);
-              thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, res);
-          }
-          break;
-
-          case CCRegClass: {
-              uint64_t res = 0;
-              inst->template popResult<uint64_t>(res);
-              thread->setCCReg(idx - TheISA::CC_Reg_Base, res);
-          }
-          break;
-
-          case VectorRegClass: {
-              VectorReg res;
-              inst->template popResult<VectorReg>(res);
-              thread->setVectorReg(idx - TheISA::Vector_Reg_Base, res);
-          }
-          break;
-
-          case MiscRegClass: {
-              // Try to get the proper misc register index for ARM here...
-              uint64_t res = 0;
-              inst->template popResult<uint64_t>(res);
-              thread->setMiscReg(idx - TheISA::Misc_Reg_Base, res);
-          }
-          break;
+          case IntRegClass:
+            thread->setIntReg(idx, res);
+            break;
+          case FloatRegClass:
+            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, res);
+            break;
+          case CCRegClass:
+            thread->setCCReg(idx - TheISA::CC_Reg_Base, res);
+            break;
+          case MiscRegClass:
+            // Try to get the proper misc register index for ARM here...
+            thread->setMiscReg(idx - TheISA::Misc_Reg_Base, res);
+            break;
             // else Register is out of range...
         }
     }

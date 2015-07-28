@@ -337,8 +337,6 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
       case CCRegClass:
         ccprintf(os, "cc_%s", ArmISA::ccRegName[rel_reg]);
         break;
-      case VectorRegClass:
-        panic("ARM ISA does not have any vector registers yet!");
     }
 }
 

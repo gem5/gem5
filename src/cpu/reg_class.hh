@@ -42,7 +42,6 @@ enum RegClass {
     IntRegClass,        ///< Integer register
     FloatRegClass,      ///< Floating-point register
     CCRegClass,         ///< Condition-code register
-    VectorRegClass,     ///< Vector register
     MiscRegClass        ///< Control (misc) register
 };
 
@@ -77,15 +76,12 @@ RegClass regIdxToClass(TheISA::RegIndex reg_idx,
     } else if (reg_idx < TheISA::CC_Reg_Base) {
         cl = FloatRegClass;
         offset = TheISA::FP_Reg_Base;
-    } else if (reg_idx < TheISA::Vector_Reg_Base) {
+    } else if (reg_idx < TheISA::Misc_Reg_Base) {
         // if there are no CC regs, the ISA should set
         // CC_Reg_Base == Misc_Reg_Base so the if above
         // never succeeds
         cl = CCRegClass;
         offset = TheISA::CC_Reg_Base;
-    } else if (reg_idx < TheISA::Misc_Reg_Base) {
-        cl = VectorRegClass;
-        offset = TheISA::Vector_Reg_Base;
     } else {
         cl = MiscRegClass;
         offset = TheISA::Misc_Reg_Base;

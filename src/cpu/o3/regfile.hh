@@ -56,7 +56,6 @@ class PhysRegFile
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
-    typedef TheISA::VectorReg VectorReg;
 
     typedef union {
         FloatReg d;
@@ -71,9 +70,6 @@ class PhysRegFile
 
     /** Condition-code register file. */
     std::vector<CCReg> ccRegFile;
-
-    /** Vector register file. */
-    std::vector<VectorReg> vectorRegFile;
 
     /**
      * The first floating-point physical register index.  The physical
@@ -97,12 +93,6 @@ class PhysRegFile
      */
     unsigned baseCCRegIndex;
 
-    /**
-     * The first vector physical register index.  The vector registers follow
-     * the condition-code registers.
-     */
-    unsigned baseVectorRegIndex;
-
     /** Total number of physical registers. */
     unsigned totalNumRegs;
 
@@ -113,8 +103,7 @@ class PhysRegFile
      */
     PhysRegFile(unsigned _numPhysicalIntRegs,
                 unsigned _numPhysicalFloatRegs,
-                unsigned _numPhysicalCCRegs,
-                unsigned _numPhysicalVectorRegs);
+                unsigned _numPhysicalCCRegs);
 
     /**
      * Destructor to free resources
@@ -133,11 +122,7 @@ class PhysRegFile
 
     /** @return the number of condition-code physical registers. */
     unsigned numCCPhysRegs() const
-    { return baseVectorRegIndex - baseCCRegIndex; }
-
-    /** @return the number of vector physical registers. */
-    unsigned numVectorPhysRegs() const
-    { return totalNumRegs - baseVectorRegIndex; }
+    { return totalNumRegs - baseCCRegIndex; }
 
     /** @return the total number of physical registers. */
     unsigned totalNumPhysRegs() const { return totalNumRegs; }
@@ -166,16 +151,7 @@ class PhysRegFile
      */
     bool isCCPhysReg(PhysRegIndex reg_idx)
     {
-        return (baseCCRegIndex <= reg_idx && reg_idx < baseVectorRegIndex);
-    }
-
-    /**
-     * @return true if the specified physical register index
-     * corresponds to a vector physical register.
-     */
-    bool isVectorPhysReg(PhysRegIndex reg_idx) const
-    {
-        return baseVectorRegIndex <= reg_idx && reg_idx < totalNumRegs;
+        return (baseCCRegIndex <= reg_idx && reg_idx < totalNumRegs);
     }
 
     /** Reads an integer register. */
@@ -229,18 +205,6 @@ class PhysRegFile
                 "data %#x\n", int(reg_idx), ccRegFile[reg_offset]);
 
         return ccRegFile[reg_offset];
-    }
-
-    /** Reads a vector register. */
-    const VectorReg &readVectorReg(PhysRegIndex reg_idx) const
-    {
-        assert(isVectorPhysReg(reg_idx));
-
-        // Remove the base vector reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseVectorRegIndex;
-
-        DPRINTF(IEW, "RegFile: Access to vector register %i\n", int(reg_idx));
-        return vectorRegFile[reg_offset];
     }
 
     /** Sets an integer register to the given value. */
@@ -297,16 +261,6 @@ class PhysRegFile
                 int(reg_idx), (uint64_t)val);
 
         ccRegFile[reg_offset] = val;
-    }
-
-    /** Sets a vector register to the given value. */
-    void setVectorReg(PhysRegIndex reg_idx, const VectorReg &val)
-    {
-        assert(isVectorPhysReg(reg_idx));
-        // Remove the base vector reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseVectorRegIndex;
-        DPRINTF(IEW, "RegFile: Setting vector register %i\n", int(reg_idx));
-        vectorRegFile[reg_offset] = val;
     }
 };
 

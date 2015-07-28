@@ -98,7 +98,6 @@ class ThreadContext
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
-    typedef TheISA::VectorReg VectorReg;
     typedef TheISA::MiscReg MiscReg;
   public:
 
@@ -206,8 +205,6 @@ class ThreadContext
 
     virtual CCReg readCCReg(int reg_idx) = 0;
 
-    virtual const VectorReg &readVectorReg(int reg_idx) = 0;
-
     virtual void setIntReg(int reg_idx, uint64_t val) = 0;
 
     virtual void setFloatReg(int reg_idx, FloatReg val) = 0;
@@ -215,8 +212,6 @@ class ThreadContext
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
 
     virtual void setCCReg(int reg_idx, CCReg val) = 0;
-
-    virtual void setVectorReg(int reg_idx, const VectorReg &val) = 0;
 
     virtual TheISA::PCState pcState() = 0;
 
@@ -241,7 +236,6 @@ class ThreadContext
     virtual int flattenIntIndex(int reg) = 0;
     virtual int flattenFloatIndex(int reg) = 0;
     virtual int flattenCCIndex(int reg) = 0;
-    virtual int flattenVectorIndex(int reg) = 0;
     virtual int flattenMiscIndex(int reg) = 0;
 
     virtual uint64_t
@@ -297,9 +291,6 @@ class ThreadContext
 
     virtual CCReg readCCRegFlat(int idx) = 0;
     virtual void setCCRegFlat(int idx, CCReg val) = 0;
-
-    virtual const VectorReg &readVectorRegFlat(int idx) = 0;
-    virtual void setVectorRegFlat(int idx, const VectorReg &val) = 0;
     /** @} */
 
 };
@@ -411,9 +402,6 @@ class ProxyThreadContext : public ThreadContext
     CCReg readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
-    const VectorReg &readVectorReg(int reg_idx)
-    { return actualTC->readVectorReg(reg_idx); }
-
     void setIntReg(int reg_idx, uint64_t val)
     { actualTC->setIntReg(reg_idx, val); }
 
@@ -425,9 +413,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setCCReg(int reg_idx, CCReg val)
     { actualTC->setCCReg(reg_idx, val); }
-
-    void setVectorReg(int reg_idx, const VectorReg &val)
-    { actualTC->setVectorReg(reg_idx, val); }
 
     TheISA::PCState pcState() { return actualTC->pcState(); }
 
@@ -464,9 +449,6 @@ class ProxyThreadContext : public ThreadContext
 
     int flattenCCIndex(int reg)
     { return actualTC->flattenCCIndex(reg); }
-
-    int flattenVectorIndex(int reg)
-    { return actualTC->flattenVectorIndex(reg); }
 
     int flattenMiscIndex(int reg)
     { return actualTC->flattenMiscIndex(reg); }
@@ -505,12 +487,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setCCRegFlat(int idx, CCReg val)
     { actualTC->setCCRegFlat(idx, val); }
-
-    const VectorReg &readVectorRegFlat(int idx)
-    { return actualTC->readVectorRegFlat(idx); }
-
-    void setVectorRegFlat(int idx, const VectorReg &val)
-    { actualTC->setVectorRegFlat(idx, val); }
 };
 
 /** @{ */

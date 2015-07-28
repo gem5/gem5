@@ -76,7 +76,6 @@ class ExecContext {
     typedef TheISA::MiscReg MiscReg;
 
     typedef TheISA::CCReg CCReg;
-    typedef TheISA::VectorReg VectorReg;
 
   public:
     /**
@@ -125,22 +124,6 @@ class ExecContext {
      */
     virtual CCReg readCCRegOperand(const StaticInst *si, int idx) = 0;
     virtual void setCCRegOperand(const StaticInst *si, int idx, CCReg val) = 0;
-    /** @} */
-
-    /**
-     * @{
-     * @name Vector Register Interfaces
-     *
-     */
-
-    /** Reads a vector register. */
-    virtual const VectorReg &readVectorRegOperand (const StaticInst *si,
-                                                   int idx) = 0;
-
-    /** Sets a vector register to a value. */
-    virtual void setVectorRegOperand(const StaticInst *si,
-                                     int idx, const VectorReg &val) = 0;
-
     /** @} */
 
     /**

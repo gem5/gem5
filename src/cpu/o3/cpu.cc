@@ -170,8 +170,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       regFile(params->numPhysIntRegs,
               params->numPhysFloatRegs,
-              params->numPhysCCRegs,
-              params->numPhysVectorRegs),
+              params->numPhysCCRegs),
 
       freeList(name() + ".freelist", &regFile),
 
@@ -270,7 +269,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     assert(params->numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
     assert(params->numPhysFloatRegs >= numThreads * TheISA::NumFloatRegs);
     assert(params->numPhysCCRegs >= numThreads * TheISA::NumCCRegs);
-    assert(params->numPhysVectorRegs >= numThreads * TheISA::NumVectorRegs);
 
     rename.setScoreboard(&scoreboard);
     iew.setScoreboard(&scoreboard);
@@ -314,12 +312,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
             PhysRegIndex phys_reg = freeList.getCCReg();
             renameMap[tid].setCCEntry(ridx, phys_reg);
             commitRenameMap[tid].setCCEntry(ridx, phys_reg);
-        }
-
-        for (RegIndex ridx = 0; ridx < TheISA::NumVectorRegs; ++ridx) {
-            PhysRegIndex phys_reg = freeList.getVectorReg();
-            renameMap[tid].setVectorEntry(ridx, phys_reg);
-            commitRenameMap[tid].setVectorEntry(ridx, phys_reg);
         }
     }
 
@@ -528,16 +520,6 @@ FullO3CPU<Impl>::regStats()
         .name(name() + ".cc_regfile_writes")
         .desc("number of cc regfile writes")
         .prereq(ccRegfileWrites);
-
-    vectorRegfileReads
-        .name(name() + ".vector_regfile_reads")
-        .desc("number of vector regfile reads")
-        .prereq(vectorRegfileReads);
-
-    vectorRegfileWrites
-        .name(name() + ".vector_regfile_writes")
-        .desc("number of vector regfile writes")
-        .prereq(vectorRegfileWrites);
 
     miscRegfileReads
         .name(name() + ".misc_regfile_reads")
@@ -825,18 +807,6 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
         scoreboard.setReg(phys_reg);
     }
 
-    //Bind vector Regs to Rename Map
-    max_reg = TheISA::NumIntRegs + TheISA::NumFloatRegs + TheISA::NumCCRegs +
-              TheISA::NumVectorRegs;
-    for (int vreg = TheISA::NumIntRegs + TheISA::NumFloatRegs +
-                    TheISA::NumCCRegs;
-         vreg < max_reg; vreg++) {
-        PhysRegIndex phys_reg = freeList.getVectorReg();
-
-        renameMap[tid].setEntry(vreg, phys_reg);
-        scoreboard.setReg(phys_reg);
-    }
-
     //Copy Thread Data Into RegFile
     //this->copyFromTC(tid);
 
@@ -886,14 +856,6 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
     max_reg = TheISA::CC_Reg_Base + TheISA::NumCCRegs;
     for (int creg = TheISA::CC_Reg_Base; creg < max_reg; creg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(creg);
-        scoreboard.unsetReg(phys_reg);
-        freeList.addReg(phys_reg);
-    }
-
-    // Unbind condition-code Regs from Rename Map
-    max_reg = TheISA::Vector_Reg_Base + TheISA::NumVectorRegs;
-    for (int vreg = TheISA::Vector_Reg_Base; vreg < max_reg; vreg++) {
-        PhysRegIndex phys_reg = renameMap[tid].lookup(vreg);
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }
@@ -1297,14 +1259,6 @@ FullO3CPU<Impl>::readCCReg(int reg_idx)
 }
 
 template <class Impl>
-const VectorReg &
-FullO3CPU<Impl>::readVectorReg(int reg_idx)
-{
-    vectorRegfileReads++;
-    return regFile.readVectorReg(reg_idx);
-}
-
-template <class Impl>
 void
 FullO3CPU<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
@@ -1334,14 +1288,6 @@ FullO3CPU<Impl>::setCCReg(int reg_idx, CCReg val)
 {
     ccRegfileWrites++;
     regFile.setCCReg(reg_idx, val);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setVectorReg(int reg_idx, const VectorReg &val)
-{
-    vectorRegfileWrites++;
-    regFile.setVectorReg(reg_idx, val);
 }
 
 template <class Impl>
@@ -1385,16 +1331,6 @@ FullO3CPU<Impl>::readArchCCReg(int reg_idx, ThreadID tid)
 }
 
 template <class Impl>
-const VectorReg&
-FullO3CPU<Impl>::readArchVectorReg(int reg_idx, ThreadID tid)
-{
-    vectorRegfileReads++;
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookupVector(reg_idx);
-
-    return regFile.readVectorReg(phys_reg);
-}
-
-template <class Impl>
 void
 FullO3CPU<Impl>::setArchIntReg(int reg_idx, uint64_t val, ThreadID tid)
 {
@@ -1432,16 +1368,6 @@ FullO3CPU<Impl>::setArchCCReg(int reg_idx, CCReg val, ThreadID tid)
     PhysRegIndex phys_reg = commitRenameMap[tid].lookupCC(reg_idx);
 
     regFile.setCCReg(phys_reg, val);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setArchVectorReg(int reg_idx, const VectorReg &val,
-                                  ThreadID tid)
-{
-    vectorRegfileWrites++;
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookupVector(reg_idx);
-    regFile.setVectorReg(phys_reg, val);
 }
 
 template <class Impl>

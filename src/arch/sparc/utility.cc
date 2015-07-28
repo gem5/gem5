@@ -237,9 +237,6 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     // Would need to add condition-code regs if implemented
     assert(NumCCRegs == 0);
 
-    // Copy vector registers when vector registers put to use.
-    assert(NumVectorRegs == 0);
-
     // Copy misc. registers
     copyMiscRegs(src, dest);
 

@@ -245,10 +245,6 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     //copy condition-code regs
     for (int i = 0; i < NumCCRegs; ++i)
          dest->setCCRegFlat(i, src->readCCRegFlat(i));
-
-    // copy vector regs when added to the architecture
-    assert(NumVectorRegs == 0);
-
     copyMiscRegs(src, dest);
     dest->pcState(src->pcState());
 }

@@ -184,13 +184,6 @@ namespace MipsISA
             return reg;
         }
 
-        // dummy
-        int
-        flattenVectorIndex(int reg) const
-        {
-            return reg;
-        }
-
         int
         flattenMiscIndex(int reg) const
         {

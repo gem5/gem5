@@ -196,7 +196,5 @@ env.Append(BUILDERS = {'ScanISA' :
 DebugFlag('IntRegs')
 DebugFlag('FloatRegs')
 DebugFlag('CCRegs')
-DebugFlag('VectorRegs')
 DebugFlag('MiscRegs')
-CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'CCRegs', 'VectorRegs',
-                            'MiscRegs' ])
+CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'CCRegs', 'MiscRegs' ])

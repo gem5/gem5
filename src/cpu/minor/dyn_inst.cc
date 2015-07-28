@@ -157,8 +157,6 @@ printRegName(std::ostream &os, TheISA::RegIndex reg)
         break;
       case CCRegClass:
         os << 'c' << static_cast<unsigned int>(reg - TheISA::CC_Reg_Base);
-      case VectorRegClass:
-        os << 'v' << static_cast<unsigned int>(reg - TheISA::Vector_Reg_Base);
     }
 }
 

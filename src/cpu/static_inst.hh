@@ -98,7 +98,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     int8_t _numFPDestRegs;
     int8_t _numIntDestRegs;
     int8_t _numCCDestRegs;
-    int8_t _numVectorDestRegs;
     //@}
 
   public:
@@ -117,10 +116,9 @@ class StaticInst : public RefCounted, public StaticInstFlags
     int8_t numFPDestRegs()  const { return _numFPDestRegs; }
     /// Number of integer destination regs.
     int8_t numIntDestRegs() const { return _numIntDestRegs; }
-    /// Number of condition code destination regs.
+    //@}
+    /// Number of coprocesor destination regs.
     int8_t numCCDestRegs() const { return _numCCDestRegs; }
-    /// Number of vector destination regs.
-    int8_t numVectorDestRegs() const { return _numVectorDestRegs; }
     //@}
 
     /// @name Flag accessors.
@@ -142,7 +140,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     bool isInteger()      const { return flags[IsInteger]; }
     bool isFloating()     const { return flags[IsFloating]; }
-    bool isVector() const { return flags[IsVector]; }
     bool isCC()           const { return flags[IsCC]; }
 
     bool isControl()      const { return flags[IsControl]; }
@@ -255,8 +252,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
         : _opClass(__opClass), _numSrcRegs(0), _numDestRegs(0),
           _numFPDestRegs(0), _numIntDestRegs(0), _numCCDestRegs(0),
-          _numVectorDestRegs(0), machInst(_machInst), mnemonic(_mnemonic),
-          cachedDisassembly(0)
+          machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
     { }
 
   public:
@@ -330,7 +326,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     void printFlags(std::ostream &outs, const std::string &separator) const;
 
     /// Return name of machine instruction
-    std::string getName() const { return mnemonic; }
+    std::string getName() { return mnemonic; }
 };
 
 #endif // __CPU_STATIC_INST_HH__

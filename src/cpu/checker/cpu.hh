@@ -94,7 +94,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
-    typedef TheISA::VectorReg VectorReg;
 
     /** id attached to all issued requests */
     MasterID masterId;
@@ -146,19 +145,10 @@ class CheckerCPU : public BaseCPU, public ExecContext
     union Result {
         uint64_t integer;
         double dbl;
-
-        // I am assuming that vector register type is different from the two
-        // types used above.  Else it seems useless to have a separate typedef
-        // for vector registers.
-        VectorReg vector;
-
         void set(uint64_t i) { integer = i; }
         void set(double d) { dbl = d; }
-        void set(const VectorReg &v) { vector = v; }
-
         void get(uint64_t& i) { i = integer; }
         void get(double& d) { d = dbl; }
-        void get(VectorReg& v) { v = vector; }
     };
 
     // ISAs like ARM can have multiple destination registers to check,
@@ -241,11 +231,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readCCReg(reg_idx);
     }
 
-    const VectorReg &readVectorRegOperand(const StaticInst *si, int idx)
-    {
-        return thread->readVectorReg(si->srcRegIdx(idx));
-    }
-
     template <class T>
     void setResult(T t)
     {
@@ -280,13 +265,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
         int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
         thread->setCCReg(reg_idx, val);
         setResult<uint64_t>(val);
-    }
-
-    void setVectorRegOperand(const StaticInst *si, int idx,
-                             const VectorReg &val)
-    {
-        thread->setVectorReg(si->destRegIdx(idx), val);
-        setResult<VectorReg>(val);
     }
 
     bool readPredicate() { return thread->readPredicate(); }
@@ -463,7 +441,7 @@ class Checker : public CheckerCPU
     void validateExecution(DynInstPtr &inst);
     void validateState();
 
-    void copyResult(DynInstPtr &inst, Result mismatch_val, int start_idx);
+    void copyResult(DynInstPtr &inst, uint64_t mismatch_val, int start_idx);
     void handlePendingInt();
 
   private:

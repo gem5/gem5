@@ -109,9 +109,6 @@ class UnifiedFreeList
     /** The list of free condition-code registers. */
     SimpleFreeList ccList;
 
-    /** The list of free vector registers. */
-    SimpleFreeList vectorList;
-
     /**
      * The register file object is used only to distinguish integer
      * from floating-point physical register indices.
@@ -151,9 +148,6 @@ class UnifiedFreeList
     /** Gets a free cc register. */
     PhysRegIndex getCCReg() { return ccList.getReg(); }
 
-    /** Gets a free vector register. */
-    PhysRegIndex getVectorReg() { return vectorList.getReg(); }
-
     /** Adds a register back to the free list. */
     void addReg(PhysRegIndex freed_reg);
 
@@ -166,9 +160,6 @@ class UnifiedFreeList
     /** Adds a cc register back to the free list. */
     void addCCReg(PhysRegIndex freed_reg) { ccList.addReg(freed_reg); }
 
-    /** Adds a vector register back to the free list. */
-    void addVectorReg(PhysRegIndex freed_reg) { vectorList.addReg(freed_reg); }
-
     /** Checks if there are any free integer registers. */
     bool hasFreeIntRegs() const { return intList.hasFreeRegs(); }
 
@@ -178,9 +169,6 @@ class UnifiedFreeList
     /** Checks if there are any free cc registers. */
     bool hasFreeCCRegs() const { return ccList.hasFreeRegs(); }
 
-    /** Checks if there are any free vector registers. */
-    bool hasFreeVectorRegs() const { return vectorList.hasFreeRegs(); }
-
     /** Returns the number of free integer registers. */
     unsigned numFreeIntRegs() const { return intList.numFreeRegs(); }
 
@@ -189,9 +177,6 @@ class UnifiedFreeList
 
     /** Returns the number of free cc registers. */
     unsigned numFreeCCRegs() const { return ccList.numFreeRegs(); }
-
-    /** Returns the number of free vector registers. */
-    unsigned numFreeVectorRegs() const { return vectorList.numFreeRegs(); }
 };
 
 inline void
@@ -204,11 +189,9 @@ UnifiedFreeList::addReg(PhysRegIndex freed_reg)
         intList.addReg(freed_reg);
     } else if (regFile->isFloatPhysReg(freed_reg)) {
         floatList.addReg(freed_reg);
-    } else if (regFile->isCCPhysReg(freed_reg)) {
-        ccList.addReg(freed_reg);
     } else {
-        assert(regFile->isVectorPhysReg(freed_reg));
-        vectorList.addReg(freed_reg);
+        assert(regFile->isCCPhysReg(freed_reg));
+        ccList.addReg(freed_reg);
     }
 
     // These assert conditions ensure that the number of free

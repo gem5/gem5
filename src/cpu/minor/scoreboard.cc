@@ -71,11 +71,6 @@ Scoreboard::findIndex(RegIndex reg, Index &scoreboard_index)
             scoreboard_index = TheISA::NumIntRegs + reg - TheISA::FP_Reg_Base;
             ret = true;
             break;
-          case VectorRegClass:
-            scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                    TheISA::NumFloatRegs + reg - TheISA::Vector_Reg_Base;
-            ret = true;
-            break;
           case MiscRegClass:
               /* Don't bother with Misc registers */
             ret = false;
@@ -103,9 +98,6 @@ flattenRegIndex(TheISA::RegIndex reg, ThreadContext *thread_context)
         break;
       case CCRegClass:
         ret = thread_context->flattenCCIndex(reg);
-        break;
-      case VectorRegClass:
-        ret = thread_context->flattenVectorIndex(reg);
         break;
       case MiscRegClass:
         /* Don't bother to flatten misc regs as we don't need them here */

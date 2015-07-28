@@ -56,12 +56,6 @@ typedef uint64_t MiscReg;
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;
 
-// vector register file entry type
-typedef uint64_t VectorRegElement;
-const int NumVectorRegElements = 0;
-const int VectorRegBytes = NumVectorRegElements * sizeof(VectorRegElement);
-typedef std::array<VectorRegElement, NumVectorRegElements> VectorReg;
-
 union AnyReg
 {
     IntReg  intreg;
@@ -101,7 +95,6 @@ const int NumFloatArchRegs = 32;
 const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
 const int NumFloatRegs = NumFloatArchRegs;
 const int NumCCRegs = 0;
-const int NumVectorRegs = 0;
 const int NumMiscRegs = NUM_MISCREGS;
 
 const int TotalNumRegs =
@@ -113,8 +106,7 @@ enum DependenceTags {
     // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Reg_Base)
     FP_Reg_Base = NumIntRegs,
     CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Vector_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
-    Misc_Reg_Base = Vector_Reg_Base + NumCCRegs, // NumVectorRegs == 0
+    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
     Max_Reg_Index = Misc_Reg_Base + NumMiscRegs + NumInternalProcRegs
 };
 
