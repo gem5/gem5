@@ -320,6 +320,8 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         if (old_blk && old_blk->isValid()) {
             if (old_blk->isDirty())
                 writebacks.push_back(writebackBlk(old_blk));
+            else
+                writebacks.push_back(cleanEvictBlk(old_blk));
             tags->invalidate(old_blk);
             old_blk->invalidate();
         }
