@@ -213,14 +213,12 @@ void
 MinorCPU::signalDrainDone()
 {
     DPRINTF(Drain, "MinorCPU drain done\n");
-    signalDrainDone();
+    Drainable::signalDrainDone();
 }
 
 void
 MinorCPU::drainResume()
 {
-    assert(drainState() == DrainState::Drained);
-
     if (switchedOut()) {
         DPRINTF(Drain, "drainResume while switched out.  Ignoring\n");
         return;
