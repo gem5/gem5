@@ -79,9 +79,6 @@ QueuedPrefetcher::notify(const PacketPtr &pkt)
                     ++itr;
                 }
             }
-
-            if (pfq.empty())
-                cache->deassertMemSideBusRequest(BaseCache::Request_PF);
         }
 
         // Calculate prefetches given this access

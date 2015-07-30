@@ -263,16 +263,6 @@ void
 Cache::markInService(MSHR *mshr, bool pending_dirty_resp)
 {
     markInServiceInternal(mshr, pending_dirty_resp);
-#if 0
-        if (mshr->originalCmd == MemCmd::HardPFReq) {
-            DPRINTF(HWPrefetch, "Marking a HW_PF in service\n");
-            //Also clear pending if need be
-            if (!prefetcher->havePending())
-            {
-                deassertMemSideBusRequest(Request_PF);
-            }
-        }
-#endif
 }
 
 
@@ -476,14 +466,14 @@ Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
                 // the Writeback does not reset the bit corresponding to this
                 // address in the snoop filter below.
                 wbPkt->setBlockCached();
-                allocateWriteBuffer(wbPkt, forward_time, true);
+                allocateWriteBuffer(wbPkt, forward_time);
             }
         } else {
             // If the block is not cached above, send packet below. Both
             // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
             // reset the bit corresponding to this address in the snoop filter
             // below.
-            allocateWriteBuffer(wbPkt, forward_time, true);
+            allocateWriteBuffer(wbPkt, forward_time);
         }
         writebacks.pop_front();
     }
@@ -808,11 +798,8 @@ Cache::recvTimingReq(PacketPtr pkt)
             if (pkt->evictingBlock() ||
                 (pkt->req->isUncacheable() && pkt->isWrite())) {
                 // We use forward_time here because there is an
-                // uncached memory write, forwarded to WriteBuffer. It
-                // specifies the latency to allocate an internal buffer and to
-                // schedule an event to the queued port and also takes into
-                // account the additional delay of the xbar.
-                allocateWriteBuffer(pkt, forward_time, true);
+                // uncached memory write, forwarded to WriteBuffer.
+                allocateWriteBuffer(pkt, forward_time);
             } else {
                 if (blk && blk->isValid()) {
                     // should have flushed and have no valid block
@@ -839,12 +826,8 @@ Cache::recvTimingReq(PacketPtr pkt)
                 }
                 // Here we are using forward_time, modelling the latency of
                 // a miss (outbound) just as forwardLatency, neglecting the
-                // lookupLatency component. In this case this latency value
-                // specifies the latency to allocate an internal buffer and to
-                // schedule an event to the queued port, when a cacheable miss
-                // is forwarded to MSHR queue.
-                // We take also into account the additional delay of the xbar.
-                allocateMissBuffer(pkt, forward_time, true);
+                // lookupLatency component.
+                allocateMissBuffer(pkt, forward_time);
             }
 
             if (prefetcher) {
@@ -854,10 +837,9 @@ Cache::recvTimingReq(PacketPtr pkt)
             }
         }
     }
-    // Here we condiser just forward_time.
+
     if (next_pf_time != MaxTick)
-        requestMemSideBus(Request_PF, std::max(clockEdge(forwardLatency),
-                                                next_pf_time));
+        schedMemSideSendEvent(next_pf_time);
 
     return true;
 }
@@ -1405,8 +1387,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         }
         mq = mshr->queue;
         mq->markPending(mshr);
-        requestMemSideBus((RequestCause)mq->index, clockEdge() +
-                          pkt->payloadDelay);
+        schedMemSideSendEvent(clockEdge() + pkt->payloadDelay);
     } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
@@ -1417,9 +1398,9 @@ Cache::recvTimingResp(PacketPtr pkt)
         // MSHRs for a prefetch to take place
         if (prefetcher && mq == &mshrQueue && mshrQueue.canPrefetch()) {
             Tick next_pf_time = std::max(prefetcher->nextPrefetchReadyTime(),
-                                         curTick());
+                                         clockEdge());
             if (next_pf_time != MaxTick)
-                requestMemSideBus(Request_PF, next_pf_time);
+                schedMemSideSendEvent(next_pf_time);
         }
     }
     // reset the xbar additional timinig  as it is now accounted for
@@ -1436,7 +1417,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         // queued port.
         if (blk->isDirty()) {
             PacketPtr wbPkt = writebackBlk(blk);
-            allocateWriteBuffer(wbPkt, forward_time, true);
+            allocateWriteBuffer(wbPkt, forward_time);
             // Set BLOCK_CACHED flag if cached above.
             if (isCachedAbove(wbPkt))
                 wbPkt->setBlockCached();
@@ -1447,7 +1428,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             if (isCachedAbove(wcPkt))
                 delete wcPkt;
             else
-                allocateWriteBuffer(wcPkt, forward_time, true);
+                allocateWriteBuffer(wcPkt, forward_time);
         }
         blk->invalidate();
     }
@@ -2151,7 +2132,10 @@ Cache::getNextMSHR()
                 // (hwpf_mshr_misses)
                 assert(pkt->req->masterId() < system->maxMasters());
                 mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
-                // Don't request bus, since we already have it
+
+                // allocate an MSHR and return it, note
+                // that we send the packet straight away, so do not
+                // schedule the send
                 return allocateMissBuffer(pkt, curTick(), false);
             } else {
                 // free the request and packet
