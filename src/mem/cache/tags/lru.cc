@@ -75,9 +75,17 @@ LRU::findVictim(Addr addr)
 {
     int set = extractSet(addr);
     // grab a replacement candidate
-    BlkType *blk = sets[set].blks[assoc - 1];
+    BlkType *blk = NULL;
+    for (int i = assoc - 1; i >= 0; i--) {
+        BlkType *b = sets[set].blks[i];
+        if (b->way < allocAssoc) {
+            blk = b;
+            break;
+        }
+    }
+    assert(!blk || blk->way < allocAssoc);
 
-    if (blk->isValid()) {
+    if (blk && blk->isValid()) {
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
                 set, regenerateBlkAddr(blk->tag, set));
     }

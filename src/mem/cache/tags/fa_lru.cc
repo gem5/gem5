@@ -101,6 +101,8 @@ FALRU::FALRU(const Params *p)
         blks[i].prev = &(blks[i-1]);
         blks[i].next = &(blks[i+1]);
         blks[i].isTouched = false;
+        blks[i].set = 0;
+        blks[i].way = i;
     }
     assert(j == numCaches);
     assert(index == numBlocks);
@@ -224,6 +226,13 @@ FALRU::findBlock(Addr addr, bool is_secure) const
         blk = NULL;
     }
     return blk;
+}
+
+CacheBlk*
+FALRU::findBlockBySetAndWay(int set, int way) const
+{
+    assert(set == 0);
+    return &blks[way];
 }
 
 CacheBlk*

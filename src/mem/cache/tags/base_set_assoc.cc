@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -54,7 +54,7 @@
 using namespace std;
 
 BaseSetAssoc::BaseSetAssoc(const Params *p)
-    :BaseTags(p), assoc(p->assoc),
+    :BaseTags(p), assoc(p->assoc), allocAssoc(p->assoc),
      numSets(p->size / (p->block_size * p->assoc)),
      sequentialAccess(p->sequential_access)
 {
@@ -108,6 +108,7 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
             blk->size = blkSize;
             sets[i].blks[j]=blk;
             blk->set = i;
+            blk->way = j;
         }
     }
 }
@@ -126,6 +127,12 @@ BaseSetAssoc::findBlock(Addr addr, bool is_secure) const
     unsigned set = extractSet(addr);
     BlkType *blk = sets[set].findBlk(tag, is_secure);
     return blk;
+}
+
+CacheBlk*
+BaseSetAssoc::findBlockBySetAndWay(int set, int way) const
+{
+    return sets[set].blks[way];
 }
 
 void

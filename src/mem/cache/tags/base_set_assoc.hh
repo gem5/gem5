@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -87,6 +87,8 @@ class BaseSetAssoc : public BaseTags
   protected:
     /** The associativity of the cache. */
     const unsigned assoc;
+    /** The allocatable associativity of the cache (alloc mask). */
+    unsigned allocAssoc;
     /** The number of sets in the cache. */
     const unsigned numSets;
     /** Whether tags and data are accessed sequentially. */
@@ -146,6 +148,34 @@ public:
     }
 
     /**
+     * Return the number of sets this cache has
+     * @return The number of sets.
+     */
+    unsigned
+    getNumSets() const
+    {
+        return numSets;
+    }
+
+    /**
+     * Return the number of ways this cache has
+     * @return The number of ways.
+     */
+    unsigned
+    getNumWays() const
+    {
+        return assoc;
+    }
+
+    /**
+     * Find the cache block given set and way
+     * @param set The set of the block.
+     * @param way The way of the block.
+     * @return The cache block.
+     */
+    CacheBlk *findBlockBySetAndWay(int set, int way) const;
+
+    /**
      * Invalidate the given block.
      * @param blk The block to invalidate.
      */
@@ -183,13 +213,13 @@ public:
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
         // a hit.  Sequential access with a miss doesn't access data.
-        tagAccesses += assoc;
+        tagAccesses += allocAssoc;
         if (sequentialAccess) {
             if (blk != NULL) {
                 dataAccesses += 1;
             }
         } else {
-            dataAccesses += assoc;
+            dataAccesses += allocAssoc;
         }
 
         if (blk != NULL) {
@@ -227,11 +257,10 @@ public:
         int set = extractSet(addr);
 
         // prefer to evict an invalid block
-        for (int i = 0; i < assoc; ++i) {
+        for (int i = 0; i < allocAssoc; ++i) {
             blk = sets[set].blks[i];
-            if (!blk->isValid()) {
+            if (!blk->isValid())
                 break;
-            }
         }
 
         return blk;
@@ -290,6 +319,25 @@ public:
          tagAccesses += 1;
          dataAccesses += 1;
      }
+
+    /**
+     * Limit the allocation for the cache ways.
+     * @param ways The maximum number of ways available for replacement.
+     */
+    virtual void setWayAllocationMax(int ways)
+    {
+        fatal_if(ways < 1, "Allocation limit must be greater than zero");
+        allocAssoc = ways;
+    }
+
+    /**
+     * Get the way allocation mask limit.
+     * @return The maximum number of ways available for replacement.
+     */
+    virtual int getWayAllocationMax() const
+    {
+        return allocAssoc;
+    }
 
     /**
      * Generate the tag from the given address.

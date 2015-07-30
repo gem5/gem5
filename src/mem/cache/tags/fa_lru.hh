@@ -236,6 +236,34 @@ public:
     }
 
     /**
+     * Return the number of sets this cache has
+     * @return The number of sets.
+     */
+    unsigned
+    getNumSets() const
+    {
+        return 1;
+    }
+
+    /**
+     * Return the number of ways this cache has
+     * @return The number of ways.
+     */
+    unsigned
+    getNumWays() const
+    {
+        return numBlocks;
+    }
+
+    /**
+     * Find the cache block given set and way
+     * @param set The set of the block.
+     * @param way The way of the block.
+     * @return The cache block.
+     */
+    CacheBlk* findBlockBySetAndWay(int set, int way) const;
+
+    /**
      * Align an address to the block size.
      * @param addr the address to align.
      * @return The aligned address.

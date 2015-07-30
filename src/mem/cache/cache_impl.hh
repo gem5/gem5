@@ -1581,6 +1581,10 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 {
     CacheBlk *blk = tags->findVictim(addr);
 
+    // It is valid to return NULL if there is no victim
+    if (!blk)
+        return nullptr;
+
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
         MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());

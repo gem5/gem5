@@ -107,10 +107,10 @@ class CacheBlk
     Tick whenReady;
 
     /**
-     * The set this block belongs to.
+     * The set and way this block belongs to.
      * @todo Move this into subclasses when we fix CacheTags to use them.
      */
-    int set;
+    int set, way;
 
     /** whether this block has been touched */
     bool isTouched;
@@ -168,7 +168,7 @@ class CacheBlk
     CacheBlk()
         : task_id(ContextSwitchTaskId::Unknown),
           asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
-          set(-1), isTouched(false), refCount(0),
+          set(-1), way(-1), isTouched(false), refCount(0),
           srcMasterId(Request::invldMasterId),
           tickInserted(0)
     {}

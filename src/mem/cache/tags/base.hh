@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2014 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -195,6 +195,37 @@ class BaseTags : public ClockedObject
     {
         return (addr & (Addr)(blkSize-1));
     }
+
+    /**
+     * Find the cache block given set and way
+     * @param set The set of the block.
+     * @param way The way of the block.
+     * @return The cache block.
+     */
+    virtual CacheBlk *findBlockBySetAndWay(int set, int way) const = 0;
+
+    /**
+     * Limit the allocation for the cache ways.
+     * @param ways The maximum number of ways available for replacement.
+     */
+    virtual void setWayAllocationMax(int ways)
+    {
+        panic("This tag class does not implement way allocation limit!\n");
+    }
+
+    /**
+     * Get the way allocation mask limit.
+     * @return The maximum number of ways available for replacement.
+     */
+    virtual int getWayAllocationMax() const
+    {
+        panic("This tag class does not implement way allocation limit!\n");
+        return -1;
+    }
+
+    virtual unsigned getNumSets() const = 0;
+
+    virtual unsigned getNumWays() const = 0;
 
     virtual void invalidate(CacheBlk *blk) = 0;
 
