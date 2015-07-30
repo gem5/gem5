@@ -4,11 +4,11 @@ sim_seconds                                  2.802895                       # Nu
 sim_ticks                                2802894699500                       # Number of ticks simulated
 final_tick                               2802894699500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1243628                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1515342                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            23740372608                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 632596                       # Number of bytes of host memory used
-host_seconds                                   118.06                       # Real time elapsed on the host
+host_inst_rate                                1692608                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2062417                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            32311218818                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 579900                       # Number of bytes of host memory used
+host_seconds                                    86.75                       # Real time elapsed on the host
 sim_insts                                   146828240                       # Number of instructions simulated
 sim_ops                                     178908039                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1387,7 +1387,7 @@ system.membus.trans_dist::ReadResp              75378                       # Tr
 system.membus.trans_dist::WriteReq              30846                       # Transaction distribution
 system.membus.trans_dist::WriteResp             30846                       # Transaction distribution
 system.membus.trans_dist::Writeback            132426                       # Transaction distribution
-system.membus.trans_dist::CleanEvict            15436                       # Transaction distribution
+system.membus.trans_dist::CleanEvict            15452                       # Transaction distribution
 system.membus.trans_dist::UpgradeReq            60361                       # Transaction distribution
 system.membus.trans_dist::SCUpgradeReq          40917                       # Transaction distribution
 system.membus.trans_dist::UpgradeResp           15653                       # Transaction distribution
@@ -1399,11 +1399,11 @@ system.membus.trans_dist::InvalidateResp        36224                       # Tr
 system.membus.pkt_count_system.l2c.mem_side::system.bridge.slave       107876                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.l2c.mem_side::system.realview.nvmem.port           34                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.l2c.mem_side::system.realview.gic.pio        13474                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count_system.l2c.mem_side::system.physmem.port       666939                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count_system.l2c.mem_side::total       788323                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.l2c.mem_side::system.physmem.port       666955                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.l2c.mem_side::total       788339                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.iocache.mem_side::system.physmem.port       109394                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.iocache.mem_side::total       109394                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::total                 897717                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                 897733                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_size_system.l2c.mem_side::system.bridge.slave       162766                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size_system.l2c.mem_side::system.realview.nvmem.port           68                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size_system.l2c.mem_side::system.realview.gic.pio        26948                       # Cumulative packet size per connected master and slave (bytes)
@@ -1413,17 +1413,17 @@ system.membus.pkt_size_system.iocache.mem_side::system.physmem.port      2332288
 system.membus.pkt_size_system.iocache.mem_side::total      2332288                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size::total                20456418                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
-system.membus.snoop_fanout::samples            587643                       # Request fanout histogram
+system.membus.snoop_fanout::samples            587659                       # Request fanout histogram
 system.membus.snoop_fanout::mean                    1                       # Request fanout histogram
 system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
 system.membus.snoop_fanout::0                       0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::1                  587643    100.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::1                  587659    100.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::2                       0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::min_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
-system.membus.snoop_fanout::total              587643                       # Request fanout histogram
+system.membus.snoop_fanout::total              587659                       # Request fanout histogram
 system.realview.ethernet.descDMAReads               0                       # Number of descriptors the device read w/ DMA
 system.realview.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
 system.realview.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
