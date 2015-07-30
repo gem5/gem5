@@ -42,6 +42,8 @@ using namespace std;
 //
 FuncUnit::FuncUnit()
 {
+    opLatencies.fill(0);
+    pipelined.fill(false);
     capabilityList.reset();
 }
 

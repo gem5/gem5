@@ -31,6 +31,7 @@
 #ifndef __CPU_FUNC_UNIT_HH__
 #define __CPU_FUNC_UNIT_HH__
 
+#include <array>
 #include <bitset>
 #include <string>
 #include <vector>
@@ -84,8 +85,8 @@ typedef std::vector<FUDesc *>::const_iterator FUDDiterator;
 class FuncUnit
 {
   private:
-    unsigned opLatencies[Num_OpClasses];
-    bool pipelined[Num_OpClasses];
+    std::array<unsigned, Num_OpClasses> opLatencies;
+    std::array<bool, Num_OpClasses> pipelined;
     std::bitset<Num_OpClasses> capabilityList;
 
   public:
