@@ -236,35 +236,41 @@ class Packet : public Printable
     typedef ::Flags<FlagsType> Flags;
 
   private:
-    static const FlagsType PUBLIC_FLAGS           = 0x00000000;
-    static const FlagsType PRIVATE_FLAGS          = 0x00007F0F;
-    static const FlagsType COPY_FLAGS             = 0x0000000F;
 
-    static const FlagsType SHARED                 = 0x00000001;
-    // Special control flags
-    /// Special timing-mode atomic snoop for multi-level coherence.
-    static const FlagsType EXPRESS_SNOOP          = 0x00000002;
-    /// Does supplier have exclusive copy?
-    /// Useful for multi-level coherence.
-    static const FlagsType SUPPLY_EXCLUSIVE       = 0x00000004;
-    // Snoop response flags
-    static const FlagsType MEM_INHIBIT            = 0x00000008;
-    /// Are the 'addr' and 'size' fields valid?
-    static const FlagsType VALID_ADDR             = 0x00000100;
-    static const FlagsType VALID_SIZE             = 0x00000200;
-    /// Is the data pointer set to a value that shouldn't be freed
-    /// when the packet is destroyed?
-    static const FlagsType STATIC_DATA            = 0x00001000;
-    /// The data pointer points to a value that should be freed when
-    /// the packet is destroyed. The pointer is assumed to be pointing
-    /// to an array, and delete [] is consequently called
-    static const FlagsType DYNAMIC_DATA           = 0x00002000;
-    /// suppress the error if this packet encounters a functional
-    /// access failure.
-    static const FlagsType SUPPRESS_FUNC_ERROR    = 0x00008000;
-    // Signal block present to squash prefetch and cache evict packets
-    // through express snoop flag
-    static const FlagsType BLOCK_CACHED          = 0x00010000;
+    enum : FlagsType {
+        // Flags to transfer across when copying a packet
+        COPY_FLAGS             = 0x0000000F,
+
+        SHARED                 = 0x00000001,
+        // Special control flags
+        /// Special timing-mode atomic snoop for multi-level coherence.
+        EXPRESS_SNOOP          = 0x00000002,
+        /// Does supplier have exclusive copy?
+        /// Useful for multi-level coherence.
+        SUPPLY_EXCLUSIVE       = 0x00000004,
+        // Snoop response flags
+        MEM_INHIBIT            = 0x00000008,
+
+        /// Are the 'addr' and 'size' fields valid?
+        VALID_ADDR             = 0x00000100,
+        VALID_SIZE             = 0x00000200,
+
+        /// Is the data pointer set to a value that shouldn't be freed
+        /// when the packet is destroyed?
+        STATIC_DATA            = 0x00001000,
+        /// The data pointer points to a value that should be freed when
+        /// the packet is destroyed. The pointer is assumed to be pointing
+        /// to an array, and delete [] is consequently called
+        DYNAMIC_DATA           = 0x00002000,
+
+        /// suppress the error if this packet encounters a functional
+        /// access failure.
+        SUPPRESS_FUNC_ERROR    = 0x00008000,
+
+        // Signal block present to squash prefetch and cache evict packets
+        // through express snoop flag
+        BLOCK_CACHED          = 0x00010000
+    };
 
     Flags flags;
 
@@ -296,14 +302,6 @@ class Packet : public Printable
 
     /// The size of the request or transfer.
     unsigned size;
-
-    /**
-     * The original value of the command field.  Only valid when the
-     * current command field is an error condition; in that case, the
-     * previous contents of the command field are copied here.  This
-     * field is *not* set on non-error responses.
-     */
-    MemCmd origCmd;
 
     /**
      * Track the bytes found that satisfy a functional read.
@@ -520,7 +518,6 @@ class Packet : public Printable
         cmd = MemCmd::BadAddressError;
     }
 
-    bool hadBadAddress() const { return cmd == MemCmd::BadAddressError; }
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
@@ -534,7 +531,16 @@ class Packet : public Printable
     void setAddr(Addr _addr) { assert(flags.isSet(VALID_ADDR)); addr = _addr; }
 
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
-    Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }
+
+    Addr getOffset(unsigned int blk_size) const
+    {
+        return getAddr() & Addr(blk_size - 1);
+    }
+
+    Addr getBlockAddr(unsigned int blk_size) const
+    {
+        return getAddr() & ~(Addr(blk_size - 1));
+    }
 
     bool isSecure() const
     {
@@ -544,7 +550,7 @@ class Packet : public Printable
 
     /**
      * It has been determined that the SC packet should successfully update
-     * memory.  Therefore, convert this SC packet to a normal write.
+     * memory. Therefore, convert this SC packet to a normal write.
      */
     void
     convertScToWrite()
@@ -555,8 +561,8 @@ class Packet : public Printable
     }
 
     /**
-     * When ruby is in use, Ruby will monitor the cache line and thus M5 
-     * phys memory should treat LL ops as normal reads. 
+     * When ruby is in use, Ruby will monitor the cache line and the
+     * phys memory should treat LL ops as normal reads.
      */
     void
     convertLlToRead()
@@ -567,7 +573,7 @@ class Packet : public Printable
     }
 
     /**
-     * Constructor.  Note that a Request object must be constructed
+     * Constructor. Note that a Request object must be constructed
      * first, but the Requests's physical address and size fields need
      * not be valid. The command must be supplied.
      */
@@ -717,7 +723,6 @@ class Packet : public Printable
     {
         assert(needsResponse());
         assert(isRequest());
-        origCmd = cmd;
         cmd = cmd.responseCommand();
 
         // responses are never express, even if the snoop that
