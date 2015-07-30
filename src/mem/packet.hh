@@ -500,7 +500,6 @@ class Packet : public Printable
     void setExpressSnoop()          { flags.set(EXPRESS_SNOOP); }
     bool isExpressSnoop() const     { return flags.isSet(EXPRESS_SNOOP); }
     void setSupplyExclusive()       { flags.set(SUPPLY_EXCLUSIVE); }
-    void clearSupplyExclusive()     { flags.clear(SUPPLY_EXCLUSIVE); }
     bool isSupplyExclusive() const  { return flags.isSet(SUPPLY_EXCLUSIVE); }
     void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
     bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }

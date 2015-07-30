@@ -400,7 +400,9 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             }
         }
         blk->status |= BlkDirty;
-        if (pkt->isSupplyExclusive()) {
+        // if shared is not asserted we got the writeback in modified
+        // state, if it is asserted we are in the owned state
+        if (!pkt->sharedAsserted()) {
             blk->status |= BlkWritable;
         }
         // nothing else to do; writeback doesn't expect response
@@ -1475,8 +1477,14 @@ Cache::writebackBlk(CacheBlk *blk)
 
     PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
     if (blk->isWritable()) {
-        writeback->setSupplyExclusive();
+        // not asserting shared means we pass the block in modified
+        // state, mark our own block non-writeable
+        blk->status &= ~BlkWritable;
+    } else {
+        // we are in the owned state, tell the receiver
+        writeback->assertShared();
     }
+
     writeback->allocate();
     std::memcpy(writeback->getPtr<uint8_t>(), blk->data, blkSize);
 
@@ -1998,9 +2006,10 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
             pkt->assertMemInhibit();
             if (!pkt->needsExclusive()) {
                 pkt->assertShared();
-                // the writeback is no longer the exclusive copy in
-                // the system
-                wb_pkt->clearSupplyExclusive();
+                // the writeback is no longer passing exclusivity (the
+                // receiving cache should consider the block owned
+                // rather than modified)
+                wb_pkt->assertShared();
             } else {
                 // if we're not asserting the shared line, we need to
                 // invalidate our copy.  we'll do that below as long as
