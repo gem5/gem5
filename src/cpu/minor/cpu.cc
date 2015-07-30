@@ -189,8 +189,13 @@ MinorCPU::startup()
     for (auto i = threads.begin(); i != threads.end(); i ++)
         (*i)->startup();
 
-    /* CPU state setup, activate initial context */
-    activateContext(0);
+    /* Workaround cases in SE mode where a thread is activated with an
+     * incorrect PC that is updated after the call to activate. This
+     * causes problems for Minor since it instantiates a virtual
+     * branch instruction when activateContext() is called which ends
+     * up pointing to an illegal address.  */
+    if (threads[0]->status() == ThreadContext::Active)
+        activateContext(0);
 }
 
 DrainState
