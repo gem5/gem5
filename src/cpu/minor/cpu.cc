@@ -201,6 +201,11 @@ MinorCPU::startup()
 DrainState
 MinorCPU::drain()
 {
+    if (switchedOut()) {
+        DPRINTF(Drain, "Minor CPU switched out, draining not needed.\n");
+        return DrainState::Drained;
+    }
+
     DPRINTF(Drain, "MinorCPU drain\n");
 
     /* Need to suspend all threads and wait for Execute to idle.
