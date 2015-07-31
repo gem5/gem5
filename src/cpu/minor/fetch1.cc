@@ -631,8 +631,8 @@ Fetch1::evaluate()
 bool
 Fetch1::isDrained()
 {
-    DPRINTF(Drain, "isDrained %s %s%s%s\n",
-        state == FetchHalted,
+    DPRINTF(Drain, "isDrained %s %s%s\n",
+        state,
         (numInFlightFetches() == 0 ? "" : "inFlightFetches "),
         ((*out.inputWire).isBubble() ? "" : "outputtingLine"));
 
