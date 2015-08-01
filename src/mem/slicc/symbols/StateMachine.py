@@ -1331,7 +1331,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 
         code('''
       default:
-        fatal("Invalid transition\\n"
+        panic("Invalid transition\\n"
               "%s time: %d addr: %s event: %s state: %s\\n",
               name(), curCycle(), addr, event, state);
     }
