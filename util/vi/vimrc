@@ -1,0 +1,91 @@
+" Copyright (c) 2015 Advanced Micro Devices, Inc.
+" All rights reserved.
+"
+" The license below extends only to copyright in the software and shall
+" not be construed as granting a license to any other intellectual
+" property including but not limited to intellectual property relating
+" to a hardware implementation of the functionality of the software
+" licensed hereunder.  You may use the software subject to the license
+" terms below provided that you ensure that this notice is replicated
+" unmodified and in its entirety in all distributions of the software,
+" modified or unmodified, in source code or in binary form.
+"
+" Redistribution and use in source and binary forms, with or without
+" modification, are permitted provided that the following conditions are
+" met: redistributions of source code must retain the above copyright
+" notice, this list of conditions and the following disclaimer;
+" redistributions in binary form must reproduce the above copyright
+" notice, this list of conditions and the following disclaimer in the
+" documentation and/or other materials provided with the distribution;
+" neither the name of the copyright holders nor the names of its
+" contributors may be used to endorse or promote products derived from
+" this software without specific prior written permission.
+"
+" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+" OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+" LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"
+" Authors: Anthony Gutierrez
+
+
+" this vimrc file helps users follow the gem5 style guide see:
+" www.gem5.org/Coding_Style
+" it highlights extraneaous whitespace and tabs (so you can easily remove
+" them), sets column length to a max of 78 characters, expands tabs, and sets
+" a tab width of 4 spaces.
+
+" *NOTE 1* this doesn't guarantee that your code with fit the style guidelines,
+" so you should still to double check everything, but it helps with a lot of
+" tedious stuff.
+
+" *NOTE 2* if you do actually NEED to use a tab, e.g., in a Makefile, enter
+" insert mode and type ctrl-v first, which will make tabs behave as expected
+
+filetype indent on "auto indenting
+set tabstop=4 "tabs = 4 spaces
+set shiftwidth=4 "auto indent = 4 spaces
+set expandtab "expand tabs to spaces
+set tw=78 "max cols is 78
+
+" highlight extrawhite space with light blue background
+highlight ExtraWhitespace ctermbg=lightblue guibg=lightblue
+match ExtraWhitespace /\s\+$\|\t/
+
+" stuff to prevent the light blue highlighting from showing up at the end of
+" lines when you're in insert mode. i.e., everytime you enter a space as you're
+" entering text the highlighting will kick in, which can be annoying. this will
+" make the highlighting only show up if you finish editing and leave some extra
+" whitespace
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$\|\t/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$\|\t\%#\@<!/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$\|\t/
+autocmd BufWinLeave * call clearmatches()
+
+
+" optionally set a vertical line on column 79. anything on, or after the line
+" is over the limit. this can be useful as set tw=78 won't breakup existing
+" lines that are over the limit, and the user can also do certain things to
+" make lines go past the set textwidth, e.g., joining a line (shift-j or J)
+
+"if exists('+colorcolumn')
+"    set colorcolumn=79
+"endif
+
+
+" optionally set spell checking
+"set spell
+
+" optionally highlight whitespace with specified characters. tab for trailing
+" tabs, trail for trailing whitespace, extends for lines that extend beyond
+" screen when wrap is off, and non-breakable white spaces. list must be set
+" for these characters to display.
+"set list
+"set listchars=tab:›\ ,trail:•,extends:#,nbsp:.
