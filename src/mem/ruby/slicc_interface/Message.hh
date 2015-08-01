@@ -121,7 +121,6 @@ operator>(const MsgPtr &lhs, const MsgPtr &rhs)
     const Message *r = rhs.get();
 
     if (l->getLastEnqueueTime() == r->getLastEnqueueTime()) {
-        assert(l->getMsgCounter() != r->getMsgCounter());
         return l->getMsgCounter() > r->getMsgCounter();
     }
     return l->getLastEnqueueTime() > r->getLastEnqueueTime();
