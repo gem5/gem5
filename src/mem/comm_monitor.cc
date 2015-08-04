@@ -38,12 +38,9 @@
  *          Andreas Hansson
  */
 
-#include "base/callback.hh"
-#include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/CommMonitor.hh"
 #include "mem/comm_monitor.hh"
-#include "proto/packet.pb.h"
 #include "sim/stats.hh"
 
 CommMonitor::CommMonitor(Params* params)
@@ -55,65 +52,11 @@ CommMonitor::CommMonitor(Params* params)
       samplePeriod(params->sample_period / SimClock::Float::s),
       readAddrMask(params->read_addr_mask),
       writeAddrMask(params->write_addr_mask),
-      system(params->system),
-      traceStream(nullptr),
       stats(params)
 {
-    // If we are using a trace file, then open the file
-    if (params->trace_enable) {
-        std::string filename;
-        if (params->trace_file != "") {
-            // If the trace file is not specified as an absolute path,
-            // append the current simulation output directory
-            filename = simout.resolve(params->trace_file);
-
-            std::string suffix = ".gz";
-            // If trace_compress has been set, check the suffix. Append
-            // accordingly.
-            if (params->trace_compress &&
-                filename.compare(filename.size() - suffix.size(), suffix.size(),
-                                 suffix) != 0)
-                    filename = filename + suffix;
-        } else {
-            // Generate a filename from the name of the SimObject. Append .trc
-            // and .gz if we want compression enabled.
-            filename = simout.resolve(name() + ".trc" +
-                                      (params->trace_compress ? ".gz" : ""));
-        }
-
-        traceStream = new ProtoOutputStream(filename);
-
-        // Create a protobuf message for the header and write it to
-        // the stream
-        ProtoMessage::PacketHeader header_msg;
-        header_msg.set_obj_id(name());
-        header_msg.set_tick_freq(SimClock::Frequency);
-        traceStream->write(header_msg);
-
-        // Register a callback to compensate for the destructor not
-        // being called. The callback forces the stream to flush and
-        // closes the output file.
-        Callback* cb = new MakeCallback<CommMonitor,
-            &CommMonitor::closeStreams>(this);
-        registerExitCallback(cb);
-    }
-
     DPRINTF(CommMonitor,
             "Created monitor %s with sample period %d ticks (%f ms)\n",
             name(), samplePeriodTicks, samplePeriod * 1E3);
-}
-
-CommMonitor::~CommMonitor()
-{
-    // if not already done, close the stream
-    closeStreams();
-}
-
-void
-CommMonitor::closeStreams()
-{
-    if (traceStream != NULL)
-        delete traceStream;
 }
 
 CommMonitor*
@@ -128,14 +71,6 @@ CommMonitor::init()
     // make sure both sides of the monitor are connected
     if (!slavePort.isConnected() || !masterPort.isConnected())
         fatal("Communication monitor is not connected on both sides.\n");
-
-    if (traceStream != NULL) {
-        // Check the memory mode. We only record something when in
-        // timing mode. Warn accordingly.
-        if (!system->isTimingMode())
-            warn("%s: Not in timing mode. No trace will be recorded.", name());
-    }
-
 }
 
 void
@@ -182,19 +117,6 @@ CommMonitor::recvAtomic(PacketPtr pkt)
 {
     ppPktReq->notify(pkt);
 
-    // if tracing enabled, store the packet information
-    // to the trace stream
-    if (traceStream != NULL) {
-        ProtoMessage::Packet pkt_msg;
-        pkt_msg.set_tick(curTick());
-        pkt_msg.set_cmd(pkt->cmdToIndex());
-        pkt_msg.set_flags(pkt->req->getFlags());
-        pkt_msg.set_addr(pkt->getAddr());
-        pkt_msg.set_size(pkt->getSize());
-
-        traceStream->write(pkt_msg);
-    }
-
     const Tick delay(masterPort.sendAtomic(pkt));
     assert(pkt->isResponse());
     ppPktResp->notify(pkt);
@@ -218,8 +140,6 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     const bool is_read = pkt->isRead();
     const bool is_write = pkt->isWrite();
     const MemCmd cmd = pkt->cmd;
-    const int cmd_idx = pkt->cmdToIndex();
-    const Request::FlagsType req_flags = pkt->req->getFlags();
     const unsigned size = pkt->getSize();
     const Addr addr = pkt->getAddr();
     const bool expects_response(
@@ -251,20 +171,6 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         pkt->cmd = cmd;
         ppPktReq->notify(pkt);
         pkt->cmd = response_cmd;
-    }
-
-    if (successful && traceStream != NULL) {
-        // Create a protobuf message representing the
-        // packet. Currently we do not preserve the flags in the
-        // trace.
-        ProtoMessage::Packet pkt_msg;
-        pkt_msg.set_tick(curTick());
-        pkt_msg.set_cmd(cmd_idx);
-        pkt_msg.set_flags(req_flags);
-        pkt_msg.set_addr(addr);
-        pkt_msg.set_size(size);
-
-        traceStream->write(pkt_msg);
     }
 
     if (successful && is_read) {

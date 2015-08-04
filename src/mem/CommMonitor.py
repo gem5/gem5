@@ -53,16 +53,6 @@ class CommMonitor(MemObject):
     master = MasterPort("Master port")
     slave = SlavePort("Slave port")
 
-    # Boolean to enable or disable the trace. Writes to an a file named based on
-    # SimObject hierarchy.
-    trace_enable = Param.Bool(False, "Enable trace capture")
-
-    # Boolean to compress the trace or not.
-    trace_compress = Param.Bool(True, "Enable trace compression")
-
-    # packet trace output file, disabled by default
-    trace_file = Param.String("", "Packet trace output file")
-
     # control the sample period window length of this monitor
     sample_period = Param.Clock("1ms", "Sample period for histograms")
 

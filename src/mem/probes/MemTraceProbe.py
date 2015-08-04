@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2014-2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,15 +35,17 @@
 #
 # Authors: Andreas Sandberg
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from BaseMemProbe import BaseMemProbe
 
-SimObject('BaseMemProbe.py')
-Source('base.cc')
+class MemTraceProbe(BaseMemProbe):
+    type = 'MemTraceProbe'
+    cxx_header = "mem/probes/mem_trace.hh"
 
-SimObject('StackDistProbe.py')
-Source('stack_dist.cc')
+    # Boolean to compress the trace or not.
+    trace_compress = Param.Bool(True, "Enable trace compression")
 
-# Packet tracing requires protobuf support
-if env['HAVE_PROTOBUF']:
-    SimObject('MemTraceProbe.py')
-    Source('mem_trace.cc')
+    # packet trace output file, disabled by default
+    trace_file = Param.String("", "Packet trace output file")
+

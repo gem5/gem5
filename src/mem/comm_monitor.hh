@@ -44,9 +44,7 @@
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
 #include "params/CommMonitor.hh"
-#include "proto/protoio.hh"
 #include "sim/probe/mem.hh"
-#include "sim/system.hh"
 
 /**
  * The communication monitor is a MemObject which can monitor statistics of
@@ -75,9 +73,6 @@ class CommMonitor : public MemObject
      * @param params Python parameters
      */
     CommMonitor(Params* params);
-
-    /** Destructor */
-    ~CommMonitor();
 
     void init() M5_ATTR_OVERRIDE;
     void regStats() M5_ATTR_OVERRIDE;
@@ -391,12 +386,6 @@ class CommMonitor : public MemObject
     /** This function is called periodically at the end of each time bin */
     void samplePeriodic();
 
-    /**
-     * Callback to flush and close all open output streams on exit. If
-     * we were calling the destructor it could be done there.
-     */
-    void closeStreams();
-
     /** Periodic event called at the end of each simulation time bin */
     EventWrapper<CommMonitor, &CommMonitor::samplePeriodic> samplePeriodicEvent;
 
@@ -416,13 +405,7 @@ class CommMonitor : public MemObject
     /** Address mask for sources of write accesses to be captured */
     const Addr writeAddrMask;
 
-    /** The system in which the monitor lives */
-    System *const system;
-
     /** @} */
-
-    /** Output stream for a potential trace. */
-    ProtoOutputStream *traceStream;
 
     /** Instantiate stats */
     MonitorStats stats;
