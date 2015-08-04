@@ -150,7 +150,7 @@ DrainManager::drainableCount() const
 
 Drainable::Drainable()
     : _drainManager(DrainManager::instance()),
-      _drainState(DrainState::Running)
+      _drainState(_drainManager.state())
 {
     _drainManager.registerDrainable(this);
 }
