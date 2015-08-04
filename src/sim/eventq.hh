@@ -338,6 +338,9 @@ class Event : public EventBase, public Serializable
     /// See if this is a SimExitEvent (without resorting to RTTI)
     bool isExitEvent() const { return flags.isSet(IsExitEvent); }
 
+    /// Check whether this event will auto-delete
+    bool isAutoDelete() const { return flags.isSet(AutoDelete); }
+
     /// Get the time that the event is scheduled
     Tick when() const { return _when; }
 
