@@ -59,7 +59,6 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states
-    NP, AccessPermission:Invalid, desc="Not present in either cache";
     I, AccessPermission:Invalid, desc="a L1 cache entry Idle";
     S, AccessPermission:Read_Only, desc="a L1 cache entry Shared";
     SS, AccessPermission:Read_Only, desc="a L1 cache entry Shared";
@@ -72,8 +71,6 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     IS, AccessPermission:Busy, desc="L1 idle, issued GETS, have not seen response yet";
     IM, AccessPermission:Busy, desc="L1 idle, issued GETX, have not seen response yet";
     SM, AccessPermission:Read_Only, desc="L1 idle, issued GETX, have not seen response yet";
-    IS_I, AccessPermission:Busy, desc="L1 idle, issued GETS, saw Inv before data because directory doesn't block on GETS hit";
-
     M_I, AccessPermission:Busy, desc="L1 replacing, waiting for ACK";
     SINK_WB_ACK, AccessPermission:Busy, desc="This is to sink WB_Acks from L2";
 
@@ -174,7 +171,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     } else if (is_valid(cache_entry)) {
       return cache_entry.CacheState;
     }
-    return State:NP;
+    return State:I;
   }
 
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
@@ -279,8 +276,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         if(in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data_Exclusive, in_msg.Addr, cache_entry, tbe);
         } else if(in_msg.Type == CoherenceResponseType:DATA) {
-          if ((getState(tbe, cache_entry, in_msg.Addr) == State:IS ||
-               getState(tbe, cache_entry, in_msg.Addr) == State:IS_I) &&
+          if (getState(tbe, cache_entry, in_msg.Addr) == State:IS &&
               machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
 
               trigger(Event:DataS_fromL1, in_msg.Addr, cache_entry, tbe);
@@ -561,13 +557,13 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Type := CoherenceRequestType:PUTX;
-      out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Requestor:= machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, clusterID));
       if (cache_entry.Dirty) {
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := cache_entry.DataBlk;
       } else {
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -608,21 +604,6 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           out_msg.Sender := machineID;
           out_msg.Dest := createMachineID(MachineType:L0Cache, version);
           out_msg.DataBlk := cache_entry.DataBlk;
-          out_msg.Dirty := cache_entry.Dirty;
-          out_msg.MessageSize := MessageSizeType:Response_Data;
-      }
-  }
-
-  action(h_stale_data_to_l0, "hs", desc="If not prefetch, send data to the L0 cache.") {
-      enqueue(bufferToL0_out, CoherenceMsg, l1_response_latency) {
-          assert(is_valid(cache_entry));
-
-          out_msg.Addr := address;
-          out_msg.Class := CoherenceClass:STALE_DATA;
-          out_msg.Sender := machineID;
-          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
-          out_msg.DataBlk := cache_entry.DataBlk;
-          out_msg.Dirty := cache_entry.Dirty;
           out_msg.MessageSize := MessageSizeType:Response_Data;
       }
   }
@@ -639,7 +620,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
           out_msg.Dirty := cache_entry.Dirty;
           out_msg.MessageSize := MessageSizeType:Response_Data;
 
-          cache_entry.Dirty := true;
+          //cache_entry.Dirty := true;
       }
   }
 
@@ -674,8 +655,10 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   action(u_writeDataFromL0Request, "ureql0", desc="Write data to cache") {
     peek(messageBufferFromL0_in, CoherenceMsg) {
       assert(is_valid(cache_entry));
-      cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
+      if (in_msg.Dirty) {
+          cache_entry.DataBlk := in_msg.DataBlk;
+          cache_entry.Dirty := in_msg.Dirty;
+      }
     }
   }
 
@@ -683,15 +666,16 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
     }
   }
 
   action(u_writeDataFromL0Response, "uresl0", desc="Write data to cache") {
     peek(messageBufferFromL0_in, CoherenceMsg) {
       assert(is_valid(cache_entry));
-      cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
+      if (in_msg.Dirty) {
+          cache_entry.DataBlk := in_msg.DataBlk;
+          cache_entry.Dirty := in_msg.Dirty;
+      }
     }
   }
 
@@ -745,17 +729,12 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK, S_IL0, M_IL0, E_IL0, MM_IL0},
+  transition({IS, IM, M_I, SM, SINK_WB_ACK, S_IL0, M_IL0, E_IL0, MM_IL0},
              {Load, Store, L1_Replacement}) {
     z0_stallAndWaitL0Queue;
   }
 
-  // Transitions from Idle
-  transition({NP,I}, L1_Replacement) {
-    ff_deallocateCacheBlock;
-  }
-
-  transition({NP,I}, Load, IS) {
+  transition(I, Load, IS) {
     oo_allocateCacheBlock;
     i_allocateTBE;
     a_issueGETS;
@@ -763,7 +742,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     k_popL0RequestQueue;
   }
 
-  transition({NP,I}, Store, IM) {
+  transition(I, Store, IM) {
     oo_allocateCacheBlock;
     i_allocateTBE;
     b_issueGETX;
@@ -771,7 +750,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     k_popL0RequestQueue;
   }
 
-  transition({NP, I}, Inv) {
+  transition(I, Inv) {
     fi_sendInvAck;
     l_popL2RequestQueue;
   }
@@ -869,6 +848,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   transition(M_I, WB_Ack, I) {
     s_deallocateTBE;
     o_popL2ResponseQueue;
+    ff_deallocateCacheBlock;
     kd_wakeUpDependents;
   }
 
@@ -885,6 +865,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(MM, Fwd_GETX, I) {
     d_sendDataToRequestor;
+    ff_deallocateCacheBlock;
     l_popL2RequestQueue;
   }
 
@@ -910,22 +891,9 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Transitions from IS
-  transition({IS,IS_I}, Inv, IS_I) {
-    fi_sendInvAck;
-    l_popL2RequestQueue;
-  }
-
   transition(IS, Data_all_Acks, S) {
     u_writeDataFromL2Response;
     h_data_to_l0;
-    s_deallocateTBE;
-    o_popL2ResponseQueue;
-    kd_wakeUpDependents;
-  }
-
-  transition(IS_I, Data_all_Acks, I) {
-    u_writeDataFromL2Response;
-    h_stale_data_to_l0;
     s_deallocateTBE;
     o_popL2ResponseQueue;
     kd_wakeUpDependents;
@@ -940,27 +908,8 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     kd_wakeUpDependents;
   }
 
-  transition(IS_I, DataS_fromL1, I) {
-    u_writeDataFromL2Response;
-    j_sendUnblock;
-    h_stale_data_to_l0;
-    s_deallocateTBE;
-    o_popL2ResponseQueue;
-    kd_wakeUpDependents;
-  }
-
   // directory is blocked when sending exclusive data
   transition(IS, Data_Exclusive, E) {
-    u_writeDataFromL2Response;
-    hh_xdata_to_l0;
-    jj_sendExclusiveUnblock;
-    s_deallocateTBE;
-    o_popL2ResponseQueue;
-    kd_wakeUpDependents;
-  }
-
-  // directory is blocked when sending exclusive data
-  transition(IS_I, Data_Exclusive, E) {
     u_writeDataFromL2Response;
     hh_xdata_to_l0;
     jj_sendExclusiveUnblock;
@@ -1015,6 +964,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   transition(SINK_WB_ACK, WB_Ack, I){
     s_deallocateTBE;
     o_popL2ResponseQueue;
+    ff_deallocateCacheBlock;
     kd_wakeUpDependents;
   }
 
@@ -1058,7 +1008,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     z2_stallAndWaitL2Queue;
   }
 
-  transition({S_IL0, M_IL0, E_IL0, MM_IL0}, {Inv, Fwd_GETX, Fwd_GETS}) {
+  transition({IS, S_IL0, M_IL0, E_IL0, MM_IL0}, {Inv, Fwd_GETX, Fwd_GETS}) {
     z2_stallAndWaitL2Queue;
   }
 }

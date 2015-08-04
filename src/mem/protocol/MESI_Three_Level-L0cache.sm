@@ -48,9 +48,6 @@ machine(L0Cache, "MESI Directory L0 Cache")
     // Base states
 
     // The cache entry has not been allocated.
-    NP, AccessPermission:Invalid, desc="Not present in either cache";
-
-    // The cache entry has been allocated, but is not in use.
     I, AccessPermission:Invalid;
 
     // The cache entry is in shared mode. The processor can read this entry
@@ -66,6 +63,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
     M, AccessPermission:Read_Write;
 
     // Transient States
+
+    // The cache controller has requested an instruction.  It will be stored
+    // in the shared state so that the processor can read it.
+    Inst_IS, AccessPermission:Busy;
 
     // The cache controller has requested that this entry be fetched in
     // shared state so that the processor can read it.
@@ -100,7 +101,6 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
     Data,               desc="Data for processor";
     Data_Exclusive,     desc="Data for processor";
-    Data_Stale,         desc="Data for processor, but not for storage";
 
     Ack,        desc="Ack for processor";
     Ack_all,      desc="Last ack for processor";
@@ -172,7 +172,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     } else if (is_valid(cache_entry)) {
       return cache_entry.CacheState;
     }
-    return State:NP;
+    return State:I;
   }
 
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
@@ -266,8 +266,6 @@ machine(L0Cache, "MESI Directory L0 Cache")
             trigger(Event:Data_Exclusive, in_msg.Addr, cache_entry, tbe);
         } else if(in_msg.Class == CoherenceClass:DATA) {
             trigger(Event:Data, in_msg.Addr, cache_entry, tbe);
-        } else if(in_msg.Class == CoherenceClass:STALE_DATA) {
-            trigger(Event:Data_Stale, in_msg.Addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:ACK) {
             trigger(Event:Ack, in_msg.Addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:WB_ACK) {
@@ -421,6 +419,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
       out_msg.Dest := createMachineID(MachineType:L1Cache, version);
       out_msg.MessageSize := MessageSizeType:Writeback_Data;
     }
+    cache_entry.Dirty := false;
   }
 
   action(fi_sendInvAck, "fi", desc="send data to the L2 cache") {
@@ -447,13 +446,13 @@ machine(L0Cache, "MESI Directory L0 Cache")
       assert(is_valid(cache_entry));
       out_msg.Addr := address;
       out_msg.Class := CoherenceClass:PUTX;
-      out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender:= machineID;
       out_msg.Dest := createMachineID(MachineType:L1Cache, version);
 
       if (cache_entry.Dirty) {
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := cache_entry.DataBlk;
       } else {
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -466,10 +465,23 @@ machine(L0Cache, "MESI Directory L0 Cache")
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
+  action(hx_load_hit, "hx", desc="If not prefetch, notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.readCallback(address, cache_entry.DataBlk, true);
+  }
+
   action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     sequencer.writeCallback(address, cache_entry.DataBlk);
+    cache_entry.Dirty := true;
+  }
+
+  action(hhx_store_hit, "\hx", desc="If not prefetch, notify sequencer that store completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.writeCallback(address, cache_entry.DataBlk, true);
     cache_entry.Dirty := true;
   }
 
@@ -505,7 +517,13 @@ machine(L0Cache, "MESI Directory L0 Cache")
     peek(messgeBuffer_in, CoherenceMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
+    }
+  }
+
+  action(u_writeInstToCache, "ui", desc="Write data to cache") {
+    peek(messgeBuffer_in, CoherenceMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
     }
   }
 
@@ -560,16 +578,12 @@ machine(L0Cache, "MESI Directory L0 Cache")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({IS, IM, SM}, {Load, Ifetch, Store, L0_Replacement}) {
+  transition({Inst_IS, IS, IM, SM}, {Load, Ifetch, Store, L0_Replacement}) {
     z_stallAndWaitMandatoryQueue;
   }
 
   // Transitions from Idle
-  transition({NP,I}, L0_Replacement) {
-    ff_deallocateCacheBlock;
-  }
-
-  transition({NP,I}, Load, IS) {
+  transition(I, Load, IS) {
     oo_allocateDCacheBlock;
     i_allocateTBE;
     a_issueGETS;
@@ -577,7 +591,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     k_popMandatoryQueue;
   }
 
-  transition({NP,I}, Ifetch, IS) {
+  transition(I, Ifetch, Inst_IS) {
     pp_allocateICacheBlock;
     i_allocateTBE;
     a_issueGETS;
@@ -585,7 +599,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     k_popMandatoryQueue;
   }
 
-  transition({NP,I}, Store, IM) {
+  transition(I, Store, IM) {
     oo_allocateDCacheBlock;
     i_allocateTBE;
     b_issueGETX;
@@ -593,7 +607,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     k_popMandatoryQueue;
   }
 
-  transition({NP, I, IS, IM}, Inv) {
+  transition({I, IS, IM, Inst_IS}, Inv) {
     fi_sendInvAck;
     l_popRequestQueue;
   }
@@ -682,7 +696,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   transition(IS, Data, S) {
     u_writeDataToCache;
-    h_load_hit;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -690,15 +704,23 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   transition(IS, Data_Exclusive, E) {
     u_writeDataToCache;
-    h_load_hit;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
 
-  transition(IS, Data_Stale, I) {
-    u_writeDataToCache;
-    h_load_hit;
+  transition(Inst_IS, Data, S) {
+    u_writeInstToCache;
+    hx_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(Inst_IS, Data_Exclusive, E) {
+    u_writeInstToCache;
+    hx_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -706,7 +728,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   transition({IM,SM}, Data_Exclusive, M) {
     u_writeDataToCache;
-    hh_store_hit;
+    hhx_store_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;

@@ -46,11 +46,6 @@ enumeration(CoherenceClass, desc="...") {
   DATA, desc="Data block for L1 cache in S state";
   DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
   ACK, desc="Generic invalidate ack";
-
-  // This is a special case in which the L1 cache lost permissions to the
-  // shared block before it got the data. So the L0 cache can use the data
-  // but not store it.
-  STALE_DATA;
 }
 
 // Class for messages sent between the L0 and the L1 controllers.
