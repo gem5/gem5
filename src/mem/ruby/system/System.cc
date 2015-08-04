@@ -30,6 +30,7 @@
 #include <zlib.h>
 
 #include <cstdio>
+#include <list>
 
 #include "base/intmath.hh"
 #include "base/statistics.hh"
@@ -56,7 +57,8 @@ unsigned RubySystem::m_systems_to_warmup = 0;
 bool RubySystem::m_cooldown_enabled = false;
 
 RubySystem::RubySystem(const Params *p)
-    : ClockedObject(p), m_access_backing_store(p->access_backing_store)
+    : ClockedObject(p), m_access_backing_store(p->access_backing_store),
+      m_cache_recorder(NULL)
 {
     m_random_seed = p->random_seed;
     srandom(m_random_seed);
@@ -99,6 +101,111 @@ RubySystem::~RubySystem()
 }
 
 void
+RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
+                              uint64 cache_trace_size,
+                              uint64 block_size_bytes)
+{
+    vector<Sequencer*> sequencer_map;
+    Sequencer* sequencer_ptr = NULL;
+
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
+        if (sequencer_ptr == NULL) {
+            sequencer_ptr = sequencer_map[cntrl];
+        }
+    }
+
+    assert(sequencer_ptr != NULL);
+
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        if (sequencer_map[cntrl] == NULL) {
+            sequencer_map[cntrl] = sequencer_ptr;
+        }
+    }
+
+    // Remove the old CacheRecorder if it's still hanging about.
+    if (m_cache_recorder != NULL) {
+        delete m_cache_recorder;
+    }
+
+    // Create the CacheRecorder and record the cache trace
+    m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
+                                         sequencer_map, block_size_bytes);
+}
+
+void
+RubySystem::memWriteback()
+{
+    m_cooldown_enabled = true;
+
+    // Make the trace so we know what to write back.
+    DPRINTF(RubyCacheTrace, "Recording Cache Trace\n");
+    makeCacheRecorder(NULL, 0, getBlockSizeBytes());
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        m_abs_cntrl_vec[cntrl]->recordCacheTrace(cntrl, m_cache_recorder);
+    }
+    DPRINTF(RubyCacheTrace, "Cache Trace Complete\n");
+
+    // save the current tick value
+    Tick curtick_original = curTick();
+    DPRINTF(RubyCacheTrace, "Recording current tick %ld\n", curtick_original);
+
+    // Deschedule all prior events on the event queue, but record the tick they
+    // were scheduled at so they can be restored correctly later.
+    list<pair<Event*, Tick> > original_events;
+    while (!eventq->empty()) {
+        Event *curr_head = eventq->getHead();
+        if (curr_head->isAutoDelete()) {
+            DPRINTF(RubyCacheTrace, "Event %s auto-deletes when descheduled,"
+                    " not recording\n", curr_head->name());
+        } else {
+            original_events.push_back(make_pair(curr_head, curr_head->when()));
+        }
+        eventq->deschedule(curr_head);
+    }
+
+    // Schedule an event to start cache cooldown
+    DPRINTF(RubyCacheTrace, "Starting cache flush\n");
+    enqueueRubyEvent(curTick());
+    simulate();
+    DPRINTF(RubyCacheTrace, "Cache flush complete\n");
+
+    // Deschedule any events left on the event queue.
+    while (!eventq->empty()) {
+        eventq->deschedule(eventq->getHead());
+    }
+
+    // Restore curTick
+    setCurTick(curtick_original);
+
+    // Restore all events that were originally on the event queue.  This is
+    // done after setting curTick back to its original value so that events do
+    // not seem to be scheduled in the past.
+    while (!original_events.empty()) {
+        pair<Event*, Tick> event = original_events.back();
+        eventq->schedule(event.first, event.second);
+        original_events.pop_back();
+    }
+
+    // No longer flushing back to memory.
+    m_cooldown_enabled = false;
+
+    // There are several issues with continuing simulation after calling
+    // memWriteback() at the moment, that stem from taking events off the
+    // queue, simulating again, and then putting them back on, whilst
+    // pretending that no time has passed.  One is that some events will have
+    // been deleted, so can't be put back.  Another is that any object
+    // recording the tick something happens may end up storing a tick in the
+    // future.  A simple warning here alerts the user that things may not work
+    // as expected.
+    warn_once("Ruby memory writeback is experimental.  Continuing simulation "
+              "afterwards may not always work as intended.");
+
+    // Keep the cache recorder around so that we can dump the trace if a
+    // checkpoint is immediately taken.
+}
+
+void
 RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
                                  uint64 uncompressed_trace_size)
 {
@@ -130,58 +237,18 @@ RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
 void
 RubySystem::serializeOld(CheckpointOut &cp)
 {
-    m_cooldown_enabled = true;
-    vector<Sequencer*> sequencer_map;
-    Sequencer* sequencer_ptr = NULL;
-
-    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
-        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
-        if (sequencer_ptr == NULL) {
-            sequencer_ptr = sequencer_map[cntrl];
-        }
-    }
-
-    assert(sequencer_ptr != NULL);
-
-    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
-        if (sequencer_map[cntrl] == NULL) {
-            sequencer_map[cntrl] = sequencer_ptr;
-        }
-    }
-
     // Store the cache-block size, so we are able to restore on systems with a
     // different cache-block size. CacheRecorder depends on the correct
     // cache-block size upon unserializing.
     uint64 block_size_bytes = getBlockSizeBytes();
     SERIALIZE_SCALAR(block_size_bytes);
 
-    DPRINTF(RubyCacheTrace, "Recording Cache Trace\n");
-    // Create the CacheRecorder and record the cache trace
-    m_cache_recorder = new CacheRecorder(NULL, 0, sequencer_map,
-                                         block_size_bytes);
-
-    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
-        m_abs_cntrl_vec[cntrl]->recordCacheTrace(cntrl, m_cache_recorder);
+    // Check that there's a valid trace to use.  If not, then memory won't be
+    // up-to-date and the simulation will probably fail when restoring from the
+    // checkpoint.
+    if (m_cache_recorder == NULL) {
+        fatal("Call memWriteback() before serialize() to create ruby trace");
     }
-
-    DPRINTF(RubyCacheTrace, "Cache Trace Complete\n");
-    // save the current tick value
-    Tick curtick_original = curTick();
-    // save the event queue head
-    Event* eventq_head = eventq->replaceHead(NULL);
-    DPRINTF(RubyCacheTrace, "Recording current tick %ld and event queue\n",
-            curtick_original);
-
-    // Schedule an event to start cache cooldown
-    DPRINTF(RubyCacheTrace, "Starting cache flush\n");
-    enqueueRubyEvent(curTick());
-    simulate();
-    DPRINTF(RubyCacheTrace, "Cache flush complete\n");
-
-    // Restore eventq head
-    eventq_head = eventq->replaceHead(eventq_head);
-    // Restore curTick
-    setCurTick(curtick_original);
 
     // Aggregate the trace entries together into a single array
     uint8_t *raw_data = new uint8_t[4096];
@@ -193,7 +260,9 @@ RubySystem::serializeOld(CheckpointOut &cp)
     SERIALIZE_SCALAR(cache_trace_file);
     SERIALIZE_SCALAR(cache_trace_size);
 
-    m_cooldown_enabled = false;
+    // Now finished with the cache recorder.
+    delete m_cache_recorder;
+    m_cache_recorder = NULL;
 }
 
 void
@@ -250,23 +319,8 @@ RubySystem::unserialize(CheckpointIn &cp)
     m_warmup_enabled = true;
     m_systems_to_warmup++;
 
-    vector<Sequencer*> sequencer_map;
-    Sequencer* t = NULL;
-    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
-        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
-        if (t == NULL) t = sequencer_map[cntrl];
-    }
-
-    assert(t != NULL);
-
-    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
-        if (sequencer_map[cntrl] == NULL) {
-            sequencer_map[cntrl] = t;
-        }
-    }
-
-    m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
-                                         sequencer_map, block_size_bytes);
+    // Create the cache recorder that will hang around until startup.
+    makeCacheRecorder(uncompressed_trace, cache_trace_size, block_size_bytes);
 }
 
 void
@@ -290,6 +344,7 @@ RubySystem::startup()
     // state was checkpointed.
 
     if (m_warmup_enabled) {
+        DPRINTF(RubyCacheTrace, "Starting ruby cache warmup\n");
         // save the current tick value
         Tick curtick_original = curTick();
         // save the event queue head

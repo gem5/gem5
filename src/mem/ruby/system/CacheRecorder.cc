@@ -95,6 +95,8 @@ CacheRecorder::enqueueNextFlushRequest()
         m_sequencer_ptr->makeRequest(pkt);
 
         DPRINTF(RubyCacheTrace, "Flushing %s\n", *rec);
+    } else {
+        DPRINTF(RubyCacheTrace, "Flushed all %d records\n", m_records_flushed);
     }
 }
 
@@ -137,6 +139,8 @@ CacheRecorder::enqueueNextFetchRequest()
 
         m_bytes_read += (sizeof(TraceRecord) + m_block_size_bytes);
         m_records_read++;
+    } else {
+        DPRINTF(RubyCacheTrace, "Fetched all %d records\n", m_records_read);
     }
 }
 

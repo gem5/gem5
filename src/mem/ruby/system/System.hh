@@ -94,6 +94,7 @@ class RubySystem : public ClockedObject
     void collateStats() { m_profiler->collateStats(); }
     void resetStats();
 
+    void memWriteback();
     void serializeOld(CheckpointOut &cp) M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
     void process();
@@ -115,6 +116,10 @@ class RubySystem : public ClockedObject
     // Private copy constructor and assignment operator
     RubySystem(const RubySystem& obj);
     RubySystem& operator=(const RubySystem& obj);
+
+    void makeCacheRecorder(uint8_t *uncompressed_trace,
+                           uint64 cache_trace_size,
+                           uint64 block_size_bytes);
 
     void readCompressedTrace(std::string filename,
                              uint8_t *&raw_data,
