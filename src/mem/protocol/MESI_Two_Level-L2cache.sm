@@ -628,8 +628,8 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   action(mr_writeDataToCacheFromRequest, "mr", desc="Write data from response queue to cache") {
     peek(L1RequestL2Network_in, RequestMsg) {
       assert(is_valid(cache_entry));
-      cache_entry.DataBlk := in_msg.DataBlk;
       if (in_msg.Dirty) {
+        cache_entry.DataBlk := in_msg.DataBlk;
         cache_entry.Dirty := in_msg.Dirty;
       }
     }
