@@ -139,6 +139,13 @@ CommMonitor::init()
 
 }
 
+void
+CommMonitor::regProbePoints()
+{
+    ppPktReq.reset(new ProbePoints::Packet(getProbeManager(), "PktRequest"));
+    ppPktResp.reset(new ProbePoints::Packet(getProbeManager(), "PktResponse"));
+}
+
 BaseMasterPort&
 CommMonitor::getMasterPort(const std::string& if_name, PortID idx)
 {
@@ -174,6 +181,8 @@ CommMonitor::recvFunctionalSnoop(PacketPtr pkt)
 Tick
 CommMonitor::recvAtomic(PacketPtr pkt)
 {
+    ppPktReq->notify(pkt);
+
     // do stack distance calculations if enabled
     if (stackDistCalc)
         stackDistCalc->update(pkt->cmd, pkt->getAddr());
@@ -191,7 +200,10 @@ CommMonitor::recvAtomic(PacketPtr pkt)
         traceStream->write(pkt_msg);
     }
 
-    return masterPort.sendAtomic(pkt);
+    const Tick delay(masterPort.sendAtomic(pkt));
+    assert(pkt->isResponse());
+    ppPktResp->notify(pkt);
+    return delay;
 }
 
 Tick
@@ -208,14 +220,15 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
 
     // Store relevant fields of packet, because packet may be modified
     // or even deleted when sendTiming() is called.
-    bool is_read = pkt->isRead();
-    bool is_write = pkt->isWrite();
-    MemCmd cmd = pkt->cmd;
-    int cmd_idx = pkt->cmdToIndex();
-    Request::FlagsType req_flags = pkt->req->getFlags();
-    unsigned size = pkt->getSize();
-    Addr addr = pkt->getAddr();
-    bool expects_response = pkt->needsResponse() && !pkt->memInhibitAsserted();
+    const bool is_read = pkt->isRead();
+    const bool is_write = pkt->isWrite();
+    const MemCmd cmd = pkt->cmd;
+    const int cmd_idx = pkt->cmdToIndex();
+    const Request::FlagsType req_flags = pkt->req->getFlags();
+    const unsigned size = pkt->getSize();
+    const Addr addr = pkt->getAddr();
+    const bool expects_response(
+        pkt->needsResponse() && !pkt->memInhibitAsserted());
 
     // If a cache miss is served by a cache, a monitor near the memory
     // would see a request which needs a response, but this response
@@ -232,6 +245,17 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     // If not successful, restore the sender state
     if (!successful && expects_response && !stats.disableLatencyHists) {
         delete pkt->popSenderState();
+    }
+
+    if (successful) {
+        // The receiver might already have modified the packet. We
+        // want to give the probe access to the original packet, which
+        // means we need to fake the original packet by temporarily
+        // restoring the command.
+        const MemCmd response_cmd(pkt->cmd);
+        pkt->cmd = cmd;
+        ppPktReq->notify(pkt);
+        pkt->cmd = response_cmd;
     }
 
     // If successful and we are calculating stack distances, update
@@ -376,6 +400,11 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
             // did not touch it
             pkt->senderState = received_state;
         }
+    }
+
+    if (successful) {
+        assert(pkt->isResponse());
+        ppPktResp->notify(pkt);
     }
 
     if (successful && is_read) {

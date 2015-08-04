@@ -46,6 +46,7 @@
 #include "mem/stack_dist_calc.hh"
 #include "params/CommMonitor.hh"
 #include "proto/protoio.hh"
+#include "sim/probe/mem.hh"
 #include "sim/system.hh"
 
 /**
@@ -82,6 +83,7 @@ class CommMonitor : public MemObject
     void init() M5_ATTR_OVERRIDE;
     void regStats() M5_ATTR_OVERRIDE;
     void startup() M5_ATTR_OVERRIDE;
+    void regProbePoints() M5_ATTR_OVERRIDE;
 
   public: // MemObject interfaces
     BaseMasterPort& getMasterPort(const std::string& if_name,
@@ -428,6 +430,20 @@ class CommMonitor : public MemObject
 
     /** Instantiate stats */
     MonitorStats stats;
+
+  protected: // Probe points
+    /**
+     * @{
+     * @name Memory system probe points
+     */
+
+    /** Successfully forwarded request packet */
+    ProbePoints::PacketUPtr ppPktReq;
+
+    /** Successfully forwarded response packet */
+    ProbePoints::PacketUPtr ppPktResp;
+
+    /** @} */
 };
 
 #endif //__MEM_COMM_MONITOR_HH__
