@@ -1,10 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 16:54:17
-gem5 started Jan 22 2014 17:29:05
-gem5 executing on u200540-lin
-command line: build/NULL/gem5.opt -d build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem -re tests/run.py build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem
+gem5 compiled Jun 17 2015 08:02:53
+gem5 started Jun 17 2015 09:01:31
+gem5 executing on e104799-lin
+command line: build/NULL/gem5.opt -d build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem -re /work/gem5/outgoing/gem5_2/tests/run.py build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 100000000000 because simulate() limit reached

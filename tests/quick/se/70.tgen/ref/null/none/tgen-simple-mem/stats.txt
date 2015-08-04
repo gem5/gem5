@@ -38,54 +38,6 @@ system.membus.reqLayer0.occupancy            66667328                       # La
 system.membus.reqLayer0.utilization               0.1                       # Layer utilization (%)
 system.membus.respLayer0.occupancy           13338000                       # Layer occupancy (ticks)
 system.membus.respLayer0.utilization              0.0                       # Layer utilization (%)
-system.monitor.stack_dist_calc.readLinearHist::samples            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::mean          nan                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::gmean          nan                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::stdev          nan                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::0            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::1            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::2            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::3            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::4            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::5            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::6            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::7            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::8            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::9            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::10            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::11            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::12            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::13            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::14            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::15            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLinearHist::total            0                       # Reads linear distribution
-system.monitor.stack_dist_calc.readLogHist::samples            0                       # Reads logarithmic distribution
-system.monitor.stack_dist_calc.writeLinearHist::samples         6676                       # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::mean  3330.061863                       # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::gmean  3328.226314                       # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::stdev    68.678195                       # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::0-255            1      0.01%      0.01% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::256-511            0      0.00%      0.01% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::512-767            1      0.01%      0.03% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::768-1023            1      0.01%      0.04% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::1024-1279            0      0.00%      0.04% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::1280-1535            0      0.00%      0.04% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::1536-1791            2      0.03%      0.07% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::1792-2047            1      0.01%      0.09% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::2048-2303            0      0.00%      0.09% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::2304-2559            0      0.00%      0.09% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::2560-2815            0      0.00%      0.09% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::2816-3071            1      0.01%      0.10% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::3072-3327            1      0.01%      0.12% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::3328-3583         6666     99.85%     99.97% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::3584-3839            2      0.03%    100.00% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::3840-4095            0      0.00%    100.00% # Writes linear distribution
-system.monitor.stack_dist_calc.writeLinearHist::total         6676                       # Writes linear distribution
-system.monitor.stack_dist_calc.writeLogHist::samples         6676                       # Writes logarithmic distribution
-system.monitor.stack_dist_calc.writeLogHist::7            1                       # Writes logarithmic distribution
-system.monitor.stack_dist_calc.writeLogHist::9            2                       # Writes logarithmic distribution
-system.monitor.stack_dist_calc.writeLogHist::10            3                       # Writes logarithmic distribution
-system.monitor.stack_dist_calc.writeLogHist::11         6670                       # Writes logarithmic distribution
 system.monitor.readBurstLengthHist::samples            1                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::gmean    64.000000                       # Histogram of burst lengths of transmitted packets
@@ -424,5 +376,54 @@ system.monitor.writeTransHist::4352-4607            0      0.00%    100.00% # Hi
 system.monitor.writeTransHist::4608-4863            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::4864-5119            0      0.00%    100.00% # Histogram of read transactions per sample period
 system.monitor.writeTransHist::total              100                       # Histogram of read transactions per sample period
+system.monitor.stackdist.readLinearHist::samples            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::mean          nan                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::gmean          nan                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::stdev          nan                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::0            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::1            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::2            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::3            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::4            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::5            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::6            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::7            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::8            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::9            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::10            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::11            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::12            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::13            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::14            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::15            0                       # Reads linear distribution
+system.monitor.stackdist.readLinearHist::total            0                       # Reads linear distribution
+system.monitor.stackdist.readLogHist::samples            0                       # Reads logarithmic distribution
+system.monitor.stackdist.writeLinearHist::samples         6677                       # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::mean  3330.175827                       # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::gmean  3328.329174                       # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::stdev    69.301570                       # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::0-255            1      0.01%      0.01% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::256-511            0      0.00%      0.01% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::512-767            1      0.01%      0.03% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::768-1023            1      0.01%      0.04% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::1024-1279            0      0.00%      0.04% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::1280-1535            0      0.00%      0.04% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::1536-1791            2      0.03%      0.07% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::1792-2047            1      0.01%      0.09% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::2048-2303            0      0.00%      0.09% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::2304-2559            0      0.00%      0.09% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::2560-2815            0      0.00%      0.09% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::2816-3071            1      0.01%      0.10% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::3072-3327            1      0.01%      0.12% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::3328-3583         6666     99.84%     99.96% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::3584-3839            2      0.03%     99.99% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::3840-4095            1      0.01%    100.00% # Writes linear distribution
+system.monitor.stackdist.writeLinearHist::total         6677                       # Writes linear distribution
+system.monitor.stackdist.writeLogHist::samples         6677                       # Writes logarithmic distribution
+system.monitor.stackdist.writeLogHist::7            1                       # Writes logarithmic distribution
+system.monitor.stackdist.writeLogHist::9            2                       # Writes logarithmic distribution
+system.monitor.stackdist.writeLogHist::10            3                       # Writes logarithmic distribution
+system.monitor.stackdist.writeLogHist::11         6671                       # Writes logarithmic distribution
+system.monitor.stackdist.infinity                6657                       # Number of requests with infinite stack distance
 
 ---------- End Simulation Statistics   ----------
