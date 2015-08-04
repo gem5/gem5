@@ -106,6 +106,8 @@ def addCommonOptions(parser):
     # Cache Options
     parser.add_option("--external-memory-system", type="string",
                       help="use external ports of this port_type for caches")
+    parser.add_option("--tlm-memory", type="string",
+                      help="use external port for SystemC TLM cosimulation")
     parser.add_option("--caches", action="store_true")
     parser.add_option("--l2cache", action="store_true")
     parser.add_option("--fastmem", action="store_true")

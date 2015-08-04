@@ -151,6 +151,15 @@ def config_mem(options, system):
     them.
     """
 
+    if options.tlm_memory:
+        system.external_memory = m5.objects.ExternalSlave(
+            port_type="tlm",
+            port_data=options.tlm_memory,
+            port=system.membus.master,
+            addr_ranges=system.mem_ranges)
+        system.kernel_addr_check = False
+        return
+
     if options.external_memory_system:
         system.external_memory = m5.objects.ExternalSlave(
             port_type=options.external_memory_system,

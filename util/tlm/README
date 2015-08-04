@@ -1,0 +1,96 @@
+This directory contains a demo of a coupling between gem5 and SystemC-TLM.
+It is based on the gem5-systemc implementation in utils/systemc.
+First a simple example with gem5's traffic generator is shown, later an full
+system example.
+
+Files:
+
+    main.cc                -- demonstration top level
+    sc_port.{cc,hh}        -- transactor that translates beween gem5 and tlm
+    sc_mm.{cc,hh}          -- implementation of a tlm memory manager
+    sc_ext.{cc,hh}         -- a TLM extension that carries the gem5 packet
+    sc_target.{cc,hh}      -- an example TLM LT/AT memory module
+    tlm.py                 -- simple gem5 configuration
+    tgen.cfg               -- configuration file for the traceplayer
+
+Other Files will be used from utils/systemc example:
+
+    sc_logger.{cc,hh},
+    sc_module.{cc,hh},
+    sc_gem5_control.{cc,hh},
+    stats.{cc,hh}
+
+
+I. Traffic Generator Setup
+==========================
+
+To build:
+
+First build a normal gem5 (cxx-config not needed, Python needed).
+Second build gem5 as a library with cxx-config support and (optionally)
+without python.
+
+> cd ../..
+> scons build/ARM/gem5.opt
+> scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
+> cd util/systemc_tlm
+
+Set a proper LD_LIBRARY_PATH e.g. for bash:
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+Then edit the Makefile to set the paths for SystemC and run make
+
+> make
+
+Make a config file for the C++-configured gem5 using normal gem5
+
+> ../../build/ARM/gem5.opt ./tlm.py
+
+The message "fatal: Can't find port handler type 'tlm'" is okay.
+The configuration will be stored in the m5out/ directory
+
+The binary 'gem5.opt.sc', that has been created in the make step,
+can now be used to load in the generated config file from the previous
+normal gem5 run.
+
+Try:
+
+> ./gem5.opt.sc m5out/config.ini -e 1000000
+
+It should run a simulation for 1us.
+
+To see more information what happens inside the TLM module use the -D flag:
+
+> ./gem5.opt.sc m5out/config.ini -e 1000000 -D
+
+To see more information about the port coupling use:
+
+> ./gem5.opt.sc m5out/config.ini -e 1000000 -d ExternalPort
+
+II. Full System Setup
+=====================
+
+Build gem5 as discribed in Section I. Then, make a config file for the
+C++-configured gem5 using normal gem5
+
+> ../../build/ARM/gem5.opt ../../configs/example/fs.py --tlm-memory=memory \
+  --cpu-type=timing --num-cpu=1 --mem-type=SimpleMemory --mem-size=512MB   \
+  --mem-channels=1  --caches --l2cache --machine-type=VExpress_EMM         \
+  --dtb-filename=vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb              \
+  --kernel=vmlinux.aarch32.ll_20131205.0-gem5                              \
+  --disk-image=linux-aarch32-ael.img
+
+The message "fatal: Can't find port handler type 'tlm'" is okay.
+The configuration will be stored in the m5out/ directory
+
+The binary 'gem5.opt.sc' can now be used to load in the generated config
+file from the previous normal gem5 run.
+
+Try:
+
+> ./gem5.opt.sc m5out/config.ini -o 2147483648
+
+The parameter -o specifies the begining of the memory region (0x80000000).
+The system should boot now.
+
+For conveniance a run_gem5.sh file holds all those commands
