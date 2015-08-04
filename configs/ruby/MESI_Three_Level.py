@@ -108,7 +108,8 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                           clk_domain=system.cpu[i].clk_domain,
                           ruby_system = ruby_system)
 
-            cpu_seq = RubySequencer(version = i, icache = l0i_cache,
+            cpu_seq = RubySequencer(version = i * num_cpus_per_cluster + j,
+                        icache = l0i_cache,
                         clk_domain=system.cpu[i].clk_domain,
                         dcache = l0d_cache, ruby_system = ruby_system)
 
