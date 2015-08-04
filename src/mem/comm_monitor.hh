@@ -43,7 +43,6 @@
 
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
-#include "mem/stack_dist_calc.hh"
 #include "params/CommMonitor.hh"
 #include "proto/protoio.hh"
 #include "sim/probe/mem.hh"
@@ -416,9 +415,6 @@ class CommMonitor : public MemObject
 
     /** Address mask for sources of write accesses to be captured */
     const Addr writeAddrMask;
-
-    /** Optional stack distance calculator */
-    StackDistCalc *const stackDistCalc;
 
     /** The system in which the monitor lives */
     System *const system;

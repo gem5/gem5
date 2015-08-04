@@ -1,4 +1,4 @@
-# Copyright (c) 2014 ARM Limited
+# Copyright (c) 2014-2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,13 +34,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Hansson
+#          Andreas Sandberg
 
-from m5.SimObject import SimObject
 from m5.params import *
+from m5.proxy import *
+from BaseMemProbe import BaseMemProbe
 
-class StackDistCalc(SimObject):
-    type = 'StackDistCalc'
-    cxx_header = "mem/stack_dist_calc.hh"
+class StackDistProbe(BaseMemProbe):
+    type = 'StackDistProbe'
+    cxx_header = "mem/probes/stack_dist.hh"
+
+    system = Param.System(Parent.any,
+                          "System to use when determining system cache "
+                          "line size")
+
+    line_size = Param.Unsigned(Parent.cache_line_size,
+                               "Cache line size in bytes (must be larger or "
+                               "equal to the system's line size)")
 
     # enable verification stack
     verify = Param.Bool(False, "Verify behaviuor with reference implementation")

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,15 +37,16 @@
  * Authors: Kanishk Sugand
  */
 
+#include "mem/stack_dist_calc.hh"
+
+#include "base/chunk_generator.hh"
 #include "base/intmath.hh"
 #include "base/trace.hh"
 #include "debug/StackDist.hh"
-#include "mem/stack_dist_calc.hh"
 
-StackDistCalc::StackDistCalc(const StackDistCalcParams* p) :
-    SimObject(p), index(0), verifyStack(p->verify),
-    disableLinearHists(p->disable_linear_hists),
-    disableLogHists(p->disable_log_hists)
+StackDistCalc::StackDistCalc(bool verify_stack)
+    : index(0),
+      verifyStack(verify_stack)
 {
     // Instantiate a new root and leaf layer
     // Map type variable, representing a layer in the tree
@@ -89,38 +90,6 @@ StackDistCalc::~StackDistCalc()
 
     // For verification
     stack.clear();
-}
-
-void
-StackDistCalc::update(const MemCmd& cmd, Addr addr)
-{
-    // only capturing read and write requests (which allocate in the
-    // cache)
-    if (cmd.isRead() || cmd.isWrite()) {
-        auto returnType = calcStackDistAndUpdate(addr);
-
-        uint64_t stackDist = returnType.first;
-
-        if (stackDist != Infinity) {
-            // Sample the stack distance of the address in linear bins
-            if (!disableLinearHists) {
-                if (cmd.isRead())
-                    readLinearHist.sample(stackDist);
-                else
-                    writeLinearHist.sample(stackDist);
-            }
-
-            if (!disableLogHists) {
-                int stackDistLog2 = stackDist == 0 ? 1 : floorLog2(stackDist);
-
-                // Sample the stack distance of the address in log bins
-                if (cmd.isRead())
-                    readLogHist.sample(stackDistLog2);
-                else
-                    writeLogHist.sample(stackDistLog2);
-            }
-        }
-    }
 }
 
 // The updateSum method is a recursive function which updates
@@ -631,40 +600,4 @@ StackDistCalc::printStack(int n) const
             DPRINTF(StackDist, "Verif Stack, Top-[%d] = %#lx\n", count, *a);
         }
     }
-}
-
-void
-StackDistCalc::regStats()
-{
-    using namespace Stats;
-
-    readLinearHist
-        .init(params()->linear_hist_bins)
-        .name(name() + ".readLinearHist")
-        .desc("Reads linear distribution")
-        .flags(disableLinearHists ? nozero : pdf);
-
-    readLogHist
-        .init(params()->log_hist_bins)
-        .name(name() + ".readLogHist")
-        .desc("Reads logarithmic distribution")
-        .flags(disableLogHists ? nozero : pdf);
-
-    writeLinearHist
-        .init(params()->linear_hist_bins)
-        .name(name() + ".writeLinearHist")
-        .desc("Writes linear distribution")
-        .flags(disableLinearHists ? nozero : pdf);
-
-    writeLogHist
-        .init(params()->log_hist_bins)
-        .name(name() + ".writeLogHist")
-        .desc("Writes logarithmic distribution")
-        .flags(disableLogHists ? nozero : pdf);
-}
-
-StackDistCalc*
-StackDistCalcParams::create()
-{
-    return new StackDistCalc(this);
 }

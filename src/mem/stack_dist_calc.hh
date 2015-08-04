@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,14 +41,11 @@
 #ifndef __MEM_STACK_DIST_CALC_HH__
 #define __MEM_STACK_DIST_CALC_HH__
 
+#include <limits>
 #include <map>
 #include <vector>
 
 #include "base/types.hh"
-#include "mem/packet.hh"
-#include "params/StackDistCalc.hh"
-#include "sim/sim_object.hh"
-#include "sim/stats.hh"
 
 /**
   * The stack distance calculator is a passive object that merely
@@ -174,7 +171,7 @@
   * A printStack(int numOfEntitiesToPrint) is provided to print top n entities
   * in both (tree and STL based dummy stack).
   */
-class StackDistCalc : public SimObject
+class StackDistCalc
 {
 
   private:
@@ -267,39 +264,6 @@ class StackDistCalc : public SimObject
     void sanityCheckTree(const Node* node, uint64_t level = 0) const;
 
     /**
-     * A convenient way of refering to infinity.
-     */
-    static constexpr uint64_t Infinity = std::numeric_limits<uint64_t>::max();
-
-    /**
-     * Process the given address. If Mark is true then set the
-     * mark flag of the leaf node.
-     * This function returns the stack distance of the incoming
-     * address and the previous status of the mark flag.
-     *
-     * @param r_address The current address to process
-     * @param mark set the mark flag for the address.
-     * @return The stack distance of the current address and the mark flag.
-     */
-    std::pair<uint64_t , bool> calcStackDist(const Addr r_address,
-                                             bool mark = false);
-
-    /**
-     * Process the given address:
-     *  - Lookup the tree for the given address
-     *  - delete old node if found in tree
-     *  - add a new node (if addNewNode flag is set)
-     * This function returns the stack distance of the incoming
-     * address and the status of the mark flag.
-     *
-     * @param r_address The current address to process
-     * @param addNewNode If true, a new node is added to the tree
-     * @return The stack distance of the current address and the mark flag.
-     */
-    std::pair<uint64_t, bool> calcStackDistAndUpdate(const Addr r_address,
-                                                     bool addNewNode = true);
-
-    /**
      * Return the counter for address accesses (unique and
      * non-unique). This is further used to dump stats at
      * regular intervals.
@@ -341,26 +305,43 @@ class StackDistCalc : public SimObject
                              bool update_stack = false);
 
   public:
-
-    /**
-     * Convenience method to get the params when registering stats.
-     */
-    const StackDistCalcParams* params() const
-    { return reinterpret_cast<const StackDistCalcParams*>(_params); }
-
-    StackDistCalc(const StackDistCalcParams* p);
+    StackDistCalc(bool verify_stack = false);
 
     ~StackDistCalc();
 
-    void regStats();
+    /**
+     * A convenient way of refering to infinity.
+     */
+    static constexpr uint64_t Infinity = std::numeric_limits<uint64_t>::max();
+
 
     /**
-     * Update the tree and the statistics.
+     * Process the given address. If Mark is true then set the
+     * mark flag of the leaf node.
+     * This function returns the stack distance of the incoming
+     * address and the previous status of the mark flag.
      *
-     * @param cmd Command from the packet
-     * @param addr Address to put on the stack
+     * @param r_address The current address to process
+     * @param mark set the mark flag for the address.
+     * @return The stack distance of the current address and the mark flag.
      */
-    void update(const MemCmd& cmd, Addr addr);
+    std::pair<uint64_t, bool> calcStackDist(const Addr r_address,
+                                            bool mark = false);
+
+    /**
+     * Process the given address:
+     *  - Lookup the tree for the given address
+     *  - delete old node if found in tree
+     *  - add a new node (if addNewNode flag is set)
+     * This function returns the stack distance of the incoming
+     * address and the status of the mark flag.
+     *
+     * @param r_address The current address to process
+     * @param addNewNode If true, a new node is added to the tree
+     * @return The stack distance of the current address and the mark flag.
+     */
+    std::pair<uint64_t, bool> calcStackDistAndUpdate(const Addr r_address,
+                                                     bool addNewNode = true);
 
   private:
 
@@ -430,25 +411,7 @@ class StackDistCalc : public SimObject
 
     // Flag to enable verification of stack. (Slows down the simulation)
     const bool verifyStack;
-
-    // Disable the linear histograms
-    const bool disableLinearHists;
-
-    // Disable the logarithmic histograms
-    const bool disableLogHists;
-
-    // Reads linear histogram
-    Stats::Histogram readLinearHist;
-
-    // Reads logarithmic histogram
-    Stats::SparseHistogram readLogHist;
-
-    // Writes linear histogram
-    Stats::Histogram writeLinearHist;
-
-    // Writes logarithmic histogram
-    Stats::SparseHistogram writeLogHist;
-
 };
+
 
 #endif //__STACK_DIST_CALC_HH__

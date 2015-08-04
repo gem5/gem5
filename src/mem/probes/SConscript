@@ -41,3 +41,6 @@ Import('*')
 
 SimObject('BaseMemProbe.py')
 Source('base.cc')
+
+SimObject('StackDistProbe.py')
+Source('stack_dist.cc')

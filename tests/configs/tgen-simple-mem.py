@@ -57,8 +57,8 @@ system = System(cpu = cpu, physmem = SimpleMemory(),
 # add a communication monitor, and also trace all the packets and
 # calculate and verify stack distance
 system.monitor = CommMonitor(trace_file = "monitor.ptrc.gz",
-                             trace_enable = True,
-                             stack_dist_calc = StackDistCalc(verify = True))
+                             trace_enable = True)
+system.monitor.stackdist = StackDistProbe(verify = True)
 
 # connect the traffic generator to the bus via a communication monitor
 system.cpu.port = system.monitor.slave

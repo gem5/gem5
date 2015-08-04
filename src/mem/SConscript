@@ -44,7 +44,6 @@ SimObject('ExternalMaster.py')
 SimObject('ExternalSlave.py')
 SimObject('MemObject.py')
 SimObject('SimpleMemory.py')
-SimObject('StackDistCalc.py')
 SimObject('XBar.py')
 
 Source('abstract_mem.cc')

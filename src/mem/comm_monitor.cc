@@ -55,7 +55,6 @@ CommMonitor::CommMonitor(Params* params)
       samplePeriod(params->sample_period / SimClock::Float::s),
       readAddrMask(params->read_addr_mask),
       writeAddrMask(params->write_addr_mask),
-      stackDistCalc(params->stack_dist_calc),
       system(params->system),
       traceStream(nullptr),
       stats(params)
@@ -183,10 +182,6 @@ CommMonitor::recvAtomic(PacketPtr pkt)
 {
     ppPktReq->notify(pkt);
 
-    // do stack distance calculations if enabled
-    if (stackDistCalc)
-        stackDistCalc->update(pkt->cmd, pkt->getAddr());
-
     // if tracing enabled, store the packet information
     // to the trace stream
     if (traceStream != NULL) {
@@ -257,11 +252,6 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
         ppPktReq->notify(pkt);
         pkt->cmd = response_cmd;
     }
-
-    // If successful and we are calculating stack distances, update
-    // the calculator
-    if (successful && stackDistCalc)
-        stackDistCalc->update(cmd, addr);
 
     if (successful && traceStream != NULL) {
         // Create a protobuf message representing the
