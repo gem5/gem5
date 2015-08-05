@@ -1,13 +1,13 @@
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.000116                       # Number of seconds simulated
-sim_ticks                                      116369                       # Number of ticks simulated
-final_tick                                     116369                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                      116367                       # Number of ticks simulated
+final_tick                                     116367                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  61340                       # Simulator instruction rate (inst/s)
-host_op_rate                                    61332                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                1116785                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 453376                       # Number of bytes of host memory used
+host_inst_rate                                  61886                       # Simulator instruction rate (inst/s)
+host_op_rate                                    61878                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                1126725                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 454884                       # Number of bytes of host memory used
 host_seconds                                     0.10                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
@@ -21,12 +21,12 @@ system.mem_ctrls.num_reads::ruby.dir_cntrl0         1176                       #
 system.mem_ctrls.num_reads::total                1176                       # Number of read requests responded to by this memory
 system.mem_ctrls.num_writes::ruby.dir_cntrl0          228                       # Number of write requests responded to by this memory
 system.mem_ctrls.num_writes::total                228                       # Number of write requests responded to by this memory
-system.mem_ctrls.bw_read::ruby.dir_cntrl0    646770188                       # Total read bandwidth from this memory (bytes/s)
-system.mem_ctrls.bw_read::total             646770188                       # Total read bandwidth from this memory (bytes/s)
-system.mem_ctrls.bw_write::ruby.dir_cntrl0    125394220                       # Write bandwidth from this memory (bytes/s)
-system.mem_ctrls.bw_write::total            125394220                       # Write bandwidth from this memory (bytes/s)
-system.mem_ctrls.bw_total::ruby.dir_cntrl0    772164408                       # Total bandwidth to/from this memory (bytes/s)
-system.mem_ctrls.bw_total::total            772164408                       # Total bandwidth to/from this memory (bytes/s)
+system.mem_ctrls.bw_read::ruby.dir_cntrl0    646781304                       # Total read bandwidth from this memory (bytes/s)
+system.mem_ctrls.bw_read::total             646781304                       # Total read bandwidth from this memory (bytes/s)
+system.mem_ctrls.bw_write::ruby.dir_cntrl0    125396375                       # Write bandwidth from this memory (bytes/s)
+system.mem_ctrls.bw_write::total            125396375                       # Write bandwidth from this memory (bytes/s)
+system.mem_ctrls.bw_total::ruby.dir_cntrl0    772177679                       # Total bandwidth to/from this memory (bytes/s)
+system.mem_ctrls.bw_total::total            772177679                       # Total bandwidth to/from this memory (bytes/s)
 system.mem_ctrls.readReqs                        1176                       # Number of read requests accepted
 system.mem_ctrls.writeReqs                        228                       # Number of write requests accepted
 system.mem_ctrls.readBursts                      1176                       # Number of DRAM read bursts, including those serviced by the write queue
@@ -73,7 +73,7 @@ system.mem_ctrls.perBankWrBursts::14               43                       # Pe
 system.mem_ctrls.perBankWrBursts::15                0                       # Per bank write bursts
 system.mem_ctrls.numRdRetry                         0                       # Number of times read queue was full causing retry
 system.mem_ctrls.numWrRetry                         0                       # Number of times write queue was full causing retry
-system.mem_ctrls.totGap                        116278                       # Total gap between requests
+system.mem_ctrls.totGap                        116276                       # Total gap between requests
 system.mem_ctrls.readPktSize::0                     0                       # Read request sizes (log2)
 system.mem_ctrls.readPktSize::1                     0                       # Read request sizes (log2)
 system.mem_ctrls.readPktSize::2                     0                       # Read request sizes (log2)
@@ -213,16 +213,16 @@ system.mem_ctrls.wrPerTurnAround::mean             16                       # Wr
 system.mem_ctrls.wrPerTurnAround::gmean     16.000000                       # Writes before turning the bus around for reads
 system.mem_ctrls.wrPerTurnAround::16                5    100.00%    100.00% # Writes before turning the bus around for reads
 system.mem_ctrls.wrPerTurnAround::total             5                       # Writes before turning the bus around for reads
-system.mem_ctrls.totQLat                         7422                       # Total ticks spent queuing
-system.mem_ctrls.totMemAccLat                   26517                       # Total ticks spent from burst creation until serviced by the DRAM
+system.mem_ctrls.totQLat                         7430                       # Total ticks spent queuing
+system.mem_ctrls.totMemAccLat                   26525                       # Total ticks spent from burst creation until serviced by the DRAM
 system.mem_ctrls.totBusLat                       5025                       # Total ticks spent in databus transfers
 system.mem_ctrls.avgQLat                         7.39                       # Average queueing delay per DRAM burst
 system.mem_ctrls.avgBusLat                       5.00                       # Average bus latency per DRAM burst
 system.mem_ctrls.avgMemAccLat                   26.39                       # Average memory access latency per DRAM burst
-system.mem_ctrls.avgRdBW                       552.72                       # Average DRAM read bandwidth in MiByte/s
+system.mem_ctrls.avgRdBW                       552.73                       # Average DRAM read bandwidth in MiByte/s
 system.mem_ctrls.avgWrBW                        44.00                       # Average achieved write bandwidth in MiByte/s
-system.mem_ctrls.avgRdBWSys                    646.77                       # Average system read bandwidth in MiByte/s
-system.mem_ctrls.avgWrBWSys                    125.39                       # Average system write bandwidth in MiByte/s
+system.mem_ctrls.avgRdBWSys                    646.78                       # Average system read bandwidth in MiByte/s
+system.mem_ctrls.avgWrBWSys                    125.40                       # Average system write bandwidth in MiByte/s
 system.mem_ctrls.peakBW                      12800.00                       # Theoretical peak bandwidth in MiByte/s
 system.mem_ctrls.busUtil                         4.66                       # Data bus utilization in percentage
 system.mem_ctrls.busUtilRead                     4.32                       # Data bus utilization in percentage for reads
@@ -244,7 +244,7 @@ system.mem_ctrls_0.actBackEnergy             60923196                       # En
 system.mem_ctrls_0.preBackEnergy             12117000                       # Energy for precharge background per rank (pJ)
 system.mem_ctrls_0.totalEnergy               86117604                       # Total energy per rank (pJ)
 system.mem_ctrls_0.averagePower            788.160821                       # Core power per rank (mW)
-system.mem_ctrls_0.memoryStateTime::IDLE        25118                       # Time in different power states
+system.mem_ctrls_0.memoryStateTime::IDLE        25116                       # Time in different power states
 system.mem_ctrls_0.memoryStateTime::REF          3640                       # Time in different power states
 system.mem_ctrls_0.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.mem_ctrls_0.memoryStateTime::ACT         85821                       # Time in different power states
@@ -254,14 +254,14 @@ system.mem_ctrls_1.preEnergy                   520800                       # En
 system.mem_ctrls_1.readEnergy                 6776640                       # Energy for read commands per rank (pJ)
 system.mem_ctrls_1.writeEnergy                 663552                       # Energy for write commands per rank (pJ)
 system.mem_ctrls_1.refreshEnergy              7119840                       # Energy for refresh commands per rank (pJ)
-system.mem_ctrls_1.actBackEnergy             72408924                       # Energy for active background per rank (pJ)
+system.mem_ctrls_1.actBackEnergy             72408240                       # Energy for active background per rank (pJ)
 system.mem_ctrls_1.preBackEnergy              2062800                       # Energy for precharge background per rank (pJ)
-system.mem_ctrls_1.totalEnergy               90489996                       # Total energy per rank (pJ)
-system.mem_ctrls_1.averagePower            827.912387                       # Core power per rank (mW)
+system.mem_ctrls_1.totalEnergy               90489312                       # Total energy per rank (pJ)
+system.mem_ctrls_1.averagePower            827.913704                       # Core power per rank (mW)
 system.mem_ctrls_1.memoryStateTime::IDLE         2878                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::REF          3640                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
-system.mem_ctrls_1.memoryStateTime::ACT        102795                       # Time in different power states
+system.mem_ctrls_1.memoryStateTime::ACT        102794                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
 system.cpu.clk_domain.clock                         1                       # Clock period in ticks
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
@@ -297,7 +297,7 @@ system.cpu.itb.data_misses                          0                       # DT
 system.cpu.itb.data_acv                             0                       # DTB access violations
 system.cpu.itb.data_accesses                        0                       # DTB accesses
 system.cpu.workload.num_syscalls                   17                       # Number of system calls
-system.cpu.numCycles                           116369                       # number of cpu cycles simulated
+system.cpu.numCycles                           116367                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.committedInsts                        6390                       # Number of instructions committed
@@ -316,7 +316,7 @@ system.cpu.num_mem_refs                          2058                       # nu
 system.cpu.num_load_insts                        1190                       # Number of load instructions
 system.cpu.num_store_insts                        868                       # Number of store instructions
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_busy_cycles                     116369                       # Number of busy cycles
+system.cpu.num_busy_cycles                     116367                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.Branches                              1050                       # Number of branches fetched
@@ -366,9 +366,9 @@ system.ruby.outstanding_req_hist::total          8449
 system.ruby.latency_hist::bucket_size              64                      
 system.ruby.latency_hist::max_bucket              639                      
 system.ruby.latency_hist::samples                8448                      
-system.ruby.latency_hist::mean              12.774740                      
-system.ruby.latency_hist::gmean              3.504112                      
-system.ruby.latency_hist::stdev             27.744497                      
+system.ruby.latency_hist::mean              12.774503                      
+system.ruby.latency_hist::gmean              3.504079                      
+system.ruby.latency_hist::stdev             27.751445                      
 system.ruby.latency_hist                 |        7443     88.10%     88.10% |         986     11.67%     99.78% |           5      0.06%     99.83% |           2      0.02%     99.86% |           7      0.08%     99.94% |           5      0.06%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.latency_hist::total                  8448                      
 system.ruby.hit_latency_hist::bucket_size            4                      
@@ -382,9 +382,9 @@ system.ruby.hit_latency_hist::total              7272
 system.ruby.miss_latency_hist::bucket_size           64                      
 system.ruby.miss_latency_hist::max_bucket          639                      
 system.ruby.miss_latency_hist::samples           1176                      
-system.ruby.miss_latency_hist::mean         75.433673                      
-system.ruby.miss_latency_hist::gmean        72.282303                      
-system.ruby.miss_latency_hist::stdev        29.690242                      
+system.ruby.miss_latency_hist::mean         75.431973                      
+system.ruby.miss_latency_hist::gmean        72.277390                      
+system.ruby.miss_latency_hist::stdev        29.740474                      
 system.ruby.miss_latency_hist            |         171     14.54%     14.54% |         986     83.84%     98.38% |           5      0.43%     98.81% |           2      0.17%     98.98% |           7      0.60%     99.57% |           5      0.43%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.miss_latency_hist::total             1176                      
 system.ruby.Directory.incomplete_times           1175                      
@@ -398,7 +398,7 @@ system.ruby.l2_cntrl0.L2cache.demand_hits          189                       # N
 system.ruby.l2_cntrl0.L2cache.demand_misses         1194                       # Number of cache demand misses
 system.ruby.l2_cntrl0.L2cache.demand_accesses         1383                       # Number of cache demand accesses
 system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
-system.ruby.network.routers0.percent_links_utilized     5.597926                      
+system.ruby.network.routers0.percent_links_utilized     5.598022                      
 system.ruby.network.routers0.msg_count.Request_Control::1         1383                      
 system.ruby.network.routers0.msg_count.Response_Data::4         1176                      
 system.ruby.network.routers0.msg_count.ResponseL2hit_Data::4          207                      
@@ -411,7 +411,7 @@ system.ruby.network.routers0.msg_bytes.ResponseL2hit_Data::4        14904
 system.ruby.network.routers0.msg_bytes.Response_Control::4            8                      
 system.ruby.network.routers0.msg_bytes.Writeback_Data::4        97488                      
 system.ruby.network.routers0.msg_bytes.Persistent_Control::3          320                      
-system.ruby.network.routers1.percent_links_utilized     4.224708                      
+system.ruby.network.routers1.percent_links_utilized     4.224780                      
 system.ruby.network.routers1.msg_count.Request_Control::1         1383                      
 system.ruby.network.routers1.msg_count.Request_Control::2         1194                      
 system.ruby.network.routers1.msg_count.ResponseL2hit_Data::4          207                      
@@ -426,7 +426,7 @@ system.ruby.network.routers1.msg_bytes.Response_Control::4            8
 system.ruby.network.routers1.msg_bytes.Writeback_Data::4       113904                      
 system.ruby.network.routers1.msg_bytes.Writeback_Control::4         7728                      
 system.ruby.network.routers1.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers2.percent_links_utilized     3.182978                      
+system.ruby.network.routers2.percent_links_utilized     3.183033                      
 system.ruby.network.routers2.msg_count.Request_Control::2         1194                      
 system.ruby.network.routers2.msg_count.Response_Data::4         1176                      
 system.ruby.network.routers2.msg_count.Writeback_Data::4          228                      
@@ -437,7 +437,7 @@ system.ruby.network.routers2.msg_bytes.Response_Data::4        84672
 system.ruby.network.routers2.msg_bytes.Writeback_Data::4        16416                      
 system.ruby.network.routers2.msg_bytes.Writeback_Control::4         7728                      
 system.ruby.network.routers2.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers3.percent_links_utilized     4.335204                      
+system.ruby.network.routers3.percent_links_utilized     4.335278                      
 system.ruby.network.routers3.msg_count.Request_Control::1         1383                      
 system.ruby.network.routers3.msg_count.Request_Control::2         1194                      
 system.ruby.network.routers3.msg_count.Response_Data::4         1176                      
@@ -468,7 +468,7 @@ system.ruby.network.msg_byte.Response_Control           24
 system.ruby.network.msg_byte.Writeback_Data       341712                      
 system.ruby.network.msg_byte.Writeback_Control        23184                      
 system.ruby.network.msg_byte.Persistent_Control          960                      
-system.ruby.network.routers0.throttle0.link_utilization     5.357097                      
+system.ruby.network.routers0.throttle0.link_utilization     5.357189                      
 system.ruby.network.routers0.throttle0.msg_count.Response_Data::4         1176                      
 system.ruby.network.routers0.throttle0.msg_count.ResponseL2hit_Data::4          207                      
 system.ruby.network.routers0.throttle0.msg_count.Response_Control::4            1                      
@@ -477,21 +477,21 @@ system.ruby.network.routers0.throttle0.msg_bytes.Response_Data::4        84672
 system.ruby.network.routers0.throttle0.msg_bytes.ResponseL2hit_Data::4        14904                      
 system.ruby.network.routers0.throttle0.msg_bytes.Response_Control::4            8                      
 system.ruby.network.routers0.throttle0.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers0.throttle1.link_utilization     5.838754                      
+system.ruby.network.routers0.throttle1.link_utilization     5.838855                      
 system.ruby.network.routers0.throttle1.msg_count.Request_Control::1         1383                      
 system.ruby.network.routers0.throttle1.msg_count.Writeback_Data::4         1354                      
 system.ruby.network.routers0.throttle1.msg_count.Persistent_Control::3           20                      
 system.ruby.network.routers0.throttle1.msg_bytes.Request_Control::1        11064                      
 system.ruby.network.routers0.throttle1.msg_bytes.Writeback_Data::4        97488                      
 system.ruby.network.routers0.throttle1.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers1.throttle0.link_utilization     5.838754                      
+system.ruby.network.routers1.throttle0.link_utilization     5.838855                      
 system.ruby.network.routers1.throttle0.msg_count.Request_Control::1         1383                      
 system.ruby.network.routers1.throttle0.msg_count.Writeback_Data::4         1354                      
 system.ruby.network.routers1.throttle0.msg_count.Persistent_Control::3           20                      
 system.ruby.network.routers1.throttle0.msg_bytes.Request_Control::1        11064                      
 system.ruby.network.routers1.throttle0.msg_bytes.Writeback_Data::4        97488                      
 system.ruby.network.routers1.throttle0.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers1.throttle1.link_utilization     2.610661                      
+system.ruby.network.routers1.throttle1.link_utilization     2.610706                      
 system.ruby.network.routers1.throttle1.msg_count.Request_Control::2         1194                      
 system.ruby.network.routers1.throttle1.msg_count.ResponseL2hit_Data::4          207                      
 system.ruby.network.routers1.throttle1.msg_count.Response_Control::4            1                      
@@ -502,7 +502,7 @@ system.ruby.network.routers1.throttle1.msg_bytes.ResponseL2hit_Data::4        14
 system.ruby.network.routers1.throttle1.msg_bytes.Response_Control::4            8                      
 system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Data::4        16416                      
 system.ruby.network.routers1.throttle1.msg_bytes.Writeback_Control::4         7728                      
-system.ruby.network.routers2.throttle0.link_utilization     1.818354                      
+system.ruby.network.routers2.throttle0.link_utilization     1.818385                      
 system.ruby.network.routers2.throttle0.msg_count.Request_Control::2         1194                      
 system.ruby.network.routers2.throttle0.msg_count.Writeback_Data::4          228                      
 system.ruby.network.routers2.throttle0.msg_count.Writeback_Control::4          966                      
@@ -511,24 +511,24 @@ system.ruby.network.routers2.throttle0.msg_bytes.Request_Control::2         9552
 system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Data::4        16416                      
 system.ruby.network.routers2.throttle0.msg_bytes.Writeback_Control::4         7728                      
 system.ruby.network.routers2.throttle0.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers2.throttle1.link_utilization     4.547603                      
+system.ruby.network.routers2.throttle1.link_utilization     4.547681                      
 system.ruby.network.routers2.throttle1.msg_count.Response_Data::4         1176                      
 system.ruby.network.routers2.throttle1.msg_bytes.Response_Data::4        84672                      
-system.ruby.network.routers3.throttle0.link_utilization     5.348503                      
+system.ruby.network.routers3.throttle0.link_utilization     5.348595                      
 system.ruby.network.routers3.throttle0.msg_count.Response_Data::4         1176                      
 system.ruby.network.routers3.throttle0.msg_count.ResponseL2hit_Data::4          207                      
 system.ruby.network.routers3.throttle0.msg_count.Response_Control::4            1                      
 system.ruby.network.routers3.throttle0.msg_bytes.Response_Data::4        84672                      
 system.ruby.network.routers3.throttle0.msg_bytes.ResponseL2hit_Data::4        14904                      
 system.ruby.network.routers3.throttle0.msg_bytes.Response_Control::4            8                      
-system.ruby.network.routers3.throttle1.link_utilization     5.838754                      
+system.ruby.network.routers3.throttle1.link_utilization     5.838855                      
 system.ruby.network.routers3.throttle1.msg_count.Request_Control::1         1383                      
 system.ruby.network.routers3.throttle1.msg_count.Writeback_Data::4         1354                      
 system.ruby.network.routers3.throttle1.msg_count.Persistent_Control::3           20                      
 system.ruby.network.routers3.throttle1.msg_bytes.Request_Control::1        11064                      
 system.ruby.network.routers3.throttle1.msg_bytes.Writeback_Data::4        97488                      
 system.ruby.network.routers3.throttle1.msg_bytes.Persistent_Control::3          160                      
-system.ruby.network.routers3.throttle2.link_utilization     1.818354                      
+system.ruby.network.routers3.throttle2.link_utilization     1.818385                      
 system.ruby.network.routers3.throttle2.msg_count.Request_Control::2         1194                      
 system.ruby.network.routers3.throttle2.msg_count.Writeback_Data::4          228                      
 system.ruby.network.routers3.throttle2.msg_count.Writeback_Control::4          966                      
@@ -540,9 +540,9 @@ system.ruby.network.routers3.throttle2.msg_bytes.Persistent_Control::3          
 system.ruby.LD.latency_hist::bucket_size           64                      
 system.ruby.LD.latency_hist::max_bucket           639                      
 system.ruby.LD.latency_hist::samples             1183                      
-system.ruby.LD.latency_hist::mean           29.333897                      
-system.ruby.LD.latency_hist::gmean           8.854915                      
-system.ruby.LD.latency_hist::stdev          36.549796                      
+system.ruby.LD.latency_hist::mean           29.327980                      
+system.ruby.LD.latency_hist::gmean           8.854319                      
+system.ruby.LD.latency_hist::stdev          36.542777                      
 system.ruby.LD.latency_hist              |         850     71.85%     71.85% |         330     27.90%     99.75% |           0      0.00%     99.75% |           1      0.08%     99.83% |           1      0.08%     99.92% |           1      0.08%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.LD.latency_hist::total               1183                      
 system.ruby.LD.hit_latency_hist::bucket_size            4                      
@@ -556,17 +556,17 @@ system.ruby.LD.hit_latency_hist::total            760
 system.ruby.LD.miss_latency_hist::bucket_size           64                      
 system.ruby.LD.miss_latency_hist::max_bucket          639                      
 system.ruby.LD.miss_latency_hist::samples          423                      
-system.ruby.LD.miss_latency_hist::mean      72.933806                      
-system.ruby.LD.miss_latency_hist::gmean     69.869692                      
-system.ruby.LD.miss_latency_hist::stdev     25.813501                      
+system.ruby.LD.miss_latency_hist::mean      72.917258                      
+system.ruby.LD.miss_latency_hist::gmean     69.856550                      
+system.ruby.LD.miss_latency_hist::stdev     25.813683                      
 system.ruby.LD.miss_latency_hist         |          90     21.28%     21.28% |         330     78.01%     99.29% |           0      0.00%     99.29% |           1      0.24%     99.53% |           1      0.24%     99.76% |           1      0.24%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.LD.miss_latency_hist::total           423                      
 system.ruby.ST.latency_hist::bucket_size           64                      
 system.ruby.ST.latency_hist::max_bucket           639                      
 system.ruby.ST.latency_hist::samples              865                      
-system.ruby.ST.latency_hist::mean           15.470520                      
-system.ruby.ST.latency_hist::gmean           4.402566                      
-system.ruby.ST.latency_hist::stdev          29.923272                      
+system.ruby.ST.latency_hist::mean           15.472832                      
+system.ruby.ST.latency_hist::gmean           4.402595                      
+system.ruby.ST.latency_hist::stdev          29.949603                      
 system.ruby.ST.latency_hist              |         778     89.94%     89.94% |          83      9.60%     99.54% |           2      0.23%     99.77% |           0      0.00%     99.77% |           0      0.00%     99.77% |           2      0.23%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.ST.latency_hist::total                865                      
 system.ruby.ST.hit_latency_hist::bucket_size            4                      
@@ -580,17 +580,17 @@ system.ruby.ST.hit_latency_hist::total            697
 system.ruby.ST.miss_latency_hist::bucket_size           64                      
 system.ruby.ST.miss_latency_hist::max_bucket          639                      
 system.ruby.ST.miss_latency_hist::samples          168                      
-system.ruby.ST.miss_latency_hist::mean      65.761905                      
-system.ruby.ST.miss_latency_hist::gmean     61.126570                      
-system.ruby.ST.miss_latency_hist::stdev     36.894126                      
+system.ruby.ST.miss_latency_hist::mean      65.773810                      
+system.ruby.ST.miss_latency_hist::gmean     61.128615                      
+system.ruby.ST.miss_latency_hist::stdev     36.988217                      
 system.ruby.ST.miss_latency_hist         |          81     48.21%     48.21% |          83     49.40%     97.62% |           2      1.19%     98.81% |           0      0.00%     98.81% |           0      0.00%     98.81% |           2      1.19%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.ST.miss_latency_hist::total           168                      
 system.ruby.IFETCH.latency_hist::bucket_size           64                      
 system.ruby.IFETCH.latency_hist::max_bucket          639                      
 system.ruby.IFETCH.latency_hist::samples         6400                      
-system.ruby.IFETCH.latency_hist::mean        9.349531                      
-system.ruby.IFETCH.latency_hist::gmean       2.862602                      
-system.ruby.IFETCH.latency_hist::stdev      24.187807                      
+system.ruby.IFETCH.latency_hist::mean        9.350000                      
+system.ruby.IFETCH.latency_hist::gmean       2.862600                      
+system.ruby.IFETCH.latency_hist::stdev      24.196666                      
 system.ruby.IFETCH.latency_hist          |        5815     90.86%     90.86% |         573      8.95%     99.81% |           3      0.05%     99.86% |           1      0.02%     99.87% |           6      0.09%     99.97% |           2      0.03%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.latency_hist::total           6400                      
 system.ruby.IFETCH.hit_latency_hist::bucket_size            4                      
@@ -604,9 +604,9 @@ system.ruby.IFETCH.hit_latency_hist::total         5815
 system.ruby.IFETCH.miss_latency_hist::bucket_size           64                      
 system.ruby.IFETCH.miss_latency_hist::max_bucket          639                      
 system.ruby.IFETCH.miss_latency_hist::samples          585                      
-system.ruby.IFETCH.miss_latency_hist::mean    80.018803                      
-system.ruby.IFETCH.miss_latency_hist::gmean    77.731964                      
-system.ruby.IFETCH.miss_latency_hist::stdev    29.160832                      
+system.ruby.IFETCH.miss_latency_hist::mean    80.023932                      
+system.ruby.IFETCH.miss_latency_hist::gmean    77.731171                      
+system.ruby.IFETCH.miss_latency_hist::stdev    29.228835                      
 system.ruby.IFETCH.miss_latency_hist     |           0      0.00%      0.00% |         573     97.95%     97.95% |           3      0.51%     98.46% |           1      0.17%     98.63% |           6      1.03%     99.66% |           2      0.34%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.miss_latency_hist::total          585                      
 system.ruby.L1Cache.hit_mach_latency_hist::bucket_size            1                      
@@ -627,9 +627,9 @@ system.ruby.L2Cache.hit_mach_latency_hist::total          207
 system.ruby.Directory.miss_mach_latency_hist::bucket_size           64                      
 system.ruby.Directory.miss_mach_latency_hist::max_bucket          639                      
 system.ruby.Directory.miss_mach_latency_hist::samples         1176                      
-system.ruby.Directory.miss_mach_latency_hist::mean    75.433673                      
-system.ruby.Directory.miss_mach_latency_hist::gmean    72.282303                      
-system.ruby.Directory.miss_mach_latency_hist::stdev    29.690242                      
+system.ruby.Directory.miss_mach_latency_hist::mean    75.431973                      
+system.ruby.Directory.miss_mach_latency_hist::gmean    72.277390                      
+system.ruby.Directory.miss_mach_latency_hist::stdev    29.740474                      
 system.ruby.Directory.miss_mach_latency_hist |         171     14.54%     14.54% |         986     83.84%     98.38% |           5      0.43%     98.81% |           2      0.17%     98.98% |           7      0.60%     99.57% |           5      0.43%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.Directory.miss_mach_latency_hist::total         1176                      
 system.ruby.Directory.miss_latency_hist.issue_to_initial_request::bucket_size            1                      
@@ -676,9 +676,9 @@ system.ruby.LD.L2Cache.hit_type_mach_latency_hist::total          102
 system.ruby.LD.Directory.miss_type_mach_latency_hist::bucket_size           64                      
 system.ruby.LD.Directory.miss_type_mach_latency_hist::max_bucket          639                      
 system.ruby.LD.Directory.miss_type_mach_latency_hist::samples          423                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::mean    72.933806                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::gmean    69.869692                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::stdev    25.813501                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::mean    72.917258                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::gmean    69.856550                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist::stdev    25.813683                      
 system.ruby.LD.Directory.miss_type_mach_latency_hist |          90     21.28%     21.28% |         330     78.01%     99.29% |           0      0.00%     99.29% |           1      0.24%     99.53% |           1      0.24%     99.76% |           1      0.24%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.LD.Directory.miss_type_mach_latency_hist::total          423                      
 system.ruby.ST.L1Cache.hit_type_mach_latency_hist::bucket_size            1                      
@@ -699,9 +699,9 @@ system.ruby.ST.L2Cache.hit_type_mach_latency_hist::total           44
 system.ruby.ST.Directory.miss_type_mach_latency_hist::bucket_size           64                      
 system.ruby.ST.Directory.miss_type_mach_latency_hist::max_bucket          639                      
 system.ruby.ST.Directory.miss_type_mach_latency_hist::samples          168                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::mean    65.761905                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::gmean    61.126570                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::stdev    36.894126                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::mean    65.773810                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::gmean    61.128615                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist::stdev    36.988217                      
 system.ruby.ST.Directory.miss_type_mach_latency_hist |          81     48.21%     48.21% |          83     49.40%     97.62% |           2      1.19%     98.81% |           0      0.00%     98.81% |           0      0.00%     98.81% |           2      1.19%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.ST.Directory.miss_type_mach_latency_hist::total          168                      
 system.ruby.IFETCH.L1Cache.hit_type_mach_latency_hist::bucket_size            1                      
@@ -722,9 +722,9 @@ system.ruby.IFETCH.L2Cache.hit_type_mach_latency_hist::total           61
 system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::bucket_size           64                      
 system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::max_bucket          639                      
 system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::samples          585                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::mean    80.018803                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::gmean    77.731964                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::stdev    29.160832                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::mean    80.023932                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::gmean    77.731171                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::stdev    29.228835                      
 system.ruby.IFETCH.Directory.miss_type_mach_latency_hist |           0      0.00%      0.00% |         573     97.95%     97.95% |           3      0.51%     98.46% |           1      0.17%     98.63% |           6      1.03%     99.66% |           2      0.34%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::total          585                      
 system.ruby.Directory_Controller.GETX             209      0.00%      0.00%
