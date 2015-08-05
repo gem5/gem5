@@ -138,10 +138,10 @@ class DrainManager
     void preCheckpointRestore();
 
     /** Check if the system is drained */
-    bool isDrained() { return _state == DrainState::Drained; }
+    bool isDrained() const { return _state == DrainState::Drained; }
 
     /** Get the simulators global drain state */
-    DrainState state() { return _state; }
+    DrainState state() const { return _state; }
 
     /**
      * Notify the DrainManager that a Drainable object has finished
@@ -209,8 +209,8 @@ class DrainManager
  *
  * <li>Serialize objects, switch CPU model, or change timing model.
  *
- * <li>Call DrainManager::resume(), which intern calls
- *     Drainable::drainResume() for all objects, and continue the
+ * <li>Call DrainManager::resume(), which in turn calls
+ *     Drainable::drainResume() for all objects, and then continue the
  *     simulation.
  * </ol>
  *
@@ -224,22 +224,24 @@ class Drainable
     virtual ~Drainable();
 
     /**
-     * Determine if an object needs draining and register a
-     * DrainManager.
+     * Notify an object that it needs to drain its state.
      *
      * If the object does not need further simulation to drain
-     * internal buffers, it returns true and automatically switches to
-     * the Drained state, otherwise it switches to the Draining state.
+     * internal buffers, it returns DrainState::Drained and
+     * automatically switches to the Drained state. If the object
+     * needs more simulation, it returns DrainState::Draining and
+     * automatically enters the Draining state. Other return values
+     * are invalid.
      *
      * @note An object that has entered the Drained state can be
-     * disturbed by other objects in the system and consequently be
-     * being drained. These perturbations are not visible in the
-     * drain state. The simulator therefore repeats the draining
-     * process until all objects return DrainState::Drained on the
-     * first call to drain().
+     * disturbed by other objects in the system and consequently stop
+     * being drained. These perturbations are not visible in the drain
+     * state. The simulator therefore repeats the draining process
+     * until all objects return DrainState::Drained on the first call
+     * to drain().
      *
-     * @return DrainState::Drained if the object is ready for
-     * serialization now, DrainState::Draining if it needs further
+     * @return DrainState::Drained if the object is drained at this
+     * point in time, DrainState::Draining if it needs further
      * simulation.
      */
     virtual DrainState drain() = 0;
