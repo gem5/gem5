@@ -37,8 +37,8 @@
  * Authors: Andreas Sandberg
  */
 
-#ifndef __MEM_PROBES_STACK_DIST_HH__
-#define __MEM_PROBES_STACK_DIST_HH__
+#ifndef __MEM_PROBES_MEM_TRACE_HH__
+#define __MEM_PROBES_MEM_TRACE_HH__
 
 #include "mem/packet.hh"
 #include "mem/probes/base.hh"
@@ -66,4 +66,4 @@ class MemTraceProbe : public BaseMemProbe
     ProtoOutputStream *traceStream;
 };
 
-#endif //__MEM_PROBES_STACK_DIST_HH__
+#endif //__MEM_PROBES_MEM_TRACE_HH__

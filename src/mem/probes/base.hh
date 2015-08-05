@@ -37,8 +37,8 @@
  * Authors: Andreas Sandberg
  */
 
-#ifndef __MEM_PROBES_STACK_BASE_HH__
-#define __MEM_PROBES_STACK_BASE_HH__
+#ifndef __MEM_PROBES_BASE_HH__
+#define __MEM_PROBES_BASE_HH__
 
 #include <memory>
 #include <vector>
@@ -94,4 +94,4 @@ class BaseMemProbe : public SimObject
     std::vector<std::unique_ptr<PacketListener>> listeners;
 };
 
-#endif //  __MEM_PROBES_STACK_BASE_HH__
+#endif //  __MEM_PROBES_BASE_HH__
