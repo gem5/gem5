@@ -55,14 +55,14 @@
 #include "sim/sim_object.hh"
 
 /**
- * The ClockedObject class extends the SimObject with a clock and
- * accessor functions to relate ticks to the cycles of the object.
+ * Helper class for objects that need to be clocked. Clocked objects
+ * typically inherit from this class. Objects that need SimObject
+ * functionality as well should inherit from ClockedObject.
  */
-class ClockedObject : public SimObject
+class Clocked
 {
 
   private:
-
     // the tick value of the next clock edge (>= curTick()) at the
     // time of the last call to update()
     mutable Tick tick;
@@ -70,13 +70,6 @@ class ClockedObject : public SimObject
     // The cycle counter value corresponding to the current value of
     // 'tick'
     mutable Cycles cycle;
-
-    /**
-     * Prevent inadvertent use of the copy constructor and assignment
-     * operator by making them private.
-     */
-    ClockedObject(ClockedObject&);
-    ClockedObject& operator=(ClockedObject&);
 
     /**
      *  Align cycle and tick to the next clock edge if not already done. When
@@ -118,18 +111,21 @@ class ClockedObject : public SimObject
      * Create a clocked object and set the clock domain based on the
      * parameters.
      */
-    ClockedObject(const ClockedObjectParams* p) :
-        SimObject(p), tick(0), cycle(0), clockDomain(*p->clk_domain)
+    Clocked(ClockDomain &clk_domain)
+        : tick(0), cycle(0), clockDomain(clk_domain)
     {
         // Register with the clock domain, so that if the clock domain
         // frequency changes, we can update this object's tick.
         clockDomain.registerWithClockDomain(this);
     }
 
+    Clocked(Clocked &) = delete;
+    Clocked &operator=(Clocked &) = delete;
+
     /**
      * Virtual destructor due to inheritance.
      */
-    virtual ~ClockedObject() { }
+    virtual ~Clocked() { }
 
     /**
      * Reset the object's clock using the current global tick value. Likely
@@ -219,6 +215,18 @@ class ClockedObject : public SimObject
     inline Cycles ticksToCycles(Tick t) const
     { return Cycles(divCeil(t, clockPeriod())); }
 
+};
+
+/**
+ * The ClockedObject class extends the SimObject with a clock and
+ * accessor functions to relate ticks to the cycles of the object.
+ */
+class ClockedObject
+    : public SimObject, public Clocked
+{
+  public:
+    ClockedObject(const ClockedObjectParams *p)
+        : SimObject(p), Clocked(*p->clk_domain) { }
 };
 
 #endif //__SIM_CLOCKED_OBJECT_HH__

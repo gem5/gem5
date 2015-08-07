@@ -62,7 +62,7 @@
  */
 class DerivedClockDomain;
 class VoltageDomain;
-class ClockedObject;
+class Clocked;
 
 /**
  * The ClockDomain provides clock to group of clocked objects bundled
@@ -103,7 +103,7 @@ class ClockDomain : public SimObject
      * Pointers to members of this clock domain, so that when the clock
      * period changes, we can update each member's tick.
      */
-    std::vector<ClockedObject*> members;
+    std::vector<Clocked *> members;
 
   public:
 
@@ -123,11 +123,11 @@ class ClockDomain : public SimObject
     Tick clockPeriod() const { return _clockPeriod; }
 
     /**
-     * Register a ClockedObject to this ClockDomain.
+     * Register a Clocked object with this ClockDomain.
      *
-     * @param ClockedObject to add as a member
+     * @param Clocked to add as a member
      */
-    void registerWithClockDomain(ClockedObject *c)
+    void registerWithClockDomain(Clocked *c)
     {
         assert(c != NULL);
         assert(std::find(members.begin(), members.end(), c) == members.end());
