@@ -296,7 +296,7 @@ class Request
     uint64_t _extraData;
 
     /** The context ID (for statistics, typically). */
-    int _contextId;
+    ContextID _contextId;
     /** The thread ID (id within this CPU) */
     ThreadID _threadId;
 
@@ -353,7 +353,7 @@ class Request
     }
 
     Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc, int cid, ThreadID tid)
+            Addr pc, ContextID cid, ThreadID tid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
@@ -369,7 +369,7 @@ class Request
      * Set up CPU and thread numbers.
      */
     void
-    setThreadContext(int context_id, ThreadID tid)
+    setThreadContext(ContextID context_id, ThreadID tid)
     {
         _contextId = context_id;
         _threadId = tid;
@@ -591,7 +591,7 @@ class Request
     }
 
     /** Accessor function for context ID.*/
-    int
+    ContextID
     contextId() const
     {
         assert(privateFlags.isSet(VALID_CONTEXT_ID));

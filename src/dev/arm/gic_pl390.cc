@@ -135,7 +135,7 @@ Pl390::readDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
 
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
 
     DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
@@ -269,7 +269,7 @@ Pl390::readCpu(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - cpuAddr;
 
     assert(pkt->req->hasContextId());
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
     assert(ctx_id < sys->numRunningContexts());
 
     DPRINTF(GIC, "gic cpu read register %#x cpu context: %d\n", daddr,
@@ -356,7 +356,7 @@ Pl390::writeDistributor(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - distAddr;
 
     assert(pkt->req->hasContextId());
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
 
     uint32_t pkt_data M5_VAR_USED;
     switch (pkt->getSize())
@@ -496,7 +496,7 @@ Pl390::writeCpu(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - cpuAddr;
 
     assert(pkt->req->hasContextId());
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
     IAR iar;
 
     DPRINTF(GIC, "gic cpu write register cpu:%d %#x val: %#x\n",
@@ -546,7 +546,7 @@ Pl390::writeCpu(PacketPtr pkt)
 }
 
 void
-Pl390::softInt(int ctx_id, SWI swi)
+Pl390::softInt(ContextID ctx_id, SWI swi)
 {
     switch (swi.list_type) {
       case 1:

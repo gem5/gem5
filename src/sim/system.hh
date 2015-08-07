@@ -197,7 +197,7 @@ class System : public MemObject
     std::vector<ThreadContext *> threadContexts;
     int _numContexts;
 
-    ThreadContext *getThreadContext(ThreadID tid)
+    ThreadContext *getThreadContext(ContextID tid)
     {
         return threadContexts[tid];
     }
@@ -514,8 +514,9 @@ class System : public MemObject
     /// @return Starting address of first page
     Addr allocPhysPages(int npages);
 
-    int registerThreadContext(ThreadContext *tc, int assigned=-1);
-    void replaceThreadContext(ThreadContext *tc, int context_id);
+    ContextID registerThreadContext(ThreadContext *tc,
+                                    ContextID assigned = InvalidContextID);
+    void replaceThreadContext(ThreadContext *tc, ContextID context_id);
 
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;

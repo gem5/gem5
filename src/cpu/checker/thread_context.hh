@@ -96,9 +96,9 @@ class CheckerThreadContext : public ThreadContext
 
     int cpuId() const { return actualTC->cpuId(); }
 
-    int contextId() const { return actualTC->contextId(); }
+    ContextID contextId() const { return actualTC->contextId(); }
 
-    void setContextId(int id)
+    void setContextId(ContextID id)
     {
        actualTC->setContextId(id);
        checkerTC->setContextId(id);

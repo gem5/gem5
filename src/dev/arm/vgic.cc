@@ -90,7 +90,7 @@ VGic::readVCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - vcpuAddr;
 
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
     assert(ctx_id < VGIC_CPU_MAX);
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
@@ -134,7 +134,7 @@ VGic::readCtrl(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - hvAddr;
 
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
 
     DPRINTF(VGIC, "VGIC HVCtrl read register %#x\n", daddr);
 
@@ -228,7 +228,7 @@ VGic::writeVCpu(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - vcpuAddr;
 
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
     assert(ctx_id < VGIC_CPU_MAX);
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
@@ -275,7 +275,7 @@ VGic::writeCtrl(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - hvAddr;
 
-    int ctx_id = pkt->req->contextId();
+    ContextID ctx_id = pkt->req->contextId();
 
     DPRINTF(VGIC, "VGIC HVCtrl write register %#x <= %#x\n", daddr, pkt->get<uint32_t>());
 
@@ -380,7 +380,7 @@ VGic::unPostMaintInt(uint32_t cpu)
  * This may raise a maintenance interrupt.
  */
 void
-VGic::updateIntState(int ctx_id)
+VGic::updateIntState(ContextID ctx_id)
 {
     // @todo This should update APRs!
 

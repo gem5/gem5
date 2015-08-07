@@ -152,7 +152,7 @@ Device::getEthPort(const std::string &if_name, int idx)
 
 
 void
-Device::prepareIO(int cpu, int index)
+Device::prepareIO(ContextID cpu, int index)
 {
     int size = virtualRegs.size();
     if (index > size)
@@ -165,7 +165,7 @@ Device::prepareIO(int cpu, int index)
 //add stats for average number of vnics busy
 
 void
-Device::prepareRead(int cpu, int index)
+Device::prepareRead(ContextID cpu, int index)
 {
     using namespace Regs;
     prepareIO(cpu, index);
@@ -206,7 +206,7 @@ Device::prepareRead(int cpu, int index)
 }
 
 void
-Device::prepareWrite(int cpu, int index)
+Device::prepareWrite(ContextID cpu, int index)
 {
     prepareIO(cpu, index);
 }
@@ -220,7 +220,7 @@ Device::read(PacketPtr pkt)
     assert(config.command & PCI_CMD_MSE);
     assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
 
-    int cpu = pkt->req->contextId();
+    ContextID cpu = pkt->req->contextId();
     Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
@@ -270,7 +270,7 @@ Device::read(PacketPtr pkt)
  * IPR read of device register
 
     Fault
-Device::iprRead(Addr daddr, int cpu, uint64_t &result)
+Device::iprRead(Addr daddr, ContextID cpu, uint64_t &result)
 {
     if (!regValid(daddr))
         panic("invalid address: da=%#x", daddr);
@@ -305,7 +305,7 @@ Device::write(PacketPtr pkt)
     assert(config.command & PCI_CMD_MSE);
     assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
 
-    int cpu = pkt->req->contextId();
+    ContextID cpu = pkt->req->contextId();
     Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;

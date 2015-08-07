@@ -293,7 +293,7 @@ PhysicalMemory::serialize(CheckpointOut &cp) const
 {
     // serialize all the locked addresses and their context ids
     vector<Addr> lal_addr;
-    vector<int> lal_cid;
+    vector<ContextID> lal_cid;
 
     for (auto& m : memories) {
         const list<LockedAddr>& locked_addrs = m->getLockedAddrList();
@@ -370,7 +370,7 @@ PhysicalMemory::unserialize(CheckpointIn &cp)
     // unserialize the locked addresses and map them to the
     // appropriate memory controller
     vector<Addr> lal_addr;
-    vector<int> lal_cid;
+    vector<ContextID> lal_cid;
     UNSERIALIZE_CONTAINER(lal_addr);
     UNSERIALIZE_CONTAINER(lal_cid);
     for(size_t i = 0; i < lal_addr.size(); ++i) {

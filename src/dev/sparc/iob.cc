@@ -118,7 +118,7 @@ void
 Iob::readJBus(PacketPtr pkt)
 {
         Addr accessAddr = pkt->getAddr() - iobJBusAddr;
-        int cpuid = pkt->req->contextId();
+        ContextID cpuid = pkt->req->contextId();
         int index;
         uint64_t data;
 
@@ -233,7 +233,7 @@ void
 Iob::writeJBus(PacketPtr pkt)
 {
         Addr accessAddr = pkt->getAddr() - iobJBusAddr;
-        int cpuid = pkt->req->contextId();
+        ContextID cpuid = pkt->req->contextId();
         int index;
         uint64_t data;
 

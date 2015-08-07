@@ -71,9 +71,9 @@ struct ThreadState : public Serializable {
 
     uint32_t socketId() const { return baseCpu->socketId(); }
 
-    int contextId() const { return _contextId; }
+    ContextID contextId() const { return _contextId; }
 
-    void setContextId(int id) { _contextId = id; }
+    void setContextId(ContextID id) { _contextId = id; }
 
     void setThreadId(ThreadID id) { _threadId = id; }
 
@@ -153,7 +153,7 @@ struct ThreadState : public Serializable {
     BaseCPU *baseCpu;
 
     // system wide HW context id
-    int _contextId;
+    ContextID _contextId;
 
     // Index of hardware thread context on the CPU that this represents.
     ThreadID _threadId;

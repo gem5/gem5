@@ -332,7 +332,8 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         return false;
     }
 
-    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+    ContextID id = pkt->req->hasContextId() ?
+        pkt->req->contextId() : InvalidContextID;
     // Here lat is the value passed as parameter to accessBlock() function
     // that can modify its value.
     blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), lat, id);

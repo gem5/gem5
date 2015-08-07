@@ -460,7 +460,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     MasterID masterId() const { return cpu->dataMasterId(); }
 
     /** Read this context's system-wide ID **/
-    int contextId() const { return thread->contextId(); }
+    ContextID contextId() const { return thread->contextId(); }
 
     /** Returns the fault type. */
     Fault getFault() const { return fault; }

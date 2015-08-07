@@ -273,10 +273,10 @@ class Device : public Base
     virtual Tick write(PacketPtr pkt);
     virtual void drainResume() M5_ATTR_OVERRIDE;
 
-    void prepareIO(int cpu, int index);
-    void prepareRead(int cpu, int index);
-    void prepareWrite(int cpu, int index);
- //   Fault iprRead(Addr daddr, int cpu, uint64_t &result);
+    void prepareIO(ContextID cpu, int index);
+    void prepareRead(ContextID cpu, int index);
+    void prepareWrite(ContextID cpu, int index);
+ //   Fault iprRead(Addr daddr, ContextID cpu, uint64_t &result);
 
 /**
  * Statistics

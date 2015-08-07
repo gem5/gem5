@@ -74,7 +74,7 @@ class LockedAddr {
     Addr addr;
 
     // locking hw context
-    const int contextId;
+    const ContextID contextId;
 
     static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
 

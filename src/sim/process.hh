@@ -75,7 +75,7 @@ class Process : public SimObject
     System *system;
 
     // thread contexts associated with this process
-    std::vector<int> contextIds;
+    std::vector<ContextID> contextIds;
 
     // number of CPUs (esxec contexts, really) assigned to this process.
     unsigned int numCpus() { return contextIds.size(); }
@@ -160,7 +160,7 @@ class Process : public SimObject
 
     // After getting registered with system object, tell process which
     // system-wide context id it is assigned.
-    void assignThreadContext(int context_id)
+    void assignThreadContext(ContextID context_id)
     {
         contextIds.push_back(context_id);
     }

@@ -254,7 +254,7 @@ class ExecContext : public ::ExecContext
     unsigned int readStCondFailures() const { return 0; }
     void setStCondFailures(unsigned int st_cond_failures) {}
 
-    int contextId() { return thread.contextId(); }
+    ContextID contextId() { return thread.contextId(); }
     /* ISA-specific (or at least currently ISA singleton) functions */
 
     /* X86: TLB twiddling */

@@ -210,7 +210,7 @@ class Pl390 : public BaseGic
     /** software generated interrupt
      * @param data data to decode that indicates which cpus to interrupt
      */
-    void softInt(int ctx_id, SWI swi);
+    void softInt(ContextID ctx_id, SWI swi);
 
     /** See if some processor interrupt flags need to be enabled/disabled
      * @param hint which set of interrupts needs to be checked

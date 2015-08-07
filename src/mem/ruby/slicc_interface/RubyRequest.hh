@@ -49,12 +49,12 @@ class RubyRequest : public Message
     PrefetchBit m_Prefetch;
     uint8_t* data;
     PacketPtr pkt;
-    unsigned m_contextId;
+    ContextID m_contextId;
 
     RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
         PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
-        unsigned _proc_id = 100)
+        ContextID _proc_id = 100)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),

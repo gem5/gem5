@@ -130,7 +130,7 @@ class CacheBlk
      */
     class Lock {
       public:
-        int contextId;     // locking context
+        ContextID contextId;     // locking context
         Addr lowAddr;      // low address of lock range
         Addr highAddr;     // high address of lock range
 

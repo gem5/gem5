@@ -209,11 +209,11 @@ bool System::breakpoint()
  */
 int rgdb_wait = -1;
 
-int
-System::registerThreadContext(ThreadContext *tc, int assigned)
+ContextID
+System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
     int id;
-    if (assigned == -1) {
+    if (assigned == InvalidContextID) {
         for (id = 0; id < threadContexts.size(); id++) {
             if (!threadContexts[id])
                 break;
@@ -305,7 +305,7 @@ System::initState()
 }
 
 void
-System::replaceThreadContext(ThreadContext *tc, int context_id)
+System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
 {
     if (context_id >= threadContexts.size()) {
         panic("replaceThreadContext: bad id, %d >= %d\n",

@@ -181,6 +181,10 @@ const Addr MaxAddr = (Addr)-1;
 typedef int16_t ThreadID;
 const ThreadID InvalidThreadID = (ThreadID)-1;
 
+/** Globally unique thread context ID */
+typedef int ContextID;
+const ContextID InvalidContextID = (ContextID)-1;
+
 /**
  * Port index/ID type, and a symbolic name for an invalid port id.
  */

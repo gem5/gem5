@@ -95,9 +95,9 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     if (id1 != id2)
         panic("CPU ids don't match, one: %d, two: %d", id1, id2);
 
-    id1 = one->contextId();
-    id2 = two->contextId();
-    if (id1 != id2)
+    const ContextID cid1 = one->contextId();
+    const ContextID cid2 = two->contextId();
+    if (cid1 != cid2)
         panic("Context ids don't match, one: %d, two: %d", id1, id2);
 
 

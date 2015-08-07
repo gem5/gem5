@@ -667,10 +667,8 @@ void
 Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
 {
     assert(pkt != NULL);
-    int proc_id = -1;
-    if (pkt->req->hasContextId()) {
-        proc_id = pkt->req->contextId();
-    }
+    ContextID proc_id = pkt->req->hasContextId() ?
+        pkt->req->contextId() : InvalidContextID;
 
     // If valid, copy the pc to the ruby request
     Addr pc = 0;

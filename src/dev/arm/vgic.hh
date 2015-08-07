@@ -222,7 +222,7 @@ class VGic : public PioDevice
     Tick writeVCpu(PacketPtr pkt);
     Tick writeCtrl(PacketPtr pkt);
 
-    void updateIntState(int ctx_id);
+    void updateIntState(ContextID ctx_id);
     uint32_t getMISR(struct vcpuIntData *vid);
     void postVInt(uint32_t cpu, Tick when);
     void unPostVInt(uint32_t cpu);
