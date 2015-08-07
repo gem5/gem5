@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -40,18 +40,22 @@
  * Authors: Ali Saidi
  *          Nathan Binkert
  *          Andreas Hansson
+ *          Andreas Sandberg
  */
+
+#include "dev/dma_device.hh"
+
+#include <utility>
 
 #include "base/chunk_generator.hh"
 #include "debug/DMA.hh"
 #include "debug/Drain.hh"
-#include "dev/dma_device.hh"
 #include "sim/system.hh"
 
 DmaPort::DmaPort(MemObject *dev, System *s)
-    : MasterPort(dev->name() + ".dma", dev), device(dev), sendEvent(this),
-      sys(s), masterId(s->getMasterId(dev->name())),
-      pendingCount(0), inRetry(false)
+    : MasterPort(dev->name() + ".dma", dev),
+      device(dev), sys(s), masterId(s->getMasterId(dev->name())),
+      sendEvent(this), pendingCount(0), inRetry(false)
 { }
 
 void
@@ -261,4 +265,215 @@ DmaDevice::getMasterPort(const std::string &if_name, PortID idx)
         return dmaPort;
     }
     return PioDevice::getMasterPort(if_name, idx);
+}
+
+
+
+
+
+DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
+                         unsigned max_req_size,
+                         unsigned max_pending,
+                         Request::Flags flags)
+    : maxReqSize(max_req_size), fifoSize(size),
+      reqFlags(flags), port(_port),
+      buffer(size),
+      nextAddr(0), endAddr(0)
+{
+    freeRequests.resize(max_pending);
+    for (auto &e : freeRequests)
+        e.reset(new DmaDoneEvent(this, max_req_size));
+
+}
+
+DmaReadFifo::~DmaReadFifo()
+{
+    for (auto &p : pendingRequests) {
+        DmaDoneEvent *e(p.release());
+
+        if (e->done()) {
+            delete e;
+        } else {
+            // We can't kill in-flight DMAs, so we'll just transfer
+            // ownership to the event queue so that they get freed
+            // when they are done.
+            e->kill();
+        }
+    }
+}
+
+void
+DmaReadFifo::serialize(CheckpointOut &cp) const
+{
+    assert(pendingRequests.empty());
+
+    SERIALIZE_CONTAINER(buffer);
+    SERIALIZE_SCALAR(endAddr);
+    SERIALIZE_SCALAR(nextAddr);
+}
+
+void
+DmaReadFifo::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_CONTAINER(buffer);
+    UNSERIALIZE_SCALAR(endAddr);
+    UNSERIALIZE_SCALAR(nextAddr);
+}
+
+bool
+DmaReadFifo::tryGet(uint8_t *dst, size_t len)
+{
+    if (buffer.size() >= len) {
+        buffer.read(dst, len);
+        resumeFill();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void
+DmaReadFifo::get(uint8_t *dst, size_t len)
+{
+    const bool success(tryGet(dst, len));
+    panic_if(!success, "Buffer underrun in DmaReadFifo::get()\n");
+}
+
+void
+DmaReadFifo::startFill(Addr start, size_t size)
+{
+    assert(atEndOfBlock());
+
+    nextAddr = start;
+    endAddr = start + size;
+    resumeFill();
+}
+
+void
+DmaReadFifo::stopFill()
+{
+    // Prevent new DMA requests by setting the next address to the end
+    // address. Pending requests will still complete.
+    nextAddr = endAddr;
+
+    // Flag in-flight accesses as canceled. This prevents their data
+    // from being written to the FIFO.
+    for (auto &p : pendingRequests)
+        p->cancel();
+}
+
+void
+DmaReadFifo::resumeFill()
+{
+    // Don't try to fetch more data if we are draining. This ensures
+    // that the DMA engine settles down before we checkpoint it.
+    if (drainState() == DrainState::Draining)
+        return;
+
+    const bool old_eob(atEndOfBlock());
+    size_t size_pending(0);
+    for (auto &e : pendingRequests)
+        size_pending += e->requestSize();
+
+    while (!freeRequests.empty() && !atEndOfBlock()) {
+        const size_t req_size(std::min(maxReqSize, endAddr - nextAddr));
+        if (buffer.size() + size_pending + req_size > fifoSize)
+            break;
+
+        DmaDoneEventUPtr event(std::move(freeRequests.front()));
+        freeRequests.pop_front();
+        assert(event);
+
+        event->reset(req_size);
+        port.dmaAction(MemCmd::ReadReq, nextAddr, req_size, event.get(),
+                       event->data(), 0, reqFlags);
+        nextAddr += req_size;
+        size_pending += req_size;
+
+        pendingRequests.emplace_back(std::move(event));
+    }
+
+    // EOB can be set before a call to dmaDone() if in-flight accesses
+    // have been canceled.
+    if (!old_eob && atEndOfBlock())
+        onEndOfBlock();
+}
+
+void
+DmaReadFifo::dmaDone()
+{
+    const bool old_active(isActive());
+
+    handlePending();
+    resumeFill();
+
+    if (!old_active && isActive())
+        onIdle();
+}
+
+void
+DmaReadFifo::handlePending()
+{
+    while (!pendingRequests.empty() && pendingRequests.front()->done()) {
+        // Get the first finished pending request
+        DmaDoneEventUPtr event(std::move(pendingRequests.front()));
+        pendingRequests.pop_front();
+
+        if (!event->canceled())
+            buffer.write(event->data(), event->requestSize());
+
+        // Move the event to the list of free requests
+        freeRequests.emplace_back(std::move(event));
+    }
+
+    if (pendingRequests.empty())
+        signalDrainDone();
+}
+
+
+
+DrainState
+DmaReadFifo::drain()
+{
+    return pendingRequests.empty() ? DrainState::Drained : DrainState::Draining;
+}
+
+
+DmaReadFifo::DmaDoneEvent::DmaDoneEvent(DmaReadFifo *_parent,
+                                        size_t max_size)
+    : parent(_parent), _done(false), _canceled(false), _data(max_size, 0)
+{
+}
+
+void
+DmaReadFifo::DmaDoneEvent::kill()
+{
+    parent = nullptr;
+    setFlags(AutoDelete);
+}
+
+void
+DmaReadFifo::DmaDoneEvent::cancel()
+{
+    _canceled = true;
+}
+
+void
+DmaReadFifo::DmaDoneEvent::reset(size_t size)
+{
+    assert(size <= _data.size());
+    _done = false;
+    _canceled = false;
+    _requestSize = size;
+}
+
+void
+DmaReadFifo::DmaDoneEvent::process()
+{
+    if (!parent)
+        return;
+
+    assert(!_done);
+    _done = true;
+    parent->dmaDone();
 }

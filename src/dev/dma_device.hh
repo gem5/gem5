@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -39,13 +39,16 @@
  *
  * Authors: Ali Saidi
  *          Nathan Binkert
+ *          Andreas Sandberg
  */
 
 #ifndef __DEV_DMA_DEVICE_HH__
 #define __DEV_DMA_DEVICE_HH__
 
 #include <deque>
+#include <memory>
 
+#include "base/circlebuf.hh"
 #include "dev/io_device.hh"
 #include "params/DmaDevice.hh"
 #include "sim/drain.hh"
@@ -104,21 +107,23 @@ class DmaPort : public MasterPort, public Drainable
         {}
     };
 
+  public:
     /** The device that owns this port. */
-    MemObject *device;
+    MemObject *const device;
 
+    /** The system that device/port are in. This is used to select which mode
+     * we are currently operating in. */
+    System *const sys;
+
+    /** Id for all requests */
+    const MasterID masterId;
+
+  protected:
     /** Use a deque as we never do any insertion or removal in the middle */
     std::deque<PacketPtr> transmitList;
 
     /** Event used to schedule a future sending from the transmit list. */
     EventWrapper<DmaPort, &DmaPort::sendDma> sendEvent;
-
-    /** The system that device/port are in. This is used to select which mode
-     * we are currently operating in. */
-    System *sys;
-
-    /** Id for all requests */
-    const MasterID masterId;
 
     /** Number of outstanding packets the dma port has. */
     uint32_t pendingCount;
@@ -177,6 +182,244 @@ class DmaDevice : public PioDevice
     virtual BaseMasterPort &getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);
 
+};
+
+/**
+ * Buffered DMA engine helper class
+ *
+ * This class implements a simple DMA engine that feeds a FIFO
+ * buffer. The size of the buffer, the maximum number of pending
+ * requests and the maximum request size are all set when the engine
+ * is instantiated.
+ *
+ * An <i>asynchronous</i> transfer of a <i>block</i> of data
+ * (designated by a start address and a size) is started by calling
+ * the startFill() method. The DMA engine will aggressively try to
+ * keep the internal FIFO full. As soon as there is room in the FIFO
+ * for more data <i>and</i> there are free request slots, a new fill
+ * will be started.
+ *
+ * Data in the FIFO can be read back using the get() and tryGet()
+ * methods. Both request a block of data from the FIFO. However, get()
+ * panics if the block cannot be satisfied, while tryGet() simply
+ * returns false. The latter call makes it possible to implement
+ * custom buffer underrun handling.
+ *
+ * A simple use case would be something like this:
+ * \code{.cpp}
+ *     // Create a DMA engine with a 1KiB buffer. Issue up to 8 concurrent
+ *     // uncacheable 64 byte (maximum) requests.
+ *     DmaReadFifo *dma = new DmaReadFifo(port, 1024, 64, 8,
+ *                                        Request::UNCACHEABLE);
+ *
+ *     // Start copying 4KiB data from 0xFF000000
+ *     dma->startFill(0xFF000000, 0x1000);
+ *
+ *     // Some time later when there is data in the FIFO.
+ *     uint8_t data[8];
+ *     dma->get(data, sizeof(data))
+ * \endcode
+ *
+ *
+ * The DMA engine allows new blocks to be requested as soon as the
+ * last request for a block has been sent (i.e., there is no need to
+ * wait for pending requests to complete). This can be queried with
+ * the atEndOfBlock() method and more advanced implementations may
+ * override the onEndOfBlock() callback.
+ */
+class DmaReadFifo : public Drainable, public Serializable
+{
+  public:
+    DmaReadFifo(DmaPort &port, size_t size,
+                unsigned max_req_size,
+                unsigned max_pending,
+                Request::Flags flags = 0);
+
+    ~DmaReadFifo();
+
+  public: // Serializable
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+
+  public: // Drainable
+    DrainState drain() M5_ATTR_OVERRIDE;
+
+  public: // FIFO access
+    /**
+     * @{
+     * @name FIFO access
+     */
+    /**
+     * Try to read data from the FIFO.
+     *
+     * This method reads len bytes of data from the FIFO and stores
+     * them in the memory location pointed to by dst. The method
+     * fails, and no data is written to the buffer, if the FIFO
+     * doesn't contain enough data to satisfy the request.
+     *
+     * @param dst Pointer to a destination buffer
+     * @param len Amount of data to read.
+     * @return true on success, false otherwise.
+     */
+    bool tryGet(uint8_t *dst, size_t len);
+
+    template<typename T>
+    bool tryGet(T &value) {
+        return tryGet(static_cast<T *>(&value), sizeof(T));
+    };
+
+    /**
+     * Read data from the FIFO and panic on failure.
+     *
+     * @see tryGet()
+     *
+     * @param dst Pointer to a destination buffer
+     * @param len Amount of data to read.
+     */
+    void get(uint8_t *dst, size_t len);
+
+    template<typename T>
+    T get() {
+        T value;
+        get(static_cast<uint8_t *>(&value), sizeof(T));
+        return value;
+    };
+
+    /** Get the amount of data stored in the FIFO */
+    size_t size() const { return buffer.size(); }
+    /** Flush the FIFO */
+    void flush() { buffer.flush(); }
+
+    /** @} */
+  public: // FIFO fill control
+    /**
+     * @{
+     * @name FIFO fill control
+     */
+    /**
+     * Start filling the FIFO.
+     *
+     * @warn It's considered an error to call start on an active DMA
+     * engine unless the last request from the active block has been
+     * sent (i.e., atEndOfBlock() is true).
+     *
+     * @param start Physical address to copy from.
+     * @param size Size of the block to copy.
+     */
+    void startFill(Addr start, size_t size);
+
+    /**
+     * Stop the DMA engine.
+     *
+     * Stop filling the FIFO and ignore incoming responses for pending
+     * requests. The onEndOfBlock() callback will not be called after
+     * this method has been invoked. However, once the last response
+     * has been received, the onIdle() callback will still be called.
+     */
+    void stopFill();
+
+    /**
+     * Has the DMA engine sent out the last request for the active
+     * block?
+     */
+    bool atEndOfBlock() const {
+        return nextAddr == endAddr;
+    }
+
+    /**
+     * Is the DMA engine active (i.e., are there still in-flight
+     * accesses)?
+     */
+    bool isActive() const {
+        return !(pendingRequests.empty() && atEndOfBlock());
+    }
+
+    /** @} */
+  protected: // Callbacks
+    /**
+     * @{
+     * @name Callbacks
+     */
+    /**
+     * End of block callback
+     *
+     * This callback is called <i>once</i> after the last access in a
+     * block has been sent. It is legal for a derived class to call
+     * startFill() from this method to initiate a transfer.
+     */
+    virtual void onEndOfBlock() {};
+
+    /**
+     * Last response received callback
+     *
+     * This callback is called when the DMA engine becomes idle (i.e.,
+     * there are no pending requests).
+     *
+     * It is possible for a DMA engine to reach the end of block and
+     * become idle at the same tick. In such a case, the
+     * onEndOfBlock() callback will be called first. This callback
+     * will <i>NOT</i> be called if that callback initiates a new DMA transfer.
+     */
+    virtual void onIdle() {};
+
+    /** @} */
+  private: // Configuration
+    /** Maximum request size in bytes */
+    const Addr maxReqSize;
+    /** Maximum FIFO size in bytes */
+    const size_t fifoSize;
+    /** Request flags */
+    const Request::Flags reqFlags;
+
+    DmaPort &port;
+
+  private:
+    class DmaDoneEvent : public Event
+    {
+      public:
+        DmaDoneEvent(DmaReadFifo *_parent, size_t max_size);
+
+        void kill();
+        void cancel();
+        bool canceled() const { return _canceled; }
+        void reset(size_t size);
+        void process();
+
+        bool done() const { return _done; }
+        size_t requestSize() const { return _requestSize; }
+        const uint8_t *data() const { return _data.data(); }
+        uint8_t *data() { return _data.data(); }
+
+      private:
+        DmaReadFifo *parent;
+        bool _done;
+        bool _canceled;
+        size_t _requestSize;
+        std::vector<uint8_t> _data;
+    };
+
+    typedef std::unique_ptr<DmaDoneEvent> DmaDoneEventUPtr;
+
+    /**
+     * DMA request done, handle incoming data and issue new
+     * request.
+     */
+    void dmaDone();
+
+    /** Handle pending requests that have been flagged as done. */
+    void handlePending();
+
+    /** Try to issue new DMA requests */
+    void resumeFill();
+
+  private: // Internal state
+    Fifo<uint8_t> buffer;
+
+    Addr nextAddr;
+    Addr endAddr;
+
+    std::deque<DmaDoneEventUPtr> pendingRequests;
+    std::deque<DmaDoneEventUPtr> freeRequests;
 };
 
 #endif // __DEV_DMA_DEVICE_HH__
