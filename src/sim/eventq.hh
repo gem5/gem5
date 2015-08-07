@@ -566,7 +566,7 @@ class EventQueue : public Serializable
 
     Tick nextTick() const { return head->when(); }
     void setCurTick(Tick newVal) { _curTick = newVal; }
-    Tick getCurTick() { return _curTick; }
+    Tick getCurTick() const { return _curTick; }
     Event *getHead() const { return head; }
 
     Event *serviceOne();
