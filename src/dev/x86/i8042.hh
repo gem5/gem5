@@ -31,7 +31,7 @@
 #ifndef __DEV_X86_I8042_HH__
 #define __DEV_X86_I8042_HH__
 
-#include <queue>
+#include <deque>
 
 #include "dev/x86/intdev.hh"
 #include "dev/io_device.hh"
@@ -45,7 +45,7 @@ class IntPin;
 class PS2Device
 {
   protected:
-    std::queue<uint8_t> outBuffer;
+    std::deque<uint8_t> outBuffer;
 
     static const uint16_t NoCommand = (uint16_t)(-1);
 
@@ -61,6 +61,9 @@ class PS2Device
     PS2Device() : lastCommand(NoCommand)
     {}
 
+    virtual void serialize(const std::string &base, CheckpointOut &cp) const;
+    virtual void unserialize(const std::string &base, CheckpointIn &cp);
+
     bool hasData()
     {
         return !outBuffer.empty();
@@ -69,7 +72,7 @@ class PS2Device
     uint8_t getData()
     {
         uint8_t data = outBuffer.front();
-        outBuffer.pop();
+        outBuffer.pop_front();
         return data;
     }
 
@@ -117,8 +120,10 @@ class PS2Mouse : public PS2Device
 
     bool processData(uint8_t data);
 
-    void serialize(const std::string &base, CheckpointOut &cp);
-    void unserialize(const std::string &base, CheckpointIn &cp);
+    void serialize(const std::string &base,
+                   CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(const std::string &base,
+                     CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 
 class PS2Keyboard : public PS2Device
@@ -149,9 +154,6 @@ class PS2Keyboard : public PS2Device
 
   public:
     bool processData(uint8_t data);
-
-    void serialize(const std::string &base, CheckpointOut &cp);
-    void unserialize(const std::string &base, CheckpointIn &cp);
 };
 
 class I8042 : public BasicPioDevice
@@ -247,7 +249,7 @@ class I8042 : public BasicPioDevice
 
     Tick write(PacketPtr pkt);
 
-    void serializeOld(CheckpointOut &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 };
 

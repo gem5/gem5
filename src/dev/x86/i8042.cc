@@ -92,6 +92,29 @@ X86ISA::I8042::writeData(uint8_t newData, bool mouse)
 }
 
 void
+X86ISA::PS2Device::serialize(const std::string &base, CheckpointOut &cp) const
+{
+    paramOut(cp, base + ".lastCommand", lastCommand);
+
+    std::vector<uint8_t> buffer(outBuffer.size());
+    std::copy(outBuffer.begin(), outBuffer.end(), buffer.begin());
+    arrayParamOut(cp, base + ".outBuffer.elts", buffer);
+}
+
+void
+X86ISA::PS2Device::unserialize(const std::string &base, CheckpointIn &cp)
+{
+    paramIn(cp, base + ".lastCommand", lastCommand);
+
+    std::vector<uint8_t> buffer;
+    arrayParamIn(cp, base + ".outBuffer.elts", buffer);
+    assert(outBuffer.empty());
+    for (auto c : buffer)
+        outBuffer.push_back(c);
+}
+
+
+void
 X86ISA::PS2Device::ack()
 {
     bufferData(&CommandAck, sizeof(CommandAck));
@@ -108,7 +131,7 @@ X86ISA::PS2Device::bufferData(const uint8_t *data, int size)
 {
     assert(data || size == 0);
     while (size) {
-        outBuffer.push(*(data++));
+        outBuffer.push_back(*(data++));
         size--;
     }
 }
@@ -463,7 +486,7 @@ X86ISA::I8042::write(PacketPtr pkt)
 }
 
 void
-X86ISA::I8042::serializeOld(CheckpointOut &cp)
+X86ISA::I8042::serialize(CheckpointOut &cp) const
 {
     uint8_t statusRegData = statusReg.__data;
     uint8_t commandByteData = commandByte.__data;
@@ -498,52 +521,11 @@ X86ISA::I8042::unserialize(CheckpointIn &cp)
 }
 
 void
-X86ISA::PS2Keyboard::serialize(const std::string &base, CheckpointOut &cp)
+X86ISA::PS2Mouse::serialize(const std::string &base, CheckpointOut &cp) const
 {
-    paramOut(cp, base + ".lastCommand", lastCommand);
-    int bufferSize = outBuffer.size();
-    paramOut(cp, base + ".outBuffer.size", bufferSize);
-    uint8_t *buffer = new uint8_t[bufferSize];
-    for (int i = 0; i < bufferSize; ++i) {
-        buffer[i] = outBuffer.front();
-        outBuffer.pop();
-    }
-    arrayParamOut(cp, base + ".outBuffer.elts", buffer,
-            bufferSize*sizeof(uint8_t));
-    delete[] buffer;
-}
+    PS2Device::serialize(base, cp);
 
-void
-X86ISA::PS2Keyboard::unserialize(const std::string &base, CheckpointIn &cp)
-{
-    paramIn(cp, base + ".lastCommand", lastCommand);
-    int bufferSize;
-    paramIn(cp, base + ".outBuffer.size", bufferSize);
-    uint8_t *buffer = new uint8_t[bufferSize];
-    arrayParamIn(cp, base + ".outBuffer.elts", buffer,
-            bufferSize*sizeof(uint8_t));
-    for (int i = 0; i < bufferSize; ++i) {
-        outBuffer.push(buffer[i]);
-    }
-    delete[] buffer;
-}
-
-void
-X86ISA::PS2Mouse::serialize(const std::string &base, CheckpointOut &cp)
-{
-    uint8_t statusData = status.__data;
-    paramOut(cp, base + ".lastCommand", lastCommand);
-    int bufferSize = outBuffer.size();
-    paramOut(cp, base + ".outBuffer.size", bufferSize);
-    uint8_t *buffer = new uint8_t[bufferSize];
-    for (int i = 0; i < bufferSize; ++i) {
-        buffer[i] = outBuffer.front();
-        outBuffer.pop();
-    }
-    arrayParamOut(cp, base + ".outBuffer.elts", buffer,
-            bufferSize*sizeof(uint8_t));
-    delete[] buffer;
-    paramOut(cp, base + ".status", statusData);
+    paramOut(cp, base + ".status", status);
     paramOut(cp, base + ".resolution", resolution);
     paramOut(cp, base + ".sampleRate", sampleRate);
 }
@@ -551,22 +533,11 @@ X86ISA::PS2Mouse::serialize(const std::string &base, CheckpointOut &cp)
 void
 X86ISA::PS2Mouse::unserialize(const std::string &base, CheckpointIn &cp)
 {
-    uint8_t statusData;
-    paramIn(cp, base + ".lastCommand", lastCommand);
-    int bufferSize;
-    paramIn(cp, base + ".outBuffer.size", bufferSize);
-    uint8_t *buffer = new uint8_t[bufferSize];
-    arrayParamIn(cp, base + ".outBuffer.elts", buffer,
-            bufferSize*sizeof(uint8_t));
-    for (int i = 0; i < bufferSize; ++i) {
-        outBuffer.push(buffer[i]);
-    }
-    delete[] buffer;
-    paramIn(cp, base + ".status", statusData);
+    PS2Device::unserialize(base, cp);
+
+    paramIn(cp, base + ".status", status);
     paramIn(cp, base + ".resolution", resolution);
     paramIn(cp, base + ".sampleRate", sampleRate);
-
-    status.__data = statusData;
 }
 
 X86ISA::I8042 *
