@@ -42,6 +42,8 @@
 
 from m5.params import *
 from m5.proxy import *
+from ClockDomain import ClockDomain
+from VoltageDomain import VoltageDomain
 from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
 from Pci import PciConfigAll
 from Ethernet import NSGigE, IGbE_igb, IGbE_e1000
@@ -88,6 +90,49 @@ class RealViewCtrl(BasicPioDevice):
     proc_id0 = Param.UInt32(0x0C000000, "Processor ID, SYS_PROCID")
     proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
+
+class RealViewOsc(ClockDomain):
+    type = 'RealViewOsc'
+    cxx_header = "dev/arm/rv_ctrl.hh"
+
+    parent = Param.RealViewCtrl(Parent.any, "RealView controller")
+
+    # TODO: We currently don't have the notion of a clock source,
+    # which means we have to associate oscillators with a voltage
+    # source.
+    voltage_domain = Param.VoltageDomain(Parent.voltage_domain,
+                                         "Voltage domain")
+
+    # See ARM DUI 0447J (ARM Motherboard Express uATX -- V2M-P1) and
+    # the individual core/logic tile reference manuals for details
+    # about the site/position/dcc/device allocation.
+    site = Param.UInt8("Board Site")
+    position = Param.UInt8("Position in device stack")
+    dcc = Param.UInt8("Daughterboard Configuration Controller")
+    device = Param.UInt8("Device ID")
+
+    freq = Param.Clock("Default frequency")
+
+class VExpressCoreTileCtrl(RealViewCtrl):
+    class MotherBoardOsc(RealViewOsc):
+        site, position, dcc = (0, 0, 0)
+
+    class CoreTileOsc(RealViewOsc):
+        site, position, dcc = (1, 0, 0)
+
+    # See ARM DUI 0447J (ARM Motherboard Express uATX -- V2M-P1)
+    osc_mcc = MotherBoardOsc(device=0, freq="50MHz")
+    osc_clcd = MotherBoardOsc(device=1, freq="23.75MHz")
+    osc_peripheral = MotherBoardOsc(device=2, freq="24MHz")
+    osc_system_bus = MotherBoardOsc(device=4, freq="24MHz")
+
+    # See Table 2.8 in ARM DUI 0604E (CoreTile Express A15x2 TRM).
+    osc_cpu = CoreTileOsc(device=0, freq="60MHz")
+    osc_hsbm = CoreTileOsc(device=4, freq="40MHz")
+    osc_pxl = CoreTileOsc(device=5, freq="23.75MHz")
+    osc_smb = CoreTileOsc(device=6, freq="50MHz")
+    osc_sys = CoreTileOsc(device=7, freq="60MHz")
+    osc_ddr = CoreTileOsc(device=8, freq="40MHz")
 
 class VGic(PioDevice):
     type = 'VGic'
@@ -227,7 +272,7 @@ class RealView(Platform):
 # Chapter 4: Programmer's Reference
 class RealViewPBX(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
-    realview_io = RealViewCtrl(pio_addr=0x10000000)
+    realview_io = VExpressCoreTileCtrl(pio_addr=0x10000000)
     gic = Pl390()
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
@@ -354,7 +399,7 @@ class RealViewPBX(RealView):
 # Chapter 4: Programmer's Reference
 class RealViewEB(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
-    realview_io = RealViewCtrl(pio_addr=0x10000000, idreg=0x01400500)
+    realview_io = VExpressCoreTileCtrl(pio_addr=0x10000000, idreg=0x01400500)
     gic = Pl390(dist_addr=0x10041000, cpu_addr=0x10040000)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
@@ -464,8 +509,9 @@ class VExpress_EMM(RealView):
     _mem_regions = [(Addr('2GB'), Addr('2GB'))]
     pci_cfg_base = 0x30000000
     uart = Pl011(pio_addr=0x1c090000, int_num=37)
-    realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000, \
-                               idreg=0x02250000, pio_addr=0x1C010000)
+    realview_io = VExpressCoreTileCtrl(
+        proc_id0=0x14000000, proc_id1=0x14000000,
+        idreg=0x02250000, pio_addr=0x1C010000)
     gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
     generic_timer = GenericTimer(int_phys=29, int_virt=27)

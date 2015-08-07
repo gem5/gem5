@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010,2013 ARM Limited
+ * Copyright (c) 2010,2013,2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 #include "base/bitunion.hh"
 #include "dev/io_device.hh"
 #include "params/RealViewCtrl.hh"
+#include "params/RealViewOsc.hh"
 
 /** @file
  * This implements the simple real view registers on a PBXA9
@@ -50,6 +51,37 @@
 
 class RealViewCtrl : public BasicPioDevice
 {
+  public:
+    enum DeviceFunc {
+        FUNC_OSC      = 1,
+        FUNC_VOLT     = 2,
+        FUNC_AMP      = 3,
+        FUNC_TEMP     = 4,
+        FUNC_RESET    = 5,
+        FUNC_SCC      = 6,
+        FUNC_MUXFPGA  = 7,
+        FUNC_SHUTDOWN = 8,
+        FUNC_REBOOT   = 9,
+        FUNC_DVIMODE  = 11,
+        FUNC_POWER    = 12,
+        FUNC_ENERGY   = 13,
+    };
+
+    class Device
+    {
+      public:
+        Device(RealViewCtrl &parent, DeviceFunc func,
+               uint8_t site, uint8_t pos, uint8_t dcc, uint16_t dev)
+        {
+            parent.registerDevice(func, site, pos, dcc, dev,  this);
+        }
+
+        virtual ~Device() {}
+
+        virtual uint32_t read() const = 0;
+        virtual void write(uint32_t value) = 0;
+    };
+
   protected:
     enum {
         IdReg      = 0x00,
@@ -96,6 +128,18 @@ class RealViewCtrl : public BasicPioDevice
         Bitfield<16> locked;
     EndBitUnion(SysLockReg)
 
+    BitUnion32(CfgCtrlReg)
+        Bitfield<11, 0> dev;
+        Bitfield<15, 12> pos;
+        Bitfield<17, 16> site;
+        Bitfield<25, 20> func;
+        Bitfield<29, 26> dcc;
+        Bitfield<30> wr;
+        Bitfield<31> start;
+    EndBitUnion(CfgCtrlReg)
+
+    static const uint32_t CFG_CTRL_ADDR_MASK = 0x3fffffffUL;
+
     SysLockReg sysLock;
 
     /** This register is used for smp booting.
@@ -127,17 +171,52 @@ class RealViewCtrl : public BasicPioDevice
      * @param pkt The memory request.
      * @param data Where to put the data.
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
 
     /**
      * All writes are simply ignored.
      * @param pkt The memory request.
      * @param data the data
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
 
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+
+  public:
+    void registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
+                        uint8_t dcc, uint16_t dev,
+                        Device *handler);
+
+  protected:
+    std::map<uint32_t, Device *> devices;
+};
+
+/**
+ * This is an implementation of a programmable oscillator on the that
+ * can be configured through the RealView/Versatile Express
+ * configuration interface.
+ *
+ * See ARM DUI 0447J (ARM  Motherboard Express uATX -- V2M-P1).
+ */
+class RealViewOsc
+    : public ClockDomain, RealViewCtrl::Device
+{
+  public:
+    RealViewOsc(RealViewOscParams *p);
+    virtual ~RealViewOsc() {};
+
+    void startup() M5_ATTR_OVERRIDE;
+
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+
+  public: // RealViewCtrl::Device interface
+    uint32_t read() const M5_ATTR_OVERRIDE;
+    void write(uint32_t freq) M5_ATTR_OVERRIDE;
+
+  protected:
+    void clockPeriod(Tick clock_period);
 };
 
 
