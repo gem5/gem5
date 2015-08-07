@@ -42,6 +42,7 @@
 #include <cassert>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 
 #include "base/refcnt.hh"
 
@@ -90,8 +91,12 @@ class Cycles
 
   public:
 
+#ifndef SWIG // SWIG gets confused by constexpr
     /** Explicit constructor assigning a value. */
+    explicit constexpr Cycles(uint64_t _c) : c(_c) { }
+#else
     explicit Cycles(uint64_t _c) : c(_c) { }
+#endif
 
     /** Default constructor for parameter classes. */
     Cycles() : c(0) { }
@@ -99,7 +104,7 @@ class Cycles
 #ifndef SWIG // keep the operators away from SWIG
 
     /** Converting back to the value type. */
-    operator uint64_t() const { return c; }
+    constexpr operator uint64_t() const { return c; }
 
     /** Prefix increment operator. */
     Cycles& operator++()
@@ -110,23 +115,26 @@ class Cycles
     { assert(c != 0); --c; return *this; }
 
     /** In-place addition of cycles. */
-    const Cycles& operator+=(const Cycles& cc)
+    Cycles& operator+=(const Cycles& cc)
     { c += cc.c; return *this; }
 
     /** Greater than comparison used for > Cycles(0). */
-    bool operator>(const Cycles& cc) const
+    constexpr bool operator>(const Cycles& cc) const
     { return c > cc.c; }
 
-    const Cycles operator +(const Cycles& b) const
+    constexpr Cycles operator +(const Cycles& b) const
     { return Cycles(c + b.c); }
 
-    const Cycles operator -(const Cycles& b) const
-    { assert(c >= b.c); return Cycles(c - b.c); }
+    constexpr Cycles operator -(const Cycles& b) const
+    {
+        return c >= b.c ? Cycles(c - b.c) :
+            throw std::invalid_argument("RHS cycle value larger than LHS");
+    }
 
-    const Cycles operator <<(const int32_t shift)
+    constexpr Cycles operator <<(const int32_t shift) const
     { return Cycles(c << shift); }
 
-    const Cycles operator >>(const int32_t shift)
+    constexpr Cycles operator >>(const int32_t shift) const
     { return Cycles(c >> shift); }
 
     friend std::ostream& operator<<(std::ostream &out, const Cycles & cycles);
