@@ -767,6 +767,12 @@ class Packet : public Printable
     }
 
 
+  public:
+    /**
+     * @{
+     * @name Data accessor mehtods
+     */
+
     /**
      * Set the data pointer to the following value that should not be
      * freed. Static data allows us to do a single memcpy even if
@@ -845,14 +851,49 @@ class Packet : public Printable
     }
 
     /**
-     * return the value of what is pointed to in the packet.
+     * Get the data in the packet byte swapped from big endian to
+     * host endian.
+     */
+    template <typename T>
+    T getBE() const;
+
+    /**
+     * Get the data in the packet byte swapped from little endian to
+     * host endian.
+     */
+    template <typename T>
+    T getLE() const;
+
+    /**
+     * Get the data in the packet byte swapped from the specified
+     * endianness.
+     */
+    template <typename T>
+    T get(ByteOrder endian) const;
+
+    /**
+     * Get the data in the packet byte swapped from guest to host
+     * endian.
      */
     template <typename T>
     T get() const;
 
+    /** Set the value in the data pointer to v as big endian. */
+    template <typename T>
+    void setBE(T v);
+
+    /** Set the value in the data pointer to v as little endian. */
+    template <typename T>
+    void setLE(T v);
+
     /**
-     * set the value in the data pointer to v.
+     * Set the value in the data pointer to v using the specified
+     * endianness.
      */
+    template <typename T>
+    void set(T v, ByteOrder endian);
+
+    /** Set the value in the data pointer to v as guest endian. */
     template <typename T>
     void set(T v);
 
@@ -925,6 +966,18 @@ class Packet : public Printable
         data = new uint8_t[getSize()];
     }
 
+    /** @} */
+
+  private: // Private data accessor methods
+    /** Get the data in the packet without byte swapping. */
+    template <typename T>
+    T getRaw() const;
+
+    /** Set the value in the data pointer to v without byte swapping. */
+    template <typename T>
+    void setRaw(T v);
+
+  public:
     /**
      * Check a functional request against a memory value stored in
      * another packet (i.e. an in-transit request or
