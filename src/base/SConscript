@@ -37,7 +37,6 @@ Source('atomicio.cc')
 Source('bigint.cc')
 Source('bitmap.cc')
 Source('callback.cc')
-Source('circlebuf.cc')
 Source('cprintf.cc')
 Source('debug.cc')
 if env['USE_FENV']:

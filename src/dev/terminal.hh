@@ -109,11 +109,11 @@ class Terminal : public SimObject
     void accept();
 
   protected:
-    CircleBuf txbuf;
-    CircleBuf rxbuf;
+    CircleBuf<char> txbuf;
+    CircleBuf<char> rxbuf;
     std::ostream *outfile;
 #if TRACING_ON == 1
-    CircleBuf linebuf;
+    CircleBuf<char> linebuf;
 #endif
 
   public:

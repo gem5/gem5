@@ -34,7 +34,7 @@ Source('unittest.cc')
 
 UnitTest('bituniontest', 'bituniontest.cc')
 UnitTest('bitvectest', 'bitvectest.cc')
-UnitTest('circletest', 'circletest.cc')
+UnitTest('circlebuf', 'circlebuf.cc')
 UnitTest('cprintftest', 'cprintftest.cc')
 UnitTest('cprintftime', 'cprintftest.cc')
 UnitTest('fbtest', 'fbtest.cc')
