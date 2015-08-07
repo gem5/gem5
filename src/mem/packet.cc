@@ -166,13 +166,13 @@ MemCmd::commandInfo[] =
     /* IntResp -- for interrupts */
     { SET2(IsWrite, IsResponse), InvalidCmd, "MessageResp" },
     /* ReleaseReq -- for release synchronization */
-    { SET3(IsRelease, IsRequest, NeedsResponse), ReleaseResp, "ReleaseReq" },
+    { SET2(IsRequest, NeedsResponse), ReleaseResp, "ReleaseReq" },
     /* ReleaseResp -- for release synchronization */
-    { SET2(IsRelease, IsResponse), InvalidCmd, "ReleaseResp" },
+    { SET1(IsResponse), InvalidCmd, "ReleaseResp" },
     /* AcquireReq -- for release synchronization */
-    { SET3(IsAcquire, IsRequest, NeedsResponse), AcquireResp, "AcquireReq" },
+    { SET2(IsRequest, NeedsResponse), AcquireResp, "AcquireReq" },
     /* AcquireResp -- for release synchronization */
-    { SET3(IsAcquire, IsResponse, NeedsResponse), InvalidCmd, "AcquireResp" },
+    { SET2(IsResponse, NeedsResponse), InvalidCmd, "AcquireResp" },
     /* InvalidDestError  -- packet dest field invalid */
     { SET2(IsResponse, IsError), InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */

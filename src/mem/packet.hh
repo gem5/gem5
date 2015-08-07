@@ -151,8 +151,6 @@ class MemCmd
         IsError,        //!< Error response
         IsPrint,        //!< Print state matching address (for debugging)
         IsFlush,        //!< Flush the address from caches
-        IsAcquire,      //!< Acquire operation
-        IsRelease,      //!< Release operation
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -209,8 +207,6 @@ class MemCmd
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
-    bool isAcquire() const      { return testCmdAttrib(IsAcquire); }
-    bool isRelease() const      { return testCmdAttrib(IsRelease); }
 
     const Command
     responseCommand() const
@@ -492,8 +488,6 @@ class Packet : public Printable
     bool isError() const             { return cmd.isError(); }
     bool isPrint() const             { return cmd.isPrint(); }
     bool isFlush() const             { return cmd.isFlush(); }
-    bool isAcquire() const           { return cmd.isAcquire(); }
-    bool isRelease() const           { return cmd.isRelease(); }
 
     // Snoop flags
     void assertMemInhibit()
