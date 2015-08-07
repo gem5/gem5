@@ -4,7 +4,7 @@ warn: Sockets disabled, not accepting vnc client connections
 warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
 warn: Existing EnergyCtrl, but no enabled DVFSHandler found.
-warn: SCReg: Writing 0 to dcc0:site0:pos0:fn7:dev0
+warn: SCReg: Access to unknown device dcc0:site0:pos0:fn7:dev0
 warn: Tried to read RealView I/O at offset 0x60 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x48 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x8 that doesn't exist

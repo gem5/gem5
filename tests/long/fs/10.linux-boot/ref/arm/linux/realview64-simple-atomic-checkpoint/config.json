@@ -68,9 +68,8 @@
             "frontend_latency": 2
         }, 
         "symbolfile": "", 
-        "readfile": "/work/gem5/scratch1/gem5/tests/halt.sh", 
+        "readfile": "/work/gem5/outgoing/gem5/tests/halt.sh", 
         "have_large_asid_64": false, 
-        "work_end_ckpt_count": 0, 
         "phys_addr_range_64": 40, 
         "have_lpae": false, 
         "cxx_class": "LinuxArmSystem", 
@@ -80,7 +79,6 @@
             "number": 0, 
             "frame_capture": false, 
             "eventq_index": 0, 
-            "capture_exit_frame": -1, 
             "cxx_class": "VncServer", 
             "path": "system.vncserver", 
             "type": "VncServer", 
@@ -132,6 +130,7 @@
                 "enable_capture": true, 
                 "path": "system.realview.hdlcd", 
                 "pio_addr": 721420288, 
+                "workaround_swap_rb": true, 
                 "type": "HDLcd"
             }, 
             "mmc_fake": {
@@ -210,22 +209,162 @@
                 "type": "AmbaFake"
             }, 
             "realview_io": {
-                "proc_id1": 335544320, 
-                "name": "realview_io", 
                 "pio": {
                     "peer": "system.iobus.master[1]", 
                     "role": "SLAVE"
                 }, 
+                "system": "system", 
+                "cxx_class": "RealViewCtrl", 
+                "pio_addr": 469827584, 
                 "pio_latency": 100000, 
                 "clk_domain": "system.clk_domain", 
-                "system": "system", 
+                "osc_sys": {
+                    "position": 0, 
+                    "name": "osc_sys", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 1, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 7, 
+                    "path": "system.realview.realview_io.osc_sys", 
+                    "freq": 16667, 
+                    "type": "RealViewOsc"
+                }, 
                 "eventq_index": 0, 
-                "cxx_class": "RealViewCtrl", 
                 "proc_id0": 335544320, 
+                "proc_id1": 335544320, 
+                "osc_clcd": {
+                    "position": 0, 
+                    "name": "osc_clcd", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 0, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 1, 
+                    "path": "system.realview.realview_io.osc_clcd", 
+                    "freq": 42105, 
+                    "type": "RealViewOsc"
+                }, 
+                "osc_peripheral": {
+                    "position": 0, 
+                    "name": "osc_peripheral", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 0, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 2, 
+                    "path": "system.realview.realview_io.osc_peripheral", 
+                    "freq": 41667, 
+                    "type": "RealViewOsc"
+                }, 
+                "osc_hsbm": {
+                    "position": 0, 
+                    "name": "osc_hsbm", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 1, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 4, 
+                    "path": "system.realview.realview_io.osc_hsbm", 
+                    "freq": 25000, 
+                    "type": "RealViewOsc"
+                }, 
+                "osc_mcc": {
+                    "position": 0, 
+                    "name": "osc_mcc", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 0, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 0, 
+                    "path": "system.realview.realview_io.osc_mcc", 
+                    "freq": 20000, 
+                    "type": "RealViewOsc"
+                }, 
                 "path": "system.realview.realview_io", 
                 "idreg": 35979264, 
+                "osc_system_bus": {
+                    "position": 0, 
+                    "name": "osc_system_bus", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 0, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 4, 
+                    "path": "system.realview.realview_io.osc_system_bus", 
+                    "freq": 41667, 
+                    "type": "RealViewOsc"
+                }, 
+                "osc_smb": {
+                    "position": 0, 
+                    "name": "osc_smb", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 1, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 6, 
+                    "path": "system.realview.realview_io.osc_smb", 
+                    "freq": 20000, 
+                    "type": "RealViewOsc"
+                }, 
+                "name": "realview_io", 
                 "type": "RealViewCtrl", 
-                "pio_addr": 469827584
+                "osc_ddr": {
+                    "position": 0, 
+                    "name": "osc_ddr", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 1, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 8, 
+                    "path": "system.realview.realview_io.osc_ddr", 
+                    "freq": 25000, 
+                    "type": "RealViewOsc"
+                }, 
+                "osc_cpu": {
+                    "position": 0, 
+                    "name": "osc_cpu", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 1, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 0, 
+                    "path": "system.realview.realview_io.osc_cpu", 
+                    "freq": 16667, 
+                    "type": "RealViewOsc"
+                }, 
+                "osc_pxl": {
+                    "position": 0, 
+                    "name": "osc_pxl", 
+                    "parent": "system.realview.realview_io", 
+                    "voltage_domain": "system.voltage_domain", 
+                    "dcc": 0, 
+                    "site": 1, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewOsc", 
+                    "device": 5, 
+                    "path": "system.realview.realview_io.osc_pxl", 
+                    "freq": 42105, 
+                    "type": "RealViewOsc"
+                }
             }, 
             "l2x0_fake": {
                 "system": "system", 
@@ -754,7 +893,7 @@
                 "MSIXCAPNextCapability": 0, 
                 "PXCAPLinkCtrl": 0, 
                 "Revision": 0, 
-                "hardware_address": "<m5.params.EthernetAddr object at 0x46abfd0>", 
+                "hardware_address": "<m5.params.EthernetAddr object at 0x7fd02360a190>", 
                 "LegacyIOBase": 0, 
                 "pio_latency": 30000, 
                 "platform": "system.realview", 
@@ -1029,7 +1168,10 @@
         "panic_on_panic": true, 
         "eventq_index": 0, 
         "iocache": {
-            "is_top_level": true, 
+            "cpu_side": {
+                "peer": "system.iobus.master[27]", 
+                "role": "SLAVE"
+            }, 
             "prefetcher": null, 
             "clk_domain": "system.clk_domain", 
             "write_buffers": 8, 
@@ -1064,17 +1206,13 @@
             "addr_ranges": [
                 "2147483648:2415919103"
             ], 
-            "assoc": 8, 
+            "is_read_only": false, 
             "prefetch_on_access": false, 
             "path": "system.iocache", 
             "name": "iocache", 
             "type": "BaseCache", 
             "sequential_access": false, 
-            "cpu_side": {
-                "peer": "system.iobus.master[27]", 
-                "role": "SLAVE"
-            }, 
-            "two_queue": false
+            "assoc": 8
         }, 
         "dvfs_handler": {
             "enable": false, 
@@ -1270,7 +1408,10 @@
                     "role": "MASTER"
                 }, 
                 "icache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu.icache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -1305,17 +1446,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 1, 
+                    "is_read_only": true, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu.icache", 
                     "name": "icache", 
                     "type": "BaseCache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu.icache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 1
                 }, 
                 "interrupts": {
                     "eventq_index": 0, 
@@ -1360,7 +1497,10 @@
                     "type": "ArmStage2MMU"
                 }, 
                 "l2cache": {
-                    "is_top_level": false, 
+                    "cpu_side": {
+                        "peer": "system.cpu.toL2Bus.master[0]", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -1395,17 +1535,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 8, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu.l2cache", 
                     "name": "l2cache", 
                     "type": "BaseCache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu.toL2Bus.master[0]", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 8
                 }, 
                 "path": "system.cpu", 
                 "max_loads_any_thread": 0, 
@@ -1442,7 +1578,10 @@
                 "progress_interval": 0, 
                 "branchPred": null, 
                 "dcache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu.dcache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -1477,17 +1616,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 4, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu.dcache", 
                     "name": "dcache", 
                     "type": "BaseCache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu.dcache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 4
                 }, 
                 "isa": [
                     {
@@ -1580,7 +1715,7 @@
             "path": "system.cf0", 
             "type": "IdeDisk"
         }, 
-        "boot_release_addr": 65528, 
+        "work_end_ckpt_count": 0, 
         "mem_mode": "atomic", 
         "name": "system", 
         "init_param": 0, 

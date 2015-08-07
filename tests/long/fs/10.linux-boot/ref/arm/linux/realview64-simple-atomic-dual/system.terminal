@@ -158,9 +158,9 @@
 [    2.411057] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
   INIT:  version 2.88 booting 
  Starting udev
-[    2.446370] udevd[609]: starting version 182
+[    2.446371] udevd[609]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    2.512067] random: dd urandom read with 17 bits of entropy available
+[    2.521978] random: dd urandom read with 17 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -169,7 +169,7 @@ Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
 Configuring network interfaces... udhcpc (v1.21.1) started
-[    2.610614] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[    2.620600] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
 Sending discover...
 Sending discover...
 Sending discover...

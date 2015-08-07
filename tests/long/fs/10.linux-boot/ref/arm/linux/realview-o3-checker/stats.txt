@@ -4,11 +4,11 @@ sim_seconds                                  2.827546                       # Nu
 sim_ticks                                2827546300000                       # Number of ticks simulated
 final_tick                               2827546300000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  69908                       # Simulator instruction rate (inst/s)
-host_op_rate                                    84797                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1747497470                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 626724                       # Number of bytes of host memory used
-host_seconds                                  1618.05                       # Real time elapsed on the host
+host_inst_rate                                  77731                       # Simulator instruction rate (inst/s)
+host_op_rate                                    94287                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1943054038                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 577104                       # Number of bytes of host memory used
+host_seconds                                  1455.21                       # Real time elapsed on the host
 sim_insts                                   113115023                       # Number of instructions simulated
 sim_ops                                     137206411                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1915,6 +1915,16 @@ system.realview.ethernet.totalRxOrn                 0                       # to
 system.realview.ethernet.coalescedTotal           nan                       # average number of interrupts coalesced into each post
 system.realview.ethernet.postedInterrupts            0                       # number of posts to CPU
 system.realview.ethernet.droppedPackets             0                       # number of packets dropped
+system.realview.realview_io.osc_clcd.clock        42105                       # Clock period in ticks
+system.realview.realview_io.osc_cpu.clock        16667                       # Clock period in ticks
+system.realview.realview_io.osc_ddr.clock        25000                       # Clock period in ticks
+system.realview.realview_io.osc_hsbm.clock        25000                       # Clock period in ticks
+system.realview.realview_io.osc_mcc.clock        20000                       # Clock period in ticks
+system.realview.realview_io.osc_peripheral.clock        41667                       # Clock period in ticks
+system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
+system.realview.realview_io.osc_smb.clock        20000                       # Clock period in ticks
+system.realview.realview_io.osc_sys.clock        16667                       # Clock period in ticks
+system.realview.realview_io.osc_system_bus.clock        41667                       # Clock period in ticks
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
 system.cpu.kern.inst.quiesce                     3038                       # number of quiesce instructions executed
 

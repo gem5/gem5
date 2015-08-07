@@ -158,9 +158,9 @@
 [    3.411222] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
   INIT:  version 2.88 booting 
  Starting udev
-[    3.446950] udevd[607]: starting version 182
+[    3.446951] udevd[607]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    3.532262] random: dd urandom read with 19 bits of entropy available
+[    3.532266] random: dd urandom read with 19 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1

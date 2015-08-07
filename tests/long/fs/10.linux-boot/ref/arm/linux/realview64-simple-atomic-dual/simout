@@ -1,17 +1,16 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 29 2014 15:46:15
-gem5 started Oct 29 2014 16:01:47
-gem5 executing on u200540-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview64-simple-atomic-dual -re /work/gem5.latest/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview64-simple-atomic-dual
+gem5 compiled Aug  7 2015 10:13:08
+gem5 started Aug  7 2015 11:11:51
+gem5 executing on e104799-lin
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-atomic-dual -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-atomic-dual
+
 Selected 64-bit ARM architecture, updating default disk image...
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /projects/pd/randd/dist/binaries/vmlinux.aarch64.20140821
-      0: system.cpu0.isa: ISA system set to: 0x52fab00 0x52fab00
-      0: system.cpu1.isa: ISA system set to: 0x52fab00 0x52fab00
+info: kernel located at: /work/gem5/dist/binaries/vmlinux.aarch64.20140821
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80080000
-info: Loading DTB file: /projects/pd/randd/dist/binaries/vexpress.aarch64.20140821.dtb at address 0x88000000
+info: Loading DTB file: /work/gem5/dist/binaries/vexpress.aarch64.20140821.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 47256535568000 because m5_exit instruction encountered
+Exiting @ tick 47216814145000 because m5_exit instruction encountered
