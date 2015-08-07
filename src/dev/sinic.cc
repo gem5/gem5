@@ -1303,7 +1303,7 @@ Base::unserialize(CheckpointIn &cp)
 }
 
 void
-Device::serializeOld(CheckpointOut &cp)
+Device::serialize(CheckpointOut &cp) const
 {
     int count;
 
@@ -1345,7 +1345,7 @@ Device::serializeOld(CheckpointOut &cp)
         paramOut(cp, reg + ".rxPacketExists", rxPacketExists);
         if (rxPacketExists) {
             int rxPacket = 0;
-            PacketFifo::iterator i = rxFifo.begin();
+            auto i = rxFifo.begin();
             while (i != vnic->rxIndex) {
                 assert(i != rxFifo.end());
                 ++i;
@@ -1369,7 +1369,7 @@ Device::serializeOld(CheckpointOut &cp)
     SERIALIZE_SCALAR(rxDirtyCount);
     SERIALIZE_SCALAR(rxMappedCount);
 
-    VirtualList::iterator i, end;
+    VirtualList::const_iterator i, end;
     for (count = 0, i = rxList.begin(), end = rxList.end(); i != end; ++i)
         paramOut(cp, csprintf("rxList%d", count++), *i);
     int rxListSize = count;
