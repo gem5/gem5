@@ -335,6 +335,8 @@ class CacheBlk
      */
     bool checkWrite(PacketPtr pkt)
     {
+        assert(pkt->isWrite());
+
         // common case
         if (!pkt->isLLSC() && lockList.empty())
             return true;

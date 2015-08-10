@@ -435,6 +435,9 @@ template <class Impl>
 void
 LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 {
+    // Should only ever get invalidations in here
+    assert(pkt->isInvalidate());
+
     int load_idx = loadHead;
     DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
 

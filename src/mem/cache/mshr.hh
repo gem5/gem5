@@ -149,7 +149,13 @@ class MSHR : public Packet::SenderState, public Printable
         bool isReset() const { return !needsWritable && !hasUpgrade; }
         void add(PacketPtr pkt, Tick readyTime, Counter order,
                  Target::Source source, bool markPending);
+
+        /**
+         * Convert upgrades to the equivalent request if the cache line they
+         * refer to would have been invalid (Upgrade -> ReadEx, SC* -> Fail).
+         * Used to rejig ordering between targets waiting on an MSHR. */
         void replaceUpgrades();
+
         void clearDownstreamPending();
         bool checkFunctional(PacketPtr pkt);
         void print(std::ostream &os, int verbosity,

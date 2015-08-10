@@ -64,7 +64,10 @@ template <class XC>
 inline void
 handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
 {
-    DPRINTF(LLSC,"%s:  handleing snoop for address: %#x locked: %d\n",
+    // Should only every see invalidations / direct writes
+    assert(pkt->isInvalidate() || pkt->isWrite());
+
+    DPRINTF(LLSC,"%s:  handling snoop for address: %#x locked: %d\n",
             xc->getCpuPtr()->name(),pkt->getAddr(),
             xc->readMiscReg(MISCREG_LOCKFLAG));
     if (!xc->readMiscReg(MISCREG_LOCKFLAG))
@@ -74,7 +77,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
     // If no caches are attached, the snoop address always needs to be masked
     Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
 
-    DPRINTF(LLSC,"%s:  handleing snoop for address: %#x locked addr: %#x\n",
+    DPRINTF(LLSC,"%s:  handling snoop for address: %#x locked addr: %#x\n",
             xc->getCpuPtr()->name(),snoop_addr, locked_addr);
     if (locked_addr == snoop_addr) {
         DPRINTF(LLSC,"%s: address match, clearing lock and signaling sev\n",
