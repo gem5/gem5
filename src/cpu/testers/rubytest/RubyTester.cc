@@ -44,7 +44,6 @@
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/RubyTest.hh"
 #include "mem/ruby/common/SubBlock.hh"
-#include "mem/ruby/system/System.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 

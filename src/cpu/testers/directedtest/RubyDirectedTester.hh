@@ -36,7 +36,7 @@
 
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/SubBlock.hh"
-#include "mem/ruby/system/RubyPort.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "params/RubyDirectedTester.hh"
