@@ -215,6 +215,8 @@ class Clocked
     inline Cycles ticksToCycles(Tick t) const
     { return Cycles(divCeil(t, clockPeriod())); }
 
+    inline Tick cyclesToTicks(Cycles c) const
+    { return clockPeriod() * c; }
 };
 
 /**
