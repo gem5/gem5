@@ -38,7 +38,7 @@
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
 inline NodeID
-map_Address_to_DirectoryNode(const Address& addr)
+map_Address_to_DirectoryNode(Addr addr)
 {
     return DirectoryMemory::mapAddressToDirectoryVersion(addr);
 }
@@ -46,7 +46,7 @@ map_Address_to_DirectoryNode(const Address& addr)
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
 inline MachineID
-map_Address_to_Directory(const Address &addr)
+map_Address_to_Directory(Addr addr)
 {
     MachineID mach =
         {MachineType_Directory, map_Address_to_DirectoryNode(addr)};
@@ -65,14 +65,14 @@ broadcast(MachineType type)
 }
 
 inline MachineID
-mapAddressToRange(const Address & addr, MachineType type, int low_bit,
+mapAddressToRange(Addr addr, MachineType type, int low_bit,
                   int num_bits, int cluster_id = 0)
 {
     MachineID mach = {type, 0};
     if (num_bits == 0)
         mach.num = cluster_id;
     else
-        mach.num = addr.bitSelect(low_bit, low_bit + num_bits - 1)
+        mach.num = bitSelect(addr, low_bit, low_bit + num_bits - 1)
             + (1 << num_bits) * cluster_id;
     return mach;
 }

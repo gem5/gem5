@@ -289,7 +289,7 @@ MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 }
 
 void
-MessageBuffer::reanalyzeMessages(const Address& addr)
+MessageBuffer::reanalyzeMessages(Addr addr)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages %s\n", addr);
     assert(m_stall_msg_map.count(addr) > 0);
@@ -325,11 +325,11 @@ MessageBuffer::reanalyzeAllMessages()
 }
 
 void
-MessageBuffer::stallMessage(const Address& addr)
+MessageBuffer::stallMessage(Addr addr)
 {
     DPRINTF(RubyQueue, "Stalling due to %s\n", addr);
     assert(isReady());
-    assert(addr.getOffset() == 0);
+    assert(getOffset(addr) == 0);
     MsgPtr message = m_prio_heap.front();
 
     dequeue();

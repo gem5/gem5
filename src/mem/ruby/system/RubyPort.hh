@@ -81,7 +81,7 @@ class RubyPort : public MemObject
         MemSlavePort(const std::string &_name, RubyPort *_port,
                      bool _access_backing_store, PortID id);
         void hitCallback(PacketPtr pkt);
-        void evictionCallback(const Address& address);
+        void evictionCallback(Addr address);
 
       protected:
         bool recvTimingReq(PacketPtr pkt);
@@ -166,7 +166,7 @@ class RubyPort : public MemObject
   protected:
     void ruby_hit_callback(PacketPtr pkt);
     void testDrainComplete();
-    void ruby_eviction_callback(const Address& address);
+    void ruby_eviction_callback(Addr address);
 
     /**
      * Called by the PIO port when receiving a timing response.

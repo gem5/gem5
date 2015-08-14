@@ -58,16 +58,16 @@ class PersistentTable
     ~PersistentTable();
 
     // Public Methods
-    void persistentRequestLock(const Address& address, MachineID locker,
+    void persistentRequestLock(Addr address, MachineID locker,
                                AccessType type);
-    void persistentRequestUnlock(const Address& address, MachineID unlocker);
-    bool okToIssueStarving(const Address& address, MachineID machID) const;
-    MachineID findSmallest(const Address& address) const;
-    AccessType typeOfSmallest(const Address& address) const;
-    void markEntries(const Address& address);
-    bool isLocked(const Address& addr) const;
-    int countStarvingForAddress(const Address& addr) const;
-    int countReadStarvingForAddress(const Address& addr) const;
+    void persistentRequestUnlock(Addr address, MachineID unlocker);
+    bool okToIssueStarving(Addr address, MachineID machID) const;
+    MachineID findSmallest(Addr address) const;
+    AccessType typeOfSmallest(Addr address) const;
+    void markEntries(Addr address);
+    bool isLocked(Addr addr) const;
+    int countStarvingForAddress(Addr addr) const;
+    int countReadStarvingForAddress(Addr addr) const;
 
     void print(std::ostream& out) const;
 
@@ -77,7 +77,7 @@ class PersistentTable
     PersistentTable& operator=(const PersistentTable& obj);
 
     // Data Members (m_prefix)
-    typedef m5::hash_map<Address, PersistentTableEntry> AddressMap;
+    typedef m5::hash_map<Addr, PersistentTableEntry> AddressMap;
     AddressMap m_map;
 };
 

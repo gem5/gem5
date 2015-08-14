@@ -158,7 +158,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // TBE entries for DMA requests
   structure(TBE, desc="TBE entries for outstanding DMA requests") {
-    Address PhysicalAddress, desc="physical address";
+    Addr PhysicalAddress, desc="physical address";
     State TBEState,        desc="Transient State";
     CoherenceResponseType ResponseType, desc="The type for the subsequent response message";
     int Acks, default="0", desc="The number of acks that the waiting response represents";
@@ -175,17 +175,17 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
-  void wakeUpBuffers(Address a);
+  void wakeUpBuffers(Addr a);
   Cycles curCycle();
 
   // ** OBJECTS **
@@ -194,7 +194,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
-  Entry getDirectoryEntry(Address addr), return_by_pointer="yes" {
+  Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
 
     if (is_valid(dir_entry)) {
@@ -206,7 +206,7 @@ machine(Directory, "AMD Hammer-like protocol")
     return dir_entry;
   }
 
-  PfEntry getProbeFilterEntry(Address addr), return_by_pointer="yes" {
+  PfEntry getProbeFilterEntry(Addr addr), return_by_pointer="yes" {
     if (probe_filter_enabled || full_bit_dir_enabled) {
       PfEntry pfEntry := static_cast(PfEntry, "pointer", probeFilter.lookup(addr));
       return pfEntry;
@@ -214,7 +214,7 @@ machine(Directory, "AMD Hammer-like protocol")
     return OOD;
   }
 
-  State getState(TBE tbe, PfEntry pf_entry, Address addr) {
+  State getState(TBE tbe, PfEntry pf_entry, Addr addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else {
@@ -227,7 +227,7 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  void setState(TBE tbe, PfEntry pf_entry, Address addr, State state) {
+  void setState(TBE tbe, PfEntry pf_entry, Addr addr, State state) {
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
@@ -249,7 +249,7 @@ machine(Directory, "AMD Hammer-like protocol")
     getDirectoryEntry(addr).DirectoryState := state;
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       return Directory_State_to_permission(tbe.TBEState);
@@ -262,11 +262,11 @@ machine(Directory, "AMD Hammer-like protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(PfEntry pf_entry, Address addr, State state) {
+  void setAccessPermission(PfEntry pf_entry, Addr addr, State state) {
     getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -275,7 +275,7 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];

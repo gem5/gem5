@@ -37,8 +37,7 @@ CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
     : m_num_writers(_num_writers), m_num_readers(_num_readers),
       m_tester_ptr(_tester)
 {
-    physical_address_t physical = 0;
-    Address address;
+    Addr physical = 0;
 
     const int size1 = 32;
     const int size2 = 100;
@@ -47,8 +46,7 @@ CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
     physical = 1000;
     for (int i = 0; i < size1; i++) {
         // Setup linear addresses
-        address.setAddress(physical);
-        addCheck(address);
+        addCheck(physical);
         physical += CHECK_SIZE;
     }
 
@@ -57,16 +55,14 @@ CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
     physical = 1000;
     for (int i = 0; i < size2; i++) {
         // Setup linear addresses
-        address.setAddress(physical);
-        addCheck(address);
+        addCheck(physical);
         physical += 256;
     }
 
     physical = 1000 + CHECK_SIZE;
     for (int i = 0; i < size2; i++) {
         // Setup linear addresses
-        address.setAddress(physical);
-        addCheck(address);
+        addCheck(physical);
         physical += 256;
     }
 }
@@ -79,27 +75,27 @@ CheckTable::~CheckTable()
 }
 
 void
-CheckTable::addCheck(const Address& address)
+CheckTable::addCheck(Addr address)
 {
     if (floorLog2(CHECK_SIZE) != 0) {
-        if (address.bitSelect(0, CHECK_SIZE_BITS - 1) != 0) {
+        if (bitSelect(address, 0, CHECK_SIZE_BITS - 1) != 0) {
             panic("Check not aligned");
         }
     }
 
     for (int i = 0; i < CHECK_SIZE; i++) {
-        if (m_lookup_map.count(Address(address.getAddress()+i))) {
+        if (m_lookup_map.count(address+i)) {
             // A mapping for this byte already existed, discard the
             // entire check
             return;
         }
     }
 
-    Check* check_ptr = new Check(address, Address(100 + m_check_vector.size()),
+    Check* check_ptr = new Check(address, 100 + m_check_vector.size(),
                                  m_num_writers, m_num_readers, m_tester_ptr);
     for (int i = 0; i < CHECK_SIZE; i++) {
         // Insert it once per byte
-        m_lookup_map[Address(address.getAddress() + i)] = check_ptr;
+        m_lookup_map[address + i] = check_ptr;
     }
     m_check_vector.push_back(check_ptr);
 }
@@ -112,11 +108,11 @@ CheckTable::getRandomCheck()
 }
 
 Check*
-CheckTable::getCheck(const Address& address)
+CheckTable::getCheck(const Addr address)
 {
     DPRINTF(RubyTest, "Looking for check by address: %s", address);
 
-    m5::hash_map<Address, Check*>::iterator i = m_lookup_map.find(address);
+    m5::hash_map<Addr, Check*>::iterator i = m_lookup_map.find(address);
 
     if (i == m_lookup_map.end())
         return NULL;

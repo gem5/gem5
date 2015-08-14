@@ -75,12 +75,12 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
     void print(std::ostream& out) const;
     void regStats();
 
-    const int getBank(const physical_address_t addr) const;
-    const int getRank(const physical_address_t addr) const;
+    const int getBank(const Addr addr) const;
+    const int getRank(const Addr addr) const;
 
     // not used in Ruby memory controller
-    const int getChannel(const physical_address_t addr) const;
-    const int getRow(const physical_address_t addr) const;
+    const int getChannel(const Addr addr) const;
+    const int getRow(const Addr addr) const;
 
     //added by SS
     int getBanksPerRank() { return m_banks_per_rank; };

@@ -30,14 +30,14 @@
 // Mapping functions
 
 int machineCount(MachineType machType);
-MachineID mapAddressToRange(Address addr, MachineType type,
+MachineID mapAddressToRange(Addr addr, MachineType type,
                             int low, int high);
-MachineID mapAddressToRange(Address addr, MachineType type,
+MachineID mapAddressToRange(Addr addr, MachineType type,
                             int low, int high, NodeID n);
 NetDest broadcast(MachineType type);
-MachineID map_Address_to_DMA(Address addr);
-MachineID map_Address_to_Directory(Address addr);
-NodeID map_Address_to_DirectoryNode(Address addr);
+MachineID map_Address_to_DMA(Addr addr);
+MachineID map_Address_to_Directory(Addr addr);
+NodeID map_Address_to_DirectoryNode(Addr addr);
 NodeID machineIDToNodeID(MachineID machID);
 NodeID machineIDToVersion(MachineID machID);
 MachineType machineIDToMachineType(MachineID machID);

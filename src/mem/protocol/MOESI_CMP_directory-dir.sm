@@ -102,17 +102,17 @@ machine(Directory, "Directory protocol")
   }
 
   structure(TBE, desc="...") {
-    Address PhysicalAddress,   desc="Physical address for this entry";
+    Addr PhysicalAddress,   desc="Physical address for this entry";
     int Len,           desc="Length of request";
     DataBlock DataBlk, desc="DataBlk";
     MachineID Requestor, desc="original requestor";
   }
 
   structure(TBETable, external = "yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   // ** OBJECTS **
@@ -121,7 +121,7 @@ machine(Directory, "Directory protocol")
   void set_tbe(TBE b);
   void unset_tbe();
 
-  Entry getDirectoryEntry(Address addr), return_by_pointer="yes" {
+  Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
 
     if (is_valid(dir_entry)) {
@@ -133,11 +133,11 @@ machine(Directory, "Directory protocol")
     return dir_entry;
   }
 
-  State getState(TBE tbe, Address addr) {
+  State getState(TBE tbe, Addr addr) {
     return getDirectoryEntry(addr).DirectoryState;
   }
 
-  void setState(TBE tbe, Address addr, State state) {
+  void setState(TBE tbe, Addr addr, State state) {
     if (directory.isPresent(addr)) {
 
       if (state == State:I) {
@@ -174,7 +174,7 @@ machine(Directory, "Directory protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     if (directory.isPresent(addr)) {
       DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState));
       return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
@@ -184,17 +184,17 @@ machine(Directory, "Directory protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Address addr, State state) {
+  void setAccessPermission(Addr addr, State state) {
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     functionalMemoryRead(pkt);
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
     num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
     return num_functional_writes;
@@ -202,7 +202,7 @@ machine(Directory, "Directory protocol")
 
   // if no sharers, then directory can be considered
   // both a sharer and exclusive w.r.t. coherence checking
-  bool isBlockShared(Address addr) {
+  bool isBlockShared(Addr addr) {
     if (directory.isPresent(addr)) {
       if (getDirectoryEntry(addr).DirectoryState == State:I) {
         return true;
@@ -211,7 +211,7 @@ machine(Directory, "Directory protocol")
     return false;
   }
 
-  bool isBlockExclusive(Address addr) {
+  bool isBlockExclusive(Addr addr) {
     if (directory.isPresent(addr)) {
       if (getDirectoryEntry(addr).DirectoryState == State:I) {
         return true;
@@ -487,7 +487,7 @@ machine(Directory, "Directory protocol")
     desc="Queue off-chip writeback request") {
     peek(unblockNetwork_in, ResponseMsg) {
       DataBlock DataBlk := in_msg.DataBlk;
-      DataBlk.copyPartial(tbe.DataBlk, addressOffset(tbe.PhysicalAddress),
+      DataBlk.copyPartial(tbe.DataBlk, getOffset(tbe.PhysicalAddress),
                           tbe.Len);
       queueMemoryWrite(tbe.Requestor, address, to_memory_controller_latency,
                        DataBlk);

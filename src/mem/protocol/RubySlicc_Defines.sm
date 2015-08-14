@@ -35,10 +35,10 @@ NodeID clusterID;
 // Functions implemented in the AbstractController class for
 // making timing access to the memory maintained by the
 // memory controllers.
-void queueMemoryRead(MachineID id, Address addr, Cycles latency);
-void queueMemoryWrite(MachineID id, Address addr, Cycles latency,
+void queueMemoryRead(MachineID id, Addr addr, Cycles latency);
+void queueMemoryWrite(MachineID id, Addr addr, Cycles latency,
                       DataBlock block);
-void queueMemoryWritePartial(MachineID id, Address addr, Cycles latency,
+void queueMemoryWritePartial(MachineID id, Addr addr, Cycles latency,
                              DataBlock block, int size);
 
 // Functions implemented in the AbstractController class for

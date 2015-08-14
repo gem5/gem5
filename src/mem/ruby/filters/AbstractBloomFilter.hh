@@ -38,19 +38,19 @@ class AbstractBloomFilter
   public:
     virtual ~AbstractBloomFilter() {};
     virtual void clear() = 0;
-    virtual void increment(const Address& addr) = 0;
-    virtual void decrement(const Address& addr) = 0;
+    virtual void increment(Addr addr) = 0;
+    virtual void decrement(Addr addr) = 0;
     virtual void merge(AbstractBloomFilter * other_filter) = 0;
-    virtual void set(const Address& addr) = 0;
-    virtual void unset(const Address& addr) = 0;
+    virtual void set(Addr addr) = 0;
+    virtual void unset(Addr addr) = 0;
 
-    virtual bool isSet(const Address& addr) = 0;
-    virtual int getCount(const Address& addr) = 0;
+    virtual bool isSet(Addr addr) = 0;
+    virtual int getCount(Addr addr) = 0;
     virtual int getTotalCount() = 0;
 
     virtual void print(std::ostream& out) const = 0;
 
-    virtual int getIndex(const Address& addr) = 0;
+    virtual int getIndex(Addr addr) = 0;
     virtual int readBit(const int index) = 0;
     virtual void writeBit(const int index, const int value) = 0;
 };

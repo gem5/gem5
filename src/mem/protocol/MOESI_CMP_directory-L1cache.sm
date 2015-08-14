@@ -115,7 +115,7 @@ machine(L1Cache, "Directory protocol")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address addr,         desc="Physical address for this TBE";
+    Addr addr,         desc="Physical address for this TBE";
     State TBEState,          desc="Transient state";
     DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
     bool Dirty,              desc="Is the data dirty (different than memory)?";
@@ -123,10 +123,10 @@ machine(L1Cache, "Directory protocol")
   }
 
   structure(TBETable, external ="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   void set_cache_entry(AbstractCacheEntry b);
@@ -140,7 +140,7 @@ machine(L1Cache, "Directory protocol")
   TimerTable useTimerTable;
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
-  Entry getCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
     if(is_valid(L1Dcache_entry)) {
       return L1Dcache_entry;
@@ -150,15 +150,15 @@ machine(L1Cache, "Directory protocol")
     return L1Icache_entry;
   }
 
-  Entry getL1DCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getL1DCacheEntry(Addr addr), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", L1Dcache.lookup(addr));
   }
 
-  Entry getL1ICacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getL1ICacheEntry(Addr addr), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", L1Icache.lookup(addr));
   }
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
     if(is_valid(tbe)) {
       return tbe.TBEState;
     } else if (is_valid(cache_entry)) {
@@ -167,7 +167,7 @@ machine(L1Cache, "Directory protocol")
     return State:I;
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
     assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     if (is_valid(tbe)) {
@@ -189,7 +189,7 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
@@ -206,13 +206,13 @@ machine(L1Cache, "Directory protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L1Cache_State_to_permission(state));
     }
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     Entry cache_entry := getCacheEntry(addr);
     if(is_valid(cache_entry)) {
       testAndRead(addr, cache_entry.DataBlk, pkt);
@@ -226,7 +226,7 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     Entry cache_entry := getCacheEntry(addr);
@@ -265,7 +265,7 @@ machine(L1Cache, "Directory protocol")
   // ** IN_PORTS **
 
   // Use Timer
-  in_port(useTimerTable_in, Address, useTimerTable) {
+  in_port(useTimerTable_in, Addr, useTimerTable) {
     if (useTimerTable_in.isReady()) {
         trigger(Event:Use_Timeout, useTimerTable.readyAddress(),
                 getCacheEntry(useTimerTable.readyAddress()),

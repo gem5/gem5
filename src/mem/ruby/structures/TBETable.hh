@@ -43,16 +43,16 @@ class TBETable
     {
     }
 
-    bool isPresent(const Address& address) const;
-    void allocate(const Address& address);
-    void deallocate(const Address& address);
+    bool isPresent(Addr address) const;
+    void allocate(Addr address);
+    void deallocate(Addr address);
     bool
     areNSlotsAvailable(int n) const
     {
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
-    ENTRY* lookup(const Address& address);
+    ENTRY* lookup(Addr address);
 
     // Print cache contents
     void print(std::ostream& out) const;
@@ -63,7 +63,7 @@ class TBETable
     TBETable& operator=(const TBETable& obj);
 
     // Data Members (m_prefix)
-    m5::hash_map<Address, ENTRY> m_map;
+    m5::hash_map<Addr, ENTRY> m_map;
 
   private:
     int m_number_of_TBEs;
@@ -80,16 +80,16 @@ operator<<(std::ostream& out, const TBETable<ENTRY>& obj)
 
 template<class ENTRY>
 inline bool
-TBETable<ENTRY>::isPresent(const Address& address) const
+TBETable<ENTRY>::isPresent(Addr address) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     assert(m_map.size() <= m_number_of_TBEs);
     return !!m_map.count(address);
 }
 
 template<class ENTRY>
 inline void
-TBETable<ENTRY>::allocate(const Address& address)
+TBETable<ENTRY>::allocate(Addr address)
 {
     assert(!isPresent(address));
     assert(m_map.size() < m_number_of_TBEs);
@@ -98,7 +98,7 @@ TBETable<ENTRY>::allocate(const Address& address)
 
 template<class ENTRY>
 inline void
-TBETable<ENTRY>::deallocate(const Address& address)
+TBETable<ENTRY>::deallocate(Addr address)
 {
     assert(isPresent(address));
     assert(m_map.size() > 0);
@@ -108,7 +108,7 @@ TBETable<ENTRY>::deallocate(const Address& address)
 // looks an address up in the cache
 template<class ENTRY>
 inline ENTRY*
-TBETable<ENTRY>::lookup(const Address& address)
+TBETable<ENTRY>::lookup(Addr address)
 {
   if(m_map.find(address) != m_map.end()) return &(m_map.find(address)->second);
   return NULL;

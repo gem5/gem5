@@ -77,17 +77,17 @@ machine(Directory, "MESI Two Level directory protocol")
 
   // TBE entries for DMA requests
   structure(TBE, desc="TBE entries for outstanding DMA requests") {
-    Address PhysicalAddress, desc="physical address";
+    Addr PhysicalAddress, desc="physical address";
     State TBEState,        desc="Transient State";
     DataBlock DataBlk,     desc="Data to be written (DMA write only)";
     int Len,               desc="...";
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
     bool functionalRead(Packet *pkt);
     int functionalWrite(Packet *pkt);
   }
@@ -98,9 +98,9 @@ machine(Directory, "MESI Two Level directory protocol")
 
   void set_tbe(TBE tbe);
   void unset_tbe();
-  void wakeUpBuffers(Address a);
+  void wakeUpBuffers(Addr a);
 
-  Entry getDirectoryEntry(Address addr), return_by_pointer="yes" {
+  Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
 
     if (is_valid(dir_entry)) {
@@ -112,7 +112,7 @@ machine(Directory, "MESI Two Level directory protocol")
     return dir_entry;
   }
 
-  State getState(TBE tbe, Address addr) {
+  State getState(TBE tbe, Addr addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else if (directory.isPresent(addr)) {
@@ -122,7 +122,7 @@ machine(Directory, "MESI Two Level directory protocol")
     }
   }
 
-  void setState(TBE tbe, Address addr, State state) {
+  void setState(TBE tbe, Addr addr, State state) {
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
@@ -132,7 +132,7 @@ machine(Directory, "MESI Two Level directory protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(tbe.TBEState));
@@ -148,7 +148,7 @@ machine(Directory, "MESI Two Level directory protocol")
     return AccessPermission:NotPresent;
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -157,7 +157,7 @@ machine(Directory, "MESI Two Level directory protocol")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];
@@ -170,7 +170,7 @@ machine(Directory, "MESI Two Level directory protocol")
     return num_functional_writes;
   }
 
-  void setAccessPermission(Address addr, State state) {
+  void setAccessPermission(Addr addr, State state) {
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }

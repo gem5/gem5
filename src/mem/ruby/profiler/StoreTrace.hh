@@ -39,7 +39,7 @@ class StoreTrace
 {
   public:
     StoreTrace() { }
-    explicit StoreTrace(const Address& addr);
+    explicit StoreTrace(Addr addr);
     ~StoreTrace();
 
     void store(NodeID node);
@@ -60,7 +60,7 @@ class StoreTrace
     static Histogram* s_store_last_to_stolen_ptr;
     static Histogram* s_store_first_to_last_ptr;
 
-    Address m_addr;
+    Addr m_addr;
     NodeID m_last_writer;
     Tick m_first_store;
     Tick m_last_store;

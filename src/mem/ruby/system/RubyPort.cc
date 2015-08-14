@@ -249,7 +249,7 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         return true;
     }
 
-    assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
+    assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
            RubySystem::getBlockSizeBytes());
 
     // Submit the ruby request
@@ -299,8 +299,7 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
     }
 
     assert(pkt->getAddr() + pkt->getSize() <=
-                line_address(Address(pkt->getAddr())).getAddress() +
-                RubySystem::getBlockSizeBytes());
+           makeLineAddress(pkt->getAddr()) + RubySystem::getBlockSizeBytes());
 
     if (access_backing_store) {
         // The attached physmem contains the official version of data.
@@ -504,14 +503,13 @@ RubyPort::MemSlavePort::isPhysMemAddress(Addr addr) const
 }
 
 void
-RubyPort::ruby_eviction_callback(const Address& address)
+RubyPort::ruby_eviction_callback(Addr address)
 {
     DPRINTF(RubyPort, "Sending invalidations.\n");
     // This request is deleted in the stack-allocated packet destructor
     // when this function exits
     // TODO: should this really be using funcMasterId?
-    RequestPtr req =
-            new Request(address.getAddress(), 0, 0, Request::funcMasterId);
+    RequestPtr req = new Request(address, 0, 0, Request::funcMasterId);
     // Use a single packet to signal all snooping ports of the invalidation.
     // This assumes that snooping ports do NOT modify the packet/request
     Packet pkt(req, MemCmd::InvalidateReq);

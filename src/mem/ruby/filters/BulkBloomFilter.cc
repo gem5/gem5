@@ -73,13 +73,13 @@ BulkBloomFilter::clear()
 }
 
 void
-BulkBloomFilter::increment(const Address& addr)
+BulkBloomFilter::increment(Addr addr)
 {
     // Not used
 }
 
 void
-BulkBloomFilter::decrement(const Address& addr)
+BulkBloomFilter::decrement(Addr addr)
 {
     // Not used
 }
@@ -91,16 +91,16 @@ BulkBloomFilter::merge(AbstractBloomFilter * other_filter)
 }
 
 void
-BulkBloomFilter::set(const Address& addr)
+BulkBloomFilter::set(Addr addr)
 {
     // c0 contains the cache index bits
     int set_bits = m_sector_bits;
     int block_bits = RubySystem::getBlockSizeBits();
-    int c0 = addr.bitSelect( block_bits, block_bits + set_bits - 1);
+    int c0 = bitSelect(addr, block_bits, block_bits + set_bits - 1);
     // c1 contains the lower m_sector_bits permuted bits
     //Address permuted_bits = permute(addr);
     //int c1 = permuted_bits.bitSelect(0, set_bits-1);
-    int c1 = addr.bitSelect( block_bits+set_bits, (block_bits+2*set_bits) - 1);
+    int c1 = bitSelect(addr, block_bits+set_bits, (block_bits+2*set_bits) - 1);
     //assert(c0 < (m_filter_size/2));
     //assert(c0 + (m_filter_size/2) < m_filter_size);
     //assert(c1 < (m_filter_size/2));
@@ -111,22 +111,22 @@ BulkBloomFilter::set(const Address& addr)
 }
 
 void
-BulkBloomFilter::unset(const Address& addr)
+BulkBloomFilter::unset(Addr addr)
 {
     // not used
 }
 
 bool
-BulkBloomFilter::isSet(const Address& addr)
+BulkBloomFilter::isSet(Addr addr)
 {
     // c0 contains the cache index bits
     int set_bits = m_sector_bits;
     int block_bits = RubySystem::getBlockSizeBits();
-    int c0 = addr.bitSelect( block_bits, block_bits + set_bits - 1);
+    int c0 = bitSelect(addr, block_bits, block_bits + set_bits - 1);
     // c1 contains the lower 10 permuted bits
     //Address permuted_bits = permute(addr);
     //int c1 = permuted_bits.bitSelect(0, set_bits-1);
-    int c1 = addr.bitSelect( block_bits+set_bits, (block_bits+2*set_bits) - 1);
+    int c1 = bitSelect(addr, block_bits+set_bits, (block_bits+2*set_bits) - 1);
     //assert(c0 < (m_filter_size/2));
     //assert(c0 + (m_filter_size/2) < m_filter_size);
     //assert(c1 < (m_filter_size/2));
@@ -173,7 +173,7 @@ BulkBloomFilter::isSet(const Address& addr)
 }
 
 int
-BulkBloomFilter::getCount(const Address& addr)
+BulkBloomFilter::getCount(Addr addr)
 {
     // not used
     return 0;
@@ -192,7 +192,7 @@ BulkBloomFilter::getTotalCount()
 }
 
 int
-BulkBloomFilter::getIndex(const Address& addr)
+BulkBloomFilter::getIndex(Addr addr)
 {
     return get_index(addr);
 }
@@ -216,40 +216,40 @@ BulkBloomFilter::print(ostream& out) const
 }
 
 int
-BulkBloomFilter::get_index(const Address& addr)
+BulkBloomFilter::get_index(Addr addr)
 {
-    return addr.bitSelect(RubySystem::getBlockSizeBits(),
-                          RubySystem::getBlockSizeBits() +
-                          m_filter_size_bits - 1);
+    return bitSelect(addr, RubySystem::getBlockSizeBits(),
+                     RubySystem::getBlockSizeBits() +
+                     m_filter_size_bits - 1);
 }
 
-Address
-BulkBloomFilter::permute(const Address & addr)
+Addr
+BulkBloomFilter::permute(Addr addr)
 {
     // permutes the original address bits according to Table 5
     int block_offset = RubySystem::getBlockSizeBits();
-    physical_address_t part1 = addr.bitSelect(block_offset, block_offset + 6),
-        part2 = addr.bitSelect(block_offset + 9, block_offset + 9),
-        part3 = addr.bitSelect(block_offset + 11, block_offset + 11),
-        part4 = addr.bitSelect(block_offset + 17, block_offset + 17),
-        part5 = addr.bitSelect(block_offset + 7, block_offset + 8),
-        part6 = addr.bitSelect(block_offset + 10, block_offset + 10),
-        part7 = addr.bitSelect(block_offset + 12, block_offset + 12),
-        part8 = addr.bitSelect(block_offset + 13, block_offset + 13),
-        part9 = addr.bitSelect(block_offset + 15, block_offset + 16),
-        part10 = addr.bitSelect(block_offset + 18, block_offset + 20),
-        part11 = addr.bitSelect(block_offset + 14, block_offset + 14);
+    Addr part1 = bitSelect(addr, block_offset, block_offset + 6),
+        part2 = bitSelect(addr, block_offset + 9, block_offset + 9),
+        part3 = bitSelect(addr, block_offset + 11, block_offset + 11),
+        part4 = bitSelect(addr, block_offset + 17, block_offset + 17),
+        part5 = bitSelect(addr, block_offset + 7, block_offset + 8),
+        part6 = bitSelect(addr, block_offset + 10, block_offset + 10),
+        part7 = bitSelect(addr, block_offset + 12, block_offset + 12),
+        part8 = bitSelect(addr, block_offset + 13, block_offset + 13),
+        part9 = bitSelect(addr, block_offset + 15, block_offset + 16),
+        part10 = bitSelect(addr, block_offset + 18, block_offset + 20),
+        part11 = bitSelect(addr, block_offset + 14, block_offset + 14);
 
-    physical_address_t result =
+    Addr result =
         (part1 << 14) | (part2 << 13) | (part3 << 12) | (part4 << 11) |
         (part5 << 9)  | (part6 << 8)  | (part7 << 7)  | (part8 << 6)  |
         (part9 << 4)  | (part10 << 1) | (part11);
 
     // assume 32 bit addresses (both virtual and physical)
     // select the remaining high-order 11 bits
-    physical_address_t remaining_bits =
-        addr.bitSelect(block_offset + 21, 31) << 21;
+    Addr remaining_bits =
+        bitSelect(addr, block_offset + 21, 31) << 21;
     result = result | remaining_bits;
 
-    return Address(result);
+    return result;
 }

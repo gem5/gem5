@@ -47,7 +47,7 @@ PersistentTable::~PersistentTable()
 }
 
 void
-PersistentTable::persistentRequestLock(const Address& address,
+PersistentTable::persistentRequestLock(Addr address,
                                        MachineID locker,
                                        AccessType type)
 {
@@ -59,7 +59,7 @@ PersistentTable::persistentRequestLock(const Address& address,
     MachineID locker = (MachineID) persistent_randomize[llocker];
 #endif
 
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
 
     static const PersistentTableEntry dflt;
     pair<AddressMap::iterator, bool> r =
@@ -82,7 +82,7 @@ PersistentTable::persistentRequestLock(const Address& address,
 }
 
 void
-PersistentTable::persistentRequestUnlock(const Address& address,
+PersistentTable::persistentRequestUnlock(Addr address,
                                          MachineID unlocker)
 {
 #if 0
@@ -93,7 +93,7 @@ PersistentTable::persistentRequestUnlock(const Address& address,
     MachineID unlocker = (MachineID) persistent_randomize[uunlocker];
 #endif
 
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     assert(m_map.count(address));
     PersistentTableEntry& entry = m_map[address];
 
@@ -115,10 +115,10 @@ PersistentTable::persistentRequestUnlock(const Address& address,
 }
 
 bool
-PersistentTable::okToIssueStarving(const Address& address,
+PersistentTable::okToIssueStarving(Addr address,
                                    MachineID machId) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
 
     AddressMap::const_iterator i = m_map.find(address);
     if (i == m_map.end()) {
@@ -138,9 +138,9 @@ PersistentTable::okToIssueStarving(const Address& address,
 }
 
 MachineID
-PersistentTable::findSmallest(const Address& address) const
+PersistentTable::findSmallest(Addr address) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     AddressMap::const_iterator i = m_map.find(address);
     assert(i != m_map.end());
     const PersistentTableEntry& entry = i->second;
@@ -148,9 +148,9 @@ PersistentTable::findSmallest(const Address& address) const
 }
 
 AccessType
-PersistentTable::typeOfSmallest(const Address& address) const
+PersistentTable::typeOfSmallest(Addr address) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     AddressMap::const_iterator i = m_map.find(address);
     assert(i != m_map.end());
     const PersistentTableEntry& entry = i->second;
@@ -163,9 +163,9 @@ PersistentTable::typeOfSmallest(const Address& address) const
 }
 
 void
-PersistentTable::markEntries(const Address& address)
+PersistentTable::markEntries(Addr address)
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     AddressMap::iterator i = m_map.find(address);
     if (i == m_map.end())
         return;
@@ -180,18 +180,18 @@ PersistentTable::markEntries(const Address& address)
 }
 
 bool
-PersistentTable::isLocked(const Address& address) const
+PersistentTable::isLocked(Addr address) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
 
     // If an entry is present, it must be locked
     return m_map.count(address) > 0;
 }
 
 int
-PersistentTable::countStarvingForAddress(const Address& address) const
+PersistentTable::countStarvingForAddress(Addr address) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     AddressMap::const_iterator i = m_map.find(address);
     if (i == m_map.end())
         return 0;
@@ -201,9 +201,9 @@ PersistentTable::countStarvingForAddress(const Address& address) const
 }
 
 int
-PersistentTable::countReadStarvingForAddress(const Address& address) const
+PersistentTable::countReadStarvingForAddress(Addr address) const
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     AddressMap::const_iterator i = m_map.find(address);
     if (i == m_map.end())
         return 0;

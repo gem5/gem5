@@ -55,9 +55,9 @@ class MessageBuffer : public SimObject
     typedef MessageBufferParams Params;
     MessageBuffer(const Params *p);
 
-    void reanalyzeMessages(const Address& addr);
+    void reanalyzeMessages(Addr addr);
     void reanalyzeAllMessages();
-    void stallMessage(const Address& addr);
+    void stallMessage(Addr addr);
 
     // TRUE if head of queue timestamp <= SystemTime
     bool isReady() const;
@@ -165,7 +165,7 @@ class MessageBuffer : public SimObject
 
     // use a std::map for the stalled messages as this container is
     // sorted and ensures a well-defined iteration order
-    typedef std::map< Address, std::list<MsgPtr> > StallMsgMapType;
+    typedef std::map<Addr, std::list<MsgPtr> > StallMsgMapType;
 
     StallMsgMapType m_stall_msg_map;
 

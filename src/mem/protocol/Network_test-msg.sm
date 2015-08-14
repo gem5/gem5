@@ -34,7 +34,7 @@ enumeration(CoherenceRequestType, desc="...") {
 
 // RequestMsg (and also forwarded requests)
 structure(RequestMsg, desc="...", interface="Message") {
-  Address addr,             desc="Physical address for this request";
+  Addr addr,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,             desc="Multicast destination mask";

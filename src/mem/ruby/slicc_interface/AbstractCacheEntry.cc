@@ -31,7 +31,7 @@
 AbstractCacheEntry::AbstractCacheEntry()
 {
     m_Permission = AccessPermission_NotPresent;
-    m_Address.setAddress(0);
+    m_Address = 0;
     m_locked = -1;
 }
 

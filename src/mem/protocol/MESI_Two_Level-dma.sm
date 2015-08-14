@@ -52,26 +52,26 @@ machine(DMA, "DMA Controller")
   MessageBuffer mandatoryQueue;
   State cur_state;
 
-  State getState(Address addr) {
+  State getState(Addr addr) {
     return cur_state;
   }
 
-  void setState(Address addr, State state) {
+  void setState(Addr addr, State state) {
     cur_state := state;
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Address addr, State state) {
+  void setAccessPermission(Addr addr, State state) {
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     error("DMA does not support functional read.");
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     error("DMA does not support functional write.");
   }
 

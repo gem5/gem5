@@ -34,8 +34,8 @@
 
 typedef RubyTester::SenderState SenderState;
 
-Check::Check(const Address& address, const Address& pc,
-             int _num_writers, int _num_readers, RubyTester* _tester)
+Check::Check(Addr address, Addr pc, int _num_writers, int _num_readers,
+             RubyTester* _tester)
     : m_num_writers(_num_writers), m_num_readers(_num_readers),
       m_tester_ptr(_tester)
 {
@@ -103,8 +103,8 @@ Check::initiatePrefetch()
     }
 
     // Prefetches are assumed to be 0 sized
-    Request *req = new Request(m_address.getAddress(), 0, flags,
-            m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
+    Request *req = new Request(m_address, 0, flags,
+            m_tester_ptr->masterId(), curTick(), m_pc);
     req->setThreadContext(index, 0);
 
     PacketPtr pkt = new Packet(req, cmd);
@@ -142,8 +142,8 @@ Check::initiateFlush()
 
     Request::Flags flags;
 
-    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
-            m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
+    Request *req = new Request(m_address, CHECK_SIZE, flags,
+            m_tester_ptr->masterId(), curTick(), m_pc);
 
     Packet::Command cmd;
 
@@ -172,12 +172,11 @@ Check::initiateAction()
     Request::Flags flags;
 
     // Create the particular address for the next byte to be written
-    Address writeAddr(m_address.getAddress() + m_store_count);
+    Addr writeAddr(m_address + m_store_count);
 
     // Stores are assumed to be 1 byte-sized
-    Request *req = new Request(writeAddr.getAddress(), 1, flags,
-            m_tester_ptr->masterId(), curTick(),
-                               m_pc.getAddress());
+    Request *req = new Request(writeAddr, 1, flags, m_tester_ptr->masterId(),
+                               curTick(), m_pc);
 
     req->setThreadContext(index, 0);
     Packet::Command cmd;
@@ -238,8 +237,8 @@ Check::initiateCheck()
     }
 
     // Checks are sized depending on the number of bytes written
-    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
-                               m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
+    Request *req = new Request(m_address, CHECK_SIZE, flags,
+                               m_tester_ptr->masterId(), curTick(), m_pc);
 
     req->setThreadContext(index, 0);
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
@@ -273,12 +272,12 @@ Check::initiateCheck()
 void
 Check::performCallback(NodeID proc, SubBlock* data, Cycles curTime)
 {
-    Address address = data->getAddress();
+    Addr address = data->getAddress();
 
     // This isn't exactly right since we now have multi-byte checks
     //  assert(getAddress() == address);
 
-    assert(getAddress().getLineAddress() == address.getLineAddress());
+    assert(makeLineAddress(m_address) == makeLineAddress(address));
     assert(data != NULL);
 
     DPRINTF(RubyTest, "RubyTester Callback\n");
@@ -325,13 +324,13 @@ Check::performCallback(NodeID proc, SubBlock* data, Cycles curTime)
     }
 
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,
-            getAddress().getLineAddress());
+            makeLineAddress(m_address));
     DPRINTF(RubyTest, "Callback done\n");
     debugPrint();
 }
 
 void
-Check::changeAddress(const Address& address)
+Check::changeAddress(Addr address)
 {
     assert(m_status == TesterStatus_Idle || m_status == TesterStatus_Ready);
     m_status = TesterStatus_Idle;
@@ -375,7 +374,6 @@ Check::debugPrint()
 {
     DPRINTF(RubyTest,
         "[%#x, value: %d, status: %s, initiating node: %d, store_count: %d]\n",
-        m_address.getAddress(), (int)m_value,
-        TesterStatus_to_string(m_status).c_str(),
+        m_address, (int)m_value, TesterStatus_to_string(m_status).c_str(),
         m_initiatingNode, m_store_count);
 }

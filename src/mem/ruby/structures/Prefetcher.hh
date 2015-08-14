@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PREFETCHER_H
-#define PREFETCHER_H
+#ifndef __MEM_RUBY_STRUCTURES_PREFETCHER_HH__
+#define __MEM_RUBY_STRUCTURES_PREFETCHER_HH__
 
 // Implements Power 4 like prefetching
 
@@ -58,7 +58,7 @@ class PrefetchEntry
         }
 
         //! The base address for the stream prefetch
-        Address m_address;
+        Addr m_address;
 
         //! stride distance to get next address from
         int m_stride;
@@ -85,22 +85,22 @@ class Prefetcher : public SimObject
         Prefetcher(const Params *p);
         ~Prefetcher();
 
-        void issueNextPrefetch(const Address &address, PrefetchEntry *stream);
+        void issueNextPrefetch(Addr address, PrefetchEntry *stream);
         /**
          * Implement the prefetch hit(miss) callback interface.
          * These functions are called by the cache when it hits(misses)
          * on a line with the line's prefetch bit set. If this address
          * hits in m_array we will continue prefetching the stream.
          */
-        void observePfHit(const Address& address);
-        void observePfMiss(const Address& address);
+        void observePfHit(Addr address);
+        void observePfMiss(Addr address);
 
         /**
          * Observe a memory miss from the cache.
          *
          * @param address   The physical address that missed out of the cache.
          */
-        void observeMiss(const Address& address, const RubyRequestType& type);
+        void observeMiss(Addr address, const RubyRequestType& type);
 
         /**
          * Print out some statistics
@@ -123,25 +123,25 @@ class Prefetcher : public SimObject
         void clearNonunitEntry(uint32_t index);
 
         //! allocate a new stream buffer at a specific index
-        void initializeStream(const Address& address, int stride,
+        void initializeStream(Addr address, int stride,
             uint32_t index, const RubyRequestType& type);
 
         //! get pointer to the matching stream entry, returns NULL if not found
         //! index holds the multiple of the stride this address is.
-        PrefetchEntry* getPrefetchEntry(const Address &address,
+        PrefetchEntry* getPrefetchEntry(Addr address,
             uint32_t &index);
 
         /// access a unit stride filter to determine if there is a hit
-        bool accessUnitFilter(std::vector<Address>& filter_table,
-            uint32_t *hit_table, uint32_t &index, const Address &address,
+        bool accessUnitFilter(std::vector<Addr>& filter_table,
+            uint32_t *hit_table, uint32_t &index, Addr address,
             int stride, bool &alloc);
 
         /// access a unit stride filter to determine if there is a hit
-        bool accessNonunitFilter(const Address& address, int *stride,
+        bool accessNonunitFilter(Addr address, int *stride,
             bool &alloc);
 
         /// determine the page aligned address
-        Address pageAddress(const Address& addr) const;
+        Addr pageAddress(Addr addr) const;
 
         //! number of prefetch streams available
         uint32_t m_num_streams;
@@ -159,7 +159,7 @@ class Prefetcher : public SimObject
 
         /// a unit stride filter array: helps reduce BW requirement of
         /// prefetching
-        std::vector<Address> m_unit_filter;
+        std::vector<Addr> m_unit_filter;
         /// a round robin pointer into the unit filter group
         uint32_t m_unit_filter_index;
         //! An array used to count the of times particular filter entries
@@ -168,7 +168,7 @@ class Prefetcher : public SimObject
 
         //! a negative nit stride filter array: helps reduce BW requirement
         //! of prefetching
-        std::vector<Address> m_negative_filter;
+        std::vector<Addr> m_negative_filter;
         /// a round robin pointer into the negative filter group
         uint32_t m_negative_filter_index;
         /// An array used to count the of times particular filter entries
@@ -177,7 +177,7 @@ class Prefetcher : public SimObject
 
         /// a non-unit stride filter array: helps reduce BW requirement of
         /// prefetching
-        std::vector<Address> m_nonunit_filter;
+        std::vector<Addr> m_nonunit_filter;
         /// An array of strides (in # of cache lines) for the filter entries
         int *m_nonunit_stride;
         /// An array used to count the of times particular filter entries
@@ -213,4 +213,4 @@ class Prefetcher : public SimObject
         Stats::Scalar numMissedPrefetchedBlocks;
 };
 
-#endif // PREFETCHER_H
+#endif // __MEM_RUBY_STRUCTURES_PREFETCHER_HH__

@@ -94,7 +94,7 @@ DMASequencer::MemSlavePort::recvTimingReq(PacketPtr pkt)
         panic("DMASequencer should never see an inhibited request\n");
 
     assert(isPhysMemAddress(pkt->getAddr()));
-    assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
+    assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
            RubySystem::getBlockSizeBytes());
 
     // Submit the ruby request
@@ -223,7 +223,7 @@ DMASequencer::makeRequest(PacketPtr pkt)
         return RequestStatus_BufferFull;
     }
 
-    uint64_t paddr = pkt->getAddr();
+    Addr paddr = pkt->getAddr();
     uint8_t* data =  pkt->getPtr<uint8_t>();
     int len = pkt->getSize();
     bool write = pkt->isWrite();
@@ -241,8 +241,8 @@ DMASequencer::makeRequest(PacketPtr pkt)
 
     std::shared_ptr<SequencerMsg> msg =
         std::make_shared<SequencerMsg>(clockEdge());
-    msg->getPhysicalAddress() = Address(paddr);
-    msg->getLineAddress() = line_address(msg->getPhysicalAddress());
+    msg->getPhysicalAddress() = paddr;
+    msg->getLineAddress() = makeLineAddress(msg->getPhysicalAddress());
     msg->getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
     int offset = paddr & m_data_block_mask;
 
@@ -280,11 +280,11 @@ DMASequencer::issueNext()
 
     std::shared_ptr<SequencerMsg> msg =
         std::make_shared<SequencerMsg>(clockEdge());
-    msg->getPhysicalAddress() = Address(active_request.start_paddr +
-                                       active_request.bytes_completed);
+    msg->getPhysicalAddress() = active_request.start_paddr +
+                                active_request.bytes_completed;
 
-    assert((msg->getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
-    msg->getLineAddress() = line_address(msg->getPhysicalAddress());
+    assert((msg->getPhysicalAddress() & m_data_block_mask) == 0);
+    msg->getLineAddress() = makeLineAddress(msg->getPhysicalAddress());
 
     msg->getType() = (active_request.write ? SequencerRequestType_ST :
                      SequencerRequestType_LD);

@@ -61,26 +61,26 @@ machine(Directory, "Network_test Directory")
   }
 
   // ** OBJECTS **
-  State getState(Address addr) {
+  State getState(Addr addr) {
     return State:I;
   }
 
-  void setState(Address addr, State state) {
+  void setState(Addr addr, State state) {
 
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Address addr, State state) {
+  void setAccessPermission(Addr addr, State state) {
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     error("Network test does not support functional read.");
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     error("Network test does not support functional write.");
   }
 

@@ -289,7 +289,7 @@ bool
 RubyMemoryControl::recvTimingReq(PacketPtr pkt)
 {
     Cycles arrival_time = curCycle();
-    physical_address_t addr = pkt->getAddr();
+    Addr addr = pkt->getAddr();
     bool is_mem_read = pkt->isRead();
 
     access(pkt);
@@ -306,7 +306,7 @@ RubyMemoryControl::enqueueMemRef(MemoryNode *memRef)
 {
     m_msg_counter++;
     memRef->m_msg_counter = m_msg_counter;
-    physical_address_t addr = memRef->m_addr;
+    Addr addr = memRef->m_addr;
     int bank = getBank(addr);
 
     m_profiler_ptr->profileMemReq(bank);
@@ -343,7 +343,7 @@ RubyMemoryControl::enqueueToDirectory(MemoryNode *req, Cycles latency)
 // getBank returns an integer that is unique for each
 // bank across this memory controller.
 const int
-RubyMemoryControl::getBank(const physical_address_t addr) const
+RubyMemoryControl::getBank(const Addr addr) const
 {
     int dimm = (addr >> m_dimm_bit_0) & (m_dimms_per_channel - 1);
     int rank = (addr >> m_rank_bit_0) & (m_ranks_per_dimm - 1);
@@ -354,7 +354,7 @@ RubyMemoryControl::getBank(const physical_address_t addr) const
 }
 
 const int
-RubyMemoryControl::getRank(const physical_address_t addr) const
+RubyMemoryControl::getRank(const Addr addr) const
 {
     int bank = getBank(addr);
     int rank = (bank / m_banks_per_rank);
@@ -374,7 +374,7 @@ RubyMemoryControl::getRank(int bank) const
 
 // Not used!
 const int
-RubyMemoryControl::getChannel(const physical_address_t addr) const
+RubyMemoryControl::getChannel(const Addr addr) const
 {
     assert(false);
     return -1;
@@ -382,7 +382,7 @@ RubyMemoryControl::getChannel(const physical_address_t addr) const
 
 // Not used!
 const int
-RubyMemoryControl::getRow(const physical_address_t addr) const
+RubyMemoryControl::getRow(const Addr addr) const
 {
     assert(false);
     return -1;

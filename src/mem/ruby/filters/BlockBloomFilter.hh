@@ -43,23 +43,23 @@ class BlockBloomFilter : public AbstractBloomFilter
     ~BlockBloomFilter();
 
     void clear();
-    void increment(const Address& addr);
-    void decrement(const Address& addr);
+    void increment(Addr addr);
+    void decrement(Addr addr);
     void merge(AbstractBloomFilter * other_filter);
-    void set(const Address& addr);
-    void unset(const Address& addr);
+    void set(Addr addr);
+    void unset(Addr addr);
 
-    bool isSet(const Address& addr);
-    int getCount(const Address& addr);
+    bool isSet(Addr addr);
+    int getCount(Addr addr);
     int getTotalCount();
-    int getIndex(const Address& addr);
+    int getIndex(Addr addr);
     int readBit(const int index);
     void writeBit(const int index, const int value);
 
     void print(std::ostream& out) const;
 
   private:
-    int get_index(const Address& addr);
+    int get_index(Addr addr);
 
     std::vector<int> m_filter;
     int m_filter_size;

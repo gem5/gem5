@@ -55,28 +55,28 @@ class PerfectCacheMemory
     PerfectCacheMemory();
 
     // tests to see if an address is present in the cache
-    bool isTagPresent(const Address& address) const;
+    bool isTagPresent(Addr address) const;
 
     // Returns true if there is:
     //   a) a tag match on this address or there is
     //   b) an Invalid line in the same cache "way"
-    bool cacheAvail(const Address& address) const;
+    bool cacheAvail(Addr address) const;
 
     // find an Invalid entry and sets the tag appropriate for the address
-    void allocate(const Address& address);
+    void allocate(Addr address);
 
-    void deallocate(const Address& address);
+    void deallocate(Addr address);
 
     // Returns with the physical address of the conflicting cache line
-    Address cacheProbe(const Address& newAddress) const;
+    Addr cacheProbe(Addr newAddress) const;
 
     // looks an address up in the cache
-    ENTRY* lookup(const Address& address);
-    const ENTRY* lookup(const Address& address) const;
+    ENTRY* lookup(Addr address);
+    const ENTRY* lookup(Addr address) const;
 
     // Get/Set permission of cache block
-    AccessPermission getPermission(const Address& address) const;
-    void changePermission(const Address& address, AccessPermission new_perm);
+    AccessPermission getPermission(Addr address) const;
+    void changePermission(Addr address, AccessPermission new_perm);
 
     // Print cache contents
     void print(std::ostream& out) const;
@@ -87,7 +87,7 @@ class PerfectCacheMemory
     PerfectCacheMemory& operator=(const PerfectCacheMemory& obj);
 
     // Data Members (m_prefix)
-    m5::hash_map<Address, PerfectCacheLineState<ENTRY> > m_map;
+    m5::hash_map<Addr, PerfectCacheLineState<ENTRY> > m_map;
 };
 
 template<class ENTRY>
@@ -108,14 +108,14 @@ PerfectCacheMemory<ENTRY>::PerfectCacheMemory()
 // tests to see if an address is present in the cache
 template<class ENTRY>
 inline bool
-PerfectCacheMemory<ENTRY>::isTagPresent(const Address& address) const
+PerfectCacheMemory<ENTRY>::isTagPresent(Addr address) const
 {
-    return m_map.count(line_address(address)) > 0;
+    return m_map.count(makeLineAddress(address)) > 0;
 }
 
 template<class ENTRY>
 inline bool
-PerfectCacheMemory<ENTRY>::cacheAvail(const Address& address) const
+PerfectCacheMemory<ENTRY>::cacheAvail(Addr address) const
 {
     return true;
 }
@@ -124,26 +124,26 @@ PerfectCacheMemory<ENTRY>::cacheAvail(const Address& address) const
 // appropriate for the address
 template<class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::allocate(const Address& address)
+PerfectCacheMemory<ENTRY>::allocate(Addr address)
 {
     PerfectCacheLineState<ENTRY> line_state;
     line_state.m_permission = AccessPermission_Invalid;
     line_state.m_entry = ENTRY();
-    m_map[line_address(address)] = line_state;
+    m_map[makeLineAddress(address)] = line_state;
 }
 
 // deallocate entry
 template<class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::deallocate(const Address& address)
+PerfectCacheMemory<ENTRY>::deallocate(Addr address)
 {
-    m_map.erase(line_address(address));
+    m_map.erase(makeLineAddress(address));
 }
 
 // Returns with the physical address of the conflicting cache line
 template<class ENTRY>
-inline Address
-PerfectCacheMemory<ENTRY>::cacheProbe(const Address& newAddress) const
+inline Addr
+PerfectCacheMemory<ENTRY>::cacheProbe(Addr newAddress) const
 {
     panic("cacheProbe called in perfect cache");
     return newAddress;
@@ -152,33 +152,32 @@ PerfectCacheMemory<ENTRY>::cacheProbe(const Address& newAddress) const
 // looks an address up in the cache
 template<class ENTRY>
 inline ENTRY*
-PerfectCacheMemory<ENTRY>::lookup(const Address& address)
+PerfectCacheMemory<ENTRY>::lookup(Addr address)
 {
-    return &m_map[line_address(address)].m_entry;
+    return &m_map[makeLineAddress(address)].m_entry;
 }
 
 // looks an address up in the cache
 template<class ENTRY>
 inline const ENTRY*
-PerfectCacheMemory<ENTRY>::lookup(const Address& address) const
+PerfectCacheMemory<ENTRY>::lookup(Addr address) const
 {
-    return &m_map[line_address(address)].m_entry;
+    return &m_map[makeLineAddress(address)].m_entry;
 }
 
 template<class ENTRY>
 inline AccessPermission
-PerfectCacheMemory<ENTRY>::getPermission(const Address& address) const
+PerfectCacheMemory<ENTRY>::getPermission(Addr address) const
 {
-    return m_map[line_address(address)].m_permission;
+    return m_map[makeLineAddress(address)].m_permission;
 }
 
 template<class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::changePermission(const Address& address,
+PerfectCacheMemory<ENTRY>::changePermission(Addr address,
                                             AccessPermission new_perm)
 {
-    Address line_address = address;
-    line_address.makeLineAddress();
+    Addr line_address = makeLineAddress(address);
     PerfectCacheLineState<ENTRY>& line_state = m_map[line_address];
     line_state.m_permission = new_perm;
 }

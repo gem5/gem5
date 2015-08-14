@@ -47,15 +47,14 @@ class DirectoryMemory : public SimObject
 
     void init();
 
-    uint64 mapAddressToLocalIdx(PhysAddress address);
-    static uint64 mapAddressToDirectoryVersion(PhysAddress address);
+    uint64_t mapAddressToLocalIdx(Addr address);
+    static uint64_t mapAddressToDirectoryVersion(Addr address);
 
-    uint64 getSize() { return m_size_bytes; }
+    uint64_t getSize() { return m_size_bytes; }
 
-    bool isPresent(PhysAddress address);
-    AbstractEntry* lookup(PhysAddress address);
-    AbstractEntry* allocate(const PhysAddress& address,
-                            AbstractEntry* new_entry);
+    bool isPresent(Addr address);
+    AbstractEntry *lookup(Addr address);
+    AbstractEntry *allocate(Addr address, AbstractEntry* new_entry);
 
     void print(std::ostream& out) const;
     void recordRequestType(DirectoryRequestType requestType);
@@ -70,9 +69,9 @@ class DirectoryMemory : public SimObject
     AbstractEntry **m_entries;
     // int m_size;  // # of memory module blocks this directory is
                     // responsible for
-    uint64 m_size_bytes;
-    uint64 m_size_bits;
-    uint64 m_num_entries;
+    uint64_t m_size_bytes;
+    uint64_t m_size_bits;
+    uint64_t m_num_entries;
     int m_version;
 
     static int m_num_directories;

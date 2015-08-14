@@ -76,14 +76,14 @@ MultiBitSelBloomFilter::clear()
 }
 
 void
-MultiBitSelBloomFilter::increment(const Address& addr)
+MultiBitSelBloomFilter::increment(Addr addr)
 {
     // Not used
 }
 
 
 void
-MultiBitSelBloomFilter::decrement(const Address& addr)
+MultiBitSelBloomFilter::decrement(Addr addr)
 {
     // Not used
 }
@@ -99,7 +99,7 @@ MultiBitSelBloomFilter::merge(AbstractBloomFilter *other_filter)
 }
 
 void
-MultiBitSelBloomFilter::set(const Address& addr)
+MultiBitSelBloomFilter::set(Addr addr)
 {
     for (int i = 0; i < m_num_hashes; i++) {
         int idx = get_index(addr, i);
@@ -108,14 +108,14 @@ MultiBitSelBloomFilter::set(const Address& addr)
 }
 
 void
-MultiBitSelBloomFilter::unset(const Address& addr)
+MultiBitSelBloomFilter::unset(Addr addr)
 {
     cout << "ERROR: Unset should never be called in a Bloom filter";
     assert(0);
 }
 
 bool
-MultiBitSelBloomFilter::isSet(const Address& addr)
+MultiBitSelBloomFilter::isSet(Addr addr)
 {
     bool res = true;
 
@@ -127,13 +127,13 @@ MultiBitSelBloomFilter::isSet(const Address& addr)
 }
 
 int
-MultiBitSelBloomFilter::getCount(const Address& addr)
+MultiBitSelBloomFilter::getCount(Addr addr)
 {
     return isSet(addr)? 1: 0;
 }
 
 int
-MultiBitSelBloomFilter::getIndex(const Address& addr)
+MultiBitSelBloomFilter::getIndex(Addr addr)
 {
     return 0;
 }
@@ -166,12 +166,12 @@ MultiBitSelBloomFilter::print(ostream& out) const
 }
 
 int
-MultiBitSelBloomFilter::get_index(const Address& addr, int i)
+MultiBitSelBloomFilter::get_index(Addr addr, int i)
 {
     // m_skip_bits is used to perform BitSelect after skipping some
     // bits. Used to simulate BitSel hashing on larger than cache-line
     // granularities
-    uint64 x = (addr.getLineAddress()) >> m_skip_bits;
+    uint64 x = (makeLineAddress(addr) >> m_skip_bits);
     int y = hash_bitsel(x, i, m_num_hashes, 30, m_filter_size_bits);
     //36-bit addresses, 6-bit cache lines
 

@@ -95,30 +95,30 @@ machine(L1Cache, "Network_test L1 Cache")
   }
 
 
-  State getState(Entry cache_entry, Address addr) {
+  State getState(Entry cache_entry, Addr addr) {
     return State:I;
   }
 
-  void setState(Entry cache_entry, Address addr, State state) {
+  void setState(Entry cache_entry, Addr addr, State state) {
 
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
   }
 
-  Entry getCacheEntry(Address address), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     return OOD;
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     error("Network test does not support functional read.");
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     error("Network test does not support functional write.");
   }
 

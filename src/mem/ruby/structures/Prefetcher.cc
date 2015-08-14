@@ -42,9 +42,9 @@ Prefetcher::Prefetcher(const Params *p)
     m_array(p->num_streams), m_train_misses(p->train_misses),
     m_num_startup_pfs(p->num_startup_pfs), m_num_unit_filters(p->unit_filter),
     m_num_nonunit_filters(p->nonunit_filter),
-    m_unit_filter(p->unit_filter, Address(0)),
-    m_negative_filter(p->unit_filter, Address(0)),
-    m_nonunit_filter(p->nonunit_filter, Address(0)),
+    m_unit_filter(p->unit_filter, 0),
+    m_negative_filter(p->unit_filter, 0),
+    m_nonunit_filter(p->nonunit_filter, 0),
     m_prefetch_cross_pages(p->cross_page),
     m_page_shift(p->sys->getPageShift())
 {
@@ -133,10 +133,10 @@ Prefetcher::regStats()
 }
 
 void
-Prefetcher::observeMiss(const Address& address, const RubyRequestType& type)
+Prefetcher::observeMiss(Addr address, const RubyRequestType& type)
 {
     DPRINTF(RubyPrefetcher, "Observed miss for %s\n", address);
-    Address line_addr = line_address(address);
+    Addr line_addr = makeLineAddress(address);
     numMissObserved++;
 
     // check to see if we have already issued a prefetch for this block
@@ -201,7 +201,7 @@ Prefetcher::observeMiss(const Address& address, const RubyRequestType& type)
 }
 
 void
-Prefetcher::observePfMiss(const Address& address)
+Prefetcher::observePfMiss(Addr address)
 {
     numPartialHits++;
     DPRINTF(RubyPrefetcher, "Observed partial hit for %s\n", address);
@@ -209,7 +209,7 @@ Prefetcher::observePfMiss(const Address& address)
 }
 
 void
-Prefetcher::observePfHit(const Address& address)
+Prefetcher::observePfHit(Addr address)
 {
     numHits++;
     DPRINTF(RubyPrefetcher, "Observed hit for %s\n", address);
@@ -217,7 +217,7 @@ Prefetcher::observePfHit(const Address& address)
 }
 
 void
-Prefetcher::issueNextPrefetch(const Address &address, PrefetchEntry *stream)
+Prefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
 {
     // get our corresponding stream fetcher
     if (stream == NULL) {
@@ -232,9 +232,9 @@ Prefetcher::issueNextPrefetch(const Address &address, PrefetchEntry *stream)
     }
 
     // extend this prefetching stream by 1 (or more)
-    Address page_addr = pageAddress(stream->m_address);
-    Address line_addr = next_stride_address(stream->m_address,
-                                            stream->m_stride);
+    Addr page_addr = pageAddress(stream->m_address);
+    Addr line_addr = makeNextStrideAddress(stream->m_address,
+                                         stream->m_stride);
 
     // possibly stop prefetching at page boundaries
     if (page_addr != pageAddress(line_addr)) {
@@ -276,33 +276,32 @@ Prefetcher::getLRUindex(void)
 void
 Prefetcher::clearNonunitEntry(uint32_t index)
 {
-    m_nonunit_filter[index].setAddress(0);
+    m_nonunit_filter[index] = 0;
     m_nonunit_stride[index] = 0;
     m_nonunit_hit[index]    = 0;
 }
 
 void
-Prefetcher::initializeStream(const Address& address, int stride,
+Prefetcher::initializeStream(Addr address, int stride,
      uint32_t index, const RubyRequestType& type)
 {
     numAllocatedStreams++;
 
     // initialize the stream prefetcher
     PrefetchEntry *mystream = &(m_array[index]);
-    mystream->m_address = line_address(address);
+    mystream->m_address = makeLineAddress(address);
     mystream->m_stride = stride;
     mystream->m_use_time = m_controller->curCycle();
     mystream->m_is_valid = true;
     mystream->m_type = type;
 
     // create a number of initial prefetches for this stream
-    Address page_addr = pageAddress(mystream->m_address);
-    Address line_addr = line_address(mystream->m_address);
-    Address prev_addr = line_addr;
+    Addr page_addr = pageAddress(mystream->m_address);
+    Addr line_addr = makeLineAddress(mystream->m_address);
 
     // insert a number of prefetches into the prefetch table
     for (int k = 0; k < m_num_startup_pfs; k++) {
-        line_addr = next_stride_address(line_addr, stride);
+        line_addr = makeNextStrideAddress(line_addr, stride);
         // possibly stop prefetching at page boundaries
         if (page_addr != pageAddress(line_addr)) {
             numPagesCrossed++;
@@ -317,7 +316,6 @@ Prefetcher::initializeStream(const Address& address, int stride,
         numPrefetchRequested++;
         DPRINTF(RubyPrefetcher, "Requesting prefetch for %s\n", line_addr);
         m_controller->enqueuePrefetch(line_addr, m_array[index].m_type);
-        prev_addr = line_addr;
     }
 
     // update the address to be the last address prefetched
@@ -325,14 +323,14 @@ Prefetcher::initializeStream(const Address& address, int stride,
 }
 
 PrefetchEntry *
-Prefetcher::getPrefetchEntry(const Address &address, uint32_t &index)
+Prefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 {
     // search all streams for a match
     for (int i = 0; i < m_num_streams; i++) {
         // search all the outstanding prefetches for this stream
         if (m_array[i].m_is_valid) {
             for (int j = 0; j < m_num_startup_pfs; j++) {
-                if (next_stride_address(m_array[i].m_address,
+                if (makeNextStrideAddress(m_array[i].m_address,
                     -(m_array[i].m_stride*j)) == address) {
                     return &(m_array[i]);
                 }
@@ -343,17 +341,17 @@ Prefetcher::getPrefetchEntry(const Address &address, uint32_t &index)
 }
 
 bool
-Prefetcher::accessUnitFilter(std::vector<Address>& filter_table,
-    uint32_t *filter_hit, uint32_t &index, const Address &address,
+Prefetcher::accessUnitFilter(std::vector<Addr>& filter_table,
+    uint32_t *filter_hit, uint32_t &index, Addr address,
     int stride, bool &alloc)
 {
     //reset the alloc flag
     alloc = false;
 
-    Address line_addr = line_address(address);
+    Addr line_addr = makeLineAddress(address);
     for (int i = 0; i < m_num_unit_filters; i++) {
         if (filter_table[i] == line_addr) {
-            filter_table[i] = next_stride_address(filter_table[i], stride);
+            filter_table[i] = makeNextStrideAddress(filter_table[i], stride);
             filter_hit[i]++;
             if (filter_hit[i] >= m_train_misses) {
                 alloc = true;
@@ -364,7 +362,7 @@ Prefetcher::accessUnitFilter(std::vector<Address>& filter_table,
 
     // enter this address in the table
     int local_index = index;
-    filter_table[local_index] = next_stride_address(line_addr, stride);
+    filter_table[local_index] = makeNextStrideAddress(line_addr, stride);
     filter_hit[local_index] = 0;
     local_index = local_index + 1;
     if (local_index >= m_num_unit_filters) {
@@ -376,21 +374,21 @@ Prefetcher::accessUnitFilter(std::vector<Address>& filter_table,
 }
 
 bool
-Prefetcher::accessNonunitFilter(const Address& address, int *stride,
+Prefetcher::accessNonunitFilter(Addr address, int *stride,
     bool &alloc)
 {
     //reset the alloc flag
     alloc = false;
 
     /// look for non-unit strides based on a (user-defined) page size
-    Address page_addr = pageAddress(address);
-    Address line_addr = line_address(address);
+    Addr page_addr = pageAddress(address);
+    Addr line_addr = makeLineAddress(address);
 
     for (uint32_t i = 0; i < m_num_nonunit_filters; i++) {
         if (pageAddress(m_nonunit_filter[i]) == page_addr) {
             // hit in the non-unit filter
             // compute the actual stride (for this reference)
-            int delta = line_addr.getAddress() - m_nonunit_filter[i].getAddress();
+            int delta = line_addr - m_nonunit_filter[i];
 
             if (delta != 0) {
                 // no zero stride prefetches
@@ -400,17 +398,19 @@ Prefetcher::accessNonunitFilter(const Address& address, int *stride,
                     // increment count (if > 2) allocate stream
                     m_nonunit_hit[i]++;
                     if (m_nonunit_hit[i] > m_train_misses) {
-                        //This stride HAS to be the multiplicative constant of
-                        //dataBlockBytes (bc next_stride_address is calculated based
-                        //on this multiplicative constant!)
-                        *stride = m_nonunit_stride[i]/RubySystem::getBlockSizeBytes();
+                        // This stride HAS to be the multiplicative constant of
+                        // dataBlockBytes (bc makeNextStrideAddress is
+                        // calculated based on this multiplicative constant!)
+                        *stride = m_nonunit_stride[i] /
+                                    RubySystem::getBlockSizeBytes();
 
                         // clear this filter entry
                         clearNonunitEntry(i);
                         alloc = true;
                     }
                 } else {
-                    // delta didn't match ... reset m_nonunit_hit count for this entry
+                    // delta didn't match ... reset m_nonunit_hit count for
+                    // this entry
                     m_nonunit_hit[i] = 0;
                 }
 
@@ -469,10 +469,8 @@ Prefetcher::print(std::ostream& out) const
     }
 }
 
-Address
-Prefetcher::pageAddress(const Address& addr) const
+Addr
+Prefetcher::pageAddress(Addr addr) const
 {
-    Address temp = addr;
-    temp.maskLowOrderBits(m_page_shift);
-    return temp;
+    return maskLowOrderBits(addr, m_page_shift);
 }

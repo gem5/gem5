@@ -129,7 +129,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address addr,            desc="Physical address for this TBE";
+    Addr addr,            desc="Physical address for this TBE";
     State TBEState,             desc="Transient state";
     DataBlock DataBlk,          desc="Buffer for the data block";
     bool Dirty, default="false", desc="Data is Dirty";
@@ -140,10 +140,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   TBETable TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
@@ -152,15 +152,15 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
-  void wakeUpBuffers(Address a);
+  void wakeUpBuffers(Addr a);
   void profileMsgDelay(int virtualNetworkType, Cycles c);
 
   // inclusive cache, returns L2 entries only
-  Entry getCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", L2cache[addr]);
   }
 
-  bool isSharer(Address addr, MachineID requestor, Entry cache_entry) {
+  bool isSharer(Addr addr, MachineID requestor, Entry cache_entry) {
     if (is_valid(cache_entry)) {
       return cache_entry.Sharers.isElement(requestor);
     } else {
@@ -168,14 +168,14 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
-  void addSharer(Address addr, MachineID requestor, Entry cache_entry) {
+  void addSharer(Addr addr, MachineID requestor, Entry cache_entry) {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "machineID: %s, requestor: %s, address: %s\n",
             machineID, requestor, addr);
     cache_entry.Sharers.add(requestor);
   }
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
     if(is_valid(tbe)) {
       return tbe.TBEState;
     } else if (is_valid(cache_entry)) {
@@ -184,7 +184,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     return State:NP;
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
     // MUST CHANGE
     if (is_valid(tbe)) {
       tbe.TBEState := state;
@@ -195,7 +195,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(tbe.TBEState));
@@ -212,7 +212,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     return AccessPermission:NotPresent;
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -221,7 +221,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];
@@ -236,13 +236,13 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     return num_functional_writes;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L2Cache_State_to_permission(state));
     }
   }
 
-  Event L1Cache_request_type_to_event(CoherenceRequestType type, Address addr,
+  Event L1Cache_request_type_to_event(CoherenceRequestType type, Addr addr,
                                       MachineID requestor, Entry cache_entry) {
     if(type == CoherenceRequestType:GETS) {
       return Event:L1_GETS;

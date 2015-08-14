@@ -98,30 +98,30 @@ structure (NetDest, external = "yes", non_obj="yes") {
 }
 
 structure (Sequencer, external = "yes") {
-  void readCallback(Address, DataBlock);
-  void readCallback(Address, DataBlock, bool);
-  void readCallback(Address, DataBlock, bool, MachineType);
-  void readCallback(Address, DataBlock, bool, MachineType,
+  void readCallback(Addr, DataBlock);
+  void readCallback(Addr, DataBlock, bool);
+  void readCallback(Addr, DataBlock, bool, MachineType);
+  void readCallback(Addr, DataBlock, bool, MachineType,
                     Cycles, Cycles, Cycles);
 
-  void writeCallback(Address, DataBlock);
-  void writeCallback(Address, DataBlock, bool);
-  void writeCallback(Address, DataBlock, bool, MachineType);
-  void writeCallback(Address, DataBlock, bool, MachineType,
+  void writeCallback(Addr, DataBlock);
+  void writeCallback(Addr, DataBlock, bool);
+  void writeCallback(Addr, DataBlock, bool, MachineType);
+  void writeCallback(Addr, DataBlock, bool, MachineType,
                      Cycles, Cycles, Cycles);
 
-  void checkCoherence(Address);
-  void evictionCallback(Address);
+  void checkCoherence(Addr);
+  void evictionCallback(Addr);
   void recordRequestType(SequencerRequestType);
-  bool checkResourceAvailable(CacheResourceType, Address);
-  void invalidateSC(Address);
+  bool checkResourceAvailable(CacheResourceType, Addr);
+  void invalidateSC(Addr);
 }
 
 structure(RubyRequest, desc="...", interface="Message", external="yes") {
-  Address LineAddress,       desc="Line address for this request";
-  Address PhysicalAddress,   desc="Physical address for this request";
+  Addr LineAddress,       desc="Line address for this request";
+  Addr PhysicalAddress,   desc="Physical address for this request";
   RubyRequestType Type,      desc="Type of request (LD, ST, etc)";
-  Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
+  Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   RubyAccessMode AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
@@ -133,10 +133,10 @@ structure(AbstractEntry, primitive="yes", external = "yes") {
 }
 
 structure (DirectoryMemory, external = "yes") {
-  AbstractEntry allocate(Address, AbstractEntry);
-  AbstractEntry lookup(Address);
-  bool isPresent(Address);
-  void invalidateBlock(Address);
+  AbstractEntry allocate(Addr, AbstractEntry);
+  AbstractEntry lookup(Addr);
+  bool isPresent(Addr);
+  void invalidateBlock(Addr);
   void recordRequestType(DirectoryRequestType);
 }
 
@@ -145,23 +145,23 @@ structure(AbstractCacheEntry, primitive="yes", external = "yes") {
 }
 
 structure (CacheMemory, external = "yes") {
-  bool cacheAvail(Address);
-  Address cacheProbe(Address);
-  AbstractCacheEntry allocate(Address, AbstractCacheEntry);
-  AbstractCacheEntry allocate(Address, AbstractCacheEntry, bool);
-  void allocateVoid(Address, AbstractCacheEntry);
-  void deallocate(Address);
-  AbstractCacheEntry lookup(Address);
-  bool isTagPresent(Address);
+  bool cacheAvail(Addr);
+  Addr cacheProbe(Addr);
+  AbstractCacheEntry allocate(Addr, AbstractCacheEntry);
+  AbstractCacheEntry allocate(Addr, AbstractCacheEntry, bool);
+  void allocateVoid(Addr, AbstractCacheEntry);
+  void deallocate(Addr);
+  AbstractCacheEntry lookup(Addr);
+  bool isTagPresent(Addr);
   Cycles getTagLatency();
   Cycles getDataLatency();
-  void setMRU(Address);
-  void recordRequestType(CacheRequestType, Address);
-  bool checkResourceAvailable(CacheResourceType, Address);
+  void setMRU(Addr);
+  void recordRequestType(CacheRequestType, Addr);
+  bool checkResourceAvailable(CacheResourceType, Addr);
 
   int getCacheSize();
   int getNumBlocks();
-  Address getAddressAtIdx(int);
+  Addr getAddressAtIdx(int);
 
   Scalar demand_misses;
   Scalar demand_hits;
@@ -179,25 +179,25 @@ structure (DMASequencer, external = "yes") {
 
 structure (TimerTable, inport="yes", external = "yes") {
   bool isReady();
-  Address readyAddress();
-  void set(Address, Cycles);
-  void unset(Address);
-  bool isSet(Address);
+  Addr readyAddress();
+  void set(Addr, Cycles);
+  void unset(Addr);
+  bool isSet(Addr);
 }
 
 structure (GenericBloomFilter, external = "yes") {
   void clear(int);
-  void increment(Address, int);
-  void decrement(Address, int);
-  void set(Address, int);
-  void unset(Address, int);
+  void increment(Addr, int);
+  void decrement(Addr, int);
+  void set(Addr, int);
+  void unset(Addr, int);
 
-  bool isSet(Address, int);
-  int getCount(Address, int);
+  bool isSet(Addr, int);
+  int getCount(Addr, int);
 }
 
 structure (Prefetcher, external = "yes") {
-    void observeMiss(Address, RubyRequestType);
-    void observePfHit(Address);
-    void observePfMiss(Address);
+    void observeMiss(Addr, RubyRequestType);
+    void observePfHit(Addr);
+    void observePfMiss(Addr);
 }

@@ -50,7 +50,7 @@ enumeration(CoherenceClass, desc="...") {
 
 // Class for messages sent between the L0 and the L1 controllers.
 structure(CoherenceMsg, desc="...", interface="Message") {
-  Address addr,              desc="Physical address of the cache block";
+  Addr addr,              desc="Physical address of the cache block";
   CoherenceClass Class,         desc="Type of message (GetS, GetX, PutX, etc)";
   RubyAccessMode AccessMode,    desc="user/supervisor access type";
   MachineID Sender,             desc="What component sent this message";

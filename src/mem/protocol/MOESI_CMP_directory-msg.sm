@@ -69,7 +69,7 @@ enumeration(TriggerType, desc="...") {
 
 // TriggerMsg
 structure(TriggerMsg, desc="...", interface="Message") {
-  Address addr,             desc="Physical address for this request";
+  Addr addr,             desc="Physical address for this request";
   TriggerType Type,            desc="Type of trigger";
 
   bool functionalRead(Packet *pkt) {
@@ -85,7 +85,7 @@ structure(TriggerMsg, desc="...", interface="Message") {
 
 // RequestMsg (and also forwarded requests)
 structure(RequestMsg, desc="...", interface="Message") {
-  Address addr,             desc="Physical address for this request";
+  Addr addr,             desc="Physical address for this request";
   int Len,                     desc="Length of Request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
@@ -114,7 +114,7 @@ structure(RequestMsg, desc="...", interface="Message") {
 
 // ResponseMsg (and also unblock requests)
 structure(ResponseMsg, desc="...", interface="Message") {
-  Address addr,             desc="Physical address for this request";
+  Addr addr,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";
   MachineType SenderMachine,   desc="type of component sending msg";

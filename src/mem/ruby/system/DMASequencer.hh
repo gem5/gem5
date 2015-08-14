@@ -76,7 +76,7 @@ class DMASequencer : public MemObject
                      PortID id, RubySystem *_ruby_system,
                      bool _access_backing_store);
         void hitCallback(PacketPtr pkt);
-        void evictionCallback(const Address& address);
+        void evictionCallback(Addr address);
 
       protected:
         bool recvTimingReq(PacketPtr pkt);

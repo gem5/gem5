@@ -393,14 +393,13 @@ RubySystem::resetStats()
 bool
 RubySystem::functionalRead(PacketPtr pkt)
 {
-    Address address(pkt->getAddr());
-    Address line_address(address);
-    line_address.makeLineAddress();
+    Addr address(pkt->getAddr());
+    Addr line_address = makeLineAddress(address);
 
     AccessPermission access_perm = AccessPermission_NotPresent;
     int num_controllers = m_abs_cntrl_vec.size();
 
-    DPRINTF(RubySystem, "Functional Read request for %s\n",address);
+    DPRINTF(RubySystem, "Functional Read request for %s\n", address);
 
     unsigned int num_ro = 0;
     unsigned int num_rw = 0;
@@ -477,12 +476,12 @@ RubySystem::functionalRead(PacketPtr pkt)
 bool
 RubySystem::functionalWrite(PacketPtr pkt)
 {
-    Address addr(pkt->getAddr());
-    Address line_addr = line_address(addr);
+    Addr addr(pkt->getAddr());
+    Addr line_addr = makeLineAddress(addr);
     AccessPermission access_perm = AccessPermission_NotPresent;
     int num_controllers = m_abs_cntrl_vec.size();
 
-    DPRINTF(RubySystem, "Functional Write request for %s\n",addr);
+    DPRINTF(RubySystem, "Functional Write request for %s\n", addr);
 
     uint32_t M5_VAR_USED num_functional_writes = 0;
 

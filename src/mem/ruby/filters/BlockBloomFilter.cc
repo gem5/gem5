@@ -65,13 +65,13 @@ BlockBloomFilter::clear()
 }
 
 void
-BlockBloomFilter::increment(const Address& addr)
+BlockBloomFilter::increment(Addr addr)
 {
     // Not used
 }
 
 void
-BlockBloomFilter::decrement(const Address& addr)
+BlockBloomFilter::decrement(Addr addr)
 {
     // Not used
 }
@@ -83,28 +83,28 @@ BlockBloomFilter::merge(AbstractBloomFilter * other_filter)
 }
 
 void
-BlockBloomFilter::set(const Address& addr)
+BlockBloomFilter::set(Addr addr)
 {
     int i = get_index(addr);
     m_filter[i] = 1;
 }
 
 void
-BlockBloomFilter::unset(const Address& addr)
+BlockBloomFilter::unset(Addr addr)
 {
     int i = get_index(addr);
     m_filter[i] = 0;
 }
 
 bool
-BlockBloomFilter::isSet(const Address& addr)
+BlockBloomFilter::isSet(Addr addr)
 {
     int i = get_index(addr);
     return (m_filter[i]);
 }
 
 int
-BlockBloomFilter::getCount(const Address& addr)
+BlockBloomFilter::getCount(Addr addr)
 {
     return m_filter[get_index(addr)];
 }
@@ -123,7 +123,7 @@ BlockBloomFilter::getTotalCount()
 }
 
 int
-BlockBloomFilter::getIndex(const Address& addr)
+BlockBloomFilter::getIndex(Addr addr)
 {
     return get_index(addr);
 }
@@ -146,17 +146,16 @@ BlockBloomFilter::writeBit(const int index, const int value)
 }
 
 int
-BlockBloomFilter::get_index(const Address& addr)
+BlockBloomFilter::get_index(Addr addr)
 {
     // Pull out some bit field ==> B1
     // Pull out additional bits, not the same as B1 ==> B2
     //  XOR B1 and B2 to get hash index
-    physical_address_t block_bits =
-        addr.bitSelect(RubySystem::getBlockSizeBits(),
+    Addr block_bits = bitSelect(addr, RubySystem::getBlockSizeBits(),
                        2 * RubySystem::getBlockSizeBits() - 1);
     int offset = 5;
-    physical_address_t other_bits =
-        addr.bitSelect(2 * RubySystem::getBlockSizeBits() + offset,
+    Addr other_bits = bitSelect(addr,
+                       2 * RubySystem::getBlockSizeBits() + offset,
                        2 * RubySystem::getBlockSizeBits() + offset +
                        m_filter_size_bits - 1);
     int index = block_bits ^ other_bits;

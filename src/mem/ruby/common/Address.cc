@@ -29,115 +29,94 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/System.hh"
 
-physical_address_t
-Address::getLineAddress() const
+Addr
+bitSelect(Addr addr, unsigned int small, unsigned int big)
 {
-    return bitSelect(RubySystem::getBlockSizeBits(), ADDRESS_WIDTH);
+    assert(big >= small);
+
+    if (big >= ADDRESS_WIDTH - 1) {
+        return (addr >> small);
+    } else {
+        Addr mask = ~((Addr)~0 << (big + 1));
+        // FIXME - this is slow to manipulate a 64-bit number using 32-bits
+        Addr partial = (addr & mask);
+        return (partial >> small);
+    }
 }
 
-physical_address_t
-Address::getOffset() const
+Addr
+bitRemove(Addr addr, unsigned int small, unsigned int big)
 {
-    return bitSelect(0, RubySystem::getBlockSizeBits() - 1);
+    assert(big >= small);
+
+    if (small >= ADDRESS_WIDTH - 1) {
+        return addr;
+    } else if (big >= ADDRESS_WIDTH - 1) {
+        Addr mask = (Addr)~0 >> small;
+        return (addr & mask);
+    } else if (small == 0) {
+        Addr mask = (Addr)~0 << big;
+        return (addr & mask);
+    } else {
+        Addr mask = ~((Addr)~0 << small);
+        Addr lower_bits = addr & mask;
+        mask = (Addr)~0 << (big + 1);
+        Addr higher_bits = addr & mask;
+
+        // Shift the valid high bits over the removed section
+        higher_bits = higher_bits >> (big - small + 1);
+        return (higher_bits | lower_bits);
+    }
 }
 
-void
-Address::makeLineAddress()
+Addr
+maskLowOrderBits(Addr addr, unsigned int number)
 {
-    m_address = maskLowOrderBits(RubySystem::getBlockSizeBits());
+  Addr mask;
+
+  if (number >= ADDRESS_WIDTH - 1) {
+      mask = ~0;
+  } else {
+      mask = (Addr)~0 << number;
+  }
+  return (addr & mask);
+}
+
+Addr
+maskHighOrderBits(Addr addr, unsigned int number)
+{
+    Addr mask;
+
+    if (number >= ADDRESS_WIDTH - 1) {
+        mask = ~0;
+    } else {
+        mask = (Addr)~0 >> number;
+    }
+    return (addr & mask);
+}
+
+Addr
+shiftLowOrderBits(Addr addr, unsigned int number)
+{
+    return (addr >> number);
+}
+
+Addr
+getOffset(Addr addr)
+{
+    return bitSelect(addr, 0, RubySystem::getBlockSizeBits() - 1);
+}
+
+Addr
+makeLineAddress(Addr addr)
+{
+    return maskLowOrderBits(addr, RubySystem::getBlockSizeBits());
 }
 
 // returns the next stride address based on line address
-void
-Address::makeNextStrideAddress(int stride)
+Addr
+makeNextStrideAddress(Addr addr, int stride)
 {
-    m_address = maskLowOrderBits(RubySystem::getBlockSizeBits())
-        + RubySystem::getBlockSizeBytes()*stride;
-}
-
-int64
-Address::memoryModuleIndex() const
-{
-    int64 index =
-        bitSelect(RubySystem::getBlockSizeBits() +
-                  RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
-    assert (index >= 0);
-    return index;
-
-    // int64 indexHighPortion =
-    //     address.bitSelect(MEMORY_SIZE_BITS - 1,
-    //                       PAGE_SIZE_BITS + NUMBER_OF_MEMORY_MODULE_BITS);
-    // int64 indexLowPortion =
-    //     address.bitSelect(DATA_BLOCK_BITS, PAGE_SIZE_BITS - 1);
-    //
-    // int64 index = indexLowPortion |
-    //     (indexHighPortion << (PAGE_SIZE_BITS - DATA_BLOCK_BITS));
-
-    /*
-      Round-robin mapping of addresses, at page size granularity
-
-ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
-  |                    |                       |               |
- \ /                  \ /                     \ /             \ /       0
-  -----------------------------------------------------------------------
-  |       unused        |xxxxxxxxxxxxxxx|       |xxxxxxxxxxxxxxx|       |
-  |                     |xxxxxxxxxxxxxxx|       |xxxxxxxxxxxxxxx|       |
-  -----------------------------------------------------------------------
-                        indexHighPortion         indexLowPortion
-                                        <------->
-                               NUMBER_OF_MEMORY_MODULE_BITS
-    */
-}
-
-void
-Address::print(std::ostream& out) const
-{
-    using namespace std;
-    out << "[" << hex << "0x" << m_address << "," << " line 0x"
-        << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]"
-        << flush;
-}
-
-void
-Address::output(std::ostream& out) const
-{
-    // Note: this outputs addresses in the form "ffff", not "0xffff".
-    // This code should always be able to write out addresses in a
-    // format that can be read in by the below input() method.  Please
-    // don't change this without talking to Milo first.
-    out << std::hex << m_address << std::dec;
-}
-
-void
-Address::input(std::istream& in)
-{
-    // Note: this only works with addresses in the form "ffff", not
-    // "0xffff".  This code should always be able to read in addresses
-    // written out by the above output() method.  Please don't change
-    // this without talking to Milo first.
-    in >> std::hex >> m_address >> std::dec;
-}
-
-Address::Address(const Address& obj)
-{
-    m_address = obj.m_address;
-}
-
-Address&
-Address::operator=(const Address& obj)
-{
-    if (this == &obj) {
-        // assert(false);
-    } else {
-        m_address = obj.m_address;
-    }
-    return *this;
-}
-
-Address
-next_stride_address(const Address& addr, int stride)
-{
-    Address temp = addr;
-    temp.makeNextStrideAddress(stride);
-    return temp;
+    return maskLowOrderBits(addr, RubySystem::getBlockSizeBits())
+        + RubySystem::getBlockSizeBytes() * stride;
 }

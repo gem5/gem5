@@ -40,7 +40,7 @@ Histogram* StoreTrace::s_store_first_to_stolen_ptr = NULL;
 Histogram* StoreTrace::s_store_last_to_stolen_ptr = NULL;
 Histogram* StoreTrace::s_store_first_to_last_ptr = NULL;
 
-StoreTrace::StoreTrace(const Address& addr)
+StoreTrace::StoreTrace(Addr addr)
     : m_store_count(-1), m_store_first_to_stolen(-1),
       m_store_last_to_stolen(-1), m_store_first_to_last(-1)
 {

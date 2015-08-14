@@ -72,9 +72,9 @@ class InPortDeclAST(DeclAST):
         param_types.append(type)
 
         # Check for Address
-        type = symtab.find("Address", Type)
+        type = symtab.find("Addr", Type)
         if type is None:
-            self.error("in_port decls require 'Address' type to be defined")
+            self.error("in_port decls require 'Addr' type to be defined")
 
         param_types.append(type)
 
@@ -107,9 +107,9 @@ class InPortDeclAST(DeclAST):
         param_types.append(type)
 
         # Check for Address2
-        type = symtab.find("Address", Type)
+        type = symtab.find("Addr", Type)
         if type is None:
-            self.error("in_port decls require 'Address' type to be defined")
+            self.error("in_port decls require 'Addr' type to be defined")
 
         param_types.append(type)
 

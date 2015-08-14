@@ -33,8 +33,6 @@
 typedef unsigned long long uint64;
 typedef long long int64;
 
-typedef uint64 physical_address_t;
-
 typedef unsigned int LinkID;
 typedef unsigned int NodeID;
 typedef unsigned int SwitchID;

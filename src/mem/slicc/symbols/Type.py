@@ -451,6 +451,7 @@ ${{self.c_ident}}::print(ostream& out) const
         if self.isMachineType:
             code('#include "base/misc.hh"')
             code('#include "mem/ruby/common/Address.hh"')
+            code('#include "mem/ruby/common/TypeDefines.hh"')
             code('struct MachineID;')
 
         code('''
@@ -499,7 +500,7 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
             for enum in self.enums.itervalues():
                 if enum.ident == "DMA":
                     code('''
-MachineID map_Address_to_DMA(const Address &addr);
+MachineID map_Address_to_DMA(const Addr &addr);
 ''')
                 code('''
 
@@ -750,7 +751,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
                 if enum.ident == "DMA":
                     code('''
 MachineID
-map_Address_to_DMA(const Address &addr)
+map_Address_to_DMA(const Addr &addr)
 {
       MachineID dma = {MachineType_DMA, 0};
       return dma;

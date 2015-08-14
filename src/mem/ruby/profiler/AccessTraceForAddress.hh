@@ -47,13 +47,13 @@ class AccessTraceForAddress
     { }
     ~AccessTraceForAddress();
 
-    void setAddress(const Address& addr) { m_addr = addr; }
+    void setAddress(Addr addr) { m_addr = addr; }
     void update(RubyRequestType type, RubyAccessMode access_mode, NodeID cpu,
                 bool sharing_miss);
     int getTotal() const;
     int getSharing() const { return m_sharing; }
     int getTouchedBy() const { return m_touched_by.count(); }
-    const Address& getAddress() const { return m_addr; }
+    Addr getAddress() const { return m_addr; }
     void addSample(int value);
 
     void print(std::ostream& out) const;
@@ -66,7 +66,7 @@ class AccessTraceForAddress
     }
 
   private:
-    Address m_addr;
+    Addr m_addr;
     uint64 m_loads;
     uint64 m_stores;
     uint64 m_atomics;

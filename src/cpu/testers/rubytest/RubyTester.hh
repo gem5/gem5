@@ -82,7 +82,7 @@ class RubyTester : public MemObject
     {
         SubBlock subBlock;
 
-        SenderState(Address addr, int size) : subBlock(addr, size) {}
+        SenderState(Addr addr, int size) : subBlock(addr, size) {}
 
     };
 

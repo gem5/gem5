@@ -134,7 +134,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address addr,              desc="Physical address for this TBE";
+    Addr addr,              desc="Physical address for this TBE";
     State TBEState,        desc="Transient state";
     DataBlock DataBlk,                desc="Buffer for the data block";
     bool Dirty, default="false",   desc="data is dirty";
@@ -143,10 +143,10 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
@@ -159,11 +159,11 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
-  void wakeUpBuffers(Address a);
+  void wakeUpBuffers(Addr a);
   void profileMsgDelay(int virtualNetworkType, Cycles c);
 
   // inclusive cache returns L1 entries only
-  Entry getCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache[addr]);
     if(is_valid(L1Dcache_entry)) {
       return L1Dcache_entry;
@@ -173,17 +173,17 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     return L1Icache_entry;
   }
 
-  Entry getL1DCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getL1DCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache[addr]);
     return L1Dcache_entry;
   }
 
-  Entry getL1ICacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getL1ICacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache[addr]);
     return L1Icache_entry;
   }
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
     assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     if(is_valid(tbe)) {
@@ -194,7 +194,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     return State:NP;
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
     assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     // MUST CHANGE
@@ -207,7 +207,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
@@ -224,7 +224,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     return AccessPermission:NotPresent;
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -233,7 +233,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];
@@ -248,7 +248,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     return num_functional_writes;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L1Cache_State_to_permission(state));
     }
@@ -508,7 +508,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  void enqueuePrefetch(Address address, RubyRequestType type) {
+  void enqueuePrefetch(Addr address, RubyRequestType type) {
       enqueue(optionalQueue_out, RubyRequest, 1) {
           out_msg.LineAddress := address;
           out_msg.Type := type;

@@ -56,8 +56,8 @@ class TraceRecord {
   public:
     int m_cntrl_id;
     Tick m_time;
-    physical_address_t m_data_address;
-    physical_address_t m_pc_address;
+    Addr m_data_address;
+    Addr m_pc_address;
     RubyRequestType m_type;
     uint8_t m_data[0];
 
@@ -74,9 +74,8 @@ class CacheRecorder
                   uint64_t uncompressed_trace_size,
                   std::vector<Sequencer*>& SequencerMap,
                   uint64_t block_size_bytes);
-    void addRecord(int cntrl, const physical_address_t data_addr,
-                   const physical_address_t pc_addr,  RubyRequestType type,
-                   Tick time, DataBlock& data);
+    void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
+                   RubyRequestType type, Tick time, DataBlock& data);
 
     uint64 aggregateRecords(uint8_t** data, uint64 size);
 

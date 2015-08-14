@@ -57,16 +57,16 @@ machine(DMA, "DMA Controller")
   }
 
   structure(TBE, desc="...") {
-    Address address, desc="Physical address";
+    Addr address, desc="Physical address";
     int NumAcks, default="0", desc="Number of Acks pending";
     DataBlock DataBlk, desc="Data";
   }
 
   structure(TBETable, external = "yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   MessageBuffer mandatoryQueue;
@@ -77,25 +77,25 @@ machine(DMA, "DMA Controller")
   void set_tbe(TBE b);
   void unset_tbe();
 
-  State getState(TBE tbe, Address addr) {
+  State getState(TBE tbe, Addr addr) {
     return cur_state;
   }
-  void setState(TBE tbe, Address addr, State state) {
+  void setState(TBE tbe, Addr addr, State state) {
   cur_state := state;
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Address addr, State state) {
+  void setAccessPermission(Addr addr, State state) {
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     error("DMA does not support functional read.");
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     error("DMA does not support functional write.");
   }
 

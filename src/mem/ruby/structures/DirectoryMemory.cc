@@ -71,7 +71,7 @@ DirectoryMemory::init()
 DirectoryMemory::~DirectoryMemory()
 {
     // free up all the directory entries
-    for (uint64 i = 0; i < m_num_entries; i++) {
+    for (uint64_t i = 0; i < m_num_entries; i++) {
         if (m_entries[i] != NULL) {
             delete m_entries[i];
         }
@@ -79,40 +79,41 @@ DirectoryMemory::~DirectoryMemory()
     delete [] m_entries;
 }
 
-uint64
-DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
+uint64_t
+DirectoryMemory::mapAddressToDirectoryVersion(Addr address)
 {
     if (m_num_directories_bits == 0)
         return 0;
 
-    uint64 ret = address.bitSelect(m_numa_high_bit - m_num_directories_bits + 1,
-                                   m_numa_high_bit);
+    uint64_t ret = bitSelect(address,
+                           m_numa_high_bit - m_num_directories_bits + 1,
+                           m_numa_high_bit);
     return ret;
 }
 
 bool
-DirectoryMemory::isPresent(PhysAddress address)
+DirectoryMemory::isPresent(Addr address)
 {
     bool ret = (mapAddressToDirectoryVersion(address) == m_version);
     return ret;
 }
 
-uint64
-DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
+uint64_t
+DirectoryMemory::mapAddressToLocalIdx(Addr address)
 {
-    uint64 ret;
+    uint64_t ret;
     if (m_num_directories_bits > 0) {
-        ret = address.bitRemove(m_numa_high_bit - m_num_directories_bits + 1,
-                                m_numa_high_bit);
+        ret = bitRemove(address, m_numa_high_bit - m_num_directories_bits + 1,
+                        m_numa_high_bit);
     } else {
-        ret = address.getAddress();
+        ret = address;
     }
 
     return ret >> (RubySystem::getBlockSizeBits());
 }
 
 AbstractEntry*
-DirectoryMemory::lookup(PhysAddress address)
+DirectoryMemory::lookup(Addr address)
 {
     assert(isPresent(address));
     DPRINTF(RubyCache, "Looking up address: %s\n", address);
@@ -123,10 +124,10 @@ DirectoryMemory::lookup(PhysAddress address)
 }
 
 AbstractEntry*
-DirectoryMemory::allocate(const PhysAddress& address, AbstractEntry* entry)
+DirectoryMemory::allocate(Addr address, AbstractEntry *entry)
 {
     assert(isPresent(address));
-    uint64 idx;
+    uint64_t idx;
     DPRINTF(RubyCache, "Looking up address: %s\n", address);
 
     idx = mapAddressToLocalIdx(address);

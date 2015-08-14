@@ -79,13 +79,13 @@ GenericBloomFilter::clear()
 }
 
 void
-GenericBloomFilter::increment(const Address& addr)
+GenericBloomFilter::increment(Addr addr)
 {
     m_filter->increment(addr);
 }
 
 void
-GenericBloomFilter::decrement(const Address& addr)
+GenericBloomFilter::decrement(Addr addr)
 {
     m_filter->decrement(addr);
 }
@@ -97,25 +97,25 @@ GenericBloomFilter::merge(GenericBloomFilter * other_filter)
 }
 
 void
-GenericBloomFilter::set(const Address& addr)
+GenericBloomFilter::set(Addr addr)
 {
     m_filter->set(addr);
 }
 
 void
-GenericBloomFilter::unset(const Address& addr)
+GenericBloomFilter::unset(Addr addr)
 {
     m_filter->unset(addr);
 }
 
 bool
-GenericBloomFilter::isSet(const Address& addr)
+GenericBloomFilter::isSet(Addr addr)
 {
     return m_filter->isSet(addr);
 }
 
 int
-GenericBloomFilter::getCount(const Address& addr)
+GenericBloomFilter::getCount(Addr addr)
 {
     return m_filter->getCount(addr);
 }
@@ -127,7 +127,7 @@ GenericBloomFilter::getTotalCount()
 }
 
 int
-GenericBloomFilter::getIndex(const Address& addr)
+GenericBloomFilter::getIndex(Addr addr)
 {
     return m_filter->getIndex(addr);
 }

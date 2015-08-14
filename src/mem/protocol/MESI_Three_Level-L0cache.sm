@@ -119,7 +119,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address addr,              desc="Physical address for this TBE";
+    Addr addr,              desc="Physical address for this TBE";
     State TBEState,        desc="Transient state";
     DataBlock DataBlk,                desc="Buffer for the data block";
     bool Dirty, default="false",   desc="data is dirty";
@@ -127,10 +127,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   TBETable TBEs, template="<L0Cache_TBE>", constructor="m_number_of_TBEs";
@@ -139,12 +139,12 @@ machine(L0Cache, "MESI Directory L0 Cache")
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
-  void wakeUpBuffers(Address a);
-  void wakeUpAllBuffers(Address a);
+  void wakeUpBuffers(Addr a);
+  void wakeUpAllBuffers(Addr a);
   void profileMsgDelay(int virtualNetworkType, Cycles c);
 
   // inclusive cache returns L0 entries only
-  Entry getCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry Dcache_entry := static_cast(Entry, "pointer", Dcache[addr]);
     if(is_valid(Dcache_entry)) {
       return Dcache_entry;
@@ -154,17 +154,17 @@ machine(L0Cache, "MESI Directory L0 Cache")
     return Icache_entry;
   }
 
-  Entry getDCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getDCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry Dcache_entry := static_cast(Entry, "pointer", Dcache[addr]);
     return Dcache_entry;
   }
 
-  Entry getICacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getICacheEntry(Addr addr), return_by_pointer="yes" {
     Entry Icache_entry := static_cast(Entry, "pointer", Icache[addr]);
     return Icache_entry;
   }
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
     assert((Dcache.isTagPresent(addr) && Icache.isTagPresent(addr)) == false);
 
     if(is_valid(tbe)) {
@@ -175,7 +175,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     return State:I;
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
     assert((Dcache.isTagPresent(addr) && Icache.isTagPresent(addr)) == false);
 
     // MUST CHANGE
@@ -188,7 +188,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L0Cache_State_to_permission(tbe.TBEState));
@@ -205,7 +205,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     return AccessPermission:NotPresent;
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -214,7 +214,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];
@@ -229,7 +229,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     return num_functional_writes;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L0Cache_State_to_permission(state));
     }

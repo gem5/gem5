@@ -57,7 +57,7 @@ class AbstractCacheEntry : public AbstractEntry
     { panic("getDataBlk() not implemented!"); }
 
 
-    Address m_Address; // Address of this block, required by CacheMemory
+    Addr m_Address; // Address of this block, required by CacheMemory
     int m_locked; // Holds info whether the address is locked,
                   // required for implementing LL/SC
 };

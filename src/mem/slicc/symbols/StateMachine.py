@@ -349,7 +349,7 @@ TransitionResult doTransition(${ident}_Event event,
 ''')
 
         code('''
-                              const Address addr);
+                              Addr addr);
 
 TransitionResult doTransitionWorker(${ident}_Event event,
                                     ${ident}_State state,
@@ -366,7 +366,7 @@ TransitionResult doTransitionWorker(${ident}_Event event,
 ''')
 
         code('''
-                                    const Address& addr);
+                                    Addr addr);
 
 int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
 int m_event_counters[${ident}_Event_NUM];
@@ -410,21 +410,21 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& '
                      'm_tbe_ptr, ${{self.EntryType.c_ident}}*& '
-                     'm_cache_entry_ptr, const Address& addr);')
+                     'm_cache_entry_ptr, Addr addr);')
         elif self.TBEType != None:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& '
-                     'm_tbe_ptr, const Address& addr);')
+                     'm_tbe_ptr, Addr addr);')
         elif self.EntryType != None:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
                 code('void ${{action.ident}}(${{self.EntryType.c_ident}}*& '
-                     'm_cache_entry_ptr, const Address& addr);')
+                     'm_cache_entry_ptr, Addr addr);')
         else:
             for action in self.actions.itervalues():
                 code('/** \\brief ${{action.desc}} */')
-                code('void ${{action.ident}}(const Address& addr);')
+                code('void ${{action.ident}}(Addr addr);')
 
         # the controller internal variables
         code('''
@@ -930,7 +930,7 @@ $c_ident::recordCacheTrace(int cntrl, CacheRecorder* tr)
                 code('''
 /** \\brief ${{action.desc}} */
 void
-$c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
+$c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, Addr addr)
 {
     DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     try {
@@ -951,7 +951,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.Entry
                 code('''
 /** \\brief ${{action.desc}} */
 void
-$c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address& addr)
+$c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, Addr addr)
 {
     DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
@@ -966,7 +966,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address
                 code('''
 /** \\brief ${{action.desc}} */
 void
-$c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
+$c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, Addr addr)
 {
     DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
@@ -981,7 +981,7 @@ $c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, con
                 code('''
 /** \\brief ${{action.desc}} */
 void
-$c_ident::${{action.ident}}(const Address& addr)
+$c_ident::${{action.ident}}(Addr addr)
 {
     DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
@@ -1181,7 +1181,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
                                   ${{self.TBEType.c_ident}}* m_tbe_ptr,
 ''')
         code('''
-                                  const Address addr)
+                                  Addr addr)
 {
 ''')
         code.indent()
@@ -1222,7 +1222,7 @@ if (result == TransitionResult_Valid) {
             ${ident}_State_to_string(next_state));
     countTransition(state, event);
 
-    DPRINTFR(ProtocolTrace, "%15d %3s %10s%20s %6s>%-6s %s %s\\n",
+    DPRINTFR(ProtocolTrace, "%15d %3s %10s%20s %6s>%-6s %#x %s\\n",
              curTick(), m_version, "${ident}",
              ${ident}_Event_to_string(event),
              ${ident}_State_to_string(state),
@@ -1246,7 +1246,7 @@ if (result == TransitionResult_Valid) {
 
         code('''
 } else if (result == TransitionResult_ResourceStall) {
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\\n",
              curTick(), m_version, "${ident}",
              ${ident}_Event_to_string(event),
              ${ident}_State_to_string(state),
@@ -1254,7 +1254,7 @@ if (result == TransitionResult_Valid) {
              addr, "Resource Stall");
 } else if (result == TransitionResult_ProtocolStall) {
     DPRINTF(RubyGenerated, "stalling\\n");
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\\n",
              curTick(), m_version, "${ident}",
              ${ident}_Event_to_string(event),
              ${ident}_State_to_string(state),
@@ -1283,7 +1283,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
                                         ${{self.EntryType.c_ident}}*& m_cache_entry_ptr,
 ''')
         code('''
-                                        const Address& addr)
+                                        Addr addr)
 {
     switch(HASH_FUN(state, event)) {
 ''')

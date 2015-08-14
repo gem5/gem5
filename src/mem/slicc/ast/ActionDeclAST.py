@@ -48,10 +48,10 @@ class ActionDeclAST(DeclAST):
             # Add new local vars
             self.symtab.pushFrame()
 
-            addr_type = self.symtab.find("Address", Type)
+            addr_type = self.symtab.find("Addr", Type)
 
             if addr_type is None:
-                self.error("Type 'Address' not declared.")
+                self.error("Type 'Addr' not declared.")
 
             var = Var(self.symtab, "address", self.location, addr_type,
                       "addr", self.pairs)

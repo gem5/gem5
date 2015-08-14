@@ -40,7 +40,7 @@ using m5::stl_helpers::operator<<;
 
 // Helper functions
 AccessTraceForAddress&
-lookupTraceForAddress(const Address& addr, AddressMap& record_map)
+lookupTraceForAddress(Addr addr, AddressMap& record_map)
 {
     // we create a static default object here that is used to insert
     // since the insertion will create a copy of the object in the
@@ -244,7 +244,7 @@ AddressProfiler::clearStats()
 }
 
 void
-AddressProfiler::profileGetX(const Address& datablock, const Address& PC,
+AddressProfiler::profileGetX(Addr datablock, Addr PC,
                              const Set& owner, const Set& sharers,
                              NodeID requestor)
 {
@@ -262,7 +262,7 @@ AddressProfiler::profileGetX(const Address& datablock, const Address& PC,
 }
 
 void
-AddressProfiler::profileGetS(const Address& datablock, const Address& PC,
+AddressProfiler::profileGetS(Addr datablock, Addr PC,
                              const Set& owner, const Set& sharers,
                              NodeID requestor)
 {
@@ -279,7 +279,7 @@ AddressProfiler::profileGetS(const Address& datablock, const Address& PC,
 }
 
 void
-AddressProfiler::addTraceSample(Address data_addr, Address pc_addr,
+AddressProfiler::addTraceSample(Addr data_addr, Addr pc_addr,
                                 RubyRequestType type,
                                 RubyAccessMode access_mode, NodeID id,
                                 bool sharing_miss)
@@ -290,14 +290,14 @@ AddressProfiler::addTraceSample(Address data_addr, Address pc_addr,
         }
 
         // record data address trace info
-        data_addr.makeLineAddress();
+        data_addr = makeLineAddress(data_addr);
         lookupTraceForAddress(data_addr, m_dataAccessTrace).
             update(type, access_mode, id, sharing_miss);
 
         // record macro data address trace info
 
         // 6 for datablock, 4 to make it 16x more coarse
-        Address macro_addr(data_addr.maskLowOrderBits(10));
+        Addr macro_addr = maskLowOrderBits(data_addr, 10);
         lookupTraceForAddress(macro_addr, m_macroBlockAccessTrace).
             update(type, access_mode, id, sharing_miss);
 
@@ -316,8 +316,7 @@ AddressProfiler::addTraceSample(Address data_addr, Address pc_addr,
 }
 
 void
-AddressProfiler::profileRetry(const Address& data_addr, AccessType type,
-                              int count)
+AddressProfiler::profileRetry(Addr data_addr, AccessType type, int count)
 {
     m_retryProfileHisto.add(count);
     if (type == AccessType_Read) {

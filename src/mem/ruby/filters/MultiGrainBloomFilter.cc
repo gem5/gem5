@@ -72,14 +72,14 @@ MultiGrainBloomFilter::clear()
 }
 
 void
-MultiGrainBloomFilter::increment(const Address& addr)
+MultiGrainBloomFilter::increment(Addr addr)
 {
     // Not used
 }
 
 
 void
-MultiGrainBloomFilter::decrement(const Address& addr)
+MultiGrainBloomFilter::decrement(Addr addr)
 {
     // Not used
 }
@@ -91,7 +91,7 @@ MultiGrainBloomFilter::merge(AbstractBloomFilter *other_filter)
 }
 
 void
-MultiGrainBloomFilter::set(const Address& addr)
+MultiGrainBloomFilter::set(Addr addr)
 {
     int i = get_block_index(addr);
     assert(i < m_filter_size);
@@ -102,13 +102,13 @@ MultiGrainBloomFilter::set(const Address& addr)
 }
 
 void
-MultiGrainBloomFilter::unset(const Address& addr)
+MultiGrainBloomFilter::unset(Addr addr)
 {
     // not used
 }
 
 bool
-MultiGrainBloomFilter::isSet(const Address& addr)
+MultiGrainBloomFilter::isSet(Addr addr)
 {
     int i = get_block_index(addr);
     assert(i < m_filter_size);
@@ -118,7 +118,7 @@ MultiGrainBloomFilter::isSet(const Address& addr)
 }
 
 int
-MultiGrainBloomFilter::getCount(const Address& addr)
+MultiGrainBloomFilter::getCount(Addr addr)
 {
     // not used
     return 0;
@@ -141,7 +141,7 @@ MultiGrainBloomFilter::getTotalCount()
 }
 
 int
-MultiGrainBloomFilter::getIndex(const Address& addr)
+MultiGrainBloomFilter::getIndex(Addr addr)
 {
     return 0;
     // TODO
@@ -166,21 +166,21 @@ MultiGrainBloomFilter::print(ostream& out) const
 }
 
 int
-MultiGrainBloomFilter::get_block_index(const Address& addr)
+MultiGrainBloomFilter::get_block_index(Addr addr)
 {
     // grap a chunk of bits after byte offset
-    return addr.bitSelect(RubySystem::getBlockSizeBits(),
-                          RubySystem::getBlockSizeBits() +
-                          m_filter_size_bits - 1);
+    return bitSelect(addr, RubySystem::getBlockSizeBits(),
+                     RubySystem::getBlockSizeBits() +
+                     m_filter_size_bits - 1);
 }
 
 int
-MultiGrainBloomFilter::get_page_index(const Address & addr)
+MultiGrainBloomFilter::get_page_index(Addr addr)
 {
     int bits = RubySystem::getBlockSizeBits() + m_filter_size_bits - 1;
 
     // grap a chunk of bits after first chunk
-    return addr.bitSelect(bits, bits + m_page_filter_size_bits - 1);
+    return bitSelect(addr, bits, bits + m_page_filter_size_bits - 1);
 }
 
 

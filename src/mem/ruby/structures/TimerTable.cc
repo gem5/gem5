@@ -36,7 +36,7 @@ TimerTable::TimerTable()
     m_clockobj_ptr = NULL;
 
     m_next_valid = false;
-    m_next_address = Address(0);
+    m_next_address = 0;
 }
 
 bool
@@ -52,7 +52,7 @@ TimerTable::isReady() const
     return (m_clockobj_ptr->curCycle() >= m_next_time);
 }
 
-const Address&
+Addr
 TimerTable::readyAddress() const
 {
     assert(isReady());
@@ -65,9 +65,9 @@ TimerTable::readyAddress() const
 }
 
 void
-TimerTable::set(const Address& address, Cycles relative_latency)
+TimerTable::set(Addr address, Cycles relative_latency)
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     assert(relative_latency > 0);
     assert(!m_map.count(address));
 
@@ -85,9 +85,9 @@ TimerTable::set(const Address& address, Cycles relative_latency)
 }
 
 void
-TimerTable::unset(const Address& address)
+TimerTable::unset(Addr address)
 {
-    assert(address == line_address(address));
+    assert(address == makeLineAddress(address));
     assert(m_map.count(address));
     m_map.erase(address);
 

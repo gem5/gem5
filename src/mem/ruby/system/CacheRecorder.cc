@@ -145,8 +145,7 @@ CacheRecorder::enqueueNextFetchRequest()
 }
 
 void
-CacheRecorder::addRecord(int cntrl, const physical_address_t data_addr,
-                         const physical_address_t pc_addr,
+CacheRecorder::addRecord(int cntrl, Addr data_addr, Addr pc_addr,
                          RubyRequestType type, Tick time, DataBlock& data)
 {
     TraceRecord* rec = (TraceRecord*)malloc(sizeof(TraceRecord) +

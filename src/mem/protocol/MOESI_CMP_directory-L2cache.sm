@@ -192,9 +192,9 @@ machine(L2Cache, "Token protocol")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address addr,                      desc="Physical address for this TBE";
+    Addr addr,                      desc="Physical address for this TBE";
     State TBEState,                       desc="Transient state";
-    Address PC,                           desc="Program counter of request";
+    Addr PC,                           desc="Program counter of request";
     DataBlock DataBlk,                    desc="Buffer for the data block";
     bool Dirty,              desc="Is the data dirty (different than memory)?";
 
@@ -210,17 +210,17 @@ machine(L2Cache, "Token protocol")
   }
 
   structure(TBETable, external = "yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   structure(PerfectCacheMemory, external = "yes") {
-    void allocate(Address);
-    void deallocate(Address);
-    DirEntry lookup(Address);
-    bool isTagPresent(Address);
+    void allocate(Addr);
+    void deallocate(Addr);
+    DirEntry lookup(Addr);
+    bool isTagPresent(Addr);
   }
 
   TBETable TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
@@ -231,19 +231,19 @@ machine(L2Cache, "Token protocol")
   void set_tbe(TBE b);
   void unset_tbe();
 
-  Entry getCacheEntry(Address address), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", L2cache[address]);
   }
 
-  bool isDirTagPresent(Address addr) {
+  bool isDirTagPresent(Addr addr) {
     return (localDirectory.isTagPresent(addr) );
   }
 
-  DirEntry getDirEntry(Address address), return_by_pointer="yes" {
+  DirEntry getDirEntry(Addr address), return_by_pointer="yes" {
     return localDirectory.lookup(address);
   }
 
-  bool isOnlySharer(Entry cache_entry, Address addr, MachineID shar_id) {
+  bool isOnlySharer(Entry cache_entry, Addr addr, MachineID shar_id) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       if (cache_entry.Sharers.count() > 1) {
@@ -285,7 +285,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void copyCacheStateToDir(Entry cache_entry, Address addr) {
+  void copyCacheStateToDir(Entry cache_entry, Addr addr) {
     assert(localDirectory.isTagPresent(addr) == false);
     assert(is_valid(cache_entry));
     localDirectory.allocate(addr);
@@ -297,7 +297,7 @@ machine(L2Cache, "Token protocol")
 
   }
 
-  void copyDirToCache(Entry cache_entry, Address addr) {
+  void copyDirToCache(Entry cache_entry, Addr addr) {
     assert(is_valid(cache_entry));
     DirEntry dir_entry := getDirEntry(addr);
     cache_entry.Sharers := dir_entry.Sharers;
@@ -306,7 +306,7 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  void recordLocalSharerInDir(Entry cache_entry, Address addr, MachineID shar_id) {
+  void recordLocalSharerInDir(Entry cache_entry, Addr addr, MachineID shar_id) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       cache_entry.Sharers.add(shar_id);
@@ -323,7 +323,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void recordNewLocalExclusiveInDir(Entry cache_entry, Address addr, MachineID exc_id) {
+  void recordNewLocalExclusiveInDir(Entry cache_entry, Addr addr, MachineID exc_id) {
 
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
@@ -342,7 +342,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void removeAllLocalSharersFromDir(Entry cache_entry, Address addr) {
+  void removeAllLocalSharersFromDir(Entry cache_entry, Addr addr) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       cache_entry.Sharers.clear();
@@ -355,7 +355,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void removeSharerFromDir(Entry cache_entry, Address addr, MachineID sender) {
+  void removeSharerFromDir(Entry cache_entry, Addr addr, MachineID sender) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       cache_entry.Sharers.remove(sender);
@@ -366,7 +366,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void removeOwnerFromDir(Entry cache_entry, Address addr, MachineID sender) {
+  void removeOwnerFromDir(Entry cache_entry, Addr addr, MachineID sender) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       cache_entry.OwnerValid := false;
@@ -377,7 +377,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  bool isLocalSharer(Entry cache_entry, Address addr, MachineID shar_id) {
+  bool isLocalSharer(Entry cache_entry, Addr addr, MachineID shar_id) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       return cache_entry.Sharers.isElement(shar_id);
@@ -388,7 +388,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  NetDest getLocalSharers(Entry cache_entry, Address addr) {
+  NetDest getLocalSharers(Entry cache_entry, Addr addr) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       return cache_entry.Sharers;
@@ -399,7 +399,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  MachineID getLocalOwner(Entry cache_entry, Address addr) {
+  MachineID getLocalOwner(Entry cache_entry, Addr addr) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       return cache_entry.Owner;
@@ -410,7 +410,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  int countLocalSharers(Entry cache_entry, Address addr) {
+  int countLocalSharers(Entry cache_entry, Addr addr) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       return cache_entry.Sharers.count();
@@ -421,7 +421,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  bool isLocalOwnerValid(Entry cache_entry, Address addr) {
+  bool isLocalOwnerValid(Entry cache_entry, Addr addr) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       return cache_entry.OwnerValid;
@@ -432,7 +432,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  int countLocalSharersExceptRequestor(Entry cache_entry, Address addr, MachineID requestor) {
+  int countLocalSharersExceptRequestor(Entry cache_entry, Addr addr, MachineID requestor) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
       if (cache_entry.Sharers.isElement(requestor)) {
@@ -453,7 +453,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
 
     if (is_valid(tbe)) {
       return tbe.TBEState;
@@ -471,7 +471,7 @@ machine(L2Cache, "Token protocol")
     return CoherenceRequestType_to_string(type);
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
     assert((localDirectory.isTagPresent(addr) && L2cache.isTagPresent(addr)) == false);
 
     if (is_valid(tbe)) {
@@ -518,7 +518,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(tbe.TBEState));
@@ -535,13 +535,13 @@ machine(L2Cache, "Token protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L2Cache_State_to_permission(state));
     }
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -550,7 +550,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];

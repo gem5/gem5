@@ -44,7 +44,7 @@ class Set;
 class AddressProfiler
 {
   public:
-    typedef m5::hash_map<Address, AccessTraceForAddress> AddressMap;
+    typedef m5::hash_map<Addr, AccessTraceForAddress> AddressMap;
 
   public:
     AddressProfiler(int num_of_sequencers, Profiler *profiler);
@@ -53,13 +53,13 @@ class AddressProfiler
     void printStats(std::ostream& out) const;
     void clearStats();
 
-    void addTraceSample(Address data_addr, Address pc_addr,
+    void addTraceSample(Addr data_addr, Addr pc_addr,
                         RubyRequestType type, RubyAccessMode access_mode,
                         NodeID id, bool sharing_miss);
-    void profileRetry(const Address& data_addr, AccessType type, int count);
-    void profileGetX(const Address& datablock, const Address& PC,
+    void profileRetry(Addr data_addr, AccessType type, int count);
+    void profileGetX(Addr datablock, Addr PC,
                      const Set& owner, const Set& sharers, NodeID requestor);
-    void profileGetS(const Address& datablock, const Address& PC,
+    void profileGetS(Addr datablock, Addr PC,
                      const Set& owner, const Set& sharers, NodeID requestor);
 
     void print(std::ostream& out) const;
@@ -96,7 +96,7 @@ class AddressProfiler
     int m_num_of_sequencers;
 };
 
-AccessTraceForAddress& lookupTraceForAddress(const Address& addr,
+AccessTraceForAddress& lookupTraceForAddress(Addr addr,
                                              AddressProfiler::AddressMap&
                                              record_map);
 

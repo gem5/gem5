@@ -96,9 +96,9 @@ Sequencer::wakeup()
             continue;
 
         panic("Possible Deadlock detected. Aborting!\n"
-             "version: %d request.paddr: 0x%x m_readRequestTable: %d "
-             "current time: %u issue_time: %d difference: %d\n", m_version,
-             Address(request->pkt->getAddr()), m_readRequestTable.size(),
+              "version: %d request.paddr: 0x%x m_readRequestTable: %d "
+              "current time: %u issue_time: %d difference: %d\n", m_version,
+              request->pkt->getAddr(), m_readRequestTable.size(),
               current_time * clockPeriod(), request->issue_time * clockPeriod(),
               (current_time * clockPeriod()) - (request->issue_time * clockPeriod()));
     }
@@ -111,9 +111,9 @@ Sequencer::wakeup()
             continue;
 
         panic("Possible Deadlock detected. Aborting!\n"
-             "version: %d request.paddr: 0x%x m_writeRequestTable: %d "
-             "current time: %u issue_time: %d difference: %d\n", m_version,
-             Address(request->pkt->getAddr()), m_writeRequestTable.size(),
+              "version: %d request.paddr: 0x%x m_writeRequestTable: %d "
+              "current time: %u issue_time: %d difference: %d\n", m_version,
+              request->pkt->getAddr(), m_writeRequestTable.size(),
               current_time * clockPeriod(), request->issue_time * clockPeriod(),
               (current_time * clockPeriod()) - (request->issue_time * clockPeriod()));
     }
@@ -222,8 +222,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
     }
 
-    Address line_addr(pkt->getAddr());
-    line_addr.makeLineAddress();
+    Addr line_addr = makeLineAddress(pkt->getAddr());
     // Create a default entry, mapping the address to NULL, the cast is
     // there to make gcc 4.4 happy
     RequestTable::value_type default_entry(line_addr,
@@ -299,8 +298,7 @@ Sequencer::removeRequest(SequencerRequest* srequest)
     assert(m_outstanding_count ==
            m_writeRequestTable.size() + m_readRequestTable.size());
 
-    Address line_addr(srequest->pkt->getAddr());
-    line_addr.makeLineAddress();
+    Addr line_addr = makeLineAddress(srequest->pkt->getAddr());
     if ((srequest->m_type == RubyRequestType_ST) ||
         (srequest->m_type == RubyRequestType_RMW_Read) ||
         (srequest->m_type == RubyRequestType_RMW_Write) ||
@@ -317,7 +315,7 @@ Sequencer::removeRequest(SequencerRequest* srequest)
 }
 
 void
-Sequencer::invalidateSC(const Address& address)
+Sequencer::invalidateSC(Addr address)
 {
     RequestTable::iterator i = m_writeRequestTable.find(address);
     if (i != m_writeRequestTable.end()) {
@@ -331,7 +329,7 @@ Sequencer::invalidateSC(const Address& address)
 }
 
 bool
-Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
+Sequencer::handleLlsc(Addr address, SequencerRequest* request)
 {
     //
     // The success flag indicates whether the LLSC operation was successful.
@@ -422,14 +420,14 @@ Sequencer::recordMissLatency(const Cycles cycles, const RubyRequestType type,
 }
 
 void
-Sequencer::writeCallback(const Address& address, DataBlock& data,
+Sequencer::writeCallback(Addr address, DataBlock& data,
                          const bool externalHit, const MachineType mach,
                          const Cycles initialRequestTime,
                          const Cycles forwardRequestTime,
                          const Cycles firstResponseTime)
 {
-    assert(address == line_address(address));
-    assert(m_writeRequestTable.count(line_address(address)));
+    assert(address == makeLineAddress(address));
+    assert(m_writeRequestTable.count(makeLineAddress(address)));
 
     RequestTable::iterator i = m_writeRequestTable.find(address);
     assert(i != m_writeRequestTable.end());
@@ -469,14 +467,14 @@ Sequencer::writeCallback(const Address& address, DataBlock& data,
 }
 
 void
-Sequencer::readCallback(const Address& address, DataBlock& data,
+Sequencer::readCallback(Addr address, DataBlock& data,
                         bool externalHit, const MachineType mach,
                         Cycles initialRequestTime,
                         Cycles forwardRequestTime,
                         Cycles firstResponseTime)
 {
-    assert(address == line_address(address));
-    assert(m_readRequestTable.count(line_address(address)));
+    assert(address == makeLineAddress(address));
+    assert(m_readRequestTable.count(makeLineAddress(address)));
 
     RequestTable::iterator i = m_readRequestTable.find(address);
     assert(i != m_readRequestTable.end());
@@ -501,9 +499,8 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                        const Cycles firstResponseTime)
 {
     PacketPtr pkt = srequest->pkt;
-    Address request_address(pkt->getAddr());
-    Address request_line_address(pkt->getAddr());
-    request_line_address.makeLineAddress();
+    Addr request_address(pkt->getAddr());
+    Addr request_line_address = makeLineAddress(pkt->getAddr());
     RubyRequestType type = srequest->m_type;
     Cycles issued_time = srequest->issue_time;
 
@@ -522,7 +519,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                       initialRequestTime, forwardRequestTime,
                       firstResponseTime, curCycle());
 
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %d cycles\n",
              curTick(), m_version, "Seq",
              llscSuccess ? "Done" : "SC_Failed", "", "",
              request_address, total_latency);
@@ -530,7 +527,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // update the data unless it is a non-data-carrying flush
     if (RubySystem::getWarmupEnabled()) {
         data.setData(pkt->getConstPtr<uint8_t>(),
-                     request_address.getOffset(), pkt->getSize());
+                     getOffset(request_address), pkt->getSize());
     } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
@@ -538,12 +535,12 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked)) {
             memcpy(pkt->getPtr<uint8_t>(),
-                   data.getData(request_address.getOffset(), pkt->getSize()),
+                   data.getData(getOffset(request_address), pkt->getSize()),
                    pkt->getSize());
             DPRINTF(RubySequencer, "read data %s\n", data);
         } else {
             data.setData(pkt->getConstPtr<uint8_t>(),
-                         request_address.getOffset(), pkt->getSize());
+                         getOffset(request_address), pkt->getSize());
             DPRINTF(RubySequencer, "set data %s\n", data);
         }
     }
@@ -690,7 +687,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
                                       RubyAccessMode_Supervisor, pkt,
                                       PrefetchBit_No, proc_id);
 
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\n",
             curTick(), m_version, "Seq", "Begin", "", "",
             msg->getPhysicalAddress(),
             RubyRequestType_to_string(secondary_type));
@@ -743,7 +740,7 @@ Sequencer::print(ostream& out) const
 // upgraded when invoked, coherence violations will be checked for the
 // given block
 void
-Sequencer::checkCoherence(const Address& addr)
+Sequencer::checkCoherence(Addr addr)
 {
 #ifdef CHECK_COHERENCE
     m_ruby_system->checkGlobalCoherenceInvariant(addr);
@@ -758,7 +755,7 @@ Sequencer::recordRequestType(SequencerRequestType requestType) {
 
 
 void
-Sequencer::evictionCallback(const Address& address)
+Sequencer::evictionCallback(Addr address)
 {
     ruby_eviction_callback(address);
 }

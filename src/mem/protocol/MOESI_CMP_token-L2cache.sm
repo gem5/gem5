@@ -129,21 +129,21 @@ machine(L2Cache, "Token protocol")
   }
 
   structure(PerfectCacheMemory, external="yes") {
-    void allocate(Address);
-    void deallocate(Address);
-    DirEntry lookup(Address);
-    bool isTagPresent(Address);
+    void allocate(Addr);
+    void deallocate(Addr);
+    DirEntry lookup(Addr);
+    bool isTagPresent(Addr);
   }
 
   structure(PersistentTable, external="yes") {
-    void persistentRequestLock(Address, MachineID, AccessType);
-    void persistentRequestUnlock(Address, MachineID);
-    MachineID findSmallest(Address);
-    AccessType typeOfSmallest(Address);
-    void markEntries(Address);
-    bool isLocked(Address);
-    int countStarvingForAddress(Address);
-    int countReadStarvingForAddress(Address);
+    void persistentRequestLock(Addr, MachineID, AccessType);
+    void persistentRequestUnlock(Addr, MachineID);
+    MachineID findSmallest(Addr);
+    AccessType typeOfSmallest(Addr);
+    void markEntries(Addr);
+    bool isLocked(Addr);
+    int countStarvingForAddress(Addr);
+    int countReadStarvingForAddress(Addr);
   }
 
   PersistentTable persistentTable;
@@ -152,20 +152,20 @@ machine(L2Cache, "Token protocol")
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
 
-  Entry getCacheEntry(Address address), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     Entry cache_entry := static_cast(Entry, "pointer", L2cache.lookup(address));
     return cache_entry;
   }
 
-  DirEntry getDirEntry(Address address), return_by_pointer="yes" {
+  DirEntry getDirEntry(Addr address), return_by_pointer="yes" {
     return localDirectory.lookup(address);
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
     num_functional_writes := num_functional_writes +
         testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
@@ -180,7 +180,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  State getState(Entry cache_entry, Address addr) {
+  State getState(Entry cache_entry, Addr addr) {
     if (is_valid(cache_entry)) {
       return cache_entry.CacheState;
     } else if (persistentTable.isLocked(addr)) {
@@ -190,7 +190,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void setState(Entry cache_entry, Address addr, State state) {
+  void setState(Entry cache_entry, Addr addr, State state) {
 
     if (is_valid(cache_entry)) {
       // Make sure the token count is in range
@@ -227,7 +227,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     Entry cache_entry := getCacheEntry(addr);
     if(is_valid(cache_entry)) {
       return L2Cache_State_to_permission(cache_entry.CacheState);
@@ -236,13 +236,13 @@ machine(L2Cache, "Token protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L2Cache_State_to_permission(state));
     }
   }
 
-  void removeSharer(Address addr, NodeID id) {
+  void removeSharer(Addr addr, NodeID id) {
 
     if (localDirectory.isTagPresent(addr)) {
       DirEntry dir_entry := getDirEntry(addr);
@@ -253,7 +253,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  bool sharersExist(Address addr) {
+  bool sharersExist(Addr addr) {
     if (localDirectory.isTagPresent(addr)) {
       DirEntry dir_entry := getDirEntry(addr);
       if (dir_entry.Sharers.count() > 0) {
@@ -268,7 +268,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  bool exclusiveExists(Address addr) {
+  bool exclusiveExists(Addr addr) {
     if (localDirectory.isTagPresent(addr)) {
       DirEntry dir_entry := getDirEntry(addr);
       if (dir_entry.exclusive) {
@@ -284,12 +284,12 @@ machine(L2Cache, "Token protocol")
   }
 
   // assumes that caller will check to make sure tag is present
-  Set getSharers(Address addr) {
+  Set getSharers(Addr addr) {
     DirEntry dir_entry := getDirEntry(addr);
     return dir_entry.Sharers;
   }
 
-  void setNewWriter(Address addr, NodeID id) {
+  void setNewWriter(Addr addr, NodeID id) {
     if (localDirectory.isTagPresent(addr) == false) {
       localDirectory.allocate(addr);
     }
@@ -299,7 +299,7 @@ machine(L2Cache, "Token protocol")
     dir_entry.exclusive := true;
   }
 
-  void addNewSharer(Address addr, NodeID id) {
+  void addNewSharer(Addr addr, NodeID id) {
     if (localDirectory.isTagPresent(addr) == false) {
       localDirectory.allocate(addr);
     }
@@ -308,7 +308,7 @@ machine(L2Cache, "Token protocol")
     // dir_entry.exclusive := false;
   }
 
-  void clearExclusiveBitIfExists(Address addr) {
+  void clearExclusiveBitIfExists(Addr addr) {
     if (localDirectory.isTagPresent(addr)) {
       DirEntry dir_entry := getDirEntry(addr);
       dir_entry.exclusive := false;

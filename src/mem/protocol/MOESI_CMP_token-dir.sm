@@ -133,20 +133,20 @@ machine(Directory, "Token protocol")
   }
 
   structure(PersistentTable, external="yes") {
-    void persistentRequestLock(Address, MachineID, AccessType);
-    void persistentRequestUnlock(Address, MachineID);
-    bool okToIssueStarving(Address, MachineID);
-    MachineID findSmallest(Address);
-    AccessType typeOfSmallest(Address);
-    void markEntries(Address);
-    bool isLocked(Address);
-    int countStarvingForAddress(Address);
-    int countReadStarvingForAddress(Address);
+    void persistentRequestLock(Addr, MachineID, AccessType);
+    void persistentRequestUnlock(Addr, MachineID);
+    bool okToIssueStarving(Addr, MachineID);
+    MachineID findSmallest(Addr);
+    AccessType typeOfSmallest(Addr);
+    void markEntries(Addr);
+    bool isLocked(Addr);
+    int countStarvingForAddress(Addr);
+    int countReadStarvingForAddress(Addr);
   }
 
   // TBE entries for DMA requests
   structure(TBE, desc="TBE entries for outstanding DMA requests") {
-    Address PhysicalAddress, desc="physical address";
+    Addr PhysicalAddress, desc="physical address";
     State TBEState,        desc="Transient State";
     DataBlock DataBlk,     desc="Current view of the associated address range";
     int Len,               desc="...";
@@ -155,10 +155,10 @@ machine(Directory, "Token protocol")
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   // ** OBJECTS **
@@ -174,7 +174,7 @@ machine(Directory, "Token protocol")
   void set_tbe(TBE b);
   void unset_tbe();
 
-  Entry getDirectoryEntry(Address addr), return_by_pointer="yes" {
+  Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
 
     if (is_valid(dir_entry)) {
@@ -186,7 +186,7 @@ machine(Directory, "Token protocol")
     return dir_entry;
   }
 
-  State getState(TBE tbe, Address addr) {
+  State getState(TBE tbe, Addr addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else {
@@ -194,7 +194,7 @@ machine(Directory, "Token protocol")
     }
   }
 
-  void setState(TBE tbe, Address addr, State state) {
+  void setState(TBE tbe, Addr addr, State state) {
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
@@ -217,7 +217,7 @@ machine(Directory, "Token protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       return Directory_State_to_permission(tbe.TBEState);
@@ -232,19 +232,19 @@ machine(Directory, "Token protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Address addr, State state) {
+  void setAccessPermission(Addr addr, State state) {
     getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
   }
 
-  bool okToIssueStarving(Address addr, MachineID machinID) {
+  bool okToIssueStarving(Addr addr, MachineID machinID) {
     return persistentTable.okToIssueStarving(addr, machineID);
   }
 
-  void markPersistentEntries(Address addr) {
+  void markPersistentEntries(Addr addr) {
     persistentTable.markEntries(addr);
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
@@ -253,7 +253,7 @@ machine(Directory, "Token protocol")
     }
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
     TBE tbe := TBEs[addr];
@@ -292,7 +292,7 @@ machine(Directory, "Token protocol")
   }
 
   // Reissue Timer
-  in_port(reissueTimerTable_in, Address, reissueTimerTable) {
+  in_port(reissueTimerTable_in, Addr, reissueTimerTable) {
     if (reissueTimerTable_in.isReady()) {
       trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
               TBEs[reissueTimerTable.readyAddress()]);
@@ -736,7 +736,7 @@ machine(Directory, "Token protocol")
     peek(responseNetwork_in, ResponseMsg) {
       DataBlock DataBlk := tbe.DataBlk;
       tbe.DataBlk := in_msg.DataBlk;
-      tbe.DataBlk.copyPartial(DataBlk, addressOffset(tbe.PhysicalAddress),
+      tbe.DataBlk.copyPartial(DataBlk, getOffset(tbe.PhysicalAddress),
                               tbe.Len);
     }
   }

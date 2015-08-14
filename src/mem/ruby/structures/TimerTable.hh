@@ -62,13 +62,13 @@ class TimerTable
     }
 
     bool isReady() const;
-    const Address& readyAddress() const;
-    bool isSet(const Address& address) const { return !!m_map.count(address); }
-    void set(const Address& address, Cycles relative_latency);
-    void set(const Address& address, uint64_t relative_latency)
+    Addr readyAddress() const;
+    bool isSet(Addr address) const { return !!m_map.count(address); }
+    void set(Addr address, Cycles relative_latency);
+    void set(Addr address, uint64_t relative_latency)
     { set(address, Cycles(relative_latency)); }
 
-    void unset(const Address& address);
+    void unset(Addr address);
     void print(std::ostream& out) const;
 
   private:
@@ -82,11 +82,11 @@ class TimerTable
 
     // use a std::map for the address map as this container is sorted
     // and ensures a well-defined iteration order
-    typedef std::map<Address, Cycles> AddressMap;
+    typedef std::map<Addr, Cycles> AddressMap;
     AddressMap m_map;
     mutable bool m_next_valid;
     mutable Cycles m_next_time; // Only valid if m_next_valid is true
-    mutable Address m_next_address;  // Only valid if m_next_valid is true
+    mutable Addr m_next_address;  // Only valid if m_next_valid is true
 
     //! Object used for querying time.
     ClockedObject* m_clockobj_ptr;

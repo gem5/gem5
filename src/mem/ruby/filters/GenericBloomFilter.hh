@@ -42,24 +42,24 @@ class GenericBloomFilter
     ~GenericBloomFilter();
 
     void clear();
-    void increment(const Address& addr);
-    void decrement(const Address& addr);
+    void increment(Addr addr);
+    void decrement(Addr addr);
     void merge(GenericBloomFilter * other_filter);
-    void set(const Address& addr);
-    void unset(const Address& addr);
+    void set(Addr addr);
+    void unset(Addr addr);
     AbstractBloomFilter *
     getFilter()
     {
         return m_filter;
     }
 
-    bool isSet(const Address& addr);
+    bool isSet(Addr addr);
 
-    int getCount(const Address& addr);
+    int getCount(Addr addr);
 
     int getTotalCount();
 
-    int getIndex(const Address& addr);
+    int getIndex(Addr addr);
     int readBit(const int index);
     void writeBit(const int index, const int value);
 

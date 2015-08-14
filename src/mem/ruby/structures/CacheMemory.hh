@@ -58,43 +58,42 @@ class CacheMemory : public SimObject
 
     // Public Methods
     // perform a cache access and see if we hit or not.  Return true on a hit.
-    bool tryCacheAccess(const Address& address, RubyRequestType type,
+    bool tryCacheAccess(Addr address, RubyRequestType type,
                         DataBlock*& data_ptr);
 
     // similar to above, but doesn't require full access check
-    bool testCacheAccess(const Address& address, RubyRequestType type,
+    bool testCacheAccess(Addr address, RubyRequestType type,
                          DataBlock*& data_ptr);
 
     // tests to see if an address is present in the cache
-    bool isTagPresent(const Address& address) const;
+    bool isTagPresent(Addr address) const;
 
     // Returns true if there is:
     //   a) a tag match on this address or there is
     //   b) an unused line in the same cache "way"
-    bool cacheAvail(const Address& address) const;
+    bool cacheAvail(Addr address) const;
 
     // find an unused entry and sets the tag appropriate for the address
-    AbstractCacheEntry* allocate(const Address& address,
+    AbstractCacheEntry* allocate(Addr address,
                                  AbstractCacheEntry* new_entry, bool touch);
-    AbstractCacheEntry* allocate(const Address& address,
-                                 AbstractCacheEntry* new_entry)
+    AbstractCacheEntry* allocate(Addr address, AbstractCacheEntry* new_entry)
     {
         return allocate(address, new_entry, true);
     }
-    void allocateVoid(const Address& address, AbstractCacheEntry* new_entry)
+    void allocateVoid(Addr address, AbstractCacheEntry* new_entry)
     {
         allocate(address, new_entry, true);
     }
 
     // Explicitly free up this address
-    void deallocate(const Address& address);
+    void deallocate(Addr address);
 
     // Returns with the physical address of the conflicting cache line
-    Address cacheProbe(const Address& address) const;
+    Addr cacheProbe(Addr address) const;
 
     // looks an address up in the cache
-    AbstractCacheEntry* lookup(const Address& address);
-    const AbstractCacheEntry* lookup(const Address& address) const;
+    AbstractCacheEntry* lookup(Addr address);
+    const AbstractCacheEntry* lookup(Addr address) const;
 
     Cycles getTagLatency() const { return tagArray.getLatency(); }
     Cycles getDataLatency() const { return dataArray.getLatency(); }
@@ -106,19 +105,19 @@ class CacheMemory : public SimObject
     void recordCacheContents(int cntrl, CacheRecorder* tr) const;
 
     // Set this address to most recently used
-    void setMRU(const Address& address);
+    void setMRU(Addr address);
 
-    void setLocked (const Address& addr, int context);
-    void clearLocked (const Address& addr);
-    bool isLocked (const Address& addr, int context);
+    void setLocked (Addr addr, int context);
+    void clearLocked (Addr addr);
+    bool isLocked (Addr addr, int context);
 
     // Print cache contents
     void print(std::ostream& out) const;
     void printData(std::ostream& out) const;
 
     void regStats();
-    bool checkResourceAvailable(CacheResourceType res, Address addr);
-    void recordRequestType(CacheRequestType requestType, Address addr);
+    bool checkResourceAvailable(CacheResourceType res, Addr addr);
+    void recordRequestType(CacheRequestType requestType, Addr addr);
 
   public:
     Stats::Scalar m_demand_hits;
@@ -141,17 +140,16 @@ class CacheMemory : public SimObject
 
     int getCacheSize() const { return m_cache_size; }
     int getNumBlocks() const { return m_cache_num_sets * m_cache_assoc; }
-    Address getAddressAtIdx(int idx) const;
+    Addr getAddressAtIdx(int idx) const;
 
   private:
     // convert a Address to its location in the cache
-    int64 addressToCacheSet(const Address& address) const;
+    int64 addressToCacheSet(Addr address) const;
 
     // Given a cache tag: returns the index of the tag in a set.
     // returns -1 if the tag is not found.
-    int findTagInSet(int64 line, const Address& tag) const;
-    int findTagInSetIgnorePermissions(int64 cacheSet,
-                                      const Address& tag) const;
+    int findTagInSet(int64 line, Addr tag) const;
+    int findTagInSetIgnorePermissions(int64 cacheSet, Addr tag) const;
 
     // Private copy constructor and assignment operator
     CacheMemory(const CacheMemory& obj);
@@ -163,7 +161,7 @@ class CacheMemory : public SimObject
 
     // The first index is the # of cache lines.
     // The second index is the the amount associativity.
-    m5::hash_map<Address, int> m_tag_index;
+    m5::hash_map<Addr, int> m_tag_index;
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
     AbstractReplacementPolicy *m_replacementPolicy_ptr;

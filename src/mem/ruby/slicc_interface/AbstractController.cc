@@ -93,7 +93,7 @@ AbstractController::profileMsgDelay(uint32_t virtualNetwork, Cycles delay)
 }
 
 void
-AbstractController::stallBuffer(MessageBuffer* buf, Address addr)
+AbstractController::stallBuffer(MessageBuffer* buf, Addr addr)
 {
     if (m_waiting_buffers.count(addr) == 0) {
         MsgVecType* msgVec = new MsgVecType;
@@ -107,7 +107,7 @@ AbstractController::stallBuffer(MessageBuffer* buf, Address addr)
 }
 
 void
-AbstractController::wakeUpBuffers(Address addr)
+AbstractController::wakeUpBuffers(Addr addr)
 {
     if (m_waiting_buffers.count(addr) > 0) {
         //
@@ -127,7 +127,7 @@ AbstractController::wakeUpBuffers(Address addr)
 }
 
 void
-AbstractController::wakeUpAllBuffers(Address addr)
+AbstractController::wakeUpAllBuffers(Addr addr)
 {
     if (m_waiting_buffers.count(addr) > 0) {
         //
@@ -186,14 +186,14 @@ AbstractController::wakeUpAllBuffers()
 }
 
 void
-AbstractController::blockOnQueue(Address addr, MessageBuffer* port)
+AbstractController::blockOnQueue(Addr addr, MessageBuffer* port)
 {
     m_is_blocking = true;
     m_block_map[addr] = port;
 }
 
 void
-AbstractController::unblock(Address addr)
+AbstractController::unblock(Addr addr)
 {
     m_block_map.erase(addr);
     if (m_block_map.size() == 0) {
@@ -209,11 +209,10 @@ AbstractController::getMasterPort(const std::string &if_name,
 }
 
 void
-AbstractController::queueMemoryRead(const MachineID &id, Address addr,
+AbstractController::queueMemoryRead(const MachineID &id, Addr addr,
                                     Cycles latency)
 {
-    RequestPtr req = new Request(addr.getAddress(),
-                                 RubySystem::getBlockSizeBytes(), 0,
+    RequestPtr req = new Request(addr, RubySystem::getBlockSizeBytes(), 0,
                                  m_masterId);
 
     PacketPtr pkt = Packet::createRead(req);
@@ -234,11 +233,10 @@ AbstractController::queueMemoryRead(const MachineID &id, Address addr,
 }
 
 void
-AbstractController::queueMemoryWrite(const MachineID &id, Address addr,
+AbstractController::queueMemoryWrite(const MachineID &id, Addr addr,
                                      Cycles latency, const DataBlock &block)
 {
-    RequestPtr req = new Request(addr.getAddress(),
-                                 RubySystem::getBlockSizeBytes(), 0,
+    RequestPtr req = new Request(addr, RubySystem::getBlockSizeBytes(), 0,
                                  m_masterId);
 
     PacketPtr pkt = Packet::createWrite(req);
@@ -262,18 +260,17 @@ AbstractController::queueMemoryWrite(const MachineID &id, Address addr,
 }
 
 void
-AbstractController::queueMemoryWritePartial(const MachineID &id, Address addr,
+AbstractController::queueMemoryWritePartial(const MachineID &id, Addr addr,
                                             Cycles latency,
                                             const DataBlock &block, int size)
 {
-    RequestPtr req = new Request(addr.getAddress(),
-                                 RubySystem::getBlockSizeBytes(), 0,
+    RequestPtr req = new Request(addr, RubySystem::getBlockSizeBytes(), 0,
                                  m_masterId);
 
     PacketPtr pkt = Packet::createWrite(req);
     uint8_t *newData = new uint8_t[size];
     pkt->dataDynamic(newData);
-    memcpy(newData, block.getData(addr.getOffset(), size), size);
+    memcpy(newData, block.getData(getOffset(addr), size), size);
 
     SenderState *s = new SenderState(id);
     pkt->pushSenderState(s);
@@ -310,7 +307,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
     assert(pkt->isResponse());
 
     std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
-    (*msg).m_addr.setAddress(pkt->getAddr());
+    (*msg).m_addr = pkt->getAddr();
     (*msg).m_Sender = m_machineID;
 
     SenderState *s = dynamic_cast<SenderState *>(pkt->senderState);

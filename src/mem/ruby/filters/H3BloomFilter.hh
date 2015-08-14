@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class H3BloomFilter : public AbstractBloomFilter
@@ -43,18 +44,18 @@ class H3BloomFilter : public AbstractBloomFilter
     ~H3BloomFilter();
 
     void clear();
-    void increment(const Address& addr);
-    void decrement(const Address& addr);
+    void increment(Addr addr);
+    void decrement(Addr addr);
     void merge(AbstractBloomFilter * other_filter);
-    void set(const Address& addr);
-    void unset(const Address& addr);
+    void set(Addr addr);
+    void unset(Addr addr);
 
-    bool isSet(const Address& addr);
-    int getCount(const Address& addr);
+    bool isSet(Addr addr);
+    int getCount(Addr addr);
     int getTotalCount();
     void print(std::ostream& out) const;
 
-    int getIndex(const Address& addr);
+    int getIndex(Addr addr);
     int readBit(const int index);
     void writeBit(const int index, const int value);
 
@@ -65,7 +66,7 @@ class H3BloomFilter : public AbstractBloomFilter
     }
 
   private:
-    int get_index(const Address& addr, int hashNumber);
+    int get_index(Addr addr, int hashNumber);
 
     int hash_H3(uint64 value, int index);
 

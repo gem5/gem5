@@ -51,7 +51,7 @@ enumeration(MemoryRequestType, desc="...") {
 // Message to and from Memory Control
 
 structure(MemoryMsg, desc="...", interface="Message") {
-  Address addr,              desc="Physical address for this request";
+  Addr addr,              desc="Physical address for this request";
   MemoryRequestType Type,       desc="Type of memory request (MEMORY_READ or MEMORY_WB)";
   MachineID Sender,             desc="What component sent the data";
   MachineID OriginalRequestorMachId, desc="What component originally requested";

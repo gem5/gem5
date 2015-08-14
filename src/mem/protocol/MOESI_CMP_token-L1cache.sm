@@ -150,10 +150,10 @@ machine(L1Cache, "Token protocol")
 
   // TBE fields
   structure(TBE, desc="...") {
-    Address addr,                      desc="Physical address for this TBE";
+    Addr addr,                      desc="Physical address for this TBE";
     State TBEState,                       desc="Transient state";
     int IssueCount,      default="0",     desc="The number of times we've issued a request for this line.";
-    Address PC,                           desc="Program counter of request";
+    Addr PC,                           desc="Program counter of request";
 
     bool WentPersistent, default="false",  desc="Request went persistent";
     bool ExternalResponse, default="false", desc="Response came from an external controller";
@@ -166,22 +166,22 @@ machine(L1Cache, "Token protocol")
   }
 
   structure(TBETable, external="yes") {
-    TBE lookup(Address);
-    void allocate(Address);
-    void deallocate(Address);
-    bool isPresent(Address);
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
   }
 
   structure(PersistentTable, external="yes") {
-    void persistentRequestLock(Address, MachineID, AccessType);
-    void persistentRequestUnlock(Address, MachineID);
-    bool okToIssueStarving(Address, MachineID);
-    MachineID findSmallest(Address);
-    AccessType typeOfSmallest(Address);
-    void markEntries(Address);
-    bool isLocked(Address);
-    int countStarvingForAddress(Address);
-    int countReadStarvingForAddress(Address);
+    void persistentRequestLock(Addr, MachineID, AccessType);
+    void persistentRequestUnlock(Addr, MachineID);
+    bool okToIssueStarving(Addr, MachineID);
+    MachineID findSmallest(Addr);
+    AccessType typeOfSmallest(Addr);
+    void markEntries(Addr);
+    bool isLocked(Addr);
+    int countStarvingForAddress(Addr);
+    int countReadStarvingForAddress(Addr);
   }
 
   void set_cache_entry(AbstractCacheEntry b);
@@ -189,7 +189,7 @@ machine(L1Cache, "Token protocol")
   void set_tbe(TBE b);
   void unset_tbe();
   void wakeUpAllBuffers();
-  void wakeUpBuffers(Address a);
+  void wakeUpBuffers(Addr a);
   Cycles curCycle();
 
   TBETable L1_TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
@@ -230,7 +230,7 @@ machine(L1Cache, "Token protocol")
     averageLatencyCounter := averageLatencyCounter - averageLatencyEstimate() + latency;
   }
 
-  Entry getCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
     if(is_valid(L1Dcache_entry)) {
       return L1Dcache_entry;
@@ -240,23 +240,23 @@ machine(L1Cache, "Token protocol")
     return L1Icache_entry;
   }
 
-  void functionalRead(Address addr, Packet *pkt) {
+  void functionalRead(Addr addr, Packet *pkt) {
     testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
   }
 
-  int functionalWrite(Address addr, Packet *pkt) {
+  int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
     num_functional_writes := num_functional_writes +
         testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
     return num_functional_writes;
   }
 
-  Entry getL1DCacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getL1DCacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Dcache_entry := static_cast(Entry, "pointer", L1Dcache.lookup(addr));
     return L1Dcache_entry;
   }
 
-  Entry getL1ICacheEntry(Address addr), return_by_pointer="yes" {
+  Entry getL1ICacheEntry(Addr addr), return_by_pointer="yes" {
     Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache.lookup(addr));
     return L1Icache_entry;
   }
@@ -268,7 +268,7 @@ machine(L1Cache, "Token protocol")
     return 0;
   }
 
-  State getState(TBE tbe, Entry cache_entry, Address addr) {
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
 
     if (is_valid(tbe)) {
       return tbe.TBEState;
@@ -284,7 +284,7 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
     assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
 
     if (is_valid(tbe)) {
@@ -365,7 +365,7 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-  AccessPermission getAccessPermission(Address addr) {
+  AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := L1_TBEs[addr];
     if(is_valid(tbe)) {
       return L1Cache_State_to_permission(tbe.TBEState);
@@ -379,7 +379,7 @@ machine(L1Cache, "Token protocol")
     return AccessPermission:NotPresent;
   }
 
-  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L1Cache_State_to_permission(state));
     }
@@ -414,7 +414,7 @@ machine(L1Cache, "Token protocol")
   }
 
   // NOTE: direct local hits should not call this function
-  bool isExternalHit(Address addr, MachineID sender) {
+  bool isExternalHit(Addr addr, MachineID sender) {
     if (machineIDToMachineType(sender) == MachineType:L1Cache) {
       return true;
     } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
@@ -430,11 +430,11 @@ machine(L1Cache, "Token protocol")
     return true;
   }
 
-  bool okToIssueStarving(Address addr, MachineID machineID) {
+  bool okToIssueStarving(Addr addr, MachineID machineID) {
     return persistentTable.okToIssueStarving(addr, machineID);
   }
 
-  void markPersistentEntries(Address addr) {
+  void markPersistentEntries(Addr addr) {
     persistentTable.markEntries(addr);
   }
 
@@ -457,7 +457,7 @@ machine(L1Cache, "Token protocol")
   // ** IN_PORTS **
 
   // Use Timer
-  in_port(useTimerTable_in, Address, useTimerTable, rank=5) {
+  in_port(useTimerTable_in, Addr, useTimerTable, rank=5) {
     if (useTimerTable_in.isReady()) {
       TBE tbe := L1_TBEs[useTimerTable.readyAddress()];
 
@@ -483,7 +483,7 @@ machine(L1Cache, "Token protocol")
   }
 
   // Reissue Timer
-  in_port(reissueTimerTable_in, Address, reissueTimerTable, rank=4) {
+  in_port(reissueTimerTable_in, Addr, reissueTimerTable, rank=4) {
     if (reissueTimerTable_in.isReady()) {
       trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
               getCacheEntry(reissueTimerTable.readyAddress()),
