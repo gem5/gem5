@@ -60,7 +60,6 @@ CacheMemory::CacheMemory(const Params *p)
              p->start_index_bit, p->ruby_system)
 {
     m_cache_size = p->size;
-    m_latency = p->latency;
     m_cache_assoc = p->assoc;
     m_replacementPolicy_ptr = p->replacement_policy;
     m_replacementPolicy_ptr->setCache(this);

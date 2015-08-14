@@ -35,16 +35,10 @@ from Ruby import create_topology
 from Ruby import send_evicts
 
 #
-# Note: the L1 Cache latency is only used by the sequencer on fast path hits
+# Declare caches used by the protocol
 #
-class L1Cache(RubyCache):
-    latency = 3
-
-#
-# Note: the L2 Cache latency is not currently used
-#
-class L2Cache(RubyCache):
-    latency = 15
+class L1Cache(RubyCache): pass
+class L2Cache(RubyCache): pass
 
 def define_options(parser):
     return

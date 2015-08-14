@@ -61,6 +61,12 @@ class RubySequencer(RubyPort):
 
     icache = Param.RubyCache("")
     dcache = Param.RubyCache("")
+    # Cache latencies currently assessed at the beginning of each access
+    # NOTE: Setting these values to a value greater than one will result in
+    # O3 CPU pipeline bubbles and negatively impact performance
+    # TODO: Latencies should be migrated into each top-level cache controller
+    icache_hit_latency = Param.Cycles(1, "Inst cache hit latency")
+    dcache_hit_latency = Param.Cycles(1, "Data cache hit latency")
     max_outstanding_requests = Param.Int(16,
         "max requests (incl. prefetches) outstanding")
     deadlock_threshold = Param.Cycles(500000,

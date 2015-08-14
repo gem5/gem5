@@ -96,7 +96,6 @@ class CacheMemory : public SimObject
     AbstractCacheEntry* lookup(const Address& address);
     const AbstractCacheEntry* lookup(const Address& address) const;
 
-    Cycles getLatency() const { return m_latency; }
     Cycles getTagLatency() const { return tagArray.getLatency(); }
     Cycles getDataLatency() const { return dataArray.getLatency(); }
 
@@ -159,8 +158,6 @@ class CacheMemory : public SimObject
     CacheMemory& operator=(const CacheMemory& obj);
 
   private:
-    Cycles m_latency;
-
     // Data Members (m_prefix)
     bool m_is_instruction_only_cache;
 

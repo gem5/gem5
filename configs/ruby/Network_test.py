@@ -34,10 +34,9 @@ from m5.util import addToPath
 from Ruby import create_topology
 
 #
-# Note: the cache latency is only used by the sequencer on fast path hits
+# Declare caches used by the protocol
 #
-class Cache(RubyCache):
-    latency = 3
+class Cache(RubyCache): pass
 
 def define_options(parser):
     return

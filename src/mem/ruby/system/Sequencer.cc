@@ -58,6 +58,8 @@ Sequencer::Sequencer(const Params *p)
 
     m_instCache_ptr = p->icache;
     m_dataCache_ptr = p->dcache;
+    m_data_cache_hit_latency = p->dcache_hit_latency;
+    m_inst_cache_hit_latency = p->icache_hit_latency;
     m_max_outstanding_requests = p->max_outstanding_requests;
     m_deadlock_threshold = p->deadlock_threshold;
 
@@ -65,6 +67,8 @@ Sequencer::Sequencer(const Params *p)
     assert(m_deadlock_threshold > 0);
     assert(m_instCache_ptr != NULL);
     assert(m_dataCache_ptr != NULL);
+    assert(m_data_cache_hit_latency > 0);
+    assert(m_inst_cache_hit_latency > 0);
 
     m_usingNetworkTester = p->using_network_tester;
 }
@@ -691,12 +695,17 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
             msg->getPhysicalAddress(),
             RubyRequestType_to_string(secondary_type));
 
-    Cycles latency(0);  // initialzed to an null value
-
+    // The Sequencer currently assesses instruction and data cache hit latency
+    // for the top-level caches at the beginning of a memory access.
+    // TODO: Eventually, this latency should be moved to represent the actual
+    // cache access latency portion of the memory access. This will require
+    // changing cache controller protocol files to assess the latency on the
+    // access response path.
+    Cycles latency(0);  // Initialize to zero to catch misconfigured latency
     if (secondary_type == RubyRequestType_IFETCH)
-        latency = m_instCache_ptr->getLatency();
+        latency = m_inst_cache_hit_latency;
     else
-        latency = m_dataCache_ptr->getLatency();
+        latency = m_data_cache_hit_latency;
 
     // Send the message to the cache controller
     assert(latency > 0);

@@ -180,6 +180,13 @@ class Sequencer : public RubyPort
     CacheMemory* m_dataCache_ptr;
     CacheMemory* m_instCache_ptr;
 
+    // The cache access latency for top-level caches (L0/L1). These are
+    // currently assessed at the beginning of each memory access through the
+    // sequencer.
+    // TODO: Migrate these latencies into top-level cache controllers.
+    Cycles m_data_cache_hit_latency;
+    Cycles m_inst_cache_hit_latency;
+
     typedef m5::hash_map<Address, SequencerRequest*> RequestTable;
     RequestTable m_writeRequestTable;
     RequestTable m_readRequestTable;

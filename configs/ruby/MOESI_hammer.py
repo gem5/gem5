@@ -35,22 +35,14 @@ from Ruby import create_topology
 from Ruby import send_evicts
 
 #
-# Note: the L1 Cache latency is only used by the sequencer on fast path hits
+# Declare caches used by the protocol
 #
-class L1Cache(RubyCache):
-    latency = 2
-
+class L1Cache(RubyCache): pass
+class L2Cache(RubyCache): pass
 #
-# Note: the L2 Cache latency is not currently used
+# Probe filter is a cache
 #
-class L2Cache(RubyCache):
-    latency = 10
-
-#
-# Probe filter is a cache, latency is not used
-#
-class ProbeFilter(RubyCache):
-    latency = 1
+class ProbeFilter(RubyCache): pass
 
 def define_options(parser):
     parser.add_option("--allow-atomic-migration", action="store_true",

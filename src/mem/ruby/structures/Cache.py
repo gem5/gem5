@@ -37,7 +37,6 @@ class RubyCache(SimObject):
     cxx_class = 'CacheMemory'
     cxx_header = "mem/ruby/structures/CacheMemory.hh"
     size = Param.MemorySize("capacity in bytes");
-    latency = Param.Cycles("");
     assoc = Param.Int("");
     replacement_policy = Param.ReplacementPolicy(PseudoLRUReplacementPolicy(),
                          "")
