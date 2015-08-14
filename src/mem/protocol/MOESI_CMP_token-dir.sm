@@ -280,9 +280,9 @@ machine(Directory, "Token protocol")
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Addr, TBEs[in_msg.Addr]);
+          trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Addr, TBEs[in_msg.Addr]);
+          trigger(Event:Memory_Ack, in_msg.addr, TBEs[in_msg.addr]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -303,32 +303,32 @@ machine(Directory, "Token protocol")
     if (responseNetwork_in.isReady()) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
-        if (getDirectoryEntry(in_msg.Addr).Tokens + in_msg.Tokens == max_tokens()) {
+        if (getDirectoryEntry(in_msg.addr).Tokens + in_msg.Tokens == max_tokens()) {
           if ((in_msg.Type == CoherenceResponseType:DATA_OWNER) ||
               (in_msg.Type == CoherenceResponseType:DATA_SHARED)) {
-            trigger(Event:Data_All_Tokens, in_msg.Addr,
-                    TBEs[in_msg.Addr]);
+            trigger(Event:Data_All_Tokens, in_msg.addr,
+                    TBEs[in_msg.addr]);
           } else if (in_msg.Type == CoherenceResponseType:ACK_OWNER) {
-            trigger(Event:Ack_Owner_All_Tokens, in_msg.Addr,
-                    TBEs[in_msg.Addr]);
+            trigger(Event:Ack_Owner_All_Tokens, in_msg.addr,
+                    TBEs[in_msg.addr]);
           } else if (in_msg.Type == CoherenceResponseType:ACK) {
-            trigger(Event:Ack_All_Tokens, in_msg.Addr,
-                    TBEs[in_msg.Addr]);
+            trigger(Event:Ack_All_Tokens, in_msg.addr,
+                    TBEs[in_msg.addr]);
           } else {
             DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Invalid message");
           }
         } else {
           if (in_msg.Type == CoherenceResponseType:DATA_OWNER) {
-            trigger(Event:Data_Owner, in_msg.Addr,
-                    TBEs[in_msg.Addr]);
+            trigger(Event:Data_Owner, in_msg.addr,
+                    TBEs[in_msg.addr]);
           } else if ((in_msg.Type == CoherenceResponseType:ACK) ||
                      (in_msg.Type == CoherenceResponseType:DATA_SHARED)) {
-            trigger(Event:Tokens, in_msg.Addr,
-                    TBEs[in_msg.Addr]);
+            trigger(Event:Tokens, in_msg.addr,
+                    TBEs[in_msg.addr]);
           } else if (in_msg.Type == CoherenceResponseType:ACK_OWNER) {
-            trigger(Event:Ack_Owner, in_msg.Addr,
-                    TBEs[in_msg.Addr]);
+            trigger(Event:Ack_Owner, in_msg.addr,
+                    TBEs[in_msg.addr]);
           } else {
             DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Invalid message");
@@ -346,52 +346,52 @@ machine(Directory, "Token protocol")
         if (distributed_persistent) {
           // Apply the lockdown or unlockdown message to the table
           if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
-            persistentTable.persistentRequestLock(in_msg.Addr, in_msg.Requestor, AccessType:Write);
+            persistentTable.persistentRequestLock(in_msg.addr, in_msg.Requestor, AccessType:Write);
           } else if (in_msg.Type == PersistentRequestType:GETS_PERSISTENT) {
-            persistentTable.persistentRequestLock(in_msg.Addr, in_msg.Requestor, AccessType:Read);
+            persistentTable.persistentRequestLock(in_msg.addr, in_msg.Requestor, AccessType:Read);
           } else if (in_msg.Type == PersistentRequestType:DEACTIVATE_PERSISTENT) {
-            persistentTable.persistentRequestUnlock(in_msg.Addr, in_msg.Requestor);
+            persistentTable.persistentRequestUnlock(in_msg.addr, in_msg.Requestor);
           } else {
             error("Invalid message");
           }
 
           // React to the message based on the current state of the table
-          if (persistentTable.isLocked(in_msg.Addr)) {
-            if (persistentTable.findSmallest(in_msg.Addr) == machineID) {
-              if (getDirectoryEntry(in_msg.Addr).Tokens > 0) {
-                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Addr,
-                        TBEs[in_msg.Addr]);
+          if (persistentTable.isLocked(in_msg.addr)) {
+            if (persistentTable.findSmallest(in_msg.addr) == machineID) {
+              if (getDirectoryEntry(in_msg.addr).Tokens > 0) {
+                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.addr,
+                        TBEs[in_msg.addr]);
               } else {
-                trigger(Event:Own_Lock_or_Unlock, in_msg.Addr,
-                        TBEs[in_msg.Addr]);
+                trigger(Event:Own_Lock_or_Unlock, in_msg.addr,
+                        TBEs[in_msg.addr]);
               }
             } else {
               // locked
-              trigger(Event:Lockdown, in_msg.Addr, TBEs[in_msg.Addr]);
+              trigger(Event:Lockdown, in_msg.addr, TBEs[in_msg.addr]);
             }
           } else {
             // unlocked
-            trigger(Event:Unlockdown, in_msg.Addr, TBEs[in_msg.Addr]);
+            trigger(Event:Unlockdown, in_msg.addr, TBEs[in_msg.addr]);
           }
         }
         else {
-          if (persistentTable.findSmallest(in_msg.Addr) == machineID) {
-              if (getDirectoryEntry(in_msg.Addr).Tokens > 0) {
-                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Addr,
-                        TBEs[in_msg.Addr]);
+          if (persistentTable.findSmallest(in_msg.addr) == machineID) {
+              if (getDirectoryEntry(in_msg.addr).Tokens > 0) {
+                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.addr,
+                        TBEs[in_msg.addr]);
               } else {
-                trigger(Event:Own_Lock_or_Unlock, in_msg.Addr,
-                        TBEs[in_msg.Addr]);
+                trigger(Event:Own_Lock_or_Unlock, in_msg.addr,
+                        TBEs[in_msg.addr]);
               }
           } else if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
             // locked
-            trigger(Event:Lockdown, in_msg.Addr, TBEs[in_msg.Addr]);
+            trigger(Event:Lockdown, in_msg.addr, TBEs[in_msg.addr]);
           } else if (in_msg.Type == PersistentRequestType:GETS_PERSISTENT) {
             // locked
-            trigger(Event:Lockdown, in_msg.Addr, TBEs[in_msg.Addr]);
+            trigger(Event:Lockdown, in_msg.addr, TBEs[in_msg.addr]);
           } else if (in_msg.Type == PersistentRequestType:DEACTIVATE_PERSISTENT) {
             // unlocked
-            trigger(Event:Unlockdown, in_msg.Addr, TBEs[in_msg.Addr]);
+            trigger(Event:Unlockdown, in_msg.addr, TBEs[in_msg.addr]);
           } else {
             error("Invalid message");
           }
@@ -405,9 +405,9 @@ machine(Directory, "Token protocol")
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.Addr, TBEs[in_msg.Addr]);
+          trigger(Event:GETS, in_msg.addr, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.Addr, TBEs[in_msg.Addr]);
+          trigger(Event:GETX, in_msg.addr, TBEs[in_msg.addr]);
         } else {
           error("Invalid message");
         }
@@ -442,11 +442,11 @@ machine(Directory, "Token protocol")
     if (getDirectoryEntry(address).Tokens > 0) {
       peek(requestNetwork_in, RequestMsg) {
         enqueue(responseNetwork_out, ResponseMsg, directory_latency) {// FIXME?
-          out_msg.Addr := address;
+          out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
           out_msg.Destination.add(in_msg.Requestor);
-          out_msg.Tokens := getDirectoryEntry(in_msg.Addr).Tokens;
+          out_msg.Tokens := getDirectoryEntry(in_msg.addr).Tokens;
           out_msg.MessageSize := MessageSizeType:Response_Control;
         }
       }
@@ -457,7 +457,7 @@ machine(Directory, "Token protocol")
   action(px_tryIssuingPersistentGETXRequest, "px", desc="...") {
     if (okToIssueStarving(address, machineID) && (starving == false)) {
       enqueue(persistentNetwork_out, PersistentMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := PersistentRequestType:GETX_PERSISTENT;
         out_msg.Requestor := machineID;
         out_msg.Destination.broadcast(MachineType:L1Cache);
@@ -502,7 +502,7 @@ machine(Directory, "Token protocol")
       //
       assert(getDirectoryEntry(address).Tokens != max_tokens());
       enqueue(requestNetwork_out, RequestMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
 
@@ -525,7 +525,7 @@ machine(Directory, "Token protocol")
   action(ps_tryIssuingPersistentGETSRequest, "ps", desc="...") {
     if (okToIssueStarving(address, machineID) && (starving == false)) {
       enqueue(persistentNetwork_out, PersistentMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := PersistentRequestType:GETS_PERSISTENT;
         out_msg.Requestor := machineID;
         out_msg.Destination.broadcast(MachineType:L1Cache);
@@ -566,7 +566,7 @@ machine(Directory, "Token protocol")
   action(br_broadcastRead, "br", desc="Broadcast GETS for data") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(requestNetwork_out, RequestMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
 
@@ -590,7 +590,7 @@ machine(Directory, "Token protocol")
     // Only send a message if we have tokens to send
     if (getDirectoryEntry(address).Tokens > 0) {
       enqueue(responseNetwork_out, ResponseMsg, directory_latency) {// FIXME?
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
         out_msg.Destination.add(persistentTable.findSmallest(address));
@@ -604,12 +604,12 @@ machine(Directory, "Token protocol")
   action(d_sendMemoryDataWithAllTokens, "d", desc="Send data and tokens to requestor") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(responseNetwork_out, ResponseMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
         assert(getDirectoryEntry(address).Tokens > 0);
-        out_msg.Tokens := getDirectoryEntry(in_msg.Addr).Tokens;
+        out_msg.Tokens := getDirectoryEntry(in_msg.addr).Tokens;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -621,7 +621,7 @@ machine(Directory, "Token protocol")
   action(dd_sendMemDataToStarver, "\d", desc="Send data and tokens to starver") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(responseNetwork_out, ResponseMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
         out_msg.Destination.add(persistentTable.findSmallest(address));
@@ -637,7 +637,7 @@ machine(Directory, "Token protocol")
 
   action(de_sendTbeDataToStarver, "de", desc="Send data and tokens to starver") {
     enqueue(responseNetwork_out, ResponseMsg, 1) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:DATA_OWNER;
       out_msg.Sender := machineID;
       out_msg.Destination.add(persistentTable.findSmallest(address));
@@ -706,7 +706,7 @@ machine(Directory, "Token protocol")
       assert(starving);
 
       enqueue(persistentNetwork_out, PersistentMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := PersistentRequestType:DEACTIVATE_PERSISTENT;
         out_msg.Requestor := machineID;
         out_msg.Destination.broadcast(MachineType:L1Cache);
@@ -787,7 +787,7 @@ machine(Directory, "Token protocol")
   action(r_bounceResponse, "r", desc="Bounce response to starving processor") {
     peek(responseNetwork_in, ResponseMsg) {
       enqueue(responseNetwork_out, ResponseMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
         out_msg.Destination.add(persistentTable.findSmallest(address));
@@ -832,7 +832,7 @@ machine(Directory, "Token protocol")
       // token.  In essence we're converting an ACK_OWNER message to a
       // DATA_OWNER message, keeping the number of tokens the same.
       enqueue(responseNetwork_out, ResponseMsg, 1) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
         out_msg.Destination.add(persistentTable.findSmallest(address));

@@ -90,7 +90,7 @@ machine(Directory, "Network_test Directory")
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
-          trigger(Event:Receive_Request, in_msg.Addr);
+          trigger(Event:Receive_Request, in_msg.addr);
         } else {
           error("Invalid message");
         }
@@ -101,7 +101,7 @@ machine(Directory, "Network_test Directory")
     if (forwardQueue_in.isReady()) {
       peek(forwardQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
-          trigger(Event:Receive_Forward, in_msg.Addr);
+          trigger(Event:Receive_Forward, in_msg.addr);
         } else {
           error("Invalid message");
         }
@@ -112,7 +112,7 @@ machine(Directory, "Network_test Directory")
     if (responseQueue_in.isReady()) {
       peek(responseQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
-          trigger(Event:Receive_Response, in_msg.Addr);
+          trigger(Event:Receive_Response, in_msg.addr);
         } else {
           error("Invalid message");
         }

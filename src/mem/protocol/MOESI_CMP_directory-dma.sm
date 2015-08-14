@@ -123,15 +123,15 @@ machine(DMA, "DMA Controller")
     if (dmaResponseQueue_in.isReady()) {
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
-          trigger(Event:DMA_Ack, makeLineAddress(in_msg.Addr),
-                  TBEs[makeLineAddress(in_msg.Addr)]);
+          trigger(Event:DMA_Ack, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
        in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, makeLineAddress(in_msg.Addr),
-                  TBEs[makeLineAddress(in_msg.Addr)]);
+          trigger(Event:Data, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:Inv_Ack, makeLineAddress(in_msg.Addr),
-                  TBEs[makeLineAddress(in_msg.Addr)]);
+          trigger(Event:Inv_Ack, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
         } else {
           error("Invalid response type");
         }
@@ -144,7 +144,7 @@ machine(DMA, "DMA Controller")
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
-          trigger(Event:All_Acks, in_msg.Addr, TBEs[in_msg.Addr]);
+          trigger(Event:All_Acks, in_msg.addr, TBEs[in_msg.addr]);
         } else {
           error("Unexpected message");
         }
@@ -155,7 +155,7 @@ machine(DMA, "DMA Controller")
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(reqToDirectory_out, RequestMsg, request_latency) {
-        out_msg.Addr := in_msg.PhysicalAddress;
+        out_msg.addr := in_msg.PhysicalAddress;
         out_msg.Type := CoherenceRequestType:DMA_READ;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
@@ -170,7 +170,7 @@ machine(DMA, "DMA Controller")
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(reqToDirectory_out, RequestMsg, request_latency) {
-          out_msg.Addr := in_msg.PhysicalAddress;
+          out_msg.addr := in_msg.PhysicalAddress;
           out_msg.Type := CoherenceRequestType:DMA_WRITE;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;
@@ -190,7 +190,7 @@ machine(DMA, "DMA Controller")
     assert(is_valid(tbe));
     if (tbe.NumAcks == 0) {
       enqueue(triggerQueue_out, TriggerMsg) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := TriggerType:ALL_ACKS;
       }
     }
@@ -205,7 +205,7 @@ machine(DMA, "DMA Controller")
 
   action( u_sendExclusiveUnblockToDir, "\u", desc="send exclusive unblock to directory") {
     enqueue(respToDirectory_out, ResponseMsg, response_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.Sender := machineID;

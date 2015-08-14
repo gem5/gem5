@@ -336,15 +336,15 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
 
-        Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := TBEs[in_msg.Addr];
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
 
         if (in_msg.Type == TriggerType:L2_to_L1) {
-          trigger(Event:Complete_L2_to_L1, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Complete_L2_to_L1, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == TriggerType:ALL_ACKS) {
-          trigger(Event:All_acks, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:All_acks, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == TriggerType:ALL_ACKS_NO_SHARERS) {
-          trigger(Event:All_acks_no_sharers, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:All_acks_no_sharers, in_msg.addr, cache_entry, tbe);
         } else {
           error("Unexpected message");
         }
@@ -357,21 +357,21 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   // Response Network
   in_port(responseToCache_in, ResponseMsg, responseToCache, rank=2) {
     if (responseToCache_in.isReady()) {
-      peek(responseToCache_in, ResponseMsg, block_on="Addr") {
+      peek(responseToCache_in, ResponseMsg, block_on="addr") {
 
-        Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := TBEs[in_msg.Addr];
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
 
         if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:Ack, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Ack, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceResponseType:ACK_SHARED) {
-          trigger(Event:Shared_Ack, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Shared_Ack, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Data, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceResponseType:DATA_SHARED) {
-          trigger(Event:Shared_Data, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Shared_Data, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Exclusive_Data, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Exclusive_Data, in_msg.addr, cache_entry, tbe);
         } else {
           error("Unexpected message");
         }
@@ -382,38 +382,38 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   // Forward Network
   in_port(forwardToCache_in, RequestMsg, forwardToCache, rank=1) {
     if (forwardToCache_in.isReady()) {
-      peek(forwardToCache_in, RequestMsg, block_on="Addr") {
+      peek(forwardToCache_in, RequestMsg, block_on="addr") {
 
-        Entry cache_entry := getCacheEntry(in_msg.Addr);
-        TBE tbe := TBEs[in_msg.Addr];
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
 
         if ((in_msg.Type == CoherenceRequestType:GETX) ||
             (in_msg.Type == CoherenceRequestType:GETF)) {
-          trigger(Event:Other_GETX, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Other_GETX, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:MERGED_GETS) {
-          trigger(Event:Merged_GETS, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Merged_GETS, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           if (machineCount(MachineType:L1Cache) > 1) {
             if (is_valid(cache_entry)) {
               if (IsAtomicAccessed(cache_entry) && no_mig_atomic) {
-                trigger(Event:Other_GETS_No_Mig, in_msg.Addr, cache_entry, tbe);
+                trigger(Event:Other_GETS_No_Mig, in_msg.addr, cache_entry, tbe);
               } else {
-                trigger(Event:Other_GETS, in_msg.Addr, cache_entry, tbe);
+                trigger(Event:Other_GETS, in_msg.addr, cache_entry, tbe);
               }
             } else {
-              trigger(Event:Other_GETS, in_msg.Addr, cache_entry, tbe);
+              trigger(Event:Other_GETS, in_msg.addr, cache_entry, tbe);
             }
           } else {
-            trigger(Event:NC_DMA_GETS, in_msg.Addr, cache_entry, tbe);
+            trigger(Event:NC_DMA_GETS, in_msg.addr, cache_entry, tbe);
           }
         } else if (in_msg.Type == CoherenceRequestType:INV) {
-          trigger(Event:Invalidate, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Invalidate, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
-          trigger(Event:Writeback_Ack, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Writeback_Ack, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
-          trigger(Event:Writeback_Nack, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Writeback_Nack, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:BLOCK_ACK) {
-          trigger(Event:Block_Ack, in_msg.Addr, cache_entry, tbe);
+          trigger(Event:Block_Ack, in_msg.addr, cache_entry, tbe);
         } else {
           error("Unexpected message");
         }
@@ -555,7 +555,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(a_issueGETS, "a", desc="Issue GETS") {
     enqueue(requestNetwork_out, RequestMsg, issue_latency) {
       assert(is_valid(tbe));
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETS;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -570,7 +570,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(b_issueGETX, "b", desc="Issue GETX") {
     enqueue(requestNetwork_out, RequestMsg, issue_latency) {
       assert(is_valid(tbe));
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETX;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -586,7 +586,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     if (machineCount(MachineType:L1Cache) > 1) {
       enqueue(requestNetwork_out, RequestMsg, issue_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(map_Address_to_Directory(address));
@@ -602,7 +602,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(bf_issueGETF, "bf", desc="Issue GETF") {
     enqueue(requestNetwork_out, RequestMsg, issue_latency) {
       assert(is_valid(tbe));
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETF;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -618,7 +618,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(cache_entry));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -641,7 +641,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -662,7 +662,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   action(d_issuePUT, "d", desc="Issue PUT") {
     enqueue(requestNetwork_out, RequestMsg, issue_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:PUT;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -672,7 +672,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   action(df_issuePUTF, "df", desc="Issue PUTF") {
     enqueue(requestNetwork_out, RequestMsg, issue_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:PUTF;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -684,7 +684,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(cache_entry));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -707,7 +707,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(cache_entry));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -731,7 +731,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -755,7 +755,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(cache_entry));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination := in_msg.MergedRequestors;
@@ -775,7 +775,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination := in_msg.MergedRequestors;
@@ -794,7 +794,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(f_sendAck, "f", desc="Send ack from cache to requestor") {
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -811,7 +811,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(ff_sendAckShared, "\f", desc="Send shared ack from cache to requestor") {
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:ACK_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -827,7 +827,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   action(g_sendUnblock, "g", desc="Send unblock to memory") {
     enqueue(unblockNetwork_out, ResponseMsg, cache_response_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -837,7 +837,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   action(gm_sendUnblockM, "gm", desc="Send unblock to memory and indicate M/O/E state") {
     enqueue(unblockNetwork_out, ResponseMsg, cache_response_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCKM;
       out_msg.Sender := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -848,7 +848,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(gs_sendUnblockS, "gs", desc="Send unblock to memory and indicate S state") {
     enqueue(unblockNetwork_out, ResponseMsg, cache_response_latency) {
       assert(is_valid(tbe));
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCKS;
       out_msg.Sender := machineID;
       out_msg.CurOwner := tbe.CurOwner;
@@ -1013,7 +1013,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   action(ll_L2toL1Transfer, "ll", desc="") {
     enqueue(triggerQueue_out, TriggerMsg, l2_cache_hit_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := TriggerType:L2_to_L1;
     }
   }
@@ -1022,7 +1022,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     assert(is_valid(tbe));
     if (tbe.NumPendingMsgs == 0) {
       enqueue(triggerQueue_out, TriggerMsg) {
-        out_msg.Addr := address;
+        out_msg.addr := address;
         if (tbe.Sharers) {
           out_msg.Type := TriggerType:ALL_ACKS;
         } else {
@@ -1047,7 +1047,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
         assert(in_msg.Requestor != machineID);
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -1072,7 +1072,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
         assert(in_msg.Requestor != machineID);
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
@@ -1096,7 +1096,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, cache_response_latency) {
         assert(is_valid(tbe));
-        out_msg.Addr := address;
+        out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination := in_msg.MergedRequestors;
@@ -1115,7 +1115,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(qq_sendDataFromTBEToMemory, "\q", desc="Send data from TBE to memory") {
     enqueue(unblockNetwork_out, ResponseMsg, cache_response_latency) {
       assert(is_valid(tbe));
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Sender := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.Dirty := tbe.Dirty;
@@ -1146,7 +1146,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   action(t_sendExclusiveDataFromTBEToMemory, "t", desc="Send exclusive data from TBE to memory") {
     enqueue(unblockNetwork_out, ResponseMsg, cache_response_latency) {
       assert(is_valid(tbe));
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Sender := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.DataBlk := tbe.DataBlk;

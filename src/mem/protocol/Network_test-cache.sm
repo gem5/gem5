@@ -145,7 +145,7 @@ machine(L1Cache, "Network_test L1 Cache")
 
   action(a_issueRequest, "a", desc="Issue a request") {
     enqueue(requestNetwork_out, RequestMsg, issue_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -156,7 +156,7 @@ machine(L1Cache, "Network_test L1 Cache")
 
   action(b_issueForward, "b", desc="Issue a forward") {
     enqueue(forwardNetwork_out, RequestMsg, issue_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
@@ -166,7 +166,7 @@ machine(L1Cache, "Network_test L1 Cache")
 
   action(c_issueResponse, "c", desc="Issue a response") {
     enqueue(responseNetwork_out, RequestMsg, issue_latency) {
-      out_msg.Addr := address;
+      out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));

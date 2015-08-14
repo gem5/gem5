@@ -51,7 +51,7 @@ enumeration(CoherenceResponseType, desc="...") {
 
 // RequestMsg (and also forwarded requests)
 structure(RequestMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,             desc="Multicast destination mask";
@@ -61,7 +61,7 @@ structure(RequestMsg, desc="...", interface="Message") {
   bool functionalRead(Packet *pkt) {
     // Valid data block is only present in PUTX messages
     if (Type == CoherenceRequestType:PUTX) {
-        return testAndRead(Addr, DataBlk, pkt);
+        return testAndRead(addr, DataBlk, pkt);
     }
     return false;
   }
@@ -69,13 +69,13 @@ structure(RequestMsg, desc="...", interface="Message") {
   bool functionalWrite(Packet *pkt) {
     // No check on message type required since the protocol should read
     // data block from only those messages that contain valid data
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }
 
 // ResponseMsg (and also unblock requests)
 structure(ResponseMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";
   NetDest Destination,             desc="Node to whom the data is sent";
@@ -86,13 +86,13 @@ structure(ResponseMsg, desc="...", interface="Message") {
   bool functionalRead(Packet *pkt) {
     // A check on message type should appear here so that only those
     // messages that contain data
-    return testAndRead(Addr, DataBlk, pkt);
+    return testAndRead(addr, DataBlk, pkt);
   }
 
   bool functionalWrite(Packet *pkt) {
     // No check on message type required since the protocol should read
     // data block from only those messages that contain valid data
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }
 

@@ -58,7 +58,7 @@ enumeration(CoherenceResponseType, desc="...") {
 
 // PersistentMsg
 structure(PersistentMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   PersistentRequestType Type,  desc="Type of starvation request";
   MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,             desc="Destination set";
@@ -79,7 +79,7 @@ structure(PersistentMsg, desc="...", interface="Message") {
 
 // RequestMsg
 structure(RequestMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,             desc="Multicast destination mask";
@@ -102,7 +102,7 @@ structure(RequestMsg, desc="...", interface="Message") {
 
 // ResponseMsg
 structure(ResponseMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";
   NetDest Destination,             desc="Node to whom the data is sent";
@@ -113,12 +113,12 @@ structure(ResponseMsg, desc="...", interface="Message") {
 
   bool functionalRead(Packet *pkt) {
     // No check being carried out on the message type. Would be added later.
-    return testAndRead(Addr, DataBlk, pkt);
+    return testAndRead(addr, DataBlk, pkt);
   }
 
   bool functionalWrite(Packet *pkt) {
     // No check required since all messages are written.
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }
 

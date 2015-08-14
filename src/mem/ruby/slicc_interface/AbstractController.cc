@@ -310,7 +310,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
     assert(pkt->isResponse());
 
     std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
-    (*msg).m_Addr.setAddress(pkt->getAddr());
+    (*msg).m_addr.setAddress(pkt->getAddr());
     (*msg).m_Sender = m_machineID;
 
     SenderState *s = dynamic_cast<SenderState *>(pkt->senderState);

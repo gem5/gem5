@@ -71,7 +71,7 @@ enumeration(TriggerType, desc="...") {
 
 // TriggerMsg
 structure(TriggerMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   TriggerType Type,            desc="Type of trigger";
 
   bool functionalRead(Packet *pkt) {
@@ -87,7 +87,7 @@ structure(TriggerMsg, desc="...", interface="Message") {
 
 // RequestMsg (and also forwarded requests)
 structure(RequestMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
   NetDest MergedRequestors,    desc="Merge set of read requestors";
@@ -114,7 +114,7 @@ structure(RequestMsg, desc="...", interface="Message") {
 
 // ResponseMsg (and also unblock requests)
 structure(ResponseMsg, desc="...", interface="Message") {
-  Address Addr,             desc="Physical address for this request";
+  Address addr,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";
   MachineID CurOwner,      desc="current owner of the block, used for UnblockS responses";
@@ -138,7 +138,7 @@ structure(ResponseMsg, desc="...", interface="Message") {
         Type == CoherenceResponseType:DATA_EXCLUSIVE ||
         Type == CoherenceResponseType:WB_DIRTY ||
         Type == CoherenceResponseType:WB_EXCLUSIVE_DIRTY) {
-        return testAndRead(Addr, DataBlk, pkt);
+        return testAndRead(addr, DataBlk, pkt);
     }
 
     return false;
@@ -148,7 +148,7 @@ structure(ResponseMsg, desc="...", interface="Message") {
     // Message type does not matter since all messages are written.
     // If a protocol reads data from a packet that is not supposed
     // to hold the data, then the fault lies with the protocol.
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }
 

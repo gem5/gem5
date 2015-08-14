@@ -50,7 +50,7 @@ enumeration(CoherenceClass, desc="...") {
 
 // Class for messages sent between the L0 and the L1 controllers.
 structure(CoherenceMsg, desc="...", interface="Message") {
-  Address Addr,              desc="Physical address of the cache block";
+  Address addr,              desc="Physical address of the cache block";
   CoherenceClass Class,         desc="Type of message (GetS, GetX, PutX, etc)";
   RubyAccessMode AccessMode,    desc="user/supervisor access type";
   MachineID Sender,             desc="What component sent this message";
@@ -62,7 +62,7 @@ structure(CoherenceMsg, desc="...", interface="Message") {
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block
     if (Class == CoherenceClass:PUTX) {
-        return testAndRead(Addr, DataBlk, pkt);
+        return testAndRead(addr, DataBlk, pkt);
     }
 
     return false;
@@ -71,6 +71,6 @@ structure(CoherenceMsg, desc="...", interface="Message") {
   bool functionalWrite(Packet *pkt) {
     // No check on message type required since the protocol should
     // read data from those messages that contain the block
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }

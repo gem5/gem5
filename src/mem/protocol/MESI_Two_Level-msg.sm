@@ -58,7 +58,7 @@ enumeration(CoherenceResponseType, desc="...") {
 
 // RequestMsg
 structure(RequestMsg, desc="...", interface="Message") {
-  Address Addr,              desc="Physical address for this request";
+  Address addr,              desc="Physical address for this request";
   CoherenceRequestType Type,    desc="Type of request (GetS, GetX, PutX, etc)";
   RubyAccessMode AccessMode,    desc="user/supervisor access type";
   MachineID Requestor      ,    desc="What component request";
@@ -72,7 +72,7 @@ structure(RequestMsg, desc="...", interface="Message") {
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block
     if (Type == CoherenceRequestType:PUTX) {
-        return testAndRead(Addr, DataBlk, pkt);
+        return testAndRead(addr, DataBlk, pkt);
     }
 
     return false;
@@ -81,13 +81,13 @@ structure(RequestMsg, desc="...", interface="Message") {
   bool functionalWrite(Packet *pkt) {
     // No check on message type required since the protocol should
     // read data from those messages that contain the block
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }
 
 // ResponseMsg
 structure(ResponseMsg, desc="...", interface="Message") {
-  Address Addr,              desc="Physical address for this request";
+  Address addr,              desc="Physical address for this request";
   CoherenceResponseType Type,   desc="Type of response (Ack, Data, etc)";
   MachineID Sender,             desc="What component sent the data";
   NetDest Destination,          desc="Node to whom the data is sent";
@@ -102,7 +102,7 @@ structure(ResponseMsg, desc="...", interface="Message") {
         Type == CoherenceResponseType:DATA_EXCLUSIVE ||
         Type == CoherenceResponseType:MEMORY_DATA) {
 
-        return testAndRead(Addr, DataBlk, pkt);
+        return testAndRead(addr, DataBlk, pkt);
     }
 
     return false;
@@ -111,6 +111,6 @@ structure(ResponseMsg, desc="...", interface="Message") {
   bool functionalWrite(Packet *pkt) {
     // No check on message type required since the protocol should
     // read data from those messages that contain the block
-    return testAndWrite(Addr, DataBlk, pkt);
+    return testAndWrite(addr, DataBlk, pkt);
   }
 }

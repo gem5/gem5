@@ -95,9 +95,9 @@ machine(DMA, "DMA Controller")
     if (dmaResponseQueue_in.isReady()) {
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:Ack, makeLineAddress(in_msg.Addr));
+          trigger(Event:Ack, makeLineAddress(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, makeLineAddress(in_msg.Addr));
+          trigger(Event:Data, makeLineAddress(in_msg.addr));
         } else {
           error("Invalid response type");
         }
@@ -108,7 +108,7 @@ machine(DMA, "DMA Controller")
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(requestToDir_out, RequestMsg, request_latency) {
-        out_msg.Addr := in_msg.PhysicalAddress;
+        out_msg.addr := in_msg.PhysicalAddress;
         out_msg.Type := CoherenceRequestType:DMA_READ;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
@@ -121,7 +121,7 @@ machine(DMA, "DMA Controller")
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(requestToDir_out, RequestMsg, request_latency) {
-          out_msg.Addr := in_msg.PhysicalAddress;
+          out_msg.addr := in_msg.PhysicalAddress;
           out_msg.Type := CoherenceRequestType:DMA_WRITE;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;
