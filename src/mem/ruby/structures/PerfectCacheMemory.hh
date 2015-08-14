@@ -71,8 +71,8 @@ class PerfectCacheMemory
     Address cacheProbe(const Address& newAddress) const;
 
     // looks an address up in the cache
-    ENTRY& lookup(const Address& address);
-    const ENTRY& lookup(const Address& address) const;
+    ENTRY* lookup(const Address& address);
+    const ENTRY* lookup(const Address& address) const;
 
     // Get/Set permission of cache block
     AccessPermission getPermission(const Address& address) const;
@@ -151,18 +151,18 @@ PerfectCacheMemory<ENTRY>::cacheProbe(const Address& newAddress) const
 
 // looks an address up in the cache
 template<class ENTRY>
-inline ENTRY&
+inline ENTRY*
 PerfectCacheMemory<ENTRY>::lookup(const Address& address)
 {
-    return m_map[line_address(address)].m_entry;
+    return &m_map[line_address(address)].m_entry;
 }
 
 // looks an address up in the cache
 template<class ENTRY>
-inline const ENTRY&
+inline const ENTRY*
 PerfectCacheMemory<ENTRY>::lookup(const Address& address) const
 {
-    return m_map[line_address(address)].m_entry;
+    return &m_map[line_address(address)].m_entry;
 }
 
 template<class ENTRY>

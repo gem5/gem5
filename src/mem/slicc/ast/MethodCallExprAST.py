@@ -156,9 +156,6 @@ class MemberMethodCallExprAST(MethodCallExprAST):
                   methodId = implementedMethodId
                   return_type = obj_type.methods[methodId].return_type
 
-        if return_type.isInterface:
-            prefix = "static_cast<%s &>" % return_type.c_ident
-
         if str(obj_type) == "AbstractCacheEntry" or \
            str(obj_type) == "AbstractEntry" or \
            ("interface" in obj_type and (

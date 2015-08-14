@@ -123,7 +123,7 @@ machine(L2Cache, "Token protocol")
     DataBlock DataBlk,       desc="data for the block";
   }
 
-  structure(DirEntry, desc="...") {
+  structure(DirEntry, desc="...", interface="AbstractEntry") {
     Set Sharers,            desc="Set of the internal processors that want the block in shared state";
     bool exclusive, default="false", desc="if local exclusive is likely";
   }
@@ -155,6 +155,10 @@ machine(L2Cache, "Token protocol")
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
     Entry cache_entry := static_cast(Entry, "pointer", L2cache.lookup(address));
     return cache_entry;
+  }
+
+  DirEntry getDirEntry(Address address), return_by_pointer="yes" {
+    return localDirectory.lookup(address);
   }
 
   void functionalRead(Address addr, Packet *pkt) {
@@ -241,8 +245,9 @@ machine(L2Cache, "Token protocol")
   void removeSharer(Address addr, NodeID id) {
 
     if (localDirectory.isTagPresent(addr)) {
-      localDirectory[addr].Sharers.remove(id);
-      if (localDirectory[addr].Sharers.count() == 0) {
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.Sharers.remove(id);
+      if (dir_entry.Sharers.count() == 0) {
         localDirectory.deallocate(addr);
       }
     }
@@ -250,7 +255,8 @@ machine(L2Cache, "Token protocol")
 
   bool sharersExist(Address addr) {
     if (localDirectory.isTagPresent(addr)) {
-      if (localDirectory[addr].Sharers.count() > 0) {
+      DirEntry dir_entry := getDirEntry(addr);
+      if (dir_entry.Sharers.count() > 0) {
         return true;
       }
       else {
@@ -264,7 +270,8 @@ machine(L2Cache, "Token protocol")
 
   bool exclusiveExists(Address addr) {
     if (localDirectory.isTagPresent(addr)) {
-      if (localDirectory[addr].exclusive) {
+      DirEntry dir_entry := getDirEntry(addr);
+      if (dir_entry.exclusive) {
         return true;
       }
       else {
@@ -278,29 +285,33 @@ machine(L2Cache, "Token protocol")
 
   // assumes that caller will check to make sure tag is present
   Set getSharers(Address addr) {
-    return localDirectory[addr].Sharers;
+    DirEntry dir_entry := getDirEntry(addr);
+    return dir_entry.Sharers;
   }
 
   void setNewWriter(Address addr, NodeID id) {
     if (localDirectory.isTagPresent(addr) == false) {
       localDirectory.allocate(addr);
     }
-    localDirectory[addr].Sharers.clear();
-    localDirectory[addr].Sharers.add(id);
-    localDirectory[addr].exclusive := true;
+    DirEntry dir_entry := getDirEntry(addr);
+    dir_entry.Sharers.clear();
+    dir_entry.Sharers.add(id);
+    dir_entry.exclusive := true;
   }
 
   void addNewSharer(Address addr, NodeID id) {
     if (localDirectory.isTagPresent(addr) == false) {
       localDirectory.allocate(addr);
     }
-    localDirectory[addr].Sharers.add(id);
-    // localDirectory[addr].exclusive := false;
+    DirEntry dir_entry := getDirEntry(addr);
+    dir_entry.Sharers.add(id);
+    // dir_entry.exclusive := false;
   }
 
   void clearExclusiveBitIfExists(Address addr) {
     if (localDirectory.isTagPresent(addr)) {
-      localDirectory[addr].exclusive := false;
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.exclusive := false;
     }
   }
 

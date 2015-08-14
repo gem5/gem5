@@ -183,7 +183,7 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  structure(DirEntry, desc="...") {
+  structure(DirEntry, desc="...", interface="AbstractEntry") {
     NetDest Sharers,            desc="Set of the internal processors that want the block in shared state";
     MachineID Owner,   desc="ID of the L1 cache to forward the block to once we get a response";
     bool OwnerValid, default="false", desc="true if Owner means something";
@@ -239,6 +239,10 @@ machine(L2Cache, "Token protocol")
     return (localDirectory.isTagPresent(addr) );
   }
 
+  DirEntry getDirEntry(Address address), return_by_pointer="yes" {
+    return localDirectory.lookup(address);
+  }
+
   bool isOnlySharer(Entry cache_entry, Address addr, MachineID shar_id) {
     if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
@@ -259,11 +263,12 @@ machine(L2Cache, "Token protocol")
       }
     }
     else if (localDirectory.isTagPresent(addr)){
-      if (localDirectory[addr].Sharers.count() > 1) {
+      DirEntry dir_entry := getDirEntry(addr);
+      if (dir_entry.Sharers.count() > 1) {
         return false;
       }
-      else if (localDirectory[addr].Sharers.count() == 1) {
-        if (localDirectory[addr].Sharers.isElement(shar_id)) {
+      else if (dir_entry.Sharers.count() == 1) {
+        if (dir_entry.Sharers.isElement(shar_id)) {
           return true;
         }
         else {
@@ -284,18 +289,20 @@ machine(L2Cache, "Token protocol")
     assert(localDirectory.isTagPresent(addr) == false);
     assert(is_valid(cache_entry));
     localDirectory.allocate(addr);
-    localDirectory[addr].DirState := cache_entry.CacheState;
-    localDirectory[addr].Sharers := cache_entry.Sharers;
-    localDirectory[addr].Owner := cache_entry.Owner;
-    localDirectory[addr].OwnerValid := cache_entry.OwnerValid;
+    DirEntry dir_entry := getDirEntry(addr);
+    dir_entry.DirState := cache_entry.CacheState;
+    dir_entry.Sharers := cache_entry.Sharers;
+    dir_entry.Owner := cache_entry.Owner;
+    dir_entry.OwnerValid := cache_entry.OwnerValid;
 
   }
 
   void copyDirToCache(Entry cache_entry, Address addr) {
     assert(is_valid(cache_entry));
-    cache_entry.Sharers := localDirectory[addr].Sharers;
-    cache_entry.Owner := localDirectory[addr].Owner;
-    cache_entry.OwnerValid := localDirectory[addr].OwnerValid;
+    DirEntry dir_entry := getDirEntry(addr);
+    cache_entry.Sharers := dir_entry.Sharers;
+    cache_entry.Owner := dir_entry.Owner;
+    cache_entry.OwnerValid := dir_entry.OwnerValid;
   }
 
 
@@ -307,10 +314,12 @@ machine(L2Cache, "Token protocol")
     else {
       if (localDirectory.isTagPresent(addr) == false) {
         localDirectory.allocate(addr);
-        localDirectory[addr].Sharers.clear();
-        localDirectory[addr].OwnerValid := false;
+        DirEntry dir_entry := getDirEntry(addr);
+        dir_entry.Sharers.clear();
+        dir_entry.OwnerValid := false;
       }
-      localDirectory[addr].Sharers.add(shar_id);
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.Sharers.add(shar_id);
     }
   }
 
@@ -326,9 +335,10 @@ machine(L2Cache, "Token protocol")
       if (localDirectory.isTagPresent(addr) == false) {
         localDirectory.allocate(addr);
       }
-      localDirectory[addr].Sharers.clear();
-      localDirectory[addr].OwnerValid := true;
-      localDirectory[addr].Owner := exc_id;
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.Sharers.clear();
+      dir_entry.OwnerValid := true;
+      dir_entry.Owner := exc_id;
     }
   }
 
@@ -339,8 +349,9 @@ machine(L2Cache, "Token protocol")
       cache_entry.OwnerValid := false;
     }
     else {
-      localDirectory[addr].Sharers.clear();
-      localDirectory[addr].OwnerValid := false;
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.Sharers.clear();
+      dir_entry.OwnerValid := false;
     }
   }
 
@@ -350,7 +361,8 @@ machine(L2Cache, "Token protocol")
       cache_entry.Sharers.remove(sender);
     }
     else {
-      localDirectory[addr].Sharers.remove(sender);
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.Sharers.remove(sender);
     }
   }
 
@@ -360,7 +372,8 @@ machine(L2Cache, "Token protocol")
       cache_entry.OwnerValid := false;
     }
     else {
-      localDirectory[addr].OwnerValid := false;
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.OwnerValid := false;
     }
   }
 
@@ -370,7 +383,8 @@ machine(L2Cache, "Token protocol")
       return cache_entry.Sharers.isElement(shar_id);
     }
     else {
-      return localDirectory[addr].Sharers.isElement(shar_id);
+      DirEntry dir_entry := getDirEntry(addr);
+      return dir_entry.Sharers.isElement(shar_id);
     }
   }
 
@@ -380,7 +394,8 @@ machine(L2Cache, "Token protocol")
       return cache_entry.Sharers;
     }
     else {
-      return localDirectory[addr].Sharers;
+      DirEntry dir_entry := getDirEntry(addr);
+      return dir_entry.Sharers;
     }
   }
 
@@ -390,7 +405,8 @@ machine(L2Cache, "Token protocol")
       return cache_entry.Owner;
     }
     else {
-      return localDirectory[addr].Owner;
+      DirEntry dir_entry := getDirEntry(addr);
+      return dir_entry.Owner;
     }
   }
 
@@ -400,7 +416,8 @@ machine(L2Cache, "Token protocol")
       return cache_entry.Sharers.count();
     }
     else {
-      return localDirectory[addr].Sharers.count();
+      DirEntry dir_entry := getDirEntry(addr);
+      return dir_entry.Sharers.count();
     }
   }
 
@@ -410,7 +427,8 @@ machine(L2Cache, "Token protocol")
       return cache_entry.OwnerValid;
     }
     else {
-      return localDirectory[addr].OwnerValid;
+      DirEntry dir_entry := getDirEntry(addr);
+      return dir_entry.OwnerValid;
     }
   }
 
@@ -425,11 +443,12 @@ machine(L2Cache, "Token protocol")
       }
     }
     else {
-      if (localDirectory[addr].Sharers.isElement(requestor)) {
-        return ( localDirectory[addr].Sharers.count() - 1 );
+      DirEntry dir_entry := getDirEntry(addr);
+      if (dir_entry.Sharers.isElement(requestor)) {
+        return ( dir_entry.Sharers.count() - 1 );
       }
       else {
-        return localDirectory[addr].Sharers.count();
+        return dir_entry.Sharers.count();
       }
     }
   }
@@ -441,7 +460,8 @@ machine(L2Cache, "Token protocol")
     } else if (is_valid(cache_entry)) {
       return cache_entry.CacheState;
     } else if (isDirTagPresent(addr)) {
-      return localDirectory[addr].DirState;
+      DirEntry dir_entry := getDirEntry(addr);
+      return dir_entry.DirState;
     } else {
       return State:NP;
     }
@@ -493,7 +513,8 @@ machine(L2Cache, "Token protocol")
       }
     }
     else if (localDirectory.isTagPresent(addr)) {
-      localDirectory[addr].DirState := state;
+      DirEntry dir_entry := getDirEntry(addr);
+      dir_entry.DirState := state;
     }
   }
 
@@ -1254,7 +1275,8 @@ machine(L2Cache, "Token protocol")
         out_msg.Requestor := in_msg.Requestor;
         out_msg.RequestorMachine := MachineType:L1Cache;
         // should randomize this so one node doesn't get abused more than others
-        out_msg.Destination.add(localDirectory[in_msg.Addr].Sharers.smallestElement(MachineType:L1Cache));
+        DirEntry dir_entry := getDirEntry(in_msg.Addr);
+        out_msg.Destination.add(dir_entry.Sharers.smallestElement(MachineType:L1Cache));
         out_msg.MessageSize := MessageSizeType:Forwarded_Control;
       }
     }
@@ -1267,7 +1289,8 @@ machine(L2Cache, "Token protocol")
       out_msg.Type := CoherenceRequestType:GETX;
       out_msg.Requestor := tbe.L1_GetX_ID;
       out_msg.RequestorMachine := MachineType:L1Cache;
-      out_msg.Destination.add(localDirectory[address].Owner);
+      DirEntry dir_entry := getDirEntry(address);
+      out_msg.Destination.add(dir_entry.Owner);
       out_msg.MessageSize := MessageSizeType:Forwarded_Control;
       out_msg.Acks := 1 + tbe.Local_GETX_IntAcks;
     }
