@@ -100,7 +100,6 @@ Throttle::addLinks(const vector<MessageBuffer*>& in_vec,
         in_ptr->setConsumer(this);
         string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
             to_string(m_node) + "]";
-        in_ptr->setDescription(desc);
     }
 }
 

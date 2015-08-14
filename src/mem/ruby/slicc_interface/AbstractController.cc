@@ -41,16 +41,8 @@ AbstractController::AbstractController(const Params *p)
       m_number_of_TBEs(p->number_of_TBEs),
       m_transitions_per_cycle(p->transitions_per_cycle),
       m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
-      memoryPort(csprintf("%s.memory", name()), this, ""),
-      m_responseFromMemory_ptr(new MessageBuffer())
+      memoryPort(csprintf("%s.memory", name()), this, "")
 {
-    // Set the sender pointer of the response message buffer from the
-    // memory controller.
-    // This pointer is used for querying for the current time.
-    m_responseFromMemory_ptr->setSender(this);
-    m_responseFromMemory_ptr->setReceiver(this);
-    m_responseFromMemory_ptr->setOrdering(false);
-
     if (m_version == 0) {
         // Combine the statistics from all controllers
         // of this particular type.
@@ -67,6 +59,9 @@ AbstractController::init()
     for (uint32_t i = 0; i < size; i++) {
         m_delayVCHistogram.push_back(new Stats::Histogram());
         m_delayVCHistogram[i]->init(10);
+    }
+    if (getMemoryQueue()) {
+        getMemoryQueue()->setSender(this);
     }
 }
 
@@ -298,9 +293,6 @@ AbstractController::functionalMemoryWrite(PacketPtr pkt)
 {
     int num_functional_writes = 0;
 
-    // Check the message buffer that runs from the memory to the controller.
-    num_functional_writes += m_responseFromMemory_ptr->functionalWrite(pkt);
-
     // Check the buffer from the controller to the memory.
     if (memoryPort.checkFunctional(pkt)) {
         num_functional_writes++;
@@ -314,6 +306,7 @@ AbstractController::functionalMemoryWrite(PacketPtr pkt)
 void
 AbstractController::recvTimingResp(PacketPtr pkt)
 {
+    assert(getMemoryQueue());
     assert(pkt->isResponse());
 
     std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
@@ -338,7 +331,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         panic("Incorrect packet type received from memory controller!");
     }
 
-    m_responseFromMemory_ptr->enqueue(msg);
+    getMemoryQueue()->enqueue(msg);
     delete pkt;
 }
 

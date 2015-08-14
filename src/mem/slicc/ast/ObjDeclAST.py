@@ -47,22 +47,6 @@ class ObjDeclAST(DeclAST):
 
         type = self.type_ast.type
 
-        if type.isBuffer and "ordered" not in self:
-            self.error("Buffer object decls require an 'ordered' attribute")
-
-        if "ordered" in self:
-            value = self["ordered"]
-
-            if value not in ("true", "false"):
-                self.error("The 'ordered' attribute is '%s' " + \
-                           "must be 'true' or 'false'.", value)
-
-        if "random" in self:
-            value = self["random"]
-            if value not in ("true", "false"):
-                self.error("The 'random' attribute is '%s' " + \
-                           "must be 'true' or 'false'.", value)
-
         # FIXME : should all use accessors here to avoid public member
         # variables
         if self.ident == "version":

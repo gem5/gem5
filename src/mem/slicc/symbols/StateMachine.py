@@ -235,10 +235,8 @@ class $py_ident(RubyController):
                 dflt_str = str(param.rvalue.inline()) + ', '
 
             if param.type_ast.type.c_ident == "MessageBuffer":
-                if param["network"] == "To":
-                    code('${{param.ident}} = MasterPort(${dflt_str}"")')
-                else:
-                    code('${{param.ident}} = SlavePort(${dflt_str}"")')
+                # The MessageBuffer MUST be instantiated in the protocol config
+                code('${{param.ident}} = Param.MessageBuffer("")')
 
             elif python_class_map.has_key(param.type_ast.type.c_ident):
                 python_type = python_class_map[param.type_ast.type.c_ident]
@@ -248,6 +246,13 @@ class $py_ident(RubyController):
                 self.error("Unknown c++ to python class conversion for c++ " \
                            "type: '%s'. Please update the python_class_map " \
                            "in StateMachine.py", param.type_ast.type.c_ident)
+
+        # Also add any MessageBuffers declared internally to the controller
+        # Note: This includes mandatory and memory queues
+        for var in self.objects:
+            if var.type.c_ident == "MessageBuffer":
+                code('${{var.ident}} = Param.MessageBuffer("")')
+
         code.dedent()
         code.write(path, '%s.py' % py_ident)
 
@@ -299,7 +304,8 @@ class $c_ident : public AbstractController
     void init();
 
     MessageBuffer* getMandatoryQueue() const;
-    void setNetQueue(const std::string& name, MessageBuffer *b);
+    MessageBuffer* getMemoryQueue() const;
+    void initNetQueues();
 
     void print(std::ostream& out) const;
     void wakeup();
@@ -525,12 +531,6 @@ $c_ident::$c_ident(const Params *p)
         # include a sequencer, connect the it to the controller.
         #
         for param in self.config_parameters:
-
-            # Do not initialize messgage buffers since they are initialized
-            # when the port based connections are made.
-            if param.type_ast.type.c_ident == "MessageBuffer":
-                continue
-
             if param.pointer:
                 code('m_${{param.ident}}_ptr = p->${{param.ident}};')
             else:
@@ -540,9 +540,13 @@ $c_ident::$c_ident(const Params *p)
                 code('m_${{param.ident}}_ptr->setController(this);')
 
         for var in self.objects:
-            if var.ident.find("mandatoryQueue") >= 0:
+            # Some MessageBuffers (e.g. mandatory and memory queues) are
+            # instantiated internally to StateMachines but exposed to
+            # components outside SLICC, so make sure to set up this
+            # controller as their receivers
+            if var.type.c_ident == "MessageBuffer":
                 code('''
-m_${{var.ident}}_ptr = new ${{var.type.c_ident}}();
+m_${{var.ident}}_ptr = p->${{var.ident}};
 m_${{var.ident}}_ptr->setReceiver(this);
 ''')
 
@@ -563,7 +567,7 @@ for (int event = 0; event < ${ident}_Event_NUM; event++) {
 }
 
 void
-$c_ident::setNetQueue(const std::string& name, MessageBuffer *b)
+$c_ident::initNetQueues()
 {
     MachineType machine_type = string_to_MachineType("${{self.ident}}");
     int base M5_VAR_USED = MachineType_base_number(machine_type);
@@ -581,15 +585,10 @@ $c_ident::setNetQueue(const std::string& name, MessageBuffer *b)
                 vtype = var.type_ast.type
                 vid = "m_%s_ptr" % var.ident
 
-                code('''
-if ("${{var.ident}}" == name) {
-    $vid = b;
-    assert($vid != NULL);
-''')
-                code.indent()
+                code('assert($vid != NULL);')
+
                 # Network port object
                 network = var["network"]
-                ordered =  var["ordered"]
 
                 if "virtual_network" in var:
                     vnet = var["virtual_network"]
@@ -599,8 +598,8 @@ if ("${{var.ident}}" == name) {
                     vnet_dir_set.add((vnet,network))
 
                     code('''
-m_net_ptr->set${network}NetQueue(m_version + base, $ordered, $vnet,
-                                 "$vnet_type", b);
+m_net_ptr->set${network}NetQueue(m_version + base, $vid->getOrdered(), $vnet,
+                                 "$vnet_type", $vid);
 ''')
                 # Set the end
                 if network == "To":
@@ -608,33 +607,9 @@ m_net_ptr->set${network}NetQueue(m_version + base, $ordered, $vnet,
                 else:
                     code('$vid->setReceiver(this);')
 
-                # Set ordering
-                code('$vid->setOrdering(${{var["ordered"]}});')
-
-                # Set randomization
-                if "random" in var:
-                    # A buffer
-                    code('$vid->setRandomization(${{var["random"]}});')
-
                 # Set Priority
                 if "rank" in var:
                     code('$vid->setPriority(${{var["rank"]}})')
-
-                # Set buffer size
-                code('$vid->resize(m_buffer_size);')
-
-                if "recycle_latency" in var:
-                    code('$vid->setRecycleLatency( ' \
-                         'Cycles(${{var["recycle_latency"]}}));')
-                else:
-                    code('$vid->setRecycleLatency(m_recycle_latency);')
-
-                # set description (may be overriden later by port def)
-                code('''
-$vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{var.ident}}]");
-''')
-                code.dedent()
-                code('}\n')
 
         code.dedent()
         code('''
@@ -644,7 +619,7 @@ void
 $c_ident::init()
 {
     // initialize objects
-
+    initNetQueues();
 ''')
 
         code.indent()
@@ -660,7 +635,7 @@ $c_ident::init()
                         code('(*$vid) = ${{var["default"]}};')
                 else:
                     # Normal Object
-                    if var.ident.find("mandatoryQueue") < 0:
+                    if var.type.c_ident != "MessageBuffer":
                         th = var.get("template", "")
                         expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
                         args = ""
@@ -676,16 +651,6 @@ $c_ident::init()
                         comment = "Type %s default" % vtype.ident
                         code('*$vid = ${{vtype["default"]}}; // $comment')
 
-                    # Set ordering
-                    if "ordered" in var:
-                        # A buffer
-                        code('$vid->setOrdering(${{var["ordered"]}});')
-
-                    # Set randomization
-                    if "random" in var:
-                        # A buffer
-                        code('$vid->setRandomization(${{var["random"]}});')
-
                     # Set Priority
                     if vtype.isBuffer and "rank" in var:
                         code('$vid->setPriority(${{var["rank"]}});')
@@ -700,13 +665,6 @@ $c_ident::init()
                         code('$vid->setSender(this);')
                         code('$vid->setReceiver(this);')
 
-            if vtype.isBuffer:
-                if "recycle_latency" in var:
-                    code('$vid->setRecycleLatency( ' \
-                         'Cycles(${{var["recycle_latency"]}}));')
-                else:
-                    code('$vid->setRecycleLatency(m_recycle_latency);')
-
         # Set the prefetchers
         code()
         for prefetcher in self.prefetchers:
@@ -716,8 +674,6 @@ $c_ident::init()
         for port in self.in_ports:
             # Set the queue consumers
             code('${{port.code}}.setConsumer(this);')
-            # Set the queue descriptions
-            code('${{port.code}}.setDescription("[Version " + to_string(m_version) + ", $ident, $port]");')
 
         # Initialize the transition profiling
         code()
@@ -745,6 +701,11 @@ $c_ident::init()
         for port in self.in_ports:
             if port.code.find("mandatoryQueue_ptr") >= 0:
                 mq_ident = "m_mandatoryQueue_ptr"
+
+        memq_ident = "NULL"
+        for port in self.in_ports:
+            if port.code.find("responseFromMemory_ptr") >= 0:
+                memq_ident = "m_responseFromMemory_ptr"
 
         seq_ident = "NULL"
         for param in self.config_parameters:
@@ -870,6 +831,12 @@ MessageBuffer*
 $c_ident::getMandatoryQueue() const
 {
     return $mq_ident;
+}
+
+MessageBuffer*
+$c_ident::getMemoryQueue() const
+{
+    return $memq_ident;
 }
 
 Sequencer*

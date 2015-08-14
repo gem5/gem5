@@ -209,6 +209,11 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
     topology.makeTopology(options, network, IntLinkClass, ExtLinkClass,
             RouterClass)
 
+    if options.garnet_network is None:
+        assert(NetworkClass == SimpleNetwork)
+        assert(RouterClass == Switch)
+        network.setup_buffers()
+
     if InterfaceClass != None:
         netifs = [InterfaceClass(id=i) for (i,n) in enumerate(network.ext_links)]
         network.netifs = netifs

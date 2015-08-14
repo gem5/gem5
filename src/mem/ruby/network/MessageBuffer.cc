@@ -39,25 +39,23 @@
 using namespace std;
 using m5::stl_helpers::operator<<;
 
-MessageBuffer::MessageBuffer(const string &name)
-    : m_time_last_time_size_checked(0), m_time_last_time_enqueue(0),
-      m_time_last_time_pop(0), m_last_arrival_time(0)
+MessageBuffer::MessageBuffer(const Params *p)
+    : SimObject(p), m_recycle_latency(p->recycle_latency),
+    m_max_size(p->buffer_size), m_time_last_time_size_checked(0),
+    m_time_last_time_enqueue(0), m_time_last_time_pop(0),
+    m_last_arrival_time(0), m_strict_fifo(p->ordered),
+    m_randomization(p->randomization)
 {
     m_msg_counter = 0;
     m_consumer = NULL;
     m_sender = NULL;
     m_receiver = NULL;
 
-    m_ordering_set = false;
-    m_strict_fifo = true;
-    m_max_size = 0;
-    m_randomization = true;
     m_size_last_time_size_checked = 0;
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
     m_not_avail_count = 0;
     m_priority_rank = 0;
-    m_name = name;
 
     m_stall_msg_map.clear();
     m_input_link_id = 0;
@@ -144,8 +142,6 @@ random_time()
 void
 MessageBuffer::enqueue(MsgPtr message, Cycles delta)
 {
-    assert(m_ordering_set);
-
     // record current time incase we have a pop that also adjusts my size
     if (m_time_last_time_enqueue < m_sender->curCycle()) {
         m_msgs_this_cycle = 0;  // first msg this cycle
@@ -184,7 +180,7 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
-                  *this, m_name, current_time,
+                  *this, name(), current_time,
                   delta * m_sender->clockPeriod(),
                   arrival_time, m_last_arrival_time);
         }
@@ -356,7 +352,7 @@ MessageBuffer::print(ostream& out) const
 
     vector<MsgPtr> copy(m_prio_heap);
     sort_heap(copy.begin(), copy.end(), greater<MsgPtr>());
-    ccprintf(out, "%s] %s", copy, m_name);
+    ccprintf(out, "%s] %s", copy, name());
 }
 
 bool
@@ -423,4 +419,10 @@ MessageBuffer::functionalWrite(Packet *pkt)
     }
 
     return num_functional_writes;
+}
+
+MessageBuffer *
+MessageBufferParams::create()
+{
+    return new MessageBuffer(this);
 }

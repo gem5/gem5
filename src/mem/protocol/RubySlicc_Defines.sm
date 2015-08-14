@@ -31,7 +31,6 @@
 NodeID version;
 MachineID machineID;
 NodeID clusterID;
-MessageBuffer responseFromMemory, ordered="false";
 
 // Functions implemented in the AbstractController class for
 // making timing access to the memory maintained by the

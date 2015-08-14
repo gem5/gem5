@@ -31,6 +31,7 @@ from m5.params import *
 from m5.proxy import *
 from Network import RubyNetwork
 from BasicRouter import BasicRouter
+from MessageBuffer import MessageBuffer
 
 class SimpleNetwork(RubyNetwork):
     type = 'SimpleNetwork'
@@ -39,9 +40,48 @@ class SimpleNetwork(RubyNetwork):
         "default buffer size; 0 indicates infinite buffering");
     endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor");
     adaptive_routing = Param.Bool(False, "enable adaptive routing");
+    int_link_buffers = VectorParam.MessageBuffer("Buffers for int_links")
+    # int_links do not recycle buffers, so this parameter is not used.
+    # TODO: Move recycle_latency out of MessageBuffers and into controllers
+    recycle_latency = Param.Cycles(0, "")
+
+    def setup_buffers(self):
+        # Note that all SimpleNetwork MessageBuffers are currently ordered
+        network_buffers = []
+        for link in self.int_links:
+            # The network needs number_of_virtual_networks buffers per
+            # int_link port
+            for i in xrange(self.number_of_virtual_networks):
+                network_buffers.append(MessageBuffer(ordered = True))
+                network_buffers.append(MessageBuffer(ordered = True))
+        self.int_link_buffers = network_buffers
+
+        # Also add buffers for all router-link connections
+        for router in self.routers:
+            router_buffers = []
+            # Add message buffers to routers for each internal link connection
+            for link in self.int_links:
+                if link.node_a == router:
+                    for i in xrange(self.number_of_virtual_networks):
+                        router_buffers.append(MessageBuffer(ordered = True))
+                if link.node_b == router:
+                    for i in xrange(self.number_of_virtual_networks):
+                        router_buffers.append(MessageBuffer(ordered = True))
+
+            # Add message buffers to routers for each external link connection
+            for link in self.ext_links:
+                # Routers can only be int_nodes on ext_links
+                if link.int_node in self.routers:
+                    for i in xrange(self.number_of_virtual_networks):
+                        router_buffers.append(MessageBuffer(ordered = True))
+            router.port_buffers = router_buffers
 
 class Switch(BasicRouter):
     type = 'Switch'
     cxx_header = 'mem/ruby/network/simple/Switch.hh'
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
+    port_buffers = VectorParam.MessageBuffer("Port buffers")
+    # Ports do not recycle buffers, so this parameter is not used.
+    # TODO: Move recycle_latency out of MessageBuffers and into controllers
+    recycle_latency = Param.Cycles(0, "")

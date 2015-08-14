@@ -100,23 +100,18 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     }
 #endif
 
-    // These could be objects from the ruby memory system.  If yes, then at
-    // least one of them should be an abstract controller.  Do a type check.
-    AbstractController *ac1, *ac2;
-    ac1 = dynamic_cast<AbstractController*>(o1);
-    ac2 = dynamic_cast<AbstractController*>(o2);
+    // These could be MessageBuffers from the ruby memory system. If so, they
+    // need not be connected to anything currently.
+    MessageBuffer *mb1, *mb2;
+    mb1 = dynamic_cast<MessageBuffer*>(o1);
+    mb2 = dynamic_cast<MessageBuffer*>(o2);
 
-    if ((ac1 || ac2) && name1 != "memory" && name2 != "memory") {
-        MessageBuffer *b = new MessageBuffer();
-
-        // set the message buffer associated with the provided names
-        if (ac1) {
-            ac1->setNetQueue(name1, b);
-        }
-        if (ac2) {
-            ac2->setNetQueue(name2, b);
-        }
-
+    if (mb1 || mb2) {
+        // No need to connect anything here currently. MessageBuffer
+        // connections in Python only serve to print the connections in
+        // the config output.
+        // TODO: Add real ports to MessageBuffers and use MemObject connect
+        // code below to bind MessageBuffer senders and receivers
         return 1;
     }
 

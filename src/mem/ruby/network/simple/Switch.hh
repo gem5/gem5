@@ -89,7 +89,8 @@ class Switch : public BasicRouter
     PerfectSwitch* m_perfect_switch;
     SimpleNetwork* m_network_ptr;
     std::vector<Throttle*> m_throttles;
-    std::vector<MessageBuffer*> m_buffers_to_free;
+    std::vector<MessageBuffer*> m_port_buffers;
+    unsigned m_num_connected_buffers;
 
     // Statistical variables
     Stats::Formula m_avg_utilization;

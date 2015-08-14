@@ -62,6 +62,9 @@ SimpleNetwork::SimpleNetwork(const Params *p)
         m_switches.push_back(s);
         s->init_net_ptr(this);
     }
+
+    m_int_link_buffers = p->int_link_buffers;
+    m_num_connected_buffers = 0;
 }
 
 void
@@ -78,7 +81,7 @@ SimpleNetwork::init()
 SimpleNetwork::~SimpleNetwork()
 {
     deletePointers(m_switches);
-    deletePointers(m_buffers_to_free);
+    deletePointers(m_int_link_buffers);
 }
 
 // From a switch to an endpoint node
@@ -121,16 +124,10 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     for (int i = 0; i < m_virtual_networks; i++) {
         // allocate a buffer
-        MessageBuffer* buffer_ptr = new MessageBuffer;
-        buffer_ptr->setOrdering(true);
-
-        if (m_buffer_size > 0) {
-            buffer_ptr->resize(m_buffer_size);
-        }
-
+        assert(m_num_connected_buffers < m_int_link_buffers.size());
+        MessageBuffer* buffer_ptr = m_int_link_buffers[m_num_connected_buffers];
+        m_num_connected_buffers++;
         queues[i] = buffer_ptr;
-        // remember to deallocate it
-        m_buffers_to_free.push_back(buffer_ptr);
     }
 
     // Connect it to the two switches
@@ -236,8 +233,8 @@ SimpleNetwork::functionalRead(Packet *pkt)
         }
     }
 
-    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
-        if (m_buffers_to_free[i]->functionalRead(pkt)) {
+    for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
+        if (m_int_link_buffers[i]->functionalRead(pkt)) {
             return true;
         }
     }
@@ -254,8 +251,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
         num_functional_writes += m_switches[i]->functionalWrite(pkt);
     }
 
-    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
-        num_functional_writes += m_buffers_to_free[i]->functionalWrite(pkt);
+    for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
+        num_functional_writes += m_int_link_buffers[i]->functionalWrite(pkt);
     }
     return num_functional_writes;
 }

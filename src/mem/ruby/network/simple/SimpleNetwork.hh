@@ -93,7 +93,8 @@ class SimpleNetwork : public Network
     SimpleNetwork& operator=(const SimpleNetwork& obj);
 
     std::vector<Switch*> m_switches;
-    std::vector<MessageBuffer*> m_buffers_to_free;
+    std::vector<MessageBuffer*> m_int_link_buffers;
+    int m_num_connected_buffers;
     std::vector<Switch*> m_endpoint_switches;
 
     int m_buffer_size;

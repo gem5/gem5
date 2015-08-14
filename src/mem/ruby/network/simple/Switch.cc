@@ -43,6 +43,8 @@ using m5::stl_helpers::operator<<;
 Switch::Switch(const Params *p) : BasicRouter(p)
 {
     m_perfect_switch = new PerfectSwitch(m_id, this, p->virt_nets);
+    m_port_buffers = p->port_buffers;
+    m_num_connected_buffers = 0;
 }
 
 Switch::~Switch()
@@ -53,7 +55,7 @@ Switch::~Switch()
     deletePointers(m_throttles);
 
     // Delete MessageBuffers
-    deletePointers(m_buffers_to_free);
+    deletePointers(m_port_buffers);
 }
 
 void
@@ -97,15 +99,10 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
             out[i]->setSender(this);
         }
 
-        MessageBuffer* buffer_ptr = new MessageBuffer;
-        // Make these queues ordered
-        buffer_ptr->setOrdering(true);
-        if (m_network_ptr->getBufferSize() > 0) {
-            buffer_ptr->resize(m_network_ptr->getBufferSize());
-        }
-
+        assert(m_num_connected_buffers < m_port_buffers.size());
+        MessageBuffer* buffer_ptr = m_port_buffers[m_num_connected_buffers];
+        m_num_connected_buffers++;
         intermediateBuffers.push_back(buffer_ptr);
-        m_buffers_to_free.push_back(buffer_ptr);
 
         buffer_ptr->setSender(this);
         buffer_ptr->setReceiver(this);
@@ -188,8 +185,8 @@ bool
 Switch::functionalRead(Packet *pkt)
 {
     // Access the buffers in the switch for performing a functional read
-    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
-        if (m_buffers_to_free[i]->functionalRead(pkt)) {
+    for (unsigned int i = 0; i < m_port_buffers.size(); ++i) {
+        if (m_port_buffers[i]->functionalRead(pkt)) {
             return true;
         }
     }
@@ -201,8 +198,8 @@ Switch::functionalWrite(Packet *pkt)
 {
     // Access the buffers in the switch for performing a functional write
     uint32_t num_functional_writes = 0;
-    for (unsigned int i = 0; i < m_buffers_to_free.size(); ++i) {
-        num_functional_writes += m_buffers_to_free[i]->functionalWrite(pkt);
+    for (unsigned int i = 0; i < m_port_buffers.size(); ++i) {
+        num_functional_writes += m_port_buffers[i]->functionalWrite(pkt);
     }
     return num_functional_writes;
 }

@@ -75,6 +75,7 @@ class AbstractController : public MemObject, public Consumer
     void unblock(Address);
 
     virtual MessageBuffer* getMandatoryQueue() const = 0;
+    virtual MessageBuffer* getMemoryQueue() const = 0;
     virtual AccessPermission getAccessPermission(const Address& addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
@@ -105,8 +106,8 @@ class AbstractController : public MemObject, public Consumer
     virtual void collateStats()
     {fatal("collateStats() should be overridden!");}
 
-    //! Set the message buffer with given name.
-    virtual void setNetQueue(const std::string& name, MessageBuffer *b) = 0;
+    //! Initialize the message buffers.
+    virtual void initNetQueues() = 0;
 
     /** A function used to return the port associated with this bus object. */
     BaseMasterPort& getMasterPort(const std::string& if_name,
@@ -209,10 +210,6 @@ class AbstractController : public MemObject, public Consumer
 
     /* Master port to the memory controller. */
     MemoryPort memoryPort;
-
-    // Message Buffer for storing the response received from the
-    // memory controller.
-    MessageBuffer *m_responseFromMemory_ptr;
 
     // State that is stored in packets sent to the memory controller.
     struct SenderState : public Packet::SenderState
