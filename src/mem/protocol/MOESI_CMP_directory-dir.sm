@@ -33,14 +33,14 @@ machine(Directory, "Directory protocol")
 
    // Message Queues
    MessageBuffer * requestToDir, network="From", virtual_network="1",
-        ordered="false", vnet_type="request";  // a mod-L2 bank -> this Dir
+        vnet_type="request";  // a mod-L2 bank -> this Dir
    MessageBuffer * responseToDir, network="From", virtual_network="2",
-        ordered="false", vnet_type="response";  // a mod-L2 bank -> this Dir
+        vnet_type="response";  // a mod-L2 bank -> this Dir
 
    MessageBuffer * forwardFromDir, network="To", virtual_network="1",
-        ordered="false", vnet_type="forward";
+        vnet_type="forward";
    MessageBuffer * responseFromDir, network="To", virtual_network="2",
-        ordered="false", vnet_type="response";  // Dir -> mod-L2 bank
+        vnet_type="response";  // Dir -> mod-L2 bank
 
 {
   // STATES
@@ -220,6 +220,7 @@ machine(Directory, "Directory protocol")
     return false;
   }
 
+  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);

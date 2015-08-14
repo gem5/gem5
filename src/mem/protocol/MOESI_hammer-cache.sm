@@ -46,16 +46,16 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
       // NETWORK BUFFERS
       MessageBuffer * requestFromCache, network="To", virtual_network="2",
-            ordered="false", vnet_type="request";
+            vnet_type="request";
       MessageBuffer * responseFromCache, network="To", virtual_network="4",
-            ordered="false", vnet_type="response";
+            vnet_type="response";
       MessageBuffer * unblockFromCache, network="To", virtual_network="5",
-            ordered="false", vnet_type="unblock";
+            vnet_type="unblock";
 
       MessageBuffer * forwardToCache, network="From", virtual_network="3",
-            ordered="false", vnet_type="forward";
+            vnet_type="forward";
       MessageBuffer * responseToCache, network="From", virtual_network="4",
-            ordered="false", vnet_type="response";
+            vnet_type="response";
 {
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -143,7 +143,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   // STRUCTURE DEFINITIONS
 
-  MessageBuffer mandatoryQueue, ordered="false";
+  MessageBuffer mandatoryQueue;
 
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
@@ -320,7 +320,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     return cache_entry.AtomicAccessed;
   }
 
-  MessageBuffer triggerQueue, ordered="false";
+  MessageBuffer triggerQueue;
 
   // ** OUT_PORTS **
 

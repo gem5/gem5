@@ -39,18 +39,18 @@ machine(L1Cache, "Directory protocol")
    // From this node's L1 cache TO the network
    // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
    MessageBuffer * requestFromL1Cache, network="To", virtual_network="0",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
    // a local L1 -> this L2 bank
    MessageBuffer * responseFromL1Cache, network="To", virtual_network="2",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 
    // To this node's L1 cache FROM the network
    // a L2 bank -> this L1
    MessageBuffer * requestToL1Cache, network="From", virtual_network="0",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
    // a L2 bank -> this L1
    MessageBuffer * responseToL1Cache, network="From", virtual_network="2",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 {
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -134,7 +134,7 @@ machine(L1Cache, "Directory protocol")
   void set_tbe(TBE b);
   void unset_tbe();
 
-  MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
+  MessageBuffer mandatoryQueue, abstract_chip_ptr="true";
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
   TimerTable useTimerTable;
@@ -254,7 +254,7 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-  MessageBuffer triggerQueue, ordered="true";
+  MessageBuffer triggerQueue;
 
   // ** OUT_PORTS **
 

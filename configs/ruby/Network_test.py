@@ -95,9 +95,10 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l1_cntrl_nodes.append(l1_cntrl)
 
         # Connect the L1 controllers and the network
-        l1_cntrl.requestFromCache =  ruby_system.network.slave
-        l1_cntrl.responseFromCache =  ruby_system.network.slave
-        l1_cntrl.forwardFromCache =  ruby_system.network.slave
+        l1_cntrl.mandatoryQueue = MessageBuffer()
+        l1_cntrl.requestFromCache = MessageBuffer()
+        l1_cntrl.responseFromCache = MessageBuffer()
+        l1_cntrl.forwardFromCache = MessageBuffer()
 
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
@@ -118,9 +119,9 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         dir_cntrl_nodes.append(dir_cntrl)
 
         # Connect the directory controllers and the network
-        dir_cntrl.requestToDir = ruby_system.network.master
-        dir_cntrl.forwardToDir = ruby_system.network.master
-        dir_cntrl.responseToDir = ruby_system.network.master
+        dir_cntrl.requestToDir = MessageBuffer()
+        dir_cntrl.forwardToDir = MessageBuffer()
+        dir_cntrl.responseToDir = MessageBuffer()
 
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes

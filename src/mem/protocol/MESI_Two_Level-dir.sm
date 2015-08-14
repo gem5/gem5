@@ -32,11 +32,11 @@ machine(Directory, "MESI Two Level directory protocol")
    Cycles directory_latency := 6;
 
    MessageBuffer * requestToDir, network="From", virtual_network="0",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
    MessageBuffer * responseToDir, network="From", virtual_network="1",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
    MessageBuffer * responseFromDir, network="To", virtual_network="1",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
@@ -182,6 +182,7 @@ machine(Directory, "MESI Two Level directory protocol")
       (type == CoherenceRequestType:GETX);
   }
 
+  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);

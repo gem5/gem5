@@ -35,13 +35,13 @@ machine(L0Cache, "MESI Directory L0 Cache")
    bool send_evictions;
 
    // From this node's L0 cache to the network
-   MessageBuffer * bufferToL1, network="To", ordered="true";
+   MessageBuffer * bufferToL1, network="To";
 
    // To this node's L0 cache FROM the network
-   MessageBuffer * bufferFromL1, network="From", ordered="true";
+   MessageBuffer * bufferFromL1, network="From";
 {
   // Message queue between this controller and the processor
-  MessageBuffer mandatoryQueue, ordered="false";
+  MessageBuffer mandatoryQueue;
 
   // STATES
   state_declaration(State, desc="Cache states", default="L0Cache_State_I") {

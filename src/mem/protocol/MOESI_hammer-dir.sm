@@ -42,28 +42,28 @@ machine(Directory, "AMD Hammer-like protocol")
       bool full_bit_dir_enabled := "False";
 
       MessageBuffer * forwardFromDir, network="To", virtual_network="3",
-            ordered="false", vnet_type="forward";
+            vnet_type="forward";
 
       MessageBuffer * responseFromDir, network="To", virtual_network="4",
-            ordered="false", vnet_type="response";
+            vnet_type="response";
 
       // For a finite buffered network, note that the DMA response network only 
       // works at this relatively lower numbered (lower priority) virtual network
       // because the trigger queue decouples cache responses from DMA responses.
       MessageBuffer * dmaResponseFromDir, network="To", virtual_network="1",
-            ordered="true", vnet_type="response";
+            vnet_type="response";
 
       MessageBuffer * unblockToDir, network="From", virtual_network="5",
-            ordered="false", vnet_type="unblock";
+            vnet_type="unblock";
 
       MessageBuffer * responseToDir, network="From", virtual_network="4",
-            ordered="false", vnet_type="response";
+            vnet_type="response";
 
       MessageBuffer * requestToDir, network="From", virtual_network="2",
-            ordered="false", vnet_type="request", recycle_latency="1";
+            vnet_type="request";
 
       MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
-            ordered="true", vnet_type="request";
+            vnet_type="request";
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_E") {
@@ -300,7 +300,8 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  MessageBuffer triggerQueue, ordered="true";
+  MessageBuffer triggerQueue;
+  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests

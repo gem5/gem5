@@ -33,12 +33,12 @@ machine(DMA, "DMA Controller")
       Cycles response_latency := 14;
 
       MessageBuffer * responseFromDir, network="From", virtual_network="2",
-            ordered="false", vnet_type="response";
+            vnet_type="response";
 
       MessageBuffer * reqToDir, network="To", virtual_network="1",
-            ordered="false", vnet_type="request";
+            vnet_type="request";
       MessageBuffer * respToDir, network="To", virtual_network="2",
-            ordered="false", vnet_type="dmaresponse";
+            vnet_type="dmaresponse";
 
 {
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
@@ -69,8 +69,8 @@ machine(DMA, "DMA Controller")
     bool isPresent(Address);
   }
 
-  MessageBuffer mandatoryQueue, ordered="false";
-  MessageBuffer triggerQueue, ordered="true";
+  MessageBuffer mandatoryQueue;
+  MessageBuffer triggerQueue;
   TBETable TBEs, template="<DMA_TBE>", constructor="m_number_of_TBEs";
   State cur_state;
 

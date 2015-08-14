@@ -35,25 +35,25 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
    // Message Buffers between the L1 and the L0 Cache
    // From the L1 cache to the L0 cache
-   MessageBuffer * bufferToL0, network="To", ordered="true";
+   MessageBuffer * bufferToL0, network="To";
 
    // From the L0 cache to the L1 cache
-   MessageBuffer * bufferFromL0, network="From", ordered="true";
+   MessageBuffer * bufferFromL0, network="From";
 
    // Message queue from this L1 cache TO the network / L2
    MessageBuffer * requestToL2, network="To", virtual_network="0",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
 
    MessageBuffer * responseToL2, network="To", virtual_network="1",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
    MessageBuffer * unblockToL2, network="To", virtual_network="2",
-        ordered="false", vnet_type="unblock";
+        vnet_type="unblock";
 
    // To this L1 cache FROM the network / L2
    MessageBuffer * requestFromL2, network="From", virtual_network="2",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
    MessageBuffer * responseFromL2, network="From", virtual_network="1",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 
 {
   // STATES

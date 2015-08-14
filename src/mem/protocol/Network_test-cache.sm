@@ -37,11 +37,11 @@ machine(L1Cache, "Network_test L1 Cache")
 
       // NETWORK BUFFERS
       MessageBuffer * requestFromCache, network="To", virtual_network="0",
-            ordered="false", vnet_type = "request";
+            vnet_type = "request";
       MessageBuffer * forwardFromCache, network="To", virtual_network="1",
-            ordered="false", vnet_type = "forward";
+            vnet_type = "forward";
       MessageBuffer * responseFromCache, network="To", virtual_network="2",
-            ordered="false", vnet_type = "response";
+            vnet_type = "response";
 {
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -58,7 +58,7 @@ machine(L1Cache, "Network_test L1 Cache")
 
   // STRUCTURE DEFINITIONS
 
-  MessageBuffer mandatoryQueue, ordered="false";
+  MessageBuffer mandatoryQueue;
   DataBlock dummyData;
 
 

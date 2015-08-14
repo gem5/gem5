@@ -123,13 +123,20 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l1_cntrl_nodes.append(l1_cntrl)
 
         # Connect the L1 controllers and the network
-        l1_cntrl.requestFromL1Cache =  ruby_system.network.slave
-        l1_cntrl.responseFromL1Cache =  ruby_system.network.slave
-        l1_cntrl.persistentFromL1Cache =  ruby_system.network.slave
+        l1_cntrl.requestFromL1Cache = MessageBuffer()
+        l1_cntrl.requestFromL1Cache.master = ruby_system.network.slave
+        l1_cntrl.responseFromL1Cache = MessageBuffer()
+        l1_cntrl.responseFromL1Cache.master = ruby_system.network.slave
+        l1_cntrl.persistentFromL1Cache = MessageBuffer(ordered = True)
+        l1_cntrl.persistentFromL1Cache.master = ruby_system.network.slave
 
-        l1_cntrl.requestToL1Cache =  ruby_system.network.master
-        l1_cntrl.responseToL1Cache =  ruby_system.network.master
-        l1_cntrl.persistentToL1Cache =  ruby_system.network.master
+        l1_cntrl.mandatoryQueue = MessageBuffer()
+        l1_cntrl.requestToL1Cache = MessageBuffer()
+        l1_cntrl.requestToL1Cache.slave = ruby_system.network.master
+        l1_cntrl.responseToL1Cache = MessageBuffer()
+        l1_cntrl.responseToL1Cache.slave = ruby_system.network.master
+        l1_cntrl.persistentToL1Cache = MessageBuffer(ordered = True)
+        l1_cntrl.persistentToL1Cache.slave = ruby_system.network.master
 
 
     l2_index_start = block_size_bits + l2_bits
@@ -152,14 +159,21 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l2_cntrl_nodes.append(l2_cntrl)
 
         # Connect the L2 controllers and the network
-        l2_cntrl.GlobalRequestFromL2Cache = ruby_system.network.slave
-        l2_cntrl.L1RequestFromL2Cache = ruby_system.network.slave
-        l2_cntrl.responseFromL2Cache = ruby_system.network.slave
+        l2_cntrl.GlobalRequestFromL2Cache = MessageBuffer()
+        l2_cntrl.GlobalRequestFromL2Cache.master = ruby_system.network.slave
+        l2_cntrl.L1RequestFromL2Cache = MessageBuffer()
+        l2_cntrl.L1RequestFromL2Cache.master = ruby_system.network.slave
+        l2_cntrl.responseFromL2Cache = MessageBuffer()
+        l2_cntrl.responseFromL2Cache.master = ruby_system.network.slave
 
-        l2_cntrl.GlobalRequestToL2Cache = ruby_system.network.master
-        l2_cntrl.L1RequestToL2Cache = ruby_system.network.master
-        l2_cntrl.responseToL2Cache = ruby_system.network.master
-        l2_cntrl.persistentToL2Cache = ruby_system.network.master
+        l2_cntrl.GlobalRequestToL2Cache = MessageBuffer()
+        l2_cntrl.GlobalRequestToL2Cache.slave = ruby_system.network.master
+        l2_cntrl.L1RequestToL2Cache = MessageBuffer()
+        l2_cntrl.L1RequestToL2Cache.slave = ruby_system.network.master
+        l2_cntrl.responseToL2Cache = MessageBuffer()
+        l2_cntrl.responseToL2Cache.slave = ruby_system.network.master
+        l2_cntrl.persistentToL2Cache = MessageBuffer(ordered = True)
+        l2_cntrl.persistentToL2Cache.slave = ruby_system.network.master
 
 
     phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
@@ -188,15 +202,24 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         dir_cntrl_nodes.append(dir_cntrl)
 
         # Connect the directory controllers and the network
-        dir_cntrl.requestToDir = ruby_system.network.master
-        dir_cntrl.responseToDir = ruby_system.network.master
-        dir_cntrl.persistentToDir = ruby_system.network.master
-        dir_cntrl.dmaRequestToDir = ruby_system.network.master
+        dir_cntrl.requestToDir = MessageBuffer()
+        dir_cntrl.requestToDir.slave = ruby_system.network.master
+        dir_cntrl.responseToDir = MessageBuffer()
+        dir_cntrl.responseToDir.slave = ruby_system.network.master
+        dir_cntrl.persistentToDir = MessageBuffer(ordered = True)
+        dir_cntrl.persistentToDir.slave = ruby_system.network.master
+        dir_cntrl.dmaRequestToDir = MessageBuffer(ordered = True)
+        dir_cntrl.dmaRequestToDir.slave = ruby_system.network.master
 
-        dir_cntrl.requestFromDir = ruby_system.network.slave
-        dir_cntrl.responseFromDir = ruby_system.network.slave
-        dir_cntrl.persistentFromDir = ruby_system.network.slave
-        dir_cntrl.dmaResponseFromDir = ruby_system.network.slave
+        dir_cntrl.requestFromDir = MessageBuffer()
+        dir_cntrl.requestFromDir.master = ruby_system.network.slave
+        dir_cntrl.responseFromDir = MessageBuffer()
+        dir_cntrl.responseFromDir.master = ruby_system.network.slave
+        dir_cntrl.persistentFromDir = MessageBuffer(ordered = True)
+        dir_cntrl.persistentFromDir.master = ruby_system.network.slave
+        dir_cntrl.dmaResponseFromDir = MessageBuffer(ordered = True)
+        dir_cntrl.dmaResponseFromDir.master = ruby_system.network.slave
+        dir_cntrl.responseFromMemory = MessageBuffer()
 
 
     for i, dma_port in enumerate(dma_ports):
@@ -216,8 +239,11 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         dma_cntrl_nodes.append(dma_cntrl)
 
         # Connect the dma controller to the network
-        dma_cntrl.responseFromDir = ruby_system.network.master
-        dma_cntrl.reqToDirectory = ruby_system.network.slave
+        dma_cntrl.mandatoryQueue = MessageBuffer()
+        dma_cntrl.responseFromDir = MessageBuffer(ordered = True)
+        dma_cntrl.responseFromDir.slave = ruby_system.network.master
+        dma_cntrl.reqToDirectory = MessageBuffer()
+        dma_cntrl.reqToDirectory.master = ruby_system.network.slave
 
     all_cntrls = l1_cntrl_nodes + \
                  l2_cntrl_nodes + \
@@ -234,8 +260,11 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         ruby_system.io_controller = io_controller
 
         # Connect the dma controller to the network
-        io_controller.responseFromDir = ruby_system.network.master
-        io_controller.reqToDirectory = ruby_system.network.slave
+        io_controller.mandatoryQueue = MessageBuffer()
+        io_controller.responseFromDir = MessageBuffer(ordered = True)
+        io_controller.responseFromDir.slave = ruby_system.network.master
+        io_controller.reqToDirectory = MessageBuffer()
+        io_controller.reqToDirectory.master = ruby_system.network.slave
 
         all_cntrls = all_cntrls + [io_controller]
 

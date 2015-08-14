@@ -37,29 +37,29 @@ machine(Directory, "Token protocol")
 
    // Message Queues from dir to other controllers / network
    MessageBuffer * dmaResponseFromDir, network="To", virtual_network="5",
-        ordered="true", vnet_type="response";
+        vnet_type="response";
 
    MessageBuffer * responseFromDir, network="To", virtual_network="4",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 
    MessageBuffer * persistentFromDir, network="To", virtual_network="3",
-        ordered="true", vnet_type="persistent";
+        vnet_type="persistent";
 
    MessageBuffer * requestFromDir, network="To", virtual_network="1",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
  
    // Message Queues to dir from other controllers / network
    MessageBuffer * responseToDir, network="From", virtual_network="4",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 
    MessageBuffer * persistentToDir, network="From", virtual_network="3",
-        ordered="true", vnet_type="persistent";
+        vnet_type="persistent";
    
    MessageBuffer * requestToDir, network="From", virtual_network="2",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
    
    MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
-        ordered="true", vnet_type="request";
+        vnet_type="request";
 
 {
   // STATES
@@ -265,6 +265,8 @@ machine(Directory, "Token protocol")
     num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
     return num_functional_writes;
   }
+
+  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);

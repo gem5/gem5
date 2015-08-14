@@ -33,16 +33,16 @@ machine(Directory, "Directory protocol")
       Cycles to_memory_controller_latency := 1;
 
       MessageBuffer * forwardFromDir, network="To", virtual_network="3",
-            ordered="false", vnet_type="forward";
+            vnet_type="forward";
       MessageBuffer * responseFromDir, network="To", virtual_network="4",
-            ordered="false", vnet_type="response";
+            vnet_type="response";
       MessageBuffer * dmaResponseFromDir, network="To", virtual_network="1",
-            ordered="true", vnet_type="response";
+            vnet_type="response";
 
       MessageBuffer * requestToDir, network="From", virtual_network="2",
-            ordered="true", vnet_type="request";
+            vnet_type="request";
       MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
-            ordered="true", vnet_type="request";
+            vnet_type="request";
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
@@ -194,6 +194,8 @@ machine(Directory, "Directory protocol")
     num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
     return num_functional_writes;
   }
+
+  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);

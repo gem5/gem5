@@ -34,19 +34,19 @@ machine(L2Cache, "Token protocol")
   // L2 BANK QUEUES
   // From local bank of L2 cache TO the network
   MessageBuffer * L1RequestFromL2Cache, network="To", virtual_network="0",
-        ordered="false", vnet_type="request";  // this L2 bank -> a local L1
+        vnet_type="request";  // this L2 bank -> a local L1
   MessageBuffer * GlobalRequestFromL2Cache, network="To", virtual_network="1",
-        ordered="false", vnet_type="request";  // this L2 bank -> mod-directory
+        vnet_type="request";  // this L2 bank -> mod-directory
   MessageBuffer * responseFromL2Cache, network="To", virtual_network="2",
-        ordered="false", vnet_type="response";  // this L2 bank -> a local L1 || mod-directory
+        vnet_type="response";  // this L2 bank -> a local L1 || mod-directory
 
   // FROM the network to this local bank of L2 cache
   MessageBuffer * L1RequestToL2Cache, network="From", virtual_network="0",
-        ordered="false", vnet_type="request";  // a local L1 -> this L2 bank, Lets try this???
+        vnet_type="request";  // a local L1 -> this L2 bank, Lets try this???
   MessageBuffer * GlobalRequestToL2Cache, network="From", virtual_network="1",
-        ordered="false", vnet_type="request";  // mod-directory -> this L2 bank
+        vnet_type="request";  // mod-directory -> this L2 bank
   MessageBuffer * responseToL2Cache, network="From", virtual_network="2",
-        ordered="false", vnet_type="response";  // a local L1 || mod-directory -> this L2 bank
+        vnet_type="response";  // a local L1 || mod-directory -> this L2 bank
 
 {
   // STATES
@@ -565,7 +565,7 @@ machine(L2Cache, "Token protocol")
     return num_functional_writes;
   }
 
-  MessageBuffer triggerQueue, ordered="true";
+  MessageBuffer triggerQueue;
 
   out_port(globalRequestNetwork_out, RequestMsg, GlobalRequestFromL2Cache);
   out_port(localRequestNetwork_out, RequestMsg, L1RequestFromL2Cache);

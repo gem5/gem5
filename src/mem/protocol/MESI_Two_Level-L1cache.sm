@@ -43,27 +43,27 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
    // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
    MessageBuffer * requestFromL1Cache, network="To", virtual_network="0",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
 
    // a local L1 -> this L2 bank
    MessageBuffer * responseFromL1Cache, network="To", virtual_network="1",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 
    MessageBuffer * unblockFromL1Cache, network="To", virtual_network="2",
-        ordered="false", vnet_type="unblock";
+        vnet_type="unblock";
 
 
    // To this node's L1 cache FROM the network
    // a L2 bank -> this L1
    MessageBuffer * requestToL1Cache, network="From", virtual_network="2",
-        ordered="false", vnet_type="request";
+        vnet_type="request";
 
    // a L2 bank -> this L1
    MessageBuffer * responseToL1Cache, network="From", virtual_network="1",
-        ordered="false", vnet_type="response";
+        vnet_type="response";
 {
   // Request Buffer for prefetches
-  MessageBuffer optionalQueue, ordered="false";
+  MessageBuffer optionalQueue;
 
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -151,7 +151,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
-  MessageBuffer mandatoryQueue, ordered="false";
+  MessageBuffer mandatoryQueue;
 
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
