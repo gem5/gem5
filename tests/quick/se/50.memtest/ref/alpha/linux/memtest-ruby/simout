@@ -1,10 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 16:27:55
-gem5 started Jan 22 2014 17:24:32
-gem5 executing on u200540-lin
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby -re tests/run.py build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby
+gem5 compiled Aug 13 2015 19:05:56
+gem5 started Aug 13 2015 20:15:04
+gem5 executing on artery
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby -re /home/joel/research/gem5/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby
+
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 8664886 because maximum number of loads reached
+Exiting @ tick 7662866 because maximum number of loads reached

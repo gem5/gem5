@@ -1,10 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 16:27:55
-gem5 started Jan 22 2014 17:24:37
-gem5 executing on u200540-lin
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby -re tests/run.py build/ALPHA/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby
+gem5 compiled Aug 13 2015 19:05:56
+gem5 started Aug 13 2015 20:15:05
+gem5 executing on artery
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby -re /home/joel/research/gem5/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby
+
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 221941 because Ruby Tester completed
+Exiting @ tick 37801 because Ruby Tester completed
