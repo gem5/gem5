@@ -56,15 +56,12 @@ class SubBlock
 
     // Merging to and from DataBlocks - We only need to worry about
     // updates when we are using DataBlocks
-    void mergeTo(DataBlock& data) const { internalMergeTo(data); }
-    void mergeFrom(const DataBlock& data) { internalMergeFrom(data); }
+    void mergeTo(DataBlock& data) const;
+    void mergeFrom(const DataBlock& data);
 
     void print(std::ostream& out) const;
 
   private:
-    void internalMergeTo(DataBlock& data) const;
-    void internalMergeFrom(const DataBlock& data);
-
     // Data Members (m_ prefix)
     Addr m_address;
     std::vector<uint8_t> m_data;
