@@ -50,7 +50,10 @@ structure(InPort, external = "yes", primitive="yes") {
 }
 
 external_type(NodeID, default="0", primitive="yes");
-external_type(MachineID);
+structure (MachineID, external = "yes", non_obj="yes") {
+   MachineType getType();
+   NodeID getNum();
+}
 
 structure (Set, external = "yes", non_obj="yes") {
   void setSize(int);
