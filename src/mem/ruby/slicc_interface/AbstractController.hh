@@ -139,14 +139,14 @@ class AbstractController : public MemObject, public Consumer
     void wakeUpAllBuffers();
 
   protected:
-    NodeID m_version;
+    const NodeID m_version;
     MachineID m_machineID;
-    NodeID m_clusterID;
+    const NodeID m_clusterID;
 
     // MasterID used by some components of gem5.
-    MasterID m_masterId;
+    const MasterID m_masterId;
 
-    Network* m_net_ptr;
+    Network *m_net_ptr;
     bool m_is_blocking;
     std::map<Addr, MessageBuffer*> m_block_map;
 
@@ -157,9 +157,9 @@ class AbstractController : public MemObject, public Consumer
 
     unsigned int m_in_ports;
     unsigned int m_cur_in_port;
-    int m_number_of_TBEs;
-    int m_transitions_per_cycle;
-    unsigned int m_buffer_size;
+    const int m_number_of_TBEs;
+    const int m_transitions_per_cycle;
+    const unsigned int m_buffer_size;
     Cycles m_recycle_latency;
 
     //! Counter for the number of cycles when the transitions carried out
