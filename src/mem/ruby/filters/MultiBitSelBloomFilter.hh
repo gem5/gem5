@@ -68,7 +68,7 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
   private:
     int get_index(Addr addr, int hashNumber);
 
-    int hash_bitsel(uint64 value, int index, int jump, int maxBits,
+    int hash_bitsel(uint64_t value, int index, int jump, int maxBits,
                     int numBits);
 
     std::vector<int> m_filter;

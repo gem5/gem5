@@ -84,7 +84,7 @@ Histogram::doubleBinSize()
 }
 
 void
-Histogram::add(int64 value)
+Histogram::add(int64_t value)
 {
     assert(value >= 0);
     m_max = max(m_max, value);

@@ -77,7 +77,7 @@ class CacheRecorder
     void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
                    RubyRequestType type, Tick time, DataBlock& data);
 
-    uint64 aggregateRecords(uint8_t** data, uint64 size);
+    uint64_t aggregateRecords(uint8_t **data, uint64_t size);
 
     /*!
      * Function for flushing the memory contents of the caches to the

@@ -49,7 +49,7 @@ BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
 }
 
 bool
-BankedArray::tryAccess(int64 idx)
+BankedArray::tryAccess(int64_t idx)
 {
     if (accessLatency == 0)
         return true;
@@ -65,7 +65,7 @@ BankedArray::tryAccess(int64 idx)
 }
 
 void
-BankedArray::reserve(int64 idx)
+BankedArray::reserve(int64_t idx)
 {
     if (accessLatency == 0)
         return;
@@ -91,7 +91,7 @@ BankedArray::reserve(int64 idx)
 }
 
 unsigned int
-BankedArray::mapIndexToBank(int64 idx)
+BankedArray::mapIndexToBank(int64_t idx)
 {
     if (banks == 1) {
         return 0;

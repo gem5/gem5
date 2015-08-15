@@ -118,14 +118,14 @@ class RubySystem : public ClockedObject
     RubySystem& operator=(const RubySystem& obj);
 
     void makeCacheRecorder(uint8_t *uncompressed_trace,
-                           uint64 cache_trace_size,
-                           uint64 block_size_bytes);
+                           uint64_t cache_trace_size,
+                           uint64_t block_size_bytes);
 
     void readCompressedTrace(std::string filename,
                              uint8_t *&raw_data,
-                             uint64& uncompressed_trace_size);
+                             uint64_t &uncompressed_trace_size);
     void writeCompressedTrace(uint8_t *raw_data, std::string file,
-                              uint64 uncompressed_trace_size);
+                              uint64_t uncompressed_trace_size);
 
   private:
     // configuration parameters

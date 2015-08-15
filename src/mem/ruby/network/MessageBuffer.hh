@@ -184,7 +184,7 @@ class MessageBuffer : public SimObject
 
     int m_not_avail_count;  // count the # of times I didn't have N
                             // slots available
-    uint64 m_msg_counter;
+    uint64_t m_msg_counter;
     int m_priority_rank;
     const bool m_strict_fifo;
     const bool m_randomization;

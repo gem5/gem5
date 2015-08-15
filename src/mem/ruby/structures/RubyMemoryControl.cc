@@ -176,7 +176,7 @@ void
 RubyMemoryControl::init()
 {
     m_msg_counter = 0;
-    assert(m_tFaw <= 62); // must fit in a uint64 shift register
+    assert(m_tFaw <= 62); // must fit in a uint64_t shift register
 
     m_total_banks = m_banks_per_rank * m_ranks_per_dimm * m_dimms_per_channel;
     m_total_ranks = m_ranks_per_dimm * m_dimms_per_channel;
@@ -213,7 +213,7 @@ RubyMemoryControl::init()
     // m_tfaw_count keeps track of how many 1 bits are set
     // in each shift register.  When m_tfaw_count is >= 4,
     // new activates are not allowed.
-    m_tfaw_shift = new uint64[m_total_ranks];
+    m_tfaw_shift = new uint64_t[m_total_ranks];
     m_tfaw_count = new int[m_total_ranks];
     for (int i = 0; i < m_total_ranks; i++) {
         m_tfaw_shift[i] = 0;
@@ -236,7 +236,7 @@ RubyMemoryControl::reset()
 {
     m_msg_counter = 0;
 
-    assert(m_tFaw <= 62); // must fit in a uint64 shift register
+    assert(m_tFaw <= 62); // must fit in a uint64_t shift register
 
     m_total_banks = m_banks_per_rank * m_ranks_per_dimm * m_dimms_per_channel;
     m_total_ranks = m_ranks_per_dimm * m_dimms_per_channel;

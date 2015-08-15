@@ -161,13 +161,13 @@ CacheRecorder::addRecord(int cntrl, Addr data_addr, Addr pc_addr,
     m_records.push_back(rec);
 }
 
-uint64
-CacheRecorder::aggregateRecords(uint8_t** buf, uint64 total_size)
+uint64_t
+CacheRecorder::aggregateRecords(uint8_t **buf, uint64_t total_size)
 {
     std::sort(m_records.begin(), m_records.end(), compareTraceRecords);
 
     int size = m_records.size();
-    uint64 current_size = 0;
+    uint64_t current_size = 0;
     int record_size = sizeof(TraceRecord) + m_block_size_bytes;
 
     for (int i = 0; i < size; ++i) {
