@@ -184,12 +184,6 @@ Switch::print(std::ostream& out) const
 bool
 Switch::functionalRead(Packet *pkt)
 {
-    // Access the buffers in the switch for performing a functional read
-    for (unsigned int i = 0; i < m_port_buffers.size(); ++i) {
-        if (m_port_buffers[i]->functionalRead(pkt)) {
-            return true;
-        }
-    }
     return false;
 }
 

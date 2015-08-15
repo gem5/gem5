@@ -233,12 +233,6 @@ SimpleNetwork::functionalRead(Packet *pkt)
         }
     }
 
-    for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
-        if (m_int_link_buffers[i]->functionalRead(pkt)) {
-            return true;
-        }
-    }
-
     return false;
 }
 
