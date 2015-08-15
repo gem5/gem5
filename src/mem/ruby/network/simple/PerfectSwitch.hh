@@ -87,7 +87,8 @@ class PerfectSwitch : public Consumer
     void operateVnet(int vnet);
     void operateMessageBuffer(MessageBuffer *b, int incoming, int vnet);
 
-    SwitchID m_switch_id;
+    const SwitchID m_switch_id;
+    Switch * const m_switch;
 
     // vector of queues from the components
     std::vector<std::vector<MessageBuffer*> > m_in;
