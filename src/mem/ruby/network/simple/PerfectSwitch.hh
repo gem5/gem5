@@ -85,6 +85,7 @@ class PerfectSwitch : public Consumer
     PerfectSwitch& operator=(const PerfectSwitch& obj);
 
     void operateVnet(int vnet);
+    void operateMessageBuffer(MessageBuffer *b, int incoming, int vnet);
 
     SwitchID m_switch_id;
 
