@@ -46,6 +46,9 @@ class FormalParamAST(AST):
     def generate(self):
         type = self.type_ast.type
         param = "param_%s" % self.ident
+        proto = ""
+        body = ""
+        default = False
 
         # Add to symbol table
         v = Var(self.symtab, self.ident, self.location, type, param,
@@ -56,6 +59,21 @@ class FormalParamAST(AST):
            "interface" in type and (
                type["interface"] == "AbstractCacheEntry" or
                type["interface"] == "AbstractEntry")):
-            return type, "%s* %s" % (type.c_ident, param)
+            proto = "%s* %s" % (type.c_ident, param)
+            body = proto
+        elif self.default != None:
+            value = ""
+            if self.default == True:
+                value = "true"
+            elif self.default == False:
+                value = "false"
+            else:
+                value = "%s" % self.default
+            proto = "const %s& %s = %s" % (type.c_ident, param, value)
+            body = "const %s& %s" % (type.c_ident, param)
+            default = True
         else:
-            return type, "const %s& %s" % (type.c_ident, param)
+            proto = "const %s& %s" % (type.c_ident, param)
+            body = proto
+
+        return type, proto, body, default

@@ -30,16 +30,19 @@ from slicc.symbols.Type import Type
 
 class Func(Symbol):
     def __init__(self, table, ident, name, location, return_type, param_types,
-                 param_strings, body, pairs):
+                 proto_param_strings, body_param_strings, body,
+                 pairs, default_count = 0):
         super(Func, self).__init__(table, ident, location, pairs)
         self.return_type = return_type
         self.param_types = param_types
-        self.param_strings = param_strings
+        self.proto_param_strings = proto_param_strings
+        self.body_param_strings = body_param_strings
         self.body = body
         self.isInternalMachineFunc = False
         self.c_ident = ident
         self.c_name = name
         self.class_name = ""
+        self.default_count = default_count
 
     def __repr__(self):
         return ""
@@ -57,16 +60,17 @@ class Func(Symbol):
             return_type += "*"
 
         return "%s %s(%s);" % (return_type, self.c_name,
-                               ", ".join(self.param_strings))
+                               ", ".join(self.proto_param_strings))
 
     def writeCodeFiles(self, path, includes):
         return
 
     def checkArguments(self, args):
-        if len(args) != len(self.param_types):
-            self.error("Wrong number of arguments passed to function : '%s'" +\
-                       " Expected %d, got %d", self.c_ident,
-                       len(self.param_types), len(args))
+        if len(args) + self.default_count < len(self.param_types) or \
+           len(args) > len(self.param_types):
+            self.error("Wrong number of arguments passed to function: '%s'" + \
+                       " Expected at least: %d, got: %d", self.c_ident,
+                       len(self.param_types) - self.default_count, len(args))
 
         cvec = []
         type_vec = []
@@ -91,14 +95,14 @@ class Func(Symbol):
         code = self.symtab.codeFormatter()
 
         # Generate function header
-        void_type = self.symtab.find("void", Type)
         return_type = self.return_type.c_ident
+        void_type = self.symtab.find("void", Type)
         if "return_by_ref" in self and self.return_type != void_type:
             return_type += "&"
         if "return_by_pointer" in self and self.return_type != void_type:
             return_type += "*"
 
-        params = ', '.join(self.param_strings)
+        params = ', '.join(self.body_param_strings)
 
         code('''
 $return_type

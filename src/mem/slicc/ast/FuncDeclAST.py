@@ -45,7 +45,9 @@ class FuncDeclAST(DeclAST):
 
     def generate(self, parent = None):
         types = []
-        params = []
+        proto_params = []
+        body_params = []
+        default_count = 0
         void_type = self.symtab.find("void", Type)
 
         # Generate definition code
@@ -58,13 +60,17 @@ class FuncDeclAST(DeclAST):
         for formal in self.formals:
             # Lookup parameter types
             try:
-                type, ident = formal.generate()
+                type, proto, body, default = formal.generate()
                 types.append(type)
-                params.append(ident)
+                proto_params.append(proto)
+                body_params.append(body)
+                if default:
+                    default_count += 1
 
             except AttributeError:
                 types.append(formal.type)
-                params.append(None)
+                proto_params.append(None)
+                body_params.append(None)
 
         body = self.slicc.codeFormatter()
         if self.statements is None:
@@ -87,7 +93,8 @@ class FuncDeclAST(DeclAST):
 
         machine = self.state_machine
         func = Func(self.symtab, func_name_args, self.ident, self.location,
-                    return_type, types, params, str(body), self.pairs)
+                    return_type, types, proto_params,
+                    body_params, str(body), self.pairs, default_count)
 
         if parent is not None:
             if not parent.addFunc(func):
