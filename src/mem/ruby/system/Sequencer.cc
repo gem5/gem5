@@ -317,28 +317,27 @@ Sequencer::removeRequest(SequencerRequest* srequest)
 void
 Sequencer::invalidateSC(Addr address)
 {
-    RequestTable::iterator i = m_writeRequestTable.find(address);
-    if (i != m_writeRequestTable.end()) {
-        SequencerRequest* request = i->second;
-        // The controller has lost the coherence permissions, hence the lock
-        // on the cache line maintained by the cache should be cleared.
-        if (request->m_type == RubyRequestType_Store_Conditional) {
-            m_dataCache_ptr->clearLocked(address);
-        }
+    AbstractCacheEntry *e = m_dataCache_ptr->lookup(address);
+    // The controller has lost the coherence permissions, hence the lock
+    // on the cache line maintained by the cache should be cleared.
+    if (e && e->isLocked(m_version)) {
+        e->clearLocked();
     }
 }
 
 bool
 Sequencer::handleLlsc(Addr address, SequencerRequest* request)
 {
-    //
+    AbstractCacheEntry *e = m_dataCache_ptr->lookup(address);
+    if (!e)
+        return true;
+
     // The success flag indicates whether the LLSC operation was successful.
     // LL ops will always succeed, but SC may fail if the cache line is no
     // longer locked.
-    //
     bool success = true;
     if (request->m_type == RubyRequestType_Store_Conditional) {
-        if (!m_dataCache_ptr->isLocked(address, m_version)) {
+        if (!e->isLocked(m_version)) {
             //
             // For failed SC requests, indicate the failure to the cpu by
             // setting the extra data to zero.
@@ -355,19 +354,18 @@ Sequencer::handleLlsc(Addr address, SequencerRequest* request)
         //
         // Independent of success, all SC operations must clear the lock
         //
-        m_dataCache_ptr->clearLocked(address);
+        e->clearLocked();
     } else if (request->m_type == RubyRequestType_Load_Linked) {
         //
         // Note: To fully follow Alpha LLSC semantics, should the LL clear any
         // previously locked cache lines?
         //
-        m_dataCache_ptr->setLocked(address, m_version);
-    } else if ((m_dataCache_ptr->isTagPresent(address)) &&
-               (m_dataCache_ptr->isLocked(address, m_version))) {
+        e->setLocked(m_version);
+    } else if (e->isLocked(m_version)) {
         //
         // Normal writes should clear the locked address
         //
-        m_dataCache_ptr->clearLocked(address);
+        e->clearLocked();
     }
     return success;
 }

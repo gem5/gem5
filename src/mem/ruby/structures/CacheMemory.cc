@@ -413,7 +413,7 @@ CacheMemory::setLocked(Addr address, int context)
     int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
-    m_cache[cacheSet][loc]->m_locked = context;
+    m_cache[cacheSet][loc]->setLocked(context);
 }
 
 void
@@ -424,7 +424,7 @@ CacheMemory::clearLocked(Addr address)
     int64 cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
-    m_cache[cacheSet][loc]->m_locked = -1;
+    m_cache[cacheSet][loc]->clearLocked();
 }
 
 bool
@@ -436,7 +436,7 @@ CacheMemory::isLocked(Addr address, int context)
     assert(loc != -1);
     DPRINTF(RubyCache, "Testing Lock for addr: %llx cur %d con %d\n",
             address, m_cache[cacheSet][loc]->m_locked, context);
-    return m_cache[cacheSet][loc]->m_locked == context;
+    return m_cache[cacheSet][loc]->isLocked(context);
 }
 
 void
