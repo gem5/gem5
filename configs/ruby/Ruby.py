@@ -231,6 +231,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
             if buildEnv['TARGET_ISA'] == "x86":
                 cpu_seq.pio_slave_port = piobus.master
 
+    ruby.number_of_virtual_networks = ruby.network.number_of_virtual_networks
     ruby._cpu_ports = cpu_sequencers
     ruby.num_of_sequencers = len(cpu_sequencers)
 
