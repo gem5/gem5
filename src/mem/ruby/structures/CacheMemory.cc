@@ -251,7 +251,7 @@ CacheMemory::cacheAvail(Addr address) const
 }
 
 AbstractCacheEntry*
-CacheMemory::allocate(Addr address, AbstractCacheEntry* entry, bool touch)
+CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
 {
     assert(address == makeLineAddress(address));
     assert(!isTagPresent(address));
@@ -270,6 +270,8 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry* entry, bool touch)
                     address);
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
+            entry->setSetIndex(cacheSet);
+            entry->setWayIndex(i);
 
             if (touch) {
                 m_replacementPolicy_ptr->touch(cacheSet, i, curTick());
