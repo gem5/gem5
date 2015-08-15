@@ -145,22 +145,22 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   // inclusive cache returns L0 entries only
   Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
-    Entry Dcache_entry := static_cast(Entry, "pointer", Dcache[addr]);
+    Entry Dcache_entry := static_cast(Entry, "pointer", Dcache.lookup(addr));
     if(is_valid(Dcache_entry)) {
       return Dcache_entry;
     }
 
-    Entry Icache_entry := static_cast(Entry, "pointer", Icache[addr]);
+    Entry Icache_entry := static_cast(Entry, "pointer", Icache.lookup(addr));
     return Icache_entry;
   }
 
   Entry getDCacheEntry(Addr addr), return_by_pointer="yes" {
-    Entry Dcache_entry := static_cast(Entry, "pointer", Dcache[addr]);
+    Entry Dcache_entry := static_cast(Entry, "pointer", Dcache.lookup(addr));
     return Dcache_entry;
   }
 
   Entry getICacheEntry(Addr addr), return_by_pointer="yes" {
-    Entry Icache_entry := static_cast(Entry, "pointer", Icache[addr]);
+    Entry Icache_entry := static_cast(Entry, "pointer", Icache.lookup(addr));
     return Icache_entry;
   }
 
@@ -189,7 +189,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L0Cache_State_to_permission(tbe.TBEState));
       return L0Cache_State_to_permission(tbe.TBEState);
@@ -206,7 +206,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
@@ -217,7 +217,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
         testAndWrite(addr, tbe.DataBlk, pkt);
@@ -260,7 +260,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
         assert(in_msg.Dest == machineID);
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
 
         if(in_msg.Class == CoherenceClass:DATA_EXCLUSIVE) {
             trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
@@ -301,7 +301,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
           if (is_valid(Icache_entry)) {
             // The tag matches for the L0, so the L0 asks the L2 for it.
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                    Icache_entry, TBEs[in_msg.LineAddress]);
+                    Icache_entry, TBEs.lookup(in_msg.LineAddress));
           } else {
 
             // Check to see if it is in the OTHER L0
@@ -309,19 +309,19 @@ machine(L0Cache, "MESI Directory L0 Cache")
             if (is_valid(Dcache_entry)) {
               // The block is in the wrong L0, put the request on the queue to the shared L2
               trigger(Event:L0_Replacement, in_msg.LineAddress,
-                      Dcache_entry, TBEs[in_msg.LineAddress]);
+                      Dcache_entry, TBEs.lookup(in_msg.LineAddress));
             }
 
             if (Icache.cacheAvail(in_msg.LineAddress)) {
               // L0 does't have the line, but we have space for it
               // in the L0 so let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                      Icache_entry, TBEs[in_msg.LineAddress]);
+                      Icache_entry, TBEs.lookup(in_msg.LineAddress));
             } else {
               // No room in the L0, so we need to make room in the L0
               trigger(Event:L0_Replacement, Icache.cacheProbe(in_msg.LineAddress),
                       getICacheEntry(Icache.cacheProbe(in_msg.LineAddress)),
-                      TBEs[Icache.cacheProbe(in_msg.LineAddress)]);
+                      TBEs.lookup(Icache.cacheProbe(in_msg.LineAddress)));
             }
           }
         } else {
@@ -331,7 +331,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
           if (is_valid(Dcache_entry)) {
             // The tag matches for the L0, so the L0 ask the L1 for it
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                    Dcache_entry, TBEs[in_msg.LineAddress]);
+                    Dcache_entry, TBEs.lookup(in_msg.LineAddress));
           } else {
 
             // Check to see if it is in the OTHER L0
@@ -339,19 +339,19 @@ machine(L0Cache, "MESI Directory L0 Cache")
             if (is_valid(Icache_entry)) {
               // The block is in the wrong L0, put the request on the queue to the private L1
               trigger(Event:L0_Replacement, in_msg.LineAddress,
-                      Icache_entry, TBEs[in_msg.LineAddress]);
+                      Icache_entry, TBEs.lookup(in_msg.LineAddress));
             }
 
             if (Dcache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it
               // in the L0 let's see if the L1 has it
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                      Dcache_entry, TBEs[in_msg.LineAddress]);
+                      Dcache_entry, TBEs.lookup(in_msg.LineAddress));
             } else {
               // No room in the L1, so we need to make room in the L0
               trigger(Event:L0_Replacement, Dcache.cacheProbe(in_msg.LineAddress),
                       getDCacheEntry(Dcache.cacheProbe(in_msg.LineAddress)),
-                      TBEs[Dcache.cacheProbe(in_msg.LineAddress)]);
+                      TBEs.lookup(Dcache.cacheProbe(in_msg.LineAddress)));
             }
           }
         }
@@ -489,7 +489,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
     check_allocate(TBEs);
     assert(is_valid(cache_entry));
     TBEs.allocate(address);
-    set_tbe(TBEs[address]);
+    set_tbe(TBEs.lookup(address));
     tbe.Dirty := cache_entry.Dirty;
     tbe.DataBlk := cache_entry.DataBlk;
   }

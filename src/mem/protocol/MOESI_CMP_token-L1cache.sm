@@ -366,7 +366,7 @@ machine(L1Cache, "Token protocol")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := L1_TBEs[addr];
+    TBE tbe := L1_TBEs.lookup(addr);
     if(is_valid(tbe)) {
       return L1Cache_State_to_permission(tbe.TBEState);
     }
@@ -459,7 +459,7 @@ machine(L1Cache, "Token protocol")
   // Use Timer
   in_port(useTimerTable_in, Addr, useTimerTable, rank=5) {
     if (useTimerTable_in.isReady()) {
-      TBE tbe := L1_TBEs[useTimerTable.readyAddress()];
+      TBE tbe := L1_TBEs.lookup(useTimerTable.readyAddress());
 
       if (persistentTable.isLocked(useTimerTable.readyAddress()) &&
           (persistentTable.findSmallest(useTimerTable.readyAddress()) != machineID)) {
@@ -487,7 +487,7 @@ machine(L1Cache, "Token protocol")
     if (reissueTimerTable_in.isReady()) {
       trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
               getCacheEntry(reissueTimerTable.readyAddress()),
-              L1_TBEs[reissueTimerTable.readyAddress()]);
+              L1_TBEs.lookup(reissueTimerTable.readyAddress()));
     }
   }
 
@@ -510,7 +510,7 @@ machine(L1Cache, "Token protocol")
 
         // React to the message based on the current state of the table
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := L1_TBEs[in_msg.addr];
+        TBE tbe := L1_TBEs.lookup(in_msg.addr);
 
         if (persistentTable.isLocked(in_msg.addr)) {
           if (persistentTable.findSmallest(in_msg.addr) == machineID) {
@@ -548,7 +548,7 @@ machine(L1Cache, "Token protocol")
         assert(in_msg.Destination.isElement(machineID));
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := L1_TBEs[in_msg.addr];
+        TBE tbe := L1_TBEs.lookup(in_msg.addr);
 
         // Mark TBE flag if response received off-chip.  Use this to update average latency estimate
         if ( machineIDToMachineType(in_msg.Sender) == MachineType:L2Cache ) {
@@ -559,7 +559,7 @@ machine(L1Cache, "Token protocol")
 
             // came from an off-chip L2 cache
             if (is_valid(tbe)) {
-               // L1_TBEs[in_msg.addr].ExternalResponse := true;
+               // L1_TBEs.lookup(in_msg.addr).ExternalResponse := true;
                // profile_offchipL2_response(in_msg.addr);
             }
           }
@@ -619,7 +619,7 @@ machine(L1Cache, "Token protocol")
         assert(in_msg.Destination.isElement(machineID));
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := L1_TBEs[in_msg.addr];
+        TBE tbe := L1_TBEs.lookup(in_msg.addr);
 
         if (in_msg.Type == CoherenceRequestType:GETX) {
           if (in_msg.isLocal) {
@@ -665,7 +665,7 @@ machine(L1Cache, "Token protocol")
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
-        TBE tbe := L1_TBEs[in_msg.LineAddress];
+        TBE tbe := L1_TBEs.lookup(in_msg.LineAddress);
 
         if (in_msg.Type == RubyRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
@@ -695,7 +695,7 @@ machine(L1Cache, "Token protocol")
               trigger(Event:L1_Replacement,
                       L1Icache.cacheProbe(in_msg.LineAddress),
                       getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
+                      L1_TBEs.lookup(L1Icache.cacheProbe(in_msg.LineAddress)));
             }
           }
         } else {
@@ -726,7 +726,7 @@ machine(L1Cache, "Token protocol")
               trigger(Event:L1_Replacement,
                       L1Dcache.cacheProbe(in_msg.LineAddress),
                       getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
-                      L1_TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
+                      L1_TBEs.lookup(L1Dcache.cacheProbe(in_msg.LineAddress)));
             }
           }
         }
@@ -1332,7 +1332,7 @@ machine(L1Cache, "Token protocol")
   action(i_allocateTBE, "i", desc="Allocate TBE") {
     check_allocate(L1_TBEs);
     L1_TBEs.allocate(address);
-    set_tbe(L1_TBEs[address]);
+    set_tbe(L1_TBEs.lookup(address));
     tbe.IssueCount := 0;
     peek(mandatoryQueue_in, RubyRequest) {
       tbe.PC := in_msg.ProgramCounter;

@@ -190,7 +190,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
       return L1Cache_State_to_permission(tbe.TBEState);
@@ -217,7 +217,7 @@ machine(L1Cache, "Directory protocol")
     if(is_valid(cache_entry)) {
       testAndRead(addr, cache_entry.DataBlk, pkt);
     } else {
-      TBE tbe := TBEs[addr];
+      TBE tbe := TBEs.lookup(addr);
       if(is_valid(tbe)) {
         testAndRead(addr, tbe.DataBlk, pkt);
       } else {
@@ -236,7 +236,7 @@ machine(L1Cache, "Directory protocol")
       return num_functional_writes;
     }
 
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     num_functional_writes := num_functional_writes +
         testAndWrite(addr, tbe.DataBlk, pkt);
     return num_functional_writes;
@@ -269,7 +269,7 @@ machine(L1Cache, "Directory protocol")
     if (useTimerTable_in.isReady()) {
         trigger(Event:Use_Timeout, useTimerTable.readyAddress(),
                 getCacheEntry(useTimerTable.readyAddress()),
-                TBEs[useTimerTable.readyAddress()]);
+                TBEs.lookup(useTimerTable.readyAddress()));
     }
   }
 
@@ -279,7 +279,7 @@ machine(L1Cache, "Directory protocol")
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
           trigger(Event:All_acks, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else {
           error("Unexpected message");
         }
@@ -299,29 +299,29 @@ machine(L1Cache, "Directory protocol")
         if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID && in_msg.RequestorMachine == MachineType:L1Cache) {
             trigger(Event:Own_GETX, in_msg.addr,
-                    getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                    getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
           } else {
             trigger(Event:Fwd_GETX, in_msg.addr,
-                    getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                    getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
           }
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:Fwd_GETS, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
           trigger(Event:Fwd_DMA, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
           trigger(Event:Writeback_Ack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK_DATA) {
           trigger(Event:Writeback_Ack_Data, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
           trigger(Event:Writeback_Nack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else {
           error("Unexpected message");
         }
@@ -335,13 +335,13 @@ machine(L1Cache, "Directory protocol")
       peek(responseToL1Cache_in, ResponseMsg, block_on="addr") {
         if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:Ack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Data, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Exclusive_Data, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else {
           error("Unexpected message");
         }
@@ -365,7 +365,7 @@ machine(L1Cache, "Directory protocol")
             // The tag matches for the L1, so the L1 asks the L2 for it.
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Icache_entry,
-                    TBEs[in_msg.LineAddress]);
+                    TBEs.lookup(in_msg.LineAddress));
           } else {
 
             Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
@@ -373,19 +373,19 @@ machine(L1Cache, "Directory protocol")
             if (is_valid(L1Dcache_entry)) {
               // The block is in the wrong L1, put the request on the queue to the shared L2
               trigger(Event:L1_Replacement, in_msg.LineAddress, L1Dcache_entry,
-                      TBEs[in_msg.LineAddress]);
+                      TBEs.lookup(in_msg.LineAddress));
             }
             if (L1Icache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type),
                       in_msg.LineAddress, L1Icache_entry,
-                      TBEs[in_msg.LineAddress]);
+                      TBEs.lookup(in_msg.LineAddress));
             } else {
               // No room in the L1, so we need to make room in the L1
               trigger(Event:L1_Replacement,
                       L1Icache.cacheProbe(in_msg.LineAddress),
                       getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
-                      TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
+                      TBEs.lookup(L1Icache.cacheProbe(in_msg.LineAddress)));
             }
           }
         } else {
@@ -396,7 +396,7 @@ machine(L1Cache, "Directory protocol")
             // The tag matches for the L1, so the L1 ask the L2 for it
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Dcache_entry,
-                    TBEs[in_msg.LineAddress]);
+                    TBEs.lookup(in_msg.LineAddress));
           } else {
 
             Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
@@ -404,19 +404,19 @@ machine(L1Cache, "Directory protocol")
             if (is_valid(L1Icache_entry)) {
               // The block is in the wrong L1, put the request on the queue to the shared L2
               trigger(Event:L1_Replacement, in_msg.LineAddress,
-                      L1Icache_entry, TBEs[in_msg.LineAddress]);
+                      L1Icache_entry, TBEs.lookup(in_msg.LineAddress));
             }
             if (L1Dcache.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type),
                       in_msg.LineAddress, L1Dcache_entry,
-                      TBEs[in_msg.LineAddress]);
+                      TBEs.lookup(in_msg.LineAddress));
             } else {
               // No room in the L1, so we need to make room in the L1
               trigger(Event:L1_Replacement,
                       L1Dcache.cacheProbe(in_msg.LineAddress),
                       getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
-                      TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
+                      TBEs.lookup(L1Dcache.cacheProbe(in_msg.LineAddress)));
             }
           }
         }
@@ -664,7 +664,7 @@ machine(L1Cache, "Directory protocol")
   action(i_allocateTBE, "i", desc="Allocate TBE") {
     check_allocate(TBEs);
     TBEs.allocate(address);
-    set_tbe(TBEs[address]);
+    set_tbe(TBEs.lookup(address));
     assert(is_valid(cache_entry));
     tbe.DataBlk := cache_entry.DataBlk; // Data only used for writebacks
     tbe.Dirty := cache_entry.Dirty;

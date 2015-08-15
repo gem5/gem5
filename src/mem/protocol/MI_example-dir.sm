@@ -111,7 +111,7 @@ machine(Directory, "Directory protocol")
   void unset_tbe();
 
   Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
-    Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+    Entry dir_entry := static_cast(Entry, "pointer", directory.lookup(addr));
 
     if (is_valid(dir_entry)) {
       return dir_entry;
@@ -155,7 +155,7 @@ machine(Directory, "Directory protocol")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       return Directory_State_to_permission(tbe.TBEState);
     }
@@ -174,7 +174,7 @@ machine(Directory, "Directory protocol")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
@@ -185,7 +185,7 @@ machine(Directory, "Directory protocol")
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
             testAndWrite(addr, tbe.DataBlk, pkt);
@@ -207,7 +207,7 @@ machine(Directory, "Directory protocol")
   in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir) {
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
-        TBE tbe := TBEs[in_msg.LineAddress];
+        TBE tbe := TBEs.lookup(in_msg.LineAddress);
         if (in_msg.Type == DMARequestType:READ) {
           trigger(Event:DMA_READ, in_msg.LineAddress, tbe);
         } else if (in_msg.Type == DMARequestType:WRITE) {
@@ -222,7 +222,7 @@ machine(Directory, "Directory protocol")
   in_port(requestQueue_in, RequestMsg, requestToDir) {
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
         if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:GETS, in_msg.addr, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
@@ -245,7 +245,7 @@ machine(Directory, "Directory protocol")
   in_port(memQueue_in, MemoryMsg, responseFromMemory) {
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
           trigger(Event:Memory_Data, in_msg.addr, tbe);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
@@ -403,7 +403,7 @@ machine(Directory, "Directory protocol")
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       TBEs.allocate(address);
-      set_tbe(TBEs[address]);
+      set_tbe(TBEs.lookup(address));
       tbe.DataBlk := in_msg.DataBlk;
       tbe.PhysicalAddress := in_msg.PhysicalAddress;
       tbe.Len := in_msg.Len;
@@ -414,7 +414,7 @@ machine(Directory, "Directory protocol")
   action(r_allocateTbeForDmaRead, "\r", desc="Allocate TBE for DMA Read") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       TBEs.allocate(address);
-      set_tbe(TBEs[address]);
+      set_tbe(TBEs.lookup(address));
       tbe.DmaRequestor := in_msg.Requestor;
     }
   }
@@ -422,7 +422,7 @@ machine(Directory, "Directory protocol")
   action(v_allocateTBEFromRequestNet, "\v", desc="Allocate TBE") {
     peek(requestQueue_in, RequestMsg) {
       TBEs.allocate(address);
-      set_tbe(TBEs[address]);
+      set_tbe(TBEs.lookup(address));
       tbe.DataBlk := in_msg.DataBlk;
     }
   }

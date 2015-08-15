@@ -152,7 +152,7 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       return L1Cache_State_to_permission(tbe.TBEState);
     }
@@ -172,7 +172,7 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
@@ -183,7 +183,7 @@ machine(L1Cache, "MI Example L1 Cache")
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
         testAndWrite(addr, tbe.DataBlk, pkt);
@@ -205,7 +205,7 @@ machine(L1Cache, "MI Example L1 Cache")
       peek(forwardRequestNetwork_in, RequestMsg, block_on="addr") {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
 
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:Fwd_GETX, in_msg.addr, cache_entry, tbe);
@@ -231,7 +231,7 @@ machine(L1Cache, "MI Example L1 Cache")
       peek(responseNetwork_in, ResponseMsg, block_on="addr") {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
 
         if (in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Data, in_msg.addr, cache_entry, tbe);
@@ -254,11 +254,11 @@ machine(L1Cache, "MI Example L1 Cache")
           // make room for the block
           trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.LineAddress),
                   getCacheEntry(cacheMemory.cacheProbe(in_msg.LineAddress)),
-                  TBEs[cacheMemory.cacheProbe(in_msg.LineAddress)]);
+                  TBEs.lookup(cacheMemory.cacheProbe(in_msg.LineAddress)));
         }
         else {
           trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
-                  cache_entry, TBEs[in_msg.LineAddress]);
+                  cache_entry, TBEs.lookup(in_msg.LineAddress));
         }
       }
     }
@@ -396,7 +396,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     TBEs.allocate(address);
-    set_tbe(TBEs[address]);
+    set_tbe(TBEs.lookup(address));
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {

@@ -122,7 +122,7 @@ machine(Directory, "Directory protocol")
   void unset_tbe();
 
   Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
-    Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+    Entry dir_entry := static_cast(Entry, "pointer", directory.lookup(addr));
 
     if (is_valid(dir_entry)) {
       return dir_entry;
@@ -234,26 +234,26 @@ machine(Directory, "Directory protocol")
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
           if (getDirectoryEntry(in_msg.addr).WaitingUnblocks == 1) {
             trigger(Event:Last_Unblock, in_msg.addr,
-                    TBEs[in_msg.addr]);
+                    TBEs.lookup(in_msg.addr));
           } else {
             trigger(Event:Unblock, in_msg.addr,
-                    TBEs[in_msg.addr]);
+                    TBEs.lookup(in_msg.addr));
           }
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
           trigger(Event:Exclusive_Unblock, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
           trigger(Event:Dirty_Writeback, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_ACK) {
           trigger(Event:Clean_Writeback, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DMA_ACK, in_msg.addr,
-                  TBEs[in_msg.addr]);
+                  TBEs.lookup(in_msg.addr));
         } else {
           error("Invalid message");
         }
@@ -265,21 +265,21 @@ machine(Directory, "Directory protocol")
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:GETS, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:GETX, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          trigger(Event:PUTX, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:PUTX, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:PUTO) {
-          trigger(Event:PUTO, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:PUTO, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:PUTO_SHARERS) {
-          trigger(Event:PUTO_SHARERS, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:PUTO_SHARERS, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
           trigger(Event:DMA_READ, makeLineAddress(in_msg.addr),
-                  TBEs[makeLineAddress(in_msg.addr)]);
+                  TBEs.lookup(makeLineAddress(in_msg.addr)));
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           trigger(Event:DMA_WRITE, makeLineAddress(in_msg.addr),
-                  TBEs[makeLineAddress(in_msg.addr)]);
+                  TBEs.lookup(makeLineAddress(in_msg.addr)));
         } else {
           error("Invalid message");
         }
@@ -292,9 +292,9 @@ machine(Directory, "Directory protocol")
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Memory_Data, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.addr, TBEs[in_msg.addr]);
+          trigger(Event:Memory_Ack, in_msg.addr, TBEs.lookup(in_msg.addr));
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -540,7 +540,7 @@ machine(Directory, "Directory protocol")
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
     peek (requestQueue_in, RequestMsg) {
       TBEs.allocate(address);
-      set_tbe(TBEs[address]);
+      set_tbe(TBEs.lookup(address));
       tbe.PhysicalAddress := in_msg.addr;
       tbe.Len := in_msg.Len;
       tbe.DataBlk := in_msg.DataBlk;

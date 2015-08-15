@@ -161,7 +161,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // inclusive cache returns L1 entries only
   Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
-    Entry cache_entry := static_cast(Entry, "pointer", cache[addr]);
+    Entry cache_entry := static_cast(Entry, "pointer", cache.lookup(addr));
     return cache_entry;
   }
 
@@ -186,7 +186,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
       return L1Cache_State_to_permission(tbe.TBEState);
@@ -203,7 +203,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
@@ -214,7 +214,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
         testAndWrite(addr, tbe.DataBlk, pkt);
@@ -271,7 +271,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         assert(in_msg.Destination.isElement(machineID));
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
 
         if(in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
@@ -307,7 +307,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
 
         if (in_msg.Type == CoherenceRequestType:INV) {
             if (is_valid(cache_entry) && inL0Cache(cache_entry.CacheState)) {
@@ -343,7 +343,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     if (messageBufferFromL0_in.isReady()) {
       peek(messageBufferFromL0_in, CoherenceMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs[in_msg.addr];
+        TBE tbe := TBEs.lookup(in_msg.addr);
 
         if(in_msg.Class == CoherenceClass:INV_DATA) {
             trigger(Event:L0_DataAck, in_msg.addr, cache_entry, tbe);
@@ -363,7 +363,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
                     // No room in the L1, so we need to make room in the L1
                     Entry victim_entry :=
                         getCacheEntry(cache.cacheProbe(in_msg.addr));
-                    TBE victim_tbe := TBEs[cache.cacheProbe(in_msg.addr)];
+                    TBE victim_tbe := TBEs.lookup(cache.cacheProbe(in_msg.addr));
 
                     if (is_valid(victim_entry) && inL0Cache(victim_entry.CacheState)) {
                         trigger(Event:L0_Invalidate_Own,
@@ -628,7 +628,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     check_allocate(TBEs);
     assert(is_valid(cache_entry));
     TBEs.allocate(address);
-    set_tbe(TBEs[address]);
+    set_tbe(TBEs.lookup(address));
     tbe.Dirty := cache_entry.Dirty;
     tbe.DataBlk := cache_entry.DataBlk;
   }

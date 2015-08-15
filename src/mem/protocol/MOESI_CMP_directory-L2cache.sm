@@ -232,7 +232,7 @@ machine(L2Cache, "Token protocol")
   void unset_tbe();
 
   Entry getCacheEntry(Addr address), return_by_pointer="yes" {
-    return static_cast(Entry, "pointer", L2cache[address]);
+    return static_cast(Entry, "pointer", L2cache.lookup(address));
   }
 
   bool isDirTagPresent(Addr addr) {
@@ -519,7 +519,7 @@ machine(L2Cache, "Token protocol")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(tbe.TBEState));
       return L2Cache_State_to_permission(tbe.TBEState);
@@ -542,7 +542,7 @@ machine(L2Cache, "Token protocol")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
@@ -553,7 +553,7 @@ machine(L2Cache, "Token protocol")
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
-    TBE tbe := TBEs[addr];
+    TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
         testAndWrite(addr, tbe.DataBlk, pkt);
@@ -582,7 +582,7 @@ machine(L2Cache, "Token protocol")
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
           trigger(Event:All_Acks, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else {
           error("Unexpected message");
         }
@@ -598,26 +598,26 @@ machine(L2Cache, "Token protocol")
         if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID) {
             trigger(Event:Own_GETX, in_msg.addr,
-                    getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                    getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
           } else {
             trigger(Event:Fwd_GETX, in_msg.addr,
-                    getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                    getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
           }
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:Fwd_GETS, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if(in_msg.Type == CoherenceRequestType:DMA_READ) {
           trigger(Event:Fwd_DMA, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
           trigger(Event:Writeback_Ack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
           trigger(Event:Writeback_Nack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else {
           error("Unexpected message");
         }
@@ -631,25 +631,25 @@ machine(L2Cache, "Token protocol")
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:L1_GETX, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
             trigger(Event:L1_GETS, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:PUTO) {
           trigger(Event:L1_PUTO, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
           trigger(Event:L1_PUTX, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceRequestType:PUTS) {
           Entry cache_entry := getCacheEntry(in_msg.addr);
           if (isOnlySharer(cache_entry, in_msg.addr, in_msg.Requestor)) {
             trigger(Event:L1_PUTS_only, in_msg.addr,
-                    cache_entry, TBEs[in_msg.addr]);
+                    cache_entry, TBEs.lookup(in_msg.addr));
           }
           else {
             trigger(Event:L1_PUTS, in_msg.addr,
-                    cache_entry, TBEs[in_msg.addr]);
+                    cache_entry, TBEs.lookup(in_msg.addr));
           }
         } else {
           error("Unexpected message");
@@ -667,35 +667,35 @@ machine(L2Cache, "Token protocol")
         if (in_msg.Type == CoherenceResponseType:ACK) {
           if (in_msg.SenderMachine == MachineType:L2Cache) {
             trigger(Event:ExtAck, in_msg.addr,
-                    getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                    getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
           }
           else {
             trigger(Event:IntAck, in_msg.addr,
-                    getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                    getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
           }
         } else if (in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Data, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data_Exclusive, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
           trigger(Event:Unblock, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
           trigger(Event:Exclusive_Unblock, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
           Entry cache_entry := getCacheEntry(in_msg.addr);
           if (is_invalid(cache_entry) &&
                    L2cache.cacheAvail(in_msg.addr) == false) {
             trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
                     getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
-                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
+                    TBEs.lookup(L2cache.cacheProbe(in_msg.addr)));
           }
           else {
             trigger(Event:L1_WBDIRTYDATA, in_msg.addr,
-                    cache_entry, TBEs[in_msg.addr]);
+                    cache_entry, TBEs.lookup(in_msg.addr));
           }
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_DATA) {
           Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -703,15 +703,15 @@ machine(L2Cache, "Token protocol")
                    L2cache.cacheAvail(in_msg.addr) == false) {
             trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
                     getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
-                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
+                    TBEs.lookup(L2cache.cacheProbe(in_msg.addr)));
           }
           else {
             trigger(Event:L1_WBCLEANDATA, in_msg.addr,
-                    cache_entry, TBEs[in_msg.addr]);
+                    cache_entry, TBEs.lookup(in_msg.addr));
           }
         } else if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DmaAck, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+                  getCacheEntry(in_msg.addr), TBEs.lookup(in_msg.addr));
         } else {
           error("Unexpected message");
         }
@@ -1223,7 +1223,7 @@ machine(L2Cache, "Token protocol")
   action(i_allocateTBE, "i", desc="Allocate TBE for internal/external request(isPrefetch=0, number of invalidates=0)") {
     check_allocate(TBEs);
     TBEs.allocate(address);
-    set_tbe(TBEs[address]);
+    set_tbe(TBEs.lookup(address));
     if(is_valid(cache_entry)) {
       tbe.DataBlk := cache_entry.DataBlk;
       tbe.Dirty := cache_entry.Dirty;
