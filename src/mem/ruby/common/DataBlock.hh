@@ -67,6 +67,8 @@ class DataBlock
   private:
     void alloc();
     uint8_t *m_data;
+    //! true if this DataBlock is responsible for deleting m_data,
+    //! false otherwise.
     bool m_alloc;
 };
 
