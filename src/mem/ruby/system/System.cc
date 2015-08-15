@@ -304,8 +304,16 @@ RubySystem::unserialize(CheckpointIn &cp)
     // This value should be set to the checkpoint-system's block-size.
     // Optional, as checkpoints without it can be run if the
     // checkpoint-system's block-size == current block-size.
-    uint64_t block_size_bytes = getBlockSizeBytes();
+    uint64_t block_size_bytes = m_block_size_bytes;
     UNSERIALIZE_OPT_SCALAR(block_size_bytes);
+
+    if (block_size_bytes < m_block_size_bytes) {
+        // Block sizes larger than when the trace was recorded are not
+        // supported, as we cannot reliably turn accesses to smaller blocks
+        // into larger ones.
+        panic("Recorded cache block size (%d) < current block size (%d) !!",
+              block_size_bytes, m_block_size_bytes);
+    }
 
     string cache_trace_file;
     uint64_t cache_trace_size = 0;
