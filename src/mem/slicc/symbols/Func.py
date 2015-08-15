@@ -62,6 +62,27 @@ class Func(Symbol):
     def writeCodeFiles(self, path, includes):
         return
 
+    def checkArguments(self, args):
+        if len(args) != len(self.param_types):
+            self.error("Wrong number of arguments passed to function : '%s'" +\
+                       " Expected %d, got %d", self.c_ident,
+                       len(self.param_types), len(args))
+
+        cvec = []
+        type_vec = []
+        for expr,expected_type in zip(args, self.param_types):
+            # Check the types of the parameter
+            actual_type,param_code = expr.inline(True)
+            if str(actual_type) != 'OOD' and \
+               str(actual_type) != str(expected_type) and \
+               str(actual_type["interface"]) != str(expected_type):
+                expr.error("Type mismatch: expected: %s actual: %s" % \
+                           (expected_type, actual_type))
+            cvec.append(param_code)
+            type_vec.append(expected_type)
+
+        return cvec, type_vec
+
     def generateCode(self):
         '''This write a function of object Chip'''
         if "external" in self:
