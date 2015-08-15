@@ -56,15 +56,6 @@ class CacheMemory : public SimObject
 
     void init();
 
-    // Public Methods
-    // perform a cache access and see if we hit or not.  Return true on a hit.
-    bool tryCacheAccess(Addr address, RubyRequestType type,
-                        DataBlock*& data_ptr);
-
-    // similar to above, but doesn't require full access check
-    bool testCacheAccess(Addr address, RubyRequestType type,
-                         DataBlock*& data_ptr);
-
     // tests to see if an address is present in the cache
     bool isTagPresent(Addr address) const;
 

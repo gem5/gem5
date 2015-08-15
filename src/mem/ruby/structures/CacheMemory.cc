@@ -158,56 +158,6 @@ CacheMemory::getAddressAtIdx(int idx) const
     return entry->m_Address;
 }
 
-bool
-CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
-                            DataBlock*& data_ptr)
-{
-    assert(address == makeLineAddress(address));
-    DPRINTF(RubyCache, "address: %s\n", address);
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-    if (loc != -1) {
-        // Do we even have a tag match?
-        AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
-        data_ptr = &(entry->getDataBlk());
-
-        if (entry->m_Permission == AccessPermission_Read_Write) {
-            return true;
-        }
-        if ((entry->m_Permission == AccessPermission_Read_Only) &&
-            (type == RubyRequestType_LD || type == RubyRequestType_IFETCH)) {
-            return true;
-        }
-        // The line must not be accessible
-    }
-    data_ptr = NULL;
-    return false;
-}
-
-bool
-CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
-                             DataBlock*& data_ptr)
-{
-    assert(address == makeLineAddress(address));
-    DPRINTF(RubyCache, "address: %s\n", address);
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-
-    if (loc != -1) {
-        // Do we even have a tag match?
-        AbstractCacheEntry* entry = m_cache[cacheSet][loc];
-        m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
-        data_ptr = &(entry->getDataBlk());
-
-        return m_cache[cacheSet][loc]->m_Permission !=
-            AccessPermission_NotPresent;
-    }
-
-    data_ptr = NULL;
-    return false;
-}
-
 // tests to see if an address is present in the cache
 bool
 CacheMemory::isTagPresent(Addr address) const
