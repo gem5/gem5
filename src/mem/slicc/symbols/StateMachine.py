@@ -1213,8 +1213,6 @@ TransitionResult result =
         else:
             code('doTransitionWorker(event, state, next_state, addr);')
 
-        port_to_buf_map, in_msg_bufs, msg_bufs = self.getBufferMaps(ident)
-
         code('''
 
 if (result == TransitionResult_Valid) {
