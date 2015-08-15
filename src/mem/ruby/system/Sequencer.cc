@@ -496,18 +496,14 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                        const Cycles forwardRequestTime,
                        const Cycles firstResponseTime)
 {
+    warn_once("Replacement policy updates recently became the responsibility "
+              "of SLICC state machines. Make sure to setMRU() near callbacks "
+              "in .sm files!");
+
     PacketPtr pkt = srequest->pkt;
     Addr request_address(pkt->getAddr());
-    Addr request_line_address = makeLineAddress(pkt->getAddr());
     RubyRequestType type = srequest->m_type;
     Cycles issued_time = srequest->issue_time;
-
-    // Set this cache entry to the most recently used
-    if (type == RubyRequestType_IFETCH) {
-        m_instCache_ptr->setMRU(request_line_address);
-    } else {
-        m_dataCache_ptr->setMRU(request_line_address);
-    }
 
     assert(curCycle() >= issued_time);
     Cycles total_latency = curCycle() - issued_time;

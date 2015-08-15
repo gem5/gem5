@@ -809,36 +809,47 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     sequencer.invalidateSC(address);
   }
 
-  action(h_load_hit, "h",
-         desc="If not prefetch, notify sequencer the load completed.")
+  action(h_load_hit, "hd",
+         desc="Notify sequencer the load completed.")
   {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Dcache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
-  action(hx_load_hit, "hx",
-         desc="If not prefetch, notify sequencer the load completed.")
+  action(h_ifetch_hit, "hi", desc="Notify sequencer the instruction fetch completed.")
   {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Icache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk);
+  }
+
+  action(hx_load_hit, "hx", desc="Notify sequencer the load completed.")
+  {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Icache.setMRU(address);
+    L1Dcache.setMRU(address);
     sequencer.readCallback(address, cache_entry.DataBlk, true);
   }
 
-  action(hh_store_hit, "\h",
-         desc="If not prefetch, notify sequencer that store completed.")
+  action(hh_store_hit, "\h", desc="Notify sequencer that store completed.")
   {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk);
     cache_entry.Dirty := true;
   }
 
-  action(hhx_store_hit, "\hx",
-         desc="If not prefetch, notify sequencer that store completed.")
+  action(hhx_store_hit, "\hx", desc="Notify sequencer that store completed.")
   {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Icache.setMRU(address);
+    L1Dcache.setMRU(address);
     sequencer.writeCallback(address, cache_entry.DataBlk, true);
     cache_entry.Dirty := true;
   }
@@ -1080,7 +1091,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   transition({S,E,M}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileInstHit;
     k_popMandatoryQueue;
   }

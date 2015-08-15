@@ -459,21 +459,38 @@ machine(L0Cache, "MESI Directory L0 Cache")
     }
   }
 
-  action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
+  action(h_load_hit, "hd", desc="If not prefetch, notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
-  action(hx_load_hit, "hx", desc="If not prefetch, notify sequencer the load completed.") {
+  action(h_ifetch_hit, "hi", desc="If not prefetch, notify sequencer the ifetch completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Icache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk);
+  }
+
+  action(hx_load_hit, "hxd", desc="notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, true);
+  }
+
+  action(hx_ifetch_hit, "hxi", desc="notify sequencer the ifetch completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Icache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk, true);
   }
 
   action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk);
     cache_entry.Dirty := true;
   }
@@ -481,6 +498,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   action(hhx_store_hit, "\hx", desc="If not prefetch, notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk, true);
     cache_entry.Dirty := true;
   }
@@ -625,7 +643,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   transition({S,E,M}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileInstHit;
     k_popMandatoryQueue;
   }
@@ -712,7 +730,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   transition(Inst_IS, Data, S) {
     u_writeInstToCache;
-    hx_load_hit;
+    hx_ifetch_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -720,7 +738,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   transition(Inst_IS, Data_Exclusive, E) {
     u_writeInstToCache;
-    hx_load_hit;
+    hx_ifetch_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;

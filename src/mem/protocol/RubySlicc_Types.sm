@@ -156,6 +156,7 @@ structure (CacheMemory, external = "yes") {
   Cycles getTagLatency();
   Cycles getDataLatency();
   void setMRU(Addr);
+  void setMRU(AbstractCacheEntry);
   void recordRequestType(CacheRequestType, Addr);
   bool checkResourceAvailable(CacheResourceType, Addr);
 

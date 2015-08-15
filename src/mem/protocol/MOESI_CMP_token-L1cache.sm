@@ -1284,12 +1284,22 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-
-  action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
+  action(h_load_hit, "hd", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
+    L1Dcache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, false,
+                           MachineType:L1Cache);
+  }
+
+  action(h_ifetch_hit, "hi", desc="Notify sequencer the load completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+
+    L1Icache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk, false,
                            MachineType:L1Cache);
   }
@@ -1299,6 +1309,8 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
+      L1Icache.setMRU(address);
+      L1Dcache.setMRU(address);
       sequencer.readCallback(address, cache_entry.DataBlk,
                              isExternalHit(address, in_msg.Sender),
                              machineIDToMachineType(in_msg.Sender));
@@ -1310,6 +1322,7 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
+    L1Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk, false,
                             MachineType:L1Cache);
     cache_entry.Dirty := true;
@@ -1321,6 +1334,8 @@ machine(L1Cache, "Token protocol")
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
+      L1Icache.setMRU(address);
+      L1Dcache.setMRU(address);
       sequencer.writeCallback(address, cache_entry.DataBlk,
                               isExternalHit(address, in_msg.Sender),
                               machineIDToMachineType(in_msg.Sender));
@@ -1702,7 +1717,7 @@ machine(L1Cache, "Token protocol")
   }
 
   transition({S, SM, S_L, SM_L}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileInstHit;
     k_popMandatoryQueue;
   }
@@ -1784,7 +1799,7 @@ machine(L1Cache, "Token protocol")
 
   // Transitions from Owned
   transition({O, OM}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileInstHit;
     k_popMandatoryQueue;
   }
@@ -1874,7 +1889,7 @@ machine(L1Cache, "Token protocol")
 
   // Transitions from Modified
   transition({MM, MM_W}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileInstHit;
     k_popMandatoryQueue;
   }
@@ -1949,7 +1964,7 @@ machine(L1Cache, "Token protocol")
 
   // Transitions from Dirty Exclusive
   transition({M, M_W}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileInstHit;
     k_popMandatoryQueue;
   }
