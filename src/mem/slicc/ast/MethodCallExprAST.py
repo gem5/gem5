@@ -56,8 +56,20 @@ class MethodCallExprAST(ExprAST):
             self.error("Invalid method call: Type '%s' does not have a method '%s'",
                        obj_type, methodId)
 
-        func = obj_type.methods[methodId]
-        func.checkArguments(self.expr_ast_vec)
+        if len(self.expr_ast_vec) != \
+               len(obj_type.methods[methodId].param_types):
+            # Right number of parameters
+            self.error("Wrong number of parameters for function name: '%s', " + \
+                       "expected: , actual: ", proc_name,
+                  len(obj_type.methods[methodId].param_types),
+                  len(self.expr_ast_vec))
+
+        for actual_type, expected_type in \
+                zip(paramTypes, obj_type.methods[methodId].param_types):
+            if actual_type != expected_type and \
+                   str(actual_type["interface"]) != str(expected_type):
+                self.error("Type mismatch: expected: %s actual: %s",
+                           expected_type, actual_type)
 
         # Return the return type of the method
         return obj_type.methods[methodId].return_type
@@ -66,9 +78,10 @@ class MethodCallExprAST(ExprAST):
         pass
 
 class MemberMethodCallExprAST(MethodCallExprAST):
-    def __init__(self, slicc, obj_expr_ast, func_call):
+    def __init__(self, slicc, obj_expr_ast, proc_name, expr_ast_vec):
         s = super(MemberMethodCallExprAST, self)
-        s.__init__(slicc, func_call.proc_name, func_call.exprs)
+        s.__init__(slicc, proc_name, expr_ast_vec)
+
         self.obj_expr_ast = obj_expr_ast
 
     def __repr__(self):

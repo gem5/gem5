@@ -31,7 +31,6 @@
 #include "base/cast.hh"
 #include "base/cprintf.hh"
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/Network.hh"
@@ -49,10 +48,27 @@ static int network_message_to_size(Message* net_msg_ptr);
 
 Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
                    int link_bandwidth_multiplier, int endpoint_bandwidth,
-                   Switch *em)
-    : Consumer(em), m_switch_id(sID), m_switch(em), m_node(node),
-      m_ruby_system(rs)
+                   ClockedObject *em)
+    : Consumer(em), m_ruby_system(rs)
 {
+    init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
+    m_sID = sID;
+}
+
+Throttle::Throttle(RubySystem *rs, NodeID node, Cycles link_latency,
+                   int link_bandwidth_multiplier, int endpoint_bandwidth,
+                   ClockedObject *em)
+    : Consumer(em), m_ruby_system(rs)
+{
+    init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
+    m_sID = 0;
+}
+
+void
+Throttle::init(NodeID node, Cycles link_latency,
+               int link_bandwidth_multiplier, int endpoint_bandwidth)
+{
+    m_node = node;
     m_vnets = 0;
 
     assert(link_bandwidth_multiplier > 0);
@@ -82,7 +98,7 @@ Throttle::addLinks(const vector<MessageBuffer*>& in_vec,
 
         // Set consumer and description
         in_ptr->setConsumer(this);
-        string desc = "[Queue to Throttle " + to_string(m_switch_id) + " " +
+        string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
             to_string(m_node) + "]";
     }
 }

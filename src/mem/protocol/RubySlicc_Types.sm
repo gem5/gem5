@@ -50,10 +50,7 @@ structure(InPort, external = "yes", primitive="yes") {
 }
 
 external_type(NodeID, default="0", primitive="yes");
-structure (MachineID, external = "yes", non_obj="yes") {
-   MachineType getType();
-   NodeID getNum();
-}
+external_type(MachineID);
 
 structure (Set, external = "yes", non_obj="yes") {
   void setSize(int);
@@ -159,7 +156,6 @@ structure (CacheMemory, external = "yes") {
   Cycles getTagLatency();
   Cycles getDataLatency();
   void setMRU(Addr);
-  void setMRU(AbstractCacheEntry);
   void recordRequestType(CacheRequestType, Addr);
   bool checkResourceAvailable(CacheResourceType, Addr);
 

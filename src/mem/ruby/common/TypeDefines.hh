@@ -30,6 +30,9 @@
 #ifndef TYPEDEFINES_H
 #define TYPEDEFINES_H
 
+typedef unsigned long long uint64;
+typedef long long int64;
+
 typedef unsigned int LinkID;
 typedef unsigned int NodeID;
 typedef unsigned int SwitchID;

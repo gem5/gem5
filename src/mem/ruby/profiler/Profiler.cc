@@ -61,10 +61,11 @@ using namespace std;
 using m5::stl_helpers::operator<<;
 
 Profiler::Profiler(const RubySystemParams *p, RubySystem *rs)
-    : m_ruby_system(rs), m_hot_lines(p->hot_lines),
-      m_all_instructions(p->all_instructions),
-      m_num_vnets(p->number_of_virtual_networks)
+    : m_ruby_system(rs)
 {
+    m_hot_lines = p->hot_lines;
+    m_all_instructions = p->all_instructions;
+
     m_address_profiler_ptr = new AddressProfiler(p->num_of_sequencers, this);
     m_address_profiler_ptr->setHotLines(m_hot_lines);
     m_address_profiler_ptr->setAllInstructions(m_all_instructions);
@@ -97,7 +98,8 @@ Profiler::regStats(const std::string &pName)
         .desc("delay histogram for all message")
         .flags(Stats::nozero | Stats::pdf | Stats::oneline);
 
-    for (int i = 0; i < m_num_vnets; i++) {
+    uint32_t numVNets = Network::getNumberOfVirtualNetworks();
+    for (int i = 0; i < numVNets; i++) {
         delayVCHistogram.push_back(new Stats::Histogram());
         delayVCHistogram[i]
             ->init(10)
@@ -249,6 +251,7 @@ Profiler::collateStats()
         m_inst_profiler_ptr->collateStats();
     }
 
+    uint32_t numVNets = Network::getNumberOfVirtualNetworks();
     for (uint32_t i = 0; i < MachineType_NUM; i++) {
         for (map<uint32_t, AbstractController*>::iterator it =
                   m_ruby_system->m_abstract_controls[i].begin();
@@ -257,7 +260,7 @@ Profiler::collateStats()
             AbstractController *ctr = (*it).second;
             delayHistogram.add(ctr->getDelayHist());
 
-            for (uint32_t i = 0; i < m_num_vnets; i++) {
+            for (uint32_t i = 0; i < numVNets; i++) {
                 delayVCHistogram[i]->add(ctr->getDelayVCHist(i));
             }
         }

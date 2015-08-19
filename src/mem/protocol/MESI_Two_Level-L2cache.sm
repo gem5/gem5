@@ -157,7 +157,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // inclusive cache, returns L2 entries only
   Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
-    return static_cast(Entry, "pointer", L2cache.lookup(addr));
+    return static_cast(Entry, "pointer", L2cache[addr]);
   }
 
   bool isSharer(Addr addr, MachineID requestor, Entry cache_entry) {
@@ -196,7 +196,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   AccessPermission getAccessPermission(Addr addr) {
-    TBE tbe := TBEs.lookup(addr);
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(tbe.TBEState));
       return L2Cache_State_to_permission(tbe.TBEState);
@@ -213,7 +213,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    TBE tbe := TBEs.lookup(addr);
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
     } else {
@@ -224,7 +224,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
-    TBE tbe := TBEs.lookup(addr);
+    TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
         testAndWrite(addr, tbe.DataBlk, pkt);
@@ -288,7 +288,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     if(L1unblockNetwork_in.isReady()) {
       peek(L1unblockNetwork_in,  ResponseMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs.lookup(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
         DPRINTF(RubySlicc, "Addr: %s State: %s Sender: %s Type: %s Dest: %s\n",
                 in_msg.addr, getState(tbe, cache_entry, in_msg.addr),
                 in_msg.Sender, in_msg.Type, in_msg.Destination);
@@ -312,7 +312,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         // test wether it's from a local L1 or an off chip source
         assert(in_msg.Destination.isElement(machineID));
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs.lookup(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
 
         if(machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
           if(in_msg.Type == CoherenceResponseType:DATA) {
@@ -351,7 +351,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     if(L1RequestL2Network_in.isReady()) {
       peek(L1RequestL2Network_in,  RequestMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        TBE tbe := TBEs.lookup(in_msg.addr);
+        TBE tbe := TBEs[in_msg.addr];
 
         DPRINTF(RubySlicc, "Addr: %s State: %s Req: %s Type: %s Dest: %s\n",
                 in_msg.addr, getState(tbe, cache_entry, in_msg.addr),
@@ -376,10 +376,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
             Entry L2cache_entry := getCacheEntry(L2cache.cacheProbe(in_msg.addr));
             if (isDirty(L2cache_entry)) {
               trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
-                      L2cache_entry, TBEs.lookup(L2cache.cacheProbe(in_msg.addr)));
+                      L2cache_entry, TBEs[L2cache.cacheProbe(in_msg.addr)]);
             } else {
               trigger(Event:L2_Replacement_clean, L2cache.cacheProbe(in_msg.addr),
-                      L2cache_entry, TBEs.lookup(L2cache.cacheProbe(in_msg.addr)));
+                      L2cache_entry, TBEs[L2cache.cacheProbe(in_msg.addr)]);
             }
           }
         }
@@ -591,7 +591,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     check_allocate(TBEs);
     assert(is_valid(cache_entry));
     TBEs.allocate(address);
-    set_tbe(TBEs.lookup(address));
+    set_tbe(TBEs[address]);
     tbe.L1_GetS_IDs.clear();
     tbe.DataBlk := cache_entry.DataBlk;
     tbe.Dirty := cache_entry.Dirty;

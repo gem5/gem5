@@ -507,8 +507,8 @@ H3BloomFilter::print(ostream& out) const
 int
 H3BloomFilter::get_index(Addr addr, int i)
 {
-    uint64_t x = makeLineAddress(addr);
-    // uint64_t y = (x*mults_list[i] + adds_list[i]) % primes_list[i];
+    uint64 x = makeLineAddress(addr);
+    // uint64 y = (x*mults_list[i] + adds_list[i]) % primes_list[i];
     int y = hash_H3(x,i);
 
     if (isParallel) {
@@ -519,10 +519,10 @@ H3BloomFilter::get_index(Addr addr, int i)
 }
 
 int
-H3BloomFilter::hash_H3(uint64_t value, int index)
+H3BloomFilter::hash_H3(uint64 value, int index)
 {
-    uint64_t mask = 1;
-    uint64_t val = value;
+    uint64 mask = 1;
+    uint64 val = value;
     int result = 0;
 
     for (int i = 0; i < 64; i++) {

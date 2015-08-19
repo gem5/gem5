@@ -68,7 +68,7 @@ class H3BloomFilter : public AbstractBloomFilter
   private:
     int get_index(Addr addr, int hashNumber);
 
-    int hash_H3(uint64_t value, int index);
+    int hash_H3(uint64 value, int index);
 
     std::vector<int> m_filter;
     int m_filter_size;

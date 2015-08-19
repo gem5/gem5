@@ -56,6 +56,15 @@ class CacheMemory : public SimObject
 
     void init();
 
+    // Public Methods
+    // perform a cache access and see if we hit or not.  Return true on a hit.
+    bool tryCacheAccess(Addr address, RubyRequestType type,
+                        DataBlock*& data_ptr);
+
+    // similar to above, but doesn't require full access check
+    bool testCacheAccess(Addr address, RubyRequestType type,
+                         DataBlock*& data_ptr);
+
     // tests to see if an address is present in the cache
     bool isTagPresent(Addr address) const;
 
@@ -89,22 +98,15 @@ class CacheMemory : public SimObject
     Cycles getTagLatency() const { return tagArray.getLatency(); }
     Cycles getDataLatency() const { return dataArray.getLatency(); }
 
-    bool isBlockInvalid(int64_t cache_set, int64_t loc);
-    bool isBlockNotBusy(int64_t cache_set, int64_t loc);
+    bool isBlockInvalid(int64 cache_set, int64 loc);
+    bool isBlockNotBusy(int64 cache_set, int64 loc);
 
     // Hook for checkpointing the contents of the cache
     void recordCacheContents(int cntrl, CacheRecorder* tr) const;
 
     // Set this address to most recently used
     void setMRU(Addr address);
-    // Set this entry to most recently used
-    void setMRU(const AbstractCacheEntry *e);
 
-    // Functions for locking and unlocking cache lines corresponding to the
-    // provided address.  These are required for supporting atomic memory
-    // accesses.  These are to be used when only the address of the cache entry
-    // is available.  In case the entry itself is available. use the functions
-    // provided by the AbstractCacheEntry class.
     void setLocked (Addr addr, int context);
     void clearLocked (Addr addr);
     bool isLocked (Addr addr, int context);
@@ -142,12 +144,12 @@ class CacheMemory : public SimObject
 
   private:
     // convert a Address to its location in the cache
-    int64_t addressToCacheSet(Addr address) const;
+    int64 addressToCacheSet(Addr address) const;
 
     // Given a cache tag: returns the index of the tag in a set.
     // returns -1 if the tag is not found.
-    int findTagInSet(int64_t line, Addr tag) const;
-    int findTagInSetIgnorePermissions(int64_t cacheSet, Addr tag) const;
+    int findTagInSet(int64 line, Addr tag) const;
+    int findTagInSetIgnorePermissions(int64 cacheSet, Addr tag) const;
 
     // Private copy constructor and assignment operator
     CacheMemory(const CacheMemory& obj);

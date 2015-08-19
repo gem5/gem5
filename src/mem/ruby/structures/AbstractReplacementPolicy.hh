@@ -44,13 +44,13 @@ class AbstractReplacementPolicy : public SimObject
     virtual ~AbstractReplacementPolicy();
 
     /* touch a block. a.k.a. update timestamp */
-    virtual void touch(int64_t set, int64_t way, Tick time) = 0;
+    virtual void touch(int64 set, int64 way, Tick time) = 0;
 
     /* returns the way to replace */
-    virtual int64_t getVictim(int64_t set) const = 0;
+    virtual int64 getVictim(int64 set) const = 0;
 
     /* get the time of the last access */
-    Tick getLastAccess(int64_t set, int64_t way);
+    Tick getLastAccess(int64 set, int64 way);
 
     virtual bool useOccupancy() const { return false; }
 

@@ -58,6 +58,15 @@ CacheRecorder::CacheRecorder(uint8_t* uncompressed_trace,
       m_seq_map(seq_map),  m_bytes_read(0), m_records_read(0),
       m_records_flushed(0), m_block_size_bytes(block_size_bytes)
 {
+    if (m_uncompressed_trace != NULL) {
+        if (m_block_size_bytes < RubySystem::getBlockSizeBytes()) {
+            // Block sizes larger than when the trace was recorded are not
+            // supported, as we cannot reliably turn accesses to smaller blocks
+            // into larger ones.
+            panic("Recorded cache block size (%d) < current block size (%d) !!",
+                    m_block_size_bytes, RubySystem::getBlockSizeBytes());
+        }
+    }
 }
 
 CacheRecorder::~CacheRecorder()
@@ -152,13 +161,13 @@ CacheRecorder::addRecord(int cntrl, Addr data_addr, Addr pc_addr,
     m_records.push_back(rec);
 }
 
-uint64_t
-CacheRecorder::aggregateRecords(uint8_t **buf, uint64_t total_size)
+uint64
+CacheRecorder::aggregateRecords(uint8_t** buf, uint64 total_size)
 {
     std::sort(m_records.begin(), m_records.end(), compareTraceRecords);
 
     int size = m_records.size();
-    uint64_t current_size = 0;
+    uint64 current_size = 0;
     int record_size = sizeof(TraceRecord) + m_block_size_bytes;
 
     for (int i = 0; i < size; ++i) {

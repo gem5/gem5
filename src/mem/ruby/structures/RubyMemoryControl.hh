@@ -162,11 +162,11 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
 
     // Each entry indicates number of address-bus cycles until bank
     // is reschedulable:
-    int *m_bankBusyCounter;
-    int *m_oldRequest;
+    int* m_bankBusyCounter;
+    int* m_oldRequest;
 
-    uint64_t *m_tfaw_shift;
-    int *m_tfaw_count;
+    uint64* m_tfaw_shift;
+    int* m_tfaw_count;
 
     // Each of these indicates number of address-bus cycles until
     // we can issue a new request of the corresponding type:
@@ -182,12 +182,12 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
     int m_ageCounter;         // age of old requests; to detect starvation
     int m_idleCount;          // watchdog timer for shutting down
 
-    MemCntrlProfiler *m_profiler_ptr;
+    MemCntrlProfiler* m_profiler_ptr;
 
     class MemCntrlEvent : public Event
     {
       public:
-        MemCntrlEvent(RubyMemoryControl *_mem_cntrl)
+        MemCntrlEvent(RubyMemoryControl* _mem_cntrl)
         {
             mem_cntrl = _mem_cntrl;
         }

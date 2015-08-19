@@ -320,9 +320,9 @@ class $c_ident : public AbstractController
 
     void countTransition(${ident}_State state, ${ident}_Event event);
     void possibleTransition(${ident}_State state, ${ident}_Event event);
-    uint64_t getEventCount(${ident}_Event event);
+    uint64 getEventCount(${ident}_Event event);
     bool isPossible(${ident}_State state, ${ident}_Event event);
-    uint64_t getTransitionCount(${ident}_State state, ${ident}_Event event);
+    uint64 getTransitionCount(${ident}_State state, ${ident}_Event event);
 
 private:
 ''')
@@ -802,7 +802,7 @@ $c_ident::possibleTransition(${ident}_State state,
     m_possible[state][event] = true;
 }
 
-uint64_t
+uint64
 $c_ident::getEventCount(${ident}_Event event)
 {
     return m_event_counters[event];
@@ -814,7 +814,7 @@ $c_ident::isPossible(${ident}_State state, ${ident}_Event event)
     return m_possible[state][event];
 }
 
-uint64_t
+uint64
 $c_ident::getTransitionCount(${ident}_State state,
                              ${ident}_Event event)
 {
@@ -1212,6 +1212,8 @@ TransitionResult result =
             code('doTransitionWorker(event, state, next_state, m_cache_entry_ptr, addr);')
         else:
             code('doTransitionWorker(event, state, next_state, addr);')
+
+        port_to_buf_map, in_msg_bufs, msg_bufs = self.getBufferMaps(ident)
 
         code('''
 

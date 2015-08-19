@@ -143,10 +143,10 @@ class RubyTester : public MemObject
     std::vector<Cycles> m_last_progress_vector;
 
     int m_num_cpus;
-    uint64_t m_checks_completed;
+    uint64 m_checks_completed;
     std::vector<MasterPort*> writePorts;
     std::vector<MasterPort*> readPorts;
-    uint64_t m_checks_to_complete;
+    uint64 m_checks_to_complete;
     int m_deadlock_threshold;
     int m_num_writers;
     int m_num_readers;

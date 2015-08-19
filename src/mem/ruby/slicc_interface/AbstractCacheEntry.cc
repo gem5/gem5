@@ -28,9 +28,6 @@
 
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 
-#include "base/trace.hh"
-#include "debug/RubyCache.hh"
-
 AbstractCacheEntry::AbstractCacheEntry()
 {
     m_Permission = AccessPermission_NotPresent;
@@ -50,26 +47,4 @@ AbstractCacheEntry::changePermission(AccessPermission new_perm)
         (new_perm == AccessPermission_NotPresent)) {
         m_locked = -1;
     }
-}
-
-void
-AbstractCacheEntry::setLocked(int context)
-{
-    DPRINTF(RubyCache, "Setting Lock for addr: %x to %d\n", m_Address, context);
-    m_locked = context;
-}
-
-void
-AbstractCacheEntry::clearLocked()
-{
-    DPRINTF(RubyCache, "Clear Lock for addr: %x\n", m_Address);
-    m_locked = -1;
-}
-
-bool
-AbstractCacheEntry::isLocked(int context) const
-{
-    DPRINTF(RubyCache, "Testing Lock for addr: %llx cur %d con %d\n",
-            m_Address, m_locked, context);
-    return m_locked == context;
 }

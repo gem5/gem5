@@ -136,6 +136,11 @@ class MessageBuffer : public SimObject
     void setIncomingLink(int link_id) { m_input_link_id = link_id; }
     void setVnet(int net) { m_vnet_id = net; }
 
+    // Function for figuring out if any of the messages in the buffer can
+    // satisfy the read request for the address in the packet.
+    // Return value, if true, indicates that the request was fulfilled.
+    bool functionalRead(Packet *pkt);
+
     // Function for figuring out if any of the messages in the buffer need
     // to be updated with the data from the packet.
     // Return value indicates the number of messages that were updated.
@@ -179,7 +184,7 @@ class MessageBuffer : public SimObject
 
     int m_not_avail_count;  // count the # of times I didn't have N
                             // slots available
-    uint64_t m_msg_counter;
+    uint64 m_msg_counter;
     int m_priority_rank;
     const bool m_strict_fifo;
     const bool m_randomization;

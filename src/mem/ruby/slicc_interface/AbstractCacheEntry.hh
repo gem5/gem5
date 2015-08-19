@@ -56,28 +56,10 @@ class AbstractCacheEntry : public AbstractEntry
     virtual DataBlock& getDataBlk()
     { panic("getDataBlk() not implemented!"); }
 
-    // Functions for locking and unlocking the cache entry.  These are required
-    // for supporting atomic memory accesses.
-    void setLocked(int context);
-    void clearLocked();
-    bool isLocked(int context) const;
 
-    void setSetIndex(uint32_t s) { m_set_index = s; }
-    uint32_t getSetIndex() const { return m_set_index; }
-
-    void setWayIndex(uint32_t s) { m_way_index = s; }
-    uint32_t getWayIndex() const { return m_way_index; }
-
-    // Address of this block, required by CacheMemory
-    Addr m_Address;
-    // Holds info whether the address is locked.
-    // Required for implementing LL/SC operations.
-    int m_locked;
-
-  private:
-    // Set and way coordinates of the entry within the cache memory object.
-    uint32_t m_set_index;
-    uint32_t m_way_index;
+    Addr m_Address; // Address of this block, required by CacheMemory
+    int m_locked; // Holds info whether the address is locked,
+                  // required for implementing LL/SC
 };
 
 inline std::ostream&

@@ -80,8 +80,8 @@ class Profiler
     void addAddressTraceSample(const RubyRequest& msg, NodeID id);
 
     // added by SS
-    bool getHotLines() const { return m_hot_lines; }
-    bool getAllInstructions() const { return m_all_instructions; }
+    bool getHotLines() { return m_hot_lines; }
+    bool getAllInstructions() { return m_all_instructions; }
 
   private:
     // Private copy constructor and assignment operator
@@ -129,9 +129,8 @@ class Profiler
     Stats::Scalar m_IncompleteTimes[MachineType_NUM];
 
     //added by SS
-    const bool m_hot_lines;
-    const bool m_all_instructions;
-    const uint32_t m_num_vnets;
+    bool m_hot_lines;
+    bool m_all_instructions;
 };
 
 #endif // __MEM_RUBY_PROFILER_PROFILER_HH__

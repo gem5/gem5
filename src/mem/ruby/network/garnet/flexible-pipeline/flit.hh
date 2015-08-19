@@ -43,18 +43,18 @@ class flit
   public:
     flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr, Cycles curTime);
 
-    int get_size() const { return m_size; }
-    int get_id() const { return m_id; }
-    Cycles get_time() const { return m_time; }
-    Cycles get_creation_time() const { return m_creation_time; }
-    void set_time(Cycles time) { m_time = time; }
-    int get_vnet() const { return m_vnet; }
-    int get_vc() const { return m_vc; }
-    void set_vc(int vc) { m_vc = vc; }
-    MsgPtr& get_msg_ptr() { return m_msg_ptr; }
-    flit_type get_type() const { return m_type; }
-    void set_delay(Cycles delay) { src_delay = delay; }
-    Cycles get_delay() const { return src_delay; }
+    int get_size();
+    int get_id();
+    Cycles get_time();
+    Cycles get_enqueue_time();
+    void set_time(Cycles time);
+    int get_vnet();
+    int get_vc();
+    void set_vc(int vc);
+    MsgPtr& get_msg_ptr();
+    flit_type get_type();
+    void set_delay(Cycles delay);
+    Cycles get_delay();
     void print(std::ostream& out) const;
 
     static bool
@@ -71,12 +71,11 @@ class flit
     bool functionalWrite(Packet *pkt);
 
   private:
-    const int m_id;
-    const int m_vnet;
+    int m_id;
+    int m_vnet;
     int m_vc;
-    const int m_size;
-    const Cycles m_creation_time;
-    Cycles m_time;
+    int m_size;
+    Cycles m_enqueue_time, m_time;
     flit_type m_type;
     MsgPtr m_msg_ptr;
     Cycles src_delay;

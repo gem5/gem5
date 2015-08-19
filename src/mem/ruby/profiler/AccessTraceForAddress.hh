@@ -67,12 +67,12 @@ class AccessTraceForAddress
 
   private:
     Addr m_addr;
-    uint64_t m_loads;
-    uint64_t m_stores;
-    uint64_t m_atomics;
-    uint64_t m_total;
-    uint64_t m_user;
-    uint64_t m_sharing;
+    uint64 m_loads;
+    uint64 m_stores;
+    uint64 m_atomics;
+    uint64 m_total;
+    uint64 m_user;
+    uint64 m_sharing;
     Set m_touched_by;
     Histogram* m_histogram_ptr;
 };

@@ -108,10 +108,10 @@ machine(DMA, "DMA Controller")
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {
           trigger(Event:ReadRequest, in_msg.LineAddress,
-                  TBEs.lookup(in_msg.LineAddress));
+                  TBEs[in_msg.LineAddress]);
         } else if (in_msg.Type == SequencerRequestType:ST) {
           trigger(Event:WriteRequest, in_msg.LineAddress,
-                  TBEs.lookup(in_msg.LineAddress));
+                  TBEs[in_msg.LineAddress]);
         } else {
           error("Invalid request type");
         }
@@ -124,14 +124,14 @@ machine(DMA, "DMA Controller")
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DMA_Ack, makeLineAddress(in_msg.addr),
-                  TBEs.lookup(makeLineAddress(in_msg.addr)));
+                  TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
        in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Data, makeLineAddress(in_msg.addr),
-                  TBEs.lookup(makeLineAddress(in_msg.addr)));
+                  TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:Inv_Ack, makeLineAddress(in_msg.addr),
-                  TBEs.lookup(makeLineAddress(in_msg.addr)));
+                  TBEs[makeLineAddress(in_msg.addr)]);
         } else {
           error("Invalid response type");
         }
@@ -144,7 +144,7 @@ machine(DMA, "DMA Controller")
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
-          trigger(Event:All_Acks, in_msg.addr, TBEs.lookup(in_msg.addr));
+          trigger(Event:All_Acks, in_msg.addr, TBEs[in_msg.addr]);
         } else {
           error("Unexpected message");
         }
@@ -240,7 +240,7 @@ machine(DMA, "DMA Controller")
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
     TBEs.allocate(address);
-    set_tbe(TBEs.lookup(address));
+    set_tbe(TBEs[address]);
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {

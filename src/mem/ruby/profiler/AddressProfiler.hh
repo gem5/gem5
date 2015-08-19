@@ -75,7 +75,7 @@ class AddressProfiler
     AddressProfiler(const AddressProfiler& obj);
     AddressProfiler& operator=(const AddressProfiler& obj);
 
-    int64_t m_sharing_miss_counter;
+    int64 m_sharing_miss_counter;
 
     AddressMap m_dataAccessTrace;
     AddressMap m_macroBlockAccessTrace;

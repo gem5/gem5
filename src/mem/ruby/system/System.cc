@@ -45,6 +45,7 @@
 
 using namespace std;
 
+int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
@@ -59,6 +60,8 @@ RubySystem::RubySystem(const Params *p)
     : ClockedObject(p), m_access_backing_store(p->access_backing_store),
       m_cache_recorder(NULL)
 {
+    m_random_seed = p->random_seed;
+    srandom(m_random_seed);
     m_randomization = p->randomization;
 
     m_block_size_bytes = p->block_size_bytes;
@@ -99,8 +102,8 @@ RubySystem::~RubySystem()
 
 void
 RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
-                              uint64_t cache_trace_size,
-                              uint64_t block_size_bytes)
+                              uint64 cache_trace_size,
+                              uint64 block_size_bytes)
 {
     vector<Sequencer*> sequencer_map;
     Sequencer* sequencer_ptr = NULL;
@@ -204,7 +207,7 @@ RubySystem::memWriteback()
 
 void
 RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
-                                 uint64_t uncompressed_trace_size)
+                                 uint64 uncompressed_trace_size)
 {
     // Create the checkpoint file for the memory
     string thefile = CheckpointIn::dir() + "/" + filename.c_str();
@@ -237,7 +240,7 @@ RubySystem::serializeOld(CheckpointOut &cp)
     // Store the cache-block size, so we are able to restore on systems with a
     // different cache-block size. CacheRecorder depends on the correct
     // cache-block size upon unserializing.
-    uint64_t block_size_bytes = getBlockSizeBytes();
+    uint64 block_size_bytes = getBlockSizeBytes();
     SERIALIZE_SCALAR(block_size_bytes);
 
     // Check that there's a valid trace to use.  If not, then memory won't be
@@ -249,7 +252,7 @@ RubySystem::serializeOld(CheckpointOut &cp)
 
     // Aggregate the trace entries together into a single array
     uint8_t *raw_data = new uint8_t[4096];
-    uint64_t cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
+    uint64 cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
                                                                  4096);
     string cache_trace_file = name() + ".cache.gz";
     writeCompressedTrace(raw_data, cache_trace_file, cache_trace_size);
@@ -264,7 +267,7 @@ RubySystem::serializeOld(CheckpointOut &cp)
 
 void
 RubySystem::readCompressedTrace(string filename, uint8_t *&raw_data,
-                                uint64_t &uncompressed_trace_size)
+                                uint64& uncompressed_trace_size)
 {
     // Read the trace file
     gzFile compressedTrace;
@@ -301,19 +304,11 @@ RubySystem::unserialize(CheckpointIn &cp)
     // This value should be set to the checkpoint-system's block-size.
     // Optional, as checkpoints without it can be run if the
     // checkpoint-system's block-size == current block-size.
-    uint64_t block_size_bytes = m_block_size_bytes;
+    uint64 block_size_bytes = getBlockSizeBytes();
     UNSERIALIZE_OPT_SCALAR(block_size_bytes);
 
-    if (block_size_bytes < m_block_size_bytes) {
-        // Block sizes larger than when the trace was recorded are not
-        // supported, as we cannot reliably turn accesses to smaller blocks
-        // into larger ones.
-        panic("Recorded cache block size (%d) < current block size (%d) !!",
-              block_size_bytes, m_block_size_bytes);
-    }
-
     string cache_trace_file;
-    uint64_t cache_trace_size = 0;
+    uint64 cache_trace_size = 0;
 
     UNSERIALIZE_SCALAR(cache_trace_file);
     UNSERIALIZE_SCALAR(cache_trace_size);

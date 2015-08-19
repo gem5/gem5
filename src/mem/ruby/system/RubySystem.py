@@ -34,6 +34,7 @@ from SimpleMemory import *
 class RubySystem(ClockedObject):
     type = 'RubySystem'
     cxx_header = "mem/ruby/system/System.hh"
+    random_seed = Param.Int(1234, "random seed used by the simulation");
     randomization = Param.Bool(False,
         "insert random delays on message enqueue times");
     block_size_bytes = Param.UInt32(64,
@@ -41,13 +42,11 @@ class RubySystem(ClockedObject):
     memory_size_bits = Param.UInt32(64,
         "number of bits that a memory address requires");
 
-    phys_mem = Param.SimpleMemory(NULL, "")
-
-    access_backing_store = Param.Bool(False, "Use phys_mem as the functional \
-        store and only use ruby for timing.")
-
     # Profiler related configuration variables
     hot_lines = Param.Bool(False, "")
     all_instructions = Param.Bool(False, "")
     num_of_sequencers = Param.Int("")
-    number_of_virtual_networks = Param.Unsigned("")
+    phys_mem = Param.SimpleMemory(NULL, "")
+
+    access_backing_store = Param.Bool(False, "Use phys_mem as the functional \
+        store and only use ruby for timing.")

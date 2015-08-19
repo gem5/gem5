@@ -41,7 +41,7 @@ SubBlock::SubBlock(Addr addr, int size)
 }
 
 void
-SubBlock::mergeFrom(const DataBlock& data)
+SubBlock::internalMergeFrom(const DataBlock& data)
 {
     int size = getSize();
     assert(size > 0);
@@ -52,7 +52,7 @@ SubBlock::mergeFrom(const DataBlock& data)
 }
 
 void
-SubBlock::mergeTo(DataBlock& data) const
+SubBlock::internalMergeTo(DataBlock& data) const
 {
     int size = getSize();
     assert(size > 0);
@@ -68,3 +68,6 @@ SubBlock::print(std::ostream& out) const
 {
     out << "[" << m_address << ", " << getSize() << ", " << m_data << "]";
 }
+
+
+

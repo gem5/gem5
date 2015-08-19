@@ -37,6 +37,7 @@ using namespace std;
 
 int DirectoryMemory::m_num_directories = 0;
 int DirectoryMemory::m_num_directories_bits = 0;
+uint64_t DirectoryMemory::m_total_size_bytes = 0;
 int DirectoryMemory::m_numa_high_bit = 0;
 
 DirectoryMemory::DirectoryMemory(const Params *p)
@@ -59,6 +60,7 @@ DirectoryMemory::init()
 
     m_num_directories++;
     m_num_directories_bits = ceilLog2(m_num_directories);
+    m_total_size_bytes += m_size_bytes;
 
     if (m_numa_high_bit == 0) {
         m_numa_high_bit = RubySystem::getMemorySizeBits() - 1;

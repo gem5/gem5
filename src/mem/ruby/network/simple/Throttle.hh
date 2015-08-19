@@ -47,18 +47,20 @@
 #include "mem/ruby/system/System.hh"
 
 class MessageBuffer;
-class Switch;
 
 class Throttle : public Consumer
 {
   public:
     Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
              int link_bandwidth_multiplier, int endpoint_bandwidth,
-             Switch *em);
+             ClockedObject *em);
+    Throttle(RubySystem *rs, NodeID node, Cycles link_latency,
+             int link_bandwidth_multiplier, int endpoint_bandwidth,
+             ClockedObject *em);
     ~Throttle() {}
 
     std::string name()
-    { return csprintf("Throttle-%i", m_switch_id); }
+    { return csprintf("Throttle-%i", m_sID); }
 
     void addLinks(const std::vector<MessageBuffer*>& in_vec,
                   const std::vector<MessageBuffer*>& out_vec);
@@ -95,10 +97,8 @@ class Throttle : public Consumer
     unsigned int m_vnets;
     std::vector<int> m_units_remaining;
 
-    const int m_switch_id;
-    Switch *m_switch;
+    int m_sID;
     NodeID m_node;
-
     int m_link_bandwidth_multiplier;
     Cycles m_link_latency;
     int m_wakeups_wo_switch;

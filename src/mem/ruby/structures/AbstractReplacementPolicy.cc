@@ -66,7 +66,7 @@ AbstractReplacementPolicy::~AbstractReplacementPolicy()
 }
 
 Tick
-AbstractReplacementPolicy::getLastAccess(int64_t set, int64_t way)
+AbstractReplacementPolicy::getLastAccess(int64 set, int64 way)
 {
     return m_last_ref_ptr[set][way];
 }
