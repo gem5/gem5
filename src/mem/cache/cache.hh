@@ -343,13 +343,6 @@ class Cache : public BaseCache
     bool invalidateVisitor(CacheBlk &blk);
 
     /**
-     * Squash all requests associated with specified thread.
-     * intended for use by I-cache.
-     * @param threadNum The thread to squash.
-     */
-    void squash(int threadNum);
-
-    /**
      * Generate an appropriate downstream bus request packet for the
      * given parameters.
      * @param cpu_pkt  The upstream request that needs to be satisfied.

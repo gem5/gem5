@@ -263,28 +263,6 @@ Cache::markInService(MSHR *mshr, bool pending_dirty_resp)
     markInServiceInternal(mshr, pending_dirty_resp);
 }
 
-
-void
-Cache::squash(int threadNum)
-{
-    bool unblock = false;
-    BlockedCause cause = NUM_BLOCKED_CAUSES;
-
-    if (noTargetMSHR && noTargetMSHR->threadNum == threadNum) {
-        noTargetMSHR = NULL;
-        unblock = true;
-        cause = Blocked_NoTargets;
-    }
-    if (mshrQueue.isFull()) {
-        unblock = true;
-        cause = Blocked_NoMSHRs;
-    }
-    mshrQueue.squash(threadNum);
-    if (unblock && !mshrQueue.isFull()) {
-        clearBlocked(cause);
-    }
-}
-
 /////////////////////////////////////////////////////
 //
 // Access path: requests coming in from the CPU side
