@@ -288,9 +288,6 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 pkt->req->isInstFetch() ? " (ifetch)" : "",
                 pkt->getAddr());
 
-        if (pkt->req->isClearLL())
-            tags->clearLocks();
-
         // flush and invalidate any existing block
         CacheBlk *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
         if (old_blk && old_blk->isValid()) {

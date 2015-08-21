@@ -306,12 +306,6 @@ public:
     }
 
     /**
-     *iterated through all blocks and clear all locks
-     *Needed to clear all lock tracking at once
-     */
-    virtual void clearLocks();
-
-    /**
      * @todo Implement as in lru. Currently not used
      */
     virtual std::string print() const { return ""; }

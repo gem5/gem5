@@ -123,8 +123,6 @@ class Request
         STRICT_ORDER                = 0x00000800,
         /** This request is to a memory mapped register. */
         MMAPPED_IPR                 = 0x00002000,
-        /** This request is a clear exclusive. */
-        CLEAR_LL                    = 0x00004000,
         /** This request is made in privileged mode. */
         PRIVILEGED                  = 0x00008000,
 
@@ -655,7 +653,6 @@ class Request
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
-    bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
 };

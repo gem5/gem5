@@ -135,14 +135,6 @@ BaseSetAssoc::findBlockBySetAndWay(int set, int way) const
     return sets[set].blks[way];
 }
 
-void
-BaseSetAssoc::clearLocks()
-{
-    for (int i = 0; i < numBlocks; i++){
-        blks[i].clearLoadLocks();
-    }
-}
-
 std::string
 BaseSetAssoc::print() const {
     std::string cache_state;

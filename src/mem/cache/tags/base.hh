@@ -171,12 +171,6 @@ class BaseTags : public ClockedObject
     virtual void computeStats() {}
 
     /**
-     *iterated through all blocks and clear all locks
-     *Needed to clear all lock tracking at once
-     */
-    virtual void clearLocks() {}
-
-    /**
      * Print all tags used
      */
     virtual std::string print() const = 0;
