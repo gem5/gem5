@@ -152,9 +152,9 @@ for t, m in zip(testerspec, multiplier):
      numtesters += t * m
 
 # Define a prototype L1 cache that we scale for all successive levels
-proto_l1 = BaseCache(size = '32kB', assoc = 4,
-                     hit_latency = 1, response_latency = 1,
-                     tgts_per_mshr = 8)
+proto_l1 = Cache(size = '32kB', assoc = 4,
+                 hit_latency = 1, response_latency = 1,
+                 tgts_per_mshr = 8)
 
 if options.blocking:
      proto_l1.mshrs = 1

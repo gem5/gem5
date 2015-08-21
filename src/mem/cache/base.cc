@@ -65,13 +65,13 @@ BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
 {
 }
 
-BaseCache::BaseCache(const Params *p)
+BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
     : MemObject(p),
       cpuSidePort(nullptr), memSidePort(nullptr),
       mshrQueue("MSHRs", p->mshrs, 4, p->demand_mshr_reserve, MSHRQueue_MSHRs),
       writeBuffer("write buffer", p->write_buffers, p->mshrs+1000, 0,
                   MSHRQueue_WriteBuffer),
-      blkSize(p->system->cacheLineSize()),
+      blkSize(blk_size),
       lookupLatency(p->hit_latency),
       forwardLatency(p->hit_latency),
       fillLatency(p->response_latency),
@@ -773,12 +773,4 @@ BaseCache::regStats()
         .desc("Number of misses that were no-allocate")
         ;
 
-}
-
-BaseCache *
-BaseCacheParams::create()
-{
-    assert(tags);
-
-    return new Cache(this);
 }

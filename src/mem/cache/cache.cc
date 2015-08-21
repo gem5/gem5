@@ -63,8 +63,8 @@
 #include "mem/cache/prefetch/base.hh"
 #include "sim/sim_exit.hh"
 
-Cache::Cache(const Params *p)
-    : BaseCache(p),
+Cache::Cache(const CacheParams *p)
+    : BaseCache(p, p->system->cacheLineSize()),
       tags(p->tags),
       prefetcher(p->prefetcher),
       doFastWrites(true),
@@ -2382,6 +2382,13 @@ CpuSidePort::CpuSidePort(const std::string &_name, Cache *_cache,
 {
 }
 
+Cache*
+CacheParams::create()
+{
+    assert(tags);
+
+    return new Cache(this);
+}
 ///////////////
 //
 // MemSidePort

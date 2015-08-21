@@ -137,7 +137,7 @@ class Water_spatial(LiveProcess):
 # Base L1 Cache Definition
 # ====================
 
-class L1(BaseCache):
+class L1(Cache):
     latency = options.l1latency
     mshrs = 12
     tgts_per_mshr = 8
@@ -146,7 +146,7 @@ class L1(BaseCache):
 # Base L2 Cache Definition
 # ----------------------
 
-class L2(BaseCache):
+class L2(Cache):
     latency = options.l2latency
     mshrs = 92
     tgts_per_mshr = 16

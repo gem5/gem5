@@ -37,6 +37,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Andreas Hansson
 
 from m5.params import *
 from m5.proxy import *
@@ -46,6 +47,7 @@ from Tags import *
 
 class BaseCache(MemObject):
     type = 'BaseCache'
+    abstract = True
     cxx_header = "mem/cache/base.hh"
 
     size = Param.MemorySize("Capacity")
@@ -81,3 +83,7 @@ class BaseCache(MemObject):
          "Address range for the CPU-side port (to allow striping)")
 
     system = Param.System(Parent.any, "System we belong to")
+
+class Cache(BaseCache):
+    type = 'Cache'
+    cxx_header = 'mem/cache/cache.hh'

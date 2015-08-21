@@ -30,7 +30,7 @@
 
 Import('*')
 
-SimObject('BaseCache.py')
+SimObject('Cache.py')
 
 Source('base.cc')
 Source('cache.cc')

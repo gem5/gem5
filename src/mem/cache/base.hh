@@ -473,8 +473,7 @@ class BaseCache : public MemObject
     virtual void regStats();
 
   public:
-    typedef BaseCacheParams Params;
-    BaseCache(const Params *p);
+    BaseCache(const BaseCacheParams *p, unsigned blk_size);
     ~BaseCache() {}
 
     virtual void init();

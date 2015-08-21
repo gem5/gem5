@@ -57,6 +57,7 @@
 #include "mem/cache/blk.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/tags/base.hh"
+#include "params/Cache.hh"
 #include "sim/eventq.hh"
 
 //Forward decleration
@@ -419,7 +420,7 @@ class Cache : public BaseCache
 
   public:
     /** Instantiates a basic cache object. */
-    Cache(const Params *p);
+    Cache(const CacheParams *p);
 
     /** Non-default destructor is needed to deallocate memory. */
     virtual ~Cache();
