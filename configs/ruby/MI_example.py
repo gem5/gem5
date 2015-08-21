@@ -37,7 +37,7 @@ from Ruby import send_evicts
 #
 # Declare caches used by the protocol
 #
-class Cache(RubyCache): pass
+class L1Cache(RubyCache): pass
 
 def define_options(parser):
     return
@@ -70,9 +70,9 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         # Only one cache exists for this protocol, so by default use the L1D
         # config parameters.
         #
-        cache = Cache(size = options.l1d_size,
-                      assoc = options.l1d_assoc,
-                      start_index_bit = block_size_bits)
+        cache = L1Cache(size = options.l1d_size,
+                        assoc = options.l1d_assoc,
+                        start_index_bit = block_size_bits)
 
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.

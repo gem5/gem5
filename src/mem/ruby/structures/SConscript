@@ -33,7 +33,7 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('Cache.py')
+SimObject('RubyCache.py')
 SimObject('DirectoryMemory.py')
 SimObject('LRUReplacementPolicy.py')
 SimObject('PseudoLRUReplacementPolicy.py')
