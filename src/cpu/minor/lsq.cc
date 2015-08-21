@@ -1578,6 +1578,12 @@ LSQ::LSQRequest::makePacket()
     if (packet)
         return;
 
+    // if the translation faulted, do not create a packet
+    if (fault != NoFault) {
+        assert(packet == NULL);
+        return;
+    }
+
     packet = makePacketForRequest(request, isLoad, this, data);
     /* Null the ret data so we know not to deallocate it when the
      * ret is destroyed.  The data now belongs to the ret and
