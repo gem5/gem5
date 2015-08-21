@@ -263,6 +263,11 @@ class BaseCPU : public MemObject
 
   public:
 
+
+    /** Invalid or unknown Pid. Possible when operating system is not present
+     *  or has not assigned a pid yet */
+    static const uint32_t invldPid = std::numeric_limits<uint32_t>::max();
+
     // Mask to align PCs to MachInst sized boundaries
     static const Addr PCMask = ~((Addr)sizeof(TheISA::MachInst) - 1);
 

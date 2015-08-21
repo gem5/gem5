@@ -195,10 +195,6 @@ class Request
     };
     /** @} */
 
-    /** Invalid or unknown Pid. Possible when operating system is not present
-     *  or has not assigned a pid yet */
-    static const uint32_t invldPid = std::numeric_limits<uint32_t>::max();
-
   private:
     typedef uint8_t PrivateFlagsType;
     typedef ::Flags<PrivateFlagsType> PrivateFlags;

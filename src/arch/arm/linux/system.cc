@@ -241,7 +241,7 @@ LinuxArmSystem::startup()
         for (int i = 0; i < _numContexts; i++) {
             ThreadContext *tc = threadContexts[i];
             uint32_t pid = tc->getCpuPtr()->getPid();
-            if (pid != Request::invldPid) {
+            if (pid != BaseCPU::invldPid) {
                 mapPid(tc, pid);
                 tc->getCpuPtr()->taskId(taskMap[pid]);
             }
