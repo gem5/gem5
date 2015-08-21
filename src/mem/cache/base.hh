@@ -47,8 +47,8 @@
  * Declares a basic cache interface BaseCache.
  */
 
-#ifndef __BASE_CACHE_HH__
-#define __BASE_CACHE_HH__
+#ifndef __MEM_CACHE_BASE_HH__
+#define __MEM_CACHE_BASE_HH__
 
 #include <algorithm>
 #include <list>
@@ -597,4 +597,4 @@ class BaseCache : public MemObject
 
 };
 
-#endif //__BASE_CACHE_HH__
+#endif //__MEM_CACHE_BASE_HH__

@@ -49,8 +49,8 @@
  * Describes a cache based on template policies.
  */
 
-#ifndef __CACHE_HH__
-#define __CACHE_HH__
+#ifndef __MEM_CACHE_CACHE_HH__
+#define __MEM_CACHE_CACHE_HH__
 
 #include "base/misc.hh" // fatal, panic, and warn
 #include "mem/cache/base.hh"
@@ -491,4 +491,4 @@ class CacheBlkIsDirtyVisitor : public CacheBlkVisitor
     bool _isDirty;
 };
 
-#endif // __CACHE_HH__
+#endif // __MEM_CACHE_CACHE_HH__
