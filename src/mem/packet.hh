@@ -255,6 +255,10 @@ class Packet : public Printable
         // Snoop response flags
         MEM_INHIBIT            = 0x00000008,
 
+        /// Are the 'addr' and 'size' fields valid?
+        VALID_ADDR             = 0x00000100,
+        VALID_SIZE             = 0x00000200,
+
         /// Is the data pointer set to a value that shouldn't be freed
         /// when the packet is destroyed?
         STATIC_DATA            = 0x00001000,
@@ -519,7 +523,7 @@ class Packet : public Printable
 
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
-    Addr getAddr() const { return addr; }
+    Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
     /**
      * Update the address of this packet mid-transaction. This is used
      * by the address mapper to change an already set address to a new
@@ -527,9 +531,9 @@ class Packet : public Printable
      * an existing address, so it asserts that the current address is
      * valid.
      */
-    void setAddr(Addr _addr) { addr = _addr; }
+    void setAddr(Addr _addr) { assert(flags.isSet(VALID_ADDR)); addr = _addr; }
 
-    unsigned getSize() const  { return size; }
+    unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
 
     Addr getOffset(unsigned int blk_size) const
     {
@@ -541,7 +545,11 @@ class Packet : public Printable
         return getAddr() & ~(Addr(blk_size - 1));
     }
 
-    bool isSecure() const { return _isSecure; }
+    bool isSecure() const
+    {
+        assert(flags.isSet(VALID_ADDR));
+        return _isSecure;
+    }
 
     /**
      * It has been determined that the SC packet should successfully update
@@ -569,28 +577,43 @@ class Packet : public Printable
 
     /**
      * Constructor. Note that a Request object must be constructed
-     * first, and have a valid physical address and size. The command
-     * must be supplied.
+     * first, but the Requests's physical address and size fields need
+     * not be valid. The command must be supplied.
      */
     Packet(const RequestPtr _req, MemCmd _cmd)
-        :  cmd(_cmd), req(_req), data(nullptr), addr(req->getPaddr()),
-           _isSecure(req->isSecure()), size(req->getSize()),
-           headerDelay(0), payloadDelay(0),
+        :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
+           size(0), headerDelay(0), payloadDelay(0),
            senderState(NULL)
-    { }
+    {
+        if (req->hasPaddr()) {
+            addr = req->getPaddr();
+            flags.set(VALID_ADDR);
+            _isSecure = req->isSecure();
+        }
+        if (req->hasSize()) {
+            size = req->getSize();
+            flags.set(VALID_SIZE);
+        }
+    }
 
     /**
-     * Alternate constructor when creating a packet that is for a
-     * whole block. This allows for overriding the size and addr of
-     * the request.
+     * Alternate constructor if you are trying to create a packet with
+     * a request that is for a whole block, not the address from the
+     * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(const RequestPtr _req, MemCmd _cmd, unsigned _blkSize)
-        :  cmd(_cmd), req(_req), data(nullptr),
-           addr(_req->getPaddr() & ~Addr(_blkSize - 1)),
-           _isSecure(_req->isSecure()), size(_blkSize),
+    Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
+        :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
            headerDelay(0), payloadDelay(0),
            senderState(NULL)
-    { }
+    {
+        if (req->hasPaddr()) {
+            addr = req->getPaddr() & ~(_blkSize - 1);
+            flags.set(VALID_ADDR);
+            _isSecure = req->isSecure();
+        }
+        size = _blkSize;
+        flags.set(VALID_SIZE);
+    }
 
     /**
      * Alternate constructor for copying a packet.  Copy all fields
@@ -610,6 +633,8 @@ class Packet : public Printable
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
+
+        flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE));
 
         // should we allocate space for data, or not, the express
         // snoops do not need to carry any data as they only serve to
@@ -731,6 +756,16 @@ class Packet : public Printable
             }
         }
     }
+
+    void
+    setSize(unsigned size)
+    {
+        assert(!flags.isSet(VALID_SIZE));
+
+        this->size = size;
+        flags.set(VALID_SIZE);
+    }
+
 
   public:
     /**
