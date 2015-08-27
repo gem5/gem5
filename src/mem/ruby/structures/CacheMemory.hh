@@ -107,6 +107,11 @@ class CacheMemory : public SimObject
     // Set this address to most recently used
     void setMRU(Addr address);
 
+    // Functions for locking and unlocking cache lines corresponding to the
+    // provided address.  These are required for supporting atomic memory
+    // accesses.  These are to be used when only the address of the cache entry
+    // is available.  In case the entry itself is available. use the functions
+    // provided by the AbstractCacheEntry class.
     void setLocked (Addr addr, int context);
     void clearLocked (Addr addr);
     bool isLocked (Addr addr, int context);
