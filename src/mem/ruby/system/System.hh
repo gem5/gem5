@@ -95,8 +95,9 @@ class RubySystem : public ClockedObject
     void resetStats();
 
     void memWriteback();
-    void serializeOld(CheckpointOut &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void drainResume() M5_ATTR_OVERRIDE;
     void process();
     void startup();
     bool functionalRead(Packet *ptr);
@@ -121,11 +122,11 @@ class RubySystem : public ClockedObject
                            uint64 cache_trace_size,
                            uint64 block_size_bytes);
 
-    void readCompressedTrace(std::string filename,
-                             uint8_t *&raw_data,
-                             uint64& uncompressed_trace_size);
-    void writeCompressedTrace(uint8_t *raw_data, std::string file,
-                              uint64 uncompressed_trace_size);
+    static void readCompressedTrace(std::string filename,
+                                    uint8_t *&raw_data,
+                                    uint64& uncompressed_trace_size);
+    static void writeCompressedTrace(uint8_t *raw_data, std::string file,
+                                     uint64 uncompressed_trace_size);
 
   private:
     // configuration parameters

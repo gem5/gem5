@@ -235,7 +235,7 @@ RubySystem::writeCompressedTrace(uint8_t *raw_data, string filename,
 }
 
 void
-RubySystem::serializeOld(CheckpointOut &cp)
+RubySystem::serialize(CheckpointOut &cp) const
 {
     // Store the cache-block size, so we are able to restore on systems with a
     // different cache-block size. CacheRecorder depends on the correct
@@ -259,10 +259,17 @@ RubySystem::serializeOld(CheckpointOut &cp)
 
     SERIALIZE_SCALAR(cache_trace_file);
     SERIALIZE_SCALAR(cache_trace_size);
+}
 
-    // Now finished with the cache recorder.
-    delete m_cache_recorder;
-    m_cache_recorder = NULL;
+void
+RubySystem::drainResume()
+{
+    // Delete the cache recorder if it was created in memWriteback()
+    // to checkpoint the current cache state.
+    if (m_cache_recorder) {
+        delete m_cache_recorder;
+        m_cache_recorder = NULL;
+    }
 }
 
 void
