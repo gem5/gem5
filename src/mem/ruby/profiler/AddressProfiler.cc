@@ -67,7 +67,7 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
 {
     const int records_printed = 100;
 
-    uint64 misses = 0;
+    uint64_t misses = 0;
     std::vector<const AccessTraceForAddress *> sorted;
 
     AddressMap::const_iterator i = record_map.begin();
@@ -95,8 +95,8 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
     Histogram all_records_log(-1);
 
     // Allows us to track how many lines where touched by n processors
-    std::vector<int64> m_touched_vec;
-    std::vector<int64> m_touched_weighted_vec;
+    std::vector<int64_t> m_touched_vec;
+    std::vector<int64_t> m_touched_weighted_vec;
     m_touched_vec.resize(num_of_sequencers+1);
     m_touched_weighted_vec.resize(num_of_sequencers+1);
     for (int j = 0; j < m_touched_vec.size(); j++) {

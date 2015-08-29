@@ -40,7 +40,7 @@ class Histogram
     Histogram(int binsize = 1, uint32_t bins = 50);
     ~Histogram();
 
-    void add(int64 value);
+    void add(int64_t value);
     void add(Histogram& hist);
     void doubleBinSize();
 
@@ -51,10 +51,10 @@ class Histogram
     uint64_t size() const { return m_count; }
     uint32_t getBins() const { return m_data.size(); }
     int getBinSize() const { return m_binsize; }
-    int64 getTotal() const { return m_sumSamples; }
+    int64_t getTotal() const { return m_sumSamples; }
     uint64_t getSquaredTotal() const { return m_sumSquaredSamples; }
     uint64_t getData(int index) const { return m_data[index]; }
-    int64 getMax() const { return m_max; }
+    int64_t getMax() const { return m_max; }
 
     void printWithMultiplier(std::ostream& out, double multiplier) const;
     void printPercent(std::ostream& out) const;
@@ -62,12 +62,12 @@ class Histogram
 
 private:
     std::vector<uint64_t> m_data;
-    int64 m_max;          // the maximum value seen so far
+    int64_t m_max;          // the maximum value seen so far
     uint64_t m_count;                // the number of elements added
     int m_binsize;                // the size of each bucket
     uint32_t m_largest_bin;      // the largest bin used
 
-    int64 m_sumSamples;   // the sum of all samples
+    int64_t m_sumSamples;   // the sum of all samples
     uint64_t m_sumSquaredSamples; // the sum of the square of all samples
 
     double getStandardDeviation() const;

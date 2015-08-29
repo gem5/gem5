@@ -171,7 +171,7 @@ MultiBitSelBloomFilter::get_index(Addr addr, int i)
     // m_skip_bits is used to perform BitSelect after skipping some
     // bits. Used to simulate BitSel hashing on larger than cache-line
     // granularities
-    uint64 x = (makeLineAddress(addr) >> m_skip_bits);
+    uint64_t x = (makeLineAddress(addr) >> m_skip_bits);
     int y = hash_bitsel(x, i, m_num_hashes, 30, m_filter_size_bits);
     //36-bit addresses, 6-bit cache lines
 
@@ -183,10 +183,10 @@ MultiBitSelBloomFilter::get_index(Addr addr, int i)
 }
 
 int
-MultiBitSelBloomFilter::hash_bitsel(uint64 value, int index, int jump,
+MultiBitSelBloomFilter::hash_bitsel(uint64_t value, int index, int jump,
                                     int maxBits, int numBits)
 {
-    uint64 mask = 1;
+    uint64_t mask = 1;
     int result = 0;
     int bit, i;
 

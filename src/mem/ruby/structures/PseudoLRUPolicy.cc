@@ -38,7 +38,7 @@ PseudoLRUPolicy::PseudoLRUPolicy(const Params * p)
     // associativity cannot exceed capacity of tree representation
     assert(m_num_sets > 0 &&
            m_assoc > 1 &&
-           m_assoc <= (int64) sizeof(uint64)*4);
+           m_assoc <= (int64_t) sizeof(uint64_t)*4);
 
     m_trees = NULL;
     m_num_levels = 0;
@@ -55,7 +55,7 @@ PseudoLRUPolicy::PseudoLRUPolicy(const Params * p)
         m_num_levels++;
     }
     assert(m_num_levels < sizeof(unsigned int)*4);
-    m_trees = new uint64[m_num_sets];
+    m_trees = new uint64_t[m_num_sets];
     for (unsigned i = 0; i < m_num_sets; i++) {
         m_trees[i] = 0;
     }
@@ -75,7 +75,7 @@ PseudoLRUPolicy::~PseudoLRUPolicy()
 }
 
 void
-PseudoLRUPolicy::touch(int64 set, int64 index, Tick time)
+PseudoLRUPolicy::touch(int64_t set, int64_t index, Tick time)
 {
     assert(index >= 0 && index < m_assoc);
     assert(set >= 0 && set < m_num_sets);
@@ -93,10 +93,10 @@ PseudoLRUPolicy::touch(int64 set, int64 index, Tick time)
     m_last_ref_ptr[set][index] = time;
 }
 
-int64
-PseudoLRUPolicy::getVictim(int64 set) const
+int64_t
+PseudoLRUPolicy::getVictim(int64_t set) const
 {
-    int64 index = 0;
+    int64_t index = 0;
 
     int tree_index = 0;
     int node_val;

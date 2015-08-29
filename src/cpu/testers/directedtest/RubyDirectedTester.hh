@@ -109,9 +109,9 @@ class RubyDirectedTester : public MemObject
     RubyDirectedTester(const RubyDirectedTester& obj);
     RubyDirectedTester& operator=(const RubyDirectedTester& obj);
 
-    uint64 m_requests_completed;
+    uint64_t m_requests_completed;
     std::vector<MasterPort*> ports;
-    uint64 m_requests_to_complete;
+    uint64_t m_requests_to_complete;
     DirectedGenerator* generator;
 };
 

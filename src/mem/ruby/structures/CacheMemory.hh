@@ -98,8 +98,8 @@ class CacheMemory : public SimObject
     Cycles getTagLatency() const { return tagArray.getLatency(); }
     Cycles getDataLatency() const { return dataArray.getLatency(); }
 
-    bool isBlockInvalid(int64 cache_set, int64 loc);
-    bool isBlockNotBusy(int64 cache_set, int64 loc);
+    bool isBlockInvalid(int64_t cache_set, int64_t loc);
+    bool isBlockNotBusy(int64_t cache_set, int64_t loc);
 
     // Hook for checkpointing the contents of the cache
     void recordCacheContents(int cntrl, CacheRecorder* tr) const;
@@ -149,12 +149,12 @@ class CacheMemory : public SimObject
 
   private:
     // convert a Address to its location in the cache
-    int64 addressToCacheSet(Addr address) const;
+    int64_t addressToCacheSet(Addr address) const;
 
     // Given a cache tag: returns the index of the tag in a set.
     // returns -1 if the tag is not found.
-    int findTagInSet(int64 line, Addr tag) const;
-    int findTagInSetIgnorePermissions(int64 cacheSet, Addr tag) const;
+    int findTagInSet(int64_t line, Addr tag) const;
+    int findTagInSetIgnorePermissions(int64_t cacheSet, Addr tag) const;
 
     // Private copy constructor and assignment operator
     CacheMemory(const CacheMemory& obj);

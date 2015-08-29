@@ -50,7 +50,7 @@ LRUReplacementPolicyParams::create()
 
 
 void
-LRUPolicy::touch(int64 set, int64 index, Tick time)
+LRUPolicy::touch(int64_t set, int64_t index, Tick time)
 {
     assert(index >= 0 && index < m_assoc);
     assert(set >= 0 && set < m_num_sets);
@@ -58,13 +58,11 @@ LRUPolicy::touch(int64 set, int64 index, Tick time)
     m_last_ref_ptr[set][index] = time;
 }
 
-int64
-LRUPolicy::getVictim(int64 set) const
+int64_t
+LRUPolicy::getVictim(int64_t set) const
 {
     Tick time, smallest_time;
-    int64 smallest_index;
-
-    smallest_index = 0;
+    int64_t smallest_index = 0;
     smallest_time = m_last_ref_ptr[set][0];
 
     for (unsigned i = 0; i < m_assoc; i++) {

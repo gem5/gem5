@@ -53,13 +53,13 @@ class PseudoLRUPolicy : public AbstractReplacementPolicy
     PseudoLRUPolicy(const Params * p);
     ~PseudoLRUPolicy();
 
-    void touch(int64 set, int64 way, Tick time);
-    int64 getVictim(int64 set) const;
+    void touch(int64_t set, int64_t way, Tick time);
+    int64_t getVictim(int64_t set) const;
 
   private:
     unsigned int m_effective_assoc;    /** nearest (to ceiling) power of 2 */
     unsigned int m_num_levels;         /** number of levels in the tree */
-    uint64* m_trees;                   /** bit representation of the
+    uint64_t* m_trees;                   /** bit representation of the
                                         * trees, one for each set */
 };
 
