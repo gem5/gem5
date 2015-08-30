@@ -93,22 +93,7 @@ class FuncCallExprAST(ExprAST):
         if func is None:
             self.error("Unrecognized function name: '%s'", func_name_args)
 
-        if len(self.exprs) != len(func.param_types):
-            self.error("Wrong number of arguments passed to function : '%s'" +\
-                       " Expected %d, got %d", self.proc_name,
-                       len(func.param_types), len(self.exprs))
-
-        cvec = []
-        type_vec = []
-        for expr,expected_type in zip(self.exprs, func.param_types):
-            # Check the types of the parameter
-            actual_type,param_code = expr.inline(True)
-            if str(actual_type) != 'OOD' and \
-            str(actual_type) != str(expected_type):
-                expr.error("Type mismatch: expected: %s actual: %s" % \
-                           (expected_type, actual_type))
-            cvec.append(param_code)
-            type_vec.append(expected_type)
+        cvec, type_vec = func.checkArguments(self.exprs)
 
         # OK, the semantics of "trigger" here is that, ports in the
         # machine have different priorities. We always check the first

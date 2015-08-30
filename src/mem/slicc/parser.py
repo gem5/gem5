@@ -669,15 +669,18 @@ class SLICC(Grammar):
 
     def p_expr__member_method_call(self, p):
         "aexpr : aexpr DOT ident '(' exprs ')'"
-        p[0] = ast.MemberMethodCallExprAST(self, p[1], p[3], p[5])
+        p[0] = ast.MemberMethodCallExprAST(self, p[1],
+                    ast.FuncCallExprAST(self, p[3], p[5]))
 
     def p_expr__member_method_call_lookup(self, p):
         "aexpr : aexpr '[' exprs ']'"
-        p[0] = ast.MemberMethodCallExprAST(self, p[1], "lookup", p[3])
+        p[0] = ast.MemberMethodCallExprAST(self, p[1],
+                    ast.FuncCallExprAST(self, "lookup", p[3]))
 
     def p_expr__class_method_call(self, p):
         "aexpr : type DOUBLE_COLON ident '(' exprs ')'"
-        p[0] = ast.ClassMethodCallExprAST(self, p[1], p[3], p[5])
+        p[0] = ast.ClassMethodCallExprAST(self, p[1],
+                    ast.FuncCallExprAST(self, p[3], p[5]))
 
     def p_expr__aexpr(self, p):
         "expr : aexpr"
