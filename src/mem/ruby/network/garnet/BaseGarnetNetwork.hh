@@ -48,9 +48,9 @@ class BaseGarnetNetwork : public Network
     BaseGarnetNetwork(const Params *p);
 
     void init();
-    int getNiFlitSize() { return m_ni_flit_size; }
-    int getVCsPerVnet() { return m_vcs_per_vnet; }
-    bool isFaultModelEnabled() { return m_enable_fault_model; }
+    int getNiFlitSize() const { return m_ni_flit_size; }
+    int getVCsPerVnet() const { return m_vcs_per_vnet; }
+    bool isFaultModelEnabled() const { return m_enable_fault_model; }
     FaultModel* fault_model;
 
     void increment_injected_flits(int vnet) { m_flits_injected[vnet]++; }
