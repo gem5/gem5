@@ -148,7 +148,6 @@ SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
     if (ordered) {
         m_ordered[network_num] = true;
     }
-    m_in_use[network_num] = true;
 }
 
 void

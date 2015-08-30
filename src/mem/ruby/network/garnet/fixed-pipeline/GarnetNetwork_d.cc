@@ -189,8 +189,7 @@ GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
 void
 GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
-                                        int network_num,
-                                        string vnet_type)
+                                        int network_num, string vnet_type)
 {
     assert(id < m_nodes);
     assert(network_num < m_virtual_networks);
@@ -198,7 +197,6 @@ GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
     if (ordered) {
         m_ordered[network_num] = true;
     }
-    m_in_use[network_num] = true;
 
     if (vnet_type == "response")
         m_vnet_type[network_num] = DATA_VNET_; // carries data (and ctrl) packets

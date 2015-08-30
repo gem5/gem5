@@ -65,7 +65,6 @@ class Router : public BasicRouter, public FlexibleConsumer
     void grant_vc(int out_port, int vc, Cycles grant_time);
     void release_vc(int out_port, int vc, Cycles release_time);
     void vc_arbitrate();
-    int get_vnet(int vc);
 
     void print(std::ostream& out) const;
 
@@ -104,6 +103,8 @@ class Router : public BasicRouter, public FlexibleConsumer
     void checkReschedule();
     void check_arbiter_reschedule();
     void scheduleOutputLinks();
+    int get_vnet(int vc) const;
+    int get_next_round_robin_vc(int vc) const;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_ROUTER_HH__

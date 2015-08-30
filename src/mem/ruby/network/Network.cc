@@ -57,11 +57,9 @@ Network::Network(const Params *p)
     // Queues that are feeding the protocol
     m_fromNetQueues.resize(m_nodes);
 
-    m_in_use.resize(m_virtual_networks);
     m_ordered.resize(m_virtual_networks);
 
     for (int i = 0; i < m_virtual_networks; i++) {
-        m_in_use[i] = false;
         m_ordered[i] = false;
     }
 

@@ -114,8 +114,6 @@ class Network : public ClockedObject
     // vector of queues from the components
     std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
     std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
-
-    std::vector<bool> m_in_use;
     std::vector<bool> m_ordered;
 
   private:

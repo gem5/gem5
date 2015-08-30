@@ -62,8 +62,7 @@ class SimpleNetwork : public Network
     void setFromNetQueue(NodeID id, bool ordered, int network_num,
                          std::string vnet_type, MessageBuffer *b);
 
-    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
-    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
+    bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
 
     // Methods used by Topology to setup the network
     void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 

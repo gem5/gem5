@@ -153,7 +153,6 @@ GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
     if (ordered) {
         m_ordered[network_num] = true;
     }
-    m_in_use[network_num] = true;
 }
 
 /*

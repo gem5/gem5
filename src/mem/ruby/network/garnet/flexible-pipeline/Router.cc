@@ -157,26 +157,12 @@ Router::vc_arbitrate()
         if (inport >= m_in_link.size())
             inport = 0;
         int invc = m_round_robin_invc[inport];
-
-        int next_round_robin_invc = invc;
-        do {
-            next_round_robin_invc++;
-
-            if (next_round_robin_invc >= m_num_vcs)
-                next_round_robin_invc = 0;
-
-        } while (!(m_net_ptr->validVirtualNetwork(
-                   get_vnet(next_round_robin_invc))));
-
-        m_round_robin_invc[inport] = next_round_robin_invc;
+        m_round_robin_invc[inport] = get_next_round_robin_vc(invc);
 
         for (int vc_iter = 0; vc_iter < m_num_vcs; vc_iter++) {
             invc++;
             if (invc >= m_num_vcs)
                 invc = 0;
-
-            if (!(m_net_ptr->validVirtualNetwork(get_vnet(invc))))
-                continue;
 
             InVcState *in_vc_state = m_in_vc_state[inport][invc];
 
@@ -335,17 +321,7 @@ Router::scheduleOutputLinks()
 {
     for (int port = 0; port < m_out_link.size(); port++) {
         int vc_tolookat = m_vc_round_robin[port];
-
-        int next_round_robin_vc_tolookat = vc_tolookat;
-        do {
-            next_round_robin_vc_tolookat++;
-
-            if (next_round_robin_vc_tolookat == m_num_vcs)
-                next_round_robin_vc_tolookat = 0;
-        } while (!(m_net_ptr->validVirtualNetwork(
-                   get_vnet(next_round_robin_vc_tolookat))));
-
-        m_vc_round_robin[port] = next_round_robin_vc_tolookat;
+        m_vc_round_robin[port] = get_next_round_robin_vc(vc_tolookat);
 
         for (int i = 0; i < m_num_vcs; i++) {
             vc_tolookat++;
@@ -374,11 +350,20 @@ Router::scheduleOutputLinks()
 }
 
 int
-Router::get_vnet(int vc)
+Router::get_vnet(int vc) const
 {
     int vnet = vc/m_vc_per_vnet;
     assert(vnet < m_virtual_networks);
     return vnet;
+}
+
+int
+Router::get_next_round_robin_vc(int vc) const
+{
+    vc++;
+    if (vc == m_num_vcs)
+        vc = 0;
+    return vc;
 }
 
 void

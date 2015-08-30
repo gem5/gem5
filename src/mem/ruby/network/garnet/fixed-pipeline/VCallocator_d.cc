@@ -180,10 +180,6 @@ VCallocator_d::arbitrate_invcs()
 {
     for (int inport_iter = 0; inport_iter < m_num_inports; inport_iter++) {
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
-            if (!((m_router->get_net_ptr())->validVirtualNetwork(
-                get_vnet(invc_iter))))
-                continue;
-
             if (m_input_unit[inport_iter]->need_stage(invc_iter, VC_AB_,
                     VA_, m_router->curCycle())) {
                 if (!is_invc_candidate(inport_iter, invc_iter))

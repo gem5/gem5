@@ -95,24 +95,15 @@ SWallocator_d::arbitrate_inports()
 
         // Select next round robin vc candidate within valid vnet
         int next_round_robin_invc = invc;
-        do {
-            next_round_robin_invc++;
-
-            if (next_round_robin_invc >= m_num_vcs)
-                next_round_robin_invc = 0;
-        } while (!((m_router->get_net_ptr())->validVirtualNetwork(
-                    get_vnet(next_round_robin_invc))));
-
+        next_round_robin_invc++;
+        if (next_round_robin_invc >= m_num_vcs)
+            next_round_robin_invc = 0;
         m_round_robin_inport[inport] = next_round_robin_invc;
 
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
             invc++;
             if (invc >= m_num_vcs)
                 invc = 0;
-
-            if (!((m_router->get_net_ptr())->validVirtualNetwork(
-                get_vnet(invc))))
-                continue;
 
             if (m_input_unit[inport]->need_stage(invc, ACTIVE_, SA_,
                                                  m_router->curCycle()) &&
