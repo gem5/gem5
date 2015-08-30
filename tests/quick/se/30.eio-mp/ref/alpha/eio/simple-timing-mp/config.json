@@ -36,12 +36,15 @@
         }, 
         "symbolfile": "", 
         "l2c": {
-            "is_top_level": false, 
+            "cpu_side": {
+                "peer": "system.toL2Bus.master[0]", 
+                "role": "SLAVE"
+            }, 
             "prefetcher": null, 
             "clk_domain": "system.cpu_clk_domain", 
             "write_buffers": 8, 
             "response_latency": 20, 
-            "cxx_class": "BaseCache", 
+            "cxx_class": "Cache", 
             "size": 4194304, 
             "tags": {
                 "name": "tags", 
@@ -71,17 +74,13 @@
             "addr_ranges": [
                 "0:18446744073709551615"
             ], 
-            "assoc": 8, 
+            "is_read_only": false, 
             "prefetch_on_access": false, 
             "path": "system.l2c", 
             "name": "l2c", 
-            "type": "BaseCache", 
+            "type": "Cache", 
             "sequential_access": false, 
-            "cpu_side": {
-                "peer": "system.toL2Bus.master[0]", 
-                "role": "SLAVE"
-            }, 
-            "two_queue": false
+            "assoc": 8
         }, 
         "readfile": "", 
         "cxx_class": "System", 
@@ -239,12 +238,15 @@
                     "role": "MASTER"
                 }, 
                 "icache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu0.icache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -274,17 +276,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 1, 
+                    "is_read_only": true, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu0.icache", 
                     "name": "icache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu0.icache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 1
                 }, 
                 "interrupts": {
                     "eventq_index": 0, 
@@ -312,12 +310,12 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu0.workload", 
                         "max_stack_size": 67108864, 
                         "type": "EioProcess", 
-                        "input": "None"
+                        "input": "cin"
                     }
                 ], 
                 "name": "cpu0", 
@@ -334,12 +332,15 @@
                 "progress_interval": 0, 
                 "branchPred": null, 
                 "dcache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu0.dcache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -369,17 +370,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 4, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu0.dcache", 
                     "name": "dcache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu0.dcache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 4
                 }, 
                 "isa": [
                     {
@@ -428,12 +425,15 @@
                     "role": "MASTER"
                 }, 
                 "icache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu1.icache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -463,17 +463,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 1, 
+                    "is_read_only": true, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu1.icache", 
                     "name": "icache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu1.icache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 1
                 }, 
                 "interrupts": {
                     "eventq_index": 0, 
@@ -501,12 +497,12 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu1.workload", 
                         "max_stack_size": 67108864, 
                         "type": "EioProcess", 
-                        "input": "None"
+                        "input": "cin"
                     }
                 ], 
                 "name": "cpu1", 
@@ -523,12 +519,15 @@
                 "progress_interval": 0, 
                 "branchPred": null, 
                 "dcache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu1.dcache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -558,17 +557,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 4, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu1.dcache", 
                     "name": "dcache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu1.dcache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 4
                 }, 
                 "isa": [
                     {
@@ -617,12 +612,15 @@
                     "role": "MASTER"
                 }, 
                 "icache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu2.icache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -652,17 +650,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 1, 
+                    "is_read_only": true, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu2.icache", 
                     "name": "icache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu2.icache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 1
                 }, 
                 "interrupts": {
                     "eventq_index": 0, 
@@ -690,12 +684,12 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu2.workload", 
                         "max_stack_size": 67108864, 
                         "type": "EioProcess", 
-                        "input": "None"
+                        "input": "cin"
                     }
                 ], 
                 "name": "cpu2", 
@@ -712,12 +706,15 @@
                 "progress_interval": 0, 
                 "branchPred": null, 
                 "dcache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu2.dcache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -747,17 +744,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 4, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu2.dcache", 
                     "name": "dcache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu2.dcache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 4
                 }, 
                 "isa": [
                     {
@@ -806,12 +799,15 @@
                     "role": "MASTER"
                 }, 
                 "icache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu3.icache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -841,17 +837,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 1, 
+                    "is_read_only": true, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu3.icache", 
                     "name": "icache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu3.icache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 1
                 }, 
                 "interrupts": {
                     "eventq_index": 0, 
@@ -879,12 +871,12 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu3.workload", 
                         "max_stack_size": 67108864, 
                         "type": "EioProcess", 
-                        "input": "None"
+                        "input": "cin"
                     }
                 ], 
                 "name": "cpu3", 
@@ -901,12 +893,15 @@
                 "progress_interval": 0, 
                 "branchPred": null, 
                 "dcache": {
-                    "is_top_level": true, 
+                    "cpu_side": {
+                        "peer": "system.cpu3.dcache_port", 
+                        "role": "SLAVE"
+                    }, 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
                     "response_latency": 2, 
-                    "cxx_class": "BaseCache", 
+                    "cxx_class": "Cache", 
                     "size": 32768, 
                     "tags": {
                         "name": "tags", 
@@ -936,17 +931,13 @@
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
-                    "assoc": 4, 
+                    "is_read_only": false, 
                     "prefetch_on_access": false, 
                     "path": "system.cpu3.dcache", 
                     "name": "dcache", 
-                    "type": "BaseCache", 
+                    "type": "Cache", 
                     "sequential_access": false, 
-                    "cpu_side": {
-                        "peer": "system.cpu3.dcache_port", 
-                        "role": "SLAVE"
-                    }, 
-                    "two_queue": false
+                    "assoc": 4
                 }, 
                 "isa": [
                     {
