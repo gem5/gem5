@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -103,7 +115,7 @@ EtherLink::Link::Link(const string &name, EtherLink *p, int num,
                       double rate, Tick delay, Tick delay_var, EtherDump *d)
     : objName(name), parent(p), number(num), txint(NULL), rxint(NULL),
       ticksPerByte(rate), linkDelay(delay), delayVar(delay_var), dump(d),
-      doneEvent(this)
+      doneEvent(this), txQueueEvent(this)
 { }
 
 void
@@ -128,25 +140,6 @@ EtherLink::Link::txComplete(EthPacketPtr packet)
     rxint->sendPacket(packet);
 }
 
-class LinkDelayEvent : public Event
-{
-  protected:
-    EtherLink::Link *link;
-    EthPacketPtr packet;
-
-  public:
-    // non-scheduling version for createForUnserialize()
-    LinkDelayEvent();
-    LinkDelayEvent(EtherLink::Link *link, EthPacketPtr pkt);
-
-    void process();
-
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-    static Serializable *createForUnserialize(CheckpointIn &cp,
-                                              const string &section);
-};
-
 void
 EtherLink::Link::txDone()
 {
@@ -155,9 +148,11 @@ EtherLink::Link::txDone()
 
     if (linkDelay > 0) {
         DPRINTF(Ethernet, "packet delayed: delay=%d\n", linkDelay);
-        Event *event = new LinkDelayEvent(this, packet);
-        parent->schedule(event, curTick() + linkDelay);
+        txQueue.emplace_back(std::make_pair(curTick() + linkDelay, packet));
+        if (!txQueueEvent.scheduled())
+            parent->schedule(txQueueEvent, txQueue.front().first);
     } else {
+        assert(txQueue.empty());
         txComplete(packet);
     }
 
@@ -165,6 +160,23 @@ EtherLink::Link::txDone()
     assert(!busy());
 
     txint->sendDone();
+}
+
+void
+EtherLink::Link::processTxQueue()
+{
+    auto cur(txQueue.front());
+    txQueue.pop_front();
+
+    // Schedule a new event to process the next packet in the queue.
+    if (!txQueue.empty()) {
+        auto next(txQueue.front());
+        assert(next.first > curTick());
+        parent->schedule(txQueueEvent, next.first);
+    }
+
+    assert(cur.first == curTick());
+    txComplete(cur.second);
 }
 
 bool
@@ -205,6 +217,15 @@ EtherLink::Link::serialize(const string &base, CheckpointOut &cp) const
         paramOut(cp, base + ".event_time", event_time);
     }
 
+    const size_t tx_queue_size(txQueue.size());
+    paramOut(cp, base + ".tx_queue_size", tx_queue_size);
+    unsigned idx(0);
+    for (const auto &pe : txQueue) {
+        paramOut(cp, csprintf("%s.txQueue[%i].tick", base, idx), pe.first);
+        pe.second->serialize(csprintf("%s.txQueue[%i].packet", base, idx), cp);
+
+        ++idx;
+    }
 }
 
 void
@@ -224,63 +245,32 @@ EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
         paramIn(cp, base + ".event_time", event_time);
         parent->schedule(doneEvent, event_time);
     }
+
+    size_t tx_queue_size;
+    if (optParamIn(cp, base + ".tx_queue_size", tx_queue_size)) {
+        for (size_t idx = 0; idx < tx_queue_size; ++idx) {
+            Tick tick;
+            EthPacketPtr delayed_packet = make_shared<EthPacketData>(16384);
+
+            paramIn(cp, csprintf("%s.txQueue[%i].tick", base, idx), tick);
+            delayed_packet->unserialize(
+                csprintf("%s.txQueue[%i].packet", base, idx), cp);
+
+            fatal_if(!txQueue.empty() && txQueue.back().first > tick,
+                     "Invalid txQueue packet order in EtherLink!\n");
+            txQueue.emplace_back(std::make_pair(tick, delayed_packet));
+        }
+
+        if (!txQueue.empty())
+            parent->schedule(txQueueEvent, txQueue.front().first);
+    } else {
+        // We can't reliably convert in-flight packets from old
+        // checkpoints. In fact, gem5 hasn't been able to load these
+        // packets for at least two years before the format change.
+        warn("Old-style EtherLink serialization format detected, "
+             "in-flight packets may have been dropped.\n");
+    }
 }
-
-LinkDelayEvent::LinkDelayEvent()
-    : Event(Default_Pri, AutoSerialize | AutoDelete), link(NULL)
-{
-}
-
-LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, EthPacketPtr p)
-    : Event(Default_Pri, AutoSerialize | AutoDelete), link(l), packet(p)
-{
-}
-
-void
-LinkDelayEvent::process()
-{
-    link->txComplete(packet);
-}
-
-void
-LinkDelayEvent::serialize(CheckpointOut &cp) const
-{
-    paramOut(cp, "type", string("LinkDelayEvent"));
-    Event::serialize(cp);
-
-    EtherLink *parent = link->parent;
-    bool number = link->number;
-    SERIALIZE_OBJPTR(parent);
-    SERIALIZE_SCALAR(number);
-
-    packet->serialize("packet", cp);
-}
-
-
-void
-LinkDelayEvent::unserialize(CheckpointIn &cp)
-{
-    Event::unserialize(cp);
-
-    EtherLink *parent;
-    bool number;
-    UNSERIALIZE_OBJPTR(parent);
-    UNSERIALIZE_SCALAR(number);
-
-    link = parent->link[number];
-
-    packet = make_shared<EthPacketData>(16384);
-    packet->unserialize("packet", cp);
-}
-
-
-Serializable *
-LinkDelayEvent::createForUnserialize(CheckpointIn &cp, const string &section)
-{
-    return new LinkDelayEvent();
-}
-
-REGISTER_SERIALIZEABLE("LinkDelayEvent", LinkDelayEvent)
 
 EtherLink *
 EtherLinkParams::create()

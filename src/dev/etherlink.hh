@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -35,6 +47,8 @@
 #ifndef __DEV_ETHERLINK_HH__
 #define __DEV_ETHERLINK_HH__
 
+#include <queue>
+
 #include "base/types.hh"
 #include "dev/etherint.hh"
 #include "dev/etherobject.hh"
@@ -53,25 +67,24 @@ class EtherLink : public EtherObject
   protected:
     class Interface;
 
-    friend class LinkDelayEvent;
-     /*
-      * Model for a single uni-directional link
-      */
+    /*
+     * Model for a single uni-directional link
+     */
     class Link
     {
       protected:
-        std::string objName;
+        const std::string objName;
 
-        EtherLink *parent;
-        int number;
+        EtherLink *const parent;
+        const int number;
 
         Interface *txint;
         Interface *rxint;
 
-        double ticksPerByte;
-        Tick linkDelay;
-        Tick delayVar;
-        EtherDump *dump;
+        const double ticksPerByte;
+        const Tick linkDelay;
+        const Tick delayVar;
+        EtherDump *const dump;
 
       protected:
         /*
@@ -83,7 +96,18 @@ class EtherLink : public EtherObject
         friend void DoneEvent::process();
         DoneEvent doneEvent;
 
-        friend class LinkDelayEvent;
+        /**
+         * Maintain a queue of in-flight packets. Assume that the
+         * delay is non-zero and constant (i.e., at most one packet
+         * per tick).
+         */
+        std::deque<std::pair<Tick, EthPacketPtr>> txQueue;
+
+        void processTxQueue();
+        typedef EventWrapper<Link, &Link::processTxQueue> TxQueueEvent;
+        friend void TxQueueEvent::process();
+        TxQueueEvent txQueueEvent;
+
         void txComplete(EthPacketPtr packet);
 
       public:
