@@ -136,18 +136,6 @@ void arrayParamIn(CheckpointIn &cp, const std::string &name,
 void
 objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
 
-template <typename T>
-void fromInt(T &t, int i)
-{
-    t = (T)i;
-}
-
-template <typename T>
-void fromSimObject(T &t, SimObject *s)
-{
-    t = dynamic_cast<T>(s);
-}
-
 //
 // These macros are streamlined to use in serialize/unserialize
 // functions.  It's assumed that serialize() has a parameter 'os' for
@@ -160,12 +148,12 @@ void fromSimObject(T &t, SimObject *s)
 // ENUMs are like SCALARs, but we cast them to ints on the way out
 #define SERIALIZE_ENUM(scalar)          paramOut(cp, #scalar, (int)scalar)
 
-#define UNSERIALIZE_ENUM(scalar)                \
- do {                                           \
-    int tmp;                                    \
-    paramIn(cp, #scalar, tmp);                  \
-    fromInt(scalar, tmp);                       \
-  } while (0)
+#define UNSERIALIZE_ENUM(scalar)                        \
+    do {                                                \
+        int tmp;                                        \
+        paramIn(cp, #scalar, tmp);                      \
+        scalar = static_cast<decltype(scalar)>(tmp);    \
+    } while (0)
 
 #define SERIALIZE_ARRAY(member, size)           \
         arrayParamOut(cp, #member, member, size)
@@ -193,11 +181,11 @@ void fromSimObject(T &t, SimObject *s)
 #define SERIALIZE_OBJPTR(objptr)        paramOut(cp, #objptr, (objptr)->name())
 
 #define UNSERIALIZE_OBJPTR(objptr)                      \
-  do {                                                  \
-    SimObject *sptr;                                    \
-    objParamIn(cp, #objptr, sptr);                      \
-    fromSimObject(objptr, sptr);                        \
-  } while (0)
+    do {                                                \
+        SimObject *sptr;                                \
+        objParamIn(cp, #objptr, sptr);                  \
+        objptr = dynamic_cast<decltype(objptr)>(sptr);  \
+    } while (0)
 
 /**
  * Basic support for object serialization.
