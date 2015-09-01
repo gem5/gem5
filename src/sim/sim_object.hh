@@ -231,6 +231,21 @@ class SimObject : public EventManager, public Serializable, public Drainable
     static SimObject *find(const char *name);
 };
 
+/**
+ * Base class to wrap object resolving functionality.
+ *
+ * This can be provided to the serialization framework to allow it to
+ * map object names onto C++ objects.
+ */
+class SimObjectResolver
+{
+  public:
+    virtual ~SimObjectResolver() { }
+
+    // Find a SimObject given a full path name
+    virtual SimObject *resolveSimObject(const std::string &name) = 0;
+};
+
 #ifdef DEBUG
 void debugObjectBreak(const char *objs);
 #endif

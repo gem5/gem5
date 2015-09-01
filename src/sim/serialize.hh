@@ -64,6 +64,7 @@ class IniFile;
 class Serializable;
 class CheckpointIn;
 class SimObject;
+class SimObjectResolver;
 class EventQueue;
 
 typedef std::ostream CheckpointOut;
@@ -449,17 +450,6 @@ class SerializableClass
 SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,                        \
                                          OBJ_CLASS::createForUnserialize);
 
-// Base class to wrap object resolving functionality.  This can be
-// provided to Checkpoint to allow it to map object names onto
-// object C++ objects in which to unserialize
-class SimObjectResolver
-{
-  public:
-    virtual ~SimObjectResolver() { }
-
-    // Find a SimObject given a full path name
-    virtual SimObject *resolveSimObject(const std::string &name) = 0;
-};
 
 class CheckpointIn
 {
