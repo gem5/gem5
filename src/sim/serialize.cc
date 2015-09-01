@@ -445,15 +445,12 @@ void
 Globals::serialize(CheckpointOut &cp) const
 {
     paramOut(cp, "curTick", curTick());
-    paramOut(cp, "numMainEventQueues", numMainEventQueues);
-
 }
 
 void
 Globals::unserialize(CheckpointIn &cp)
 {
     paramIn(cp, "curTick", unserializedCurTick);
-    paramIn(cp, "numMainEventQueues", numMainEventQueues);
 }
 
 Serializable::Serializable()
@@ -500,8 +497,6 @@ Serializable::serializeAll(const string &cpt_dir)
     outstream << "## checkpoint generated: " << ctime(&t);
 
     globals.serializeSection(outstream, "Globals");
-    for (uint32_t i = 0; i < numMainEventQueues; ++i)
-        mainEventQueue[i]->serializeSection(outstream, "MainEventQueue");
 
     SimObject::serializeAll(outstream);
 }
@@ -511,10 +506,8 @@ Serializable::unserializeGlobals(CheckpointIn &cp)
 {
     globals.unserializeSection(cp, "Globals");
 
-    for (uint32_t i = 0; i < numMainEventQueues; ++i) {
+    for (uint32_t i = 0; i < numMainEventQueues; ++i)
         mainEventQueue[i]->setCurTick(globals.unserializedCurTick);
-        mainEventQueue[i]->unserializeSection(cp, "MainEventQueue");
-    }
 }
 
 Serializable::ScopedCheckpointSection::~ScopedCheckpointSection()
@@ -549,59 +542,6 @@ debug_serialize(const string &cpt_dir)
     Serializable::serializeAll(cpt_dir);
 }
 
-
-////////////////////////////////////////////////////////////////////////
-//
-// SerializableClass member definitions
-//
-////////////////////////////////////////////////////////////////////////
-
-// Map of class names to SerializableBuilder creation functions.
-// Need to make this a pointer so we can force initialization on the
-// first reference; otherwise, some SerializableClass constructors
-// may be invoked before the classMap constructor.
-map<string, SerializableClass::CreateFunc> *SerializableClass::classMap = 0;
-
-// SerializableClass constructor: add mapping to classMap
-SerializableClass::SerializableClass(const string &className,
-                                     CreateFunc createFunc)
-{
-    if (classMap == NULL)
-        classMap = new map<string, SerializableClass::CreateFunc>();
-
-    if ((*classMap)[className])
-        fatal("Error: simulation object class %s redefined\n", className);
-
-    // add className --> createFunc to class map
-    (*classMap)[className] = createFunc;
-}
-
-//
-//
-Serializable *
-SerializableClass::createObject(CheckpointIn &cp, const string &section)
-{
-    string className;
-
-    if (!cp.find(section, "type", className)) {
-        fatal("Serializable::create: no 'type' entry in section '%s'.\n",
-              section);
-    }
-
-    CreateFunc createFunc = (*classMap)[className];
-
-    if (createFunc == NULL) {
-        fatal("Serializable::create: no create function for class '%s'.\n",
-              className);
-    }
-
-    Serializable *object = createFunc(cp, section);
-
-    assert(object != NULL);
-
-    return object;
-}
-
 const std::string &
 Serializable::currentSection()
 {
@@ -609,15 +549,6 @@ Serializable::currentSection()
 
     return path.top();
 }
-
-Serializable *
-Serializable::create(CheckpointIn &cp, const string &section)
-{
-    Serializable *object = SerializableClass::createObject(cp, section);
-    object->unserializeSection(cp, section);
-    return object;
-}
-
 
 const char *CheckpointIn::baseFilename = "m5.cpt";
 

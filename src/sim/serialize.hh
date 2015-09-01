@@ -350,8 +350,6 @@ class Serializable
     /** Get the fully-qualified name of the active section */
     static const std::string &currentSection();
 
-    static Serializable *create(CheckpointIn &cp, const std::string &section);
-
     static int ckptCount;
     static int ckptMaxCount;
     static int ckptPrevCount;
@@ -363,52 +361,6 @@ class Serializable
 };
 
 void debug_serialize(const std::string &cpt_dir);
-
-//
-// An instance of SerializableClass corresponds to a class derived from
-// Serializable.  The SerializableClass instance serves to bind the string
-// name (found in the config file) to a function that creates an
-// instance of the appropriate derived class.
-//
-// This would be much cleaner in Smalltalk or Objective-C, where types
-// are first-class objects themselves.
-//
-class SerializableClass
-{
-  public:
-
-    // Type CreateFunc is a pointer to a function that creates a new
-    // simulation object builder based on a .ini-file parameter
-    // section (specified by the first string argument), a unique name
-    // for the object (specified by the second string argument), and
-    // an optional config hierarchy node (specified by the third
-    // argument).  A pointer to the new SerializableBuilder is returned.
-    typedef Serializable *(*CreateFunc)(CheckpointIn &cp,
-                                        const std::string &section);
-
-    static std::map<std::string,CreateFunc> *classMap;
-
-    // Constructor.  For example:
-    //
-    // SerializableClass baseCacheSerializableClass("BaseCacheSerializable",
-    //                         newBaseCacheSerializableBuilder);
-    //
-    SerializableClass(const std::string &className, CreateFunc createFunc);
-
-    // create Serializable given name of class and pointer to
-    // configuration hierarchy node
-    static Serializable *createObject(CheckpointIn &cp,
-                                      const std::string &section);
-};
-
-//
-// Macros to encapsulate the magic of declaring & defining
-// SerializableBuilder and SerializableClass objects
-//
-
-#define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)                      \
-SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,                        \
-                                         OBJ_CLASS::createForUnserialize);
 
 
 class CheckpointIn

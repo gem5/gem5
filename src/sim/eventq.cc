@@ -283,55 +283,6 @@ Event::unserialize(CheckpointIn &cp)
 }
 
 void
-EventQueue::serialize(CheckpointOut &cp) const
-{
-    std::list<Event *> eventPtrs;
-
-    int numEvents = 0;
-    Event *nextBin = head;
-    while (nextBin) {
-        Event *nextInBin = nextBin;
-
-        while (nextInBin) {
-            if (nextInBin->flags.isSet(Event::AutoSerialize)) {
-                eventPtrs.push_back(nextInBin);
-                paramOut(cp, csprintf("event%d", numEvents++),
-                         nextInBin->name());
-            }
-            nextInBin = nextInBin->nextInBin;
-        }
-
-        nextBin = nextBin->nextBin;
-    }
-
-    SERIALIZE_SCALAR(numEvents);
-
-    for (Event *ev : eventPtrs)
-        ev->serializeSection(cp, ev->name());
-}
-
-void
-EventQueue::unserialize(CheckpointIn &cp)
-{
-    int numEvents;
-    UNSERIALIZE_SCALAR(numEvents);
-
-    std::string eventName;
-    for (int i = 0; i < numEvents; i++) {
-        // get the pointer value associated with the event
-        paramIn(cp, csprintf("event%d", i), eventName);
-
-        // create the event based on its pointer value
-        Serializable *obj(Serializable::create(cp, eventName));
-        Event *event(dynamic_cast<Event *>(obj));
-        fatal_if(!event,
-                 "Event queue unserialized something that wasn't an event.\n");
-
-        checkpointReschedule(event);
-    }
-}
-
-void
 EventQueue::checkpointReschedule(Event *event)
 {
     // It's safe to call insert() directly here since this method

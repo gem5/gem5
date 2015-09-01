@@ -104,7 +104,12 @@ class EventBase
     static const FlagsType Squashed      = 0x0001; // has been squashed
     static const FlagsType Scheduled     = 0x0002; // has been scheduled
     static const FlagsType AutoDelete    = 0x0004; // delete after dispatch
-    static const FlagsType AutoSerialize = 0x0008; // must be serialized
+    /**
+     * This used to be AutoSerialize. This value can't be reused
+     * without changing the checkpoint version since the flag field
+     * gets serialized.
+     */
+    static const FlagsType Reserved0     = 0x0008;
     static const FlagsType IsExitEvent   = 0x0010; // special exit event
     static const FlagsType IsMainQueue   = 0x0020; // on main event queue
     static const FlagsType Initialized   = 0x7a40; // somewhat random bits
@@ -437,7 +442,7 @@ operator!=(const Event &l, const Event &r)
  * otherwise they risk being scheduled in the past by
  * handleAsyncInsertions().
  */
-class EventQueue : public Serializable
+class EventQueue
 {
   private:
     std::string objName;
@@ -642,11 +647,6 @@ class EventQueue : public Serializable
     void lock() { service_mutex.lock(); }
     void unlock() { service_mutex.unlock(); }
     /**@}*/
-
-#ifndef SWIG
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-#endif
 
     /**
      * Reschedule an event after a checkpoint.
