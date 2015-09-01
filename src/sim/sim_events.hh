@@ -63,7 +63,7 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     // non-scheduling version for createForUnserialize()
     GlobalSimLoopExitEvent();
     GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
-                           Tick repeat = 0, bool serialize = false);
+                           Tick repeat = 0);
 
     const std::string getCause() const { return cause; }
     const int getCode() const { return code; }
@@ -83,8 +83,7 @@ class LocalSimLoopExitEvent : public Event
 
   public:
     LocalSimLoopExitEvent();
-    LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0,
-                          bool serialize = false);
+    LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
     const std::string getCause() const { return cause; }
     const int getCode() const { return code; }
