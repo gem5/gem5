@@ -365,34 +365,6 @@ class Serializable
 void debug_serialize(const std::string &cpt_dir);
 
 //
-// A SerializableBuilder serves as an evaluation context for a set of
-// parameters that describe a specific instance of a Serializable.  This
-// evaluation context corresponds to a section in the .ini file (as
-// with the base ParamContext) plus an optional node in the
-// configuration hierarchy (the configNode member) for resolving
-// Serializable references.  SerializableBuilder is an abstract superclass;
-// derived classes specialize the class for particular subclasses of
-// Serializable (e.g., BaseCache).
-//
-// For typical usage, see the definition of
-// SerializableClass::createObject().
-//
-class SerializableBuilder
-{
-  public:
-
-    SerializableBuilder() {}
-
-    virtual ~SerializableBuilder() {}
-
-    // Create the actual Serializable corresponding to the parameter
-    // values in this context.  This function is overridden in derived
-    // classes to call a specific constructor for a particular
-    // subclass of Serializable.
-    virtual Serializable *create() = 0;
-};
-
-//
 // An instance of SerializableClass corresponds to a class derived from
 // Serializable.  The SerializableClass instance serves to bind the string
 // name (found in the config file) to a function that creates an
