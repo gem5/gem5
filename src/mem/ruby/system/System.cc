@@ -45,7 +45,6 @@
 
 using namespace std;
 
-int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
 uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
@@ -60,8 +59,6 @@ RubySystem::RubySystem(const Params *p)
     : ClockedObject(p), m_access_backing_store(p->access_backing_store),
       m_cache_recorder(NULL)
 {
-    m_random_seed = p->random_seed;
-    srandom(m_random_seed);
     m_randomization = p->randomization;
 
     m_block_size_bytes = p->block_size_bytes;
