@@ -212,6 +212,24 @@ arrayParamOut(CheckpointOut &os, const string &name, const list<T> &param)
 
 template <class T>
 void
+arrayParamOut(CheckpointOut &os, const string &name, const set<T> &param)
+{
+    typename set<T>::const_iterator it = param.begin();
+
+    os << name << "=";
+    if (param.size() > 0)
+        showParam(os, *it);
+    it++;
+    while (it != param.end()) {
+        os << " ";
+        showParam(os, *it);
+        it++;
+    }
+    os << "\n";
+}
+
+template <class T>
+void
 paramIn(CheckpointIn &cp, const string &name, T &param)
 {
     const string &section(Serializable::currentSection());
@@ -368,6 +386,36 @@ arrayParamIn(CheckpointIn &cp, const string &name, list<T> &param)
     }
 }
 
+template <class T>
+void
+arrayParamIn(CheckpointIn &cp, const string &name, set<T> &param)
+{
+    const string &section(Serializable::currentSection());
+    string str;
+    if (!cp.find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+    param.clear();
+
+    vector<string> tokens;
+    tokenize(tokens, str, ' ');
+
+    for (vector<string>::size_type i = 0; i < tokens.size(); i++) {
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param.insert(scalar_value);
+    }
+}
+
 
 void
 objParamIn(CheckpointIn &cp, const string &name, SimObject * &param)
@@ -423,6 +471,11 @@ INSTANTIATE_PARAM_TEMPLATES(double)
 INSTANTIATE_PARAM_TEMPLATES(string)
 INSTANTIATE_PARAM_TEMPLATES(Pixel)
 
+// set is only used with strings and furthermore doesn't agree with Pixel
+template void
+arrayParamOut(CheckpointOut &, const string &, const set<string> &);
+template void
+arrayParamIn(CheckpointIn &, const string &, set<string> &);
 
 /////////////////////////////
 

@@ -55,6 +55,7 @@
 #include <list>
 #include <map>
 #include <stack>
+#include <set>
 #include <vector>
 
 #include "base/bitunion.hh"
@@ -124,6 +125,10 @@ void arrayParamOut(CheckpointOut &cp, const std::string &name,
                    const std::list<T> &param);
 
 template <class T>
+void arrayParamOut(CheckpointOut &cp, const std::string &name,
+                   const std::set<T> &param);
+
+template <class T>
 void arrayParamIn(CheckpointIn &cp, const std::string &name,
                   T *param, unsigned size);
 
@@ -134,6 +139,10 @@ void arrayParamIn(CheckpointIn &cp, const std::string &name,
 template <class T>
 void arrayParamIn(CheckpointIn &cp, const std::string &name,
                   std::list<T> &param);
+
+template <class T>
+void arrayParamIn(CheckpointIn &cp, const std::string &name,
+                  std::set<T> &param);
 
 void
 objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
