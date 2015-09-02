@@ -916,6 +916,11 @@ env.Command('debug/flags.cc', Value(debug_flags),
 env.Depends(SWIG, 'debug/flags.cc')
 Source('debug/flags.cc')
 
+# version tags
+env.Command('sim/tags.cc', None,
+            MakeAction('util/cpt_upgrader.py --get-cc-file > $TARGET',
+                       Transform("VER TAGS")))
+
 # Embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
 # library.  To do that, we compile the file to byte code, marshal the
