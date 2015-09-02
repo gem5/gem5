@@ -223,12 +223,13 @@ paramIn(CheckpointIn &cp, const string &name, T &param)
 
 template <class T>
 bool
-optParamIn(CheckpointIn &cp, const string &name, T &param)
+optParamIn(CheckpointIn &cp, const string &name, T &param, bool warn)
 {
     const string &section(Serializable::currentSection());
     string str;
     if (!cp.find(section, name, str) || !parseParam(str, param)) {
-        warn("optional parameter %s:%s not present\n", section, name);
+        if (warn)
+            warn("optional parameter %s:%s not present\n", section, name);
         return false;
     } else {
         return true;
@@ -384,7 +385,8 @@ objParamIn(CheckpointIn &cp, const string &name, SimObject * &param)
     template void                                                       \
     paramIn(CheckpointIn &cp, const string &name, type & param);        \
     template bool                                                       \
-    optParamIn(CheckpointIn &cp, const string &name, type & param);     \
+    optParamIn(CheckpointIn &cp, const string &name, type & param,      \
+               bool warn);                                              \
     template void                                                       \
     arrayParamOut(CheckpointOut &os, const string &name,                \
                   type const *param, unsigned size);                    \

@@ -100,13 +100,15 @@ void paramIn(CheckpointIn &cp, const std::string &name,
 }
 
 template <class T>
-bool optParamIn(CheckpointIn &cp, const std::string &name, T &param);
+bool optParamIn(CheckpointIn &cp, const std::string &name, T &param,
+                bool warn = true);
 
 template <typename DataType, typename BitUnion>
 bool optParamIn(CheckpointIn &cp, const std::string &name,
-                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p,
+                bool warn = true)
 {
-    return optParamIn(cp, name, p.__data);
+    return optParamIn(cp, name, p.__data, warn);
 }
 
 template <class T>
