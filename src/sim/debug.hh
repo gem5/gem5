@@ -44,6 +44,13 @@
  */
 void schedBreak(Tick when);
 
+/**
+ * Cause the simulator to execute a breakpoint when
+ * the given kernel function is reached
+ * @param funcName the name of the kernel function at which to break
+ */
+void breakAtKernelFunction(const char* funcName);
+
 /** Cause the simulator to return to python to create a checkpoint
  * @param when the cycle to break
  */

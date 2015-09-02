@@ -38,6 +38,8 @@
 #include "sim/global_event.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
+#include "cpu/pc_event.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -85,6 +87,14 @@ schedBreak(Tick when)
 {
     new DebugBreakEvent(when);
     warn("need to stop all queues");
+}
+
+void
+breakAtKernelFunction(const char* funcName)
+{
+    System* curSystem = System::systemList[0];
+    curSystem->addKernelFuncEvent<BreakPCEvent>(funcName,
+                                                "GDB scheduled break", true);
 }
 
 ///
