@@ -132,8 +132,6 @@ Root::loadState(CheckpointIn &cp)
 void
 Root::serialize(CheckpointOut &cp) const
 {
-    uint64_t cpt_ver = gem5CheckpointVersion;
-    SERIALIZE_SCALAR(cpt_ver);
     SERIALIZE_SCALAR(FullSystem);
     std::string isa = THE_ISA_STR;
     SERIALIZE_SCALAR(isa);
@@ -141,27 +139,7 @@ Root::serialize(CheckpointOut &cp) const
 
 void
 Root::unserialize(CheckpointIn &cp)
-{
-    uint64_t cpt_ver = 0;
-    UNSERIALIZE_OPT_SCALAR(cpt_ver);
-    if (cpt_ver < gem5CheckpointVersion) {
-        warn("**********************************************************\n");
-        warn("!!!! Checkpoint ver %#x is older than current ver %#x !!!!\n",
-                cpt_ver, gem5CheckpointVersion);
-        warn("You might experience some issues when restoring and should run "
-             "the checkpoint upgrader (util/cpt_upgrader.py) on your "
-             "checkpoint\n");
-        warn("**********************************************************\n");
-    } else if (cpt_ver > gem5CheckpointVersion) {
-        warn("**********************************************************\n");
-        warn("!!!! Checkpoint ver %#x is newer than current ver %#x !!!!\n",
-                cpt_ver, gem5CheckpointVersion);
-        warn("Running a new checkpoint with an older version of gem5 is not "
-             "supported. While it might work, you may experience incorrect "
-             "behavior or crashes.\n");
-        warn("**********************************************************\n");
-     }
-}
+{}
 
 
 bool FullSystem;

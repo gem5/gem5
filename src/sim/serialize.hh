@@ -55,6 +55,7 @@
 #include <list>
 #include <map>
 #include <stack>
+#include <set>
 #include <vector>
 
 #include "base/bitunion.hh"
@@ -69,15 +70,6 @@ class EventQueue;
 
 typedef std::ostream CheckpointOut;
 
-
-/** The current version of the checkpoint format.
- * This should be incremented by 1 and only 1 for every new version, where a new
- * version is defined as a checkpoint created before this version won't work on
- * the current version until the checkpoint format is updated. Adding a new
- * SimObject shouldn't cause the version number to increase, only changes to
- * existing objects such as serializing/unserializing more state, changing sizes
- * of serialized arrays, etc. */
-static const uint64_t gem5CheckpointVersion = 0x000000000000000f;
 
 template <class T>
 void paramOut(CheckpointOut &cp, const std::string &name, const T &param);
@@ -100,13 +92,15 @@ void paramIn(CheckpointIn &cp, const std::string &name,
 }
 
 template <class T>
-bool optParamIn(CheckpointIn &cp, const std::string &name, T &param);
+bool optParamIn(CheckpointIn &cp, const std::string &name, T &param,
+                bool warn = true);
 
 template <typename DataType, typename BitUnion>
 bool optParamIn(CheckpointIn &cp, const std::string &name,
-                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p,
+                bool warn = true)
 {
-    return optParamIn(cp, name, p.__data);
+    return optParamIn(cp, name, p.__data, warn);
 }
 
 template <class T>
@@ -122,6 +116,10 @@ void arrayParamOut(CheckpointOut &cp, const std::string &name,
                    const std::list<T> &param);
 
 template <class T>
+void arrayParamOut(CheckpointOut &cp, const std::string &name,
+                   const std::set<T> &param);
+
+template <class T>
 void arrayParamIn(CheckpointIn &cp, const std::string &name,
                   T *param, unsigned size);
 
@@ -132,6 +130,10 @@ void arrayParamIn(CheckpointIn &cp, const std::string &name,
 template <class T>
 void arrayParamIn(CheckpointIn &cp, const std::string &name,
                   std::list<T> &param);
+
+template <class T>
+void arrayParamIn(CheckpointIn &cp, const std::string &name,
+                  std::set<T> &param);
 
 void
 objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
