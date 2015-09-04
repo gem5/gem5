@@ -1828,17 +1828,13 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     }
 
     if (!pkt->req->isUncacheable() && pkt->isRead() && !invalidate) {
+        // reading non-exclusive shared data, note that we retain
+        // the block in owned state if it is dirty, with the response
+        // taken care of below, and otherwhise simply downgrade to
+        // shared
         assert(!needs_exclusive);
         pkt->assertShared();
-        int bits_to_clear = BlkWritable;
-        const bool haveOwnershipState = true; // for now
-        if (!haveOwnershipState) {
-            // if we don't support pure ownership (dirty && !writable),
-            // have to clear dirty bit here, assume memory snarfs data
-            // on cache-to-cache xfer
-            bits_to_clear |= BlkDirty;
-        }
-        blk->status &= ~bits_to_clear;
+        blk->status &= ~BlkWritable;
     }
 
     if (respond) {
@@ -1850,9 +1846,10 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // will write it back at a later point
         pkt->assertMemInhibit();
         if (have_exclusive) {
-            // in the case of an uncacheable request there is no need
-            // to set the exclusive flag, but since the recipient does
-            // not care there is no harm in doing so
+            // in the case of an uncacheable request there is no point
+            // in setting the exclusive flag, but since the recipient
+            // does not care there is no harm in doing so, in any case
+            // it is just a hint
             pkt->setSupplyExclusive();
         }
         if (is_timing) {
