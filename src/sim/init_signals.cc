@@ -87,7 +87,7 @@ exitNowHandler(int sigtype)
 void
 abortHandler(int sigtype)
 {
-    ccprintf(cerr, "Program aborted at cycle %d\n", curTick());
+    ccprintf(cerr, "Program aborted at tick %llu\n", curTick());
 }
 
 // Handle SIGIO
