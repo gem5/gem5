@@ -101,6 +101,9 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         if (mshr != NULL) {
             assert(!mshr->downstreamPending);
             mshr->downstreamPending = true;
+        } else {
+            // No need to clear downstreamPending later
+            markPending = false;
         }
     }
 
