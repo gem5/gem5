@@ -26,11 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// NetDest specifies the network destination of a Message
-// This is backward compatible with the Set class that was previously
-// used to specify network destinations.
-// NetDest supports both node networks and component networks
-
 #ifndef __MEM_RUBY_COMMON_NETDEST_HH__
 #define __MEM_RUBY_COMMON_NETDEST_HH__
 
@@ -40,6 +35,7 @@
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/common/MachineID.hh"
 
+// NetDest specifies the network destination of a Message
 class NetDest
 {
   public:

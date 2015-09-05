@@ -32,129 +32,192 @@
 #ifndef __MEM_RUBY_COMMON_SET_HH__
 #define __MEM_RUBY_COMMON_SET_HH__
 
+#include <bitset>
+#include <cassert>
 #include <iostream>
-#include <limits>
 
+#include "base/misc.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
-/*
- * This defines the number of longs (32-bits on 32 bit machines,
- * 64-bit on 64-bit AMD machines) to use to hold the set...
- * the default is 4, allowing 128 or 256 different members
- * of the set.
- *
- * This should never need to be changed for correctness reasons,
- * though increasing it will increase performance for larger
- * set sizes at the cost of a (much) larger memory footprint
- *
- */
-const int NUMBER_WORDS_PER_SET = 1;
+// Change for systems with more than 64 controllers of a particular type.
+const int NUMBER_BITS_PER_SET = 64;
 
 class Set
 {
   private:
-    int m_nSize;              // the number of bits in this set
-    int m_nArrayLen;          // the number of 32-bit words that are
-                              // held in the array
-
-    // Changed 5/24/05 for static allocation of array
-    // note that "long" corresponds to 32 bits on a 32-bit machine,
-    // 64 bits if the -m64 parameter is passed to g++, which it is
-    // for an AMD opteron under our configuration
-
-    // an word array to hold the bits in the set
-    unsigned long *m_p_nArray;
-    unsigned long m_p_nArray_Static[NUMBER_WORDS_PER_SET];
-
-    static const int LONG_BITS =
-        std::numeric_limits<unsigned long>::digits + 1;
-    static const int INDEX_SHIFT = LONG_BITS == 64 ? 6 : 5;
-    static const int INDEX_MASK = (1 << INDEX_SHIFT) - 1;
-
-    void clearExcess();
+    // Number of bits in use in this set.
+    int m_nSize;
+    std::bitset<NUMBER_BITS_PER_SET> bits;
 
   public:
-    Set();
-    Set(int size);
-    Set(const Set& obj);
-    ~Set();
+    Set() : m_nSize(0) {}
 
-    Set& operator=(const Set& obj);
+    Set(int size) : m_nSize(size)
+    {
+        if (size > NUMBER_BITS_PER_SET)
+            fatal("Number of bits(%d) < size specified(%d). "
+                  "Increase the number of bits and recompile.\n",
+                  NUMBER_BITS_PER_SET, size);
+    }
+
+    Set(const Set& obj) : m_nSize(obj.m_nSize), bits(obj.bits) {}
+    ~Set() {}
+
+    Set& operator=(const Set& obj)
+    {
+        m_nSize = obj.m_nSize;
+        bits = obj.bits;
+        return *this;
+    }
 
     void
     add(NodeID index)
     {
-        m_p_nArray[index >> INDEX_SHIFT] |=
-            (((unsigned long) 1) << (index & INDEX_MASK));
+        bits.set(index);
     }
 
-    void addSet(const Set& set);
+    /*
+     * This function should set all the bits in the current set that are
+     * already set in the parameter set
+     */
+    void
+    addSet(const Set& obj)
+    {
+        assert(m_nSize == obj.m_nSize);
+        bits |= obj.bits;
+    }
 
+    /*
+     * This function clears bits that are =1 in the parameter set
+     */
     void
     remove(NodeID index)
     {
-        m_p_nArray[index >> INDEX_SHIFT] &=
-            ~(((unsigned long)1) << (index & INDEX_MASK));
+        bits.reset(index);
     }
 
-    void removeSet(const Set& set);
-
+    /*
+     * This function clears bits that are =1 in the parameter set
+     */
     void
-    clear()
+    removeSet(const Set& obj)
     {
-        for (int i = 0; i < m_nArrayLen; i++)
-            m_p_nArray[i] = 0;
+        assert(m_nSize == obj.m_nSize);
+        bits &= (~obj.bits);
     }
 
-    void broadcast();
-    int count() const;
-    bool isEqual(const Set& set) const;
+    void clear() { bits.reset(); }
+
+    /*
+     * this function sets all bits in the set
+     */
+    void broadcast()
+    {
+        bits.set();
+        for (int j = m_nSize; j < NUMBER_BITS_PER_SET; ++j) {
+            bits.reset(j);
+        }
+    }
+
+    /*
+     * This function returns the population count of 1's in the set
+     */
+    int count() const { return bits.count(); }
+
+    /*
+     * This function checks for set equality
+     */
+    bool
+    isEqual(const Set& obj) const
+    {
+        assert(m_nSize == obj.m_nSize);
+        return bits == obj.bits;
+    }
 
     // return the logical OR of this set and orSet
-    Set OR(const Set& orSet) const;
+    Set
+    OR(const Set& obj) const
+    {
+        assert(m_nSize == obj.m_nSize);
+        Set r(m_nSize);
+        r.bits = bits | obj.bits;
+        return r;
+    };
 
     // return the logical AND of this set and andSet
-    Set AND(const Set& andSet) const;
+    Set
+    AND(const Set& obj) const
+    {
+        assert(m_nSize == obj.m_nSize);
+        Set r(m_nSize);
+        r.bits = bits & obj.bits;
+        return r;
+    }
 
     // Returns true if the intersection of the two sets is empty
     bool
-    intersectionIsEmpty(const Set& other_set) const
+    intersectionIsEmpty(const Set& obj) const
     {
-        for (int i = 0; i < m_nArrayLen; i++)
-            if (m_p_nArray[i] & other_set.m_p_nArray[i])
-                return false;
-        return true;
+        std::bitset<NUMBER_BITS_PER_SET> r = bits & obj.bits;
+        return r.none();
     }
 
-    bool isSuperset(const Set& test) const;
+    /*
+     * Returns false if a bit is set in the parameter set that is NOT set
+     * in this set
+     */
+    bool
+    isSuperset(const Set& test) const
+    {
+        assert(m_nSize == test.m_nSize);
+        std::bitset<NUMBER_BITS_PER_SET> r = bits | test.bits;
+        return (r == bits);
+    }
+
     bool isSubset(const Set& test) const { return test.isSuperset(*this); }
 
+    bool isElement(NodeID element) const { return bits.test(element); }
+
+    /*
+     * this function returns true iff all bits in use are set
+     */
     bool
-    isElement(NodeID element) const
+    isBroadcast() const
     {
-        return (m_p_nArray[element>>INDEX_SHIFT] &
-            (((unsigned long)1) << (element & INDEX_MASK))) != 0;
+        return (bits.count() == m_nSize);
     }
 
-    bool isBroadcast() const;
-    bool isEmpty() const;
+    bool isEmpty() const { return bits.none(); }
 
-    NodeID smallestElement() const;
-
-    void setSize(int size);
-
-    NodeID
-    elementAt(int index) const
+    NodeID smallestElement() const
     {
-        if (isElement(index))
-            return (NodeID)true;
-        else
-            return 0;
+        for (int i = 0; i < m_nSize; ++i) {
+            if (bits.test(i)) {
+                return i;
+            }
+        }
+        panic("No smallest element of an empty set.");
     }
+
+    bool elementAt(int index) const { return bits[index]; }
 
     int getSize() const { return m_nSize; }
 
-    void print(std::ostream& out) const;
+    void
+    setSize(int size)
+    {
+        if (size > NUMBER_BITS_PER_SET)
+            fatal("Number of bits(%d) < size specified(%d). "
+                  "Increase the number of bits and recompile.\n",
+                  NUMBER_BITS_PER_SET, size);
+        m_nSize = size;
+        bits.reset();
+    }
+
+    void print(std::ostream& out) const
+    {
+        out << "[Set (" << m_nSize << "): " << bits << "]";
+    }
 };
 
 inline std::ostream&
