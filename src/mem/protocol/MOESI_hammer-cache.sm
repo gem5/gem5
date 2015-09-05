@@ -853,9 +853,18 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     }
   }
 
-  action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
+  action(h_load_hit, "hd", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Dcache.setMRU(cache_entry);
+    sequencer.readCallback(address, cache_entry.DataBlk, false,
+                           testAndClearLocalHit(cache_entry));
+  }
+
+  action(h_ifetch_hit, "hi", desc="Notify sequencer the ifetch completed.") {
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    L1Icache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk, false,
                            testAndClearLocalHit(cache_entry));
   }
@@ -865,7 +874,8 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     assert(is_valid(tbe));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     peek(responseToCache_in, ResponseMsg) {
-
+      L1Icache.setMRU(address);
+      L1Dcache.setMRU(address);
       sequencer.readCallback(address, cache_entry.DataBlk, true,
                  machineIDToMachineType(in_msg.Sender), tbe.InitialRequestTime,
                  tbe.ForwardRequestTime, tbe.FirstResponseTime);
@@ -876,6 +886,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     peek(mandatoryQueue_in, RubyRequest) {
+      L1Dcache.setMRU(cache_entry);
       sequencer.writeCallback(address, cache_entry.DataBlk, false,
                               testAndClearLocalHit(cache_entry));
 
@@ -897,7 +908,8 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     assert(is_valid(tbe));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     peek(responseToCache_in, ResponseMsg) {
-
+      L1Icache.setMRU(address);
+      L1Dcache.setMRU(address);
       sequencer.writeCallback(address, cache_entry.DataBlk, true,
               machineIDToMachineType(in_msg.Sender), tbe.InitialRequestTime,
               tbe.ForwardRequestTime, tbe.FirstResponseTime);
@@ -910,7 +922,8 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     assert(is_valid(cache_entry));
     assert(is_valid(tbe));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
-
+    L1Icache.setMRU(address);
+    L1Dcache.setMRU(address);
     sequencer.writeCallback(address, cache_entry.DataBlk, true,
             machineIDToMachineType(tbe.LastResponder), tbe.InitialRequestTime,
             tbe.ForwardRequestTime, tbe.FirstResponseTime);
@@ -1504,7 +1517,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   transition({S, SM, ISM}, Ifetch) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstHit;
     k_popMandatoryQueue;
   }
@@ -1518,7 +1531,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   transition(SR, Ifetch, S) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstMiss;
     uu_profileL2Hit;
     k_popMandatoryQueue;
@@ -1566,7 +1579,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   transition({O, OM, SS, MM_W, M_W}, {Ifetch}) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstHit;
     k_popMandatoryQueue;
   }
@@ -1580,7 +1593,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   transition(OR, Ifetch, O) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstMiss;
     uu_profileL2Hit;
     k_popMandatoryQueue;
@@ -1631,7 +1644,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   // Transitions from Modified
   transition({MM, M}, {Ifetch}) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstHit;
     k_popMandatoryQueue;
   }
@@ -1657,7 +1670,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   transition(MMR, Ifetch, MM) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstMiss;
     uu_profileL2Hit;
     k_popMandatoryQueue;
@@ -1738,7 +1751,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   transition(MR, Ifetch, M) {
-    h_load_hit;
+    h_ifetch_hit;
     uu_profileL1InstMiss;
     uu_profileL2Hit;
     k_popMandatoryQueue;

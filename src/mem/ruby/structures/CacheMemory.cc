@@ -344,6 +344,14 @@ CacheMemory::setMRU(Addr address)
 }
 
 void
+CacheMemory::setMRU(const AbstractCacheEntry *e)
+{
+    uint32_t cacheSet = e->getSetIndex();
+    uint32_t loc = e->getWayIndex();
+    m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
+}
+
+void
 CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 {
     uint64_t warmedUpBlocks = 0;
