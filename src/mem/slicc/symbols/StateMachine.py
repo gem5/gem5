@@ -43,6 +43,7 @@ python_class_map = {
                     "Sequencer": "RubySequencer",
                     "DirectoryMemory": "RubyDirectoryMemory",
                     "MemoryControl": "MemoryControl",
+                    "MessageBuffer": "MessageBuffer",
                     "DMASequencer": "DMASequencer",
                     "Prefetcher":"Prefetcher",
                     "Cycles":"Cycles",
@@ -234,11 +235,7 @@ class $py_ident(RubyController):
             if param.rvalue is not None:
                 dflt_str = str(param.rvalue.inline()) + ', '
 
-            if param.type_ast.type.c_ident == "MessageBuffer":
-                # The MessageBuffer MUST be instantiated in the protocol config
-                code('${{param.ident}} = Param.MessageBuffer("")')
-
-            elif python_class_map.has_key(param.type_ast.type.c_ident):
+            if python_class_map.has_key(param.type_ast.type.c_ident):
                 python_type = python_class_map[param.type_ast.type.c_ident]
                 code('${{param.ident}} = Param.${{python_type}}(${dflt_str}"")')
 
@@ -246,12 +243,6 @@ class $py_ident(RubyController):
                 self.error("Unknown c++ to python class conversion for c++ " \
                            "type: '%s'. Please update the python_class_map " \
                            "in StateMachine.py", param.type_ast.type.c_ident)
-
-        # Also add any MessageBuffers declared internally to the controller
-        # Note: This includes mandatory and memory queues
-        for var in self.objects:
-            if var.type.c_ident == "MessageBuffer":
-                code('${{var.ident}} = Param.MessageBuffer("")')
 
         code.dedent()
         code.write(path, '%s.py' % py_ident)
@@ -303,8 +294,8 @@ class $c_ident : public AbstractController
     static int getNumControllers();
     void init();
 
-    MessageBuffer* getMandatoryQueue() const;
-    MessageBuffer* getMemoryQueue() const;
+    MessageBuffer *getMandatoryQueue() const;
+    MessageBuffer *getMemoryQueue() const;
     void initNetQueues();
 
     void print(std::ostream& out) const;
@@ -539,17 +530,6 @@ $c_ident::$c_ident(const Params *p)
             if re.compile("sequencer").search(param.ident):
                 code('m_${{param.ident}}_ptr->setController(this);')
 
-        for var in self.objects:
-            # Some MessageBuffers (e.g. mandatory and memory queues) are
-            # instantiated internally to StateMachines but exposed to
-            # components outside SLICC, so make sure to set up this
-            # controller as their receivers
-            if var.type.c_ident == "MessageBuffer":
-                code('''
-m_${{var.ident}}_ptr = p->${{var.ident}};
-m_${{var.ident}}_ptr->setReceiver(this);
-''')
-
         code('''
 
 for (int state = 0; state < ${ident}_State_NUM; state++) {
@@ -581,10 +561,9 @@ $c_ident::initNetQueues()
         vnet_dir_set = set()
 
         for var in self.config_parameters:
+            vid = "m_%s_ptr" % var.ident
             if "network" in var:
                 vtype = var.type_ast.type
-                vid = "m_%s_ptr" % var.ident
-
                 code('assert($vid != NULL);')
 
                 # Network port object
@@ -611,6 +590,14 @@ m_net_ptr->set${network}NetQueue(m_version + base, $vid->getOrdered(), $vnet,
                 if "rank" in var:
                     code('$vid->setPriority(${{var["rank"]}})')
 
+            else:
+                if var.type_ast.type.c_ident == "MessageBuffer":
+                    code('$vid->setReceiver(this);')
+                if var.ident.find("triggerQueue") >= 0:
+                    code('$vid->setSender(this);')
+                elif var.ident.find("optionalQueue") >= 0:
+                    code('$vid->setSender(this);')
+
         code.dedent()
         code('''
 }
@@ -635,14 +622,13 @@ $c_ident::init()
                         code('(*$vid) = ${{var["default"]}};')
                 else:
                     # Normal Object
-                    if var.type.c_ident != "MessageBuffer":
-                        th = var.get("template", "")
-                        expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
-                        args = ""
-                        if "non_obj" not in vtype and not vtype.isEnumeration:
-                            args = var.get("constructor", "")
-                        code('$expr($args);')
+                    th = var.get("template", "")
+                    expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
+                    args = ""
+                    if "non_obj" not in vtype and not vtype.isEnumeration:
+                        args = var.get("constructor", "")
 
+                    code('$expr($args);')
                     code('assert($vid != NULL);')
 
                     if "default" in var:
@@ -651,19 +637,8 @@ $c_ident::init()
                         comment = "Type %s default" % vtype.ident
                         code('*$vid = ${{vtype["default"]}}; // $comment')
 
-                    # Set Priority
-                    if vtype.isBuffer and "rank" in var:
-                        code('$vid->setPriority(${{var["rank"]}});')
-
-                    # Set sender and receiver for trigger queue
-                    if var.ident.find("triggerQueue") >= 0:
-                        code('$vid->setSender(this);')
-                        code('$vid->setReceiver(this);')
-                    elif vtype.c_ident == "TimerTable":
+                    if vtype.c_ident == "TimerTable":
                         code('$vid->setClockObj(this);')
-                    elif var.ident.find("optionalQueue") >= 0:
-                        code('$vid->setSender(this);')
-                        code('$vid->setReceiver(this);')
 
         # Set the prefetchers
         code()

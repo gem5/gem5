@@ -48,6 +48,7 @@ machine(L2Cache, "Token protocol")
   MessageBuffer * responseToL2Cache, network="From", virtual_network="2",
         vnet_type="response";  // a local L1 || mod-directory -> this L2 bank
 
+  MessageBuffer * triggerQueue;
 {
   // STATES
   state_declaration(State, desc="L2 Cache states", default="L2Cache_State_I") {
@@ -564,8 +565,6 @@ machine(L2Cache, "Token protocol")
         testAndWrite(addr, getCacheEntry(addr).DataBlk, pkt);
     return num_functional_writes;
   }
-
-  MessageBuffer triggerQueue;
 
   out_port(globalRequestNetwork_out, RequestMsg, GlobalRequestFromL2Cache);
   out_port(localRequestNetwork_out, RequestMsg, L1RequestFromL2Cache);

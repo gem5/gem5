@@ -56,6 +56,10 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
             vnet_type="forward";
       MessageBuffer * responseToCache, network="From", virtual_network="4",
             vnet_type="response";
+
+      MessageBuffer * mandatoryQueue;
+
+      MessageBuffer * triggerQueue;
 {
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -139,12 +143,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     Block_Ack,                   desc="the directory is blocked and ready for the flush";
   }
 
-  // TYPES
-
   // STRUCTURE DEFINITIONS
-
-  MessageBuffer mandatoryQueue;
-
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State CacheState,        desc="cache state";
@@ -320,10 +319,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
     return cache_entry.AtomicAccessed;
   }
 
-  MessageBuffer triggerQueue;
-
   // ** OUT_PORTS **
-
   out_port(requestNetwork_out, RequestMsg, requestFromCache);
   out_port(responseNetwork_out, ResponseMsg, responseFromCache);
   out_port(unblockNetwork_out, ResponseMsg, unblockFromCache);

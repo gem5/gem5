@@ -35,6 +35,7 @@ machine(DMA, "DMA Controller")
             vnet_type="response";
       MessageBuffer * requestToDir, network="To", virtual_network="0",
             vnet_type="request";
+      MessageBuffer * mandatoryQueue;
 {
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";
@@ -49,7 +50,6 @@ machine(DMA, "DMA Controller")
     Ack,          desc="DMA write to memory completed";
   }
 
-  MessageBuffer mandatoryQueue;
   State cur_state;
 
   State getState(Addr addr) {

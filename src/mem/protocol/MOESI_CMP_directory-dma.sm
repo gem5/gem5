@@ -40,6 +40,8 @@ machine(DMA, "DMA Controller")
       MessageBuffer * respToDir, network="To", virtual_network="2",
             vnet_type="dmaresponse";
 
+      MessageBuffer * mandatoryQueue;
+      MessageBuffer * triggerQueue;
 {
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";
@@ -69,8 +71,6 @@ machine(DMA, "DMA Controller")
     bool isPresent(Addr);
   }
 
-  MessageBuffer mandatoryQueue;
-  MessageBuffer triggerQueue;
   TBETable TBEs, template="<DMA_TBE>", constructor="m_number_of_TBEs";
   State cur_state;
 

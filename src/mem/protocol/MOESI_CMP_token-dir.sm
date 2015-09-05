@@ -61,6 +61,7 @@ machine(Directory, "Token protocol")
    MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
         vnet_type="request";
 
+   MessageBuffer * responseFromMemory;
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_O") {
@@ -265,8 +266,6 @@ machine(Directory, "Token protocol")
     num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
     return num_functional_writes;
   }
-
-  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);

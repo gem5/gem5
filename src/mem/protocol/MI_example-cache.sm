@@ -44,6 +44,8 @@ machine(L1Cache, "MI Example L1 Cache")
             vnet_type="forward";
       MessageBuffer * responseToCache, network="From", virtual_network="4",
             vnet_type="response";
+
+      MessageBuffer * mandatoryQueue;
 {
   // STATES
   state_declaration(State, desc="Cache states") {
@@ -76,9 +78,6 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   // STRUCTURE DEFINITIONS
-
-  MessageBuffer mandatoryQueue;
-
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State CacheState,        desc="cache state";

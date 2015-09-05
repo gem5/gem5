@@ -51,6 +51,10 @@ machine(L1Cache, "Directory protocol")
    // a L2 bank -> this L1
    MessageBuffer * responseToL1Cache, network="From", virtual_network="2",
         vnet_type="response";
+
+   MessageBuffer * triggerQueue;
+
+   MessageBuffer * mandatoryQueue;
 {
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -133,8 +137,6 @@ machine(L1Cache, "Directory protocol")
   void unset_cache_entry();
   void set_tbe(TBE b);
   void unset_tbe();
-
-  MessageBuffer mandatoryQueue, abstract_chip_ptr="true";
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
   TimerTable useTimerTable;
@@ -253,8 +255,6 @@ machine(L1Cache, "Directory protocol")
       error("Invalid RubyRequestType");
     }
   }
-
-  MessageBuffer triggerQueue;
 
   // ** OUT_PORTS **
 

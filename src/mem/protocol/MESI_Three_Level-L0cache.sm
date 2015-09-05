@@ -39,10 +39,10 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
    // To this node's L0 cache FROM the network
    MessageBuffer * bufferFromL1, network="From";
-{
-  // Message queue between this controller and the processor
-  MessageBuffer mandatoryQueue;
 
+   // Message queue between this controller and the processor
+   MessageBuffer * mandatoryQueue;
+{
   // STATES
   state_declaration(State, desc="Cache states", default="L0Cache_State_I") {
     // Base states

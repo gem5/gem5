@@ -64,6 +64,9 @@ machine(Directory, "AMD Hammer-like protocol")
 
       MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
             vnet_type="request";
+
+      MessageBuffer * triggerQueue;
+      MessageBuffer * responseFromMemory;
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_E") {
@@ -299,9 +302,6 @@ machine(Directory, "AMD Hammer-like protocol")
       error("Invalid CoherenceRequestType");
     }
   }
-
-  MessageBuffer triggerQueue;
-  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests

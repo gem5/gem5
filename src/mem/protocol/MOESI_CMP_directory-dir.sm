@@ -42,6 +42,7 @@ machine(Directory, "Directory protocol")
    MessageBuffer * responseFromDir, network="To", virtual_network="2",
         vnet_type="response";  // Dir -> mod-L2 bank
 
+   MessageBuffer * responseFromMemory;
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
@@ -219,8 +220,6 @@ machine(Directory, "Directory protocol")
     }
     return false;
   }
-
-  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);

@@ -37,6 +37,8 @@ machine(Directory, "MESI Two Level directory protocol")
         vnet_type="response";
    MessageBuffer * responseFromDir, network="To", virtual_network="1",
         vnet_type="response";
+
+   MessageBuffer * responseFromMemory;
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
@@ -181,8 +183,6 @@ machine(Directory, "MESI Two Level directory protocol")
       (type == CoherenceRequestType:GET_INSTR) ||
       (type == CoherenceRequestType:GETX);
   }
-
-  MessageBuffer responseFromMemory;
 
   // ** OUT_PORTS **
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
