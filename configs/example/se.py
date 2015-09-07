@@ -241,8 +241,8 @@ for i in xrange(np):
     system.cpu[i].createThreads()
 
 if options.ruby:
-    if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
-        print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
+    if options.cpu_type == "atomic" or options.cpu_type == "AtomicSimpleCPU":
+        print >> sys.stderr, "Ruby does not work with atomic cpu!!"
         sys.exit(1)
 
     Ruby.create_system(options, False, system)
