@@ -272,8 +272,6 @@ $klass ${{self.c_ident}}$parent
             code.indent()
             for dm in self.data_members.values():
                 code('m_${{dm.ident}} = local_${{dm.ident}};')
-                if "nextLineCallHack" in dm:
-                    code('m_${{dm.ident}}${{dm["nextLineCallHack"]}};')
 
             code.dedent()
             code('}')
