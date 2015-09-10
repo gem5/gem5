@@ -228,15 +228,13 @@ main(int argc, char **argv)
     if (checkpoint_save) {
         exit_event = simulate(pre_run_time);
 
-        DrainManager drain_manager;
         unsigned int drain_count = 1;
         do {
-            drain_count = config_manager->drain(&drain_manager);
+            drain_count = config_manager->drain();
 
             std::cerr << "Draining " << drain_count << '\n';
 
             if (drain_count > 0) {
-                drain_manager.setCount(drain_count);
                 exit_event = simulate();
             }
         } while (drain_count > 0);
@@ -259,11 +257,12 @@ main(int argc, char **argv)
     if (checkpoint_restore) {
         std::cerr << "Restoring checkpoint\n";
 
-        Checkpoint *checkpoint = new Checkpoint(checkpoint_dir,
+        CheckpointIn *checkpoint = new CheckpointIn(checkpoint_dir,
             config_manager->getSimObjectResolver());
 
-        Serializable::unserializeGlobals(checkpoint);
-        config_manager->loadState(checkpoint);
+        DrainManager::instance().preCheckpointRestore();
+        Serializable::unserializeGlobals(*checkpoint);
+        config_manager->loadState(*checkpoint);
         config_manager->startup();
 
         config_manager->drainResume();
@@ -281,15 +280,13 @@ main(int argc, char **argv)
         BaseCPU &old_cpu = config_manager->getObject<BaseCPU>(from_cpu);
         BaseCPU &new_cpu = config_manager->getObject<BaseCPU>(to_cpu);
 
-        DrainManager drain_manager;
         unsigned int drain_count = 1;
         do {
-            drain_count = config_manager->drain(&drain_manager);
+            drain_count = config_manager->drain();
 
             std::cerr << "Draining " << drain_count << '\n';
 
             if (drain_count > 0) {
-                drain_manager.setCount(drain_count);
                 exit_event = simulate();
             }
         } while (drain_count > 0);
