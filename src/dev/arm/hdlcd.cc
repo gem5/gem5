@@ -95,6 +95,18 @@ HDLcd::~HDLcd()
 }
 
 void
+HDLcd::regStats()
+{
+    using namespace Stats;
+
+    stats.underruns
+        .name(name() + ".underruns")
+        .desc("number of buffer underruns")
+        .flags(nozero)
+        ;
+}
+
+void
 HDLcd::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing ARM HDLCD\n");
@@ -503,6 +515,7 @@ void
 HDLcd::pxlUnderrun()
 {
     DPRINTF(HDLcd, "Buffer underrun, stopping DMA fill.\n");
+    ++stats.underruns;
     intRaise(INT_UNDERRUN);
     dmaEngine->abortFrame();
 }

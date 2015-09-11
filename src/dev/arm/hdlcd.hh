@@ -95,6 +95,8 @@ class HDLcd: public AmbaDmaDevice
     HDLcd(const HDLcdParams *p);
     ~HDLcd();
 
+    void regStats() M5_ATTR_OVERRIDE;
+
     void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
     void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
 
@@ -381,6 +383,11 @@ class HDLcd: public AmbaDmaDevice
     };
 
     std::unique_ptr<DmaEngine> dmaEngine;
+
+  protected: // Statistics
+    struct {
+        Stats::Scalar underruns;
+    } stats;
 };
 
 #endif
