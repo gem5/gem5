@@ -54,6 +54,7 @@ from Uart import Uart
 from SimpleMemory import SimpleMemory
 from Gic import *
 from EnergyCtrl import EnergyCtrl
+from ClockDomain import SrcClockDomain
 
 class AmbaPioDevice(BasicPioDevice):
     type = 'AmbaPioDevice'
@@ -218,22 +219,22 @@ class Pl111(AmbaDmaDevice):
     amba_id = 0x00141111
     enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
 
-
 class HDLcd(AmbaDmaDevice):
     type = 'HDLcd'
     cxx_header = "dev/arm/hdlcd.hh"
-    # For reference, 1024x768MR-16@60  ~= 56 MHz
-    #                1920x1080MR-16@60 ~= 137 MHz
-    #                3840x2160MR-16@60 ~= 533 MHz
-    # Match against the resolution selected in the Linux DTS/DTB file.
-    pixel_clock = Param.Clock('137MHz', "Clock frequency of the pixel clock "
-                                        "(i.e. PXLREFCLK / OSCCLK 5")
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
                                      "display")
     amba_id = 0x00141000
     workaround_swap_rb = Param.Bool(True, "Workaround incorrect color "
                                     "selector order in some kernels")
+    workaround_dma_line_count = Param.Bool(True, "Workaround incorrect "
+                                           "DMA line count (off by 1)")
     enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
+
+    pixel_buffer_size = Param.MemorySize32("2kB", "Size of address range")
+
+    pxl_clk = Param.ClockDomain("Pixel clock source")
+    pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
 
 class RealView(Platform):
     type = 'RealView'
@@ -518,7 +519,8 @@ class VExpress_EMM(RealView):
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
-    hdlcd  = HDLcd(pio_addr=0x2b000000, int_num=117)
+    hdlcd  = HDLcd(pxl_clk=realview_io.osc_pxl,
+                   pio_addr=0x2b000000, int_num=117)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
     kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
     vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
