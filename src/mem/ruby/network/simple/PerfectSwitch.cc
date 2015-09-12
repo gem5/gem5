@@ -49,9 +49,8 @@ operator<(const LinkOrder& l1, const LinkOrder& l2)
 }
 
 PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets)
-    : Consumer(sw)
+    : Consumer(sw), m_switch_id(sid), m_switch(sw)
 {
-    m_switch_id = sid;
     m_round_robin_start = 0;
     m_wakeups_wo_switch = 0;
     m_virtual_networks = virt_nets;
