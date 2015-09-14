@@ -29,10 +29,9 @@ from slicc.symbols.Symbol import Symbol
 
 class Var(Symbol):
     def __init__(self, symtab, ident, location, type, code, pairs,
-                 machine=None, buffer_expr=""):
+                 machine=None):
         super(Var, self).__init__(symtab, ident, location, pairs)
 
-        self.buffer_expr = buffer_expr
         self.machine = machine
         self.type = type
         self.code = code

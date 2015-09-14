@@ -58,8 +58,9 @@ class InPortDeclAST(DeclAST):
                        queue_type)
 
         type = self.queue_type.type
+        self.pairs["buffer_expr"] = self.var_expr
         in_port = Var(self.symtab, self.ident, self.location, type, str(code),
-                      self.pairs, machine, self.var_expr)
+                      self.pairs, machine)
         symtab.newSymbol(in_port)
 
         symtab.pushFrame()

@@ -196,7 +196,7 @@ class StateMachine(Symbol):
         port_to_buf_map = {}
         in_msg_bufs = {}
         for port in self.in_ports:
-            buf_name = "m_%s_ptr" % port.buffer_expr.name
+            buf_name = "m_%s_ptr" % port.pairs["buffer_expr"].name
             msg_bufs.append(buf_name)
             port_to_buf_map[port] = msg_bufs.index(buf_name)
             if buf_name not in in_msg_bufs:
