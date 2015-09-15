@@ -90,6 +90,8 @@ IdeDisk::IdeDisk(const Params *p)
     } else {
         if (lba_size >= 63)
             sectors = 63;
+        else if (lba_size == 0)
+            panic("Bad IDE image size: 0\n");
         else
             sectors = lba_size;
 
