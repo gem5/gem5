@@ -116,7 +116,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
                 cpu->deschedule(tickCompare);
             cpu->schedule(tickCompare, cpu->clockEdge(Cycles(time)));
         }
-        panic("writing to TICK compare register %#X\n", val);
+        DPRINTF(Timer, "writing to TICK compare register value %#X\n", val);
         break;
 
       case MISCREG_STICK_CMPR:
