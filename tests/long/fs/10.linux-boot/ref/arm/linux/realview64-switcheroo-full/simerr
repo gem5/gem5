@@ -23,220 +23,202 @@ warn: Tried to read RealView I/O at offset 0x60 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x48 that doesn't exist
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 11735, Bank: 6
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 8760, Bank: 1
-WARNING: Bank is not active!
-Command: 1, Timestamp: 5113, Bank: 5
-WARNING: Bank is already active!
-Command: 0, Timestamp: 8082, Bank: 5
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+Command: 0, Timestamp: 10604, Bank: 7
 warn: Tried to read RealView I/O at offset 0x8 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x48 that doesn't exist
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: Bank is already active!
-Command: 0, Timestamp: 9156, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+Command: 0, Timestamp: 6518, Bank: 4
 WARNING: Bank is already active!
-Command: 0, Timestamp: 7012, Bank: 7
+Command: 0, Timestamp: 12331, Bank: 6
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10303, Bank: 6
+Command: 0, Timestamp: 9979, Bank: 4
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 8446, Bank: 6
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
@@ -244,7 +226,11 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10805, Bank: 3
+Command: 0, Timestamp: 6448, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 10161, Bank: 1
+WARNING: Bank is already active!
+Command: 0, Timestamp: 11757, Bank: 2
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -261,42 +247,20 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6448, Bank: 5
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6479, Bank: 5
+WARNING: Bank is already active!
+Command: 0, Timestamp: 6448, Bank: 6
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -312,55 +276,7 @@ warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10011, Bank: 1
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 11449, Bank: 3
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: Bank is already active!
-Command: 0, Timestamp: 6626, Bank: 3
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+Command: 0, Timestamp: 7980, Bank: 3
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -380,17 +296,75 @@ warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 9676, Bank: 5
-WARNING: Bank is already active!
-Command: 0, Timestamp: 10242, Bank: 1
-WARNING: Bank is already active!
-Command: 0, Timestamp: 10403, Bank: 7
+Command: 0, Timestamp: 11719, Bank: 3
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 WARNING: Bank is already active!
-Command: 0, Timestamp: 11427, Bank: 7
+Command: 0, Timestamp: 7906, Bank: 3
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -411,18 +385,28 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 9256, Bank: 6
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
+Command: 0, Timestamp: 9641, Bank: 4
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -431,24 +415,6 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -469,84 +435,8 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 6826, Bank: 1
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: Bank is already active!
-Command: 0, Timestamp: 7179, Bank: 6
-WARNING: Bank is already active!
-Command: 0, Timestamp: 8996, Bank: 7
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 11485, Bank: 4
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: Bank is already active!
-Command: 0, Timestamp: 6448, Bank: 4
-WARNING: Bank is already active!
-Command: 0, Timestamp: 10203, Bank: 6
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
@@ -565,6 +455,22 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -597,44 +503,14 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -655,24 +531,10 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -689,10 +551,22 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -720,7 +594,17 @@ warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 7188, Bank: 5
+Command: 0, Timestamp: 8213, Bank: 7
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
@@ -733,32 +617,68 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: Bank is already active!
-Command: 0, Timestamp: 7000, Bank: 1
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+Command: 0, Timestamp: 6550, Bank: 4
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -773,24 +693,34 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -809,10 +739,6 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -827,312 +753,26 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: Bank is already active!
-Command: 0, Timestamp: 7487, Bank: 6
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+Command: 0, Timestamp: 6448, Bank: 7
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10743, Bank: 3
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
+Command: 0, Timestamp: 10397, Bank: 4
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 11000, Bank: 4
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 7339, Bank: 7
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -1152,7 +792,73 @@ warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 12368, Bank: 3
+Command: 0, Timestamp: 7532, Bank: 2
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 7045, Bank: 2
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -1167,6 +873,174 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: Bank is already active!
+Command: 0, Timestamp: 9050, Bank: 3
+WARNING: Bank is already active!
+Command: 0, Timestamp: 11416, Bank: 6
+WARNING: Bank is already active!
+Command: 0, Timestamp: 8249, Bank: 1
+WARNING: Bank is already active!
+Command: 0, Timestamp: 9760, Bank: 4
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -1195,6 +1069,46 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: Bank is already active!
+Command: 0, Timestamp: 7036, Bank: 4
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -1203,6 +1117,58 @@ warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 7706, Bank: 7
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
@@ -1232,141 +1198,151 @@ warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 7794, Bank: 5
+Command: 0, Timestamp: 8714, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10622, Bank: 2
-WARNING: Bank is already active!
-Command: 0, Timestamp: 8145, Bank: 1
-WARNING: Bank is already active!
-Command: 0, Timestamp: 6448, Bank: 7
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
+Command: 0, Timestamp: 7453, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10803, Bank: 6
+Command: 0, Timestamp: 6792, Bank: 5
+WARNING: Bank is already active!
+Command: 0, Timestamp: 10152, Bank: 5
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 11476, Bank: 4
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 9430, Bank: 2
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR

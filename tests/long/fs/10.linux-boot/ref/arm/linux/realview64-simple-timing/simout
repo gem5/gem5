@@ -1,16 +1,18 @@
+Redirecting stdout to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-timing/simout
+Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug  7 2015 10:13:08
-gem5 started Aug  7 2015 11:22:13
-gem5 executing on e104799-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-timing -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-timing
+gem5 compiled Sep 14 2015 23:29:19
+gem5 started Sep 15 2015 00:24:53
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-simple-timing
 
 Selected 64-bit ARM architecture, updating default disk image...
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /work/gem5/dist/binaries/vmlinux.aarch64.20140821
+info: kernel located at: /scratch/nilay/GEM5/system/binaries/vmlinux.aarch64.20140821
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80080000
-info: Loading DTB file: /work/gem5/dist/binaries/vexpress.aarch64.20140821.dtb at address 0x88000000
+info: Loading DTB file: /scratch/nilay/GEM5/system/binaries/vexpress.aarch64.20140821.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 51832458543500 because m5_exit instruction encountered

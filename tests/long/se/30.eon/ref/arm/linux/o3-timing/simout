@@ -1,13 +1,14 @@
+Redirecting stdout to build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing/simout
+Redirecting stderr to build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 22 2015 10:58:25
-gem5 started Apr 22 2015 11:46:25
-gem5 executing on phenom
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing
+gem5 compiled Sep 14 2015 23:29:19
+gem5 started Sep 15 2015 01:15:27
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/long/se/30.eon/arm/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu.isa: ISA system set to: 0 0x2c9dca0
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Eon, Version 1.1
@@ -15,4 +16,4 @@ info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 OO-style eon Time= 0.110000
-Exiting @ tick 112553814500 because target called exit()
+Exiting @ tick 112687034500 because target called exit()

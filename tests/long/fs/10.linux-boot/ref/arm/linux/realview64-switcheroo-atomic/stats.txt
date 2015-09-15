@@ -4,11 +4,11 @@ sim_seconds                                 51.111153                       # Nu
 sim_ticks                                51111152682000                       # Number of ticks simulated
 final_tick                               51111152682000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1034928                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1216210                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            53725315382                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 668860                       # Number of bytes of host memory used
-host_seconds                                   951.34                       # Real time elapsed on the host
+host_inst_rate                                 916811                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1077403                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            47593586653                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 712068                       # Number of bytes of host memory used
+host_seconds                                  1073.91                       # Real time elapsed on the host
 sim_insts                                   984570519                       # Number of instructions simulated
 sim_ops                                    1157031967                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -228,7 +228,7 @@ system.cpu0.itb.inst_accesses               493628912                       # IT
 system.cpu0.itb.hits                        493558289                       # DTB hits
 system.cpu0.itb.misses                          70623                       # DTB misses
 system.cpu0.itb.accesses                    493628912                       # DTB accesses
-system.cpu0.numCycles                     98036732821                       # number of cpu cycles simulated
+system.cpu0.numCycles                     98036734134                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 system.cpu0.committedInsts                  493343054                       # Number of instructions committed
@@ -248,8 +248,8 @@ system.cpu0.num_cc_register_writes          132723498                       # nu
 system.cpu0.num_mem_refs                    176296730                       # number of memory refs
 system.cpu0.num_load_insts                   91967123                       # Number of load instructions
 system.cpu0.num_store_insts                  84329607                       # Number of store instructions
-system.cpu0.num_idle_cycles              96926191341.047134                       # Number of idle cycles
-system.cpu0.num_busy_cycles              1110541479.952863                       # Number of busy cycles
+system.cpu0.num_idle_cycles              96926192639.173721                       # Number of idle cycles
+system.cpu0.num_busy_cycles              1110541494.826277                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.011328                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.988672                       # Percentage of idle cycles
 system.cpu0.Branches                        110281342                       # Number of branches fetched
@@ -289,7 +289,7 @@ system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Cl
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                 579643698                       # Class of executed instruction
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu0.kern.inst.quiesce                   16775                       # number of quiesce instructions executed
+system.cpu0.kern.inst.quiesce                   19653                       # number of quiesce instructions executed
 system.cpu0.dcache.tags.replacements         11612141                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.999719                       # Cycle average of tags in use
 system.cpu0.dcache.tags.total_refs          340775537                       # Total number of references to valid blocks.
@@ -612,7 +612,7 @@ system.cpu1.itb.inst_accesses               491545246                       # IT
 system.cpu1.itb.hits                        491475383                       # DTB hits
 system.cpu1.itb.misses                          69863                       # DTB misses
 system.cpu1.itb.accesses                    491545246                       # DTB accesses
-system.cpu1.numCycles                     97463064529                       # number of cpu cycles simulated
+system.cpu1.numCycles                     97463066094                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
 system.cpu1.committedInsts                  491227465                       # Number of instructions committed
@@ -632,8 +632,8 @@ system.cpu1.num_cc_register_writes          131105905                       # nu
 system.cpu1.num_mem_refs                    176168876                       # number of memory refs
 system.cpu1.num_load_insts                   92213308                       # Number of load instructions
 system.cpu1.num_store_insts                  83955568                       # Number of store instructions
-system.cpu1.num_idle_cycles              96357044010.669601                       # Number of idle cycles
-system.cpu1.num_busy_cycles              1106020518.330400                       # Number of busy cycles
+system.cpu1.num_idle_cycles              96357045557.909821                       # Number of idle cycles
+system.cpu1.num_busy_cycles              1106020536.090176                       # Number of busy cycles
 system.cpu1.not_idle_fraction                0.011348                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                    0.988652                       # Percentage of idle cycles
 system.cpu1.Branches                        109807220                       # Number of branches fetched
@@ -1080,13 +1080,13 @@ system.realview.ethernet.totalRxOrn                 0                       # to
 system.realview.ethernet.coalescedTotal             0                       # average number of interrupts coalesced into each post
 system.realview.ethernet.postedInterrupts           18                       # number of posts to CPU
 system.realview.ethernet.droppedPackets             0                       # number of packets dropped
+system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
 system.realview.realview_io.osc_clcd.clock        42105                       # Clock period in ticks
 system.realview.realview_io.osc_cpu.clock        16667                       # Clock period in ticks
 system.realview.realview_io.osc_ddr.clock        25000                       # Clock period in ticks
 system.realview.realview_io.osc_hsbm.clock        25000                       # Clock period in ticks
 system.realview.realview_io.osc_mcc.clock        20000                       # Clock period in ticks
 system.realview.realview_io.osc_peripheral.clock        41667                       # Clock period in ticks
-system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
 system.realview.realview_io.osc_smb.clock        20000                       # Clock period in ticks
 system.realview.realview_io.osc_sys.clock        16667                       # Clock period in ticks
 system.realview.realview_io.osc_system_bus.clock        41667                       # Clock period in ticks

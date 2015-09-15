@@ -3,14 +3,15 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/minor-tim
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  7 2014 10:41:53
-gem5 started May  7 2014 10:42:15
-gem5 executing on cz3212c2d7
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/minor-timing -re tests/run.py build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/minor-timing
+gem5 compiled Sep 14 2015 20:54:01
+gem5 started Sep 14 2015 21:15:11
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/minor-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/long/se/30.eon/alpha/tru64/minor-timing
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Eon, Version 1.1
 info: Increasing stack size by one page.
 OO-style eon Time= 0.216667
-Exiting @ tick 220685290500 because target called exit()
+Exiting @ tick 225710988500 because target called exit()

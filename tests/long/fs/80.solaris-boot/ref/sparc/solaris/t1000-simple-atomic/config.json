@@ -3,6 +3,7 @@
     "sim_quantum": 0, 
     "system": {
         "kernel": "", 
+        "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "rom": {
             "range": "1099243192320:1099251580927", 
@@ -57,9 +58,9 @@
                 "role": "SLAVE"
             }, 
             "name": "iobus", 
+            "forward_latency": 1, 
             "clk_domain": "system.clk_domain", 
-            "header_cycles": 1, 
-            "width": 8, 
+            "width": 16, 
             "eventq_index": 0, 
             "master": {
                 "peer": [
@@ -81,10 +82,12 @@
                 ], 
                 "role": "MASTER"
             }, 
+            "response_latency": 2, 
             "cxx_class": "NoncoherentXBar", 
             "path": "system.iobus", 
             "type": "NoncoherentXBar", 
-            "use_default_range": false
+            "use_default_range": false, 
+            "frontend_latency": 2
         }, 
         "t1000": {
             "htod": {
@@ -484,11 +487,11 @@
         "work_end_ckpt_count": 0, 
         "nvram_addr": 133429198848, 
         "memories": [
-            "system.nvram", 
-            "system.physmem1", 
             "system.hypervisor_desc", 
+            "system.nvram", 
             "system.partition_desc", 
             "system.physmem0", 
+            "system.physmem1", 
             "system.rom"
         ], 
         "work_begin_ckpt_count": 0, 
@@ -582,10 +585,10 @@
                 "ret_data16": 65535
             }, 
             "snoop_filter": null, 
+            "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
-            "header_cycles": 1, 
             "system": "system", 
-            "width": 8, 
+            "width": 16, 
             "eventq_index": 0, 
             "master": {
                 "peer": [
@@ -601,10 +604,13 @@
                 ], 
                 "role": "MASTER"
             }, 
+            "response_latency": 2, 
             "cxx_class": "CoherentXBar", 
             "path": "system.membus", 
+            "snoop_response_latency": 4, 
             "type": "CoherentXBar", 
-            "use_default_range": false
+            "use_default_range": false, 
+            "frontend_latency": 3
         }, 
         "nvram": {
             "range": "133429198848:133429207039", 

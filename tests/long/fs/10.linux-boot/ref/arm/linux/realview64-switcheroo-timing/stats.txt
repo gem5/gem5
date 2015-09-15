@@ -4,11 +4,11 @@ sim_seconds                                 51.832615                       # Nu
 sim_ticks                                51832614542500                       # Number of ticks simulated
 final_tick                               51832614542500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 636228                       # Simulator instruction rate (inst/s)
-host_op_rate                                   747615                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            37416431352                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 669888                       # Number of bytes of host memory used
-host_seconds                                  1385.29                       # Real time elapsed on the host
+host_inst_rate                                 536275                       # Simulator instruction rate (inst/s)
+host_op_rate                                   630162                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            31538205227                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 713092                       # Number of bytes of host memory used
+host_seconds                                  1643.49                       # Real time elapsed on the host
 sim_insts                                   881360160                       # Number of instructions simulated
 sim_ops                                    1035663034                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -599,7 +599,7 @@ system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Cl
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                 518072849                       # Class of executed instruction
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu0.kern.inst.quiesce                   16267                       # number of quiesce instructions executed
+system.cpu0.kern.inst.quiesce                   19145                       # number of quiesce instructions executed
 system.cpu0.dcache.tags.replacements         10037940                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.966034                       # Cycle average of tags in use
 system.cpu0.dcache.tags.total_refs          305864730                       # Total number of references to valid blocks.
@@ -2119,13 +2119,13 @@ system.realview.ethernet.totalRxOrn                 0                       # to
 system.realview.ethernet.coalescedTotal             0                       # average number of interrupts coalesced into each post
 system.realview.ethernet.postedInterrupts           18                       # number of posts to CPU
 system.realview.ethernet.droppedPackets             0                       # number of packets dropped
+system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
 system.realview.realview_io.osc_clcd.clock        42105                       # Clock period in ticks
 system.realview.realview_io.osc_cpu.clock        16667                       # Clock period in ticks
 system.realview.realview_io.osc_ddr.clock        25000                       # Clock period in ticks
 system.realview.realview_io.osc_hsbm.clock        25000                       # Clock period in ticks
 system.realview.realview_io.osc_mcc.clock        20000                       # Clock period in ticks
 system.realview.realview_io.osc_peripheral.clock        41667                       # Clock period in ticks
-system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
 system.realview.realview_io.osc_smb.clock        20000                       # Clock period in ticks
 system.realview.realview_io.osc_sys.clock        16667                       # Clock period in ticks
 system.realview.realview_io.osc_system_bus.clock        41667                       # Clock period in ticks

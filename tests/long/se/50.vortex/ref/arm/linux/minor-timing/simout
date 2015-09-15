@@ -1,12 +1,14 @@
+Redirecting stdout to build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing/simout
+Redirecting stderr to build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 15 2015 20:30:55
-gem5 started Mar 15 2015 20:31:14
-gem5 executing on zizzer2
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing -re /z/stever/hg/gem5/tests/run.py build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing
+gem5 compiled Sep 14 2015 23:29:19
+gem5 started Sep 15 2015 03:05:45
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing
+
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu.isa: ISA system set to: 0 0x3b079b0
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 57738195500 because target called exit()
+Exiting @ tick 56986224500 because target called exit()
