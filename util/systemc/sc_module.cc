@@ -140,6 +140,7 @@ void
 Module::serviceAsyncEvent()
 {
     EventQueue *eventq = getEventQueue(0);
+    std::lock_guard<EventQueue> lock(*eventq);
 
     assert(async_event);
 
