@@ -30,6 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Matthias Jung
+ *          Abdul Mutaal Ahmad
  */
 
 #include <cctype>
@@ -175,8 +176,9 @@ sc_transactor::recvTimingReq(PacketPtr packet)
      * required */
     sc_assert(!needToSendRequestRetry);
 
-    /* FIXME screw coherency traffic */
-    if (packet->memInhibitAsserted())
+    // simply drop inhibited packets and clean evictions
+    if (packet->memInhibitAsserted() ||
+        packet->cmd == MemCmd::CleanEvict)
         return true;
 
     /* Remember if a request comes in while we're blocked so that a retry

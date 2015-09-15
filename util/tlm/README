@@ -33,7 +33,7 @@ without python.
 > cd ../..
 > scons build/ARM/gem5.opt
 > scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
-> cd util/systemc_tlm
+> cd util/tlm
 
 Set a proper LD_LIBRARY_PATH e.g. for bash:
 > export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
