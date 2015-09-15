@@ -1347,7 +1347,7 @@ DefaultIEW<Impl>::executeInsts()
                 DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %s "
                         "[sn:%lli], inst PC: %s [sn:%lli]. Addr is: %#x.\n",
                         violator->pcState(), violator->seqNum,
-                        inst->pcState(), inst->seqNum, inst->physEffAddr);
+                        inst->pcState(), inst->seqNum, inst->physEffAddrLow);
 
                 fetchRedirect[tid] = true;
 
@@ -1370,7 +1370,7 @@ DefaultIEW<Impl>::executeInsts()
                 DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
                         "%s, inst PC: %s.  Addr is: %#x.\n",
                         violator->pcState(), inst->pcState(),
-                        inst->physEffAddr);
+                        inst->physEffAddrLow);
                 DPRINTF(IEW, "Violation will not be handled because "
                         "already squashing\n");
 

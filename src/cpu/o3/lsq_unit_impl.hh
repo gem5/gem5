@@ -453,10 +453,13 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
 
     DynInstPtr ld_inst = loadQueue[load_idx];
     if (ld_inst) {
-        Addr load_addr = ld_inst->physEffAddr & cacheBlockMask;
+        Addr load_addr_low = ld_inst->physEffAddrLow & cacheBlockMask;
+        Addr load_addr_high = ld_inst->physEffAddrHigh & cacheBlockMask;
+
         // Check that this snoop didn't just invalidate our lock flag
-        if (ld_inst->effAddrValid() && load_addr == invalidate_addr &&
-            ld_inst->memReqFlags & Request::LLSC)
+        if (ld_inst->effAddrValid() && (load_addr_low == invalidate_addr
+                                        || load_addr_high == invalidate_addr)
+            && ld_inst->memReqFlags & Request::LLSC)
             TheISA::handleLockedSnoopHit(ld_inst.get());
     }
 
@@ -476,11 +479,14 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
             continue;
         }
 
-        Addr load_addr = ld_inst->physEffAddr & cacheBlockMask;
-        DPRINTF(LSQUnit, "-- inst [sn:%lli] load_addr: %#x to pktAddr:%#x\n",
-                    ld_inst->seqNum, load_addr, invalidate_addr);
+        Addr load_addr_low = ld_inst->physEffAddrLow & cacheBlockMask;
+        Addr load_addr_high = ld_inst->physEffAddrHigh & cacheBlockMask;
 
-        if (load_addr == invalidate_addr || force_squash) {
+        DPRINTF(LSQUnit, "-- inst [sn:%lli] load_addr: %#x to pktAddr:%#x\n",
+                    ld_inst->seqNum, load_addr_low, invalidate_addr);
+
+        if ((load_addr_low == invalidate_addr
+             || load_addr_high == invalidate_addr) || force_squash) {
             if (needsTSO) {
                 // If we have a TSO system, as all loads must be ordered with
                 // all other loads, this load as well as *all* subsequent loads

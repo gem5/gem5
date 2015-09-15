@@ -88,7 +88,8 @@ BaseDynInst<Impl>::initVars()
 {
     memData = NULL;
     effAddr = 0;
-    physEffAddr = 0;
+    physEffAddrLow = 0;
+    physEffAddrHigh = 0;
     readyRegs = 0;
     memReqFlags = 0;
 
