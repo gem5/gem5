@@ -167,6 +167,7 @@ class TournamentBP : public BPredUnit
         static int newCount;
 #endif
         unsigned globalHistory;
+        unsigned localHistoryIdx;
         unsigned localHistory;
         bool localPredTaken;
         bool globalPredTaken;

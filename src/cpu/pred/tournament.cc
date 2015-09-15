@@ -217,6 +217,7 @@ TournamentBP::lookup(Addr branch_addr, void * &bp_history)
     history->localPredTaken = local_prediction;
     history->globalPredTaken = global_prediction;
     history->globalUsed = choice_prediction;
+    history->localHistoryIdx = local_history_idx;
     history->localHistory = local_predictor_idx;
     bp_history = (void *)history;
 
@@ -256,6 +257,7 @@ TournamentBP::uncondBranch(Addr pc, void * &bp_history)
     history->localPredTaken = true;
     history->globalPredTaken = true;
     history->globalUsed = true;
+    history->localHistoryIdx = invalidPredictorIndex;
     history->localHistory = invalidPredictorIndex;
     bp_history = static_cast<void *>(history);
 
@@ -370,6 +372,11 @@ TournamentBP::squash(void *bp_history)
 
     // Restore global history to state prior to this branch.
     globalHistory = history->globalHistory;
+
+    // Restore local history
+    if (history->localHistoryIdx != invalidPredictorIndex) {
+        localHistoryTable[history->localHistoryIdx] = history->localHistory;
+    }
 
     // Delete this BPHistory now that we're done with it.
     delete history;
