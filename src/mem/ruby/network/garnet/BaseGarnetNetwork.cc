@@ -67,28 +67,6 @@ BaseGarnetNetwork::init()
 }
 
 void
-BaseGarnetNetwork::setToNetQueue(NodeID id, bool ordered, int network_num,
-                                 string vnet_type, MessageBuffer *b)
-{
-    checkNetworkAllocation(id, ordered, network_num, vnet_type);
-    while (m_toNetQueues[id].size() <= network_num) {
-        m_toNetQueues[id].push_back(nullptr);
-    }
-    m_toNetQueues[id][network_num] = b;
-}
-
-void
-BaseGarnetNetwork::setFromNetQueue(NodeID id, bool ordered, int network_num,
-                                   string vnet_type, MessageBuffer *b)
-{
-    checkNetworkAllocation(id, ordered, network_num, vnet_type);
-    while (m_fromNetQueues[id].size() <= network_num) {
-        m_fromNetQueues[id].push_back(nullptr);
-    }
-    m_fromNetQueues[id][network_num] = b;
-}
-
-void
 BaseGarnetNetwork::regStats()
 {
     m_flits_received

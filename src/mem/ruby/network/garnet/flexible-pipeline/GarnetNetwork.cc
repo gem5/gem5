@@ -143,18 +143,6 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                          link->m_weight);
 }
 
-void
-GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
-    int network_num, std::string vnet_type)
-{
-    assert(id < m_nodes);
-    assert(network_num < m_virtual_networks);
-
-    if (ordered) {
-        m_ordered[network_num] = true;
-    }
-}
-
 /*
  * Go through all the routers, network interfaces and the interconnecting
  * links for reading/writing all the messages.

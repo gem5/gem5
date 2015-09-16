@@ -84,9 +84,6 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     uint32_t functionalWrite(Packet *pkt);
 
   private:
-    void checkNetworkAllocation(NodeID id, bool ordered, int network_num,
-                                std::string vnet_type);
-
     GarnetNetwork_d(const GarnetNetwork_d& obj);
     GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);
 

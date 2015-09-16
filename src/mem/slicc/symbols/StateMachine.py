@@ -592,7 +592,6 @@ void
 $c_ident::init()
 {
     // initialize objects
-    initNetQueues();
 ''')
 
         code.indent()

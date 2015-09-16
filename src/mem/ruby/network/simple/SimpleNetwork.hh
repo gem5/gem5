@@ -56,23 +56,17 @@ class SimpleNetwork : public Network
     void collateStats();
     void regStats();
 
-    // sets the queue requested
-    void setToNetQueue(NodeID id, bool ordered, int network_num,
-                       std::string vnet_type, MessageBuffer *b);
-    void setFromNetQueue(NodeID id, bool ordered, int network_num,
-                         std::string vnet_type, MessageBuffer *b);
-
     bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
 
     // Methods used by Topology to setup the network
-    void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
-                     LinkDirection direction, 
+    void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
+                     LinkDirection direction,
                      const NetDest& routing_table_entry);
     void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                    LinkDirection direction, 
+                    LinkDirection direction,
                     const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          LinkDirection direction, 
+                          LinkDirection direction,
                           const NetDest& routing_table_entry);
 
     void print(std::ostream& out) const;
@@ -81,7 +75,6 @@ class SimpleNetwork : public Network
     uint32_t functionalWrite(Packet *pkt);
 
   private:
-    void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
     void addLink(SwitchID src, SwitchID dest, int link_latency);
     void makeLink(SwitchID src, SwitchID dest,
         const NetDest& routing_table_entry, int link_latency);
@@ -98,7 +91,7 @@ class SimpleNetwork : public Network
 
     int m_buffer_size;
     int m_endpoint_bandwidth;
-    bool m_adaptive_routing;    
+    bool m_adaptive_routing;
 
     //Statistical variables
     Stats::Formula m_msg_counts[MessageSizeType_NUM];

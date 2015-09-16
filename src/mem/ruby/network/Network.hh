@@ -72,10 +72,13 @@ class Network : public ClockedObject
     static uint32_t MessageSizeType_to_int(MessageSizeType size_type);
 
     // returns the queue requested for the given component
-    virtual void setToNetQueue(NodeID id, bool ordered, int netNumber,
-                               std::string vnet_type, MessageBuffer *b) = 0;
+    void setToNetQueue(NodeID id, bool ordered, int netNumber,
+                               std::string vnet_type, MessageBuffer *b);
     virtual void setFromNetQueue(NodeID id, bool ordered, int netNumber,
-                                 std::string vnet_type, MessageBuffer *b) = 0;
+                                 std::string vnet_type, MessageBuffer *b);
+
+    virtual void checkNetworkAllocation(NodeID id, bool ordered,
+        int network_num, std::string vnet_type);
 
     virtual void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
                              LinkDirection direction,
@@ -107,6 +110,7 @@ class Network : public ClockedObject
 
     uint32_t m_nodes;
     static uint32_t m_virtual_networks;
+    std::vector<std::string> m_vnet_type_names;
     Topology* m_topology_ptr;
     static uint32_t m_control_msg_size;
     static uint32_t m_data_msg_size;

@@ -68,15 +68,7 @@ class BaseGarnetNetwork : public Network
         m_queueing_latency[vnet] += latency;
     }
 
-    // set the queue
-    void setToNetQueue(NodeID id, bool ordered, int network_num,
-                       std::string vnet_type, MessageBuffer *b);
-    void setFromNetQueue(NodeID id, bool ordered, int network_num,
-                         std::string vnet_type, MessageBuffer *b);
-
     bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
-    virtual void checkNetworkAllocation(NodeID id, bool ordered,
-        int network_num, std::string vnet_type) = 0;
 
     virtual void regStats();
     virtual void collateStats() {}

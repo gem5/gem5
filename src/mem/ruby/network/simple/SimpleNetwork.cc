@@ -140,39 +140,6 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 }
 
 void
-SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
-{
-    assert(id < m_nodes);
-    assert(network_num < m_virtual_networks);
-
-    if (ordered) {
-        m_ordered[network_num] = true;
-    }
-}
-
-void
-SimpleNetwork::setToNetQueue(NodeID id, bool ordered, int network_num,
-                             std::string vnet_type, MessageBuffer *b)
-{
-    checkNetworkAllocation(id, ordered, network_num);
-    while (m_toNetQueues[id].size() <= network_num) {
-        m_toNetQueues[id].push_back(nullptr);
-    }
-    m_toNetQueues[id][network_num] = b;
-}
-
-void
-SimpleNetwork::setFromNetQueue(NodeID id, bool ordered, int network_num,
-                               std::string vnet_type, MessageBuffer *b)
-{
-    checkNetworkAllocation(id, ordered, network_num);
-    while (m_fromNetQueues[id].size() <= network_num) {
-        m_fromNetQueues[id].push_back(nullptr);
-    }
-    m_fromNetQueues[id][network_num] = b;
-}
-
-void
 SimpleNetwork::regStats()
 {
     for (MessageSizeType type = MessageSizeType_FIRST;

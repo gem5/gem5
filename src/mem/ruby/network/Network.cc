@@ -58,6 +58,7 @@ Network::Network(const Params *p)
     m_fromNetQueues.resize(m_nodes);
 
     m_ordered.resize(m_virtual_networks);
+    m_vnet_type_names.resize(m_virtual_networks);
 
     for (int i = 0; i < m_virtual_networks; i++) {
         m_ordered[i] = false;
@@ -75,6 +76,10 @@ Network::Network(const Params *p)
 
     // Register a callback function for combining the statistics
     Stats::registerDumpCallback(new StatsCallback(this));
+
+    for (auto &it : dynamic_cast<Network *>(this)->params()->ext_links) {
+        it->params()->ext_node->initNetQueues();
+    }
 }
 
 Network::~Network()
@@ -127,4 +132,42 @@ Network::MessageSizeType_to_int(MessageSizeType size_type)
         panic("Invalid range for type MessageSizeType");
         break;
     }
+}
+
+void
+Network::checkNetworkAllocation(NodeID id, bool ordered,
+                                        int network_num,
+                                        std::string vnet_type)
+{
+    fatal_if(id >= m_nodes, "Node ID is out of range");
+    fatal_if(network_num >= m_virtual_networks, "Network id is out of range");
+
+    if (ordered) {
+        m_ordered[network_num] = true;
+    }
+
+    m_vnet_type_names[network_num] = vnet_type;
+}
+
+
+void
+Network::setToNetQueue(NodeID id, bool ordered, int network_num,
+                                 std::string vnet_type, MessageBuffer *b)
+{
+    checkNetworkAllocation(id, ordered, network_num, vnet_type);
+    while (m_toNetQueues[id].size() <= network_num) {
+        m_toNetQueues[id].push_back(nullptr);
+    }
+    m_toNetQueues[id][network_num] = b;
+}
+
+void
+Network::setFromNetQueue(NodeID id, bool ordered, int network_num,
+                                   std::string vnet_type, MessageBuffer *b)
+{
+    checkNetworkAllocation(id, ordered, network_num, vnet_type);
+    while (m_fromNetQueues[id].size() <= network_num) {
+        m_fromNetQueues[id].push_back(nullptr);
+    }
+    m_fromNetQueues[id][network_num] = b;
 }

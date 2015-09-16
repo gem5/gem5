@@ -51,8 +51,13 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
     m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
 
     m_vnet_type.resize(m_virtual_networks);
-    for (int i = 0; i < m_vnet_type.size(); i++) {
-        m_vnet_type[i] = NULL_VNET_; // default
+
+    for(int i = 0 ; i < m_virtual_networks ; i++)
+    {
+        if (m_vnet_type_names[i] == "response")
+            m_vnet_type[i] = DATA_VNET_; // carries data (and ctrl) packets
+        else
+            m_vnet_type[i] = CTRL_VNET_; // carries only ctrl packets
     }
 
     // record the routers
@@ -185,23 +190,6 @@ GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     m_routers[dest]->addInPort(net_link, credit_link);
     m_routers[src]->addOutPort(net_link, routing_table_entry,
                                          link->m_weight, credit_link);
-}
-
-void
-GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
-                                        int network_num, string vnet_type)
-{
-    assert(id < m_nodes);
-    assert(network_num < m_virtual_networks);
-
-    if (ordered) {
-        m_ordered[network_num] = true;
-    }
-
-    if (vnet_type == "response")
-        m_vnet_type[network_num] = DATA_VNET_; // carries data (and ctrl) packets
-    else
-        m_vnet_type[network_num] = CTRL_VNET_; // carries only ctrl packets
 }
 
 void
