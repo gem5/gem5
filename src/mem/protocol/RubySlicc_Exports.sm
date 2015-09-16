@@ -32,7 +32,7 @@ external_type(int, primitive="yes", default="0");
 external_type(bool, primitive="yes", default="false");
 external_type(std::string, primitive="yes");
 external_type(uint32_t, primitive="yes");
-external_type(uint64, primitive="yes");
+external_type(uint64_t, primitive="yes");
 external_type(PacketPtr, primitive="yes");
 external_type(Packet, primitive="yes");
 external_type(Addr, primitive="yes");
