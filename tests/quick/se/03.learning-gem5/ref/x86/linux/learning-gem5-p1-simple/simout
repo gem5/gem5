@@ -1,0 +1,13 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Jul  6 2015 10:35:34
+gem5 started Jul  6 2015 10:39:43
+gem5 executing on mustardseed.cs.wisc.edu
+command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/03.learning-gem5/x86/linux/learning-gem5-p1-simple -re /afs/cs.wisc.edu/p/multifacet/users/powerjg/gem5-tutorial/gem5/tests/run.py build/X86/tests/opt/quick/se/03.learning-gem5/x86/linux/learning-gem5-p1-simple
+
+Global frequency set at 1000000000000 ticks per second
+Beginning simulation!
+info: Entering event queue @ 0.  Starting simulation...
+Hello world!
+Exiting @ tick 445082000 because target called exit()

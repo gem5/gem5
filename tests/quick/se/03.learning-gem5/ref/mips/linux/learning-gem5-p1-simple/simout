@@ -1,0 +1,14 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Jul  8 2015 14:37:59
+gem5 started Jul  8 2015 14:38:43
+gem5 executing on galapagos-15.cs.wisc.edu
+command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple -re /afs/cs.wisc.edu/p/multifacet/users/powerjg/gem5-tutorial/gem5/tests/run.py build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple
+
+Global frequency set at 1000000000000 ticks per second
+Beginning simulation!
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+Hello World!
+Exiting @ tick 367783000 because target called exit()
