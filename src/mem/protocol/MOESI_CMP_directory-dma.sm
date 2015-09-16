@@ -74,6 +74,7 @@ machine(DMA, "DMA Controller")
   TBETable TBEs, template="<DMA_TBE>", constructor="m_number_of_TBEs";
   State cur_state;
 
+  Tick clockEdge();
   void set_tbe(TBE b);
   void unset_tbe();
 
@@ -104,7 +105,7 @@ machine(DMA, "DMA Controller")
   out_port(triggerQueue_out, TriggerMsg, triggerQueue, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
-    if (dmaRequestQueue_in.isReady()) {
+    if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {
           trigger(Event:ReadRequest, in_msg.LineAddress,
@@ -120,7 +121,7 @@ machine(DMA, "DMA Controller")
   }
 
   in_port(dmaResponseQueue_in, ResponseMsg, responseFromDir, desc="...") {
-    if (dmaResponseQueue_in.isReady()) {
+    if (dmaResponseQueue_in.isReady(clockEdge())) {
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DMA_Ack, makeLineAddress(in_msg.addr),
@@ -141,7 +142,7 @@ machine(DMA, "DMA Controller")
 
   // Trigger Queue
   in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
-    if (triggerQueue_in.isReady()) {
+    if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
           trigger(Event:All_Acks, in_msg.addr, TBEs[in_msg.addr]);
@@ -215,15 +216,15 @@ machine(DMA, "DMA Controller")
   }
 
   action(p_popRequestQueue, "p", desc="Pop request queue") {
-    dmaRequestQueue_in.dequeue();
+    dmaRequestQueue_in.dequeue(clockEdge());
   }
 
   action(p_popResponseQueue, "\p", desc="Pop request queue") {
-    dmaResponseQueue_in.dequeue();
+    dmaResponseQueue_in.dequeue(clockEdge());
   }
 
   action(p_popTriggerQueue, "pp", desc="Pop trigger queue") {
-    triggerQueue_in.dequeue();
+    triggerQueue_in.dequeue(clockEdge());
   }
 
   action(t_updateTBEData, "t", desc="Update TBE Data") {

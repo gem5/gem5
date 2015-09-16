@@ -184,6 +184,7 @@ machine(Directory, "AMD Hammer-like protocol")
     bool isPresent(Addr);
   }
 
+  Tick clockEdge();
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE a);
@@ -314,7 +315,7 @@ machine(Directory, "AMD Hammer-like protocol")
   
   // Trigger Queue
   in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=5) {
-    if (triggerQueue_in.isReady()) {
+    if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         PfEntry pf_entry := getProbeFilterEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -338,7 +339,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   in_port(unblockNetwork_in, ResponseMsg, unblockToDir, rank=4) {
-    if (unblockNetwork_in.isReady()) {
+    if (unblockNetwork_in.isReady(clockEdge())) {
       peek(unblockNetwork_in, ResponseMsg) {
         PfEntry pf_entry := getProbeFilterEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -367,7 +368,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // Response Network
   in_port(responseToDir_in, ResponseMsg, responseToDir, rank=3) {
-    if (responseToDir_in.isReady()) {
+    if (responseToDir_in.isReady(clockEdge())) {
       peek(responseToDir_in, ResponseMsg) {
         PfEntry pf_entry := getProbeFilterEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -390,7 +391,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // off-chip memory request/response is done
   in_port(memQueue_in, MemoryMsg, responseFromMemory, rank=2) {
-    if (memQueue_in.isReady()) {
+    if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
         PfEntry pf_entry := getProbeFilterEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -407,7 +408,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   in_port(requestQueue_in, RequestMsg, requestToDir, rank=1) {
-    if (requestQueue_in.isReady()) {
+    if (requestQueue_in.isReady(clockEdge())) {
       peek(requestQueue_in, RequestMsg) {
         PfEntry pf_entry := getProbeFilterEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -441,7 +442,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir, rank=0) {
-    if (dmaRequestQueue_in.isReady()) {
+    if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
         PfEntry pf_entry := getProbeFilterEntry(in_msg.LineAddress);
         TBE tbe := TBEs[in_msg.LineAddress];
@@ -682,7 +683,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
-    responseToDir_in.dequeue();
+    responseToDir_in.dequeue(clockEdge());
   }
 
   action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
@@ -1115,14 +1116,14 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(i_popIncomingRequestQueue, "i", desc="Pop incoming request queue") {
-    requestQueue_in.dequeue();
+    requestQueue_in.dequeue(clockEdge());
   }
 
   action(j_popIncomingUnblockQueue, "j", desc="Pop incoming unblock queue") {
     peek(unblockNetwork_in, ResponseMsg) {
         APPEND_TRANSITION_COMMENT(in_msg.Sender);
     } 
-    unblockNetwork_in.dequeue();
+    unblockNetwork_in.dequeue(clockEdge());
   }
 
   action(k_wakeUpDependents, "k", desc="wake-up dependents") {
@@ -1130,15 +1131,15 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
-    memQueue_in.dequeue();
+    memQueue_in.dequeue(clockEdge());
   }
 
   action(g_popTriggerQueue, "g", desc="Pop trigger queue") {
-    triggerQueue_in.dequeue();
+    triggerQueue_in.dequeue(clockEdge());
   }
 
   action(p_popDmaRequestQueue, "pd", desc="pop dma request queue") {
-    dmaRequestQueue_in.dequeue();
+    dmaRequestQueue_in.dequeue(clockEdge());
   }
 
   action(zd_stallAndWaitDMARequest, "zd", desc="Stall and wait the dma request queue") {

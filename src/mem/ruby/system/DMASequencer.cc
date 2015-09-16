@@ -54,7 +54,6 @@ DMASequencer::init()
     MemObject::init();
     assert(m_controller != NULL);
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
-    m_mandatory_q_ptr->setSender(this);
     m_is_busy = false;
     m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
 
@@ -256,7 +255,7 @@ DMASequencer::makeRequest(PacketPtr pkt)
     }
 
     assert(m_mandatory_q_ptr != NULL);
-    m_mandatory_q_ptr->enqueue(msg);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
     active_request.bytes_issued += msg->getLen();
 
     return RequestStatus_Issued;
@@ -302,7 +301,7 @@ DMASequencer::issueNext()
     }
 
     assert(m_mandatory_q_ptr != NULL);
-    m_mandatory_q_ptr->enqueue(msg);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
     active_request.bytes_issued += msg->getLen();
     DPRINTF(RubyDma,
             "DMA request bytes issued %d, bytes completed %d, total len %d\n",

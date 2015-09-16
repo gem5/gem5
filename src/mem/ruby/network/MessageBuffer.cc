@@ -40,7 +40,7 @@ using namespace std;
 using m5::stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const Params *p)
-    : SimObject(p), m_recycle_latency(p->recycle_latency),
+    : SimObject(p),
     m_max_size(p->buffer_size), m_time_last_time_size_checked(0),
     m_time_last_time_enqueue(0), m_time_last_time_pop(0),
     m_last_arrival_time(0), m_strict_fifo(p->ordered),
@@ -48,9 +48,6 @@ MessageBuffer::MessageBuffer(const Params *p)
 {
     m_msg_counter = 0;
     m_consumer = NULL;
-    m_sender = NULL;
-    m_receiver = NULL;
-
     m_size_last_time_size_checked = 0;
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
@@ -63,10 +60,10 @@ MessageBuffer::MessageBuffer(const Params *p)
 }
 
 unsigned int
-MessageBuffer::getSize()
+MessageBuffer::getSize(Tick curTime)
 {
-    if (m_time_last_time_size_checked != m_receiver->curCycle()) {
-        m_time_last_time_size_checked = m_receiver->curCycle();
+    if (m_time_last_time_size_checked != curTime) {
+        m_time_last_time_size_checked = curTime;
         m_size_last_time_size_checked = m_prio_heap.size();
     }
 
@@ -74,7 +71,7 @@ MessageBuffer::getSize()
 }
 
 bool
-MessageBuffer::areNSlotsAvailable(unsigned int n)
+MessageBuffer::areNSlotsAvailable(unsigned int n, Tick current_time)
 {
 
     // fast path when message buffers have infinite size
@@ -88,11 +85,11 @@ MessageBuffer::areNSlotsAvailable(unsigned int n)
     // size immediately
     unsigned int current_size = 0;
 
-    if (m_time_last_time_pop < m_sender->clockEdge()) {
+    if (m_time_last_time_pop < current_time) {
         // no pops this cycle - heap size is correct
         current_size = m_prio_heap.size();
     } else {
-        if (m_time_last_time_enqueue < m_sender->curCycle()) {
+        if (m_time_last_time_enqueue < current_time) {
             // no enqueues this cycle - m_size_at_cycle_start is correct
             current_size = m_size_at_cycle_start;
         } else {
@@ -118,8 +115,6 @@ const Message*
 MessageBuffer::peek() const
 {
     DPRINTF(RubyQueue, "Peeking at head of queue.\n");
-    assert(isReady());
-
     const Message* msg_ptr = m_prio_heap.front().get();
     assert(msg_ptr);
 
@@ -128,24 +123,24 @@ MessageBuffer::peek() const
 }
 
 // FIXME - move me somewhere else
-Cycles
+Tick
 random_time()
 {
-    Cycles time(1);
-    time += Cycles(random_mt.random(0, 3));  // [0...3]
+    Tick time = 1;
+    time += random_mt.random(0, 3);  // [0...3]
     if (random_mt.random(0, 7) == 0) {  // 1 in 8 chance
-        time += Cycles(100 + random_mt.random(1, 15)); // 100 + [1...15]
+        time += 100 + random_mt.random(1, 15); // 100 + [1...15]
     }
     return time;
 }
 
 void
-MessageBuffer::enqueue(MsgPtr message, Cycles delta)
+MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
 {
     // record current time incase we have a pop that also adjusts my size
-    if (m_time_last_time_enqueue < m_sender->curCycle()) {
+    if (m_time_last_time_enqueue < current_time) {
         m_msgs_this_cycle = 0;  // first msg this cycle
-        m_time_last_time_enqueue = m_sender->curCycle();
+        m_time_last_time_enqueue = current_time;
     }
 
     m_msg_counter++;
@@ -154,23 +149,20 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
     assert(delta > 0);
-    Tick current_time = m_sender->clockEdge();
     Tick arrival_time = 0;
 
     if (!RubySystem::getRandomization() || !m_randomization) {
         // No randomization
-        arrival_time = current_time + delta * m_sender->clockPeriod();
+        arrival_time = current_time + delta;
     } else {
         // Randomization - ignore delta
         if (m_strict_fifo) {
             if (m_last_arrival_time < current_time) {
                 m_last_arrival_time = current_time;
             }
-            arrival_time = m_last_arrival_time +
-                           random_time() * m_sender->clockPeriod();
+            arrival_time = m_last_arrival_time + random_time();
         } else {
-            arrival_time = current_time +
-                           random_time() * m_sender->clockPeriod();
+            arrival_time = current_time + random_time();
         }
     }
 
@@ -180,9 +172,8 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
-                  *this, name(), current_time,
-                  delta * m_sender->clockPeriod(),
-                  arrival_time, m_last_arrival_time);
+                  *this, name(), current_time, delta, arrival_time,
+                  m_last_arrival_time);
         }
     }
 
@@ -195,10 +186,10 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     Message* msg_ptr = message.get();
     assert(msg_ptr != NULL);
 
-    assert(m_sender->clockEdge() >= msg_ptr->getLastEnqueueTime() &&
+    assert(current_time >= msg_ptr->getLastEnqueueTime() &&
            "ensure we aren't dequeued early");
 
-    msg_ptr->updateDelayedTicks(m_sender->clockEdge());
+    msg_ptr->updateDelayedTicks(current_time);
     msg_ptr->setLastEnqueueTime(arrival_time);
     msg_ptr->setMsgCounter(m_msg_counter);
 
@@ -215,32 +206,30 @@ MessageBuffer::enqueue(MsgPtr message, Cycles delta)
     m_consumer->storeEventInfo(m_vnet_id);
 }
 
-Cycles
-MessageBuffer::dequeue()
+Tick
+MessageBuffer::dequeue(Tick current_time)
 {
     DPRINTF(RubyQueue, "Popping\n");
-    assert(isReady());
+    assert(isReady(current_time));
 
     // get MsgPtr of the message about to be dequeued
     MsgPtr message = m_prio_heap.front();
 
     // get the delay cycles
-    message->updateDelayedTicks(m_receiver->clockEdge());
-    Cycles delayCycles =
-        m_receiver->ticksToCycles(message->getDelayedTicks());
+    message->updateDelayedTicks(current_time);
+    Tick delay = message->getDelayedTicks();
 
     // record previous size and time so the current buffer size isn't
     // adjusted until schd cycle
-    if (m_time_last_time_pop < m_receiver->clockEdge()) {
+    if (m_time_last_time_pop < current_time) {
         m_size_at_cycle_start = m_prio_heap.size();
-        m_time_last_time_pop = m_receiver->clockEdge();
+        m_time_last_time_pop = current_time;
     }
 
-    pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
-        greater<MsgPtr>());
+    pop_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
     m_prio_heap.pop_back();
 
-    return delayCycles;
+    return delay;
 }
 
 void
@@ -249,25 +238,26 @@ MessageBuffer::clear()
     m_prio_heap.clear();
 
     m_msg_counter = 0;
-    m_time_last_time_enqueue = Cycles(0);
+    m_time_last_time_enqueue = 0;
     m_time_last_time_pop = 0;
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
 }
 
 void
-MessageBuffer::recycle()
+MessageBuffer::recycle(Tick current_time, Tick recycle_latency)
 {
     DPRINTF(RubyQueue, "Recycling.\n");
-    assert(isReady());
+    assert(isReady(current_time));
     MsgPtr node = m_prio_heap.front();
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
 
-    node->setLastEnqueueTime(m_receiver->clockEdge(m_recycle_latency));
+    Tick future_time = current_time + recycle_latency;
+    node->setLastEnqueueTime(future_time);
+
     m_prio_heap.back() = node;
     push_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
-    m_consumer->
-        scheduleEventAbsolute(m_receiver->clockEdge(m_recycle_latency));
+    m_consumer->scheduleEventAbsolute(future_time);
 }
 
 void
@@ -289,11 +279,10 @@ MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 }
 
 void
-MessageBuffer::reanalyzeMessages(Addr addr)
+MessageBuffer::reanalyzeMessages(Addr addr, Tick current_time)
 {
     DPRINTF(RubyQueue, "ReanalyzeMessages %s\n", addr);
     assert(m_stall_msg_map.count(addr) > 0);
-    Tick curTick = m_receiver->clockEdge();
 
     //
     // Put all stalled messages associated with this address back on the
@@ -301,15 +290,14 @@ MessageBuffer::reanalyzeMessages(Addr addr)
     // scheduled for the current cycle so that the previously stalled messages
     // will be observed before any younger messages that may arrive this cycle
     //
-    reanalyzeList(m_stall_msg_map[addr], curTick);
+    reanalyzeList(m_stall_msg_map[addr], current_time);
     m_stall_msg_map.erase(addr);
 }
 
 void
-MessageBuffer::reanalyzeAllMessages()
+MessageBuffer::reanalyzeAllMessages(Tick current_time)
 {
     DPRINTF(RubyQueue, "ReanalyzeAllMessages\n");
-    Tick curTick = m_receiver->clockEdge();
 
     //
     // Put all stalled messages associated with this address back on the
@@ -319,20 +307,20 @@ MessageBuffer::reanalyzeAllMessages()
     //
     for (StallMsgMapType::iterator map_iter = m_stall_msg_map.begin();
          map_iter != m_stall_msg_map.end(); ++map_iter) {
-        reanalyzeList(map_iter->second, curTick);
+        reanalyzeList(map_iter->second, current_time);
     }
     m_stall_msg_map.clear();
 }
 
 void
-MessageBuffer::stallMessage(Addr addr)
+MessageBuffer::stallMessage(Addr addr, Tick current_time)
 {
     DPRINTF(RubyQueue, "Stalling due to %s\n", addr);
-    assert(isReady());
+    assert(isReady(current_time));
     assert(getOffset(addr) == 0);
     MsgPtr message = m_prio_heap.front();
 
-    dequeue();
+    dequeue(current_time);
 
     //
     // Note: no event is scheduled to analyze the map at a later time.
@@ -356,10 +344,10 @@ MessageBuffer::print(ostream& out) const
 }
 
 bool
-MessageBuffer::isReady() const
+MessageBuffer::isReady(Tick current_time) const
 {
     return ((m_prio_heap.size() > 0) &&
-        (m_prio_heap.front()->getLastEnqueueTime() <= m_receiver->clockEdge()));
+        (m_prio_heap.front()->getLastEnqueueTime() <= current_time));
 }
 
 bool

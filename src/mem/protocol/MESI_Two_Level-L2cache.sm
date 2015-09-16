@@ -148,6 +148,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   TBETable TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
 
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+  Cycles ticksToCycles(Tick t);
+
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
   void set_tbe(TBE a);
@@ -285,7 +289,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
 
   in_port(L1unblockNetwork_in, ResponseMsg, unblockToL2Cache, rank = 2) {
-    if(L1unblockNetwork_in.isReady()) {
+    if(L1unblockNetwork_in.isReady(clockEdge())) {
       peek(L1unblockNetwork_in,  ResponseMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -307,7 +311,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // Response  L2 Network - response msg to this particular L2 bank
   in_port(responseL2Network_in, ResponseMsg, responseToL2Cache, rank = 1) {
-    if (responseL2Network_in.isReady()) {
+    if (responseL2Network_in.isReady(clockEdge())) {
       peek(responseL2Network_in, ResponseMsg) {
         // test wether it's from a local L1 or an off chip source
         assert(in_msg.Destination.isElement(machineID));
@@ -348,7 +352,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   // L1 Request
   in_port(L1RequestL2Network_in, RequestMsg, L1RequestToL2Cache, rank = 0) {
-    if(L1RequestL2Network_in.isReady()) {
+    if(L1RequestL2Network_in.isReady(clockEdge())) {
       peek(L1RequestL2Network_in,  RequestMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -604,15 +608,18 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(jj_popL1RequestQueue, "\j", desc="Pop incoming L1 request queue") {
-    profileMsgDelay(0, L1RequestL2Network_in.dequeue());
+    Tick delay := L1RequestL2Network_in.dequeue(clockEdge());
+    profileMsgDelay(0, ticksToCycles(delay));
   }
 
   action(k_popUnblockQueue, "k", desc="Pop incoming unblock queue") {
-    profileMsgDelay(0, L1unblockNetwork_in.dequeue());
+    Tick delay := L1unblockNetwork_in.dequeue(clockEdge());
+    profileMsgDelay(0, ticksToCycles(delay));
   }
 
   action(o_popIncomingResponseQueue, "o", desc="Pop Incoming Response queue") {
-    profileMsgDelay(1, responseL2Network_in.dequeue());
+    Tick delay := responseL2Network_in.dequeue(clockEdge());
+    profileMsgDelay(1, ticksToCycles(delay));
   }
 
   action(m_writeDataToCache, "m", desc="Write data from response queue to cache") {
@@ -769,7 +776,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(zn_recycleResponseNetwork, "zn", desc="recycle memory request") {
-    responseL2Network_in.recycle();
+    responseL2Network_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {

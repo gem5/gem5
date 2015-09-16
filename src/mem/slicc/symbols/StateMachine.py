@@ -580,23 +580,9 @@ $c_ident::initNetQueues()
 m_net_ptr->set${network}NetQueue(m_version + base, $vid->getOrdered(), $vnet,
                                  "$vnet_type", $vid);
 ''')
-                # Set the end
-                if network == "To":
-                    code('$vid->setSender(this);')
-                else:
-                    code('$vid->setReceiver(this);')
-
                 # Set Priority
                 if "rank" in var:
                     code('$vid->setPriority(${{var["rank"]}})')
-
-            else:
-                if var.type_ast.type.c_ident == "MessageBuffer":
-                    code('$vid->setReceiver(this);')
-                if var.ident.find("triggerQueue") >= 0:
-                    code('$vid->setSender(this);')
-                elif var.ident.find("optionalQueue") >= 0:
-                    code('$vid->setSender(this);')
 
         code.dedent()
         code('''
@@ -636,9 +622,6 @@ $c_ident::init()
                     elif "default" in vtype:
                         comment = "Type %s default" % vtype.ident
                         code('*$vid = ${{vtype["default"]}}; // $comment')
-
-                    if vtype.c_ident == "TimerTable":
-                        code('$vid->setClockObj(this);')
 
         # Set the prefetchers
         code()
@@ -1293,7 +1276,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
             res = trans.resources
             for key,val in res.iteritems():
                 val = '''
-if (!%s.areNSlotsAvailable(%s))
+if (!%s.areNSlotsAvailable(%s, clockEdge()))
     return TransitionResult_ResourceStall;
 ''' % (key.code, val)
                 case_sorter.append(val)

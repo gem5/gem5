@@ -69,12 +69,6 @@ void
 Switch::addInPort(const vector<MessageBuffer*>& in)
 {
     m_perfect_switch->addInPort(in);
-
-    for (auto& it : in) {
-        if (it != nullptr) {
-            it->setReceiver(this);
-        }
-    }
 }
 
 void
@@ -95,17 +89,10 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
     vector<MessageBuffer*> intermediateBuffers;
 
     for (int i = 0; i < out.size(); ++i) {
-        if (out[i] != nullptr) {
-            out[i]->setSender(this);
-        }
-
         assert(m_num_connected_buffers < m_port_buffers.size());
         MessageBuffer* buffer_ptr = m_port_buffers[m_num_connected_buffers];
         m_num_connected_buffers++;
         intermediateBuffers.push_back(buffer_ptr);
-
-        buffer_ptr->setSender(this);
-        buffer_ptr->setReceiver(this);
     }
 
     // Hook the queues to the PerfectSwitch

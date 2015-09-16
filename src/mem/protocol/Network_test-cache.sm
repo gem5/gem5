@@ -68,6 +68,7 @@ machine(L1Cache, "Network_test L1 Cache")
   }
 
   // FUNCTIONS
+  Tick clockEdge();
 
   // cpu/testers/networktest/networktest.cc generates packets of the type
   // ReadReq, INST_FETCH, and WriteReq.
@@ -129,7 +130,7 @@ machine(L1Cache, "Network_test L1 Cache")
 
   // Mandatory Queue
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest) {
         trigger(mandatory_request_type_to_event(in_msg.Type),
                 in_msg.LineAddress, getCacheEntry(in_msg.LineAddress));
@@ -174,7 +175,7 @@ machine(L1Cache, "Network_test L1 Cache")
   }
 
   action(m_popMandatoryQueue, "m", desc="Pop the mandatory request queue") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {

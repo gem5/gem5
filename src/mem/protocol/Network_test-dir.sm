@@ -60,7 +60,9 @@ machine(Directory, "Network_test Directory")
     DataBlock DataBlk,             desc="data for the block";
   }
 
-  // ** OBJECTS **
+  // ** FUNCTIONS **
+  Tick clockEdge();
+
   State getState(Addr addr) {
     return State:I;
   }
@@ -87,7 +89,7 @@ machine(Directory, "Network_test Directory")
   // ** IN_PORTS **
 
   in_port(requestQueue_in, RequestMsg, requestToDir) {
-    if (requestQueue_in.isReady()) {
+    if (requestQueue_in.isReady(clockEdge())) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
           trigger(Event:Receive_Request, in_msg.addr);
@@ -98,7 +100,7 @@ machine(Directory, "Network_test Directory")
     }
   }
   in_port(forwardQueue_in, RequestMsg, forwardToDir) {
-    if (forwardQueue_in.isReady()) {
+    if (forwardQueue_in.isReady(clockEdge())) {
       peek(forwardQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
           trigger(Event:Receive_Forward, in_msg.addr);
@@ -109,7 +111,7 @@ machine(Directory, "Network_test Directory")
     }
   }
   in_port(responseQueue_in, RequestMsg, responseToDir) {
-    if (responseQueue_in.isReady()) {
+    if (responseQueue_in.isReady(clockEdge())) {
       peek(responseQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:MSG) {
           trigger(Event:Receive_Response, in_msg.addr);
@@ -123,15 +125,15 @@ machine(Directory, "Network_test Directory")
   // Actions
 
   action(i_popIncomingRequestQueue, "i", desc="Pop incoming request queue") {
-    requestQueue_in.dequeue();
+    requestQueue_in.dequeue(clockEdge());
   }
 
   action(f_popIncomingForwardQueue, "f", desc="Pop incoming forward queue") {
-    forwardQueue_in.dequeue();
+    forwardQueue_in.dequeue(clockEdge());
   }
 
   action(r_popIncomingResponseQueue, "r", desc="Pop incoming response queue") {
-    responseQueue_in.dequeue();
+    responseQueue_in.dequeue(clockEdge());
   }
 
   // TRANSITIONS

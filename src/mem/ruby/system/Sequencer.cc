@@ -629,7 +629,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     assert(latency > 0);
 
     assert(m_mandatory_q_ptr != NULL);
-    m_mandatory_q_ptr->enqueue(msg, latency);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(latency));
 }
 
 template <class KEY, class VALUE>

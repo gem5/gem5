@@ -181,6 +181,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
+  Tick clockEdge();
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE b);
@@ -329,7 +330,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   // Trigger Queue
   in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=3) {
-    if (triggerQueue_in.isReady()) {
+    if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -352,7 +353,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   // Response Network
   in_port(responseToCache_in, ResponseMsg, responseToCache, rank=2) {
-    if (responseToCache_in.isReady()) {
+    if (responseToCache_in.isReady(clockEdge())) {
       peek(responseToCache_in, ResponseMsg, block_on="addr") {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -377,7 +378,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   // Forward Network
   in_port(forwardToCache_in, RequestMsg, forwardToCache, rank=1) {
-    if (forwardToCache_in.isReady()) {
+    if (forwardToCache_in.isReady(clockEdge())) {
       peek(forwardToCache_in, RequestMsg, block_on="addr") {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -421,7 +422,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
 
   // Mandatory Queue
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank=0) {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
@@ -950,15 +951,15 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   action(j_popTriggerQueue, "j", desc="Pop trigger queue.") {
-    triggerQueue_in.dequeue();
+    triggerQueue_in.dequeue(clockEdge());
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(l_popForwardQueue, "l", desc="Pop forwareded request queue.") {
-    forwardToCache_in.dequeue();
+    forwardToCache_in.dequeue(clockEdge());
   }
 
   action(hp_copyFromTBEToL2, "li", desc="Copy data from TBE to L2 cache entry.") {
@@ -1017,7 +1018,7 @@ machine({L1Cache, L2Cache}, "AMD Hammer-like protocol")
   }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
-    responseToCache_in.dequeue();
+    responseToCache_in.dequeue(clockEdge());
   }
 
   action(ll_L2toL1Transfer, "ll", desc="") {

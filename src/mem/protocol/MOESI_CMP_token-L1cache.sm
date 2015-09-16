@@ -184,6 +184,8 @@ machine(L1Cache, "Token protocol")
     int countReadStarvingForAddress(Addr);
   }
 
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE b);
@@ -456,25 +458,26 @@ machine(L1Cache, "Token protocol")
 
   // Use Timer
   in_port(useTimerTable_in, Addr, useTimerTable, rank=5) {
-    if (useTimerTable_in.isReady()) {
-      TBE tbe := L1_TBEs[useTimerTable.readyAddress()];
+    if (useTimerTable_in.isReady(clockEdge())) {
+      Addr readyAddress := useTimerTable.nextAddress();
+      TBE tbe := L1_TBEs.lookup(readyAddress);
 
-      if (persistentTable.isLocked(useTimerTable.readyAddress()) &&
-          (persistentTable.findSmallest(useTimerTable.readyAddress()) != machineID)) {
-        if (persistentTable.typeOfSmallest(useTimerTable.readyAddress()) == AccessType:Write) {
-          trigger(Event:Use_TimeoutStarverX, useTimerTable.readyAddress(),
-                  getCacheEntry(useTimerTable.readyAddress()), tbe);
+      if (persistentTable.isLocked(readyAddress) &&
+          (persistentTable.findSmallest(readyAddress) != machineID)) {
+        if (persistentTable.typeOfSmallest(readyAddress) == AccessType:Write) {
+          trigger(Event:Use_TimeoutStarverX, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
         } else {
-          trigger(Event:Use_TimeoutStarverS, useTimerTable.readyAddress(),
-                  getCacheEntry(useTimerTable.readyAddress()), tbe);
+          trigger(Event:Use_TimeoutStarverS, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
         }
       } else {
         if (no_mig_atomic && IsAtomic(tbe)) {
-          trigger(Event:Use_TimeoutNoStarvers_NoMig, useTimerTable.readyAddress(),
-                  getCacheEntry(useTimerTable.readyAddress()), tbe);
+          trigger(Event:Use_TimeoutNoStarvers_NoMig, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
         } else {
-          trigger(Event:Use_TimeoutNoStarvers, useTimerTable.readyAddress(),
-                  getCacheEntry(useTimerTable.readyAddress()), tbe);
+          trigger(Event:Use_TimeoutNoStarvers, readyAddress,
+                  getCacheEntry(readyAddress), tbe);
         }
       }
     }
@@ -482,16 +485,17 @@ machine(L1Cache, "Token protocol")
 
   // Reissue Timer
   in_port(reissueTimerTable_in, Addr, reissueTimerTable, rank=4) {
-    if (reissueTimerTable_in.isReady()) {
-      trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
-              getCacheEntry(reissueTimerTable.readyAddress()),
-              L1_TBEs[reissueTimerTable.readyAddress()]);
+    Tick current_time := clockEdge();
+    if (reissueTimerTable_in.isReady(current_time)) {
+      Addr addr := reissueTimerTable.nextAddress();
+      trigger(Event:Request_Timeout, addr, getCacheEntry(addr),
+              L1_TBEs.lookup(addr));
     }
   }
 
   // Persistent Network
   in_port(persistentNetwork_in, PersistentMsg, persistentToL1Cache, rank=3) {
-    if (persistentNetwork_in.isReady()) {
+    if (persistentNetwork_in.isReady(clockEdge())) {
       peek(persistentNetwork_in, PersistentMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -541,7 +545,7 @@ machine(L1Cache, "Token protocol")
 
   // Response Network
   in_port(responseNetwork_in, ResponseMsg, responseToL1Cache, rank=2) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -612,7 +616,7 @@ machine(L1Cache, "Token protocol")
 
   // Request Network
   in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
-    if (requestNetwork_in.isReady()) {
+    if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -659,7 +663,7 @@ machine(L1Cache, "Token protocol")
 
   // Mandatory Queue
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank=0) {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
@@ -792,7 +796,8 @@ machine(L1Cache, "Token protocol")
           // IssueCount.
 
           // Set a wakeup timer
-          reissueTimerTable.set(address, reissue_wakeup_latency);
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(reissue_wakeup_latency));
 
         }
       } else {
@@ -844,9 +849,11 @@ machine(L1Cache, "Token protocol")
         // Set a wakeup timer
 
         if (dynamic_timeout_enabled) {
-          reissueTimerTable.set(address, (5 * averageLatencyEstimate()) / 4);
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(averageLatencyEstimate()));
         } else {
-          reissueTimerTable.set(address, fixed_timeout_latency);
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(fixed_timeout_latency));
         }
 
       }
@@ -911,7 +918,8 @@ machine(L1Cache, "Token protocol")
           // IssueCount.
 
           // Set a wakeup timer
-          reissueTimerTable.set(address, reissue_wakeup_latency);
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(reissue_wakeup_latency));
         }
 
       } else  {
@@ -968,9 +976,11 @@ machine(L1Cache, "Token protocol")
 
         // Set a wakeup timer
         if (dynamic_timeout_enabled) {
-          reissueTimerTable.set(address, (5 * averageLatencyEstimate()) / 4);
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(averageLatencyEstimate()));
         } else {
-          reissueTimerTable.set(address, fixed_timeout_latency);
+          reissueTimerTable.set(
+            address, clockEdge() + cyclesToTicks(fixed_timeout_latency));
         }
       }
   }
@@ -1376,23 +1386,24 @@ machine(L1Cache, "Token protocol")
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(l_popPersistentQueue, "l", desc="Pop persistent queue.") {
-    persistentNetwork_in.dequeue();
+    persistentNetwork_in.dequeue(clockEdge());
   }
 
   action(m_popRequestQueue, "m", desc="Pop request queue.") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
-    responseNetwork_in.dequeue();
+    responseNetwork_in.dequeue(clockEdge());
   }
 
   action(o_scheduleUseTimeout, "o", desc="Schedule a use timeout.") {
-    useTimerTable.set(address, use_timeout_latency);
+    useTimerTable.set(
+        address, clockEdge() + cyclesToTicks(use_timeout_latency));
   }
 
   action(p_informL2AboutTokenLoss, "p", desc="Inform L2 about loss of all tokens") {

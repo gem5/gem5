@@ -103,6 +103,8 @@ machine(L1Cache, "MI Example L1 Cache")
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
   // PROTOTYPES
+  Tick clockEdge();
+  Cycles ticksToCycles(Tick t);
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
   void set_tbe(TBE b);
@@ -200,7 +202,7 @@ machine(L1Cache, "MI Example L1 Cache")
   out_port(responseNetwork_out, ResponseMsg, responseFromCache);
 
   in_port(forwardRequestNetwork_in, RequestMsg, forwardToCache) {
-    if (forwardRequestNetwork_in.isReady()) {
+    if (forwardRequestNetwork_in.isReady(clockEdge())) {
       peek(forwardRequestNetwork_in, RequestMsg, block_on="addr") {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -226,7 +228,7 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   in_port(responseNetwork_in, ResponseMsg, responseToCache) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg, block_on="addr") {
 
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -244,7 +246,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
     // Mandatory Queue
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         Entry cache_entry := getCacheEntry(in_msg.LineAddress);
@@ -330,15 +332,17 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   action(m_popMandatoryQueue, "m", desc="Pop the mandatory request queue") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(n_popResponseQueue, "n", desc="Pop the response queue") {
-    profileMsgDelay(1, responseNetwork_in.dequeue());
+    Tick delay := responseNetwork_in.dequeue(clockEdge());
+    profileMsgDelay(1, ticksToCycles(delay));
   }
 
   action(o_popForwardedRequestQueue, "o", desc="Pop the forwarded request queue") {
-    profileMsgDelay(2, forwardRequestNetwork_in.dequeue());
+    Tick delay := forwardRequestNetwork_in.dequeue(clockEdge());
+    profileMsgDelay(2, ticksToCycles(delay));
   }
 
   action(p_profileMiss, "pi", desc="Profile cache miss") {

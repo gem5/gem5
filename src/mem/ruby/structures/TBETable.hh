@@ -47,12 +47,12 @@ class TBETable
     void allocate(Addr address);
     void deallocate(Addr address);
     bool
-    areNSlotsAvailable(int n) const
+    areNSlotsAvailable(int n, Tick current_time) const
     {
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
-    ENTRY* lookup(Addr address);
+    ENTRY *lookup(Addr address);
 
     // Print cache contents
     void print(std::ostream& out) const;

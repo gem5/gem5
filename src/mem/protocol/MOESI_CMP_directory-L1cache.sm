@@ -133,6 +133,8 @@ machine(L1Cache, "Directory protocol")
     bool isPresent(Addr);
   }
 
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE b);
@@ -266,16 +268,16 @@ machine(L1Cache, "Directory protocol")
 
   // Use Timer
   in_port(useTimerTable_in, Addr, useTimerTable) {
-    if (useTimerTable_in.isReady()) {
-        trigger(Event:Use_Timeout, useTimerTable.readyAddress(),
-                getCacheEntry(useTimerTable.readyAddress()),
-                TBEs[useTimerTable.readyAddress()]);
+    if (useTimerTable_in.isReady(clockEdge())) {
+        Addr readyAddress := useTimerTable.nextAddress();
+        trigger(Event:Use_Timeout, readyAddress, getCacheEntry(readyAddress),
+                TBEs.lookup(readyAddress));
     }
   }
 
   // Trigger Queue
   in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
-    if (triggerQueue_in.isReady()) {
+    if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
           trigger(Event:All_acks, in_msg.addr,
@@ -291,7 +293,7 @@ machine(L1Cache, "Directory protocol")
 
   // Request Network
   in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
-    if (requestNetwork_in.isReady()) {
+    if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
         DPRINTF(RubySlicc, "L1 received: %s\n", in_msg.Type);
@@ -331,7 +333,7 @@ machine(L1Cache, "Directory protocol")
 
   // Response Network
   in_port(responseToL1Cache_in, ResponseMsg, responseToL1Cache) {
-    if (responseToL1Cache_in.isReady()) {
+    if (responseToL1Cache_in.isReady(clockEdge())) {
       peek(responseToL1Cache_in, ResponseMsg, block_on="addr") {
         if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:Ack, in_msg.addr,
@@ -352,7 +354,7 @@ machine(L1Cache, "Directory protocol")
   // Nothing from the unblock network
   // Mandatory Queue betweens Node's CPU and it's L1 caches
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
@@ -684,7 +686,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(j_popTriggerQueue, "j", desc="Pop trigger queue.") {
-    triggerQueue_in.dequeue();
+    triggerQueue_in.dequeue(clockEdge());
   }
 
   action(jj_unsetUseTimer, "\jj", desc="Unset use timer.") {
@@ -692,11 +694,11 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(l_popForwardQueue, "l", desc="Pop forwareded request queue.") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
@@ -715,7 +717,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
-    responseToL1Cache_in.dequeue();
+    responseToL1Cache_in.dequeue(clockEdge());
   }
 
   action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
@@ -729,7 +731,8 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(o_scheduleUseTimeout, "oo", desc="Schedule a use timeout.") {
-    useTimerTable.set(address, use_timeout_latency);
+    useTimerTable.set(address,
+                      clockEdge() + cyclesToTicks(use_timeout_latency));
   }
 
   action(ub_dmaUnblockL2Cache, "ub", desc="Send dma ack to l2 cache") {
@@ -908,11 +911,11 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(z_recycleRequestQueue, "z", desc="Send the head of the mandatory queue to the back of the queue.") {
-    requestNetwork_in.recycle();
+    requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(zz_recycleMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
-    mandatoryQueue_in.recycle();
+    mandatoryQueue_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   //*****************************************************

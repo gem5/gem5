@@ -99,13 +99,6 @@ NetworkInterface::addNode(vector<MessageBuffer*>& in,
     for (auto& it: in) {
         if (it != nullptr) {
             it->setConsumer(this);
-            it->setReceiver(this);
-        }
-    }
-
-    for (auto& it : out) {
-        if (it != nullptr) {
-            it->setSender(this);
         }
     }
 }
@@ -250,10 +243,10 @@ NetworkInterface::wakeup()
             continue;
         }
 
-        while (b->isReady()) { // Is there a message waiting
+        while (b->isReady(clockEdge())) { // Is there a message waiting
             msg_ptr = b->peekMsgPtr();
             if (flitisizeMessage(msg_ptr, vnet)) {
-                b->dequeue();
+                b->dequeue(clockEdge());
             } else {
                 break;
             }
@@ -272,7 +265,7 @@ NetworkInterface::wakeup()
                     m_id, curCycle());
 
             outNode_ptr[t_flit->get_vnet()]->enqueue(
-                t_flit->get_msg_ptr(), Cycles(1));
+                t_flit->get_msg_ptr(), clockEdge(), cyclesToTicks(Cycles(1)));
 
             // signal the upstream router that this vc can be freed now
             inNetLink->release_vc_link(t_flit->get_vc(),
@@ -334,7 +327,7 @@ NetworkInterface::checkReschedule()
             continue;
         }
 
-        while (it->isReady()) { // Is there a message waiting
+        while (it->isReady(clockEdge())) { // Is there a message waiting
             scheduleEvent(Cycles(1));
             return;
         }

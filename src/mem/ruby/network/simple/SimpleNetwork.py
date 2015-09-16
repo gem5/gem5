@@ -41,9 +41,6 @@ class SimpleNetwork(RubyNetwork):
     endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor");
     adaptive_routing = Param.Bool(False, "enable adaptive routing");
     int_link_buffers = VectorParam.MessageBuffer("Buffers for int_links")
-    # int_links do not recycle buffers, so this parameter is not used.
-    # TODO: Move recycle_latency out of MessageBuffers and into controllers
-    recycle_latency = Param.Cycles(0, "")
 
     def setup_buffers(self):
         # Note that all SimpleNetwork MessageBuffers are currently ordered
@@ -82,6 +79,3 @@ class Switch(BasicRouter):
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
     port_buffers = VectorParam.MessageBuffer("Port buffers")
-    # Ports do not recycle buffers, so this parameter is not used.
-    # TODO: Move recycle_latency out of MessageBuffers and into controllers
-    recycle_latency = Param.Cycles(0, "")

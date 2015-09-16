@@ -37,7 +37,6 @@ class MessageBuffer(SimObject):
     ordered = Param.Bool(False, "Whether the buffer is ordered")
     buffer_size = Param.Unsigned(0, "Maximum number of entries to buffer \
                                      (0 allows infinite entries)")
-    recycle_latency = Param.Cycles(Parent.recycle_latency, "")
     randomization = Param.Bool(False, "")
 
     master = MasterPort("Master port to MessageBuffer receiver")

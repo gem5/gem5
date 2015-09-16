@@ -135,6 +135,8 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   TBETable TBEs, template="<L0Cache_TBE>", constructor="m_number_of_TBEs";
 
+  Tick clockEdge();
+  Cycles ticksToCycles(Tick t);
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
   void set_tbe(TBE a);
@@ -255,7 +257,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   // Messages for this L0 cache from the L1 cache
   in_port(messgeBuffer_in, CoherenceMsg, bufferFromL1, rank = 1) {
-    if (messgeBuffer_in.isReady()) {
+    if (messgeBuffer_in.isReady(clockEdge())) {
       peek(messgeBuffer_in, CoherenceMsg, block_on="addr") {
         assert(in_msg.Dest == machineID);
 
@@ -289,7 +291,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   // Mandatory Queue betweens Node's CPU and it's L0 caches
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank = 0) {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
@@ -513,17 +515,19 @@ machine(L0Cache, "MESI Directory L0 Cache")
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(l_popRequestQueue, "l",
          desc="Pop incoming request queue and profile the delay within this virtual network") {
-    profileMsgDelay(2, messgeBuffer_in.dequeue());
+    Tick delay := messgeBuffer_in.dequeue(clockEdge());
+    profileMsgDelay(2, ticksToCycles(delay));
   }
 
   action(o_popIncomingResponseQueue, "o",
          desc="Pop Incoming Response queue and profile the delay within this virtual network") {
-    profileMsgDelay(1, messgeBuffer_in.dequeue());
+    Tick delay := messgeBuffer_in.dequeue(clockEdge());
+    profileMsgDelay(1, ticksToCycles(delay));
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {

@@ -52,6 +52,9 @@ machine(DMA, "DMA Controller")
 
   State cur_state;
 
+  Tick clockEdge();
+  Cycles ticksToCycles(Tick t);
+
   State getState(Addr addr) {
     return cur_state;
   }
@@ -78,7 +81,7 @@ machine(DMA, "DMA Controller")
   out_port(requestToDir_out, DMARequestMsg, requestToDir, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
-    if (dmaRequestQueue_in.isReady()) {
+    if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {
           trigger(Event:ReadRequest, in_msg.LineAddress);
@@ -92,7 +95,7 @@ machine(DMA, "DMA Controller")
   }
 
   in_port(dmaResponseQueue_in, DMAResponseMsg, responseFromDir, desc="...") {
-    if (dmaResponseQueue_in.isReady()) {
+    if (dmaResponseQueue_in.isReady(clockEdge())) {
       peek( dmaResponseQueue_in, DMAResponseMsg) {
         if (in_msg.Type == DMAResponseType:ACK) {
           trigger(Event:Ack, in_msg.LineAddress);
@@ -148,11 +151,11 @@ machine(DMA, "DMA Controller")
   }
 
   action(p_popRequestQueue, "p", desc="Pop request queue") {
-    dmaRequestQueue_in.dequeue();
+    dmaRequestQueue_in.dequeue(clockEdge());
   }
 
   action(p_popResponseQueue, "\p", desc="Pop request queue") {
-    dmaResponseQueue_in.dequeue();
+    dmaResponseQueue_in.dequeue(clockEdge());
   }
 
   transition(READY, ReadRequest, BUSY_RD) {

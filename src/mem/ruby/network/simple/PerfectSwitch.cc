@@ -144,8 +144,9 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
     // temporary vectors to store the routing results
     vector<LinkID> output_links;
     vector<NetDest> output_link_destinations;
+    Tick current_time = m_switch->clockEdge();
 
-    while (buffer->isReady()) {
+    while (buffer->isReady(current_time)) {
         DPRINTF(RubyNetwork, "incoming: %d\n", incoming);
 
         // Peek at message
@@ -176,7 +177,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
                 for (int out = 0; out < m_out.size(); out++) {
                     int out_queue_length = 0;
                     for (int v = 0; v < m_virtual_networks; v++) {
-                        out_queue_length += m_out[out][v]->getSize();
+                        out_queue_length += m_out[out][v]->getSize(current_time);
                     }
                     int value =
                         (out_queue_length << 8) |
@@ -220,7 +221,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
         for (int i = 0; i < output_links.size(); i++) {
             int outgoing = output_links[i];
 
-            if (!m_out[outgoing][vnet]->areNSlotsAvailable(1))
+            if (!m_out[outgoing][vnet]->areNSlotsAvailable(1, current_time))
                 enough = false;
 
             DPRINTF(RubyNetwork, "Checking if node is blocked ..."
@@ -251,7 +252,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
         }
 
         // Dequeue msg
-        buffer->dequeue();
+        buffer->dequeue(current_time);
         m_pending_message_count[vnet]--;
 
         // Enqueue it - for all outgoing queues
@@ -273,7 +274,8 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
                     "inport[%d][%d] to outport [%d][%d].\n",
                     incoming, vnet, outgoing, vnet);
 
-            m_out[outgoing][vnet]->enqueue(msg_ptr);
+            m_out[outgoing][vnet]->enqueue(msg_ptr, current_time,
+                                           m_switch->cyclesToTicks(Cycles(1)));
         }
     }
 }

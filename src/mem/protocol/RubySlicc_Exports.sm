@@ -37,6 +37,7 @@ external_type(PacketPtr, primitive="yes");
 external_type(Packet, primitive="yes");
 external_type(Addr, primitive="yes");
 external_type(Cycles, primitive="yes", default="Cycles(0)");
+external_type(Tick, primitive="yes", default="0");
 
 structure(DataBlock, external = "yes", desc="..."){
   void clear();

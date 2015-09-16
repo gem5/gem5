@@ -60,9 +60,6 @@ AbstractController::init()
         m_delayVCHistogram.push_back(new Stats::Histogram());
         m_delayVCHistogram[i]->init(10);
     }
-    if (getMemoryQueue()) {
-        getMemoryQueue()->setSender(this);
-    }
 }
 
 void
@@ -118,7 +115,8 @@ AbstractController::wakeUpBuffers(Addr addr)
              in_port_rank >= 0;
              in_port_rank--) {
             if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
-                (*(m_waiting_buffers[addr]))[in_port_rank]->reanalyzeMessages(addr);
+                (*(m_waiting_buffers[addr]))[in_port_rank]->
+                    reanalyzeMessages(addr, clockEdge());
             }
         }
         delete m_waiting_buffers[addr];
@@ -138,7 +136,8 @@ AbstractController::wakeUpAllBuffers(Addr addr)
              in_port_rank >= 0;
              in_port_rank--) {
             if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
-                (*(m_waiting_buffers[addr]))[in_port_rank]->reanalyzeMessages(addr);
+                (*(m_waiting_buffers[addr]))[in_port_rank]->
+                    reanalyzeMessages(addr, clockEdge());
             }
         }
         delete m_waiting_buffers[addr];
@@ -168,7 +167,7 @@ AbstractController::wakeUpAllBuffers()
                   //
                   if (*vec_iter != NULL &&
                       (wokeUpMsgBufs.count(*vec_iter) == 0)) {
-                      (*vec_iter)->reanalyzeAllMessages();
+                      (*vec_iter)->reanalyzeAllMessages(clockEdge());
                       wokeUpMsgBufs.insert(*vec_iter);
                   }
              }
@@ -328,7 +327,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         panic("Incorrect packet type received from memory controller!");
     }
 
-    getMemoryQueue()->enqueue(msg);
+    getMemoryQueue()->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
     delete pkt;
 }
 

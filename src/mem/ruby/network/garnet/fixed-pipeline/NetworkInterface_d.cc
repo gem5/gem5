@@ -115,13 +115,6 @@ NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
     for (auto& it : in) {
         if (it != nullptr) {
             it->setConsumer(this);
-            it->setReceiver(this);
-        }
-    }
-
-    for (auto& it : out) {
-        if (it != nullptr) {
-            it->setSender(this);
         }
     }
 }
@@ -222,6 +215,7 @@ NetworkInterface_d::wakeup()
     DPRINTF(RubyNetwork, "m_id: %d woke up at time: %lld", m_id, curCycle());
 
     MsgPtr msg_ptr;
+    Tick curTime = clockEdge();
 
     // Checking for messages coming from the protocol
     // can pick up a message/cycle for each virtual net
@@ -231,10 +225,10 @@ NetworkInterface_d::wakeup()
             continue;
         }
 
-        while (b->isReady()) { // Is there a message waiting
+        while (b->isReady(curTime)) { // Is there a message waiting
             msg_ptr = b->peekMsgPtr();
             if (flitisizeMessage(msg_ptr, vnet)) {
-                b->dequeue();
+                b->dequeue(curTime);
             } else {
                 break;
             }
@@ -253,7 +247,7 @@ NetworkInterface_d::wakeup()
             free_signal = true;
 
             outNode_ptr[t_flit->get_vnet()]->enqueue(
-                t_flit->get_msg_ptr(), Cycles(1));
+                t_flit->get_msg_ptr(), curTime, cyclesToTicks(Cycles(1)));
         }
         // Simply send a credit back since we are not buffering
         // this flit in the NI
@@ -363,7 +357,7 @@ NetworkInterface_d::checkReschedule()
             continue;
         }
 
-        while (it->isReady()) { // Is there a message waiting
+        while (it->isReady(clockEdge())) { // Is there a message waiting
             scheduleEvent(Cycles(1));
             return;
         }

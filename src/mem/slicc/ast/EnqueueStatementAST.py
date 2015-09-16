@@ -65,9 +65,10 @@ class EnqueueStatementAST(StatementAST):
         if self.latexpr != None:
             ret_type, rcode = self.latexpr.inline(True)
             code("(${{self.queue_name.var.code}}).enqueue(" \
-                 "out_msg, Cycles($rcode));")
+                 "out_msg, clockEdge(), cyclesToTicks(Cycles($rcode)));")
         else:
-            code("(${{self.queue_name.var.code}}).enqueue(out_msg);")
+            code("(${{self.queue_name.var.code}}).enqueue(out_msg, "\
+                 "clockEdge(), cyclesToTicks(Cycles(1)));")
 
         # End scope
         self.symtab.popFrame()

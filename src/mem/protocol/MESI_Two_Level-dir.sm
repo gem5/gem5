@@ -98,6 +98,8 @@ machine(Directory, "MESI Two Level directory protocol")
   // ** OBJECTS **
   TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
   void set_tbe(TBE tbe);
   void unset_tbe();
   void wakeUpBuffers(Addr a);
@@ -190,7 +192,7 @@ machine(Directory, "MESI Two Level directory protocol")
   // ** IN_PORTS **
 
   in_port(requestNetwork_in, RequestMsg, requestToDir, rank = 0) {
-    if (requestNetwork_in.isReady()) {
+    if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (isGETRequest(in_msg.Type)) {
@@ -210,7 +212,7 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   in_port(responseNetwork_in, ResponseMsg, responseToDir, rank = 1) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
@@ -227,7 +229,7 @@ machine(Directory, "MESI Two Level directory protocol")
 
   // off-chip memory request/response is done
   in_port(memQueue_in, MemoryMsg, responseFromMemory, rank = 2) {
-    if (memQueue_in.isReady()) {
+    if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
           trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
@@ -286,15 +288,15 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   action(j_popIncomingRequestQueue, "j", desc="Pop incoming request queue") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(k_popIncomingResponseQueue, "k", desc="Pop incoming request queue") {
-    responseNetwork_in.dequeue();
+    responseNetwork_in.dequeue(clockEdge());
   }
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
-    memQueue_in.dequeue();
+    memQueue_in.dequeue(clockEdge());
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
@@ -322,7 +324,7 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   action(p_popIncomingDMARequestQueue, "p", desc="Pop incoming DMA queue") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
@@ -359,7 +361,7 @@ machine(Directory, "MESI Two Level directory protocol")
   }
 
   action(zz_recycleDMAQueue, "zz", desc="recycle DMA queue") {
-    requestNetwork_in.recycle();
+    requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {

@@ -41,9 +41,9 @@ external_type(OutPort, primitive="yes");
 external_type(Scalar, primitive="yes");
 
 structure(InPort, external = "yes", primitive="yes") {
-  bool isReady();
-  Cycles dequeue();
-  void recycle();
+  bool isReady(Tick current_time);
+  Tick dequeue(Tick current_time);
+  void recycle(Tick current_time, Tick recycle_latency);
   bool isEmpty();
   bool isStallMapEmpty();
   int getStallMapSize();
@@ -179,9 +179,9 @@ structure (DMASequencer, external = "yes") {
 }
 
 structure (TimerTable, inport="yes", external = "yes") {
-  bool isReady();
-  Addr readyAddress();
-  void set(Addr, Cycles);
+  bool isReady(Tick);
+  Addr nextAddress();
+  void set(Addr, Tick);
   void unset(Addr);
   bool isSet(Addr);
 }

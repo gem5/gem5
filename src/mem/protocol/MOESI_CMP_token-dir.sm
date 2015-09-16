@@ -172,6 +172,8 @@ machine(Directory, "Token protocol")
   bool starving, default="false";
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
   void set_tbe(TBE b);
   void unset_tbe();
 
@@ -276,7 +278,7 @@ machine(Directory, "Token protocol")
   // ** IN_PORTS **
   // off-chip memory request/response is done
   in_port(memQueue_in, MemoryMsg, responseFromMemory) {
-    if (memQueue_in.isReady()) {
+    if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
           trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
@@ -292,14 +294,15 @@ machine(Directory, "Token protocol")
 
   // Reissue Timer
   in_port(reissueTimerTable_in, Addr, reissueTimerTable) {
-    if (reissueTimerTable_in.isReady()) {
-      trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
-              TBEs[reissueTimerTable.readyAddress()]);
+    Tick current_time := clockEdge();
+    if (reissueTimerTable_in.isReady(current_time)) {
+      Addr addr := reissueTimerTable.nextAddress();
+      trigger(Event:Request_Timeout, addr, TBEs.lookup(addr));
     }
   }
 
   in_port(responseNetwork_in, ResponseMsg, responseToDir) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (getDirectoryEntry(in_msg.addr).Tokens + in_msg.Tokens == max_tokens()) {
@@ -338,7 +341,7 @@ machine(Directory, "Token protocol")
   }
 
   in_port(persistentNetwork_in, PersistentMsg, persistentToDir) {
-    if (persistentNetwork_in.isReady()) {
+    if (persistentNetwork_in.isReady(clockEdge())) {
       peek(persistentNetwork_in, PersistentMsg) {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -400,7 +403,7 @@ machine(Directory, "Token protocol")
   }
 
   in_port(requestNetwork_in, RequestMsg, requestToDir) {
-    if (requestNetwork_in.isReady()) {
+    if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETS) {
@@ -415,7 +418,7 @@ machine(Directory, "Token protocol")
   }
 
   in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir) {
-    if (dmaRequestQueue_in.isReady()) {
+    if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
         if (in_msg.Type == DMARequestType:READ) {
           trigger(Event:DMA_READ, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
@@ -490,7 +493,7 @@ machine(Directory, "Token protocol")
       // IssueCount.
 
       // Set a wakeup timer
-      reissueTimerTable.set(address, reissue_wakeup_latency);
+      reissueTimerTable.set(address, cyclesToTicks(reissue_wakeup_latency));
     }
   }
 
@@ -558,7 +561,7 @@ machine(Directory, "Token protocol")
       // IssueCount.
 
       // Set a wakeup timer
-      reissueTimerTable.set(address, reissue_wakeup_latency);
+      reissueTimerTable.set(address, cyclesToTicks(reissue_wakeup_latency));
     }
   }
 
@@ -752,35 +755,35 @@ machine(Directory, "Token protocol")
   }
 
   action(j_popIncomingRequestQueue, "j", desc="Pop incoming request queue") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(z_recycleRequest, "z", desc="Recycle the request queue") {
-    requestNetwork_in.recycle();
+    requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(k_popIncomingResponseQueue, "k", desc="Pop incoming response queue") {
-    responseNetwork_in.dequeue();
+    responseNetwork_in.dequeue(clockEdge());
   }
 
   action(kz_recycleResponse, "kz", desc="Recycle incoming response queue") {
-    responseNetwork_in.recycle();
+    responseNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(l_popIncomingPersistentQueue, "l", desc="Pop incoming persistent queue") {
-    persistentNetwork_in.dequeue();
+    persistentNetwork_in.dequeue(clockEdge());
   }
 
   action(p_popDmaRequestQueue, "pd", desc="pop dma request queue") {
-    dmaRequestQueue_in.dequeue();
+    dmaRequestQueue_in.dequeue(clockEdge());
   }
 
   action(y_recycleDmaRequestQueue, "y", desc="recycle dma request queue") {
-    dmaRequestQueue_in.recycle();
+    dmaRequestQueue_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
-    memQueue_in.dequeue();
+    memQueue_in.dequeue(clockEdge());
   }
 
   action(r_bounceResponse, "r", desc="Bounce response to starving processor") {
@@ -804,7 +807,7 @@ machine(Directory, "Token protocol")
     //
     if (reissueTimerTable.isSet(address)) {
       reissueTimerTable.unset(address);
-      reissueTimerTable.set(address, fixed_timeout_latency);
+      reissueTimerTable.set(address, cyclesToTicks(fixed_timeout_latency));
     }
   }
 
@@ -812,7 +815,7 @@ machine(Directory, "Token protocol")
     //
     // currently only support a fixed timeout latency
     //
-    reissueTimerTable.set(address, fixed_timeout_latency);
+    reissueTimerTable.set(address, cyclesToTicks(fixed_timeout_latency));
   }
 
   action(ut_unsetReissueTimer, "ut", desc="Unset reissue timer.") {

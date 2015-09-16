@@ -151,6 +151,8 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
+  Tick clockEdge();
+  Cycles ticksToCycles(Tick t);
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
   void set_tbe(TBE a);
@@ -266,7 +268,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Response From the L2 Cache to this L1 cache
   in_port(responseNetwork_in, ResponseMsg, responseFromL2, rank = 3) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -303,7 +305,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Request to this L1 cache from the shared L2
   in_port(requestNetwork_in, RequestMsg, requestFromL2, rank = 2) {
-    if(requestNetwork_in.isReady()) {
+    if(requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -340,7 +342,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Requests to this L1 cache from the L0 cache.
   in_port(messageBufferFromL0_in, CoherenceMsg, bufferFromL0, rank = 0) {
-    if (messageBufferFromL0_in.isReady()) {
+    if (messageBufferFromL0_in.isReady(clockEdge())) {
       peek(messageBufferFromL0_in, CoherenceMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
@@ -634,17 +636,19 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(k_popL0RequestQueue, "k", desc="Pop mandatory queue.") {
-    messageBufferFromL0_in.dequeue();
+    messageBufferFromL0_in.dequeue(clockEdge());
   }
 
   action(l_popL2RequestQueue, "l",
          desc="Pop incoming request queue and profile the delay within this virtual network") {
-    profileMsgDelay(2, requestNetwork_in.dequeue());
+    Tick delay := requestNetwork_in.dequeue(clockEdge());
+    profileMsgDelay(2, ticksToCycles(delay));
   }
 
   action(o_popL2ResponseQueue, "o",
          desc="Pop Incoming Response queue and profile the delay within this virtual network") {
-    profileMsgDelay(1, responseNetwork_in.dequeue());
+    Tick delay := responseNetwork_in.dequeue(clockEdge());
+    profileMsgDelay(1, ticksToCycles(delay));
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {

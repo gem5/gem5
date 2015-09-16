@@ -227,6 +227,8 @@ machine(L2Cache, "Token protocol")
   TBETable TBEs, template="<L2Cache_TBE>", constructor="m_number_of_TBEs";
   PerfectCacheMemory localDirectory, template="<L2Cache_DirEntry>";
 
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
   void set_tbe(TBE b);
@@ -577,7 +579,7 @@ machine(L2Cache, "Token protocol")
 
   // Trigger Queue
   in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
-    if (triggerQueue_in.isReady()) {
+    if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
           trigger(Event:All_Acks, in_msg.addr,
@@ -592,7 +594,7 @@ machine(L2Cache, "Token protocol")
 
   // Request Network
   in_port(requestNetwork_in, RequestMsg, GlobalRequestToL2Cache) {
-    if (requestNetwork_in.isReady()) {
+    if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID) {
@@ -625,7 +627,7 @@ machine(L2Cache, "Token protocol")
   }
 
   in_port(L1requestNetwork_in, RequestMsg, L1RequestToL2Cache) {
-    if (L1requestNetwork_in.isReady()) {
+    if (L1requestNetwork_in.isReady(clockEdge())) {
       peek(L1requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETX) {
@@ -660,7 +662,7 @@ machine(L2Cache, "Token protocol")
 
   // Response Network
   in_port(responseNetwork_in, ResponseMsg, responseToL2Cache) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:ACK) {
@@ -1366,7 +1368,7 @@ machine(L2Cache, "Token protocol")
   }
 
   action(m_popRequestQueue, "m", desc="Pop request queue.") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(m_decrementNumberOfMessagesInt, "\m", desc="Decrement the number of messages for which we're waiting") {
@@ -1391,15 +1393,15 @@ machine(L2Cache, "Token protocol")
   }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
-    responseNetwork_in.dequeue();
+    responseNetwork_in.dequeue(clockEdge());
   }
 
   action(n_popTriggerQueue, "\n", desc="Pop trigger queue.") {
-    triggerQueue_in.dequeue();
+    triggerQueue_in.dequeue(clockEdge());
   }
 
   action(o_popL1RequestQueue, "o", desc="Pop L1 request queue.") {
-    L1requestNetwork_in.dequeue();
+    L1requestNetwork_in.dequeue(clockEdge());
   }
 
 
@@ -1538,21 +1540,21 @@ machine(L2Cache, "Token protocol")
     peek(L1requestNetwork_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
     }
-    L1requestNetwork_in.recycle();
+    L1requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(zz_recycleRequestQueue, "\zz", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(requestNetwork_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
     }
-    requestNetwork_in.recycle();
+    requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(zz_recycleResponseQueue, "\z\z", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(responseNetwork_in, ResponseMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Sender);
     }
-    responseNetwork_in.recycle();
+    responseNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(da_sendDmaAckUnblock, "da", desc="Send dma ack to global directory") {

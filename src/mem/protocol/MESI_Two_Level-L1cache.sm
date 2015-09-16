@@ -156,6 +156,8 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
+  Tick clockEdge();
+  Cycles ticksToCycles(Tick t);
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
   void set_tbe(TBE a);
@@ -296,7 +298,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   // searches of all entries in the queue, not just the head msg. All
   // msgs in the structure can be invalidated if a demand miss matches.
   in_port(optionalQueue_in, RubyRequest, optionalQueue, desc="...", rank = 3) {
-      if (optionalQueue_in.isReady()) {
+      if (optionalQueue_in.isReady(clockEdge())) {
           peek(optionalQueue_in, RubyRequest) {
               // Instruction Prefetch
               if (in_msg.Type == RubyRequestType:IFETCH) {
@@ -373,7 +375,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Response  L1 Network - response msg to this L1 cache
   in_port(responseL1Network_in, ResponseMsg, responseToL1Cache, rank = 2) {
-    if (responseL1Network_in.isReady()) {
+    if (responseL1Network_in.isReady(clockEdge())) {
       peek(responseL1Network_in, ResponseMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -413,7 +415,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Request InterChip network - request from this L1 cache to the shared L2
   in_port(requestL1Network_in, RequestMsg, requestToL1Cache, rank = 1) {
-    if(requestL1Network_in.isReady()) {
+    if(requestL1Network_in.isReady(clockEdge())) {
       peek(requestL1Network_in, RequestMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -439,7 +441,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
 
   // Mandatory Queue betweens Node's CPU and it's L1 caches
   in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank = 0) {
-    if (mandatoryQueue_in.isReady()) {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
@@ -866,17 +868,19 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
-    mandatoryQueue_in.dequeue();
+    mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(l_popRequestQueue, "l",
     desc="Pop incoming request queue and profile the delay within this virtual network") {
-    profileMsgDelay(2, requestL1Network_in.dequeue());
+    Tick delay := requestL1Network_in.dequeue(clockEdge());
+    profileMsgDelay(2, ticksToCycles(delay));
   }
 
   action(o_popIncomingResponseQueue, "o",
     desc="Pop Incoming Response queue and profile the delay within this virtual network") {
-    profileMsgDelay(1, responseL1Network_in.dequeue());
+    Tick delay := responseL1Network_in.dequeue(clockEdge());
+    profileMsgDelay(1, ticksToCycles(delay));
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
@@ -963,7 +967,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(pq_popPrefetchQueue, "\pq", desc="Pop the prefetch request queue") {
-      optionalQueue_in.dequeue();
+      optionalQueue_in.dequeue(clockEdge());
   }
 
   action(mp_markPrefetched, "mp", desc="Write data from response queue to cache") {

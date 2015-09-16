@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -31,6 +30,7 @@
 NodeID version;
 MachineID machineID;
 NodeID clusterID;
+Cycles recycle_latency;
 
 // Functions implemented in the AbstractController class for
 // making timing access to the memory maintained by the

@@ -149,6 +149,7 @@ machine(L2Cache, "Token protocol")
   PersistentTable persistentTable;
   PerfectCacheMemory localDirectory, template="<L2Cache_DirEntry>";
 
+  Tick clockEdge();
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
 
@@ -326,7 +327,7 @@ machine(L2Cache, "Token protocol")
 
   // Persistent Network
   in_port(persistentNetwork_in, PersistentMsg, persistentToL2Cache) {
-    if (persistentNetwork_in.isReady()) {
+    if (persistentNetwork_in.isReady(clockEdge())) {
       peek(persistentNetwork_in, PersistentMsg) {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -366,7 +367,7 @@ machine(L2Cache, "Token protocol")
 
   // Request Network
   in_port(requestNetwork_in, RequestMsg, GlobalRequestToL2Cache) {
-    if (requestNetwork_in.isReady()) {
+    if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
 
@@ -389,7 +390,7 @@ machine(L2Cache, "Token protocol")
   }
 
   in_port(L1requestNetwork_in, RequestMsg, L1RequestToL2Cache) {
-    if (L1requestNetwork_in.isReady()) {
+    if (L1requestNetwork_in.isReady(clockEdge())) {
       peek(L1requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -413,7 +414,7 @@ machine(L2Cache, "Token protocol")
 
   // Response Network
   in_port(responseNetwork_in, ResponseMsg, responseToL2Cache) {
-    if (responseNetwork_in.isReady()) {
+    if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
         Entry cache_entry := getCacheEntry(in_msg.addr);
@@ -870,19 +871,19 @@ machine(L2Cache, "Token protocol")
   }
 
   action(l_popPersistentQueue, "l", desc="Pop persistent queue.") {
-    persistentNetwork_in.dequeue();
+    persistentNetwork_in.dequeue(clockEdge());
   }
 
   action(m_popRequestQueue, "m", desc="Pop request queue.") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.dequeue(clockEdge());
   }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
-    responseNetwork_in.dequeue();
+    responseNetwork_in.dequeue(clockEdge());
   }
 
   action(o_popL1RequestQueue, "o", desc="Pop L1 request queue.") {
-    L1requestNetwork_in.dequeue();
+    L1requestNetwork_in.dequeue(clockEdge());
   }
 
 

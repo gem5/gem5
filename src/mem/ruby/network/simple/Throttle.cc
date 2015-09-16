@@ -94,14 +94,16 @@ Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
     if (out == nullptr || in == nullptr) {
         return;
     }
+
     assert(m_units_remaining[vnet] >= 0);
+    Tick current_time = m_switch->clockEdge();
 
-    while (bw_remaining > 0 && (in->isReady() || m_units_remaining[vnet] > 0) &&
-                                out->areNSlotsAvailable(1)) {
-
+    while (bw_remaining > 0 && (in->isReady(current_time) ||
+                                m_units_remaining[vnet] > 0) &&
+           out->areNSlotsAvailable(1, current_time)) {
         // See if we are done transferring the previous message on
         // this virtual network
-        if (m_units_remaining[vnet] == 0 && in->isReady()) {
+        if (m_units_remaining[vnet] == 0 && in->isReady(current_time)) {
             // Find the size of the message we are moving
             MsgPtr msg_ptr = in->peekMsgPtr();
             Message *net_msg_ptr = msg_ptr.get();
@@ -114,8 +116,9 @@ Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
                     m_ruby_system->curCycle());
 
             // Move the message
-            in->dequeue();
-            out->enqueue(msg_ptr, m_link_latency);
+            in->dequeue(current_time);
+            out->enqueue(msg_ptr, current_time,
+                         m_switch->cyclesToTicks(m_link_latency));
 
             // Count the message
             m_msg_counts[net_msg_ptr->getMessageSize()][vnet]++;
@@ -128,8 +131,9 @@ Throttle::operateVnet(int vnet, int &bw_remaining, bool &schedule_wakeup,
         bw_remaining = max(0, -diff);
     }
 
-    if (bw_remaining > 0 && (in->isReady() || m_units_remaining[vnet] > 0) &&
-                             !out->areNSlotsAvailable(1)) {
+    if (bw_remaining > 0 && (in->isReady(current_time) ||
+                             m_units_remaining[vnet] > 0) &&
+        !out->areNSlotsAvailable(1, current_time)) {
         DPRINTF(RubyNetwork, "vnet: %d", vnet);
 
         // schedule me to wakeup again because I'm waiting for my
