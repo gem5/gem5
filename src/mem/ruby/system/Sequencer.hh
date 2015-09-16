@@ -97,7 +97,6 @@ class Sequencer : public RubyPort
     void checkCoherence(Addr address);
 
     void markRemoved();
-    void removeRequest(SequencerRequest* request);
     void evictionCallback(Addr address);
     void invalidateSC(Addr address);
 

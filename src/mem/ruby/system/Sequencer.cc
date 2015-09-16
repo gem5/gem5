@@ -242,28 +242,6 @@ Sequencer::markRemoved()
 }
 
 void
-Sequencer::removeRequest(SequencerRequest* srequest)
-{
-    assert(m_outstanding_count ==
-           m_writeRequestTable.size() + m_readRequestTable.size());
-
-    Addr line_addr = makeLineAddress(srequest->pkt->getAddr());
-    if ((srequest->m_type == RubyRequestType_ST) ||
-        (srequest->m_type == RubyRequestType_RMW_Read) ||
-        (srequest->m_type == RubyRequestType_RMW_Write) ||
-        (srequest->m_type == RubyRequestType_Load_Linked) ||
-        (srequest->m_type == RubyRequestType_Store_Conditional) ||
-        (srequest->m_type == RubyRequestType_Locked_RMW_Read) ||
-        (srequest->m_type == RubyRequestType_Locked_RMW_Write)) {
-        m_writeRequestTable.erase(line_addr);
-    } else {
-        m_readRequestTable.erase(line_addr);
-    }
-
-    markRemoved();
-}
-
-void
 Sequencer::invalidateSC(Addr address)
 {
     AbstractCacheEntry *e = m_dataCache_ptr->lookup(address);
