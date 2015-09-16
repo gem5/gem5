@@ -361,6 +361,8 @@ configs += ['simple-atomic', 'simple-atomic-mp',
             'rubytest', 'memtest', 'memtest-filter',
             'tgen-simple-mem', 'tgen-dram-ctrl']
 
+configs += ['learning-gem5-p1-simple', 'learning-gem5-p1-two-level']
+
 if env['PROTOCOL'] != 'None':
     if env['PROTOCOL'] == 'MI_example':
         configs += [c + "-ruby" for c in configs]
