@@ -63,7 +63,6 @@ class Sequencer : public RubyPort
 
     // Public Methods
     void wakeup(); // Used only for deadlock detection
-    void printProgress(std::ostream& out) const;
     void resetStats();
     void collateStats();
     void regStats();

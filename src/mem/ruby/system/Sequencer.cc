@@ -157,57 +157,6 @@ void Sequencer::resetStats()
     }
 }
 
-void
-Sequencer::printProgress(ostream& out) const
-{
-#if 0
-    int total_demand = 0;
-    out << "Sequencer Stats Version " << m_version << endl;
-    out << "Current time = " << m_ruby_system->getTime() << endl;
-    out << "---------------" << endl;
-    out << "outstanding requests" << endl;
-
-    out << "proc " << m_Read
-        << " version Requests = " << m_readRequestTable.size() << endl;
-
-    // print the request table
-    RequestTable::iterator read = m_readRequestTable.begin();
-    RequestTable::iterator read_end = m_readRequestTable.end();
-    for (; read != read_end; ++read) {
-        SequencerRequest* request = read->second;
-        out << "\tRequest[ " << i << " ] = " << request->type
-            << " Address " << rkeys[i]
-            << " Posted " << request->issue_time
-            << " PF " << PrefetchBit_No << endl;
-        total_demand++;
-    }
-
-    out << "proc " << m_version
-        << " Write Requests = " << m_writeRequestTable.size << endl;
-
-    // print the request table
-    RequestTable::iterator write = m_writeRequestTable.begin();
-    RequestTable::iterator write_end = m_writeRequestTable.end();
-    for (; write != write_end; ++write) {
-        SequencerRequest* request = write->second;
-        out << "\tRequest[ " << i << " ] = " << request.getType()
-            << " Address " << wkeys[i]
-            << " Posted " << request.getTime()
-            << " PF " << request.getPrefetch() << endl;
-        if (request.getPrefetch() == PrefetchBit_No) {
-            total_demand++;
-        }
-    }
-
-    out << endl;
-
-    out << "Total Number Outstanding: " << m_outstanding_count << endl
-        << "Total Number Demand     : " << total_demand << endl
-        << "Total Number Prefetches : " << m_outstanding_count - total_demand
-        << endl << endl << endl;
-#endif
-}
-
 // Insert the request on the correct request table.  Return true if
 // the entry was already present.
 RequestStatus
