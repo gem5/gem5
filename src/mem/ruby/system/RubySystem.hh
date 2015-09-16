@@ -37,10 +37,10 @@
 
 #include "base/callback.hh"
 #include "base/output.hh"
+#include "mem/packet.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
-#include "mem/packet.hh"
 #include "params/RubySystem.hh"
 #include "sim/clocked_object.hh"
 

@@ -33,12 +33,12 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('Sequencer.py')
 SimObject('RubySystem.py')
+SimObject('Sequencer.py')
 
 Source('CacheRecorder.cc')
 Source('DMASequencer.cc')
 Source('RubyPort.cc')
 Source('RubyPortProxy.cc')
+Source('RubySystem.cc')
 Source('Sequencer.cc')
-Source('System.cc')

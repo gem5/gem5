@@ -27,7 +27,7 @@
  */
 
 #include "mem/ruby/common/DataBlock.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 DataBlock::DataBlock(const DataBlock &cp)
 {

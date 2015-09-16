@@ -397,7 +397,7 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 #include <memory>
 
 #include "mem/protocol/${{self.c_ident}}.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 ''')

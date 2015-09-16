@@ -34,7 +34,7 @@
 #include "debug/RubyStats.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/structures/CacheMemory.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 

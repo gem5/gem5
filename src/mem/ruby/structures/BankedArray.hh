@@ -35,7 +35,7 @@
 #include <vector>
 
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "sim/core.hh"
 
 class BankedArray

@@ -29,7 +29,7 @@
 #include "debug/RubyPrefetcher.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/structures/Prefetcher.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 Prefetcher*
 PrefetcherParams::create()

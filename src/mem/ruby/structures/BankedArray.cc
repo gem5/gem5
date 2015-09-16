@@ -31,7 +31,7 @@
 
 #include "base/intmath.hh"
 #include "mem/ruby/structures/BankedArray.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
                          unsigned int startIndexBit, RubySystem *rs)

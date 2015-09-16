@@ -29,7 +29,7 @@
 #include "base/misc.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 uint32_t Network::m_virtual_networks;
 uint32_t Network::m_control_msg_size;

@@ -47,7 +47,7 @@
 
 #include "mem/protocol/RequestStatus.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "mem/mem_object.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"

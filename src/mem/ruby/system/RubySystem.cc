@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/system/RubySystem.hh"
+
 #include <fcntl.h>
 #include <zlib.h>
 
@@ -38,7 +40,6 @@
 #include "debug/RubySystem.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/system/System.hh"
 #include "mem/simple_mem.hh"
 #include "sim/eventq.hh"
 #include "sim/simulate.hh"

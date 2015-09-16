@@ -38,7 +38,7 @@
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

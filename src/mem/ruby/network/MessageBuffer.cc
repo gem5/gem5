@@ -34,7 +34,7 @@
 #include "base/stl_helpers.hh"
 #include "debug/RubyQueue.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 using m5::stl_helpers::operator<<;

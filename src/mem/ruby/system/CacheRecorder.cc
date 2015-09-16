@@ -29,8 +29,8 @@
 
 #include "debug/RubyCacheTrace.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/System.hh"
 
 using namespace std;
 

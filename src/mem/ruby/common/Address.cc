@@ -27,7 +27,8 @@
  */
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/System.hh"
+
+#include "mem/ruby/system/RubySystem.hh"
 
 Addr
 bitSelect(Addr addr, unsigned int small, unsigned int big)

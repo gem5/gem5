@@ -29,7 +29,8 @@
  */
 
 #include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
-#include "mem/ruby/system/System.hh"
+
+#include "mem/ruby/system/RubySystem.hh"
 
 OutVcState_d::OutVcState_d(int id, GarnetNetwork_d *network_ptr)
     : m_time(0)

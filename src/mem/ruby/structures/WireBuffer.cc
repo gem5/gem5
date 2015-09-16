@@ -35,7 +35,7 @@
 #include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
 #include "mem/ruby/structures/WireBuffer.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 
@@ -121,7 +121,8 @@ WireBuffer::recycle()
     push_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MsgPtr>());
     m_consumer_ptr->
-        scheduleEventAbsolute(m_ruby_system->curCycle() + Cycles(1));
+        scheduleEventAbsolute(m_ruby_system->clockPeriod()
+                              * (m_ruby_system->curCycle() + Cycles(1)));
 }
 
 bool

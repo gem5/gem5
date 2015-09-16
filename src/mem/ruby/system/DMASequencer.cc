@@ -34,7 +34,7 @@
 #include "debug/RubyStats.hh"
 #include "mem/protocol/SequencerMsg.hh"
 #include "mem/ruby/system/DMASequencer.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "sim/system.hh"
 
 DMASequencer::DMASequencer(const Params *p)

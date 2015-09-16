@@ -37,7 +37,7 @@
 #include "mem/protocol/RequestStatus.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "mem/simple_mem.hh"
 #include "mem/tport.hh"
 #include "params/DMASequencer.hh"

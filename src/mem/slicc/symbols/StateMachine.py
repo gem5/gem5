@@ -464,7 +464,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 ''')
         for include_path in includes:
@@ -1029,7 +1029,7 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 
         code('''
 #include "mem/protocol/Types.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 ''')
 
@@ -1137,7 +1137,7 @@ ${ident}_Controller::wakeup()
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 #define HASH_FUN(state, event)  ((int(state)*${ident}_Event_NUM)+int(event))
 

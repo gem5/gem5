@@ -44,7 +44,7 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 class MessageBuffer;
 class Switch;

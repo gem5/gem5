@@ -38,7 +38,7 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "params/Prefetcher.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"

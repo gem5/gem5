@@ -39,7 +39,7 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/structures/MemoryNode.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "params/RubyMemoryControl.hh"
 
 // This constant is part of the definition of tFAW; see

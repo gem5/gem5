@@ -38,8 +38,8 @@
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/System.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
 

@@ -36,7 +36,7 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 
