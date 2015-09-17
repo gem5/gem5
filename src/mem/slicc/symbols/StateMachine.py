@@ -1080,7 +1080,7 @@ ${ident}_Controller::wakeup()
             if len(ports) > 1:
                 # only produce checks when a buffer is shared by multiple ports
                 code('''
-        if (${{buf_name}}->isReady() && rejected[${{port_to_buf_map[ports[0]]}}] == ${{len(ports)}})
+        if (${{buf_name}}->isReady(clockEdge()) && rejected[${{port_to_buf_map[ports[0]]}}] == ${{len(ports)}})
         {
             // no port claimed the message on the top of this buffer
             panic("Runtime Error at Ruby Time: %d. "

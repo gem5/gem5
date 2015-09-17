@@ -57,7 +57,6 @@ WireBuffer::WireBuffer(const Params *p)
     : SimObject(p)
 {
     m_msg_counter = 0;
-    m_ruby_system = p->ruby_system;
 }
 
 void
@@ -70,11 +69,10 @@ WireBuffer::~WireBuffer()
 }
 
 void
-WireBuffer::enqueue(MsgPtr message, Cycles latency)
+WireBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
 {
     m_msg_counter++;
-    Cycles current_time = m_ruby_system->curCycle();
-    Cycles arrival_time = current_time + latency;
+    Tick arrival_time = current_time + delta;
     assert(arrival_time > current_time);
 
     Message* msg_ptr = message.get();
@@ -82,16 +80,16 @@ WireBuffer::enqueue(MsgPtr message, Cycles latency)
     m_message_queue.push_back(message);
     if (m_consumer_ptr != NULL) {
         m_consumer_ptr->
-            scheduleEventAbsolute(m_ruby_system->clockPeriod() * arrival_time);
+            scheduleEventAbsolute(arrival_time);
     } else {
         panic("No Consumer for WireBuffer! %s\n", *this);
     }
 }
 
 void
-WireBuffer::dequeue()
+WireBuffer::dequeue(Tick current_time)
 {
-    assert(isReady());
+    assert(isReady(current_time));
     pop_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MsgPtr>());
     m_message_queue.pop_back();
@@ -106,31 +104,31 @@ WireBuffer::peek()
 }
 
 void
-WireBuffer::recycle()
+WireBuffer::recycle(Tick current_time, Tick recycle_latency)
 {
     // Because you don't want anything reordered, make sure the recycle latency
     // is just 1 cycle. As a result, you really want to use this only in
     // Wire-like situations because you don't want to deadlock as a result of
     // being stuck behind something if you're not actually supposed to.
-    assert(isReady());
+    assert(isReady(current_time));
     MsgPtr node = m_message_queue.front();
     pop_heap(m_message_queue.begin(), m_message_queue.end(), greater<MsgPtr>());
 
-    node->setLastEnqueueTime(m_ruby_system->curCycle() + Cycles(1));
+    Tick future_time = current_time + recycle_latency;
+    node->setLastEnqueueTime(future_time);
+
     m_message_queue.back() = node;
     push_heap(m_message_queue.begin(), m_message_queue.end(),
         greater<MsgPtr>());
     m_consumer_ptr->
-        scheduleEventAbsolute(m_ruby_system->clockPeriod()
-                              * (m_ruby_system->curCycle() + Cycles(1)));
+        scheduleEventAbsolute(future_time);
 }
 
 bool
-WireBuffer::isReady()
+WireBuffer::isReady(Tick current_time)
 {
     return ((!m_message_queue.empty()) &&
-            (m_message_queue.front()->getLastEnqueueTime() <=
-                    m_ruby_system->curCycle()));
+            (m_message_queue.front()->getLastEnqueueTime() <= current_time));
 }
 
 void

@@ -72,12 +72,13 @@ class WireBuffer : public SimObject
     void setDescription(const std::string& name) { m_description = name; };
     std::string getDescription() { return m_description; };
 
-    void enqueue(MsgPtr message, Cycles latency);
-    void dequeue();
+    void enqueue(MsgPtr message, Tick current_time, Tick delta);
+    void dequeue(Tick current_time);
     const Message* peek();
-    void recycle();
-    bool isReady();
-    bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
+    void recycle(Tick current_time, Tick recycle_latency);
+    bool isReady(Tick current_time);
+    // infinite queue length
+    bool areNSlotsAvailable(int n, Tick current_time) { return true; };
 
     void print(std::ostream& out) const;
     uint64_t m_msg_counter;
@@ -93,9 +94,6 @@ class WireBuffer : public SimObject
 
     // queues where memory requests live
     std::vector<MsgPtr> m_message_queue;
-
-    RubySystem * m_ruby_system;
-
 };
 
 std::ostream& operator<<(std::ostream& out, const WireBuffer& obj);
