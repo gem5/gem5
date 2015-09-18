@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013 ARM Limited
+ * Copyright (c) 2010, 2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -93,6 +93,8 @@ Pl390::Pl390(const Params *p)
     for (int x = 0; x < CPU_MAX; x++) {
         cpuPpiActive[x] = 0;
         cpuPpiPending[x] = 0;
+        cpuSgiActiveExt[x] = 0;
+        cpuSgiPendingExt[x] = 0;
     }
 
     for (int i = 0; i < CPU_MAX; i++) {
@@ -100,6 +102,8 @@ Pl390::Pl390(const Params *p)
             bankedIntPriority[i][j] = 0;
         }
     }
+
+    gem5ExtensionsEnabled = false;
 }
 
 Tick
@@ -226,8 +230,13 @@ Pl390::readDistributor(PacketPtr pkt)
             }
         } else {
             assert(ctx_id < sys->numRunningContexts());
+            uint32_t ctx_mask;
+            if (gem5ExtensionsEnabled) {
+                ctx_mask = ctx_id;
+            } else {
             // convert the CPU id number into a bit mask
-            uint32_t ctx_mask = power(2, ctx_id);
+                ctx_mask = power(2, ctx_id);
+            }
             // replicate the 8-bit mask 4 times in a 32-bit word
             ctx_mask |= ctx_mask << 8;
             ctx_mask |= ctx_mask << 16;
@@ -252,7 +261,12 @@ Pl390::readDistributor(PacketPtr pkt)
       case ICDICTR:
         uint32_t tmp;
         tmp = ((sys->numRunningContexts() - 1) << 5) |
-              (itLines/INT_BITS_MAX -1);
+              (itLines/INT_BITS_MAX -1) |
+            0x100;
+        /* The 0x100 is a made-up flag to show that gem5 extensions
+         * are available,
+         * write 0x200 to this register to enable it.
+         */
         pkt->set<uint32_t>(tmp);
         break;
       default:
@@ -297,21 +311,27 @@ Pl390::readCpu(PacketPtr pkt)
             iar.cpu_id = 0;
             if (active_int < SGI_MAX) {
                 // this is a software interrupt from another CPU
-                if (!cpuSgiPending[active_int])
-                    panic("Interrupt %d active but no CPU generated it?\n",
+                if (!gem5ExtensionsEnabled) {
+                    panic_if(!cpuSgiPending[active_int],
+                            "Interrupt %d active but no CPU generated it?\n",
                             active_int);
-                for (int x = 0; x < CPU_MAX; x++) {
-                    // See which CPU generated the interrupt
-                    uint8_t cpugen =
-                        bits(cpuSgiPending[active_int], 7 + 8 * x, 8 * x);
-                    if (cpugen & (1 << ctx_id)) {
-                        iar.cpu_id = x;
-                        break;
+                    for (int x = 0; x < sys->numRunningContexts(); x++) {
+                        // See which CPU generated the interrupt
+                        uint8_t cpugen =
+                            bits(cpuSgiPending[active_int], 7 + 8 * x, 8 * x);
+                        if (cpugen & (1 << ctx_id)) {
+                            iar.cpu_id = x;
+                            break;
+                        }
                     }
+                    uint64_t sgi_num = ULL(1) << (ctx_id + 8 * iar.cpu_id);
+                    cpuSgiActive[iar.ack_id] |= sgi_num;
+                    cpuSgiPending[iar.ack_id] &= ~sgi_num;
+                } else {
+                    uint64_t sgi_num = ULL(1) << iar.ack_id;
+                    cpuSgiActiveExt[ctx_id] |= sgi_num;
+                    cpuSgiPendingExt[ctx_id] &= ~sgi_num;
                 }
-                uint64_t sgi_num = ULL(1) << (ctx_id + 8 * iar.cpu_id);
-                cpuSgiActive[iar.ack_id] |= sgi_num;
-                cpuSgiPending[iar.ack_id] &= ~sgi_num;
             } else if (active_int < (SGI_MAX + PPI_MAX) ) {
                 uint32_t int_num = 1 << (cpuHighestInt[ctx_id] - SGI_MAX);
                 cpuPpiActive[ctx_id] |= int_num;
@@ -478,6 +498,13 @@ Pl390::writeDistributor(PacketPtr pkt)
         enabled = pkt->get<uint32_t>();
         DPRINTF(Interrupt, "Distributor enable flag set to = %d\n", enabled);
         break;
+      case ICDICTR:
+        /* 0x200 is a made-up flag to enable gem5 extension functionality.
+         * This reg is not normally written.
+         */
+        gem5ExtensionsEnabled = !!(pkt->get<uint32_t>() & 0x200);
+        DPRINTF(GIC, "gem5 extensions %s\n", gem5ExtensionsEnabled ? "enabled" : "disabled");
+        break;
       case ICDSGIR:
         softInt(ctx_id, pkt->get<uint32_t>());
         break;
@@ -518,13 +545,18 @@ Pl390::writeCpu(PacketPtr pkt)
         if (iar.ack_id < SGI_MAX) {
             // Clear out the bit that corrseponds to the cleared int
             uint64_t clr_int = ULL(1) << (ctx_id + 8 * iar.cpu_id);
-            if (!(cpuSgiActive[iar.ack_id] & clr_int))
+            if (!(cpuSgiActive[iar.ack_id] & clr_int) &&
+                !(cpuSgiActiveExt[ctx_id] & (1 << iar.ack_id)))
                 panic("Done handling a SGI that isn't active?\n");
-            cpuSgiActive[iar.ack_id] &= ~clr_int;
+            if (gem5ExtensionsEnabled)
+                cpuSgiActiveExt[ctx_id] &= ~(1 << iar.ack_id);
+            else
+                cpuSgiActive[iar.ack_id] &= ~clr_int;
         } else if (iar.ack_id < (SGI_MAX + PPI_MAX) ) {
             uint32_t int_num = 1 << (iar.ack_id - SGI_MAX);
             if (!(cpuPpiActive[ctx_id] & int_num))
-                panic("CPU %d Done handling a PPI interrupt that isn't active?\n", ctx_id);
+                panic("CPU %d Done handling a PPI interrupt "
+                      "that isn't active?\n", ctx_id);
             cpuPpiActive[ctx_id] &= ~int_num;
         } else {
             uint32_t int_num = 1 << intNumToBit(iar.ack_id);
@@ -549,31 +581,69 @@ Pl390::writeCpu(PacketPtr pkt)
 void
 Pl390::softInt(ContextID ctx_id, SWI swi)
 {
-    switch (swi.list_type) {
-      case 1:
-        // interrupt all
-        uint8_t cpu_list;
-        cpu_list = 0;
-        for (int x = 0; x < CPU_MAX; x++)
-            cpu_list |= cpuEnabled[x] ? 1 << x : 0;
-        swi.cpu_list = cpu_list;
-        break;
-      case 2:
-        // interrupt requesting cpu only
-        swi.cpu_list = 1 << ctx_id;
-        break;
-        // else interrupt cpus specified
-    }
+    if (gem5ExtensionsEnabled) {
+        switch (swi.list_type) {
+          case 0: {
+             // interrupt cpus specified
+             int dest = swi.cpu_list;
+             DPRINTF(IPI, "Generating softIRQ from CPU %d for CPU %d\n",
+                    ctx_id, dest);
+             if (cpuEnabled[dest]) {
+                 cpuSgiPendingExt[dest] |= (1 << swi.sgi_id);
+                 DPRINTF(IPI, "SGI[%d]=%#x\n", dest,
+                         cpuSgiPendingExt[dest]);
+             }
+          } break;
+          case 1: {
+             // interrupt all
+             for (int i = 0; i < sys->numContexts(); i++) {
+                 DPRINTF(IPI, "Processing CPU %d\n", i);
+                 if (!cpuEnabled[i])
+                     continue;
+                 cpuSgiPendingExt[i] |= 1 << swi.sgi_id;
+                 DPRINTF(IPI, "SGI[%d]=%#x\n", swi.sgi_id,
+                         cpuSgiPendingExt[i]);
+              }
+          } break;
+          case 2: {
+            // Interrupt requesting cpu only
+            DPRINTF(IPI, "Generating softIRQ from CPU %d for CPU %d\n",
+                    ctx_id, ctx_id);
+            if (cpuEnabled[ctx_id]) {
+                cpuSgiPendingExt[ctx_id] |= (1 << swi.sgi_id);
+                DPRINTF(IPI, "SGI[%d]=%#x\n", ctx_id,
+                        cpuSgiPendingExt[ctx_id]);
+            }
+          } break;
+        }
+    } else {
+        switch (swi.list_type) {
+          case 1:
+            // interrupt all
+            uint8_t cpu_list;
+            cpu_list = 0;
+            for (int x = 0; x < sys->numContexts(); x++)
+                cpu_list |= cpuEnabled[x] ? 1 << x : 0;
+            swi.cpu_list = cpu_list;
+            break;
+          case 2:
+            // interrupt requesting cpu only
+            swi.cpu_list = 1 << ctx_id;
+            break;
+            // else interrupt cpus specified
+        }
 
-    DPRINTF(IPI, "Generating softIRQ from CPU %d for %#x\n", ctx_id,
-            swi.cpu_list);
-    for (int i = 0; i < CPU_MAX; i++) {
-        DPRINTF(IPI, "Processing CPU %d\n", i);
-        if (!cpuEnabled[i])
-            continue;
-        if (swi.cpu_list & (1 << i))
-            cpuSgiPending[swi.sgi_id] |= (1 << i) << (8 * ctx_id);
-        DPRINTF(IPI, "SGI[%d]=%#x\n", swi.sgi_id, cpuSgiPending[swi.sgi_id]);
+        DPRINTF(IPI, "Generating softIRQ from CPU %d for %#x\n", ctx_id,
+                swi.cpu_list);
+        for (int i = 0; i < sys->numContexts(); i++) {
+            DPRINTF(IPI, "Processing CPU %d\n", i);
+            if (!cpuEnabled[i])
+                continue;
+            if (swi.cpu_list & (1 << i))
+                cpuSgiPending[swi.sgi_id] |= (1 << i) << (8 * ctx_id);
+            DPRINTF(IPI, "SGI[%d]=%#x\n", swi.sgi_id,
+                    cpuSgiPending[swi.sgi_id]);
+        }
     }
     updateIntState(-1);
 }
@@ -581,7 +651,7 @@ Pl390::softInt(ContextID ctx_id, SWI swi)
 uint64_t
 Pl390::genSwiMask(int cpu)
 {
-    if (cpu > 7)
+    if (cpu > sys->numContexts())
         panic("Invalid CPU ID\n");
     return ULL(0x0101010101010101) << cpu;
 }
@@ -589,11 +659,9 @@ Pl390::genSwiMask(int cpu)
 void
 Pl390::updateIntState(int hint)
 {
-    for (int cpu = 0; cpu < CPU_MAX; cpu++) {
+    for (int cpu = 0; cpu < sys->numContexts(); cpu++) {
         if (!cpuEnabled[cpu])
             continue;
-        if (cpu >= sys->numContexts())
-            break;
 
         /*@todo use hint to do less work. */
         int highest_int = SPURIOUS_INT;
@@ -602,9 +670,10 @@ Pl390::updateIntState(int hint)
 
         // Check SGIs
         for (int swi = 0; swi < SGI_MAX; swi++) {
-            if (!cpuSgiPending[swi])
+            if (!cpuSgiPending[swi] && !cpuSgiPendingExt[cpu])
                 continue;
-            if (cpuSgiPending[swi] & genSwiMask(cpu))
+            if ((cpuSgiPending[swi] & genSwiMask(cpu)) ||
+                (cpuSgiPendingExt[cpu] & (1 << swi)))
                 if (highest_pri > bankedIntPriority[cpu][swi]) {
                     highest_pri = bankedIntPriority[cpu][swi];
                     highest_int = swi;
@@ -635,7 +704,10 @@ Pl390::updateIntState(int hint)
                      */
                     if ((bits(intEnabled[x], y) & bits(pendingInt[x], y)) &&
                         (intPriority[int_nm] < highest_pri))
-                        if ( (!mp_sys) || (cpuTarget[int_nm] & (1 << cpu))) {
+                        if ( (!mp_sys) ||
+                             (!gem5ExtensionsEnabled && (cpuTarget[int_nm] & (1 << cpu))) ||
+                             (gem5ExtensionsEnabled && (cpuTarget[int_nm] == cpu))
+                            ) {
                             highest_pri = intPriority[int_nm];
                             highest_int = int_nm;
                         }
@@ -664,13 +736,14 @@ Pl390::updateIntState(int hint)
 void
 Pl390::updateRunPri()
 {
-    for (int cpu = 0; cpu < CPU_MAX; cpu++) {
+    for (int cpu = 0; cpu < sys->numContexts(); cpu++) {
         if (!cpuEnabled[cpu])
             continue;
         uint8_t maxPriority = 0xff;
         for (int i = 0; i < itLines; i++){
             if (i < SGI_MAX) {
-                if ((cpuSgiActive[i] & genSwiMask(cpu)) &&
+                if (((cpuSgiActive[i] & genSwiMask(cpu)) ||
+                     (cpuSgiActiveExt[cpu] & (1 << i))) &&
                         (bankedIntPriority[cpu][i] < maxPriority))
                     maxPriority = bankedIntPriority[cpu][i];
             } else if (i < (SGI_MAX + PPI_MAX)) {
@@ -693,7 +766,7 @@ Pl390::sendInt(uint32_t num)
 {
     DPRINTF(Interrupt, "Received Interupt number %d,  cpuTarget %#x: \n",
             num, cpuTarget[num]);
-    if (cpuTarget[num] & (cpuTarget[num] - 1))
+    if ((cpuTarget[num] & (cpuTarget[num] - 1)) && !gem5ExtensionsEnabled)
         panic("Multiple targets for peripheral interrupts is not supported\n");
     pendingInt[intNumToWord(num)] |= 1 << intNumToBit(num);
     updateIntState(intNumToWord(num));
@@ -766,6 +839,8 @@ Pl390::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
     SERIALIZE_ARRAY(cpuSgiActive, SGI_MAX);
     SERIALIZE_ARRAY(cpuSgiPending, SGI_MAX);
+    SERIALIZE_ARRAY(cpuSgiActiveExt, CPU_MAX);
+    SERIALIZE_ARRAY(cpuSgiPendingExt, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
     SERIALIZE_ARRAY(*bankedIntPriority, CPU_MAX * (SGI_MAX + PPI_MAX));
@@ -778,7 +853,7 @@ Pl390::serialize(CheckpointOut &cp) const
         }
     }
     SERIALIZE_ARRAY(interrupt_time, CPU_MAX);
-
+    SERIALIZE_SCALAR(gem5ExtensionsEnabled);
 }
 
 void
@@ -806,6 +881,8 @@ Pl390::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuSgiActive, SGI_MAX);
     UNSERIALIZE_ARRAY(cpuSgiPending, SGI_MAX);
+    UNSERIALIZE_ARRAY(cpuSgiActiveExt, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuSgiPendingExt, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
     UNSERIALIZE_ARRAY(*bankedIntPriority, CPU_MAX * (SGI_MAX + PPI_MAX));
@@ -818,7 +895,8 @@ Pl390::unserialize(CheckpointIn &cp)
         if (interrupt_time[cpu])
             schedule(postIntEvent[cpu], interrupt_time[cpu]);
     }
-
+    if (!UNSERIALIZE_OPT_SCALAR(gem5ExtensionsEnabled))
+        gem5ExtensionsEnabled = false;
 }
 
 Pl390 *

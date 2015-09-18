@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013 ARM Limited
+ * Copyright (c) 2010, 2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -108,7 +108,7 @@ class Pl390 : public BaseGic
     /** Mask for bits that config N:N mode in ICDICFR's */
     static const int NN_CONFIG_MASK = 0x55555555;
 
-    static const int CPU_MAX = 8;   // Max number of supported CPU interfaces
+    static const int CPU_MAX = 256;   // Max number of supported CPU interfaces
     static const int SPURIOUS_INT = 1023;
     static const int INT_BITS_MAX = 32;
     static const int INT_LINES_MAX = 1020;
@@ -142,6 +142,9 @@ class Pl390 : public BaseGic
 
     /** Gic enabled */
     bool enabled;
+
+    /** gem5 many-core extension enabled by driver */
+    bool gem5ExtensionsEnabled;
 
     /** Number of itLines enabled */
     uint32_t itLines;
@@ -195,6 +198,12 @@ class Pl390 : public BaseGic
      * for CPU 2. */
     uint64_t cpuSgiPending[SGI_MAX];
     uint64_t cpuSgiActive[SGI_MAX];
+
+    /** SGI pending arrays for gem5 GIC extension mode, which instead keeps
+     * 16 SGI pending bits for each of the (large number of) CPUs.
+     */
+    uint32_t cpuSgiPendingExt[CPU_MAX];
+    uint32_t cpuSgiActiveExt[CPU_MAX];
 
     /** One bit per private peripheral interrupt. Only upper 16 bits
      * will be used since PPI interrupts are numberred from 16 to 32 */
