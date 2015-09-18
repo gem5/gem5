@@ -412,7 +412,11 @@ ${{self.c_ident}}::print(ostream& out) const
         # For each field
         code.indent()
         for dm in self.data_members.values():
-            code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";''')
+            if dm.type.c_ident == "Addr":
+                code('''
+out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
+            else:
+                code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";''')
 
         code.dedent()
 

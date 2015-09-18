@@ -281,7 +281,7 @@ MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 void
 MessageBuffer::reanalyzeMessages(Addr addr, Tick current_time)
 {
-    DPRINTF(RubyQueue, "ReanalyzeMessages %s\n", addr);
+    DPRINTF(RubyQueue, "ReanalyzeMessages %#x\n", addr);
     assert(m_stall_msg_map.count(addr) > 0);
 
     //
@@ -315,7 +315,7 @@ MessageBuffer::reanalyzeAllMessages(Tick current_time)
 void
 MessageBuffer::stallMessage(Addr addr, Tick current_time)
 {
-    DPRINTF(RubyQueue, "Stalling due to %s\n", addr);
+    DPRINTF(RubyQueue, "Stalling due to %#x\n", addr);
     assert(isReady(current_time));
     assert(getOffset(addr) == 0);
     MsgPtr message = m_prio_heap.front();

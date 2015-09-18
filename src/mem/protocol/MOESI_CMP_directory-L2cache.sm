@@ -797,7 +797,7 @@ machine(L2Cache, "Token protocol")
       out_msg.Dirty := false;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, tbe.DataBlk);
   }
 
@@ -814,7 +814,7 @@ machine(L2Cache, "Token protocol")
       out_msg.Acks := tbe.Local_GETX_IntAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, tbe.DataBlk);
   }
 
@@ -864,7 +864,7 @@ machine(L2Cache, "Token protocol")
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, tbe.DataBlk);
   }
 
@@ -883,7 +883,7 @@ machine(L2Cache, "Token protocol")
       out_msg.Acks := tbe.Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, tbe.DataBlk);
   }
 
@@ -900,7 +900,7 @@ machine(L2Cache, "Token protocol")
       out_msg.Acks := tbe.Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, tbe.DataBlk);
   }
 
@@ -920,7 +920,7 @@ machine(L2Cache, "Token protocol")
         out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
       }
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
   }
 
@@ -940,7 +940,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Acks := tbe.Local_GETX_IntAcks;
       }
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
   }
 
@@ -959,7 +959,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Acks := in_msg.Acks;
       }
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
   }
 
@@ -980,7 +980,7 @@ machine(L2Cache, "Token protocol")
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
   }
 
@@ -1044,7 +1044,7 @@ machine(L2Cache, "Token protocol")
   action(ee_sendLocalInv, "\ee", desc="Send local invalidates") {
     assert(is_valid(tbe));
     tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
-    DPRINTF(RubySlicc, "Address: %s, Local Sharers: %s, Pending Acks: %d\n",
+    DPRINTF(RubySlicc, "Address: %#x, Local Sharers: %s, Pending Acks: %d\n",
             address, getLocalSharers(cache_entry, address),
             tbe.NumIntPendingAcks);
     if (isLocalOwnerValid(cache_entry, address)) {
@@ -1494,7 +1494,7 @@ machine(L2Cache, "Token protocol")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
-      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+      DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
       if ((cache_entry.Dirty == false) && in_msg.Dirty) {
         cache_entry.Dirty := in_msg.Dirty;

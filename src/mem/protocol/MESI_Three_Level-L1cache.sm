@@ -392,7 +392,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, clusterID));
-        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -409,7 +409,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         DPRINTF(RubySlicc, "%s\n", machineID);
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, clusterID));
-        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -425,7 +425,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, clusterID));
-        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
                 address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -580,7 +580,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, clusterID));
       out_msg.MessageSize := MessageSizeType:Response_Control;
-      DPRINTF(RubySlicc, "%s\n", address);
+      DPRINTF(RubySlicc, "%#x\n", address);
     }
   }
 
@@ -592,7 +592,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, clusterID));
       out_msg.MessageSize := MessageSizeType:Response_Control;
-      DPRINTF(RubySlicc, "%s\n", address);
+      DPRINTF(RubySlicc, "%#x\n", address);
 
     }
   }

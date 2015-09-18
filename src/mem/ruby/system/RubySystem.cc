@@ -404,7 +404,7 @@ RubySystem::functionalRead(PacketPtr pkt)
     AccessPermission access_perm = AccessPermission_NotPresent;
     int num_controllers = m_abs_cntrl_vec.size();
 
-    DPRINTF(RubySystem, "Functional Read request for %s\n", address);
+    DPRINTF(RubySystem, "Functional Read request for %#x\n", address);
 
     unsigned int num_ro = 0;
     unsigned int num_rw = 0;
@@ -486,7 +486,7 @@ RubySystem::functionalWrite(PacketPtr pkt)
     AccessPermission access_perm = AccessPermission_NotPresent;
     int num_controllers = m_abs_cntrl_vec.size();
 
-    DPRINTF(RubySystem, "Functional Write request for %s\n", addr);
+    DPRINTF(RubySystem, "Functional Write request for %#x\n", addr);
 
     uint32_t M5_VAR_USED num_functional_writes = 0;
 

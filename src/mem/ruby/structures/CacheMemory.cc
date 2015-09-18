@@ -163,7 +163,7 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
                             DataBlock*& data_ptr)
 {
     assert(address == makeLineAddress(address));
-    DPRINTF(RubyCache, "address: %s\n", address);
+    DPRINTF(RubyCache, "address: %#x\n", address);
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if (loc != -1) {
@@ -190,7 +190,7 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
                              DataBlock*& data_ptr)
 {
     assert(address == makeLineAddress(address));
-    DPRINTF(RubyCache, "address: %s\n", address);
+    DPRINTF(RubyCache, "address: %#x\n", address);
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
@@ -218,10 +218,10 @@ CacheMemory::isTagPresent(Addr address) const
 
     if (loc == -1) {
         // We didn't find the tag
-        DPRINTF(RubyCache, "No tag match for address: %s\n", address);
+        DPRINTF(RubyCache, "No tag match for address: %#x\n", address);
         return false;
     }
-    DPRINTF(RubyCache, "address: %s found\n", address);
+    DPRINTF(RubyCache, "address: %#x found\n", address);
     return true;
 }
 
@@ -256,7 +256,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
     assert(address == makeLineAddress(address));
     assert(!isTagPresent(address));
     assert(cacheAvail(address));
-    DPRINTF(RubyCache, "address: %s\n", address);
+    DPRINTF(RubyCache, "address: %#x\n", address);
 
     // Find the first open slot
     int64_t cacheSet = addressToCacheSet(address);
@@ -288,7 +288,7 @@ CacheMemory::deallocate(Addr address)
 {
     assert(address == makeLineAddress(address));
     assert(isTagPresent(address));
-    DPRINTF(RubyCache, "address: %s\n", address);
+    DPRINTF(RubyCache, "address: %#x\n", address);
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if (loc != -1) {
@@ -417,7 +417,7 @@ CacheMemory::printData(ostream& out) const
 void
 CacheMemory::setLocked(Addr address, int context)
 {
-    DPRINTF(RubyCache, "Setting Lock for addr: %x to %d\n", address, context);
+    DPRINTF(RubyCache, "Setting Lock for addr: %#x to %d\n", address, context);
     assert(address == makeLineAddress(address));
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
@@ -428,7 +428,7 @@ CacheMemory::setLocked(Addr address, int context)
 void
 CacheMemory::clearLocked(Addr address)
 {
-    DPRINTF(RubyCache, "Clear Lock for addr: %x\n", address);
+    DPRINTF(RubyCache, "Clear Lock for addr: %#x\n", address);
     assert(address == makeLineAddress(address));
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
@@ -443,7 +443,7 @@ CacheMemory::isLocked(Addr address, int context)
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
-    DPRINTF(RubyCache, "Testing Lock for addr: %llx cur %d con %d\n",
+    DPRINTF(RubyCache, "Testing Lock for addr: %#llx cur %d con %d\n",
             address, m_cache[cacheSet][loc]->m_locked, context);
     return m_cache[cacheSet][loc]->isLocked(context);
 }
@@ -582,7 +582,7 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
         if (tagArray.tryAccess(addressToCacheSet(addr))) return true;
         else {
             DPRINTF(RubyResourceStalls,
-                    "Tag array stall on addr %s in set %d\n",
+                    "Tag array stall on addr %#x in set %d\n",
                     addr, addressToCacheSet(addr));
             numTagArrayStalls++;
             return false;
@@ -591,7 +591,7 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
         if (dataArray.tryAccess(addressToCacheSet(addr))) return true;
         else {
             DPRINTF(RubyResourceStalls,
-                    "Data array stall on addr %s in set %d\n",
+                    "Data array stall on addr %#x in set %d\n",
                     addr, addressToCacheSet(addr));
             numDataArrayStalls++;
             return false;

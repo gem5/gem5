@@ -443,7 +443,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %d cycles\n",
              curTick(), m_version, "Seq",
              llscSuccess ? "Done" : "SC_Failed", "", "",
-             request_address, total_latency);
+             printAddress(request_address), total_latency);
 
     // update the data unless it is a non-data-carrying flush
     if (RubySystem::getWarmupEnabled()) {
@@ -610,7 +610,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
 
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\n",
             curTick(), m_version, "Seq", "Begin", "", "",
-            msg->getPhysicalAddress(),
+            printAddress(msg->getPhysicalAddress()),
             RubyRequestType_to_string(secondary_type));
 
     // The Sequencer currently assesses instruction and data cache hit latency

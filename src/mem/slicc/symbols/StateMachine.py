@@ -1155,7 +1155,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
         code('''
 ${ident}_State next_state = state;
 
-DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
+DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %#x\\n",
         *this, curCycle(), ${ident}_State_to_string(state),
         ${ident}_Event_to_string(event), addr);
 
@@ -1184,7 +1184,7 @@ if (result == TransitionResult_Valid) {
              ${ident}_Event_to_string(event),
              ${ident}_State_to_string(state),
              ${ident}_State_to_string(next_state),
-             addr, GET_TRANSITION_COMMENT());
+             printAddress(addr), GET_TRANSITION_COMMENT());
 
     CLEAR_TRANSITION_COMMENT();
 ''')
@@ -1208,7 +1208,7 @@ if (result == TransitionResult_Valid) {
              ${ident}_Event_to_string(event),
              ${ident}_State_to_string(state),
              ${ident}_State_to_string(next_state),
-             addr, "Resource Stall");
+             printAddress(addr), "Resource Stall");
 } else if (result == TransitionResult_ProtocolStall) {
     DPRINTF(RubyGenerated, "stalling\\n");
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\\n",
@@ -1216,7 +1216,7 @@ if (result == TransitionResult_Valid) {
              ${ident}_Event_to_string(event),
              ${ident}_State_to_string(state),
              ${ident}_State_to_string(next_state),
-             addr, "Protocol Stall");
+             printAddress(addr), "Protocol Stall");
 }
 
 return result;

@@ -47,5 +47,6 @@ Addr shiftLowOrderBits(Addr addr, unsigned int number);
 Addr getOffset(Addr addr);
 Addr makeLineAddress(Addr addr);
 Addr makeNextStrideAddress(Addr addr, int stride);
+std::string printAddress(Addr addr);
 
 #endif // __MEM_RUBY_COMMON_ADDRESS_HH__

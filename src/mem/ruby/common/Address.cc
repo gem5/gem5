@@ -121,3 +121,13 @@ makeNextStrideAddress(Addr addr, int stride)
     return maskLowOrderBits(addr, RubySystem::getBlockSizeBits())
         + RubySystem::getBlockSizeBytes() * stride;
 }
+
+std::string
+printAddress(Addr addr)
+{
+    std::stringstream out;
+    out << "[" << std::hex << "0x" << addr << "," << " line 0x"
+       << maskLowOrderBits(addr, RubySystem::getBlockSizeBits())
+       << std::dec << "]";
+    return out.str();
+}

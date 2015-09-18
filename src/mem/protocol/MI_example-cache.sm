@@ -396,7 +396,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
   action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
     if (send_evictions) {
-      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
       sequencer.evictionCallback(address);
     }
   }

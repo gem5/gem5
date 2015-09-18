@@ -514,7 +514,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Acks := in_msg.Acks;
           out_msg.MessageSize := MessageSizeType:Response_Data;
         }
-        DPRINTF(RubySlicc, "Sending data to L2: %s\n", in_msg.addr);
+        DPRINTF(RubySlicc, "Sending data to L2: %#x\n", in_msg.addr);
       }
       else {
         enqueue(responseNetwork_out, ResponseMsg, request_latency) {
@@ -889,7 +889,7 @@ machine(L1Cache, "Directory protocol")
 
   action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
     if (send_evictions) {
-      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
       sequencer.evictionCallback(address);
     }
   }

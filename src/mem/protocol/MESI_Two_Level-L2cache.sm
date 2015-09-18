@@ -174,7 +174,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   void addSharer(Addr addr, MachineID requestor, Entry cache_entry) {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "machineID: %s, requestor: %s, address: %s\n",
+    DPRINTF(RubySlicc, "machineID: %s, requestor: %s, address: %#x\n",
             machineID, requestor, addr);
     cache_entry.Sharers.add(requestor);
   }
@@ -267,7 +267,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         return Event:L1_PUTX_old;
       }
     } else {
-      DPRINTF(RubySlicc, "address: %s, Request Type: %s\n", addr, type);
+      DPRINTF(RubySlicc, "address: %#x, Request Type: %s\n", addr, type);
       error("Invalid L1 forwarded request type");
     }
   }
@@ -293,7 +293,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       peek(L1unblockNetwork_in,  ResponseMsg) {
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
-        DPRINTF(RubySlicc, "Addr: %s State: %s Sender: %s Type: %s Dest: %s\n",
+        DPRINTF(RubySlicc, "Addr: %#x State: %s Sender: %s Type: %s Dest: %s\n",
                 in_msg.addr, getState(tbe, cache_entry, in_msg.addr),
                 in_msg.Sender, in_msg.Type, in_msg.Destination);
 
@@ -357,7 +357,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs[in_msg.addr];
 
-        DPRINTF(RubySlicc, "Addr: %s State: %s Req: %s Type: %s Dest: %s\n",
+        DPRINTF(RubySlicc, "Addr: %#x State: %s Req: %s Type: %s Dest: %s\n",
                 in_msg.addr, getState(tbe, cache_entry, in_msg.addr),
                 in_msg.Requestor, in_msg.Type, in_msg.Destination);
 
@@ -546,7 +546,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Destination.add(tbe.L1_GetX_ID);
       DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
       out_msg.DataBlk := cache_entry.DataBlk;
-      DPRINTF(RubySlicc, "Address: %s, Destination: %s, DataBlock: %s\n",
+      DPRINTF(RubySlicc, "Address: %#x, Destination: %s, DataBlock: %s\n",
               out_msg.addr, out_msg.Destination, out_msg.DataBlk);
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }

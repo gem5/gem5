@@ -369,7 +369,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
         out_msg.Class := CoherenceClass:GETS;
         out_msg.Sender := machineID;
         out_msg.Dest := createMachineID(MachineType:L1Cache, version);
-        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
                 address, out_msg.Dest);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -386,7 +386,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
         DPRINTF(RubySlicc, "%s\n", machineID);
         out_msg.Dest := createMachineID(MachineType:L1Cache, version);
 
-        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
                 address, out_msg.Dest);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -402,7 +402,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
         out_msg.Sender := machineID;
         out_msg.Dest := createMachineID(MachineType:L1Cache, version);
 
-        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
                 address, out_msg.Dest);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -438,7 +438,7 @@ machine(L0Cache, "MESI Directory L0 Cache")
 
   action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
     if (send_evictions) {
-      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
       sequencer.evictionCallback(address);
     }
   }

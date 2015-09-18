@@ -1294,7 +1294,7 @@ machine(L1Cache, "Token protocol")
 
   action(h_load_hit, "hd", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
     L1Dcache.setMRU(cache_entry);
@@ -1304,7 +1304,7 @@ machine(L1Cache, "Token protocol")
 
   action(h_ifetch_hit, "hi", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
     L1Icache.setMRU(cache_entry);
@@ -1314,7 +1314,7 @@ machine(L1Cache, "Token protocol")
 
   action(x_external_load_hit, "x", desc="Notify sequencer the load completed.") {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
       L1Icache.setMRU(address);
@@ -1327,7 +1327,7 @@ machine(L1Cache, "Token protocol")
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
 
     L1Dcache.setMRU(cache_entry);
@@ -1339,7 +1339,7 @@ machine(L1Cache, "Token protocol")
 
   action(xx_external_store_hit, "\x", desc="Notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+    DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
       L1Icache.setMRU(address);
@@ -1424,7 +1424,7 @@ machine(L1Cache, "Token protocol")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       assert(in_msg.Tokens != 0);
-      DPRINTF(RubySlicc, "L1 received tokens for address: %s, tokens: %d\n",
+      DPRINTF(RubySlicc, "L1 received tokens for address: %#x, tokens: %d\n",
               in_msg.addr, in_msg.Tokens);
       cache_entry.Tokens := cache_entry.Tokens + in_msg.Tokens;
       DPRINTF(RubySlicc, "%d\n", cache_entry.Tokens);
@@ -1544,7 +1544,7 @@ machine(L1Cache, "Token protocol")
 
   action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
     if (send_evictions) {
-      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      DPRINTF(RubySlicc, "Sending invalidation for %#x to the CPU\n", address);
       sequencer.evictionCallback(address);
     }
   }

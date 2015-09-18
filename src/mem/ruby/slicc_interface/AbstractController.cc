@@ -97,7 +97,7 @@ AbstractController::stallBuffer(MessageBuffer* buf, Addr addr)
         msgVec->resize(m_in_ports, NULL);
         m_waiting_buffers[addr] = msgVec;
     }
-    DPRINTF(RubyQueue, "stalling %s port %d addr %s\n", buf, m_cur_in_port,
+    DPRINTF(RubyQueue, "stalling %s port %d addr %#x\n", buf, m_cur_in_port,
             addr);
     assert(m_in_ports > m_cur_in_port);
     (*(m_waiting_buffers[addr]))[m_cur_in_port] = buf;
