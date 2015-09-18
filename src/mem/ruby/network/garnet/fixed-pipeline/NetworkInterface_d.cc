@@ -43,13 +43,10 @@ using namespace std;
 using m5::stl_helpers::deletePointers;
 
 NetworkInterface_d::NetworkInterface_d(const Params *p)
-    : ClockedObject(p), Consumer(this)
+    : ClockedObject(p), Consumer(this), m_id(p->id),
+      m_virtual_networks(p->virt_nets), m_vc_per_vnet(p->vcs_per_vnet),
+      m_num_vcs(m_vc_per_vnet * m_virtual_networks)
 {
-    m_id = p->id;
-    m_virtual_networks  = p->virt_nets;
-    m_vc_per_vnet = p->vcs_per_vnet;
-    m_num_vcs = m_vc_per_vnet*m_virtual_networks;
-
     m_vc_round_robin = 0;
     m_ni_buffers.resize(m_num_vcs);
     m_ni_enqueue_time.resize(m_num_vcs);
