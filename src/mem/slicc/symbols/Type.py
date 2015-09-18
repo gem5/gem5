@@ -31,11 +31,11 @@ from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
 
-class DataMember(PairContainer):
-    def __init__(self, ident, type, pairs, init_code):
-        super(DataMember, self).__init__(pairs)
-        self.ident = ident
-        self.type = type
+class DataMember(Var):
+    def __init__(self, symtab, ident, location, type, code, pairs,
+                 machine, init_code):
+        super(DataMember, self).__init__(symtab, ident, location, type,
+                                         code, pairs, machine)
         self.init_code = init_code
 
 class Enumeration(PairContainer):
@@ -126,12 +126,11 @@ class Type(Symbol):
         if ident in self.data_members:
             return False
 
-        member = DataMember(ident, type, pairs, init_code)
-        self.data_members[ident] = member
+        member = DataMember(self.symtab, ident, self.location, type,
+                            "m_%s" % ident, pairs, None, init_code)
 
-        var = Var(self.symtab, ident, self.location, type,
-                "m_%s" % ident, {}, None)
-        self.symtab.registerSym(ident, var)
+        self.data_members[ident] = member
+        self.symtab.registerSym(ident, member)
         return True
 
     def dataMemberType(self, ident):
