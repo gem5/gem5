@@ -57,7 +57,7 @@ def system():
         try:
             path = env['M5_PATH'].split(':')
         except KeyError:
-            path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+            path = [ '/dist/m5/system', '~/Tools/GEM5/x86Dist' ]
 
         # expand '~' and '~user' in paths
         path = map(os.path.expanduser, path)
