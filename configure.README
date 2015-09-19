@@ -1,0 +1,10 @@
+1. Preparation
+sudo apt-get install mercurial scons build-essential swig python-dev zlib1g-dev libgoogle-perftools-dev protobuf-compiler libprotobuf-dev g++-aarch64-linux-gnu (64bit ARM) g++-arm-linux-gnueabi (32bit ARM)
+
+2. Cross compiling for ARM64 on x86 machines:
+aarch64-linux-gnu-gcc
+aarch64-linux-gnu-g++
+
+Cross compiling for ARM32 on x86 machines:
+arm-linux-gnueabi-gcc
+arm-linux-gnueabi-g++

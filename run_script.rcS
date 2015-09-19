@@ -1,0 +1,5 @@
+#!/bin/sh
+cd hello
+/sbin/m5 dumpresetstats
+./hello
+/sbin/m5 exit
