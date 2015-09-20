@@ -82,7 +82,7 @@
 			<param name="execu_wire_mat_type" value="2"/>
 			<param name="execu_bypass_base_width" value="1"/>
 			<param name="execu_bypass_base_height" value="1"/>
-			<param name="execu_bypass_start_wiring_level"value="3"/>
+			<param name="execu_bypass_start_wiring_level" value="3"/>
 			<param name="execu_bypass_route_over_perc" value="1"/>
 			<param name="globalCheckpoint" value="32"/>
 			<param name="perThreadState" value="8"/>
@@ -216,7 +216,7 @@
 				<param name="miss_buff_access_mode" value="2"/>
 				<param name="fetch_buff_access_mode" value="2"/>
 				<param name="prefetch_buff_access_mode" value="2"/>
-				<param name="writeback_buff_access_mode"value="2"/>
+				<param name="writeback_buff_access_mode" value="2"/>
 				<param name="cache_rw_ports" value="1"/>
 				<param name="cache_rd_ports" value="0"/>
 				<param name="cache_wr_ports" value="0"/>
@@ -289,7 +289,7 @@
 				<param name="miss_buff_access_mode" value="2"/>
 				<param name="fetch_buff_access_mode" value="2"/>
 				<param name="prefetch_buff_access_mode" value="2"/>
-				<param name="writeback_buff_access_mode"value="2"/>
+				<param name="writeback_buff_access_mode" value="2"/>
 				<param name="cache_rw_ports" value="1"/>
 				<param name="cache_rd_ports" value="0"/>
 				<param name="cache_wr_ports" value="0"/>
@@ -366,7 +366,7 @@
 			<param name="miss_buff_access_mode" value="0"/>
 			<param name="fetch_buff_access_mode" value="0"/>
 			<param name="prefetch_buff_access_mode" value="0"/>
-			<param name="writeback_buff_access_mode"value="0"/>
+			<param name="writeback_buff_access_mode" value="0"/>
 			<param name="cache_rw_ports" value="1"/>
 			<param name="cache_rd_ports" value="0"/>
 			<param name="cache_wr_ports" value="0"/>
