@@ -1,3 +1,4 @@
+0. Integration of NUMA architecture modeling support.
 1. Integration of PARSEC and CPU2006 benchmark suite.
 2. Multiple workload mapping and running.
 3. BookSim Noc simulator integration.
