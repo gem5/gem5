@@ -21,3 +21,15 @@ http://arc.zju.edu.cn/research
 
 gem5 horrors and solutions
 http://www.lowepower.com/jason/gem5-horrors-and-what-we-can-do-about-it.html
+
+numa
+http://qa.gem5.org/1395/how-to-simulate-a-numa-system?show=1395#q1395
+https://www.mail-archive.com/gem5-users@gem5.org/msg09709.html
+http://t362027.emulators-m5-users.emulatortalk.info/help-cc-numa-in-gem5-t362027.html
+https://github.com/djangkrix/gem5
+
+http://search.gmane.org/?query=numa&group=gmane.comp.emulators.m5.users
+http://thread.gmane.org/gmane.comp.emulators.m5.users/3927
+http://thread.gmane.org/gmane.comp.emulators.m5.users/17326
+http://thread.gmane.org/gmane.comp.emulators.m5.users/15980
+http://thread.gmane.org/gmane.comp.emulators.m5.users/15970
