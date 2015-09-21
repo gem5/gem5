@@ -4,3 +4,21 @@
 4. Multiple workload mapping and running.
 5. BookSim Noc simulator integration.
 6. Automated experiment and plot scripting support.
+
+
+parsec
+http://comments.gmane.org/gmane.comp.emulators.m5.users/12503
+http://www.cs.utexas.edu/~parsec_m5/
+http://www.cs.utexas.edu/~parsec_m5/TR-09-32.pdf
+http://www.m5sim.org/PARSEC_benchmarks#Running_PARSEC_in_gem5
+https://schen26.wordpress.com/2012/11/16/parsec-on-m5-with-x86_fs/
+http://yulistic.com/problems-solutions/230   [Gem5] Make a new boot image
+
+general
+https://github.com/lzyerste/gem5_doc/wiki
+
+arch research
+http://arc.zju.edu.cn/research
+
+gem5 horrors and solutions
+http://www.lowepower.com/jason/gem5-horrors-and-what-we-can-do-about-it.html
