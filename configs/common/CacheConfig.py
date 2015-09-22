@@ -73,13 +73,17 @@ def config_cache(options, system):
         # Provide a clock for the L2 and the L1-to-L2 bus here as they
         # are not connected using addTwoLevelCacheHierarchy. Use the
         # same clock as the CPUs.
-        system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
+        system.l2s = [l2_cache_class(clk_domain=system.cpu_clk_domain,
                                    size=options.l2_size,
                                    assoc=options.l2_assoc)
+                      for x in range(options.num_cpus)]
 
-        system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
-        system.l2.cpu_side = system.tol2bus.master
-        system.l2.mem_side = system.membus.slave
+        system.tol2buses = [L2XBar(clk_domain = system.cpu_clk_domain)
+                            for x in range(options.num_cpus)]
+
+        for i, l2 in enumerate(system.l2s):
+            l2.cpu_side = system.tol2buses[i].master
+            l2.mem_side = system.membuses[i].slave
 
     if options.memchecker:
         system.memchecker = MemChecker()
@@ -140,11 +144,11 @@ def config_cache(options, system):
 
         system.cpu[i].createInterruptController()
         if options.l2cache:
-            system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
+            system.cpu[i].connectAllPorts(system.tol2buses[i], system.membuses[i])
         elif options.external_memory_system:
-            system.cpu[i].connectUncachedPorts(system.membus)
+            system.cpu[i].connectUncachedPorts(system.membuses[i])
         else:
-            system.cpu[i].connectAllPorts(system.membus)
+            system.cpu[i].connectAllPorts(system.membuses[i])
 
     return system
 

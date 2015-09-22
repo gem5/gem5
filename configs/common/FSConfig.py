@@ -414,13 +414,13 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     interrupts_address_space_base = 0xa000000000000000
     APIC_range_size = 1 << 12;
 
-    x86_sys.membus = MemBus()
+    x86_sys.membuses = [MemBus() for x in range(numCPUs)]
 
     # North Bridge
     x86_sys.iobus = IOXBar()
     x86_sys.bridge = Bridge(delay='50ns')
     x86_sys.bridge.master = x86_sys.iobus.slave
-    x86_sys.bridge.slave = x86_sys.membus.master
+    x86_sys.bridge.slave = x86_sys.membuses[0].master
     # Allow the bridge to pass through:
     #  1) kernel configured PCI device memory map address: address range
     #     [0xC0000000, 0xFFFF0000). (The upper 64kB are reserved for m5ops.)
@@ -440,7 +440,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     # the local APIC (two pages)
     x86_sys.apicbridge = Bridge(delay='50ns')
     x86_sys.apicbridge.slave = x86_sys.iobus.master
-    x86_sys.apicbridge.master = x86_sys.membus.slave
+    x86_sys.apicbridge.master = x86_sys.membuses[0].slave
     x86_sys.apicbridge.ranges = [AddrRange(interrupts_address_space_base,
                                            interrupts_address_space_base +
                                            numCPUs * APIC_range_size
@@ -449,7 +449,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
 
-    x86_sys.system_port = x86_sys.membus.slave
+    x86_sys.system_port = x86_sys.membuses[0].slave
 
 def connectX86RubySystem(x86_sys):
     # North Bridge
