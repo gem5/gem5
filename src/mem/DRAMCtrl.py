@@ -912,6 +912,132 @@ class GDDR5_4000_x64(DRAMCtrl):
     # Assume 2 cycles
     tRTW = '2ns'
 
+# A single HBM x128 interface (one command and address bus), with
+# default timings based on data publically released
+# ("HBM: Memory Solution for High Performance Processors", MemCon, 2014),
+# IDD measurement values, and by extrapolating data from other classes.
+# Architecture values based on published HBM spec
+# A 4H stack is defined, 2Gb per die for a total of 1GB of memory.
+class HBM_1000_4H_x128(DRAMCtrl):
+    # HBM gen1 supports up to 8 128-bit physical channels
+    # Configuration defines a single channel, with the capacity
+    # set to (full_ stack_capacity / 8) based on 2Gb dies
+    # To use all 8 channels, set 'channels' parameter to 8 in
+    # system configuration
+
+    # 128-bit interface legacy mode
+    device_bus_width = 128
+
+    # HBM supports BL4 and BL2 (legacy mode only)
+    burst_length = 4
+
+    # size of channel in bytes, 4H stack of 2Gb dies is 1GB per stack;
+    # with 8 channels, 128MB per channel
+    device_size = '128MB'
+
+    device_rowbuffer_size = '2kB'
+
+    # 1x128 configuration
+    devices_per_rank = 1
+
+    # HBM does not have a CS pin; set rank to 1
+    ranks_per_channel = 1
+
+    # HBM has 8 or 16 banks depending on capacity
+    # 2Gb dies have 8 banks
+    banks_per_rank = 8
+
+    # depending on frequency, bank groups may be required
+    # will always have 4 bank groups when enabled
+    # current specifications do not define the minimum frequency for
+    # bank group architecture
+    # setting bank_groups_per_rank to 0 to disable until range is defined
+    bank_groups_per_rank = 0
+
+    # 500 MHz for 1Gbps DDR data rate
+    tCK = '2ns'
+
+    # use values from IDD measurement in JEDEC spec
+    # use tRP value for tRCD and tCL similar to other classes
+    tRP = '15ns'
+    tRCD = '15ns'
+    tCL = '15ns'
+    tRAS = '33ns'
+
+    # BL2 and BL4 supported, default to BL4
+    # DDR @ 500 MHz means 4 * 2ns / 2 = 4ns
+    tBURST = '4ns'
+
+    # value for 2Gb device from JEDEC spec
+    tRFC = '160ns'
+
+    # value for 2Gb device from JEDEC spec
+    tREFI = '3.9us'
+
+    # extrapolate the following from LPDDR configs, using ns values
+    # to minimize burst length, prefetch differences
+    tWR = '18ns'
+    tRTP = '7.5ns'
+    tWTR = '10ns'
+
+    # start with 2 cycles turnaround, similar to other memory classes
+    # could be more with variations across the stack
+    tRTW = '4ns'
+
+    # single rank device, set to 0
+    tCS = '0ns'
+
+    # from MemCon example, tRRD is 4ns with 2ns tCK
+    tRRD = '4ns'
+
+    # from MemCon example, tFAW is 30ns with 2ns tCK
+    tXAW = '30ns'
+    activation_limit = 4
+
+    # 4tCK
+    tXP = '8ns'
+
+    # start with tRFC + tXP -> 160ns + 8ns = 168ns
+    tXS = '168ns'
+
+# A single HBM x64 interface (one command and address bus), with
+# default timings based on HBM gen1 and data publically released
+# A 4H stack is defined, 8Gb per die for a total of 4GB of memory.
+# Note: This defines a pseudo-channel with a unique controller
+# instantiated per pseudo-channel
+# Stay at same IO rate (1Gbps) to maintain timing relationship with
+# HBM gen1 class (HBM_1000_4H_x128) where possible
+class HBM_1000_4H_x64(HBM_1000_4H_x128):
+    # For HBM gen2 with pseudo-channel mode, configure 2X channels.
+    # Configuration defines a single pseudo channel, with the capacity
+    # set to (full_ stack_capacity / 16) based on 8Gb dies
+    # To use all 16 pseudo channels, set 'channels' parameter to 16 in
+    # system configuration
+
+    # 64-bit pseudo-channle interface
+    device_bus_width = 64
+
+    # HBM pseudo-channel only supports BL4
+    burst_length = 4
+
+    # size of channel in bytes, 4H stack of 8Gb dies is 4GB per stack;
+    # with 16 channels, 256MB per channel
+    device_size = '256MB'
+
+    # page size is halved with pseudo-channel; maintaining the same same number
+    # of rows per pseudo-channel with 2X banks across 2 channels
+    device_rowbuffer_size = '1kB'
+
+    # HBM has 8 or 16 banks depending on capacity
+    # Starting with 4Gb dies, 16 banks are defined
+    banks_per_rank = 16
+
+    # reset tRFC for larger, 8Gb device
+    # use HBM1 4Gb value as a starting point
+    tRFC = '260ns'
+
+    # start with tRFC + tXP -> 160ns + 8ns = 168ns
+    tXS = '268ns'
     # Default different rank bus delay to 2 CK, @1000 MHz = 2 ns
     tCS = '2ns'
     tREFI = '3.9us'
