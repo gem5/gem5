@@ -30,7 +30,6 @@
 #define __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -39,7 +38,7 @@
 class BulkBloomFilter : public AbstractBloomFilter
 {
   public:
-    BulkBloomFilter(std::string config);
+    BulkBloomFilter(int size);
     ~BulkBloomFilter();
 
     void clear();

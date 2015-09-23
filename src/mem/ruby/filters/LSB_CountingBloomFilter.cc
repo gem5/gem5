@@ -27,25 +27,17 @@
  */
 
 #include "base/intmath.hh"
-#include "base/str.hh"
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;
 
-LSB_CountingBloomFilter::LSB_CountingBloomFilter(string str)
+LSB_CountingBloomFilter::LSB_CountingBloomFilter(int head, int tail)
 {
-    string head, tail;
-#ifndef NDEBUG
-    bool success =
-#endif
-        split_first(str, head, tail, '_');
-    assert(success);
-
-    m_filter_size = atoi(head.c_str());
+    m_filter_size = head;
     m_filter_size_bits = floorLog2(m_filter_size);
 
-    m_count = atoi(tail.c_str());
+    m_count = tail;
     m_count_bits = floorLog2(m_count);
 
     m_filter.resize(m_filter_size);

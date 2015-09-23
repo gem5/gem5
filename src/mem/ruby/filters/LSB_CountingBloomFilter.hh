@@ -30,7 +30,6 @@
 #define __MEM_RUBY_FILTERS_LSBCOUNTINGBLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -39,7 +38,7 @@
 class LSB_CountingBloomFilter : public AbstractBloomFilter
 {
   public:
-    LSB_CountingBloomFilter(std::string config);
+    LSB_CountingBloomFilter(int head, int tail);
     ~LSB_CountingBloomFilter();
 
     void clear();

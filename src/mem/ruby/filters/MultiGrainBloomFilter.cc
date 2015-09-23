@@ -33,22 +33,14 @@
 
 using namespace std;
 
-MultiGrainBloomFilter::MultiGrainBloomFilter(string str)
+MultiGrainBloomFilter::MultiGrainBloomFilter(int head, int tail)
 {
-    string head, tail;
-#ifndef NDEBUG
-    bool success =
-#endif
-        split_first(str, head, tail, '_');
-    assert(success);
-
     // head contains size of 1st bloom filter, tail contains size of
     // 2nd bloom filter
-
-    m_filter_size = atoi(head.c_str());
+    m_filter_size = head;
     m_filter_size_bits = floorLog2(m_filter_size);
 
-    m_page_filter_size = atoi(tail.c_str());
+    m_page_filter_size = tail;
     m_page_filter_size_bits = floorLog2(m_page_filter_size);
 
     m_filter.resize(m_filter_size);

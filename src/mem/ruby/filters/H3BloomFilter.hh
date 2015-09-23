@@ -30,17 +30,15 @@
 #define __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class H3BloomFilter : public AbstractBloomFilter
 {
   public:
-    H3BloomFilter(std::string config);
+    H3BloomFilter(int size, int hashes, bool parallel);
     ~H3BloomFilter();
 
     void clear();

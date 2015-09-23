@@ -35,7 +35,6 @@ if env['PROTOCOL'] == 'None':
 
 Source('BlockBloomFilter.cc')
 Source('BulkBloomFilter.cc')
-Source('GenericBloomFilter.cc')
 Source('H3BloomFilter.cc')
 Source('LSB_CountingBloomFilter.cc')
 Source('MultiBitSelBloomFilter.cc')
