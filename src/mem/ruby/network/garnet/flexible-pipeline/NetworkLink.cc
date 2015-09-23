@@ -32,21 +32,12 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 
 NetworkLink::NetworkLink(const Params *p)
-    : ClockedObject(p), Consumer(this)
+    : ClockedObject(p), Consumer(this), m_id(p->link_id),
+      m_latency(p->link_latency), m_in_port(0), m_out_port(0),
+      linkBuffer(new flitBuffer()), link_consumer(nullptr),
+      link_source(nullptr), link_srcQueue(nullptr),  m_link_utilized(0),
+      m_vc_load(p->virt_nets * p->vcs_per_vnet)
 {
-    linkBuffer = new flitBuffer();
-    m_in_port = 0;
-    m_out_port = 0;
-    m_link_utilized = 0;
-    m_latency = p->link_latency;
-    m_id = p->link_id;
-
-    int num_net = p->virt_nets;
-    int num_vc = p->vcs_per_vnet;
-    m_vc_load.resize(num_net * num_vc);
-
-    for (int i = 0; i < num_net * num_vc; i++)
-        m_vc_load[i] = 0;
 }
 
 NetworkLink::~NetworkLink()

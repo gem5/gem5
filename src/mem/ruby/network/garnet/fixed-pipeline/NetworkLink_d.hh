@@ -51,8 +51,8 @@ class NetworkLink_d : public ClockedObject, public Consumer
 
     void setLinkConsumer(Consumer *consumer);
     void setSourceQueue(flitBuffer_d *srcQueue);
-    void print(std::ostream& out) const{}
-    int get_id(){return m_id;}
+    void print(std::ostream& out) const {}
+    int get_id() const { return m_id; }
     void wakeup();
 
     unsigned int getLinkUtilization() const { return m_link_utilized; }
@@ -67,9 +67,9 @@ class NetworkLink_d : public ClockedObject, public Consumer
     uint32_t functionalWrite(Packet *);
 
   private:
-    int m_id;
-    Cycles m_latency;
-    int channel_width;
+    const int m_id;
+    const Cycles m_latency;
+    const int channel_width;
 
     flitBuffer_d *linkBuffer;
     Consumer *link_consumer;

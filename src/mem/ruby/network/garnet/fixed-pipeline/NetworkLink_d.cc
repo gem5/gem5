@@ -32,18 +32,12 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 
 NetworkLink_d::NetworkLink_d(const Params *p)
-    : ClockedObject(p), Consumer(this)
+    : ClockedObject(p), Consumer(this), m_id(p->link_id),
+      m_latency(p->link_latency),  channel_width(p->channel_width),
+      linkBuffer(new flitBuffer_d()), link_consumer(nullptr),
+      link_srcQueue(nullptr), m_link_utilized(0),
+      m_vc_load(p->vcs_per_vnet * p->virt_nets)
 {
-    m_latency = p->link_latency;
-    channel_width = p->channel_width;
-    m_id = p->link_id;
-    linkBuffer = new flitBuffer_d();
-    m_link_utilized = 0;
-    m_vc_load.resize(p->vcs_per_vnet * p->virt_nets);
-
-    for (int i = 0; i < (p->vcs_per_vnet * p->virt_nets); i++) {
-        m_vc_load[i] = 0;
-    }
 }
 
 NetworkLink_d::~NetworkLink_d()
