@@ -60,7 +60,6 @@ from Benchmarks import *
 import Simulation
 import CacheConfig
 import MemConfig
-import NUMAConfig
 from Caches import *
 import Options
 
@@ -186,11 +185,11 @@ def build_test_system(np):
             # By default the IOCache runs at the system clock
             test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
             test_sys.iocache.cpu_side = test_sys.iobus.master
-            test_sys.iocache.mem_side = test_sys.membuses[0].slave
+            test_sys.iocache.mem_side = test_sys.membus.slave
         elif not options.external_memory_system:
             test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
             test_sys.iobridge.slave = test_sys.iobus.master
-            test_sys.iobridge.master = test_sys.membuses[0].slave
+            test_sys.iobridge.master = test_sys.membus.slave
 
         # Sanity check
         if options.fastmem:
@@ -217,7 +216,6 @@ def build_test_system(np):
 
         CacheConfig.config_cache(options, test_sys)
         MemConfig.config_mem(options, test_sys)
-        NUMAConfig.config_numa(options, test_sys)
 
     return test_sys
 

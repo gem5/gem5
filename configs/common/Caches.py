@@ -76,13 +76,6 @@ class IOCache(Cache):
     tgts_per_mshr = 12
     forward_snoops = False
 
-class NUMACache(Cache):
-    assoc = 8
-    hit_latency = 50
-    response_latency = 50
-    mshrs = 20
-    tgts_per_mshr = 12
-
 class PageTableWalkerCache(Cache):
     assoc = 2
     hit_latency = 2

@@ -187,14 +187,7 @@ def config_mem(options, system):
     # For every range (most systems will only have one), create an
     # array of controllers and set their parameters to match their
     # address mapping in the case of a DRAM
-
-    AddrRange = m5.objects.AddrRange
-    numa_mem_ranges = [AddrRange('0MB', size='128MB'),
-                       AddrRange('128MB', size='128MB'),
-                       AddrRange('256MB', size='128MB'),
-                       AddrRange('384MB', size='128MB')]
-
-    for r in numa_mem_ranges:
+    for r in system.mem_ranges:
         for i in xrange(nbr_mem_ctrls):
             mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,
                                        intlv_size)
@@ -210,4 +203,4 @@ def config_mem(options, system):
 
     # Connect the controllers to the membus
     for i in xrange(len(system.mem_ctrls)):
-        system.mem_ctrls[i].port = system.membuses[i].master
+        system.mem_ctrls[i].port = system.membus.master
