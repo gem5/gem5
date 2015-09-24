@@ -34,9 +34,21 @@ addToPath('../common')
 
 from Caches import *
 
-num_domains = 2
+from optparse import OptionParser
 
-num_cpus_per_domain = 2
+parser = OptionParser()
+parser.add_option('--l1i_size', type='string', default='32kB', help = 'L1 instruction cache size')
+parser.add_option('--l1d_size', type='string', default='64kB', help = 'L1 data cache size')
+parser.add_option('--l2_size', type='string', default='512kB', help = 'L2 cache size')
+parser.add_option('--num_domains', type='int', default=2, help = 'Number of NUMA domains')
+parser.add_option('--num_cpus_per_domain', type='int', default=2, help = 'Number of CPUs per NUMA domain')
+parser.add_option('--mem_size_per_domain', type='string', default='512MB', help = 'Memory size per NUMA domain')
+
+(option, arg) = parser.parse_args()
+
+num_domains = option.num_domains
+
+num_cpus_per_domain = option.num_cpus_per_domain
 
 isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
 
@@ -46,7 +58,7 @@ class Domain:
     def __init__(self, id = -1):
         self.id = id
 
-        self.mem_ranges = AddrRange(Addr(str(self.id * 512) + 'MB'), size = '512MB')
+        self.mem_ranges = AddrRange(Addr(str(self.id * 512) + 'MB'), size = option.mem_size_per_domain) # TODO: 512 should not be hardcoded
 
         self.membus = SystemXBar()
 
@@ -54,12 +66,12 @@ class Domain:
 
         self.l2bus = L2XBar()
 
-        self.l2cache = L2Cache(size = '256kB')
+        self.l2cache = L2Cache(size = option.l2_size)
         self.l2cache.cpu_side = self.l2bus.master
         self.l2cache.mem_side = self.membus.slave
 
         self.cpu = [TimingSimpleCPU(cpu_id = num_cpus_per_domain * self.id + i,
-                                     icache = L1_ICache(size = '16kB'), dcache = L1_DCache(size = '64kB'))
+                                     icache = L1_ICache(size = option.l1i_size), dcache = L1_DCache(size = option.l1d_size))
                      for i in range(num_cpus_per_domain)]
 
         for cpu in self.cpu:
@@ -102,10 +114,12 @@ for domain in domains:
     domain.numa_cache.addr_ranges = []
     for r in range(num_domains):
         if r != domain.id:
-            domain.numa_cache.addr_ranges.append(AddrRange(Addr(str(r * 512) + 'MB'), size = '512MB'))
+            addr_range = AddrRange(Addr(str(r * 512) + 'MB'), size = option.mem_size_per_domain) # TODO: 512 should not be hardcoded
+            domain.numa_cache.addr_ranges.append(addr_range)
 
     domain.numa_cache.cpu_side = domain.membus.master
     domain.numa_cache.mem_side = system.systembus.slave
+
     numa_cache.append(domain.numa_cache)
 
     system.mem_ranges.append(domain.mem_ranges)

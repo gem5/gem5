@@ -50,6 +50,9 @@ http://thread.gmane.org/gmane.comp.emulators.m5.users/15980
 http://thread.gmane.org/gmane.comp.emulators.m5.users/16572 *
 http://thread.gmane.org/gmane.comp.emulators.m5.users/17326 *
 
+http://thread.gmane.org/gmane.comp.emulators.m5.users/17738
+http://thread.gmane.org/gmane.comp.emulators.m5.users/14663
+
 I just created:
 A. a 4 cpu numa system,
 B. each cpu connect to a membus and then a dram controller,
