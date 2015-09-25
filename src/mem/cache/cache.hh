@@ -252,6 +252,11 @@ class Cache : public BaseCache
     void doWritebacks(PacketList& writebacks, Tick forward_time);
 
     /**
+     * Send writebacks down the memory hierarchy in atomic mode
+     */
+    void doWritebacksAtomic(PacketList& writebacks);
+
+    /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The response packet
      */
@@ -375,7 +380,7 @@ class Cache : public BaseCache
      * Send up a snoop request and find cached copies. If cached copies are
      * found, set the BLOCK_CACHED flag in pkt.
      */
-    bool isCachedAbove(const PacketPtr pkt) const;
+    bool isCachedAbove(PacketPtr pkt, bool is_timing = true) const;
 
     /**
      * Selects an outstanding request to service.  Called when the

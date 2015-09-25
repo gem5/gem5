@@ -605,6 +605,13 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
                     " SF size: %i lat: %i\n", __func__,
                     slavePorts[slave_port_id]->name(), pkt->cmdString(),
                     pkt->getAddr(), sf_res.first.size(), sf_res.second);
+
+            // let the snoop filter know about the success of the send
+            // operation, and do it even before sending it onwards to
+            // avoid situations where atomic upward snoops sneak in
+            // between and change the filter state
+            snoopFilter->updateRequest(pkt, *slavePorts[slave_port_id], false);
+
             snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
                                          sf_res.first);
         } else {
@@ -612,6 +619,15 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         }
         snoop_response_cmd = snoop_result.first;
         snoop_response_latency += snoop_result.second;
+    }
+
+    // forwardAtomic snooped into peer caches of the sender, and if
+    // this is a clean evict, but the packet is found in a cache, do
+    // not forward it
+    if (pkt->cmd == MemCmd::CleanEvict && pkt->isBlockCached()) {
+        DPRINTF(CoherentXBar, "recvAtomic: Clean evict 0x%x still cached, "
+                "not forwarding\n", pkt->getAddr());
+        return 0;
     }
 
     // even if we had a snoop response, we must continue and also
@@ -626,8 +642,8 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     // forward the request to the appropriate destination
     Tick response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
 
-    // Lower levels have replied, tell the snoop filter
-    if (snoopFilter && !system->bypassCaches() && pkt->isResponse()) {
+    // if lower levels have replied, tell the snoop filter
+    if (!system->bypassCaches() && snoopFilter && pkt->isResponse()) {
         snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
     }
 

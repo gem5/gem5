@@ -455,6 +455,39 @@ Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
     }
 }
 
+void
+Cache::doWritebacksAtomic(PacketList& writebacks)
+{
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        // Call isCachedAbove for both Writebacks and CleanEvicts. If
+        // isCachedAbove returns true we set BLOCK_CACHED flag in Writebacks
+        // and discard CleanEvicts.
+        if (isCachedAbove(wbPkt, false)) {
+            if (wbPkt->cmd == MemCmd::Writeback) {
+                // Set BLOCK_CACHED flag in Writeback and send below,
+                // so that the Writeback does not reset the bit
+                // corresponding to this address in the snoop filter
+                // below. We can discard CleanEvicts because cached
+                // copies exist above. Atomic mode isCachedAbove
+                // modifies packet to set BLOCK_CACHED flag
+                memSidePort->sendAtomic(wbPkt);
+            }
+        } else {
+            // If the block is not cached above, send packet below. Both
+            // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
+            // reset the bit corresponding to this address in the snoop filter
+            // below.
+            memSidePort->sendAtomic(wbPkt);
+        }
+        writebacks.pop_front();
+        // In case of CleanEvicts, the packet destructor will delete the
+        // request object because this is a non-snoop request packet which
+        // does not require a response.
+        delete wbPkt;
+    }
+}
+
 
 void
 Cache::recvTimingSnoopResp(PacketPtr pkt)
@@ -953,12 +986,7 @@ Cache::recvAtomic(PacketPtr pkt)
 
     // handle writebacks resulting from the access here to ensure they
     // logically proceed anything happening below
-    while (!writebacks.empty()){
-        PacketPtr wbPkt = writebacks.front();
-        memSidePort->sendAtomic(wbPkt);
-        writebacks.pop_front();
-        delete wbPkt;
-    }
+    doWritebacksAtomic(writebacks);
 
     if (!satisfied) {
         // MISS
@@ -1040,12 +1068,7 @@ Cache::recvAtomic(PacketPtr pkt)
     // there).
 
     // Handle writebacks (from the response handling) if needed
-    while (!writebacks.empty()){
-        PacketPtr wbPkt = writebacks.front();
-        memSidePort->sendAtomic(wbPkt);
-        writebacks.pop_front();
-        delete wbPkt;
-    }
+    doWritebacksAtomic(writebacks);
 
     if (pkt->needsResponse()) {
         pkt->makeAtomicResponse();
@@ -1906,7 +1929,7 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
-    // no need to snoop writebacks or requests that are not in range
+    // no need to snoop requests that are not in range
     if (!inRange(pkt->getAddr())) {
         return;
     }
@@ -2044,11 +2067,8 @@ Cache::recvAtomicSnoop(PacketPtr pkt)
     // Snoops shouldn't happen when bypassing caches
     assert(!system->bypassCaches());
 
-    // no need to snoop writebacks or requests that are not in range. In
-    // atomic we have no Writebacks/CleanEvicts queued and no prefetches,
-    // hence there is no need to snoop upwards and determine if they are
-    // present above.
-    if (pkt->evictingBlock() || !inRange(pkt->getAddr())) {
+    // no need to snoop requests that are not in range.
+    if (!inRange(pkt->getAddr())) {
         return 0;
     }
 
@@ -2144,7 +2164,7 @@ Cache::getNextMSHR()
 }
 
 bool
-Cache::isCachedAbove(const PacketPtr pkt) const
+Cache::isCachedAbove(PacketPtr pkt, bool is_timing) const
 {
     if (!forwardSnoops)
         return false;
@@ -2153,18 +2173,22 @@ Cache::isCachedAbove(const PacketPtr pkt) const
     // same block. Using the BLOCK_CACHED flag with the Writeback/CleanEvict
     // packet, the cache can inform the crossbar below of presence or absence
     // of the block.
-
-    Packet snoop_pkt(pkt, true, false);
-    snoop_pkt.setExpressSnoop();
-    // Assert that packet is either Writeback or CleanEvict and not a prefetch
-    // request because prefetch requests need an MSHR and may generate a snoop
-    // response.
-    assert(pkt->evictingBlock());
-    snoop_pkt.senderState = NULL;
-    cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
-    // Writeback/CleanEvict snoops do not generate a separate snoop response.
-    assert(!(snoop_pkt.memInhibitAsserted()));
-    return snoop_pkt.isBlockCached();
+    if (is_timing) {
+        Packet snoop_pkt(pkt, true, false);
+        snoop_pkt.setExpressSnoop();
+        // Assert that packet is either Writeback or CleanEvict and not a
+        // prefetch request because prefetch requests need an MSHR and may
+        // generate a snoop response.
+        assert(pkt->evictingBlock());
+        snoop_pkt.senderState = NULL;
+        cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
+        // Writeback/CleanEvict snoops do not generate a snoop response.
+        assert(!(snoop_pkt.memInhibitAsserted()));
+        return snoop_pkt.isBlockCached();
+    } else {
+        cpuSidePort->sendAtomicSnoop(pkt);
+        return pkt->isBlockCached();
+    }
 }
 
 PacketPtr
