@@ -81,11 +81,11 @@ if args:
 # at the moment we stay with the default open-adaptive page policy,
 # and address mapping
 
-# start with the system itself, using a multi-layer 1.5 GHz
-# crossbar, delivering 64 bytes / 5 cycles (one header cycle)
-# which amounts to 19.2 GByte/s per layer and thus per port
-system = System(membus = IOXBar(width = 16))
-system.clk_domain = SrcClockDomain(clock = '1.5GHz',
+# start with the system itself, using a multi-layer 2.0 GHz
+# crossbar, delivering 64 bytes / 3 cycles (one header cycle)
+# which amounts to 42.7 GByte/s per layer and thus per port
+system = System(membus = IOXBar(width = 32))
+system.clk_domain = SrcClockDomain(clock = '2.0GHz',
                                    voltage_domain =
                                    VoltageDomain(voltage = '1V'))
 
@@ -100,6 +100,7 @@ mmap_using_noreserve = True
 # generator
 options.mem_channels = 1
 options.external_memory_system = 0
+options.tlm_memory = 0
 MemConfig.config_mem(options, system)
 
 # the following assumes that we are using the native DRAM
