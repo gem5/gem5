@@ -4,11 +4,11 @@ sim_seconds                                  1.208801                       # Nu
 sim_ticks                                1208800797500                       # Number of ticks simulated
 final_tick                               1208800797500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 239332                       # Simulator instruction rate (inst/s)
-host_op_rate                                   239332                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              158403619                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 291552                       # Number of bytes of host memory used
-host_seconds                                  7631.14                       # Real time elapsed on the host
+host_inst_rate                                 309355                       # Simulator instruction rate (inst/s)
+host_op_rate                                   309355                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              204748768                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 299532                       # Number of bytes of host memory used
+host_seconds                                  5903.82                       # Real time elapsed on the host
 sim_insts                                  1826378509                       # Number of instructions simulated
 sim_ops                                    1826378509                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -703,6 +703,12 @@ system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.inst 68146.812957         
 system.cpu.l2cache.overall_avg_mshr_miss_latency::cpu.data 77658.597897                       # average overall mshr miss latency
 system.cpu.l2cache.overall_avg_mshr_miss_latency::total 77653.938429                       # average overall mshr miss latency
 system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
+system.cpu.toL2Bus.snoop_filter.tot_requests     18249028                       # Total number of requests made to the snoop filter.
+system.cpu.toL2Bus.snoop_filter.hit_single_requests      9121989                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+system.cpu.toL2Bus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.cpu.toL2Bus.snoop_filter.tot_snoops         1267                       # Total number of snoops made to the snoop filter.
+system.cpu.toL2Bus.snoop_filter.hit_single_snoops         1267                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+system.cpu.toL2Bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.cpu.toL2Bus.trans_dist::ReadResp       7239716                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::Writeback      4708732                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::CleanEvict      6334139                       # Transaction distribution
@@ -718,15 +724,15 @@ system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_s
 system.cpu.toL2Bus.pkt_size::total          820072320                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.snoops                     1920882                       # Total snoops (count)
 system.cpu.toL2Bus.snoop_fanout::samples     20169910                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::mean        1.095235                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::stdev       0.293539                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::mean        0.000063                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::stdev       0.007925                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::0                  0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::1           18249028     90.48%     90.48% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::2            1920882      9.52%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::0           20168643     99.99%     99.99% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::1               1267      0.01%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::2                  0      0.00%    100.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::overflows            0      0.00%    100.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::min_value            1                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::max_value            2                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::min_value            0                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::max_value            1                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::total       20169910                       # Request fanout histogram
 system.cpu.toL2Bus.reqLayer0.occupancy    12811105000                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.reqLayer0.utilization          1.1                       # Layer utilization (%)

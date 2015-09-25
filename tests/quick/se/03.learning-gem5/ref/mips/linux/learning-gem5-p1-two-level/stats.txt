@@ -4,10 +4,10 @@ sim_seconds                                  0.000059                       # Nu
 sim_ticks                                    58892000                       # Number of ticks simulated
 final_tick                                   58892000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 807198                       # Simulator instruction rate (inst/s)
-host_op_rate                                   805914                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8425106508                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 672980                       # Number of bytes of host memory used
+host_inst_rate                                 489554                       # Simulator instruction rate (inst/s)
+host_op_rate                                   489001                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             5114816745                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 679136                       # Number of bytes of host memory used
 host_seconds                                     0.01                       # Real time elapsed on the host
 sim_insts                                        5624                       # Number of instructions simulated
 sim_ops                                          5624                       # Number of ops (including micro ops) simulated
@@ -514,6 +514,12 @@ system.cpu.icache.demand_avg_mshr_miss_latency::total 99919.191919              
 system.cpu.icache.overall_avg_mshr_miss_latency::cpu.inst 99919.191919                       # average overall mshr miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency::total 99919.191919                       # average overall mshr miss latency
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
+system.l2bus.snoop_filter.tot_requests            528                       # Total number of requests made to the snoop filter.
+system.l2bus.snoop_filter.hit_single_requests           94                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+system.l2bus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l2bus.snoop_filter.tot_snoops                0                       # Total number of snoops made to the snoop filter.
+system.l2bus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+system.l2bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.l2bus.trans_dist::ReadResp                 384                       # Transaction distribution
 system.l2bus.trans_dist::CleanEvict                94                       # Transaction distribution
 system.l2bus.trans_dist::ReadExReq                 50                       # Transaction distribution
@@ -527,15 +533,15 @@ system.l2bus.pkt_size_system.cpu.dcache.mem_side::system.l2cache.cpu_side       
 system.l2bus.pkt_size::total                    27776                       # Cumulative packet size per connected master and slave (bytes)
 system.l2bus.snoops                                 0                       # Total snoops (count)
 system.l2bus.snoop_fanout::samples                528                       # Request fanout histogram
-system.l2bus.snoop_fanout::mean                     1                       # Request fanout histogram
+system.l2bus.snoop_fanout::mean                     0                       # Request fanout histogram
 system.l2bus.snoop_fanout::stdev                    0                       # Request fanout histogram
 system.l2bus.snoop_fanout::underflows               0      0.00%      0.00% # Request fanout histogram
-system.l2bus.snoop_fanout::0                        0      0.00%      0.00% # Request fanout histogram
-system.l2bus.snoop_fanout::1                      528    100.00%    100.00% # Request fanout histogram
+system.l2bus.snoop_fanout::0                      528    100.00%    100.00% # Request fanout histogram
+system.l2bus.snoop_fanout::1                        0      0.00%    100.00% # Request fanout histogram
 system.l2bus.snoop_fanout::2                        0      0.00%    100.00% # Request fanout histogram
 system.l2bus.snoop_fanout::overflows                0      0.00%    100.00% # Request fanout histogram
-system.l2bus.snoop_fanout::min_value                1                       # Request fanout histogram
-system.l2bus.snoop_fanout::max_value                1                       # Request fanout histogram
+system.l2bus.snoop_fanout::min_value                0                       # Request fanout histogram
+system.l2bus.snoop_fanout::max_value                0                       # Request fanout histogram
 system.l2bus.snoop_fanout::total                  528                       # Request fanout histogram
 system.l2bus.reqLayer0.occupancy               528000                       # Layer occupancy (ticks)
 system.l2bus.reqLayer0.utilization                0.9                       # Layer utilization (%)
