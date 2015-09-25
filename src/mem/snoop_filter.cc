@@ -174,12 +174,6 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
 
     assert(cpkt->isRequest());
 
-    // Broadcast / filter upward snoops
-    const bool filter_upward = true;  // @todo: Make configurable
-
-    if (!filter_upward)
-        return snoopAll(lookupLatency);
-
     Addr line_addr = cpkt->getBlockAddr(linesize);
     auto sf_it = cachedLocations.find(line_addr);
     bool is_hit = (sf_it != cachedLocations.end());
@@ -188,15 +182,12 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
              "snoop filter exceeded capacity of %d cache blocks\n",
              maxEntryCount);
 
-    // If the snoop filter has no entry and its an uncacheable
-    // request, do not create a new snoop filter entry, simply return
-    // a NULL portlist.
-    if (!is_hit && cpkt->req->isUncacheable())
+    // If the snoop filter has no entry, simply return a NULL
+    // portlist, there is no point creating an entry only to remove it
+    // later
+    if (!is_hit)
         return snoopDown(lookupLatency);
 
-    // If no hit in snoop filter create a new element and update iterator
-    if (!is_hit)
-        sf_it = cachedLocations.emplace(line_addr, SnoopItem()).first;
     SnoopItem& sf_item = sf_it->second;
 
     DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
@@ -205,13 +196,12 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
     SnoopMask interested = (sf_item.holder | sf_item.requested);
 
     totSnoops++;
-    if (is_hit) {
-        // Single bit set -> value is a power of two
-        if (isPow2(interested))
-            hitSingleSnoops++;
-        else
-            hitMultiSnoops++;
-    }
+    // Single bit set -> value is a power of two
+    if (isPow2(interested))
+        hitSingleSnoops++;
+    else
+        hitMultiSnoops++;
+
     // ReadEx and Writes require both invalidation and exlusivity, while reads
     // require neither. Writebacks on the other hand require exclusivity but
     // not the invalidation. Previously Writebacks did not generate upward
@@ -296,23 +286,28 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
             __func__, rsp_port.name(), req_port.name(), cpkt->getAddr(),
             cpkt->cmdString());
 
-    Addr line_addr = cpkt->getBlockAddr(linesize);
-    auto sf_it = cachedLocations.find(line_addr);
-    if (sf_it == cachedLocations.end())
-        sf_it = cachedLocations.emplace(line_addr, SnoopItem()).first;
-    SnoopItem& sf_item = sf_it->second;
-    SnoopMask rsp_mask M5_VAR_USED = portToMask(rsp_port);
-
     assert(cpkt->isResponse());
     assert(cpkt->memInhibitAsserted());
+
+    Addr line_addr = cpkt->getBlockAddr(linesize);
+    auto sf_it = cachedLocations.find(line_addr);
+    bool is_hit = sf_it != cachedLocations.end();
+
+    // Nothing to do if it is not a hit
+    if (!is_hit)
+        return;
+
+    SnoopItem& sf_item = sf_it->second;
 
     DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
             __func__,  sf_item.requested, sf_item.holder);
 
-    // Remote (to this snoop filter) snoops update the filter already when they
-    // arrive from below, because we may not see any response.
+    // Remote (to this snoop filter) snoops update the filter
+    // already when they arrive from below, because we may not see
+    // any response.
     if (cpkt->needsExclusive()) {
-        // If the request to this snoop response hit an in-flight transaction,
+        // If the request to this snoop response hit an in-flight
+        // transaction,
         // the holder was not reset -> no assertion & do that here, now!
         //assert(sf_item.holder == 0);
         sf_item.holder = 0;
@@ -320,6 +315,7 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
     DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
             __func__, sf_item.requested, sf_item.holder);
     eraseIfNullEntry(sf_it);
+
 }
 
 void
