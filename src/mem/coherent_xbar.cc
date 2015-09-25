@@ -96,9 +96,6 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         snoopRespPorts.push_back(new SnoopRespPort(*bp, *this));
     }
 
-    if (snoopFilter)
-        snoopFilter->setSlavePorts(slavePorts);
-
     clearPortCache();
 }
 
@@ -133,6 +130,11 @@ CoherentXBar::init()
 
     if (snoopPorts.empty())
         warn("CoherentXBar %s has no snooping ports attached!\n", name());
+
+    // inform the snoop filter about the slave ports so it can create
+    // its own internal representation
+    if (snoopFilter)
+        snoopFilter->setSlavePorts(slavePorts);
 }
 
 bool

@@ -96,13 +96,27 @@ class SnoopFilter : public SimObject {
     }
 
     /**
-     * Init a new snoop filter and tell it about all the slave ports of the
-     * enclosing bus.
+     * Init a new snoop filter and tell it about all the
+     * slave ports of the enclosing bus.
      *
-     * @param bus_slave_ports Vector of slave ports that the bus is attached to.
+     * @param slave_ports Slave ports that the bus is attached to.
      */
-    void setSlavePorts(const SnoopList& bus_slave_ports) {
-        slavePorts = bus_slave_ports;
+    void setSlavePorts(const SnoopList& slave_ports) {
+        localSlavePortIds.resize(slave_ports.size(), InvalidPortID);
+
+        PortID id = 0;
+        for (const auto& p : slave_ports) {
+            // no need to track this port if it is not snooping
+            if (p->isSnooping()) {
+                slavePorts.push_back(p);
+                localSlavePortIds[p->getId()] = id++;
+            }
+        }
+
+        // make sure we can deal with this many ports
+        fatal_if(id > 8 * sizeof(SnoopMask),
+                 "Snoop filter only supports %d snooping ports, got %d\n",
+                 8 * sizeof(SnoopMask), id);
     }
 
     /**
@@ -218,12 +232,6 @@ class SnoopFilter : public SimObject {
      */
     SnoopMask portToMask(const SlavePort& port) const;
     /**
-     * Convert multiple ports to a corresponding bitmask
-     * @param ports SnoopList that should be converted.
-     * @return Bitmask corresponding to the ports in the list.
-     */
-    SnoopMask portListToMask(const SnoopList& ports) const;
-    /**
      * Converts a bitmask of ports into the corresponing list of ports
      * @param ports SnoopMask of the requested ports
      * @return SnoopList containing all the requested SlavePorts
@@ -249,8 +257,10 @@ class SnoopFilter : public SimObject {
      * (because of crossbar retry)
      */
     SnoopItem retryItem;
-    /** List of all attached slave ports. */
+    /** List of all attached snooping slave ports. */
     SnoopList slavePorts;
+    /** Track the mapping from port ids to the local mask ids. */
+    std::vector<PortID> localSlavePortIds;
     /** Cache line size. */
     const unsigned linesize;
     /** Latency for doing a lookup in the filter */
@@ -271,29 +281,19 @@ class SnoopFilter : public SimObject {
 inline SnoopFilter::SnoopMask
 SnoopFilter::portToMask(const SlavePort& port) const
 {
-    unsigned id = (unsigned)port.getId();
-    assert(id != (unsigned)InvalidPortID);
-    assert((int)id < 8 * sizeof(SnoopMask));
-
-    return ((SnoopMask)1) << id;
-}
-
-inline SnoopFilter::SnoopMask
-SnoopFilter::portListToMask(const SnoopList& ports) const
-{
-    SnoopMask m = 0;
-    for (auto port = ports.begin(); port != ports.end(); ++port)
-        m |= portToMask(**port);
-    return m;
+    assert(port.getId() != InvalidPortID);
+    // if this is not a snooping port, return a zero mask
+    return !port.isSnooping() ? 0 :
+        ((SnoopMask)1) << localSlavePortIds[port.getId()];
 }
 
 inline SnoopFilter::SnoopList
 SnoopFilter::maskToPortList(SnoopMask port_mask) const
 {
     SnoopList res;
-    for (auto port = slavePorts.begin(); port != slavePorts.end(); ++port)
-        if (port_mask & portToMask(**port))
-            res.push_back(*port);
+    for (const auto& p : slavePorts)
+        if (port_mask & portToMask(*p))
+            res.push_back(p);
     return res;
 }
 #endif // __MEM_SNOOP_FILTER_HH__
