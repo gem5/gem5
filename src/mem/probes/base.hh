@@ -43,8 +43,7 @@
 #include <memory>
 #include <vector>
 
-#include "mem/packet.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/mem.hh"
 #include "sim/sim_object.hh"
 
 struct BaseMemProbeParams;
@@ -72,10 +71,10 @@ class BaseMemProbe : public SimObject
     /**
      * Callback to analyse intercepted Packets.
      */
-    virtual void handleRequest(const PacketPtr &pkt) = 0;
+    virtual void handleRequest(const ProbePoints::PacketInfo &pkt_info) = 0;
 
   private:
-    class PacketListener : public ProbeListenerArgBase<PacketPtr>
+    class PacketListener : public ProbeListenerArgBase<ProbePoints::PacketInfo>
     {
       public:
         PacketListener(BaseMemProbe &_parent,
@@ -83,8 +82,8 @@ class BaseMemProbe : public SimObject
             : ProbeListenerArgBase(pm, name),
               parent(_parent) {}
 
-        void notify(const PacketPtr &pkt) M5_ATTR_OVERRIDE {
-            parent.handleRequest(pkt);
+        void notify(const ProbePoints::PacketInfo &pkt_info) M5_ATTR_OVERRIDE {
+            parent.handleRequest(pkt_info);
         }
 
       protected:

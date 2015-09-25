@@ -55,7 +55,8 @@ class StackDistProbe : public BaseMemProbe
     void regStats() M5_ATTR_OVERRIDE;
 
   protected:
-    void handleRequest(const PacketPtr &pkt) M5_ATTR_OVERRIDE;
+    void handleRequest(const ProbePoints::PacketInfo &pkt_info) \
+        M5_ATTR_OVERRIDE;
 
   protected:
     // Cache line size to simulate

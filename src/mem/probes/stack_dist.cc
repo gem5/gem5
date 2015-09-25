@@ -94,15 +94,15 @@ StackDistProbe::regStats()
 }
 
 void
-StackDistProbe::handleRequest(const PacketPtr &pkt)
+StackDistProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
 {
     // only capturing read and write requests (which allocate in the
     // cache)
-    if (!pkt->isRead() && !pkt->isWrite())
+    if (!pkt_info.cmd.isRead() && !pkt_info.cmd.isWrite())
         return;
 
     // Align the address to a cache line size
-    const Addr aligned_addr(roundDown(pkt->getAddr(), lineSize));
+    const Addr aligned_addr(roundDown(pkt_info.addr, lineSize));
 
     // Calculate the stack distance
     const uint64_t sd(calc.calcStackDistAndUpdate(aligned_addr).first);
@@ -113,7 +113,7 @@ StackDistProbe::handleRequest(const PacketPtr &pkt)
 
     // Sample the stack distance of the address in linear bins
     if (!disableLinearHists) {
-        if (pkt->isRead())
+        if (pkt_info.cmd.isRead())
             readLinearHist.sample(sd);
         else
             writeLinearHist.sample(sd);
@@ -123,7 +123,7 @@ StackDistProbe::handleRequest(const PacketPtr &pkt)
         int sd_lg2 = sd == 0 ? 1 : floorLog2(sd);
 
         // Sample the stack distance of the address in log bins
-        if (pkt->isRead())
+        if (pkt_info.cmd.isRead())
             readLogHist.sample(sd_lg2);
         else
             writeLogHist.sample(sd_lg2);
