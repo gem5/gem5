@@ -90,7 +90,8 @@ class SnoopFilter : public SimObject {
 
     SnoopFilter (const SnoopFilterParams *p) :
         SimObject(p), reqLookupResult(cachedLocations.end()), retryItem{0, 0},
-        linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency)
+        linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency),
+        maxEntryCount(p->max_capacity / p->system->cacheLineSize())
     {
     }
 
@@ -254,6 +255,8 @@ class SnoopFilter : public SimObject {
     const unsigned linesize;
     /** Latency for doing a lookup in the filter */
     const Cycles lookupLatency;
+    /** Max capacity in terms of cache blocks tracked, for sanity checking */
+    const unsigned maxEntryCount;
 
     /** Statistics */
     Stats::Scalar totRequests;
