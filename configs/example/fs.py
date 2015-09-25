@@ -340,5 +340,5 @@ if options.timesync:
 if options.frame_capture:
     VncServer.frame_capture = True
 
-# Simulation.setWorkCountOptions(test_sys, options)
-# Simulation.run(options, root, test_sys, FutureClass)
+Simulation.setWorkCountOptions(test_sys, options)
+Simulation.run(options, root, test_sys, FutureClass)
