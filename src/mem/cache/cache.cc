@@ -1657,6 +1657,16 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
         blk->status |= BlkSecure;
     blk->status |= BlkValid | BlkReadable;
 
+    // sanity check for whole-line writes, which should always be
+    // marked as writable as part of the fill, and then later marked
+    // dirty as part of satisfyCpuSideRequest
+    if (pkt->cmd == MemCmd::WriteLineReq) {
+        assert(!pkt->sharedAsserted());
+        // at the moment other caches do not respond to the
+        // invalidation requests corresponding to a whole-line write
+        assert(!pkt->memInhibitAsserted());
+    }
+
     if (!pkt->sharedAsserted()) {
         // we could get non-shared responses from memory (rather than
         // a cache) even in a read-only cache, note that we set this
