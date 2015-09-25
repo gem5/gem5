@@ -1228,7 +1228,7 @@ Cache::recvTimingResp(PacketPtr pkt)
 
     // allow invalidation responses originating from write-line
     // requests to be discarded
-    bool discard_invalidate = false;
+    bool is_invalidate = pkt->isInvalidate();
 
     // First offset for critical word first calculations
     int initial_offset = initial_tgt->pkt->getOffset(blkSize);
@@ -1271,7 +1271,7 @@ Cache::recvTimingResp(PacketPtr pkt)
                 // treat as a fill, and discard the invalidation
                 // response
                 is_fill = true;
-                discard_invalidate = true;
+                is_invalidate = false;
             }
 
             if (is_fill) {
@@ -1327,7 +1327,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             if (is_error)
                 tgt_pkt->copyError(pkt);
             if (tgt_pkt->cmd == MemCmd::ReadResp &&
-                (pkt->isInvalidate() || mshr->hasPostInvalidate())) {
+                (is_invalidate || mshr->hasPostInvalidate())) {
                 // If intermediate cache got ReadRespWithInvalidate,
                 // propagate that.  Response should not have
                 // isInvalidate() set otherwise.
@@ -1353,7 +1353,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
-            assert(!(pkt->isInvalidate() && !mshr->hasPostInvalidate()));
+            assert(!(is_invalidate && !mshr->hasPostInvalidate()));
             handleSnoop(tgt_pkt, blk, true, true, mshr->hasPostInvalidate());
             break;
 
@@ -1368,8 +1368,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         // an invalidate response stemming from a write line request
         // should not invalidate the block, so check if the
         // invalidation should be discarded
-        if ((pkt->isInvalidate() || mshr->hasPostInvalidate()) &&
-            !discard_invalidate) {
+        if (is_invalidate || mshr->hasPostInvalidate()) {
             assert(blk != tempBlock);
             tags->invalidate(blk);
             blk->invalidate();
