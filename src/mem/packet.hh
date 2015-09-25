@@ -324,6 +324,14 @@ class Packet : public Printable
     uint32_t headerDelay;
 
     /**
+     * Keep track of the extra delay incurred by snooping upwards
+     * before sending a request down the memory system. This is used
+     * by the coherent crossbar to account for the additional request
+     * delay.
+     */
+    uint32_t snoopDelay;
+
+    /**
      * The extra pipelining delay from seeing the packet until the end of
      * payload is transmitted by the component that provided it (if
      * any). This includes the header delay. Similar to the header
@@ -582,7 +590,7 @@ class Packet : public Printable
      */
     Packet(const RequestPtr _req, MemCmd _cmd)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           size(0), headerDelay(0), payloadDelay(0),
+           size(0), headerDelay(0), snoopDelay(0), payloadDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -603,7 +611,7 @@ class Packet : public Printable
      */
     Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
         :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           headerDelay(0), payloadDelay(0),
+           headerDelay(0), snoopDelay(0), payloadDelay(0),
            senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -628,6 +636,7 @@ class Packet : public Printable
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
            bytesValid(pkt->bytesValid),
            headerDelay(pkt->headerDelay),
+           snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
            senderState(pkt->senderState)
     {

@@ -1730,7 +1730,7 @@ Cache::doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     memSidePort->schedTimingSnoopResp(pkt, forward_time, true);
 }
 
-void
+uint32_t
 Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
                    bool is_deferred, bool pending_inval)
 {
@@ -1747,6 +1747,8 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     // original packet up front
     bool invalidate = pkt->isInvalidate();
     bool M5_VAR_USED needs_exclusive = pkt->needsExclusive();
+
+    uint32_t snoop_delay = 0;
 
     if (forwardSnoops) {
         // first propagate snoop upward to see if anyone above us wants to
@@ -1765,6 +1767,12 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             // time
             snoopPkt.headerDelay = snoopPkt.payloadDelay = 0;
             cpuSidePort->sendTimingSnoopReq(&snoopPkt);
+
+            // add the header delay (including crossbar and snoop
+            // delays) of the upward snoop to the snoop delay for this
+            // cache
+            snoop_delay += snoopPkt.headerDelay;
+
             if (snoopPkt.memInhibitAsserted()) {
                 // cache-to-cache response from some upper cache
                 assert(!alreadyResponded);
@@ -1796,7 +1804,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     if (!blk || !blk->isValid()) {
         DPRINTF(Cache, "%s snoop miss for %s addr %#llx size %d\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
-        return;
+        return snoop_delay;
     } else {
        DPRINTF(Cache, "%s snoop hit for %s for addr %#llx size %d, "
                "old state is %s\n", __func__, pkt->cmdString(),
@@ -1824,7 +1832,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         DPRINTF(Cache, "Found addr %#llx in upper level cache for snoop %s from"
                 " lower cache\n", pkt->getAddr(), pkt->cmdString());
         pkt->setBlockCached();
-        return;
+        return snoop_delay;
     }
 
     if (!pkt->req->isUncacheable() && pkt->isRead() && !invalidate) {
@@ -1884,6 +1892,8 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     }
 
     DPRINTF(Cache, "new state is %s\n", blk->print());
+
+    return snoop_delay;
 }
 
 
@@ -1906,6 +1916,14 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
 
     Addr blk_addr = blockAlign(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
+
+    // Update the latency cost of the snoop so that the crossbar can
+    // account for it. Do not overwrite what other neighbouring caches
+    // have already done, rather take the maximum. The update is
+    // tentative, for cases where we return before an upward snoop
+    // happens below.
+    pkt->snoopDelay = std::max<uint32_t>(pkt->snoopDelay,
+                                         lookupLatency * clockPeriod());
 
     // Inform request(Prefetch, CleanEvict or Writeback) from below of
     // MSHR hit, set setBlockCached.
@@ -2004,7 +2022,12 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     // We could be more selective and return here if the
     // request is non-exclusive or if the writeback is
     // exclusive.
-    handleSnoop(pkt, blk, true, false, false);
+    uint32_t snoop_delay = handleSnoop(pkt, blk, true, false, false);
+
+    // Override what we did when we first saw the snoop, as we now
+    // also have the cost of the upwards snoops to account for
+    pkt->snoopDelay = std::max<uint32_t>(pkt->snoopDelay, snoop_delay +
+                                         lookupLatency * clockPeriod());
 }
 
 bool
@@ -2030,9 +2053,8 @@ Cache::recvAtomicSnoop(PacketPtr pkt)
     }
 
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
-    handleSnoop(pkt, blk, false, false, false);
-    // We consider forwardLatency here because a snoop occurs in atomic mode
-    return forwardLatency * clockPeriod();
+    uint32_t snoop_delay = handleSnoop(pkt, blk, false, false, false);
+    return snoop_delay + lookupLatency * clockPeriod();
 }
 
 

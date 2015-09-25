@@ -187,6 +187,8 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     if (!system->bypassCaches()) {
+        assert(pkt->snoopDelay == 0);
+
         // the packet is a memory-mapped request and should be
         // broadcasted to our snoopers but the source
         if (snoopFilter) {
@@ -204,6 +206,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         } else {
             forwardTiming(pkt, slave_port_id);
         }
+
+        // add the snoop delay to our header delay, and then reset it
+        pkt->headerDelay += pkt->snoopDelay;
+        pkt->snoopDelay = 0;
     }
 
     // forwardTiming snooped into peer caches of the sender, and if
@@ -377,8 +383,14 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // we should only see express snoops from caches
     assert(pkt->isExpressSnoop());
 
+    // set the packet header and payload delay, for now use forward latency
+    // @todo Assess the choice of latency further
+    calcPacketTiming(pkt, forwardLatency * clockPeriod());
+
     // remeber if the packet is inhibited so we can see if it changes
     const bool is_inhibited = pkt->memInhibitAsserted();
+
+    assert(pkt->snoopDelay == 0);
 
     if (snoopFilter) {
         // let the Snoop Filter work its magic and guide probing
@@ -397,6 +409,10 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     } else {
         forwardTiming(pkt, InvalidPortID);
     }
+
+    // add the snoop delay to our header delay, and then reset it
+    pkt->headerDelay += pkt->snoopDelay;
+    pkt->snoopDelay = 0;
 
     // if we can expect a response, remember how to route it
     if (!is_inhibited && pkt->memInhibitAsserted()) {

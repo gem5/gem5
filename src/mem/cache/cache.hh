@@ -300,12 +300,19 @@ class Cache : public BaseCache
                                 bool already_copied, bool pending_inval);
 
     /**
-     * Sets the blk to the new state.
-     * @param blk The cache block being snooped.
-     * @param new_state The new coherence state for the block.
+     * Perform an upward snoop if needed, and update the block state
+     * (possibly invalidating the block). Also create a response if required.
+     *
+     * @param pkt Snoop packet
+     * @param blk Cache block being snooped
+     * @param is_timing Timing or atomic for the response
+     * @param is_deferred Is this a deferred snoop or not?
+     * @param pending_inval Do we have a pending invalidation?
+     *
+     * @return The snoop delay incurred by the upwards snoop
      */
-    void handleSnoop(PacketPtr ptk, CacheBlk *blk,
-                     bool is_timing, bool is_deferred, bool pending_inval);
+    uint32_t handleSnoop(PacketPtr pkt, CacheBlk *blk,
+                         bool is_timing, bool is_deferred, bool pending_inval);
 
     /**
      * Create a writeback request for the given block.
