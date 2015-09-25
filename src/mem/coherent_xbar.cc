@@ -230,24 +230,12 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     const bool expect_response = pkt->needsResponse() &&
         !pkt->memInhibitAsserted();
 
-    // Note: Cannot create a copy of the full packet, here.
-    MemCmd orig_cmd(pkt->cmd);
-
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
 
     if (snoopFilter && !system->bypassCaches()) {
-        // The packet may already be overwritten by the sendTimingReq function.
-        // The snoop filter needs to see the original request *and* the return
-        // status of the send operation, so we need to recreate the original
-        // request.  Atomic mode does not have the issue, as there the send
-        // operation and the response happen instantaneously and don't need two
-        // phase tracking.
-        MemCmd tmp_cmd(pkt->cmd);
-        pkt->cmd = orig_cmd;
         // Let the snoop filter know about the success of the send operation
         snoopFilter->updateRequest(pkt, *src_port, !success);
-        pkt->cmd = tmp_cmd;
     }
 
     // check if we were successful in sending the packet onwards

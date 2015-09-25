@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -203,6 +203,11 @@ class SnoopFilter : public SimObject {
         SnoopMask holder;
     };
     /**
+     * HashMap of SnoopItems indexed by line address
+     */
+    typedef m5::hash_map<Addr, SnoopItem> SnoopFilterCache;
+
+    /**
      * Convert a single port to a corresponding, one-hot bitmask
      * @param port SlavePort that should be converted.
      * @return One-hot bitmask corresponding to the port.
@@ -222,8 +227,19 @@ class SnoopFilter : public SimObject {
     SnoopList maskToPortList(SnoopMask ports) const;
 
   private:
+
+    /**
+     * Removes snoop filter items which have no requesters and no holders.
+     */
+    void eraseIfNullEntry(SnoopFilterCache::iterator& sf_it);
     /** Simple hash set of cached addresses. */
-    m5::hash_map<Addr, SnoopItem> cachedLocations;
+    SnoopFilterCache cachedLocations;
+    /**
+     * Variable to temporarily store value of snoopfilter entry
+     * incase updateRequest needs to undo changes made in lookupRequest
+     * (because of crossbar retry)
+     */
+    SnoopItem retryItem;
     /** List of all attached slave ports. */
     SnoopList slavePorts;
     /** Cache line size. */
