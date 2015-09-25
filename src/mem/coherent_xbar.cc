@@ -192,11 +192,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         if (snoopFilter) {
             // check with the snoop filter where to forward this packet
             auto sf_res = snoopFilter->lookupRequest(pkt, *src_port);
-            // If SnoopFilter is enabled, the total time required by a packet
-            // to be delivered through the xbar has to be charged also with
-            // to lookup latency of the snoop filter (sf_res.second).
+            // the time required by a packet to be delivered through
+            // the xbar has to be charged also with to lookup latency
+            // of the snoop filter
             pkt->headerDelay += sf_res.second * clockPeriod();
-            packetFinishTime += sf_res.second * clockPeriod();
             DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x"\
                     " SF size: %i lat: %i\n", src_port->name(),
                     pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
@@ -384,7 +383,10 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     if (snoopFilter) {
         // let the Snoop Filter work its magic and guide probing
         auto sf_res = snoopFilter->lookupSnoop(pkt);
-        // No timing here: packetFinishTime += sf_res.second * clockPeriod();
+        // the time required by a packet to be delivered through
+        // the xbar has to be charged also with to lookup latency
+        // of the snoop filter
+        pkt->headerDelay += sf_res.second * clockPeriod();
         DPRINTF(CoherentXBar, "recvTimingSnoopReq: src %s %s 0x%x"\
                 " SF size: %i lat: %i\n", masterPorts[master_port_id]->name(),
                 pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
