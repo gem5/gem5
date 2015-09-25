@@ -34,12 +34,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephan Diestelhorst <stephan.diestelhorst@arm.com>
+ * Authors: Stephan Diestelhorst
  */
 
 /**
  * @file
- * Definition of a snoop filter.
+ * Implementation of a snoop filter.
  */
 
 #include "base/misc.hh"

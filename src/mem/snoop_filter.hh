@@ -34,7 +34,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephan Diestelhorst <stephan.diestelhorst@arm.com>
+ * Authors: Stephan Diestelhorst
  */
 
 /**
@@ -96,8 +96,8 @@ class SnoopFilter : public SimObject {
     }
 
     /**
-     * Init a new snoop filter and tell it about all the
-     * slave ports of the enclosing bus.
+     * Init a new snoop filter and tell it about all the slave ports
+     * of the enclosing bus.
      *
      * @param slave_ports Slave ports that the bus is attached to.
      */
@@ -127,7 +127,7 @@ class SnoopFilter : public SimObject {
      * call finishRequest once it is known if the request needs to
      * retry or not.
      *
-     * @param cpkt          Pointer to the request packet.  Not changed.
+     * @param cpkt          Pointer to the request packet. Not changed.
      * @param slave_port    Slave port where the request came from.
      * @return Pair of a vector of snoop target ports and lookup latency.
      */
@@ -141,14 +141,15 @@ class SnoopFilter : public SimObject {
      * reqLookupResult.
      *
      * @param will_retry    This request will retry on this bus / snoop filter
-     * @param cpkt     Request packet, merely for sanity checking
+     * @param cpkt          Request packet, merely for sanity checking
      */
     void finishRequest(bool will_retry, const Packet* cpkt);
 
     /**
-     * Handle an incoming snoop from below (the master port).  These can upgrade the
-     * tracking logic and may also benefit from additional steering thanks to the
-     * snoop filter.
+     * Handle an incoming snoop from below (the master port). These
+     * can upgrade the tracking logic and may also benefit from
+     * additional steering thanks to the snoop filter.
+     *
      * @param cpkt Pointer to const Packet containing the snoop.
      * @return Pair with a vector of SlavePorts that need snooping and a lookup
      *         latency.
@@ -156,9 +157,9 @@ class SnoopFilter : public SimObject {
     std::pair<SnoopList, Cycles> lookupSnoop(const Packet* cpkt);
 
     /**
-     * Let the snoop filter see any snoop responses that turn into request responses
-     * and indicate cache to cache transfers.  These will update the corresponding
-     * state in the filter.
+     * Let the snoop filter see any snoop responses that turn into
+     * request responses and indicate cache to cache transfers. These
+     * will update the corresponding state in the filter.
      *
      * @param cpkt     Pointer to const Packet holding the snoop response.
      * @param rsp_port SlavePort that sends the response.
@@ -169,28 +170,58 @@ class SnoopFilter : public SimObject {
                              const SlavePort& req_port);
 
     /**
-     * Pass snoop responses that travel downward through the snoop filter and let
-     * them update the snoop filter state.  No additional routing happens.
+     * Pass snoop responses that travel downward through the snoop
+     * filter and let them update the snoop filter state.  No
+     * additional routing happens.
      *
      * @param cpkt     Pointer to const Packet holding the snoop response.
      * @param rsp_port SlavePort that sends the response.
-     * @param req_port MasterPort through which the response leaves this cluster.
+     * @param req_port MasterPort through which the response is forwarded.
      */
     void updateSnoopForward(const Packet *cpkt, const SlavePort& rsp_port,
                             const MasterPort& req_port);
 
     /**
-     * Update the snoop filter with a response from below (outer / other cache,
-     * or memory) and update the tracking information in the snoop filter.
+     * Update the snoop filter with a response from below (outer /
+     * other cache, or memory) and update the tracking information in
+     * the snoop filter.
      *
      * @param cpkt       Pointer to const Packet holding the snoop response.
-     * @param slave_port SlavePort that made the original request and is the target
-     *                   of this response.
+     * @param slave_port SlavePort that made the original request and
+     *                   is the target of this response.
      */
     void updateResponse(const Packet *cpkt, const SlavePort& slave_port);
 
+    virtual void regStats();
+
+  protected:
+
     /**
-     * Simple factory methods for standard return values for lookupRequest
+     * The underlying type for the bitmask we use for tracking. This
+     * limits the number of snooping ports supported per crossbar. For
+     * the moment it is an uint64_t to offer maximum
+     * scalability. However, it is possible to use e.g. a uint16_t or
+     * uint32_to slim down the footprint of the hash map (and
+     * ultimately improve the simulation performance).
+     */
+    typedef uint64_t SnoopMask;
+
+    /**
+    * Per cache line item tracking a bitmask of SlavePorts who have an
+    * outstanding request to this line (requested) or already share a
+    * cache line with this address (holder).
+    */
+    struct SnoopItem {
+        SnoopMask requested;
+        SnoopMask holder;
+    };
+    /**
+     * HashMap of SnoopItems indexed by line address
+     */
+    typedef m5::hash_map<Addr, SnoopItem> SnoopFilterCache;
+
+    /**
+     * Simple factory methods for standard return values.
      */
     std::pair<SnoopList, Cycles> snoopAll(Cycles latency) const
     {
@@ -206,24 +237,6 @@ class SnoopFilter : public SimObject {
         SnoopList empty;
         return std::make_pair(empty , latency);
     }
-
-    virtual void regStats();
-
-  protected:
-    typedef uint64_t SnoopMask;
-   /**
-    * Per cache line item tracking a bitmask of SlavePorts who have an
-    * outstanding request to this line (requested) or already share a cache line
-    * with this address (holder).
-    */
-    struct SnoopItem {
-        SnoopMask requested;
-        SnoopMask holder;
-    };
-    /**
-     * HashMap of SnoopItems indexed by line address
-     */
-    typedef m5::hash_map<Addr, SnoopItem> SnoopFilterCache;
 
     /**
      * Convert a single port to a corresponding, one-hot bitmask
@@ -244,6 +257,7 @@ class SnoopFilter : public SimObject {
      * Removes snoop filter items which have no requesters and no holders.
      */
     void eraseIfNullEntry(SnoopFilterCache::iterator& sf_it);
+
     /** Simple hash set of cached addresses. */
     SnoopFilterCache cachedLocations;
     /**
@@ -296,4 +310,5 @@ SnoopFilter::maskToPortList(SnoopMask port_mask) const
             res.push_back(p);
     return res;
 }
+
 #endif // __MEM_SNOOP_FILTER_HH__
