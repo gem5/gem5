@@ -70,8 +70,8 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
     bool allocate = !cpkt->req->isUncacheable() && slave_port.isSnooping();
     Addr line_addr = cpkt->getBlockAddr(linesize);
     SnoopMask req_port = portToMask(slave_port);
-    auto sf_it = cachedLocations.find(line_addr);
-    bool is_hit = (sf_it != cachedLocations.end());
+    reqLookupResult = cachedLocations.find(line_addr);
+    bool is_hit = (reqLookupResult != cachedLocations.end());
 
     // If the snoop filter has no entry, and we should not allocate,
     // do not create a new snoop filter entry, simply return a NULL
@@ -79,8 +79,10 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
     if (!is_hit && !allocate)
         return snoopDown(lookupLatency);
 
-    // Create a new element through operator[] and modify in-place
-    SnoopItem& sf_item = is_hit ? sf_it->second : cachedLocations[line_addr];
+    // If no hit in snoop filter create a new element and update iterator
+    if (!is_hit)
+        reqLookupResult = cachedLocations.emplace(line_addr, SnoopItem()).first;
+    SnoopItem& sf_item = reqLookupResult->second;
     SnoopMask interested = sf_item.holder | sf_item.requested;
 
     // Store unmodified value of snoop filter item in temp storage in
@@ -144,32 +146,24 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
 }
 
 void
-SnoopFilter::updateRequest(const Packet* cpkt, const SlavePort& slave_port,
-                           bool will_retry)
+SnoopFilter::finishRequest(bool will_retry, const Packet* cpkt)
 {
-    DPRINTF(SnoopFilter, "%s: packet src %s addr 0x%x cmd %s\n",
-            __func__, slave_port.name(), cpkt->getAddr(), cpkt->cmdString());
+    if (reqLookupResult != cachedLocations.end()) {
+        // since we rely on the caller, do a basic check to ensure
+        // that finishRequest is being called following lookupRequest
+        assert(reqLookupResult->first == cpkt->getBlockAddr(linesize));
+        if (will_retry) {
+            // Undo any changes made in lookupRequest to the snoop filter
+            // entry if the request will come again. retryItem holds
+            // the previous value of the snoopfilter entry.
+            reqLookupResult->second = retryItem;
 
-    // Ultimately we should check if the packet came from an
-    // allocating source, not just if the port is snooping
-    bool allocate = !cpkt->req->isUncacheable() && slave_port.isSnooping();
-    if (!allocate)
-        return;
+            DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n",
+                    __func__,  retryItem.requested, retryItem.holder);
+        }
 
-    Addr line_addr = cpkt->getBlockAddr(linesize);
-    auto sf_it = cachedLocations.find(line_addr);
-    assert(sf_it != cachedLocations.end());
-    if (will_retry) {
-        // Undo any changes made in lookupRequest to the snoop filter
-        // entry if the request will come again. retryItem holds
-        // the previous value of the snoopfilter entry.
-        sf_it->second = retryItem;
-
-        DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n",
-                __func__,  retryItem.requested, retryItem.holder);
+        eraseIfNullEntry(reqLookupResult);
     }
-
-    eraseIfNullEntry(sf_it);
 }
 
 std::pair<SnoopFilter::SnoopList, Cycles>

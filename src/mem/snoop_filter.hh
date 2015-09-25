@@ -88,7 +88,8 @@ class SnoopFilter : public SimObject {
   public:
     typedef std::vector<QueuedSlavePort*> SnoopList;
 
-    SnoopFilter (const SnoopFilterParams *p) : SimObject(p),
+    SnoopFilter (const SnoopFilterParams *p) :
+        SimObject(p), reqLookupResult(cachedLocations.end()), retryItem{0, 0},
         linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency)
     {
     }
@@ -104,10 +105,12 @@ class SnoopFilter : public SimObject {
     }
 
     /**
-     * Lookup a request (from a slave port) in the snoop filter and return a
-     * list of other slave ports that need forwarding of the resulting snoops.
-     * Additionally, update the tracking structures with new request
-     * information.
+     * Lookup a request (from a slave port) in the snoop filter and
+     * return a list of other slave ports that need forwarding of the
+     * resulting snoops.  Additionally, update the tracking structures
+     * with new request information. Note that the caller must also
+     * call finishRequest once it is known if the request needs to
+     * retry or not.
      *
      * @param cpkt          Pointer to the request packet.  Not changed.
      * @param slave_port    Slave port where the request came from.
@@ -117,15 +120,15 @@ class SnoopFilter : public SimObject {
                                                const SlavePort& slave_port);
 
     /**
-     * For a successful request, update all data structures in the snoop filter
-     * reflecting the changes caused by that request
+     * For an un-successful request, revert the change to the snoop
+     * filter. Also take care of erasing any null entries. This method
+     * relies on the result from lookupRequest being stored in
+     * reqLookupResult.
      *
-     * @param cpkt          Pointer to the request packet.  Not changed.
-     * @param slave_port    Slave port where the request came from.
      * @param will_retry    This request will retry on this bus / snoop filter
+     * @param cpkt     Request packet, merely for sanity checking
      */
-    void updateRequest(const Packet* cpkt, const SlavePort& slave_port,
-                       bool will_retry);
+    void finishRequest(bool will_retry, const Packet* cpkt);
 
     /**
      * Handle an incoming snoop from below (the master port).  These can upgrade the
@@ -235,8 +238,13 @@ class SnoopFilter : public SimObject {
     /** Simple hash set of cached addresses. */
     SnoopFilterCache cachedLocations;
     /**
+     * Iterator used to store the result from lookupRequest until we
+     * call finishRequest.
+     */
+    SnoopFilterCache::iterator reqLookupResult;
+    /**
      * Variable to temporarily store value of snoopfilter entry
-     * incase updateRequest needs to undo changes made in lookupRequest
+     * incase finishRequest needs to undo changes made in lookupRequest
      * (because of crossbar retry)
      */
     SnoopItem retryItem;

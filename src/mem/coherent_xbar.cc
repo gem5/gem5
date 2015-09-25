@@ -235,7 +235,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     if (snoopFilter && !system->bypassCaches()) {
         // Let the snoop filter know about the success of the send operation
-        snoopFilter->updateRequest(pkt, *src_port, !success);
+        snoopFilter->finishRequest(!success, pkt);
     }
 
     // check if we were successful in sending the packet onwards
@@ -610,7 +610,7 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
             // operation, and do it even before sending it onwards to
             // avoid situations where atomic upward snoops sneak in
             // between and change the filter state
-            snoopFilter->updateRequest(pkt, *slavePorts[slave_port_id], false);
+            snoopFilter->finishRequest(false, pkt);
 
             snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
                                          sf_res.first);
