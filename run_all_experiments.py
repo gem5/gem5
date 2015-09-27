@@ -24,7 +24,7 @@ for bench in benches:
 
         cmd_first_run = 'build/X86_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --num-cpus=' \
                         + str(num_thread) + ' --script=ext/parsec/2.1/run_scripts/' \
-                        + bench + '_' + str(num_thread) + 'c_simsmall_chkpts.rcS'
+                        + bench + '_' + str(num_thread) + 'c_simsmall_ckpts.rcS'
         os.system(cmd_first_run)
 
         cmd_second_run = 'build/X86_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --cpu-type=timing --num-cpus=' \
