@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# File to run the freqmine benchmark
+
+cd /parsec/install/bin.ckpts
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./freqmine /parsec/install/inputs/freqmine/kosarak_990k.dat 790
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the rtview benchmark
+
+cd /parsec/install/bin
+/sbin/m5 switchcpu
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./rtview /parsec/install/inputs/rtview/happy_buddha.obj -nodisplay -automove -nthreads 4 -frames 3 -res 1920 1080
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

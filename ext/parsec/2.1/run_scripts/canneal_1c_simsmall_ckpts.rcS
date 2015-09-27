@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# File to run the canneal benchmark
+
+cd /parsec/install/bin.ckpts
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./canneal 1 10000 2000 /parsec/install/inputs/canneal/100000.nets 32
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

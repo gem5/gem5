@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the blackscholes benchmark
+
+cd /parsec/install/bin
+/sbin/m5 switchcpu
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./blackscholes 1 /parsec/install/inputs/blackscholes/in_4K.txt /parsec/install/inputs/blackscholes/prices.txt
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the streamcluster benchmark
+
+cd /parsec/install/bin
+/sbin/m5 switchcpu
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./streamcluster 10 20 64 8192 8192 1000 none /parsec/install/inputs/streamcluster/output.txt 16
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

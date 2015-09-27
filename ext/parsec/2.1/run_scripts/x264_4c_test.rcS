@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the x264 benchmark
+
+cd /parsec/install/bin
+/sbin/m5 switchcpu
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./x264 --quiet --qp 20 --partitions b8x8,i4x4 --ref 5 --direct auto --b-pyramid --weightb --mixed-refs --no-fast-pskip --me umh --subme 7 --analyse b8x8,i4x4 --threads 4 -o /parsec/install/inputs/x264/eledream.264 /parsec/install/inputs/x264/eledream_32x18_1.y4m
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

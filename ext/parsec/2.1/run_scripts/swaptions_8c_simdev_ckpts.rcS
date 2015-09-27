@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# File to run the swaptions benchmark
+
+cd /parsec/install/bin.ckpts
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./swaptions -ns 3 -sm 50 -nt 8
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

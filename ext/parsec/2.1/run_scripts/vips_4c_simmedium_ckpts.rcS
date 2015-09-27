@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the vips benchmark
+
+export IM_CONCURRENCY=4
+cd /parsec/install/bin.ckpts
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./vips im_benchmark /parsec/install/inputs/vips/vulture_2336x2336.v /parsec/install/inputs/vips/output.v
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

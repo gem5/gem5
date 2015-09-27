@@ -1,0 +1,62 @@
+#!/bin/sh
+
+#
+# This is a tricky script to understand. When run in M5, it creates
+# a checkpoint after Linux boot up, but before any benchmarks have
+# been run. By playing around with environment variables, we can
+# detect whether the checkpoint has been taken.
+#  - If the checkpoint hasn't been taken, the script allows M5 to checkpoint the system,
+# re-read this script into a new tmp file, and re-run it. On the
+# second execution of this script (checkpoint has been taken), the
+# environment variable is already set, so the script will exit the
+# simulation
+#  - When we restore the simulation from a checkpoint, we can
+# specify a new script for M5 to execute in the full-system simulation,
+# and it will be executed as if a checkpoint had just been taken.
+#
+# Author:
+#   Joel Hestness, hestness@cs.utexas.edu
+#   while at AMD Research and Advanced Development Lab
+# Date:
+#   10/5/2010
+#
+
+# Test if the RUNSCRIPT_VAR environment variable is already set
+if [ "${RUNSCRIPT_VAR+set}" != set ]
+then
+	# Signal our future self that it's safe to continue
+	export RUNSCRIPT_VAR=1
+else
+	# We've already executed once, so we should exit
+	/sbin/m5 exit
+fi
+
+# Checkpoint the first execution
+echo "Checkpointing simulation..."
+/sbin/m5 checkpoint
+
+# Test if we previously okayed ourselves to run this script
+if [ "$RUNSCRIPT_VAR" -eq 1 ]
+then
+
+	# Signal our future self not to recurse infinitely
+	export RUNSCRIPT_VAR=2
+
+	# Read the script for the checkpoint restored execution
+	echo "Loading new script..."
+	/sbin/m5 readfile > /tmp/runscript
+	chmod 755 /tmp/runscript
+
+	# Execute the new runscript
+	if [ -s /tmp/runscript ]
+	then
+		exec /tmp/runscript
+	else
+		echo "Script not specified. Dropping into shell..."
+		/bin/bash
+	fi
+
+fi
+
+echo "Fell through script. Exiting..."
+/sbin/m5 exit

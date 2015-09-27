@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the freqmine benchmark
+
+cd /parsec/install/bin
+/sbin/m5 switchcpu
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./freqmine /parsec/install/inputs/freqmine/T10I4D100K_1k.dat 3
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# File to run the bodytrack benchmark
+
+cd /parsec/install/bin
+/sbin/m5 switchcpu
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+./bodytrack /parsec/install/inputs/bodytrack/sequenceB_1 4 1 100 3 0 4
+echo "Done :D"
+/sbin/m5 exit
+/sbin/m5 exit
