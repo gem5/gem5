@@ -29,7 +29,6 @@ for bench in benches:
 
         cmd_second_run = 'build/X86_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --cpu-type=timing --num-cpus=' \
                          + str(num_thread) \
-                         + ' --caches --l2cache --num-l2caches=' \
-                         + 1 \
+                         + ' --caches --l2cache --num-l2caches=1' \
                          + ' --l1d_size=32kB --l1i_size=32kB --l2_size=256kB --checkpoint-restore=1'
         os.system(cmd_second_run)
