@@ -621,7 +621,8 @@ def makeLinuxX86System(mem_mode, numCPUs=1, mdesc=None, Ruby=False,
     if not cmdline:
         cmdline = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1'
     self.boot_osflags = fillInCmdline(mdesc, cmdline)
-    self.kernel = binary('x86_64-vmlinux-2.6.22.9')
+    # self.kernel = binary('x86_64-vmlinux-2.6.22.9')
+    self.kernel = binary('x86_64-vmlinux-2.6.22.9.smp')
     return self
 
 
