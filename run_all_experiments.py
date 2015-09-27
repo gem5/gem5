@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #
-# A Python script to generate all common-case runscripts for parsec 2.1 benchmarks.
+# A Python script to run all checkpoint-based experiments for PARSEC 2.1 benchmarks.
 #
 # Copyright (C) Min Cai 2015
 #
