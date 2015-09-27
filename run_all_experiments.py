@@ -18,16 +18,16 @@ num_threads = [4]
 
 for bench in benches:
     for num_thread in num_threads:
-        dir = '-d m5out/' + bench +'/' + str(num_thread) + 'c/'
+        dir = 'm5out/' + bench +'/' + str(num_thread) + 'c/'
 
         os.system('mkdir -p ' + dir)
 
-        cmd_first_run = 'build/X86_MESI_Two_Level/gem5.debug ' + dir + ' configs/example/fs.py --num-cpus=' \
+        cmd_first_run = 'build/X86_MESI_Two_Level/gem5.debug -d ' + dir + ' configs/example/fs.py --num-cpus=' \
                         + str(num_thread) + ' --script=ext/parsec/2.1/run_scripts/' \
                         + bench + '_' + str(num_thread) + 'c_simsmall_chkpts.rcS'
         os.system(cmd_first_run)
 
-        cmd_second_run = 'build/X86_MESI_Two_Level/gem5.debug ' + dir + ' configs/example/fs.py --cpu-type=timing --num-cpus=' \
+        cmd_second_run = 'build/X86_MESI_Two_Level/gem5.debug -d ' + dir + ' configs/example/fs.py --cpu-type=timing --num-cpus=' \
                          + str(num_thread) \
                          + ' --caches --l2cache --num-l2caches=' \
                          + str(num_thread) \
