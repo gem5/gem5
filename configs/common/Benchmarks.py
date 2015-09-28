@@ -56,7 +56,8 @@ class SysConfig:
         if self.diskname:
             return disk(self.diskname)
         elif buildEnv['TARGET_ISA'] == 'alpha':
-            return env.get('LINUX_IMAGE', disk('linux-latest.img'))
+            # return env.get('LINUX_IMAGE', disk('linux-latest.img'))
+            return env.get('LINUX_IMAGE', disk('linux-parsec-2-1-m5-with-test-inputs.img'))
         elif buildEnv['TARGET_ISA'] == 'x86':
             # return env.get('LINUX_IMAGE', disk('linux-x86.img'))
             return env.get('LINUX_IMAGE', disk('x86root-parsec.img'))
