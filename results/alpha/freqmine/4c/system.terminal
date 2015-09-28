@@ -4,3 +4,26 @@ freqmine(783): unaligned trap at 00000001200066c4: 00000200014dae14 2d 16
 freqmine(782): unaligned trap at 00000001200066c4: 0000020000236364 2d 16
 freqmine(782): unaligned trap at 00000001200066d4: 0000020000236374 2d 7
 freqmine(782): unaligned trap at 00000001200066ec: 000002000023635c 2d 5
+[HOOKS] Leaving ROI
+1425
+11337
+34098
+63741
+99770
+149038
+199629
+221458
+198502
+143333
+83353
+39081
+14773
+4463
+1043
+176
+19
+1
+the data preparation cost 1.305272 seconds, the FPgrowth cost 2.671118 seconds
+[HOOKS] Total time spent in ROI: 3.972s
+[HOOKS] Terminating
+Done :D

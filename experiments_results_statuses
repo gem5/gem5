@@ -7,8 +7,8 @@ dedup                       done
 facesim                     running
 ferret                      done
 fluidanimate                done
-freqmine                    running
+freqmine                    done
 streamcluster               done
 swaptions                   done with errors (serial8250: too much work for irq4)
 vips                        done
-x264                        running
+x264                        done
