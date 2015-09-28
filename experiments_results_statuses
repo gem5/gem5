@@ -1,0 +1,14 @@
+ALPHA/4c/simsmall:
+
+blackscholes                done
+bodytrack                   done
+canneal                     done
+dedup                       done
+facesim                     running
+ferret                      done
+fluidanimate                done
+freqmine                    running
+streamcluster               done
+swaptions                   done with errors (serial8250: too much work for irq4)
+vips                        running
+x264                        running

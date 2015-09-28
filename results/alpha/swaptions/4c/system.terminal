@@ -1,0 +1,26 @@
+f Simulations: 5000,  Number of threads: 4 Number of swaptions: 16
+[HOOKS] Entering ROI
+[HOOKS] Leaving ROI
+Swaption0: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption1: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption2: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption3: [SwaptionPrice: 0.0000234735 StdError: 0.00000835serial8250: too much work for irq4
+99] 
+Swaption4: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption5: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption6: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption7: [SwaptionPrice: 0.0000234735 StdError: 0.00serial8250: too much work for irq4
+00083599] 
+Swaption8: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption9: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption10: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption11: [SwaptionPrice: 0.0000234735 StdErrserial8250: too much work for irq4
+or: 0.0000083599] 
+Swaption12: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption13: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption14: [SwaptionPrice: 0.0000234735 StdError: 0.0000083599] 
+Swaption15: [SwaptionPrice: 0.0000234serial8250: too much work for irq4
+735 StdError: 0.0000083599] 
+[HOOKS] Total time spent in ROI: 0.424s
+[HOOKS] Terminating
+Done :D

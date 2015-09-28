@@ -1,0 +1,6 @@
+HOOKS] Entering ROI
+transaction number is 250000
+freqmine(783): unaligned trap at 00000001200066c4: 00000200014dae14 2d 16
+freqmine(782): unaligned trap at 00000001200066c4: 0000020000236364 2d 16
+freqmine(782): unaligned trap at 00000001200066d4: 0000020000236374 2d 7
+freqmine(782): unaligned trap at 00000001200066ec: 000002000023635c 2d 5

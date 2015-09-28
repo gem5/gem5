@@ -1,0 +1,22 @@
+HOOKS] Entering ROI
+(3,1)
+(4,2)
+(4,3)
+(7,4)
+(7,5)
+(10,6)
+(10,7)
+(10,8)
+(13,9)
+(16,10)
+(16,11)
+(16,12)
+(16,13)
+(16,14)
+(16,15)
+(16,16)
+[HOOKS] Leaving ROI
+QUERY TIME: 1.322 seconds
+[HOOKS] Total time spent in ROI: 1.322s
+[HOOKS] Terminating
+Done :D
