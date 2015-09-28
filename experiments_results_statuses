@@ -10,5 +10,5 @@ fluidanimate                done
 freqmine                    running
 streamcluster               done
 swaptions                   done with errors (serial8250: too much work for irq4)
-vips                        running
+vips                        done
 x264                        running
