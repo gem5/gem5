@@ -1,0 +1,69 @@
+HOOKS] Entering ROI
+INFO: task ferret:783 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ferret        D 0000000000000000     0   783    775
+fffffc001f073da8 0000000000000001 fffffc000036e078 fffffc001f65c0c0 
+       00000000003b9a4d 0000000000000003 fffffc000035a16c 0000000000000000 
+       fffffc000036ddc0 fffffc000086bf40 fffffc000081bf40 fffffc000035a0f0 
+       fffffc0000819040 fffffc001f063ea8 fffffc0000000063 fffffc0000811b80 
+       fffffc00008113b8 fffffc00003111d0 fffffc00003111e8 fffffc001f05fd40 
+       fffffc001f05fce8 fffffc0000821760 0000000000000000 0000000000000000 
+Trace:
+[<fffffc000036e078>] watchdog+0x2b8/0x320
+[<fffffc000035a16c>] kthread+0x7c/0xd0
+[<fffffc000036ddc0>] watchdog+0x0/0x320
+[<fffffc000035a0f0>] kthread+0x0/0xd0
+[<fffffc00003111d0>] kernel_thread+0x10/0x90
+[<fffffc00003111e8>] kernel_thread+0x28/0x90
+
+INFO: task ferret:784 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ferret        D 0000000000000000     0   784    775
+fffffc001f073da8 0000000000000001 fffffc000036e078 fffffc001f65cf00 
+       00000000003b9a4d 0000000000000003 fffffc000035a16c 0000000000000000 
+       fffffc000036ddc0 fffffc000086bf40 fffffc000081bf40 fffffc000035a0f0 
+       fffffc0000819040 fffffc001f063ea8 fffffc0000000063 fffffc0000811b80 
+       fffffc00008113b8 fffffc00003111d0 fffffc00003111e8 fffffc001f05fd40 
+       fffffc001f05fce8 fffffc0000821760 0000000000000000 0000000000000000 
+Trace:
+[<fffffc000036e078>] watchdog+0x2b8/0x320
+[<fffffc000035a16c>] kthread+0x7c/0xd0
+[<fffffc000036ddc0>] watchdog+0x0/0x320
+[<fffffc000035a0f0>] kthread+0x0/0xd0
+[<fffffc00003111d0>] kernel_thread+0x10/0x90
+[<fffffc00003111e8>] kernel_thread+0x28/0x90
+
+INFO: task ferret:783 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ferret        D 0000000000000000     0   783    775
+fffffc001f073da8 0000000000000001 fffffc000036e078 fffffc001f65c0c0 
+       00000000003b9ac9 0000000000000003 fffffc000035a16c 0000000000000000 
+       fffffc000036ddc0 fffffc000086bf40 fffffc000081bf40 fffffc000035a0f0 
+       fffffc0000819040 fffffc001f063ea8 fffffc0000000063 fffffc0000811b80 
+       fffffc00008113b8 fffffc00003111d0 fffffc00003111e8 fffffc001f05fd40 
+       fffffc001f05fce8 fffffc0000821760 0000000000000000 0000000000000000 
+Trace:
+[<fffffc000036e078>] watchdog+0x2b8/0x320
+[<fffffc000035a16c>] kthread+0x7c/0xd0
+[<fffffc000036ddc0>] watchdog+0x0/0x320
+[<fffffc000035a0f0>] kthread+0x0/0xd0
+[<fffffc00003111d0>] kernel_thread+0x10/0x90
+[<fffffc00003111e8>] kernel_thread+0x28/0x90
+
+INFO: task ferret:784 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ferret        D 0000000000000000     0   784    775
+fffffc001f073da8 0000000000000001 fffffc000036e078 fffffc001f65cf00 
+       00000000003b9ac9 0000000000000003 fffffc000035a16c 0000000000000000 
+       fffffc000036ddc0 fffffc000086bf40 fffffc000081bf40 fffffc000035a0f0 
+       fffffc0000819040 fffffc001f063ea8 fffffc0000000063 fffffc0000811b80 
+       fffffc00008113b8 fffffc00003111d0 fffffc00003111e8 fffffc001f05fd40 
+       fffffc001f05fce8 fffffc0000821760 0000000000000000 0000000000000000 
+Trace:
+[<fffffc000036e078>] watchdog+0x2b8/0x320
+[<fffffc000035a16c>] kthread+0x7c/0xd0
+[<fffffc000036ddc0>] watchdog+0x0/0x320
+[<fffffc000035a0f0>] kthread+0x0/0xd0
+[<fffffc00003111d0>] kernel_thread+0x10/0x90
+[<fffffc00003111e8>] kernel_thread+0x28/0x90
+

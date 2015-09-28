@@ -1,0 +1,3959 @@
+digraph G {
+ranksep="1.3";
+subgraph cluster_root {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;full_system&#61;true&#10;sim_quantum&#61;0&#10;time_sync_enable&#61;false&#10;time_sync_period&#61;100000000000&#10;time_sync_spin_threshold&#61;100000000";
+label="root \n: Root";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="boot_cpu_frequency&#61;500&#10;boot_osflags&#61;root=/dev/hda1 console=ttyS0&#10;cache_line_size&#61;64&#10;clk_domain&#61;system.clk_domain&#10;console&#61;/home/itecgo/Tools/GEM5/system/binaries/console&#10;eventq_index&#61;0&#10;init_param&#61;0&#10;kernel&#61;/home/itecgo/Tools/GEM5/system/binaries/vmlinux_2.6.27-gcc_4.3.4&#10;kernel_addr_check&#61;true&#10;load_addr_mask&#61;1099511627775&#10;load_offset&#61;0&#10;mem_mode&#61;timing&#10;mem_ranges&#61;0:536870911&#10;memories&#61;system.mem_ctrls0 system.mem_ctrls1 system.mem_ctrls2 system.mem_ctrls3&#10;mmap_using_noreserve&#61;false&#10;num_work_ids&#61;16&#10;pal&#61;/home/itecgo/Tools/GEM5/system/binaries/tsb_osfpal&#10;readfile&#61;&#10;symbolfile&#61;&#10;system_rev&#61;1024&#10;system_type&#61;34&#10;work_begin_ckpt_count&#61;0&#10;work_begin_cpu_id_exit&#61;-1&#10;work_begin_exit_count&#61;0&#10;work_cpus_ckpt_count&#61;0&#10;work_end_ckpt_count&#61;0&#10;work_end_exit_count&#61;0&#10;work_item_id&#61;-1";
+label="system \n: LinuxAlphaSystem";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#e4e7eb";
+fontcolor="#000000";
+system_system_port [fontname=Arial, color="#000000", style="rounded, filled", label=system_port, shape=Mrecord, fontsize=14, fillcolor="#b6b8bc", fontcolor="#000000"];
+subgraph cluster_system_terminal {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;intr_control&#61;system.intrctrl&#10;number&#61;0&#10;output&#61;true&#10;port&#61;3456";
+label="terminal \n: Terminal";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_disk0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="delay&#61;1000000&#10;driveID&#61;master&#10;eventq_index&#61;0&#10;image&#61;system.disk0.image";
+label="disk0 \n: CowIdeDisk";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_disk0_image {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="child&#61;system.disk0.image.child&#10;eventq_index&#61;0&#10;image_file&#61;&#10;read_only&#61;false&#10;table_size&#61;65536";
+label="image \n: CowDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_disk0_image_child {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;image_file&#61;/home/itecgo/Tools/GEM5/system/disks/linux-parsec-2-1-m5-with-test-inputs.img&#10;read_only&#61;true";
+label="child \n: RawDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+}
+
+}
+
+subgraph cluster_system_ruby {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="access_backing_store&#61;false&#10;all_instructions&#61;false&#10;block_size_bytes&#61;64&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;hot_lines&#61;false&#10;memory_size_bits&#61;48&#10;num_of_sequencers&#61;4&#10;phys_mem&#61;Null&#10;randomization&#61;false";
+label="ruby \n: RubySystem";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="L1Dcache&#61;system.ruby.l1_cntrl0.L1Dcache&#10;L1Icache&#61;system.ruby.l1_cntrl0.L1Icache&#10;buffer_size&#61;0&#10;clk_domain&#61;system.cpu_clk_domain&#10;cluster_id&#61;0&#10;enable_prefetch&#61;false&#10;eventq_index&#61;0&#10;l1_request_latency&#61;2&#10;l1_response_latency&#61;2&#10;l2_select_num_bits&#61;0&#10;mandatoryQueue&#61;system.ruby.l1_cntrl0.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;optionalQueue&#61;system.ruby.l1_cntrl0.optionalQueue&#10;prefetcher&#61;system.ruby.l1_cntrl0.prefetcher&#10;recycle_latency&#61;10&#10;requestFromL1Cache&#61;system.ruby.l1_cntrl0.requestFromL1Cache&#10;requestToL1Cache&#61;system.ruby.l1_cntrl0.requestToL1Cache&#10;responseFromL1Cache&#61;system.ruby.l1_cntrl0.responseFromL1Cache&#10;responseToL1Cache&#61;system.ruby.l1_cntrl0.responseToL1Cache&#10;ruby_system&#61;system.ruby&#10;send_evictions&#61;false&#10;sequencer&#61;system.ruby.l1_cntrl0.sequencer&#10;system&#61;system&#10;to_l2_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;unblockFromL1Cache&#61;system.ruby.l1_cntrl0.unblockFromL1Cache&#10;version&#61;0";
+label="l1_cntrl0 \n: L1Cache_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl0_responseToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl0_responseToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_L1Dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;false&#10;replacement_policy&#61;system.ruby.l1_cntrl0.L1Dcache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Dcache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl0_L1Dcache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_unblockFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="unblockFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl0_unblockFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_requestFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl0_requestFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_optionalQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="optionalQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_prefetcher {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="cross_page&#61;false&#10;eventq_index&#61;0&#10;nonunit_filter&#61;8&#10;num_startup_pfs&#61;1&#10;num_streams&#61;4&#10;pf_per_stream&#61;1&#10;sys&#61;system&#10;train_misses&#61;4&#10;unit_filter&#61;8";
+label="prefetcher \n: Prefetcher";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_requestToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl0_requestToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.cpu_clk_domain&#10;dcache&#61;system.ruby.l1_cntrl0.L1Dcache&#10;dcache_hit_latency&#61;1&#10;deadlock_threshold&#61;500000&#10;eventq_index&#61;0&#10;icache&#61;system.ruby.l1_cntrl0.L1Icache&#10;icache_hit_latency&#61;1&#10;max_outstanding_requests&#61;16&#10;ruby_system&#61;system.ruby&#10;support_data_reqs&#61;true&#10;support_inst_reqs&#61;true&#10;system&#61;system&#10;using_network_tester&#61;false&#10;using_ruby_tester&#61;false&#10;version&#61;0";
+label="sequencer \n: RubySequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl0_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl0_sequencer_mem_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=mem_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl0_sequencer_pio_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=pio_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_L1Icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;true&#10;replacement_policy&#61;system.ruby.l1_cntrl0.L1Icache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Icache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl0_L1Icache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl0_responseFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl0_responseFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_network {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffers_per_ctrl_vc&#61;1&#10;buffers_per_data_vc&#61;4&#10;clk_domain&#61;system.ruby.clk_domain&#10;control_msg_size&#61;8&#10;enable_fault_model&#61;false&#10;eventq_index&#61;0&#10;ext_links&#61;system.ruby.network.ext_links00 system.ruby.network.ext_links01 system.ruby.network.ext_links02 system.ruby.network.ext_links03 system.ruby.network.ext_links04 system.ruby.network.ext_links05 system.ruby.network.ext_links06 system.ruby.network.ext_links07 system.ruby.network.ext_links08 system.ruby.network.ext_links09 system.ruby.network.ext_links10 system.ruby.network.ext_links11&#10;fault_model&#61;Null&#10;int_links&#61;system.ruby.network.int_links0 system.ruby.network.int_links1 system.ruby.network.int_links2 system.ruby.network.int_links3&#10;netifs&#61;system.ruby.network.netifs00 system.ruby.network.netifs01 system.ruby.network.netifs02 system.ruby.network.netifs03 system.ruby.network.netifs04 system.ruby.network.netifs05 system.ruby.network.netifs06 system.ruby.network.netifs07 system.ruby.network.netifs08 system.ruby.network.netifs09 system.ruby.network.netifs10 system.ruby.network.netifs11&#10;ni_flit_size&#61;16&#10;number_of_virtual_networks&#61;3&#10;routers&#61;system.ruby.network.routers0 system.ruby.network.routers1 system.ruby.network.routers2 system.ruby.network.routers3&#10;ruby_system&#61;system.ruby&#10;topology&#61;Mesh&#10;vcs_per_vnet&#61;4";
+label="network \n: GarnetNetwork_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+system_ruby_network_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#7f7c77", fontcolor="#000000"];
+system_ruby_network_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#7f7c77", fontcolor="#000000"];
+subgraph cluster_system_ruby_network_int_links0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.int_links0.cls0 system.ruby.network.int_links0.cls1&#10;eventq_index&#61;0&#10;latency&#61;1&#10;link_id&#61;12&#10;network_links&#61;system.ruby.network.int_links0.nls0 system.ruby.network.int_links0.nls1&#10;node_a&#61;system.ruby.network.routers0&#10;node_b&#61;system.ruby.network.routers1&#10;weight&#61;1";
+label="int_links0 \n: GarnetIntLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_int_links0_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;12&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links0_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;12&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links0_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;12&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links0_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;12&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links0_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;12&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links0_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;12&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_int_links1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.int_links1.cls0 system.ruby.network.int_links1.cls1&#10;eventq_index&#61;0&#10;latency&#61;1&#10;link_id&#61;13&#10;network_links&#61;system.ruby.network.int_links1.nls0 system.ruby.network.int_links1.nls1&#10;node_a&#61;system.ruby.network.routers2&#10;node_b&#61;system.ruby.network.routers3&#10;weight&#61;1";
+label="int_links1 \n: GarnetIntLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_int_links1_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;13&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links1_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;13&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links1_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;13&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links1_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;13&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links1_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;13&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links1_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;13&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_int_links2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.int_links2.cls0 system.ruby.network.int_links2.cls1&#10;eventq_index&#61;0&#10;latency&#61;1&#10;link_id&#61;14&#10;network_links&#61;system.ruby.network.int_links2.nls0 system.ruby.network.int_links2.nls1&#10;node_a&#61;system.ruby.network.routers0&#10;node_b&#61;system.ruby.network.routers2&#10;weight&#61;2";
+label="int_links2 \n: GarnetIntLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_int_links2_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;14&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links2_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;14&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links2_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;14&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links2_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;14&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links2_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;14&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links2_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;14&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_int_links3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.int_links3.cls0 system.ruby.network.int_links3.cls1&#10;eventq_index&#61;0&#10;latency&#61;1&#10;link_id&#61;15&#10;network_links&#61;system.ruby.network.int_links3.nls0 system.ruby.network.int_links3.nls1&#10;node_a&#61;system.ruby.network.routers1&#10;node_b&#61;system.ruby.network.routers3&#10;weight&#61;2";
+label="int_links3 \n: GarnetIntLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_int_links3_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;15&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links3_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;15&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links3_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;15&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links3_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;15&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links3_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;15&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_int_links3_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;15&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_routers0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;router_id&#61;0&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="routers0 \n: GarnetRouter_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_routers1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;router_id&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="routers1 \n: GarnetRouter_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_routers2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;router_id&#61;2&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="routers2 \n: GarnetRouter_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_routers3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;router_id&#61;3&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="routers3 \n: GarnetRouter_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs00 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;0&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs00 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs01 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs01 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs02 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;2&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs02 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs03 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;3&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs03 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs04 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;4&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs04 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs05 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;5&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs05 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs06 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;6&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs06 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs07 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;7&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs07 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs08 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;8&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs08 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs09 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;9&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs09 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs10 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;10&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs10 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_netifs11 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;id&#61;11&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="netifs11 \n: GarnetNetworkInterface_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links00 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links00.cls0 system.ruby.network.ext_links00.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.l1_cntrl0&#10;int_node&#61;system.ruby.network.routers0&#10;latency&#61;1&#10;link_id&#61;0&#10;network_links&#61;system.ruby.network.ext_links00.nls0 system.ruby.network.ext_links00.nls1&#10;weight&#61;1";
+label="ext_links00 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links00_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;0&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links00_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;0&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links00_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;0&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links00_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;0&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links00_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;0&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links00_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;0&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links01 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links01.cls0 system.ruby.network.ext_links01.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.l1_cntrl1&#10;int_node&#61;system.ruby.network.routers1&#10;latency&#61;1&#10;link_id&#61;1&#10;network_links&#61;system.ruby.network.ext_links01.nls0 system.ruby.network.ext_links01.nls1&#10;weight&#61;1";
+label="ext_links01 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links01_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;1&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links01_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;1&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links01_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;1&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links01_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;1&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links01_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;1&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links01_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;1&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links02 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links02.cls0 system.ruby.network.ext_links02.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.l1_cntrl2&#10;int_node&#61;system.ruby.network.routers2&#10;latency&#61;1&#10;link_id&#61;2&#10;network_links&#61;system.ruby.network.ext_links02.nls0 system.ruby.network.ext_links02.nls1&#10;weight&#61;1";
+label="ext_links02 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links02_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;2&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links02_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;2&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links02_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;2&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links02_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;2&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links02_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;2&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links02_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;2&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links03 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links03.cls0 system.ruby.network.ext_links03.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.l1_cntrl3&#10;int_node&#61;system.ruby.network.routers3&#10;latency&#61;1&#10;link_id&#61;3&#10;network_links&#61;system.ruby.network.ext_links03.nls0 system.ruby.network.ext_links03.nls1&#10;weight&#61;1";
+label="ext_links03 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links03_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;3&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links03_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;3&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links03_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;3&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links03_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;3&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links03_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;3&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links03_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;3&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links04 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links04.cls0 system.ruby.network.ext_links04.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.l2_cntrl0&#10;int_node&#61;system.ruby.network.routers0&#10;latency&#61;1&#10;link_id&#61;4&#10;network_links&#61;system.ruby.network.ext_links04.nls0 system.ruby.network.ext_links04.nls1&#10;weight&#61;1";
+label="ext_links04 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links04_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;4&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links04_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;4&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links04_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;4&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links04_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;4&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links04_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;4&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links04_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;4&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links05 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links05.cls0 system.ruby.network.ext_links05.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.dir_cntrl0&#10;int_node&#61;system.ruby.network.routers1&#10;latency&#61;1&#10;link_id&#61;5&#10;network_links&#61;system.ruby.network.ext_links05.nls0 system.ruby.network.ext_links05.nls1&#10;weight&#61;1";
+label="ext_links05 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links05_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;5&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links05_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;5&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links05_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;5&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links05_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;5&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links05_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;5&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links05_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;5&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links06 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links06.cls0 system.ruby.network.ext_links06.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.dir_cntrl1&#10;int_node&#61;system.ruby.network.routers2&#10;latency&#61;1&#10;link_id&#61;6&#10;network_links&#61;system.ruby.network.ext_links06.nls0 system.ruby.network.ext_links06.nls1&#10;weight&#61;1";
+label="ext_links06 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links06_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;6&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links06_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;6&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links06_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;6&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links06_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;6&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links06_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;6&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links06_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;6&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links07 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links07.cls0 system.ruby.network.ext_links07.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.dir_cntrl2&#10;int_node&#61;system.ruby.network.routers3&#10;latency&#61;1&#10;link_id&#61;7&#10;network_links&#61;system.ruby.network.ext_links07.nls0 system.ruby.network.ext_links07.nls1&#10;weight&#61;1";
+label="ext_links07 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links07_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;7&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links07_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;7&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links07_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;7&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links07_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;7&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links07_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;7&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links07_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;7&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links08 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links08.cls0 system.ruby.network.ext_links08.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.dir_cntrl3&#10;int_node&#61;system.ruby.network.routers0&#10;latency&#61;1&#10;link_id&#61;8&#10;network_links&#61;system.ruby.network.ext_links08.nls0 system.ruby.network.ext_links08.nls1&#10;weight&#61;1";
+label="ext_links08 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links08_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;8&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links08_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;8&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links08_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;8&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links08_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;8&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links08_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;8&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links08_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;8&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links09 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links09.cls0 system.ruby.network.ext_links09.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.dma_cntrl0&#10;int_node&#61;system.ruby.network.routers1&#10;latency&#61;1&#10;link_id&#61;9&#10;network_links&#61;system.ruby.network.ext_links09.nls0 system.ruby.network.ext_links09.nls1&#10;weight&#61;1";
+label="ext_links09 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links09_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;9&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links09_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;9&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links09_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;9&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links09_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;9&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links09_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;9&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links09_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;9&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links10 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links10.cls0 system.ruby.network.ext_links10.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.dma_cntrl1&#10;int_node&#61;system.ruby.network.routers2&#10;latency&#61;1&#10;link_id&#61;10&#10;network_links&#61;system.ruby.network.ext_links10.nls0 system.ruby.network.ext_links10.nls1&#10;weight&#61;1";
+label="ext_links10 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links10_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;10&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links10_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;10&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links10_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;10&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links10_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;10&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links10_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;10&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links10_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;10&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_network_ext_links11 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bandwidth_factor&#61;16&#10;credit_links&#61;system.ruby.network.ext_links11.cls0 system.ruby.network.ext_links11.cls1&#10;eventq_index&#61;0&#10;ext_node&#61;system.ruby.io_controller&#10;int_node&#61;system.ruby.network.routers3&#10;latency&#61;1&#10;link_id&#61;11&#10;network_links&#61;system.ruby.network.ext_links11.nls0 system.ruby.network.ext_links11.nls1&#10;weight&#61;1";
+label="ext_links11 \n: GarnetExtLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_network_ext_links11_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;11&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links11_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;11&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links11_nls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;11&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls0 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links11_nls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;11&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="nls1 \n: NetworkLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links11_cls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;11&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls0 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_network_ext_links11_cls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="channel_width&#61;16&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;link_id&#61;11&#10;link_latency&#61;1&#10;vcs_per_vnet&#61;4&#10;virt_nets&#61;3";
+label="cls1 \n: CreditLink_d";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="L1Dcache&#61;system.ruby.l1_cntrl2.L1Dcache&#10;L1Icache&#61;system.ruby.l1_cntrl2.L1Icache&#10;buffer_size&#61;0&#10;clk_domain&#61;system.cpu_clk_domain&#10;cluster_id&#61;0&#10;enable_prefetch&#61;false&#10;eventq_index&#61;0&#10;l1_request_latency&#61;2&#10;l1_response_latency&#61;2&#10;l2_select_num_bits&#61;0&#10;mandatoryQueue&#61;system.ruby.l1_cntrl2.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;optionalQueue&#61;system.ruby.l1_cntrl2.optionalQueue&#10;prefetcher&#61;system.ruby.l1_cntrl2.prefetcher&#10;recycle_latency&#61;10&#10;requestFromL1Cache&#61;system.ruby.l1_cntrl2.requestFromL1Cache&#10;requestToL1Cache&#61;system.ruby.l1_cntrl2.requestToL1Cache&#10;responseFromL1Cache&#61;system.ruby.l1_cntrl2.responseFromL1Cache&#10;responseToL1Cache&#61;system.ruby.l1_cntrl2.responseToL1Cache&#10;ruby_system&#61;system.ruby&#10;send_evictions&#61;false&#10;sequencer&#61;system.ruby.l1_cntrl2.sequencer&#10;system&#61;system&#10;to_l2_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;unblockFromL1Cache&#61;system.ruby.l1_cntrl2.unblockFromL1Cache&#10;version&#61;2";
+label="l1_cntrl2 \n: L1Cache_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl2_responseToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl2_responseToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_L1Dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;false&#10;replacement_policy&#61;system.ruby.l1_cntrl2.L1Dcache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Dcache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl2_L1Dcache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_unblockFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="unblockFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl2_unblockFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_requestFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl2_requestFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_optionalQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="optionalQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_prefetcher {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="cross_page&#61;false&#10;eventq_index&#61;0&#10;nonunit_filter&#61;8&#10;num_startup_pfs&#61;1&#10;num_streams&#61;4&#10;pf_per_stream&#61;1&#10;sys&#61;system&#10;train_misses&#61;4&#10;unit_filter&#61;8";
+label="prefetcher \n: Prefetcher";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_requestToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl2_requestToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.cpu_clk_domain&#10;dcache&#61;system.ruby.l1_cntrl2.L1Dcache&#10;dcache_hit_latency&#61;1&#10;deadlock_threshold&#61;500000&#10;eventq_index&#61;0&#10;icache&#61;system.ruby.l1_cntrl2.L1Icache&#10;icache_hit_latency&#61;1&#10;max_outstanding_requests&#61;16&#10;ruby_system&#61;system.ruby&#10;support_data_reqs&#61;true&#10;support_inst_reqs&#61;true&#10;system&#61;system&#10;using_network_tester&#61;false&#10;using_ruby_tester&#61;false&#10;version&#61;2";
+label="sequencer \n: RubySequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl2_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl2_sequencer_mem_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=mem_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl2_sequencer_pio_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=pio_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_L1Icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;true&#10;replacement_policy&#61;system.ruby.l1_cntrl2.L1Icache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Icache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl2_L1Icache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl2_responseFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl2_responseFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="L1Dcache&#61;system.ruby.l1_cntrl3.L1Dcache&#10;L1Icache&#61;system.ruby.l1_cntrl3.L1Icache&#10;buffer_size&#61;0&#10;clk_domain&#61;system.cpu_clk_domain&#10;cluster_id&#61;0&#10;enable_prefetch&#61;false&#10;eventq_index&#61;0&#10;l1_request_latency&#61;2&#10;l1_response_latency&#61;2&#10;l2_select_num_bits&#61;0&#10;mandatoryQueue&#61;system.ruby.l1_cntrl3.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;optionalQueue&#61;system.ruby.l1_cntrl3.optionalQueue&#10;prefetcher&#61;system.ruby.l1_cntrl3.prefetcher&#10;recycle_latency&#61;10&#10;requestFromL1Cache&#61;system.ruby.l1_cntrl3.requestFromL1Cache&#10;requestToL1Cache&#61;system.ruby.l1_cntrl3.requestToL1Cache&#10;responseFromL1Cache&#61;system.ruby.l1_cntrl3.responseFromL1Cache&#10;responseToL1Cache&#61;system.ruby.l1_cntrl3.responseToL1Cache&#10;ruby_system&#61;system.ruby&#10;send_evictions&#61;false&#10;sequencer&#61;system.ruby.l1_cntrl3.sequencer&#10;system&#61;system&#10;to_l2_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;unblockFromL1Cache&#61;system.ruby.l1_cntrl3.unblockFromL1Cache&#10;version&#61;3";
+label="l1_cntrl3 \n: L1Cache_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl3_responseToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl3_responseToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_L1Dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;false&#10;replacement_policy&#61;system.ruby.l1_cntrl3.L1Dcache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Dcache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl3_L1Dcache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_unblockFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="unblockFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl3_unblockFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_requestFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl3_requestFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_optionalQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="optionalQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_prefetcher {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="cross_page&#61;false&#10;eventq_index&#61;0&#10;nonunit_filter&#61;8&#10;num_startup_pfs&#61;1&#10;num_streams&#61;4&#10;pf_per_stream&#61;1&#10;sys&#61;system&#10;train_misses&#61;4&#10;unit_filter&#61;8";
+label="prefetcher \n: Prefetcher";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_requestToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl3_requestToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.cpu_clk_domain&#10;dcache&#61;system.ruby.l1_cntrl3.L1Dcache&#10;dcache_hit_latency&#61;1&#10;deadlock_threshold&#61;500000&#10;eventq_index&#61;0&#10;icache&#61;system.ruby.l1_cntrl3.L1Icache&#10;icache_hit_latency&#61;1&#10;max_outstanding_requests&#61;16&#10;ruby_system&#61;system.ruby&#10;support_data_reqs&#61;true&#10;support_inst_reqs&#61;true&#10;system&#61;system&#10;using_network_tester&#61;false&#10;using_ruby_tester&#61;false&#10;version&#61;3";
+label="sequencer \n: RubySequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl3_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl3_sequencer_mem_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=mem_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl3_sequencer_pio_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=pio_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_L1Icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;true&#10;replacement_policy&#61;system.ruby.l1_cntrl3.L1Icache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Icache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl3_L1Icache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl3_responseFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl3_responseFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_l2_cntrl0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="DirRequestFromL2Cache&#61;system.ruby.l2_cntrl0.DirRequestFromL2Cache&#10;L1RequestFromL2Cache&#61;system.ruby.l2_cntrl0.L1RequestFromL2Cache&#10;L1RequestToL2Cache&#61;system.ruby.l2_cntrl0.L1RequestToL2Cache&#10;L2cache&#61;system.ruby.l2_cntrl0.L2cache&#10;buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;eventq_index&#61;0&#10;l2_request_latency&#61;2&#10;l2_response_latency&#61;2&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;responseFromL2Cache&#61;system.ruby.l2_cntrl0.responseFromL2Cache&#10;responseToL2Cache&#61;system.ruby.l2_cntrl0.responseToL2Cache&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;to_l1_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;unblockToL2Cache&#61;system.ruby.l2_cntrl0.unblockToL2Cache&#10;version&#61;0";
+label="l2_cntrl0 \n: L2Cache_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l2_cntrl0_L1RequestToL2Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="L1RequestToL2Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l2_cntrl0_L1RequestToL2Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l2_cntrl0_responseFromL2Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromL2Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l2_cntrl0_responseFromL2Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l2_cntrl0_L1RequestFromL2Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="L1RequestFromL2Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l2_cntrl0_L1RequestFromL2Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l2_cntrl0_unblockToL2Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="unblockToL2Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l2_cntrl0_unblockToL2Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l2_cntrl0_L2cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;8&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;false&#10;replacement_policy&#61;system.ruby.l2_cntrl0.L2cache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;262144&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L2cache \n: L2Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l2_cntrl0_L2cache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;8&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;262144";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l2_cntrl0_DirRequestFromL2Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="DirRequestFromL2Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l2_cntrl0_DirRequestFromL2Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l2_cntrl0_responseToL2Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToL2Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l2_cntrl0_responseToL2Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_clk_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clock&#61;500&#10;domain_id&#61;-1&#10;eventq_index&#61;0&#10;init_perf_level&#61;0&#10;voltage_domain&#61;system.voltage_domain";
+label="clk_domain \n: SrcClockDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dma_cntrl0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;dma_sequencer&#61;system.ruby.dma_cntrl0.dma_sequencer&#10;eventq_index&#61;0&#10;mandatoryQueue&#61;system.ruby.dma_cntrl0.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.dma_cntrl0.requestToDir&#10;request_latency&#61;6&#10;responseFromDir&#61;system.ruby.dma_cntrl0.responseFromDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;transitions_per_cycle&#61;4&#10;version&#61;0";
+label="dma_cntrl0 \n: DMA_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_dma_cntrl0_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;true&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dma_cntrl0_responseFromDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dma_cntrl0_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dma_cntrl0_dma_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;using_ruby_tester&#61;false&#10;version&#61;0";
+label="dma_sequencer \n: DMASequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dma_cntrl0_dma_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dma_cntrl0_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dma_cntrl0_requestToDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_dma_cntrl1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;dma_sequencer&#61;system.ruby.dma_cntrl1.dma_sequencer&#10;eventq_index&#61;0&#10;mandatoryQueue&#61;system.ruby.dma_cntrl1.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.dma_cntrl1.requestToDir&#10;request_latency&#61;6&#10;responseFromDir&#61;system.ruby.dma_cntrl1.responseFromDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;transitions_per_cycle&#61;4&#10;version&#61;1";
+label="dma_cntrl1 \n: DMA_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_dma_cntrl1_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;true&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dma_cntrl1_responseFromDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dma_cntrl1_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dma_cntrl1_dma_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;using_ruby_tester&#61;false&#10;version&#61;1";
+label="dma_sequencer \n: DMASequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dma_cntrl1_dma_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dma_cntrl1_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dma_cntrl1_requestToDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_io_controller {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;dma_sequencer&#61;system.ruby.io_controller.dma_sequencer&#10;eventq_index&#61;0&#10;mandatoryQueue&#61;system.ruby.io_controller.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.io_controller.requestToDir&#10;request_latency&#61;6&#10;responseFromDir&#61;system.ruby.io_controller.responseFromDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;transitions_per_cycle&#61;32&#10;version&#61;2";
+label="io_controller \n: DMA_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_io_controller_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;true&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_io_controller_responseFromDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_io_controller_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_io_controller_dma_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;using_ruby_tester&#61;false&#10;version&#61;2";
+label="dma_sequencer \n: DMASequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_io_controller_dma_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_io_controller_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_io_controller_requestToDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_memctrl_clk_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_divider&#61;3&#10;clk_domain&#61;system.ruby.clk_domain&#10;eventq_index&#61;0";
+label="memctrl_clk_domain \n: DerivedClockDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;directory&#61;system.ruby.dir_cntrl0.directory&#10;directory_latency&#61;6&#10;eventq_index&#61;0&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.dir_cntrl0.requestToDir&#10;responseFromDir&#61;system.ruby.dir_cntrl0.responseFromDir&#10;responseFromMemory&#61;system.ruby.dir_cntrl0.responseFromMemory&#10;responseToDir&#61;system.ruby.dir_cntrl0.responseToDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;to_mem_ctrl_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;version&#61;0";
+label="dir_cntrl0 \n: Directory_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+system_ruby_dir_cntrl0_memory [fontname=Arial, color="#000000", style="rounded, filled", label=memory, shape=Mrecord, fontsize=14, fillcolor="#7f7c77", fontcolor="#000000"];
+subgraph cluster_system_ruby_dir_cntrl0_directory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;numa_high_bit&#61;7&#10;size&#61;134217728&#10;version&#61;0";
+label="directory \n: RubyDirectoryMemory";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl0_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl0_requestToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl0_responseFromMemory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromMemory \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl0_responseToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl0_responseToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl0_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl0_responseFromDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_dir_cntrl3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;directory&#61;system.ruby.dir_cntrl3.directory&#10;directory_latency&#61;6&#10;eventq_index&#61;0&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.dir_cntrl3.requestToDir&#10;responseFromDir&#61;system.ruby.dir_cntrl3.responseFromDir&#10;responseFromMemory&#61;system.ruby.dir_cntrl3.responseFromMemory&#10;responseToDir&#61;system.ruby.dir_cntrl3.responseToDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;to_mem_ctrl_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;version&#61;3";
+label="dir_cntrl3 \n: Directory_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+system_ruby_dir_cntrl3_memory [fontname=Arial, color="#000000", style="rounded, filled", label=memory, shape=Mrecord, fontsize=14, fillcolor="#7f7c77", fontcolor="#000000"];
+subgraph cluster_system_ruby_dir_cntrl3_directory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;numa_high_bit&#61;7&#10;size&#61;134217728&#10;version&#61;3";
+label="directory \n: RubyDirectoryMemory";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl3_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl3_requestToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl3_responseFromMemory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromMemory \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl3_responseToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl3_responseToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl3_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl3_responseFromDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_dir_cntrl2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;directory&#61;system.ruby.dir_cntrl2.directory&#10;directory_latency&#61;6&#10;eventq_index&#61;0&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.dir_cntrl2.requestToDir&#10;responseFromDir&#61;system.ruby.dir_cntrl2.responseFromDir&#10;responseFromMemory&#61;system.ruby.dir_cntrl2.responseFromMemory&#10;responseToDir&#61;system.ruby.dir_cntrl2.responseToDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;to_mem_ctrl_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;version&#61;2";
+label="dir_cntrl2 \n: Directory_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+system_ruby_dir_cntrl2_memory [fontname=Arial, color="#000000", style="rounded, filled", label=memory, shape=Mrecord, fontsize=14, fillcolor="#7f7c77", fontcolor="#000000"];
+subgraph cluster_system_ruby_dir_cntrl2_directory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;numa_high_bit&#61;7&#10;size&#61;134217728&#10;version&#61;2";
+label="directory \n: RubyDirectoryMemory";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl2_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl2_requestToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl2_responseFromMemory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromMemory \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl2_responseToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl2_responseToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl2_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl2_responseFromDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_dir_cntrl1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;clk_domain&#61;system.ruby.clk_domain&#10;cluster_id&#61;0&#10;directory&#61;system.ruby.dir_cntrl1.directory&#10;directory_latency&#61;6&#10;eventq_index&#61;0&#10;number_of_TBEs&#61;256&#10;recycle_latency&#61;10&#10;requestToDir&#61;system.ruby.dir_cntrl1.requestToDir&#10;responseFromDir&#61;system.ruby.dir_cntrl1.responseFromDir&#10;responseFromMemory&#61;system.ruby.dir_cntrl1.responseFromMemory&#10;responseToDir&#61;system.ruby.dir_cntrl1.responseToDir&#10;ruby_system&#61;system.ruby&#10;system&#61;system&#10;to_mem_ctrl_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;version&#61;1";
+label="dir_cntrl1 \n: Directory_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+system_ruby_dir_cntrl1_memory [fontname=Arial, color="#000000", style="rounded, filled", label=memory, shape=Mrecord, fontsize=14, fillcolor="#7f7c77", fontcolor="#000000"];
+subgraph cluster_system_ruby_dir_cntrl1_directory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;numa_high_bit&#61;7&#10;size&#61;134217728&#10;version&#61;1";
+label="directory \n: RubyDirectoryMemory";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl1_requestToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl1_requestToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl1_responseFromMemory {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromMemory \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_dir_cntrl1_responseToDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl1_responseToDir_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_dir_cntrl1_responseFromDir {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromDir \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_dir_cntrl1_responseFromDir_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="L1Dcache&#61;system.ruby.l1_cntrl1.L1Dcache&#10;L1Icache&#61;system.ruby.l1_cntrl1.L1Icache&#10;buffer_size&#61;0&#10;clk_domain&#61;system.cpu_clk_domain&#10;cluster_id&#61;0&#10;enable_prefetch&#61;false&#10;eventq_index&#61;0&#10;l1_request_latency&#61;2&#10;l1_response_latency&#61;2&#10;l2_select_num_bits&#61;0&#10;mandatoryQueue&#61;system.ruby.l1_cntrl1.mandatoryQueue&#10;number_of_TBEs&#61;256&#10;optionalQueue&#61;system.ruby.l1_cntrl1.optionalQueue&#10;prefetcher&#61;system.ruby.l1_cntrl1.prefetcher&#10;recycle_latency&#61;10&#10;requestFromL1Cache&#61;system.ruby.l1_cntrl1.requestFromL1Cache&#10;requestToL1Cache&#61;system.ruby.l1_cntrl1.requestToL1Cache&#10;responseFromL1Cache&#61;system.ruby.l1_cntrl1.responseFromL1Cache&#10;responseToL1Cache&#61;system.ruby.l1_cntrl1.responseToL1Cache&#10;ruby_system&#61;system.ruby&#10;send_evictions&#61;false&#10;sequencer&#61;system.ruby.l1_cntrl1.sequencer&#10;system&#61;system&#10;to_l2_latency&#61;1&#10;transitions_per_cycle&#61;4&#10;unblockFromL1Cache&#61;system.ruby.l1_cntrl1.unblockFromL1Cache&#10;version&#61;1";
+label="l1_cntrl1 \n: L1Cache_Controller";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl1_responseToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl1_responseToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_L1Dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;false&#10;replacement_policy&#61;system.ruby.l1_cntrl1.L1Dcache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Dcache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl1_L1Dcache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_unblockFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="unblockFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl1_unblockFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_requestFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl1_requestFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_optionalQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="optionalQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_prefetcher {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="cross_page&#61;false&#10;eventq_index&#61;0&#10;nonunit_filter&#61;8&#10;num_startup_pfs&#61;1&#10;num_streams&#61;4&#10;pf_per_stream&#61;1&#10;sys&#61;system&#10;train_misses&#61;4&#10;unit_filter&#61;8";
+label="prefetcher \n: Prefetcher";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_requestToL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="requestToL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl1_requestToL1Cache_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_mandatoryQueue {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="mandatoryQueue \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_sequencer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.cpu_clk_domain&#10;dcache&#61;system.ruby.l1_cntrl1.L1Dcache&#10;dcache_hit_latency&#61;1&#10;deadlock_threshold&#61;500000&#10;eventq_index&#61;0&#10;icache&#61;system.ruby.l1_cntrl1.L1Icache&#10;icache_hit_latency&#61;1&#10;max_outstanding_requests&#61;16&#10;ruby_system&#61;system.ruby&#10;support_data_reqs&#61;true&#10;support_inst_reqs&#61;true&#10;system&#61;system&#10;using_network_tester&#61;false&#10;using_ruby_tester&#61;false&#10;version&#61;1";
+label="sequencer \n: RubySequencer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl1_sequencer_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl1_sequencer_mem_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=mem_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+system_ruby_l1_cntrl1_sequencer_pio_master_port [fontname=Arial, color="#000000", style="rounded, filled", label=pio_master_port, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_L1Icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;dataAccessLatency&#61;1&#10;dataArrayBanks&#61;1&#10;eventq_index&#61;0&#10;is_icache&#61;true&#10;replacement_policy&#61;system.ruby.l1_cntrl1.L1Icache.replacement_policy&#10;resourceStalls&#61;false&#10;ruby_system&#61;system.ruby&#10;size&#61;32768&#10;start_index_bit&#61;6&#10;tagAccessLatency&#61;1&#10;tagArrayBanks&#61;1";
+label="L1Icache \n: L1Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+subgraph cluster_system_ruby_l1_cntrl1_L1Icache_replacement_policy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;eventq_index&#61;0&#10;size&#61;32768";
+label="replacement_policy \n: PseudoLRUReplacementPolicy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6a6863";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_ruby_l1_cntrl1_responseFromL1Cache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="buffer_size&#61;0&#10;eventq_index&#61;0&#10;ordered&#61;false&#10;randomization&#61;false";
+label="responseFromL1Cache \n: MessageBuffer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+system_ruby_l1_cntrl1_responseFromL1Cache_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#6a6863", fontcolor="#000000"];
+}
+
+}
+
+}
+
+subgraph cluster_system_disk2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="delay&#61;1000000&#10;driveID&#61;master&#10;eventq_index&#61;0&#10;image&#61;system.disk2.image";
+label="disk2 \n: CowIdeDisk";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_disk2_image {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="child&#61;system.disk2.image.child&#10;eventq_index&#61;0&#10;image_file&#61;&#10;read_only&#61;false&#10;table_size&#61;65536";
+label="image \n: CowDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_disk2_image_child {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;image_file&#61;/home/itecgo/Tools/GEM5/system/disks/linux-bigswap2.img&#10;read_only&#61;true";
+label="child \n: RawDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+}
+
+}
+
+subgraph cluster_system_voltage_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;voltage&#61;1.000000";
+label="voltage_domain \n: VoltageDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_clk_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clock&#61;1000&#10;domain_id&#61;-1&#10;eventq_index&#61;0&#10;init_perf_level&#61;0&#10;voltage_domain&#61;system.voltage_domain";
+label="clk_domain \n: SrcClockDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_intrctrl {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;sys&#61;system";
+label="intrctrl \n: IntrControl";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_simple_disk {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="disk&#61;system.simple_disk.disk&#10;eventq_index&#61;0&#10;system&#61;system";
+label="simple_disk \n: SimpleDisk";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_simple_disk_disk {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;image_file&#61;/home/itecgo/Tools/GEM5/system/disks/linux-parsec-2-1-m5-with-test-inputs.img&#10;read_only&#61;true";
+label="disk \n: RawDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_tsunami {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;intrctrl&#61;system.intrctrl&#10;system&#61;system";
+label="tsunami \n: BaseTsunami";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_tsunami_fake_uart1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848696&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart1 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart1_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_uart2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848936&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart2 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart2_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_uart3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848680&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart3 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart3_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_uart4 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848944&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart4 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart4_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_ppc {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848891&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_ppc \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_ppc_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_cchip {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;pio_addr&#61;8803072344064&#10;pio_latency&#61;100000&#10;system&#61;system&#10;tsunami&#61;system.tsunami";
+label="cchip \n: TsunamiCChip";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_cchip_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_io {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;frequency&#61;976562500&#10;pio_addr&#61;8804615847936&#10;pio_latency&#61;100000&#10;system&#61;system&#10;time&#61;Thu Jan  1 00:00:00 2009&#10;tsunami&#61;system.tsunami&#10;year_is_bcd&#61;false";
+label="io \n: TsunamiIO";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_io_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_pciconfig {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bus&#61;0&#10;clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;pio_addr&#61;0&#10;pio_latency&#61;30000&#10;platform&#61;system.tsunami&#10;size&#61;16777216&#10;system&#61;system";
+label="pciconfig \n: PciConfigAll";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_pciconfig_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_ata1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848304&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_ata1 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_ata1_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_ata0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848432&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_ata0 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_ata0_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_backdoor {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;cpu&#61;system.cpu0&#10;disk&#61;system.simple_disk&#10;eventq_index&#61;0&#10;pio_addr&#61;8804682956800&#10;pio_latency&#61;100000&#10;platform&#61;system.tsunami&#10;system&#61;system&#10;terminal&#61;system.terminal";
+label="backdoor \n: AlphaBackdoor";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_backdoor_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848643&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read3 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read3_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848579&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read2 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read2_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848515&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read1 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read1_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848451&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read0 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read0_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read7 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848899&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read7 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read7_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read6 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848835&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read6 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read6_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read5 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848771&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read5 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read5_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read4 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848707&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read4 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read4_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_write {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615850617&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_write \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_write_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;devicename&#61;FrameBuffer&#10;eventq_index&#61;0&#10;pio_addr&#61;8804615848912&#10;pio_latency&#61;100000&#10;system&#61;system";
+label="fb \n: BadDevice";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fb_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_pchip {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;pio_addr&#61;8802535473152&#10;pio_latency&#61;100000&#10;system&#61;system&#10;tsunami&#61;system.tsunami";
+label="pchip \n: TsunamiPChip";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_pchip_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_OROM {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8796093677568&#10;pio_latency&#61;100000&#10;pio_size&#61;393216&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_OROM \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_OROM_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_uart {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;pio_addr&#61;8804615848952&#10;pio_latency&#61;100000&#10;platform&#61;system.tsunami&#10;system&#61;system&#10;terminal&#61;system.terminal";
+label="uart \n: Uart8250";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_uart_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_sm_chip {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848816&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_sm_chip \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_sm_chip_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_addr {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;pio_addr&#61;8804615848569&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_addr \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_addr_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_ethernet {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="BAR0&#61;1&#10;BAR0LegacyIO&#61;false&#10;BAR0Size&#61;256&#10;BAR1&#61;0&#10;BAR1LegacyIO&#61;false&#10;BAR1Size&#61;4096&#10;BAR2&#61;0&#10;BAR2LegacyIO&#61;false&#10;BAR2Size&#61;0&#10;BAR3&#61;0&#10;BAR3LegacyIO&#61;false&#10;BAR3Size&#61;0&#10;BAR4&#61;0&#10;BAR4LegacyIO&#61;false&#10;BAR4Size&#61;0&#10;BAR5&#61;0&#10;BAR5LegacyIO&#61;false&#10;BAR5Size&#61;0&#10;BIST&#61;0&#10;CacheLineSize&#61;0&#10;CapabilityPtr&#61;0&#10;CardbusCIS&#61;0&#10;ClassCode&#61;2&#10;Command&#61;0&#10;DeviceID&#61;34&#10;ExpansionROM&#61;0&#10;HeaderType&#61;0&#10;InterruptLine&#61;30&#10;InterruptPin&#61;1&#10;LatencyTimer&#61;0&#10;LegacyIOBase&#61;0&#10;MSICAPBaseOffset&#61;0&#10;MSICAPCapId&#61;0&#10;MSICAPMaskBits&#61;0&#10;MSICAPMsgAddr&#61;0&#10;MSICAPMsgCtrl&#61;0&#10;MSICAPMsgData&#61;0&#10;MSICAPMsgUpperAddr&#61;0&#10;MSICAPNextCapability&#61;0&#10;MSICAPPendingBits&#61;0&#10;MSIXCAPBaseOffset&#61;0&#10;MSIXCAPCapId&#61;0&#10;MSIXCAPNextCapability&#61;0&#10;MSIXMsgCtrl&#61;0&#10;MSIXPbaOffset&#61;0&#10;MSIXTableOffset&#61;0&#10;MaximumLatency&#61;52&#10;MinimumGrant&#61;176&#10;PMCAPBaseOffset&#61;0&#10;PMCAPCapId&#61;0&#10;PMCAPCapabilities&#61;0&#10;PMCAPCtrlStatus&#61;0&#10;PMCAPNextCapability&#61;0&#10;PXCAPBaseOffset&#61;0&#10;PXCAPCapId&#61;0&#10;PXCAPCapabilities&#61;0&#10;PXCAPDevCap2&#61;0&#10;PXCAPDevCapabilities&#61;0&#10;PXCAPDevCtrl&#61;0&#10;PXCAPDevCtrl2&#61;0&#10;PXCAPDevStatus&#61;0&#10;PXCAPLinkCap&#61;0&#10;PXCAPLinkCtrl&#61;0&#10;PXCAPLinkStatus&#61;0&#10;PXCAPNextCapability&#61;0&#10;ProgIF&#61;0&#10;Revision&#61;0&#10;Status&#61;656&#10;SubClassCode&#61;0&#10;SubsystemID&#61;0&#10;SubsystemVendorID&#61;0&#10;VendorID&#61;4107&#10;clk_domain&#61;system.clk_domain&#10;config_latency&#61;20000&#10;dma_data_free&#61;false&#10;dma_desc_free&#61;false&#10;dma_no_allocate&#61;true&#10;dma_read_delay&#61;0&#10;dma_read_factor&#61;0&#10;dma_write_delay&#61;0&#10;dma_write_factor&#61;0&#10;eventq_index&#61;0&#10;hardware_address&#61;00:90:00:00:00:01&#10;intr_delay&#61;10000000&#10;pci_bus&#61;0&#10;pci_dev&#61;1&#10;pci_func&#61;0&#10;pio_latency&#61;30000&#10;platform&#61;system.tsunami&#10;rss&#61;false&#10;rx_delay&#61;1000000&#10;rx_fifo_size&#61;524288&#10;rx_filter&#61;true&#10;rx_thread&#61;false&#10;system&#61;system&#10;tx_delay&#61;1000000&#10;tx_fifo_size&#61;524288&#10;tx_thread&#61;false";
+label="ethernet \n: NSGigE";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_ethernet_config [fontname=Arial, color="#000000", style="rounded, filled", label=config, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ethernet_dma [fontname=Arial, color="#000000", style="rounded, filled", label=dma, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ethernet_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_ide {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="BAR0&#61;1&#10;BAR0LegacyIO&#61;false&#10;BAR0Size&#61;8&#10;BAR1&#61;1&#10;BAR1LegacyIO&#61;false&#10;BAR1Size&#61;4&#10;BAR2&#61;1&#10;BAR2LegacyIO&#61;false&#10;BAR2Size&#61;8&#10;BAR3&#61;1&#10;BAR3LegacyIO&#61;false&#10;BAR3Size&#61;4&#10;BAR4&#61;1&#10;BAR4LegacyIO&#61;false&#10;BAR4Size&#61;16&#10;BAR5&#61;1&#10;BAR5LegacyIO&#61;false&#10;BAR5Size&#61;0&#10;BIST&#61;0&#10;CacheLineSize&#61;0&#10;CapabilityPtr&#61;0&#10;CardbusCIS&#61;0&#10;ClassCode&#61;1&#10;Command&#61;0&#10;DeviceID&#61;28945&#10;ExpansionROM&#61;0&#10;HeaderType&#61;0&#10;InterruptLine&#61;31&#10;InterruptPin&#61;1&#10;LatencyTimer&#61;0&#10;LegacyIOBase&#61;0&#10;MSICAPBaseOffset&#61;0&#10;MSICAPCapId&#61;0&#10;MSICAPMaskBits&#61;0&#10;MSICAPMsgAddr&#61;0&#10;MSICAPMsgCtrl&#61;0&#10;MSICAPMsgData&#61;0&#10;MSICAPMsgUpperAddr&#61;0&#10;MSICAPNextCapability&#61;0&#10;MSICAPPendingBits&#61;0&#10;MSIXCAPBaseOffset&#61;0&#10;MSIXCAPCapId&#61;0&#10;MSIXCAPNextCapability&#61;0&#10;MSIXMsgCtrl&#61;0&#10;MSIXPbaOffset&#61;0&#10;MSIXTableOffset&#61;0&#10;MaximumLatency&#61;0&#10;MinimumGrant&#61;0&#10;PMCAPBaseOffset&#61;0&#10;PMCAPCapId&#61;0&#10;PMCAPCapabilities&#61;0&#10;PMCAPCtrlStatus&#61;0&#10;PMCAPNextCapability&#61;0&#10;PXCAPBaseOffset&#61;0&#10;PXCAPCapId&#61;0&#10;PXCAPCapabilities&#61;0&#10;PXCAPDevCap2&#61;0&#10;PXCAPDevCapabilities&#61;0&#10;PXCAPDevCtrl&#61;0&#10;PXCAPDevCtrl2&#61;0&#10;PXCAPDevStatus&#61;0&#10;PXCAPLinkCap&#61;0&#10;PXCAPLinkCtrl&#61;0&#10;PXCAPLinkStatus&#61;0&#10;PXCAPNextCapability&#61;0&#10;ProgIF&#61;133&#10;Revision&#61;0&#10;Status&#61;640&#10;SubClassCode&#61;1&#10;SubsystemID&#61;0&#10;SubsystemVendorID&#61;0&#10;VendorID&#61;32902&#10;clk_domain&#61;system.clk_domain&#10;config_latency&#61;20000&#10;ctrl_offset&#61;0&#10;disks&#61;system.disk0 system.disk2&#10;eventq_index&#61;0&#10;io_shift&#61;0&#10;pci_bus&#61;0&#10;pci_dev&#61;0&#10;pci_func&#61;0&#10;pio_latency&#61;30000&#10;platform&#61;system.tsunami&#10;system&#61;system";
+label="ide \n: IdeController";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_ide_config [fontname=Arial, color="#000000", style="rounded, filled", label=config, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ide_dma [fontname=Arial, color="#000000", style="rounded, filled", label=dma, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ide_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_cpu_voltage_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;voltage&#61;1.000000";
+label="cpu_voltage_domain \n: VoltageDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_mem_ctrls0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="IDD0&#61;0.075000&#10;IDD02&#61;0.000000&#10;IDD2N&#61;0.050000&#10;IDD2N2&#61;0.000000&#10;IDD2P0&#61;0.000000&#10;IDD2P02&#61;0.000000&#10;IDD2P1&#61;0.000000&#10;IDD2P12&#61;0.000000&#10;IDD3N&#61;0.057000&#10;IDD3N2&#61;0.000000&#10;IDD3P0&#61;0.000000&#10;IDD3P02&#61;0.000000&#10;IDD3P1&#61;0.000000&#10;IDD3P12&#61;0.000000&#10;IDD4R&#61;0.187000&#10;IDD4R2&#61;0.000000&#10;IDD4W&#61;0.165000&#10;IDD4W2&#61;0.000000&#10;IDD5&#61;0.220000&#10;IDD52&#61;0.000000&#10;IDD6&#61;0.000000&#10;IDD62&#61;0.000000&#10;VDD&#61;1.500000&#10;VDD2&#61;0.000000&#10;activation_limit&#61;4&#10;addr_mapping&#61;RoRaBaCoCh&#10;bank_groups_per_rank&#61;0&#10;banks_per_rank&#61;8&#10;burst_length&#61;8&#10;channels&#61;4&#10;clk_domain&#61;system.clk_domain&#10;conf_table_reported&#61;true&#10;device_bus_width&#61;8&#10;device_rowbuffer_size&#61;1024&#10;device_size&#61;536870912&#10;devices_per_rank&#61;8&#10;dll&#61;true&#10;eventq_index&#61;0&#10;in_addr_map&#61;true&#10;max_accesses_per_row&#61;16&#10;mem_sched_policy&#61;frfcfs&#10;min_writes_per_switch&#61;16&#10;null&#61;false&#10;page_policy&#61;open_adaptive&#10;range&#61;0:536870911&#10;ranks_per_channel&#61;2&#10;read_buffer_size&#61;32&#10;static_backend_latency&#61;10000&#10;static_frontend_latency&#61;10000&#10;tBURST&#61;5000&#10;tCCD_L&#61;0&#10;tCK&#61;1250&#10;tCL&#61;13750&#10;tCS&#61;2500&#10;tRAS&#61;35000&#10;tRCD&#61;13750&#10;tREFI&#61;7800000&#10;tRFC&#61;260000&#10;tRP&#61;13750&#10;tRRD&#61;6000&#10;tRRD_L&#61;0&#10;tRTP&#61;7500&#10;tRTW&#61;2500&#10;tWR&#61;15000&#10;tWTR&#61;7500&#10;tXAW&#61;30000&#10;tXP&#61;0&#10;tXPDLL&#61;0&#10;tXS&#61;0&#10;tXSDLL&#61;0&#10;write_buffer_size&#61;64&#10;write_high_thresh_perc&#61;85&#10;write_low_thresh_perc&#61;50";
+label="mem_ctrls0 \n: DDR3_1600_x64";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#5e5958";
+fontcolor="#000000";
+system_mem_ctrls0_port [fontname=Arial, color="#000000", style="rounded, filled", label=port, shape=Mrecord, fontsize=14, fillcolor="#4b4746", fontcolor="#000000"];
+}
+
+subgraph cluster_system_mem_ctrls1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="IDD0&#61;0.075000&#10;IDD02&#61;0.000000&#10;IDD2N&#61;0.050000&#10;IDD2N2&#61;0.000000&#10;IDD2P0&#61;0.000000&#10;IDD2P02&#61;0.000000&#10;IDD2P1&#61;0.000000&#10;IDD2P12&#61;0.000000&#10;IDD3N&#61;0.057000&#10;IDD3N2&#61;0.000000&#10;IDD3P0&#61;0.000000&#10;IDD3P02&#61;0.000000&#10;IDD3P1&#61;0.000000&#10;IDD3P12&#61;0.000000&#10;IDD4R&#61;0.187000&#10;IDD4R2&#61;0.000000&#10;IDD4W&#61;0.165000&#10;IDD4W2&#61;0.000000&#10;IDD5&#61;0.220000&#10;IDD52&#61;0.000000&#10;IDD6&#61;0.000000&#10;IDD62&#61;0.000000&#10;VDD&#61;1.500000&#10;VDD2&#61;0.000000&#10;activation_limit&#61;4&#10;addr_mapping&#61;RoRaBaCoCh&#10;bank_groups_per_rank&#61;0&#10;banks_per_rank&#61;8&#10;burst_length&#61;8&#10;channels&#61;4&#10;clk_domain&#61;system.clk_domain&#10;conf_table_reported&#61;true&#10;device_bus_width&#61;8&#10;device_rowbuffer_size&#61;1024&#10;device_size&#61;536870912&#10;devices_per_rank&#61;8&#10;dll&#61;true&#10;eventq_index&#61;0&#10;in_addr_map&#61;true&#10;max_accesses_per_row&#61;16&#10;mem_sched_policy&#61;frfcfs&#10;min_writes_per_switch&#61;16&#10;null&#61;false&#10;page_policy&#61;open_adaptive&#10;range&#61;0:536870911&#10;ranks_per_channel&#61;2&#10;read_buffer_size&#61;32&#10;static_backend_latency&#61;10000&#10;static_frontend_latency&#61;10000&#10;tBURST&#61;5000&#10;tCCD_L&#61;0&#10;tCK&#61;1250&#10;tCL&#61;13750&#10;tCS&#61;2500&#10;tRAS&#61;35000&#10;tRCD&#61;13750&#10;tREFI&#61;7800000&#10;tRFC&#61;260000&#10;tRP&#61;13750&#10;tRRD&#61;6000&#10;tRRD_L&#61;0&#10;tRTP&#61;7500&#10;tRTW&#61;2500&#10;tWR&#61;15000&#10;tWTR&#61;7500&#10;tXAW&#61;30000&#10;tXP&#61;0&#10;tXPDLL&#61;0&#10;tXS&#61;0&#10;tXSDLL&#61;0&#10;write_buffer_size&#61;64&#10;write_high_thresh_perc&#61;85&#10;write_low_thresh_perc&#61;50";
+label="mem_ctrls1 \n: DDR3_1600_x64";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#5e5958";
+fontcolor="#000000";
+system_mem_ctrls1_port [fontname=Arial, color="#000000", style="rounded, filled", label=port, shape=Mrecord, fontsize=14, fillcolor="#4b4746", fontcolor="#000000"];
+}
+
+subgraph cluster_system_mem_ctrls2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="IDD0&#61;0.075000&#10;IDD02&#61;0.000000&#10;IDD2N&#61;0.050000&#10;IDD2N2&#61;0.000000&#10;IDD2P0&#61;0.000000&#10;IDD2P02&#61;0.000000&#10;IDD2P1&#61;0.000000&#10;IDD2P12&#61;0.000000&#10;IDD3N&#61;0.057000&#10;IDD3N2&#61;0.000000&#10;IDD3P0&#61;0.000000&#10;IDD3P02&#61;0.000000&#10;IDD3P1&#61;0.000000&#10;IDD3P12&#61;0.000000&#10;IDD4R&#61;0.187000&#10;IDD4R2&#61;0.000000&#10;IDD4W&#61;0.165000&#10;IDD4W2&#61;0.000000&#10;IDD5&#61;0.220000&#10;IDD52&#61;0.000000&#10;IDD6&#61;0.000000&#10;IDD62&#61;0.000000&#10;VDD&#61;1.500000&#10;VDD2&#61;0.000000&#10;activation_limit&#61;4&#10;addr_mapping&#61;RoRaBaCoCh&#10;bank_groups_per_rank&#61;0&#10;banks_per_rank&#61;8&#10;burst_length&#61;8&#10;channels&#61;4&#10;clk_domain&#61;system.clk_domain&#10;conf_table_reported&#61;true&#10;device_bus_width&#61;8&#10;device_rowbuffer_size&#61;1024&#10;device_size&#61;536870912&#10;devices_per_rank&#61;8&#10;dll&#61;true&#10;eventq_index&#61;0&#10;in_addr_map&#61;true&#10;max_accesses_per_row&#61;16&#10;mem_sched_policy&#61;frfcfs&#10;min_writes_per_switch&#61;16&#10;null&#61;false&#10;page_policy&#61;open_adaptive&#10;range&#61;0:536870911&#10;ranks_per_channel&#61;2&#10;read_buffer_size&#61;32&#10;static_backend_latency&#61;10000&#10;static_frontend_latency&#61;10000&#10;tBURST&#61;5000&#10;tCCD_L&#61;0&#10;tCK&#61;1250&#10;tCL&#61;13750&#10;tCS&#61;2500&#10;tRAS&#61;35000&#10;tRCD&#61;13750&#10;tREFI&#61;7800000&#10;tRFC&#61;260000&#10;tRP&#61;13750&#10;tRRD&#61;6000&#10;tRRD_L&#61;0&#10;tRTP&#61;7500&#10;tRTW&#61;2500&#10;tWR&#61;15000&#10;tWTR&#61;7500&#10;tXAW&#61;30000&#10;tXP&#61;0&#10;tXPDLL&#61;0&#10;tXS&#61;0&#10;tXSDLL&#61;0&#10;write_buffer_size&#61;64&#10;write_high_thresh_perc&#61;85&#10;write_low_thresh_perc&#61;50";
+label="mem_ctrls2 \n: DDR3_1600_x64";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#5e5958";
+fontcolor="#000000";
+system_mem_ctrls2_port [fontname=Arial, color="#000000", style="rounded, filled", label=port, shape=Mrecord, fontsize=14, fillcolor="#4b4746", fontcolor="#000000"];
+}
+
+subgraph cluster_system_mem_ctrls3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="IDD0&#61;0.075000&#10;IDD02&#61;0.000000&#10;IDD2N&#61;0.050000&#10;IDD2N2&#61;0.000000&#10;IDD2P0&#61;0.000000&#10;IDD2P02&#61;0.000000&#10;IDD2P1&#61;0.000000&#10;IDD2P12&#61;0.000000&#10;IDD3N&#61;0.057000&#10;IDD3N2&#61;0.000000&#10;IDD3P0&#61;0.000000&#10;IDD3P02&#61;0.000000&#10;IDD3P1&#61;0.000000&#10;IDD3P12&#61;0.000000&#10;IDD4R&#61;0.187000&#10;IDD4R2&#61;0.000000&#10;IDD4W&#61;0.165000&#10;IDD4W2&#61;0.000000&#10;IDD5&#61;0.220000&#10;IDD52&#61;0.000000&#10;IDD6&#61;0.000000&#10;IDD62&#61;0.000000&#10;VDD&#61;1.500000&#10;VDD2&#61;0.000000&#10;activation_limit&#61;4&#10;addr_mapping&#61;RoRaBaCoCh&#10;bank_groups_per_rank&#61;0&#10;banks_per_rank&#61;8&#10;burst_length&#61;8&#10;channels&#61;4&#10;clk_domain&#61;system.clk_domain&#10;conf_table_reported&#61;true&#10;device_bus_width&#61;8&#10;device_rowbuffer_size&#61;1024&#10;device_size&#61;536870912&#10;devices_per_rank&#61;8&#10;dll&#61;true&#10;eventq_index&#61;0&#10;in_addr_map&#61;true&#10;max_accesses_per_row&#61;16&#10;mem_sched_policy&#61;frfcfs&#10;min_writes_per_switch&#61;16&#10;null&#61;false&#10;page_policy&#61;open_adaptive&#10;range&#61;0:536870911&#10;ranks_per_channel&#61;2&#10;read_buffer_size&#61;32&#10;static_backend_latency&#61;10000&#10;static_frontend_latency&#61;10000&#10;tBURST&#61;5000&#10;tCCD_L&#61;0&#10;tCK&#61;1250&#10;tCL&#61;13750&#10;tCS&#61;2500&#10;tRAS&#61;35000&#10;tRCD&#61;13750&#10;tREFI&#61;7800000&#10;tRFC&#61;260000&#10;tRP&#61;13750&#10;tRRD&#61;6000&#10;tRRD_L&#61;0&#10;tRTP&#61;7500&#10;tRTW&#61;2500&#10;tWR&#61;15000&#10;tWTR&#61;7500&#10;tXAW&#61;30000&#10;tXP&#61;0&#10;tXPDLL&#61;0&#10;tXS&#61;0&#10;tXSDLL&#61;0&#10;write_buffer_size&#61;64&#10;write_high_thresh_perc&#61;85&#10;write_low_thresh_perc&#61;50";
+label="mem_ctrls3 \n: DDR3_1600_x64";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#5e5958";
+fontcolor="#000000";
+system_mem_ctrls3_port [fontname=Arial, color="#000000", style="rounded, filled", label=port, shape=Mrecord, fontsize=14, fillcolor="#4b4746", fontcolor="#000000"];
+}
+
+subgraph cluster_system_dvfs_handler {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="domains&#61;&#10;enable&#61;false&#10;eventq_index&#61;0&#10;sys_clk_domain&#61;system.clk_domain&#10;transition_latency&#61;100000000";
+label="dvfs_handler \n: DVFSHandler";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_iobus {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;forward_latency&#61;1&#10;frontend_latency&#61;2&#10;response_latency&#61;2&#10;use_default_range&#61;true&#10;width&#61;16";
+label="iobus \n: IOXBar";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6f798c";
+fontcolor="#000000";
+system_iobus_default [fontname=Arial, color="#000000", style="rounded, filled", label=default, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_iobus_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_iobus_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+}
+
+subgraph cluster_system_cpu_clk_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clock&#61;500&#10;domain_id&#61;-1&#10;eventq_index&#61;0&#10;init_perf_level&#61;0&#10;voltage_domain&#61;system.cpu_voltage_domain";
+label="cpu_clk_domain \n: SrcClockDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;0&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu0.dtb&#10;eventq_index&#61;0&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu0.interrupts&#10;isa&#61;system.cpu0.isa&#10;itb&#61;system.cpu0.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu0.tracer&#10;workload&#61;";
+label="cpu0 \n: TimingSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu0_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu0_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu0_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;1&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu1.dtb&#10;eventq_index&#61;0&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu1.interrupts&#10;isa&#61;system.cpu1.isa&#10;itb&#61;system.cpu1.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu1.tracer&#10;workload&#61;";
+label="cpu1 \n: TimingSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu1_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu1_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu1_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;2&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu2.dtb&#10;eventq_index&#61;0&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu2.interrupts&#10;isa&#61;system.cpu2.isa&#10;itb&#61;system.cpu2.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu2.tracer&#10;workload&#61;";
+label="cpu2 \n: TimingSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu2_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu2_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu2_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;3&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu3.dtb&#10;eventq_index&#61;0&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu3.interrupts&#10;isa&#61;system.cpu3.isa&#10;itb&#61;system.cpu3.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu3.tracer&#10;workload&#61;";
+label="cpu3 \n: TimingSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu3_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu3_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu3_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_sys_port_proxy {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;ruby_system&#61;system.ruby&#10;support_data_reqs&#61;true&#10;support_inst_reqs&#61;true&#10;system&#61;system&#10;using_ruby_tester&#61;false&#10;version&#61;0";
+label="sys_port_proxy \n: RubyPortProxy";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_sys_port_proxy_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+}
+
+}
+
+}
+
+system_system_port -> system_sys_port_proxy_slave;
+system_ruby_l1_cntrl0_unblockFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl0_requestFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl0_sequencer_mem_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl0_sequencer_pio_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl0_responseFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl0_requestToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl0_responseToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl1_requestToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl1_responseToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl2_requestToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl2_responseToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl3_requestToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l1_cntrl3_responseToL1Cache_slave;
+system_ruby_network_master -> system_ruby_l2_cntrl0_unblockToL2Cache_slave;
+system_ruby_network_master -> system_ruby_l2_cntrl0_L1RequestToL2Cache_slave;
+system_ruby_network_master -> system_ruby_l2_cntrl0_responseToL2Cache_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl0_requestToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl0_responseToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl1_requestToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl1_responseToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl2_requestToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl2_responseToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl3_requestToDir_slave;
+system_ruby_network_master -> system_ruby_dir_cntrl3_responseToDir_slave;
+system_ruby_network_master -> system_ruby_dma_cntrl0_responseFromDir_slave;
+system_ruby_network_master -> system_ruby_dma_cntrl1_responseFromDir_slave;
+system_ruby_network_master -> system_ruby_io_controller_responseFromDir_slave;
+system_ruby_l1_cntrl2_unblockFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl2_requestFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl2_sequencer_mem_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl2_sequencer_pio_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl2_responseFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl3_unblockFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl3_requestFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl3_sequencer_mem_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl3_sequencer_pio_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl3_responseFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l2_cntrl0_responseFromL2Cache_master -> system_ruby_network_slave;
+system_ruby_l2_cntrl0_L1RequestFromL2Cache_master -> system_ruby_network_slave;
+system_ruby_l2_cntrl0_DirRequestFromL2Cache_master -> system_ruby_network_slave;
+system_ruby_dma_cntrl0_requestToDir_master -> system_ruby_network_slave;
+system_ruby_dma_cntrl1_requestToDir_master -> system_ruby_network_slave;
+system_ruby_io_controller_requestToDir_master -> system_ruby_network_slave;
+system_ruby_dir_cntrl0_memory -> system_mem_ctrls0_port;
+system_ruby_dir_cntrl0_responseFromDir_master -> system_ruby_network_slave;
+system_ruby_dir_cntrl3_memory -> system_mem_ctrls3_port;
+system_ruby_dir_cntrl3_responseFromDir_master -> system_ruby_network_slave;
+system_ruby_dir_cntrl2_memory -> system_mem_ctrls2_port;
+system_ruby_dir_cntrl2_responseFromDir_master -> system_ruby_network_slave;
+system_ruby_dir_cntrl1_memory -> system_mem_ctrls1_port;
+system_ruby_dir_cntrl1_responseFromDir_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl1_unblockFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl1_requestFromL1Cache_master -> system_ruby_network_slave;
+system_ruby_l1_cntrl1_sequencer_mem_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl1_sequencer_pio_master_port -> system_iobus_slave;
+system_ruby_l1_cntrl1_responseFromL1Cache_master -> system_ruby_network_slave;
+system_tsunami_ethernet_dma -> system_ruby_dma_cntrl1_dma_sequencer_slave;
+system_tsunami_ide_dma -> system_ruby_dma_cntrl0_dma_sequencer_slave;
+system_iobus_default -> system_tsunami_pciconfig_pio;
+system_iobus_master -> system_tsunami_cchip_pio;
+system_iobus_master -> system_tsunami_pchip_pio;
+system_iobus_master -> system_tsunami_fake_sm_chip_pio;
+system_iobus_master -> system_tsunami_fake_uart1_pio;
+system_iobus_master -> system_tsunami_fake_uart2_pio;
+system_iobus_master -> system_tsunami_fake_uart3_pio;
+system_iobus_master -> system_tsunami_fake_uart4_pio;
+system_iobus_master -> system_tsunami_fake_ppc_pio;
+system_iobus_master -> system_tsunami_fake_OROM_pio;
+system_iobus_master -> system_tsunami_fake_pnp_addr_pio;
+system_iobus_master -> system_tsunami_fake_pnp_write_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read0_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read1_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read2_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read3_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read4_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read5_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read6_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read7_pio;
+system_iobus_master -> system_tsunami_fake_ata0_pio;
+system_iobus_master -> system_tsunami_fake_ata1_pio;
+system_iobus_master -> system_tsunami_fb_pio;
+system_iobus_master -> system_tsunami_io_pio;
+system_iobus_master -> system_tsunami_uart_pio;
+system_iobus_master -> system_tsunami_backdoor_pio;
+system_iobus_master -> system_tsunami_ide_pio;
+system_iobus_master -> system_tsunami_ide_config;
+system_iobus_master -> system_tsunami_ethernet_pio;
+system_iobus_master -> system_tsunami_ethernet_config;
+system_iobus_master -> system_ruby_io_controller_dma_sequencer_slave;
+system_cpu0_icache_port -> system_ruby_l1_cntrl0_sequencer_slave;
+system_cpu0_dcache_port -> system_ruby_l1_cntrl0_sequencer_slave;
+system_cpu1_icache_port -> system_ruby_l1_cntrl1_sequencer_slave;
+system_cpu1_dcache_port -> system_ruby_l1_cntrl1_sequencer_slave;
+system_cpu2_icache_port -> system_ruby_l1_cntrl2_sequencer_slave;
+system_cpu2_dcache_port -> system_ruby_l1_cntrl2_sequencer_slave;
+system_cpu3_icache_port -> system_ruby_l1_cntrl3_sequencer_slave;
+system_cpu3_dcache_port -> system_ruby_l1_cntrl3_sequencer_slave;
+}

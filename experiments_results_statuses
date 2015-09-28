@@ -4,7 +4,7 @@ blackscholes                done
 bodytrack                   done
 canneal                     done
 dedup                       done
-facesim                     running
+facesim                     done
 ferret                      done
 fluidanimate                done
 freqmine                    done
@@ -12,3 +12,20 @@ streamcluster               done
 swaptions                   done with errors (serial8250: too much work for irq4)
 vips                        done
 x264                        done
+
+------------------------------------------------------------
+
+ALPHA_RUBY_GARNET/4c/simsmall:
+
+blackscholes                done
+bodytrack                   done
+canneal                     done
+dedup                       running
+facesim                     not_started
+ferret                      running
+fluidanimate                not_started
+freqmine                    not_started
+streamcluster               not_started
+swaptions                   not_started
+vips                        not_started
+x264                        not_started
