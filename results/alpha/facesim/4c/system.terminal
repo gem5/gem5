@@ -138,3 +138,4 @@ Simulation                                        Reading simulation model : ./F
 Total particles = 80598
 Total tetrahedra = 372126
 muscles = 32
+attachments = 3
