@@ -527,6 +527,8 @@ RubyMemoryControl::issueRequest(int bank)
         m_busBusyCounter_Write = m_basic_bus_busy_time;
         m_busBusyCounter_ReadNewRank = m_basic_bus_busy_time;
     }
+
+    delete req;
 }
 
 // executeCycle:  This function is called once per memory clock cycle
