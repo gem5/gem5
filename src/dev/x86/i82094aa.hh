@@ -105,6 +105,8 @@ class I82094AA : public BasicPioDevice, public IntDevice
     BaseMasterPort &getMasterPort(const std::string &if_name,
                                   PortID idx = InvalidPortID);
 
+    Tick recvResponse(PacketPtr pkt) M5_ATTR_OVERRIDE;
+
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);

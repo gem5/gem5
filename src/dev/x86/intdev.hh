@@ -150,6 +150,7 @@ class IntDevice
     virtual Tick
     recvResponse(PacketPtr pkt)
     {
+        panic("recvResponse not implemented.\n");
         return 0;
     }
 
