@@ -23,9 +23,9 @@ canneal                     done
 dedup                       running
 facesim                     not_started
 ferret                      running
-fluidanimate                not_started
-freqmine                    not_started
-streamcluster               not_started
-swaptions                   not_started
-vips                        not_started
-x264                        not_started
+fluidanimate                running
+freqmine                    running
+streamcluster               running
+swaptions                   running
+vips                        running
+x264                        running

@@ -11,7 +11,7 @@ import os
 # benches = ['blackscholes', 'bodytrack', 'canneal', 'dedup', 'facesim',
 #            'ferret', 'fluidanimate', 'freqmine', 'streamcluster',
 #            'swaptions', 'vips', 'x264', 'rtview']
-benches = ['ferret']
+benches = ['vips', 'x264']
 
 # num_threads = [1, 4, 8, 16]
 # num_threads = [1, 2, 4, 8, 16, 32]
