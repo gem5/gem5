@@ -263,6 +263,13 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry, bool touch)
     std::vector<AbstractCacheEntry*> &set = m_cache[cacheSet];
     for (int i = 0; i < m_cache_assoc; i++) {
         if (!set[i] || set[i]->m_Permission == AccessPermission_NotPresent) {
+            if (set[i] && (set[i] != entry)) {
+                warn_once("This protocol contains a cache entry handling bug: "
+                    "Entries in the cache should never be NotPresent! If\n"
+                    "this entry (%#x) is not tracked elsewhere, it will memory "
+                    "leak here. Fix your protocol to eliminate these!",
+                    address);
+            }
             set[i] = entry;  // Init entry
             set[i]->m_Address = address;
             set[i]->m_Permission = AccessPermission_Invalid;
