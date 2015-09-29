@@ -472,6 +472,7 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 LiveProcess::LiveProcess(LiveProcessParams *params, ObjectFile *_objFile)
     : Process(params), objFile(_objFile),
       argv(params->cmd), envp(params->env), cwd(params->cwd),
+      executable(params->executable),
       __uid(params->uid), __euid(params->euid),
       __gid(params->gid), __egid(params->egid),
       __pid(params->pid), __ppid(params->ppid),
@@ -528,11 +529,15 @@ LiveProcess::create(LiveProcessParams * params)
 {
     LiveProcess *process = NULL;
 
-    string executable =
-        params->executable == "" ? params->cmd[0] : params->executable;
-    ObjectFile *objFile = createObjectFile(executable);
+    // If not specified, set the executable parameter equal to the
+    // simulated system's zeroth command line parameter
+    if (params->executable == "") {
+        params->executable = params->cmd[0];
+    }
+
+    ObjectFile *objFile = createObjectFile(params->executable);
     if (objFile == NULL) {
-        fatal("Can't load object file %s", executable);
+        fatal("Can't load object file %s", params->executable);
     }
 
     if (objFile->isDynamic())

@@ -238,6 +238,7 @@ class LiveProcess : public Process
     std::vector<std::string> argv;
     std::vector<std::string> envp;
     std::string cwd;
+    std::string executable;
 
     LiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
@@ -294,7 +295,7 @@ class LiveProcess : public Process
     inline uint64_t ppid() {return __ppid;}
 
     // provide program name for debug messages
-    virtual const char *progName() const { return argv[0].c_str(); }
+    virtual const char *progName() const { return executable.c_str(); }
 
     std::string
     fullPath(const std::string &filename)
