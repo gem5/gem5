@@ -116,8 +116,9 @@ std::ostream &output();
 /** Delete the current global logger and assign a new one */
 void setDebugLogger(Logger *logger);
 
-/** Enable debug logging */
-extern bool enabled;
+/** Enable/disable debug logging */
+void enable();
+void disable();
 
 } // namespace Trace
 
@@ -160,7 +161,7 @@ class Named
 
 #if TRACING_ON
 
-#define DTRACE(x) ((Debug::x) && Trace::enabled)
+#define DTRACE(x) (Debug::x)
 
 #define DDUMP(x, data, count) do {                                        \
     using namespace Debug;                                                \

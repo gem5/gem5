@@ -71,9 +71,6 @@ class IntelTrace : public InstTracer
         if (!Debug::ExecEnable)
             return NULL;
 
-        if (!Trace::enabled)
-            return NULL;
-
         return new IntelTraceRecord(when, tc, staticInst, pc, macroStaticInst);
     }
 };

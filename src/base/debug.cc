@@ -68,6 +68,8 @@ allFlags()
     return flags;
 }
 
+bool SimpleFlag::_active = false;
+
 Flag *
 findFlag(const std::string &name)
 {
@@ -95,17 +97,33 @@ Flag::~Flag()
 }
 
 void
+SimpleFlag::enableAll()
+{
+    _active = true;
+    for (auto& i : allFlags())
+        i.second->sync();
+}
+
+void
+SimpleFlag::disableAll()
+{
+    _active = false;
+    for (auto& i : allFlags())
+        i.second->sync();
+}
+
+void
 CompoundFlag::enable()
 {
-    SimpleFlag::enable();
-    for_each(_kids.begin(), _kids.end(), mem_fun(&Flag::enable));
+    for (auto& k : _kids)
+        k->enable();
 }
 
 void
 CompoundFlag::disable()
 {
-    SimpleFlag::disable();
-    for_each(_kids.begin(), _kids.end(), mem_fun(&Flag::disable));
+    for (auto& k : _kids)
+        k->disable();
 }
 
 struct AllFlags : public Flag

@@ -39,6 +39,7 @@
 #include <sstream>
 #include <string>
 
+#include "base/debug.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/str.hh"
@@ -53,8 +54,6 @@ const std::string &name()
 
 namespace Trace
 {
-
-bool enabled = false;
 
 // This variable holds the output logger for debug information.  Other
 // than setting up/redirecting this logger, do *NOT* reference this
@@ -85,6 +84,18 @@ setDebugLogger(Logger *logger)
         warn("Trying to set debug logger to NULL\n");
     else
         debug_logger = logger;
+}
+
+void
+enable()
+{
+    Debug::SimpleFlag::enableAll();
+}
+
+void
+disable()
+{
+    Debug::SimpleFlag::disableAll();
 }
 
 ObjectMatch ignore;

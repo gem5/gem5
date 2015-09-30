@@ -45,7 +45,6 @@ class Flag
   protected:
     const char *_name;
     const char *_desc;
-    std::vector<Flag *> _kids;
 
   public:
     Flag(const char *name, const char *desc);
@@ -53,33 +52,43 @@ class Flag
 
     std::string name() const { return _name; }
     std::string desc() const { return _desc; }
-    std::vector<Flag *> kids() { return _kids; }
+    virtual std::vector<Flag *> kids() { return std::vector<Flag*>(); }
 
     virtual void enable() = 0;
     virtual void disable() = 0;
+    virtual void sync() {}
 };
 
 class SimpleFlag : public Flag
 {
+    static bool _active; // whether debug tracings are enabled
   protected:
-    bool _status;
+    bool _tracing; // tracing is enabled and flag is on
+    bool _status;  // flag status
 
   public:
     SimpleFlag(const char *name, const char *desc)
         : Flag(name, desc), _status(false)
     { }
 
-    bool status() const { return _status; }
-    operator bool() const { return _status; }
-    bool operator!() const { return !_status; }
+    bool status() const { return _tracing; }
+    operator bool() const { return _tracing; }
+    bool operator!() const { return !_tracing; }
 
-    void enable() { _status = true; }
-    void disable() { _status = false; }
+    void enable()  { _status = true;  sync(); }
+    void disable() { _status = false; sync(); }
+
+    void sync() { _tracing = _active && _status; }
+
+    static void enableAll();
+    static void disableAll();
 };
 
-class CompoundFlag : public SimpleFlag
+class CompoundFlag : public Flag
 {
   protected:
+    std::vector<Flag *> _kids;
+
     void
     addFlag(Flag *f)
     {
@@ -99,13 +108,15 @@ class CompoundFlag : public SimpleFlag
         Flag *f14 = nullptr, Flag *f15 = nullptr,
         Flag *f16 = nullptr, Flag *f17 = nullptr,
         Flag *f18 = nullptr, Flag *f19 = nullptr)
-        : SimpleFlag(name, desc)
+        : Flag(name, desc)
     {
         addFlag(f00); addFlag(f01); addFlag(f02); addFlag(f03); addFlag(f04);
         addFlag(f05); addFlag(f06); addFlag(f07); addFlag(f08); addFlag(f09);
         addFlag(f10); addFlag(f11); addFlag(f12); addFlag(f13); addFlag(f14);
         addFlag(f15); addFlag(f16); addFlag(f17); addFlag(f18); addFlag(f19);
     }
+
+    std::vector<Flag *> kids() { return _kids; }
 
     void enable();
     void disable();
