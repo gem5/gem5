@@ -403,12 +403,12 @@ Execute::takeInterrupt(ThreadID thread_id, BranchData &branch)
     DPRINTF(MinorInterrupt, "Considering interrupt status from PC: %s\n",
         cpu.getContext(thread_id)->pcState());
 
-    Fault interrupt = cpu.getInterruptController()->getInterrupt
+    Fault interrupt = cpu.getInterruptController(thread_id)->getInterrupt
         (cpu.getContext(thread_id));
 
     if (interrupt != NoFault) {
         /* The interrupt *must* set pcState */
-        cpu.getInterruptController()->updateIntrInfo
+        cpu.getInterruptController(thread_id)->updateIntrInfo
             (cpu.getContext(thread_id));
         interrupt->invoke(cpu.getContext(thread_id));
 
@@ -1391,7 +1391,7 @@ Execute::evaluate()
     /* If there was an interrupt signalled, was it acted on now? */
     bool took_interrupt = false;
 
-    if (cpu.getInterruptController()) {
+    if (cpu.getInterruptController(0)) {
         /* This is here because it seems that after drainResume the
          * interrupt controller isn't always set */
         interrupted = drainState == NotDraining && isInterrupted(0);

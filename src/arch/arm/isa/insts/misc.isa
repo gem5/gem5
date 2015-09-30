@@ -649,7 +649,8 @@ let {{
     if (SevMailbox == 1) {
         SevMailbox = 0;
         PseudoInst::quiesceSkip(tc);
-    } else if (tc->getCpuPtr()->getInterruptController()->checkInterrupts(tc)) {
+    } else if (tc->getCpuPtr()->getInterruptController(
+                tc->threadId())->checkInterrupts(tc)) {
         PseudoInst::quiesceSkip(tc);
     } else if (cpsr.el == EL0 && !sctlr.ntwe) {
         PseudoInst::quiesceSkip(tc);
@@ -692,8 +693,8 @@ let {{
 
     // WFI doesn't sleep if interrupts are pending (masked or not)
     ThreadContext *tc = xc->tcBase();
-    if (tc->getCpuPtr()->getInterruptController()->checkWfiWake(hcr, cpsr,
-                                                                scr)) {
+    if (tc->getCpuPtr()->getInterruptController(
+                tc->threadId())->checkWfiWake(hcr, cpsr, scr)) {
         PseudoInst::quiesceSkip(tc);
     } else if (cpsr.el == EL0 && !sctlr.ntwi) {
         PseudoInst::quiesceSkip(tc);
@@ -711,7 +712,7 @@ let {{
     } else {
         PseudoInst::quiesce(tc);
     }
-    tc->getCpuPtr()->clearInterrupt(INT_ABT, 0);
+    tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     '''
     wfiIop = InstObjParams("wfi", "WfiInst", "PredOp", \
             { "code" : wfiCode, "predicate_test" : predicateTest },
@@ -731,7 +732,7 @@ let {{
         // Wake CPU with interrupt if they were sleeping
         if (oc->readMiscReg(MISCREG_SEV_MAILBOX) == 0) {
             // Post Interrupt and wake cpu if needed
-            oc->getCpuPtr()->postInterrupt(INT_SEV, 0);
+            oc->getCpuPtr()->postInterrupt(oc->threadId(), INT_SEV, 0);
         }
     }
     '''

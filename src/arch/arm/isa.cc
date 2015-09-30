@@ -668,12 +668,12 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_DBGDSCRint:
         return 0;
       case MISCREG_ISR:
-        return tc->getCpuPtr()->getInterruptController()->getISR(
+        return tc->getCpuPtr()->getInterruptController(tc->threadId())->getISR(
             readMiscRegNoEffect(MISCREG_HCR),
             readMiscRegNoEffect(MISCREG_CPSR),
             readMiscRegNoEffect(MISCREG_SCR));
       case MISCREG_ISR_EL1:
-        return tc->getCpuPtr()->getInterruptController()->getISR(
+        return tc->getCpuPtr()->getInterruptController(tc->threadId())->getISR(
             readMiscRegNoEffect(MISCREG_HCR_EL2),
             readMiscRegNoEffect(MISCREG_CPSR),
             readMiscRegNoEffect(MISCREG_SCR_EL3));
@@ -1929,7 +1929,7 @@ ISA::getGenericTimer(ThreadContext *tc)
               "been configured to use a generic timer.\n");
     }
 
-    timer.reset(new GenericTimerISA(*generic_timer, tc->cpuId()));
+    timer.reset(new GenericTimerISA(*generic_timer, tc->contextId()));
     return *timer.get();
 }
 

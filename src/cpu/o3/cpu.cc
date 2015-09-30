@@ -392,7 +392,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     }
 
     // FullO3CPU always requires an interrupt controller.
-    if (!params->switched_out && !interrupts) {
+    if (!params->switched_out && interrupts.empty()) {
         fatal("FullO3CPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n", name());
     }
@@ -935,7 +935,7 @@ Fault
 FullO3CPU<Impl>::getInterrupts()
 {
     // Check if there are any outstanding interrupts
-    return this->interrupts->getInterrupt(this->threadContexts[0]);
+    return this->interrupts[0]->getInterrupt(this->threadContexts[0]);
 }
 
 template <class Impl>
@@ -949,7 +949,7 @@ FullO3CPU<Impl>::processInterrupts(const Fault &interrupt)
     // @todo: Allow other threads to handle interrupts.
 
     assert(interrupt != NoFault);
-    this->interrupts->updateIntrInfo(this->threadContexts[0]);
+    this->interrupts[0]->updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
     this->trap(interrupt, 0, nullptr);

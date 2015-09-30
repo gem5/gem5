@@ -1142,9 +1142,9 @@ X86KvmCPU::deliverInterrupts()
         // call across threads, we might still lose interrupts unless
         // they are getInterrupt() and updateIntrInfo() are called
         // atomically.
-        EventQueue::ScopedMigration migrate(interrupts->eventQueue());
-        fault = interrupts->getInterrupt(tc);
-        interrupts->updateIntrInfo(tc);
+        EventQueue::ScopedMigration migrate(interrupts[0]->eventQueue());
+        fault = interrupts[0]->getInterrupt(tc);
+        interrupts[0]->updateIntrInfo(tc);
     }
 
     X86Interrupt *x86int(dynamic_cast<X86Interrupt *>(fault.get()));
@@ -1187,8 +1187,8 @@ X86KvmCPU::kvmRun(Tick ticks)
 {
     struct kvm_run &kvm_run(*getKvmRunState());
 
-    if (interrupts->checkInterruptsRaw()) {
-        if (interrupts->hasPendingUnmaskable()) {
+    if (interrupts[0]->checkInterruptsRaw()) {
+        if (interrupts[0]->hasPendingUnmaskable()) {
             DPRINTF(KvmInt,
                     "Delivering unmaskable interrupt.\n");
             syncThreadContext();
@@ -1200,7 +1200,7 @@ X86KvmCPU::kvmRun(Tick ticks)
             // the thread context and check if there are /really/
             // interrupts that should be delivered now.
             syncThreadContext();
-            if (interrupts->checkInterrupts(tc)) {
+            if (interrupts[0]->checkInterrupts(tc)) {
                 DPRINTF(KvmInt,
                         "M5 has pending interrupts, delivering interrupt.\n");
 

@@ -149,40 +149,40 @@ class BaseCPU(MemObject):
     if buildEnv['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcTLB(SparcTLB(), "Data TLB")
         itb = Param.SparcTLB(SparcTLB(), "Instruction TLB")
-        interrupts = Param.SparcInterrupts(
-                NULL, "Interrupt Controller")
+        interrupts = VectorParam.SparcInterrupts(
+                [], "Interrupt Controller")
         isa = VectorParam.SparcISA([ isa_class() ], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaTLB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaTLB(AlphaITB(), "Instruction TLB")
-        interrupts = Param.AlphaInterrupts(
-                NULL, "Interrupt Controller")
+        interrupts = VectorParam.AlphaInterrupts(
+                [], "Interrupt Controller")
         isa = VectorParam.AlphaISA([ isa_class() ], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'x86':
         dtb = Param.X86TLB(X86TLB(), "Data TLB")
         itb = Param.X86TLB(X86TLB(), "Instruction TLB")
-        interrupts = Param.X86LocalApic(NULL, "Interrupt Controller")
+        interrupts = VectorParam.X86LocalApic([], "Interrupt Controller")
         isa = VectorParam.X86ISA([ isa_class() ], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'mips':
         dtb = Param.MipsTLB(MipsTLB(), "Data TLB")
         itb = Param.MipsTLB(MipsTLB(), "Instruction TLB")
-        interrupts = Param.MipsInterrupts(
-                NULL, "Interrupt Controller")
+        interrupts = VectorParam.MipsInterrupts(
+                [], "Interrupt Controller")
         isa = VectorParam.MipsISA([ isa_class() ], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'arm':
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
         istage2_mmu = Param.ArmStage2MMU(ArmStage2IMMU(), "Stage 2 trans")
         dstage2_mmu = Param.ArmStage2MMU(ArmStage2DMMU(), "Stage 2 trans")
-        interrupts = Param.ArmInterrupts(
-                NULL, "Interrupt Controller")
+        interrupts = VectorParam.ArmInterrupts(
+                [], "Interrupt Controller")
         isa = VectorParam.ArmISA([ isa_class() ], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.PowerTLB(PowerTLB(), "Data TLB")
         itb = Param.PowerTLB(PowerTLB(), "Instruction TLB")
-        interrupts = Param.PowerInterrupts(
-                NULL, "Interrupt Controller")
+        interrupts = VectorParam.PowerInterrupts(
+                [], "Interrupt Controller")
         isa = VectorParam.PowerISA([ isa_class() ], "ISA instance")
     else:
         print "Don't know what TLB to use for ISA %s" % \
@@ -218,27 +218,29 @@ class BaseCPU(MemObject):
     _uncached_slave_ports = []
     _uncached_master_ports = []
     if buildEnv['TARGET_ISA'] == 'x86':
-        _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
-        _uncached_master_ports += ["interrupts.int_master"]
+        _uncached_slave_ports += ["interrupts[0].pio",
+                                  "interrupts[0].int_slave"]
+        _uncached_master_ports += ["interrupts[0].int_master"]
 
     def createInterruptController(self):
         if buildEnv['TARGET_ISA'] == 'sparc':
-            self.interrupts = SparcInterrupts()
+            self.interrupts = [SparcInterrupts() for i in xrange(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'alpha':
-            self.interrupts = AlphaInterrupts()
+            self.interrupts = [AlphaInterrupts() for i in xrange(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'x86':
             self.apic_clk_domain = DerivedClockDomain(clk_domain =
                                                       Parent.clk_domain,
                                                       clk_divider = 16)
-            self.interrupts = X86LocalApic(clk_domain = self.apic_clk_domain,
+            self.interrupts = [X86LocalApic(clk_domain = self.apic_clk_domain,
                                            pio_addr=0x2000000000000000)
+                               for i in xrange(self.numThreads)]
             _localApic = self.interrupts
         elif buildEnv['TARGET_ISA'] == 'mips':
-            self.interrupts = MipsInterrupts()
+            self.interrupts = [MipsInterrupts() for i in xrange(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'arm':
-            self.interrupts = ArmInterrupts()
+            self.interrupts = [ArmInterrupts() for i in xrange(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'power':
-            self.interrupts = PowerInterrupts()
+            self.interrupts = [PowerInterrupts() for i in xrange(self.numThreads)]
         else:
             print "Don't know what Interrupt Controller to use for ISA %s" % \
                 buildEnv['TARGET_ISA']

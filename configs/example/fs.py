@@ -176,9 +176,9 @@ def build_test_system(np):
                 cpu.itb.walker.port = test_sys.ruby._cpu_ports[i].slave
                 cpu.dtb.walker.port = test_sys.ruby._cpu_ports[i].slave
 
-                cpu.interrupts.pio = test_sys.ruby._cpu_ports[i].master
-                cpu.interrupts.int_master = test_sys.ruby._cpu_ports[i].slave
-                cpu.interrupts.int_slave = test_sys.ruby._cpu_ports[i].master
+                cpu.interrupts[0].pio = test_sys.ruby._cpu_ports[i].master
+                cpu.interrupts[0].int_master = test_sys.ruby._cpu_ports[i].slave
+                cpu.interrupts[0].int_slave = test_sys.ruby._cpu_ports[i].master
 
     else:
         if options.caches or options.l2cache:

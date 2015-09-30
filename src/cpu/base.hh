@@ -207,41 +207,45 @@ class BaseCPU : public MemObject
     TheISA::MicrocodeRom microcodeRom;
 
   protected:
-    TheISA::Interrupts *interrupts;
+    std::vector<TheISA::Interrupts*> interrupts;
 
   public:
     TheISA::Interrupts *
-    getInterruptController()
+    getInterruptController(ThreadID tid)
     {
-        return interrupts;
+        if (interrupts.empty())
+            return NULL;
+
+        assert(interrupts.size() > tid);
+        return interrupts[tid];
     }
 
     virtual void wakeup() = 0;
 
     void
-    postInterrupt(int int_num, int index)
+    postInterrupt(ThreadID tid, int int_num, int index)
     {
-        interrupts->post(int_num, index);
+        interrupts[tid]->post(int_num, index);
         if (FullSystem)
             wakeup();
     }
 
     void
-    clearInterrupt(int int_num, int index)
+    clearInterrupt(ThreadID tid, int int_num, int index)
     {
-        interrupts->clear(int_num, index);
+        interrupts[tid]->clear(int_num, index);
     }
 
     void
-    clearInterrupts()
+    clearInterrupts(ThreadID tid)
     {
-        interrupts->clearAll();
+        interrupts[tid]->clearAll();
     }
 
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return FullSystem && interrupts->checkInterrupts(tc);
+        return FullSystem && interrupts[tc->threadId()]->checkInterrupts(tc);
     }
 
     class ProfileEvent : public Event

@@ -237,8 +237,10 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     // The interrupts should always be present unless this CPU is
     // switched in later or in case it is a checker CPU
     if (!params()->switched_out && !is_checker) {
-        if (interrupts) {
-            interrupts->setCPU(this);
+        if (!interrupts.empty()) {
+            for (ThreadID tid = 0; tid < numThreads; tid++) {
+                interrupts[tid]->setCPU(this);
+            }
         } else {
             fatal("CPU %s has no interrupt controller.\n"
                   "Ensure createInterruptController() is called.\n", name());
@@ -583,8 +585,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     }
 
     interrupts = oldCPU->interrupts;
-    interrupts->setCPU(this);
-    oldCPU->interrupts = NULL;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        interrupts[tid]->setCPU(this);
+    }
+    oldCPU->interrupts.clear();
 
     if (FullSystem) {
         for (ThreadID i = 0; i < size; ++i)
@@ -656,11 +660,10 @@ BaseCPU::serialize(CheckpointOut &cp) const
          * system. */
         SERIALIZE_SCALAR(_pid);
 
-        interrupts->serialize(cp);
-
         // Serialize the threads, this is done by the CPU implementation.
         for (ThreadID i = 0; i < numThreads; ++i) {
             ScopedCheckpointSection sec(cp, csprintf("xc.%i", i));
+            interrupts[i]->serialize(cp);
             serializeThread(cp, i);
         }
     }
@@ -673,11 +676,11 @@ BaseCPU::unserialize(CheckpointIn &cp)
 
     if (!_switchedOut) {
         UNSERIALIZE_SCALAR(_pid);
-        interrupts->unserialize(cp);
 
         // Unserialize the threads, this is done by the CPU implementation.
         for (ThreadID i = 0; i < numThreads; ++i) {
             ScopedCheckpointSection sec(cp, csprintf("xc.%i", i));
+            interrupts[i]->unserialize(cp);
             unserializeThread(cp, i);
         }
     }

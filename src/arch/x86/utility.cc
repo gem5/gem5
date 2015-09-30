@@ -183,7 +183,7 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_APIC_BASE, lApicBase);
 
     Interrupts * interrupts = dynamic_cast<Interrupts *>(
-            tc->getCpuPtr()->getInterruptController());
+            tc->getCpuPtr()->getInterruptController(0));
     assert(interrupts);
 
     interrupts->setRegNoEffect(APIC_ID, cpuId << 24);
