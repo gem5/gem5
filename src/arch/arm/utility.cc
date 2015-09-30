@@ -210,7 +210,10 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
     // for simulation of larger systems
     assert((0 <= tc->cpuId()) && (tc->cpuId() < 256));
     assert((0 <= tc->socketId()) && (tc->socketId() < 65536));
-    if (arm_sys->multiProc) {
+    if (arm_sys->multiThread) {
+       return 0x80000000 | // multiprocessor extensions available
+              tc->contextId();
+    } else if (arm_sys->multiProc) {
        return 0x80000000 | // multiprocessor extensions available
               tc->cpuId() | tc->socketId() << 8;
     } else {
