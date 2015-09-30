@@ -327,6 +327,7 @@ protected:
     HCR hcr;
     uint32_t dacr;
     bool miscRegValid;
+    ContextID miscRegContext;
     ArmTranslationType curTranType;
 
     // Cached copies of system-level properties
