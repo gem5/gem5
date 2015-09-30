@@ -196,6 +196,7 @@ class System : public MemObject
 
     std::vector<ThreadContext *> threadContexts;
     int _numContexts;
+    const bool multiThread;
 
     ThreadContext *getThreadContext(ContextID tid)
     {

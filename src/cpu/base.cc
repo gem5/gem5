@@ -436,21 +436,17 @@ BaseCPU::getMasterPort(const string &if_name, PortID idx)
 void
 BaseCPU::registerThreadContexts()
 {
+    assert(system->multiThread || numThreads == 1);
+
     ThreadID size = threadContexts.size();
     for (ThreadID tid = 0; tid < size; ++tid) {
         ThreadContext *tc = threadContexts[tid];
 
-        /** This is so that contextId and cpuId match where there is a
-         * 1cpu:1context relationship.  Otherwise, the order of registration
-         * could affect the assignment and cpu 1 could have context id 3, for
-         * example.  We may even want to do something like this for SMT so that
-         * cpu 0 has the lowest thread contexts and cpu N has the highest, but
-         * I'll just do this for now
-         */
-        if (numThreads == 1)
-            tc->setContextId(system->registerThreadContext(tc, _cpuId));
-        else
+        if (system->multiThread) {
             tc->setContextId(system->registerThreadContext(tc));
+        } else {
+            tc->setContextId(system->registerThreadContext(tc, _cpuId));
+        }
 
         if (!FullSystem)
             tc->getProcessPtr()->assignThreadContext(tc->contextId());
