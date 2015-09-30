@@ -100,7 +100,7 @@ class BaseKvmCPU : public BaseCPU
     MasterPort &getDataPort() { return dataPort; }
     MasterPort &getInstPort() { return instPort; }
 
-    void wakeup();
+    void wakeup(ThreadID tid = 0) M5_ATTR_OVERRIDE;
     void activateContext(ThreadID thread_num);
     void suspendContext(ThreadID thread_num);
     void deallocateContext(ThreadID thread_num);

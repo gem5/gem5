@@ -220,14 +220,14 @@ class BaseCPU : public MemObject
         return interrupts[tid];
     }
 
-    virtual void wakeup() = 0;
+    virtual void wakeup(ThreadID tid) = 0;
 
     void
     postInterrupt(ThreadID tid, int int_num, int index)
     {
         interrupts[tid]->post(int_num, index);
         if (FullSystem)
-            wakeup();
+            wakeup(tid);
     }
 
     void

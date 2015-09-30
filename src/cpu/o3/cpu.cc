@@ -120,7 +120,7 @@ FullO3CPU<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
     for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
         if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
-            cpu->wakeup();
+            cpu->wakeup(tid);
         }
     }
     lsq->recvTimingSnoopReq(pkt);
@@ -1633,15 +1633,15 @@ FullO3CPU<Impl>::wakeCPU()
 
 template <class Impl>
 void
-FullO3CPU<Impl>::wakeup()
+FullO3CPU<Impl>::wakeup(ThreadID tid)
 {
-    if (this->thread[0]->status() != ThreadContext::Suspended)
+    if (this->thread[tid]->status() != ThreadContext::Suspended)
         return;
 
     this->wakeCPU();
 
     DPRINTF(Quiesce, "Suspended Processor woken\n");
-    this->threadContexts[0]->activate();
+    this->threadContexts[tid]->activate();
 }
 
 template <class Impl>

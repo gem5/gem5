@@ -93,7 +93,7 @@ class BaseSimpleCPU : public BaseCPU
   public:
     BaseSimpleCPU(BaseSimpleCPUParams *params);
     virtual ~BaseSimpleCPU();
-    void wakeup();
+    void wakeup(ThreadID tid) M5_ATTR_OVERRIDE;
     virtual void init();
   public:
     Trace::InstRecord *traceData;

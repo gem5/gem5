@@ -380,7 +380,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     Fault hwrei() { return thread->hwrei(); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
-    void wakeup() { }
+    void wakeup(ThreadID tid) M5_ATTR_OVERRIDE { }
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
     void syscall(int64_t callnum) { }

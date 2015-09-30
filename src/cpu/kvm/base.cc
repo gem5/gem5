@@ -408,7 +408,7 @@ BaseKvmCPU::verifyMemoryMode() const
 }
 
 void
-BaseKvmCPU::wakeup()
+BaseKvmCPU::wakeup(ThreadID tid)
 {
     DPRINTF(Kvm, "wakeup()\n");
     // This method might have been called from another

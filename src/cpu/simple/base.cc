@@ -416,14 +416,13 @@ BaseSimpleCPU::dbg_vtophys(Addr addr)
 }
 
 void
-BaseSimpleCPU::wakeup()
+BaseSimpleCPU::wakeup(ThreadID tid)
 {
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
-        getCpuAddrMonitor(tid)->gotWakeup = true;
-        if (threadInfo[tid]->thread->status() == ThreadContext::Suspended) {
-            DPRINTF(Quiesce,"Suspended Processor awoke\n");
-            threadInfo[tid]->thread->activate();
-        }
+    getCpuAddrMonitor(tid)->gotWakeup = true;
+
+    if (threadInfo[tid]->thread->status() == ThreadContext::Suspended) {
+        DPRINTF(Quiesce,"[tid:%d] Suspended Processor awoke\n", tid);
+        threadInfo[tid]->thread->activate();
     }
 }
 

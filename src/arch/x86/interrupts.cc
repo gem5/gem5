@@ -290,7 +290,7 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
         }
     }
     if (FullSystem)
-        cpu->wakeup();
+        cpu->wakeup(0);
 }
 
 

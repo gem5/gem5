@@ -640,7 +640,7 @@ class FullO3CPU : public BaseO3CPU
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
 
-    virtual void wakeup();
+    virtual void wakeup(ThreadID tid) M5_ATTR_OVERRIDE;
 
     /** Gets a free thread id. Use if thread ids change across system. */
     ThreadID getFreeTid();

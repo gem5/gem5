@@ -82,7 +82,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
         xc->setMiscReg(MISCREG_LOCKFLAG, false);
         // Implement ARMv8 WFE/SEV semantics
         xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
-        xc->getCpuPtr()->wakeup();
+        xc->getCpuPtr()->wakeup(xc->threadId());
     }
 }
 

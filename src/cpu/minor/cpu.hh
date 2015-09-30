@@ -128,7 +128,7 @@ class MinorCPU : public BaseCPU
     /** Starting, waking and initialisation */
     void init();
     void startup();
-    void wakeup();
+    void wakeup(ThreadID tid) M5_ATTR_OVERRIDE;
 
     Addr dbg_vtophys(Addr addr);
 
