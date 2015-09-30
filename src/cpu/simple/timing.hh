@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #define __CPU_SIMPLE_TIMING_HH__
 
 #include "cpu/simple/base.hh"
+#include "cpu/simple/exec_context.hh"
 #include "cpu/translation.hh"
 #include "params/TimingSimpleCPU.hh"
 
@@ -342,7 +343,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * </ul>
      */
     bool isDrained() {
-        return microPC() == 0 && !stayAtPC && !fetchEvent.scheduled();
+        SimpleExecContext& t_info = *threadInfo[curThread];
+        SimpleThread* thread = t_info.thread;
+
+        return thread->microPC() == 0 && !t_info.stayAtPC &&
+               !fetchEvent.scheduled();
     }
 
     /**

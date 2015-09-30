@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #define __CPU_SIMPLE_ATOMIC_HH__
 
 #include "cpu/simple/base.hh"
+#include "cpu/simple/exec_context.hh"
 #include "params/AtomicSimpleCPU.hh"
 #include "sim/probe/probe.hh"
 
@@ -96,9 +97,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * </ul>
      */
     bool isDrained() {
-        return microPC() == 0 &&
+        SimpleExecContext &t_info = *threadInfo[curThread];
+
+        return t_info.thread->microPC() == 0 &&
             !locked &&
-            !stayAtPC;
+            !t_info.stayAtPC;
     }
 
     /**
