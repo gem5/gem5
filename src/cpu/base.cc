@@ -133,7 +133,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       numThreads(p->numThreads), system(p->system),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
-      addressMonitor()
+      addressMonitor(p->numThreads)
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
@@ -271,39 +271,48 @@ BaseCPU::~BaseCPU()
 }
 
 void
-BaseCPU::armMonitor(Addr address)
+BaseCPU::armMonitor(ThreadID tid, Addr address)
 {
-    addressMonitor.armed = true;
-    addressMonitor.vAddr = address;
-    addressMonitor.pAddr = 0x0;
-    DPRINTF(Mwait,"Armed monitor (vAddr=0x%lx)\n", address);
+    assert(tid < numThreads);
+    AddressMonitor &monitor = addressMonitor[tid];
+
+    monitor.armed = true;
+    monitor.vAddr = address;
+    monitor.pAddr = 0x0;
+    DPRINTF(Mwait,"[tid:%d] Armed monitor (vAddr=0x%lx)\n", tid, address);
 }
 
 bool
-BaseCPU::mwait(PacketPtr pkt)
+BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
 {
-    if(addressMonitor.gotWakeup == false) {
+    assert(tid < numThreads);
+    AddressMonitor &monitor = addressMonitor[tid];
+
+    if(monitor.gotWakeup == false) {
         int block_size = cacheLineSize();
         uint64_t mask = ~((uint64_t)(block_size - 1));
 
         assert(pkt->req->hasPaddr());
-        addressMonitor.pAddr = pkt->getAddr() & mask;
-        addressMonitor.waiting = true;
+        monitor.pAddr = pkt->getAddr() & mask;
+        monitor.waiting = true;
 
-        DPRINTF(Mwait,"mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
-                addressMonitor.vAddr, addressMonitor.pAddr);
+        DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, "
+                "line's paddr=0x%lx)\n", tid, monitor.vAddr, monitor.pAddr);
         return true;
     } else {
-        addressMonitor.gotWakeup = false;
+        monitor.gotWakeup = false;
         return false;
     }
 }
 
 void
-BaseCPU::mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb)
+BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb)
 {
+    assert(tid < numThreads);
+    AddressMonitor &monitor = addressMonitor[tid];
+
     Request req;
-    Addr addr = addressMonitor.vAddr;
+    Addr addr = monitor.vAddr;
     int block_size = cacheLineSize();
     uint64_t mask = ~((uint64_t)(block_size - 1));
     int size = block_size;
@@ -320,11 +329,11 @@ BaseCPU::mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb)
     Fault fault = dtb->translateAtomic(&req, tc, BaseTLB::Read);
     assert(fault == NoFault);
 
-    addressMonitor.pAddr = req.getPaddr() & mask;
-    addressMonitor.waiting = true;
+    monitor.pAddr = req.getPaddr() & mask;
+    monitor.waiting = true;
 
-    DPRINTF(Mwait,"mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
-            addressMonitor.vAddr, addressMonitor.pAddr);
+    DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
+            tid, monitor.vAddr, monitor.pAddr);
 }
 
 void

@@ -350,11 +350,11 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
     // monitor/mwait funtions
-    virtual void armMonitor(Addr address) { BaseCPU::armMonitor(address); }
-    bool mwait(PacketPtr pkt) { return BaseCPU::mwait(pkt); }
+    virtual void armMonitor(Addr address) { BaseCPU::armMonitor(0, address); }
+    bool mwait(PacketPtr pkt) { return BaseCPU::mwait(0, pkt); }
     void mwaitAtomic(ThreadContext *tc)
-    { return BaseCPU::mwaitAtomic(tc, thread->dtb); }
-    AddressMonitor *getAddrMonitor() { return BaseCPU::getCpuAddrMonitor(); }
+    { return BaseCPU::mwaitAtomic(0, tc, thread->dtb); }
+    AddressMonitor *getAddrMonitor() { return BaseCPU::getCpuAddrMonitor(0); }
 
     void demapInstPage(Addr vaddr, uint64_t asn)
     {

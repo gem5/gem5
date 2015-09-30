@@ -559,14 +559,17 @@ class BaseCPU : public MemObject
     Stats::Scalar numWorkItemsCompleted;
 
   private:
-    AddressMonitor addressMonitor;
+    std::vector<AddressMonitor> addressMonitor;
 
   public:
-    void armMonitor(Addr address);
-    bool mwait(PacketPtr pkt);
-    void mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb);
-    AddressMonitor *getCpuAddrMonitor() { return &addressMonitor; }
-    void atomicNotify(Addr address);
+    void armMonitor(ThreadID tid, Addr address);
+    bool mwait(ThreadID tid, PacketPtr pkt);
+    void mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb);
+    AddressMonitor *getCpuAddrMonitor(ThreadID tid)
+    {
+        assert(tid < numThreads);
+        return &addressMonitor[tid];
+    }
 };
 
 #endif // THE_ISA == NULL_ISA

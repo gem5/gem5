@@ -132,6 +132,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     };
     FetchTranslation fetchTranslation;
 
+    void threadSnoop(PacketPtr pkt, ThreadID sender);
     void sendData(RequestPtr req, uint8_t *data, uint64_t *res, bool read);
     void sendSplitData(RequestPtr req1, RequestPtr req2, RequestPtr req,
                        uint8_t *data, bool read);

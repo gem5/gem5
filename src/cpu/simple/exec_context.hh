@@ -376,22 +376,22 @@ class SimpleExecContext : public ExecContext {
 
     void armMonitor(Addr address) M5_ATTR_OVERRIDE
     {
-        cpu->armMonitor(address);
+        cpu->armMonitor(thread->threadId(), address);
     }
 
     bool mwait(PacketPtr pkt) M5_ATTR_OVERRIDE
     {
-        return cpu->mwait(pkt);
+        return cpu->mwait(thread->threadId(), pkt);
     }
 
     void mwaitAtomic(ThreadContext *tc) M5_ATTR_OVERRIDE
     {
-        cpu->mwaitAtomic(tc, thread->dtb);
+        cpu->mwaitAtomic(thread->threadId(), tc, thread->dtb);
     }
 
     AddressMonitor *getAddrMonitor() M5_ATTR_OVERRIDE
     {
-        return cpu->getCpuAddrMonitor();
+        return cpu->getCpuAddrMonitor(thread->threadId());
     }
 
 #if THE_ISA == MIPS_ISA

@@ -1501,7 +1501,8 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
     if (inst->traceData)
         inst->traceData->setMem(addr, size, flags);
 
-    request->request.setThreadContext(cpu.cpuId(), /* thread id */ 0);
+    int cid = cpu.threads[inst->id.threadId]->getTC()->contextId();
+    request->request.setThreadContext(cid, /* thread id */ 0);
     request->request.setVirt(0 /* asid */,
         addr, size, flags, cpu.dataMasterId(),
         /* I've no idea why we need the PC, but give it */

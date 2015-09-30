@@ -86,9 +86,10 @@ AtomicSimpleCPU::init()
 {
     BaseSimpleCPU::init();
 
-    ifetch_req.setThreadContext(_cpuId, 0);
-    data_read_req.setThreadContext(_cpuId, 0);
-    data_write_req.setThreadContext(_cpuId, 0);
+    int cid = threadContexts[0]->contextId();
+    ifetch_req.setThreadContext(cid, 0);
+    data_read_req.setThreadContext(cid, 0);
+    data_write_req.setThreadContext(cid, 0);
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
@@ -127,6 +128,24 @@ AtomicSimpleCPU::drain()
         activeThreads.clear();
         DPRINTF(Drain, "Not executing microcode, no need to drain.\n");
         return DrainState::Drained;
+    }
+}
+
+void
+AtomicSimpleCPU::threadSnoop(PacketPtr pkt, ThreadID sender)
+{
+    DPRINTF(SimpleCPU, "received snoop pkt for addr:%#x %s\n", pkt->getAddr(),
+            pkt->cmdString());
+
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        if (tid != sender) {
+            if(getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+                wakeup();
+            }
+
+            TheISA::handleLockedSnoop(threadInfo[tid]->thread,
+                                      pkt, dcachePort.cacheBlockMask);
+        }
     }
 }
 
@@ -265,8 +284,11 @@ AtomicSimpleCPU::AtomicCPUDPort::recvAtomicSnoop(PacketPtr pkt)
 
     // X86 ISA: Snooping an invalidation for monitor/mwait
     AtomicSimpleCPU *cpu = (AtomicSimpleCPU *)(&owner);
-    if(cpu->getCpuAddrMonitor()->doMonitor(pkt)) {
-        cpu->wakeup();
+
+    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
+        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            cpu->wakeup();
+        }
     }
 
     // if snoop invalidates, release any associated locks
@@ -289,8 +311,10 @@ AtomicSimpleCPU::AtomicCPUDPort::recvFunctionalSnoop(PacketPtr pkt)
 
     // X86 ISA: Snooping an invalidation for monitor/mwait
     AtomicSimpleCPU *cpu = (AtomicSimpleCPU *)(&owner);
-    if(cpu->getCpuAddrMonitor()->doMonitor(pkt)) {
-        cpu->wakeup();
+    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
+        if(cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            cpu->wakeup();
+        }
     }
 
     // if snoop invalidates, release any associated locks
@@ -460,6 +484,9 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
                         system->getPhysMem().access(&pkt);
                     else
                         dcache_latency += dcachePort.sendAtomic(&pkt);
+
+                    // Notify other threads on this CPU of write
+                    threadSnoop(&pkt, curThread);
                 }
                 dcache_access = true;
                 assert(!pkt.isError());
@@ -516,9 +543,11 @@ AtomicSimpleCPU::tick()
 
     // Set memroy request ids to current thread
     if (numThreads > 1) {
-        ifetch_req.setThreadContext(_cpuId, curThread);
-        data_read_req.setThreadContext(_cpuId, curThread);
-        data_write_req.setThreadContext(_cpuId, curThread);
+        ContextID cid = threadContexts[curThread]->contextId();
+
+        ifetch_req.setThreadContext(cid, curThread);
+        data_read_req.setThreadContext(cid, curThread);
+        data_write_req.setThreadContext(cid, curThread);
     }
 
     SimpleExecContext& t_info = *threadInfo[curThread];

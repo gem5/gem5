@@ -186,6 +186,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     /** Return a reference to the instruction port. */
     virtual MasterPort &getInstPort() { return icachePort; }
 
+    /** Perform snoop for other cpu-local thread contexts. */
+    void threadSnoop(PacketPtr pkt, ThreadID sender);
+
   public:
 
     DrainState drain() M5_ATTR_OVERRIDE;

@@ -302,6 +302,7 @@ TimingSimpleCPU::sendData(RequestPtr req, uint8_t *data, uint64_t *res,
         if (do_access) {
             dcache_pkt = pkt;
             handleWritePacket();
+            threadSnoop(pkt, curThread);
         } else {
             _status = DcacheWaitResponse;
             completeDataAccess(pkt);
@@ -538,6 +539,19 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     return NoFault;
 }
 
+void
+TimingSimpleCPU::threadSnoop(PacketPtr pkt, ThreadID sender)
+{
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        if (tid != sender) {
+            if(getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+                wakeup();
+            }
+            TheISA::handleLockedSnoop(threadInfo[tid]->thread, pkt,
+                    dcachePort.cacheBlockMask);
+        }
+    }
+}
 
 void
 TimingSimpleCPU::finishTranslation(WholeTranslationState *state)
@@ -849,9 +863,10 @@ TimingSimpleCPU::updateCycleCounts()
 void
 TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
-    // X86 ISA: Snooping an invalidation for monitor/mwait
-    if(cpu->getCpuAddrMonitor()->doMonitor(pkt)) {
-        cpu->wakeup();
+    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
+        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            cpu->wakeup();
+        }
     }
 
     for (auto &t_info : cpu->threadInfo) {
@@ -862,9 +877,10 @@ TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 void
 TimingSimpleCPU::DcachePort::recvFunctionalSnoop(PacketPtr pkt)
 {
-    // X86 ISA: Snooping an invalidation for monitor/mwait
-    if(cpu->getCpuAddrMonitor()->doMonitor(pkt)) {
-        cpu->wakeup();
+    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
+        if(cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            cpu->wakeup();
+        }
     }
 }
 

@@ -343,12 +343,12 @@ class ExecContext : public ::ExecContext
 
   public:
     // monitor/mwait funtions
-    void armMonitor(Addr address) { getCpuPtr()->armMonitor(address); }
-    bool mwait(PacketPtr pkt) { return getCpuPtr()->mwait(pkt); }
+    void armMonitor(Addr address) { getCpuPtr()->armMonitor(0, address); }
+    bool mwait(PacketPtr pkt) { return getCpuPtr()->mwait(0, pkt); }
     void mwaitAtomic(ThreadContext *tc)
-    { return getCpuPtr()->mwaitAtomic(tc, thread.dtb); }
+    { return getCpuPtr()->mwaitAtomic(0, tc, thread.dtb); }
     AddressMonitor *getAddrMonitor()
-    { return getCpuPtr()->getCpuAddrMonitor(); }
+    { return getCpuPtr()->getCpuAddrMonitor(0); }
 };
 
 }
