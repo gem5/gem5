@@ -70,9 +70,9 @@ system.cpu.createInterruptController()
 # For x86 only, make sure the interrupts are connected to the memory
 # Note: these are directly connected to the memory bus and are not cached
 if m5.defines.buildEnv['TARGET_ISA'] == "x86":
-    system.cpu.interrupts.pio = system.membus.master
-    system.cpu.interrupts.int_master = system.membus.slave
-    system.cpu.interrupts.int_slave = system.membus.master
+    system.cpu.interrupts[0].pio = system.membus.master
+    system.cpu.interrupts[0].int_master = system.membus.slave
+    system.cpu.interrupts[0].int_slave = system.membus.master
 
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = DDR3_1600_x64()
