@@ -180,7 +180,16 @@
                 "role": "SLAVE"
             }, 
             "name": "toL2Bus", 
-            "snoop_filter": null, 
+            "snoop_filter": {
+                "name": "snoop_filter", 
+                "system": "system", 
+                "max_capacity": 8388608, 
+                "eventq_index": 0, 
+                "cxx_class": "SnoopFilter", 
+                "path": "system.toL2Bus.snoop_filter", 
+                "type": "SnoopFilter", 
+                "lookup_latency": 0
+            }, 
             "forward_latency": 0, 
             "clk_domain": "system.cpu_clk_domain", 
             "system": "system", 
@@ -287,13 +296,15 @@
                     "sequential_access": false, 
                     "assoc": 1
                 }, 
-                "interrupts": {
-                    "eventq_index": 0, 
-                    "path": "system.cpu0.interrupts", 
-                    "type": "AlphaInterrupts", 
-                    "name": "interrupts", 
-                    "cxx_class": "AlphaISA::Interrupts"
-                }, 
+                "interrupts": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu0.interrupts", 
+                        "type": "AlphaInterrupts", 
+                        "name": "interrupts", 
+                        "cxx_class": "AlphaISA::Interrupts"
+                    }
+                ], 
                 "dcache_port": {
                     "peer": "system.cpu0.dcache.cpu_side", 
                     "role": "MASTER"
@@ -313,7 +324,7 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu0.workload", 
                         "max_stack_size": 67108864, 
@@ -478,13 +489,15 @@
                     "sequential_access": false, 
                     "assoc": 1
                 }, 
-                "interrupts": {
-                    "eventq_index": 0, 
-                    "path": "system.cpu1.interrupts", 
-                    "type": "AlphaInterrupts", 
-                    "name": "interrupts", 
-                    "cxx_class": "AlphaISA::Interrupts"
-                }, 
+                "interrupts": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu1.interrupts", 
+                        "type": "AlphaInterrupts", 
+                        "name": "interrupts", 
+                        "cxx_class": "AlphaISA::Interrupts"
+                    }
+                ], 
                 "dcache_port": {
                     "peer": "system.cpu1.dcache.cpu_side", 
                     "role": "MASTER"
@@ -504,7 +517,7 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu1.workload", 
                         "max_stack_size": 67108864, 
@@ -669,13 +682,15 @@
                     "sequential_access": false, 
                     "assoc": 1
                 }, 
-                "interrupts": {
-                    "eventq_index": 0, 
-                    "path": "system.cpu2.interrupts", 
-                    "type": "AlphaInterrupts", 
-                    "name": "interrupts", 
-                    "cxx_class": "AlphaISA::Interrupts"
-                }, 
+                "interrupts": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu2.interrupts", 
+                        "type": "AlphaInterrupts", 
+                        "name": "interrupts", 
+                        "cxx_class": "AlphaISA::Interrupts"
+                    }
+                ], 
                 "dcache_port": {
                     "peer": "system.cpu2.dcache.cpu_side", 
                     "role": "MASTER"
@@ -695,7 +710,7 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu2.workload", 
                         "max_stack_size": 67108864, 
@@ -860,13 +875,15 @@
                     "sequential_access": false, 
                     "assoc": 1
                 }, 
-                "interrupts": {
-                    "eventq_index": 0, 
-                    "path": "system.cpu3.interrupts", 
-                    "type": "AlphaInterrupts", 
-                    "name": "interrupts", 
-                    "cxx_class": "AlphaISA::Interrupts"
-                }, 
+                "interrupts": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu3.interrupts", 
+                        "type": "AlphaInterrupts", 
+                        "name": "interrupts", 
+                        "cxx_class": "AlphaISA::Interrupts"
+                    }
+                ], 
                 "dcache_port": {
                     "peer": "system.cpu3.dcache.cpu_side", 
                     "role": "MASTER"
@@ -886,7 +903,7 @@
                         "system": "system", 
                         "useArchPT": false, 
                         "eventq_index": 0, 
-                        "file": "/scratch/nilay/GEM5/gem5/tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
+                        "file": "/dist/m5/regression/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz", 
                         "cxx_class": "EioProcess", 
                         "path": "system.cpu3.workload", 
                         "max_stack_size": 67108864, 
@@ -974,9 +991,10 @@
                 }
             }
         ], 
-        "num_work_ids": 16, 
+        "multi_thread": false, 
+        "work_begin_cpu_id_exit": -1, 
         "work_item_id": -1, 
-        "work_begin_cpu_id_exit": -1
+        "num_work_ids": 16
     }, 
     "time_sync_period": 100000000000, 
     "eventq_index": 0, 
