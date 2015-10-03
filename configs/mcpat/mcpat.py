@@ -21,15 +21,11 @@ from yattag import Doc
 
 from optparse import OptionParser
 
-from pprint import pprint
-
 parser = OptionParser()
 parser.add_option('--config', type='string', default='../../m5out/config.json', help = 'GEM5\'s system configuration JSON file name')
 parser.add_option('--stats', type='string', default='../../m5out/stats.txt', help = 'GEM5\'s output statistics file name')
 
 (option, arg) = parser.parse_args()
-
-np = 4 # TODO
 
 config_json_file_name = option.config
 stats_file_name = option.stats
@@ -39,9 +35,7 @@ with open(config_json_file_name) as config_json_file:
 
 config_tree = Tree(config)
 
-pprint(config_tree.execute('$.system.kernel'))
-
-stat_rule = Word(printables) + Word('.' + nums) + Optional(restOfLine)
+stat_rule = Word(printables) + Word('nan.%' + nums) + Optional(restOfLine)
 
 stats = collections.OrderedDict({})
 
@@ -55,28 +49,86 @@ with open(stats_file_name) as stats_file:
         except ParseException, err:
             pass
 
-for key, value in stats.iteritems():
-    print '{}: {}'.format(key, value)
+def gen_system(tag):
+    with tag('param', name = 'core_tech_node', value = '40'):
+        pass
+    with tag('param', name = 'target_core_clockrate', value = str(int(stats['sim_freq']) / 1000 / 10**6)):
+        pass
+    with tag('param', name = 'temperature', value = '380'):
+        pass
+    with tag('param', name = 'device_type', value = '0'):
+        pass
+    with tag('param', name = 'longer_channel_device', value = '1'):
+        pass
+    with tag('param', name = 'machine_bits', value = '64'):
+        pass
+    with tag('param', name = 'virtual_address_width', value = '64'):
+        pass
+    with tag('param', name = 'physical_address_width', value = '64'):
+        pass
+    with tag('param', name = 'virtual_memory_page_size', value = '4096'):
+        pass
+
+    np = config_tree.execute('len($.system.cpu)')
+
+    for i in range(np):
+        gen_core(tag, i)
+
+    gen_l2()
+    gen_nocs()
+    gen_mcs()
+    gen_misc()
+
+def gen_core(tag, i):
+    def gen_l1i():
+        pass
+    def gen_l1d():
+        pass
+
+    with tag('component', id = 'system.core' + str(i), name = 'core' + str(i), type = 'Core'):
+        with tag('param', name = 'instruction_length', value = '32'):
+            pass
+        with tag('param', name = 'number_hardware_threads', value = config_tree.execute('$.system.cpu[' + str(i) + '].numThreads')):
+            pass
+        with tag('param', name = 'opcode_width', value = '16'):
+            pass
+        with tag('param', name = 'instruction_buffer_size', value = '32'):
+            pass
+        with tag('param', name = 'number_instruction_fetch_ports', value = '1'):
+            pass
+        with tag('param', name = 'peak_issue_width', value = '1'):
+            pass
+        # TODO
+
+def gen_l2():
+    # TODO
+    pass
+
+def gen_nocs():
+    # TODO
+    pass
+
+def gen_mcs():
+    # TODO
+    pass
+
+def gen_misc():
+    # TODO
+    pass
+
+def gen_document(tag):
+    with tag('document'):
+        with tag('component', id = 'root', name = 'root'):
+            with tag('component', id = 'system', name = 'system', type = 'System'):
+                gen_system(tag)
 
 (doc, tag, text) = Doc().tagtext()
 
-with tag('document'):
-    with tag('component', id = 'root', name = 'root'):
-        with tag('component', id = 'system', name = 'system', type = 'System'):
-            with tag('param', name = 'core_tech_node', value = '40'):
-                pass
-            for i in range(np):
-                with tag('component', id = 'system.core' + str(i), name = 'core' + str(i), type = 'Core'):
-                    pass
-
-mcpat_xml = doc.getvalue()
+gen_document(tag)
 
 mcpat_xml_file_name = 'mcpat.xml'
 
-with open(mcpat_xml_file_name, 'w') as mcpat_xml_file:
-    mcpat_xml_file.write(mcpat_xml)
-
-mcpat_xml = etree.tostring(etree.parse(mcpat_xml_file_name), pretty_print = True).rstrip()
+mcpat_xml = etree.tostring(etree.fromstring(doc.getvalue()), pretty_print = True).rstrip()
 
 with open(mcpat_xml_file_name, 'w') as mcpat_xml_file:
     mcpat_xml_file.write(mcpat_xml)
