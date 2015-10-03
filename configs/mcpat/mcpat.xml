@@ -1,0 +1,11 @@
+<document>
+  <component id="root" name="root">
+    <component type="System" id="system" name="system">
+      <param name="core_tech_node" value="40"/>
+      <component type="Core" id="system.core0" name="core0"/>
+      <component type="Core" id="system.core1" name="core1"/>
+      <component type="Core" id="system.core2" name="core2"/>
+      <component type="Core" id="system.core3" name="core3"/>
+    </component>
+  </component>
+</document>
