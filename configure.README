@@ -1,11 +1,2 @@
-1. Preparation
-sudo apt-get install mercurial scons build-essential swig python-dev python-pip python-pydot zlib1g-dev libgoogle-perftools-dev protobuf-compiler libprotobuf-dev g++-aarch64-linux-gnu (64bit ARM) g++-arm-linux-gnueabi (32bit ARM)
-sudo pip install yattag
-
-2. Cross compiling for ARM64 on x86 machines:
-aarch64-linux-gnu-gcc
-aarch64-linux-gnu-g++
-
-Cross compiling for ARM32 on x86 machines:
-arm-linux-gnueabi-gcc
-arm-linux-gnueabi-g++
+sudo apt-get install git mercurial scons build-essential swig python-dev python-pip python-pydot zlib1g-dev libgoogle-perftools-dev protobuf-compiler libprotobuf-dev
+pip install objectpath yattag
