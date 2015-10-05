@@ -1,4 +1,16 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2013, 2015 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,9 +36,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Korey Sewell
+# Authors: Andreas Hansson
 
-process1 = LiveProcess(cmd = 'hello', executable = binpath('hello'))
-process2 = LiveProcess(cmd = 'hello', executable = binpath('hello'))
+from m5.objects import *
+from m5.defines import buildEnv
+from base_config import *
+from arm_generic import *
+from O3_ARM_v7a import O3_ARM_v7a_3
 
-root.system.cpu[0].workload = [process1, process2]
+# If we are running ARM regressions, use a more sensible CPU
+# configuration. This makes the results more meaningful, and also
+# increases the coverage of the regressions.
+if buildEnv['TARGET_ISA'] == "arm":
+    root = ArmSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+                                   cpu_class=O3_ARM_v7a_3,
+                                   num_threads=2).create_root()
+else:
+    root = BaseSESystemUniprocessor(mem_mode='timing', mem_class=DDR3_1600_x64,
+                                    cpu_class=DerivO3CPU,
+                                    num_threads=2).create_root()
