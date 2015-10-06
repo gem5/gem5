@@ -126,7 +126,7 @@ ExtSlave::recvTimingReq(PacketPtr pkt)
     else if ((::MemCmd::Command)pkt->cmd.toInt() == ::MemCmd::StoreCondReq)
         ev->setStoreConditional();
 
-    if (pkt->req->isLocked())      ev->setFlag(MemEvent::F_LOCKED);
+    if (pkt->req->isLockedRMW())      ev->setFlag(MemEvent::F_LOCKED);
     if (pkt->req->isUncacheable()) ev->setFlag(MemEvent::F_NONCACHEABLE);
     if (pkt->req->hasContextId())  ev->setGroupId(pkt->req->contextId());
 // Prefetches not working with SST; it maybe be dropping them, treating them
@@ -184,7 +184,7 @@ ExtSlave::handleEvent(Event* ev)
         // make Req/Pkt for Snoop/no response needed
         // presently no consideration for masterId, packet type, flags...
         RequestPtr req = new Request(event->getAddr(), event->getSize(), 0, 0);
-        auto pkt = new Packet(req, ::MemCmd::InvalidationReq);
+        auto pkt = new Packet(req, ::MemCmd::InvalidateReq);
 
         // Clear out bus delay notifications
         pkt->headerDelay = pkt->payloadDelay = 0;

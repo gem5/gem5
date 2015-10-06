@@ -165,7 +165,7 @@ ExtMaster::handleEvent(SST::Event* event)
 
     Request::FlagsType flags = 0;
     if (ev->queryFlag(MemEvent::F_LOCKED))
-        flags |= Request::LOCKED;
+        flags |= Request::LOCKED_RMW;
     if (ev->queryFlag(MemEvent::F_NONCACHEABLE))
         flags |= Request::UNCACHEABLE;
     if (ev->isLoadLink()) {
