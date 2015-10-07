@@ -108,8 +108,8 @@ CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
     'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
     'ExecAsid', 'ExecFlags' ])
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecFaulting',
-    'ExecUser', 'ExecKernel' ])
+    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecMacro',
+    'ExecFaulting', 'ExecUser', 'ExecKernel' ])
 CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecFaulting',
+    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecMacro', 'ExecFaulting',
     'ExecUser', 'ExecKernel' ])
