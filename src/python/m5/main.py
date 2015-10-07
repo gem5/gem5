@@ -291,7 +291,8 @@ def main(*args):
 
         print "gem5 started %s" % \
             datetime.datetime.now().strftime("%b %e %Y %X")
-        print "gem5 executing on %s" % socket.gethostname()
+        print "gem5 executing on %s, pid %d" % \
+            (socket.gethostname(), os.getpid())
 
         # in Python 3 pipes.quote() is moved to shlex.quote()
         import pipes
