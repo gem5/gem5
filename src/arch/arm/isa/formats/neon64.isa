@@ -40,51 +40,54 @@ output header {{
 namespace Aarch64
 {
     // AdvSIMD three same
+    template <typename DecoderFeatures>
     StaticInstPtr decodeNeon3Same(ExtMachInst machInst);
     // AdvSIMD three different
-    StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
     // AdvSIMD two-reg misc
-    StaticInstPtr decodeNeon2RegMisc(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeon2RegMisc(ExtMachInst machInst);
     // AdvSIMD across lanes
-    StaticInstPtr decodeNeonAcrossLanes(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonAcrossLanes(ExtMachInst machInst);
     // AdvSIMD copy
-    StaticInstPtr decodeNeonCopy(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonCopy(ExtMachInst machInst);
     // AdvSIMD vector x indexed element
+    template <typename DecoderFeatures>
     StaticInstPtr decodeNeonIndexedElem(ExtMachInst machInst);
     // AdvSIMD modified immediate
-    StaticInstPtr decodeNeonModImm(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonModImm(ExtMachInst machInst);
     // AdvSIMD shift by immediate
-    StaticInstPtr decodeNeonShiftByImm(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonShiftByImm(ExtMachInst machInst);
     // AdvSIMD TBL/TBX
-    StaticInstPtr decodeNeonTblTbx(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonTblTbx(ExtMachInst machInst);
     // AdvSIMD ZIP/UZP/TRN
-    StaticInstPtr decodeNeonZipUzpTrn(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonZipUzpTrn(ExtMachInst machInst);
     // AdvSIMD EXT
-    StaticInstPtr decodeNeonExt(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonExt(ExtMachInst machInst);
 
     // AdvSIMD scalar three same
-    StaticInstPtr decodeNeonSc3Same(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonSc3Same(ExtMachInst machInst);
     // AdvSIMD scalar three different
-    StaticInstPtr decodeNeonSc3Diff(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonSc3Diff(ExtMachInst machInst);
     // AdvSIMD scalar two-reg misc
-    StaticInstPtr decodeNeonSc2RegMisc(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonSc2RegMisc(ExtMachInst machInst);
     // AdvSIMD scalar pairwise
-    StaticInstPtr decodeNeonScPwise(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonScPwise(ExtMachInst machInst);
     // AdvSIMD scalar copy
-    StaticInstPtr decodeNeonScCopy(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonScCopy(ExtMachInst machInst);
     // AdvSIMD scalar x indexed element
-    StaticInstPtr decodeNeonScIndexedElem(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonScIndexedElem(ExtMachInst machInst);
     // AdvSIMD scalar shift by immediate
-    StaticInstPtr decodeNeonScShiftByImm(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonScShiftByImm(ExtMachInst machInst);
 
     // AdvSIMD load/store
-    StaticInstPtr decodeNeonMem(ExtMachInst machInst);
+    inline StaticInstPtr decodeNeonMem(ExtMachInst machInst);
 }
 }};
 
 output decoder {{
 namespace Aarch64
 {
+    template <typename DecoderFeatures>
     StaticInstPtr
     decodeNeon3Same(ExtMachInst machInst)
     {
@@ -1267,6 +1270,7 @@ namespace Aarch64
         }
     }
 
+    template <typename DecoderFeatures>
     StaticInstPtr
     decodeNeonIndexedElem(ExtMachInst machInst)
     {

@@ -47,6 +47,7 @@
 namespace X86ISA
 {
 
+class ISA;
 class Decoder
 {
   private:
@@ -230,7 +231,7 @@ class Decoder
     static InstCacheMap instCacheMap;
 
   public:
-    Decoder() : basePC(0), origPC(0), offset(0),
+    Decoder(ISA* isa = nullptr) : basePC(0), origPC(0), offset(0),
         outOfBytes(true), instDone(false),
         state(ResetState)
     {

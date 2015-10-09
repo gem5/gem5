@@ -41,6 +41,8 @@
  */
 
 #include "arch/arm/decoder.hh"
+
+#include "arch/arm/isa.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
@@ -51,8 +53,10 @@ namespace ArmISA
 
 GenericISA::BasicDecodeCache Decoder::defaultCache;
 
-Decoder::Decoder()
-    : data(0), fpscrLen(0), fpscrStride(0)
+Decoder::Decoder(ISA* isa)
+    : data(0), fpscrLen(0), fpscrStride(0), decoderFlavour(isa
+            ? isa->decoderFlavour()
+            : Enums::Generic)
 {
     reset();
 }

@@ -67,6 +67,7 @@ output header {{
 #include "arch/arm/isa_traits.hh"
 #include "mem/packet.hh"
 #include "sim/faults.hh"
+#include "enums/DecoderFlavour.hh"
 }};
 
 output decoder {{

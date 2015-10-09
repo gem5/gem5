@@ -50,10 +50,12 @@
 #include "arch/generic/decode_cache.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
+#include "enums/DecoderFlavour.hh"
 
 namespace ArmISA
 {
 
+class ISA;
 class Decoder
 {
   protected:
@@ -69,6 +71,8 @@ class Decoder
 
     int fpscrLen;
     int fpscrStride;
+
+    Enums::DecoderFlavour decoderFlavour;
 
     /// A cache of decoded instruction objects.
     static GenericISA::BasicDecodeCache defaultCache;
@@ -86,7 +90,7 @@ class Decoder
     void consumeBytes(int numBytes);
 
   public: // Decoder API
-    Decoder();
+    Decoder(ISA* isa = nullptr);
 
     /** Reset the decoders internal state. */
     void reset();

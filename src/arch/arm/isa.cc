@@ -127,6 +127,7 @@ const struct ISA::MiscRegInitializerEntry
 ISA::ISA(Params *p)
     : SimObject(p),
       system(NULL),
+      _decoderFlavour(p->decoderFlavour),
       pmu(p->pmu),
       lookUpMiscReg(NUM_MISCREGS, {0,0})
 {

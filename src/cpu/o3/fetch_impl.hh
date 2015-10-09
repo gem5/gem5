@@ -73,6 +73,7 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
+#include "cpu/o3/isa_specific.hh"
 
 using namespace std;
 
@@ -151,7 +152,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     branchPred = params->branchPred;
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        decoder[tid] = new TheISA::Decoder;
+        decoder[tid] = new TheISA::Decoder(params->isa[tid]);
         // Create space to buffer the cache line data,
         // which may not hold the entire cache line.
         fetchBuffer[tid] = new uint8_t[fetchBufferSize];
