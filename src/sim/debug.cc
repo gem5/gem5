@@ -90,6 +90,12 @@ schedBreak(Tick when)
 }
 
 void
+schedRelBreak(Tick delta)
+{
+    schedBreak(curTick() + delta);
+}
+
+void
 breakAtKernelFunction(const char* funcName)
 {
     System* curSystem = System::systemList[0];
