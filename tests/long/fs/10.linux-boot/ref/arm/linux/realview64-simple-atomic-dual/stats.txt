@@ -4,11 +4,11 @@ sim_seconds                                 47.216814                       # Nu
 sim_ticks                                47216814145000                       # Number of ticks simulated
 final_tick                               47216814145000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1096625                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1290081                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            53081906922                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 734248                       # Number of bytes of host memory used
-host_seconds                                   889.51                       # Real time elapsed on the host
+host_inst_rate                                 645560                       # Simulator instruction rate (inst/s)
+host_op_rate                                   759443                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            31248192864                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 683532                       # Number of bytes of host memory used
+host_seconds                                  1511.03                       # Real time elapsed on the host
 sim_insts                                   975457230                       # Number of instructions simulated
 sim_ops                                    1147538415                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -241,9 +241,11 @@ system.cpu0.itb.inst_accesses               497757770                       # IT
 system.cpu0.itb.hits                        497696393                       # DTB hits
 system.cpu0.itb.misses                          61377                       # DTB misses
 system.cpu0.itb.accesses                    497757770                       # DTB accesses
-system.cpu0.numCycles                     94433643486                       # number of cpu cycles simulated
+system.cpu0.numCycles                     94433641544                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
+system.cpu0.kern.inst.quiesce                   13253                       # number of quiesce instructions executed
 system.cpu0.committedInsts                  497466384                       # Number of instructions committed
 system.cpu0.committedOps                    584970773                       # Number of ops (including micro ops) committed
 system.cpu0.num_int_alu_accesses            536103359                       # Number of integer alu accesses
@@ -261,8 +263,8 @@ system.cpu0.num_cc_register_writes          133531045                       # nu
 system.cpu0.num_mem_refs                    178459396                       # number of memory refs
 system.cpu0.num_load_insts                   92737001                       # Number of load instructions
 system.cpu0.num_store_insts                  85722395                       # Number of store instructions
-system.cpu0.num_idle_cycles              93848339121.288452                       # Number of idle cycles
-system.cpu0.num_busy_cycles              585304364.711543                       # Number of busy cycles
+system.cpu0.num_idle_cycles              93848337191.325058                       # Number of idle cycles
+system.cpu0.num_busy_cycles              585304352.674931                       # Number of busy cycles
 system.cpu0.not_idle_fraction                0.006198                       # Percentage of non-idle cycles
 system.cpu0.idle_fraction                    0.993802                       # Percentage of idle cycles
 system.cpu0.Branches                        111287587                       # Number of branches fetched
@@ -301,8 +303,6 @@ system.cpu0.op_class::MemWrite               85722395     14.65%    100.00% # Cl
 system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                 585300003                       # Class of executed instruction
-system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu0.kern.inst.quiesce                   15195                       # number of quiesce instructions executed
 system.cpu0.dcache.tags.replacements          6272771                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          500.885315                       # Cycle average of tags in use
 system.cpu0.dcache.tags.total_refs          172015771                       # Total number of references to valid blocks.
@@ -773,9 +773,11 @@ system.cpu1.itb.inst_accesses               478309003                       # IT
 system.cpu1.itb.hits                        478248118                       # DTB hits
 system.cpu1.itb.misses                          60885                       # DTB misses
 system.cpu1.itb.accesses                    478309003                       # DTB accesses
-system.cpu1.numCycles                     94433635490                       # number of cpu cycles simulated
+system.cpu1.numCycles                     94433634550                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
+system.cpu1.kern.inst.quiesce                    6259                       # number of quiesce instructions executed
 system.cpu1.committedInsts                  477990846                       # Number of instructions committed
 system.cpu1.committedOps                    562567642                       # Number of ops (including micro ops) committed
 system.cpu1.num_int_alu_accesses            516282159                       # Number of integer alu accesses
@@ -793,8 +795,8 @@ system.cpu1.num_cc_register_writes          126112608                       # nu
 system.cpu1.num_mem_refs                    171406825                       # number of memory refs
 system.cpu1.num_load_insts                   90251973                       # Number of load instructions
 system.cpu1.num_store_insts                  81154852                       # Number of store instructions
-system.cpu1.num_idle_cycles              93870751219.397461                       # Number of idle cycles
-system.cpu1.num_busy_cycles              562884270.602548                       # Number of busy cycles
+system.cpu1.num_idle_cycles              93870750285.000458                       # Number of idle cycles
+system.cpu1.num_busy_cycles              562884264.999552                       # Number of busy cycles
 system.cpu1.not_idle_fraction                0.005961                       # Percentage of non-idle cycles
 system.cpu1.idle_fraction                    0.994039                       # Percentage of idle cycles
 system.cpu1.Branches                        106497601                       # Number of branches fetched
@@ -833,8 +835,6 @@ system.cpu1.op_class::MemWrite               81154852     14.42%    100.00% # Cl
 system.cpu1.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::total                 562879339                       # Class of executed instruction
-system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu1.kern.inst.quiesce                    7199                       # number of quiesce instructions executed
 system.cpu1.dcache.tags.replacements          5945049                       # number of replacements
 system.cpu1.dcache.tags.tagsinuse          438.290639                       # Cycle average of tags in use
 system.cpu1.dcache.tags.total_refs          165346662                       # Total number of references to valid blocks.

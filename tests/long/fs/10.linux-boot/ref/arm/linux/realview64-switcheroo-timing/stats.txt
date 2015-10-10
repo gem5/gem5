@@ -4,11 +4,11 @@ sim_seconds                                 51.811486                       # Nu
 sim_ticks                                51811486345500                       # Number of ticks simulated
 final_tick                               51811486345500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 646354                       # Simulator instruction rate (inst/s)
-host_op_rate                                   759580                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            40519578786                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 722184                       # Number of bytes of host memory used
-host_seconds                                  1278.68                       # Real time elapsed on the host
+host_inst_rate                                 353733                       # Simulator instruction rate (inst/s)
+host_op_rate                                   415699                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            22175355428                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 671232                       # Number of bytes of host memory used
+host_seconds                                  2336.44                       # Real time elapsed on the host
 sim_insts                                   826478524                       # Number of instructions simulated
 sim_ops                                     971257944                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -546,6 +546,8 @@ system.cpu0.itb.accesses                    414300878                       # DT
 system.cpu0.numCycles                     51812404725                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
+system.cpu0.kern.inst.quiesce                   15960                       # number of quiesce instructions executed
 system.cpu0.committedInsts                  413973920                       # Number of instructions committed
 system.cpu0.committedOps                    486522682                       # Number of ops (including micro ops) committed
 system.cpu0.num_int_alu_accesses            447282441                       # Number of integer alu accesses
@@ -603,8 +605,6 @@ system.cpu0.op_class::MemWrite               70739077     14.53%    100.00% # Cl
 system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                 486797091                       # Class of executed instruction
-system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu0.kern.inst.quiesce                   18838                       # number of quiesce instructions executed
 system.cpu0.dcache.tags.replacements          9220536                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.942797                       # Cycle average of tags in use
 system.cpu0.dcache.tags.total_refs          287472122                       # Total number of references to valid blocks.
@@ -1218,6 +1218,8 @@ system.cpu1.itb.accesses                    412837830                       # DT
 system.cpu1.numCycles                     51810567966                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
+system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.cpu1.committedInsts                  412504604                       # Number of instructions committed
 system.cpu1.committedOps                    484735262                       # Number of ops (including micro ops) committed
 system.cpu1.num_int_alu_accesses            445679810                       # Number of integer alu accesses
@@ -1275,8 +1277,6 @@ system.cpu1.op_class::MemWrite               70487276     14.53%    100.00% # Cl
 system.cpu1.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::total                 485014384                       # Class of executed instruction
-system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.iobus.trans_dist::ReadReq                40322                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               40322                       # Transaction distribution
 system.iobus.trans_dist::WriteReq              136571                       # Transaction distribution
