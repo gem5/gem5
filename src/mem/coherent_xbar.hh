@@ -258,7 +258,7 @@ class CoherentXBar : public BaseXBar
      * responses from so we can determine which snoop responses we
      * generated and which ones were merely forwarded.
      */
-    m5::hash_set<RequestPtr> outstandingSnoop;
+    std::unordered_set<RequestPtr> outstandingSnoop;
 
     /**
      * Keep a pointer to the system to be allow to querying memory system

@@ -132,8 +132,8 @@ class EnergyCtrl : public BasicPioDevice
      */
     virtual Tick write(PacketPtr pkt);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     void startup();
     void init();

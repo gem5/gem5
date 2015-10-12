@@ -249,14 +249,14 @@ class PciDevice : public DmaDevice
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
 
     /**
      * Reconstruct the state of this object from a checkpoint.
      * @param cp The checkpoint use.
      * @param section The section name of this object
      */
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) override;
 
 
     virtual BaseSlavePort &getSlavePort(const std::string &if_name,

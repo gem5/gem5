@@ -45,9 +45,9 @@
 #ifndef __MEM_SNOOP_FILTER_HH__
 #define __MEM_SNOOP_FILTER_HH__
 
+#include <unordered_map>
 #include <utility>
 
-#include "base/hashmap.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/qport.hh"
@@ -218,7 +218,7 @@ class SnoopFilter : public SimObject {
     /**
      * HashMap of SnoopItems indexed by line address
      */
-    typedef m5::hash_map<Addr, SnoopItem> SnoopFilterCache;
+    typedef std::unordered_map<Addr, SnoopItem> SnoopFilterCache;
 
     /**
      * Simple factory methods for standard return values.

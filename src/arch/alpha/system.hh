@@ -60,8 +60,8 @@ class AlphaSystem : public System
     /**
      * Serialization stuff
      */
-    void serializeSymtab(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserializeSymtab(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serializeSymtab(CheckpointOut &cp) const override;
+    void unserializeSymtab(CheckpointIn &cp) override;
 
     /** Override startup() to provide a path to call setupFuncEvents()
      */

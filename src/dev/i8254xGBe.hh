@@ -329,8 +329,8 @@ class IGbE : public EtherDevice
         void reset();
 
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
         virtual bool hasOutstandingEvents() {
             return wbEvent.scheduled() || fetchEvent.scheduled();
@@ -393,8 +393,8 @@ class IGbE : public EtherDevice
 
         virtual bool hasOutstandingEvents();
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
     friend class RxDescCache;
 
@@ -504,8 +504,8 @@ class IGbE : public EtherDevice
         }
         EventWrapper<TxDescCache, &TxDescCache::nullCallback> nullEvent;
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     friend class TxDescCache;
@@ -535,11 +535,11 @@ class IGbE : public EtherDevice
     bool ethRxPkt(EthPacketPtr packet);
     void ethTxDone();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-    DrainState drain() M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
+    void drainResume() override;
 
 };
 

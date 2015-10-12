@@ -35,9 +35,8 @@
 #include <fstream>
 #include <list>
 #include <string>
+#include <unordered_map>
 #include <vector>
-
-#include "base/hashmap.hh"
 
 /**
  * @file
@@ -94,7 +93,7 @@ class IniFile
     class Section
     {
         /// EntryTable type.  Map of strings to Entry object pointers.
-        typedef m5::hash_map<std::string, Entry *> EntryTable;
+        typedef std::unordered_map<std::string, Entry *> EntryTable;
 
         EntryTable      table;          ///< Table of entries.
         mutable bool    referenced;     ///< Has this section been used?
@@ -139,7 +138,7 @@ class IniFile
     };
 
     /// SectionTable type.  Map of strings to Section object pointers.
-    typedef m5::hash_map<std::string, Section *> SectionTable;
+    typedef std::unordered_map<std::string, Section *> SectionTable;
 
   protected:
     /// Hash of section names to Section object pointers.

@@ -191,14 +191,14 @@ class Interrupts : public SimObject
     }
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         SERIALIZE_ARRAY(interrupts,NumInterruptTypes);
         SERIALIZE_SCALAR(intStatus);
     }
 
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         UNSERIALIZE_ARRAY(interrupts,NumInterruptTypes);
         UNSERIALIZE_SCALAR(intStatus);

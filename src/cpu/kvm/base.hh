@@ -84,13 +84,11 @@ class BaseKvmCPU : public BaseCPU
     void startup();
     void regStats();
 
-    void serializeThread(CheckpointOut &cp,
-                         ThreadID tid) const M5_ATTR_OVERRIDE;
-    void unserializeThread(CheckpointIn &cp,
-                           ThreadID tid) M5_ATTR_OVERRIDE;
+    void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
-    DrainState drain() M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
+    void drainResume() override;
 
     void switchOut();
     void takeOverFrom(BaseCPU *cpu);
@@ -100,7 +98,7 @@ class BaseKvmCPU : public BaseCPU
     MasterPort &getDataPort() { return dataPort; }
     MasterPort &getInstPort() { return instPort; }
 
-    void wakeup(ThreadID tid = 0) M5_ATTR_OVERRIDE;
+    void wakeup(ThreadID tid = 0) override;
     void activateContext(ThreadID thread_num);
     void suspendContext(ThreadID thread_num);
     void deallocateContext(ThreadID thread_num);

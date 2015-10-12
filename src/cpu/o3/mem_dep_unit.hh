@@ -46,8 +46,8 @@
 #include <list>
 #include <memory>
 #include <set>
+#include <unordered_map>
 
-#include "base/hashmap.hh"
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
 #include "debug/MemDepUnit.hh"
@@ -237,7 +237,7 @@ class MemDepUnit
     /** Moves an entry to the ready list. */
     inline void moveToReady(MemDepEntryPtr &ready_inst_entry);
 
-    typedef m5::hash_map<InstSeqNum, MemDepEntryPtr, SNHash> MemDepHash;
+    typedef std::unordered_map<InstSeqNum, MemDepEntryPtr, SNHash> MemDepHash;
 
     typedef typename MemDepHash::iterator MemDepHashIt;
 

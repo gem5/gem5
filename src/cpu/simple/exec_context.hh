@@ -160,23 +160,21 @@ class SimpleExecContext : public ExecContext {
     { }
 
     /** Reads an integer register. */
-    IntReg readIntRegOperand(const StaticInst *si, int idx) M5_ATTR_OVERRIDE
+    IntReg readIntRegOperand(const StaticInst *si, int idx) override
     {
         numIntRegReads++;
         return thread->readIntReg(si->srcRegIdx(idx));
     }
 
     /** Sets an integer register to a value. */
-    void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
-        M5_ATTR_OVERRIDE
+    void setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
     {
         numIntRegWrites++;
         thread->setIntReg(si->destRegIdx(idx), val);
     }
 
     /** Reads a floating point register of single register width. */
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx)
-        M5_ATTR_OVERRIDE
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx) override
     {
         numFpRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Reg_Base;
@@ -185,8 +183,7 @@ class SimpleExecContext : public ExecContext {
 
     /** Reads a floating point register in its binary format, instead
      * of by value. */
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
-        M5_ATTR_OVERRIDE
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         numFpRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Reg_Base;
@@ -194,8 +191,8 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Sets a floating point register of single width to a value. */
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
-        M5_ATTR_OVERRIDE
+    void setFloatRegOperand(const StaticInst *si, int idx,
+                            FloatReg val) override
     {
         numFpRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Reg_Base;
@@ -205,37 +202,36 @@ class SimpleExecContext : public ExecContext {
     /** Sets the bits of a floating point register of single width
      * to a binary value. */
     void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val) M5_ATTR_OVERRIDE
+                                FloatRegBits val) override
     {
         numFpRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Reg_Base;
         thread->setFloatRegBits(reg_idx, val);
     }
 
-    CCReg readCCRegOperand(const StaticInst *si, int idx) M5_ATTR_OVERRIDE
+    CCReg readCCRegOperand(const StaticInst *si, int idx) override
     {
         numCCRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::CC_Reg_Base;
         return thread->readCCReg(reg_idx);
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
-        M5_ATTR_OVERRIDE
+    void setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
     {
         numCCRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
         thread->setCCReg(reg_idx, val);
     }
 
-    MiscReg readMiscRegOperand(const StaticInst *si, int idx) M5_ATTR_OVERRIDE
+    MiscReg readMiscRegOperand(const StaticInst *si, int idx) override
     {
         numIntRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::Misc_Reg_Base;
         return thread->readMiscReg(reg_idx);
     }
 
-    void setMiscRegOperand(const StaticInst *si, int idx, const MiscReg &val)
-        M5_ATTR_OVERRIDE
+    void setMiscRegOperand(const StaticInst *si, int idx,
+                           const MiscReg &val) override
     {
         numIntRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::Misc_Reg_Base;
@@ -246,7 +242,7 @@ class SimpleExecContext : public ExecContext {
      * Reads a miscellaneous register, handling any architectural
      * side effects due to reading that register.
      */
-    MiscReg readMiscReg(int misc_reg) M5_ATTR_OVERRIDE
+    MiscReg readMiscReg(int misc_reg) override
     {
         numIntRegReads++;
         return thread->readMiscReg(misc_reg);
@@ -256,18 +252,18 @@ class SimpleExecContext : public ExecContext {
      * Sets a miscellaneous register, handling any architectural
      * side effects due to writing that register.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val) M5_ATTR_OVERRIDE
+    void setMiscReg(int misc_reg, const MiscReg &val) override
     {
         numIntRegWrites++;
         thread->setMiscReg(misc_reg, val);
     }
 
-    PCState pcState() const M5_ATTR_OVERRIDE
+    PCState pcState() const override
     {
         return thread->pcState();
     }
 
-    void pcState(const PCState &val) M5_ATTR_OVERRIDE
+    void pcState(const PCState &val) override
     {
         thread->pcState(val);
     }
@@ -278,7 +274,7 @@ class SimpleExecContext : public ExecContext {
      *
      * @note Only valid for memory ops.
      */
-    void setEA(Addr EA) M5_ATTR_OVERRIDE
+    void setEA(Addr EA) override
     { panic("BaseSimpleCPU::setEA() not implemented\n"); }
 
     /**
@@ -286,17 +282,17 @@ class SimpleExecContext : public ExecContext {
      *
      * @note Only valid for memory ops.
      */
-    Addr getEA() const M5_ATTR_OVERRIDE
+    Addr getEA() const override
     { panic("BaseSimpleCPU::getEA() not implemented\n"); }
 
     Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-                  unsigned int flags) M5_ATTR_OVERRIDE
+                  unsigned int flags) override
     {
         return cpu->readMem(addr, data, size, flags);
     }
 
     Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
-                   unsigned int flags, uint64_t *res) M5_ATTR_OVERRIDE
+                   unsigned int flags, uint64_t *res) override
     {
         return cpu->writeMem(data, size, addr, flags, res);
     }
@@ -304,7 +300,7 @@ class SimpleExecContext : public ExecContext {
     /**
      * Sets the number of consecutive store conditional failures.
      */
-    void setStCondFailures(unsigned int sc_failures) M5_ATTR_OVERRIDE
+    void setStCondFailures(unsigned int sc_failures) override
     {
         thread->setStCondFailures(sc_failures);
     }
@@ -312,7 +308,7 @@ class SimpleExecContext : public ExecContext {
     /**
      * Returns the number of consecutive store conditional failures.
      */
-    unsigned int readStCondFailures() const M5_ATTR_OVERRIDE
+    unsigned int readStCondFailures() const override
     {
         return thread->readStCondFailures();
     }
@@ -320,7 +316,7 @@ class SimpleExecContext : public ExecContext {
     /**
      * Executes a syscall specified by the callnum.
      */
-    void syscall(int64_t callnum) M5_ATTR_OVERRIDE
+    void syscall(int64_t callnum) override
     {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.");
@@ -329,7 +325,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Returns a pointer to the ThreadContext. */
-    ThreadContext *tcBase() M5_ATTR_OVERRIDE
+    ThreadContext *tcBase() override
     {
         return thread->getTC();
     }
@@ -338,7 +334,7 @@ class SimpleExecContext : public ExecContext {
      * Somewhat Alpha-specific function that handles returning from an
      * error or interrupt.
      */
-    Fault hwrei() M5_ATTR_OVERRIDE
+    Fault hwrei() override
     {
         return thread->hwrei();
     }
@@ -347,17 +343,17 @@ class SimpleExecContext : public ExecContext {
      * Check for special simulator handling of specific PAL calls.  If
      * return value is false, actual PAL call will be suppressed.
      */
-    bool simPalCheck(int palFunc) M5_ATTR_OVERRIDE
+    bool simPalCheck(int palFunc) override
     {
         return thread->simPalCheck(palFunc);
     }
 
-    bool readPredicate() M5_ATTR_OVERRIDE
+    bool readPredicate() override
     {
         return thread->readPredicate();
     }
 
-    void setPredicate(bool val) M5_ATTR_OVERRIDE
+    void setPredicate(bool val) override
     {
         thread->setPredicate(val);
 
@@ -369,41 +365,41 @@ class SimpleExecContext : public ExecContext {
     /**
      * Invalidate a page in the DTLB <i>and</i> ITLB.
      */
-    void demapPage(Addr vaddr, uint64_t asn) M5_ATTR_OVERRIDE
+    void demapPage(Addr vaddr, uint64_t asn) override
     {
         thread->demapPage(vaddr, asn);
     }
 
-    void armMonitor(Addr address) M5_ATTR_OVERRIDE
+    void armMonitor(Addr address) override
     {
         cpu->armMonitor(thread->threadId(), address);
     }
 
-    bool mwait(PacketPtr pkt) M5_ATTR_OVERRIDE
+    bool mwait(PacketPtr pkt) override
     {
         return cpu->mwait(thread->threadId(), pkt);
     }
 
-    void mwaitAtomic(ThreadContext *tc) M5_ATTR_OVERRIDE
+    void mwaitAtomic(ThreadContext *tc) override
     {
         cpu->mwaitAtomic(thread->threadId(), tc, thread->dtb);
     }
 
-    AddressMonitor *getAddrMonitor() M5_ATTR_OVERRIDE
+    AddressMonitor *getAddrMonitor() override
     {
         return cpu->getCpuAddrMonitor(thread->threadId());
     }
 
 #if THE_ISA == MIPS_ISA
     MiscReg readRegOtherThread(int regIdx, ThreadID tid = InvalidThreadID)
-        M5_ATTR_OVERRIDE
+        override
     {
         panic("Simple CPU models do not support multithreaded "
               "register access.");
     }
 
     void setRegOtherThread(int regIdx, MiscReg val,
-                           ThreadID tid = InvalidThreadID) M5_ATTR_OVERRIDE
+                           ThreadID tid = InvalidThreadID) override
     {
         panic("Simple CPU models do not support multithreaded "
               "register access.");

@@ -75,7 +75,7 @@ class InstPBTraceRecord : public InstRecord
      * This implementation of dump calls InstPBTrace to output the contents to a
      * protobuf file
      */
-    void dump() M5_ATTR_OVERRIDE;
+    void dump() override;
 
   protected:
     InstPBTrace& tracer;
@@ -90,7 +90,7 @@ class InstPBTrace : public InstTracer
 
     InstPBTraceRecord* getInstRecord(Tick when, ThreadContext *tc, const
                                     StaticInstPtr si, TheISA::PCState pc, const
-                                    StaticInstPtr mi = NULL) M5_ATTR_OVERRIDE;
+                                    StaticInstPtr mi = NULL) override;
 
   protected:
     /** One output stream for the entire simulation.

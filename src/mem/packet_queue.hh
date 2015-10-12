@@ -188,7 +188,7 @@ class PacketQueue : public Drainable
      */
     void retry();
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 };
 
 class ReqPacketQueue : public PacketQueue

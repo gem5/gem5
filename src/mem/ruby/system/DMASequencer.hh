@@ -108,7 +108,7 @@ class DMASequencer : public MemObject
     // A pointer to the controller is needed for atomic support.
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
     uint32_t getId() { return m_version; }
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     /* SLICC callback */
     void dataCallback(const DataBlock & dblk);

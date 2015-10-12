@@ -184,7 +184,7 @@ class SimObject : public EventManager, public Serializable, public Drainable
      * Provide a default implementation of the drain interface for
      * objects that don't need draining.
      */
-    DrainState drain() M5_ATTR_OVERRIDE { return DrainState::Drained; }
+    DrainState drain() override { return DrainState::Drained; }
 
     /**
      * Write back dirty buffers to memory using functional writes.
@@ -209,8 +209,8 @@ class SimObject : public EventManager, public Serializable, public Drainable
      */
     virtual void memInvalidate() {};
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE {};
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE {};
+    void serialize(CheckpointOut &cp) const override {};
+    void unserialize(CheckpointIn &cp) override {};
 
     /**
      * Serialize all SimObjects in the system.

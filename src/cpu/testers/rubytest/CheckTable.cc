@@ -112,7 +112,7 @@ CheckTable::getCheck(const Addr address)
 {
     DPRINTF(RubyTest, "Looking for check by address: %s", address);
 
-    m5::hash_map<Addr, Check*>::iterator i = m_lookup_map.find(address);
+    auto i = m_lookup_map.find(address);
 
     if (i == m_lookup_map.end())
         return NULL;

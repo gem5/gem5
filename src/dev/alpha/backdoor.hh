@@ -76,8 +76,8 @@ class AlphaBackdoor : public BasicPioDevice
   protected:
     struct Access : public AlphaAccess, public Serializable
     {
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     union {
@@ -118,8 +118,8 @@ class AlphaBackdoor : public BasicPioDevice
     /**
      * standard serialization routines for checkpointing
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 #endif // __DEV_ALPHA_BACKDOOR_HH__

@@ -634,10 +634,10 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
 
 template <class KEY, class VALUE>
 std::ostream &
-operator<<(ostream &out, const m5::hash_map<KEY, VALUE> &map)
+operator<<(ostream &out, const std::unordered_map<KEY, VALUE> &map)
 {
-    typename m5::hash_map<KEY, VALUE>::const_iterator i = map.begin();
-    typename m5::hash_map<KEY, VALUE>::const_iterator end = map.end();
+    auto i = map.begin();
+    auto end = map.end();
 
     out << "[";
     for (; i != end; ++i)

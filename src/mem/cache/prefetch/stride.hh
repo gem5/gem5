@@ -48,7 +48,8 @@
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_HH__
 
-#include "base/hashmap.hh"
+#include <unordered_map>
+
 #include "mem/cache/prefetch/queued.hh"
 #include "params/StridePrefetcher.hh"
 
@@ -99,7 +100,7 @@ class StridePrefetcher : public QueuedPrefetcher
         const int pcTableAssoc;
         const int pcTableSets;
         const std::string _name;
-        m5::hash_map<int, StrideEntry**> entries;
+        std::unordered_map<int, StrideEntry**> entries;
 
         StrideEntry** allocateNewContext(int context);
     };

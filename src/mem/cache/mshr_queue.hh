@@ -255,7 +255,7 @@ class MSHRQueue : public Drainable
         return readyList.empty() ? MaxTick : readyList.front()->readyTime;
     }
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 };
 
 #endif //__MEM_CACHE_MSHR_QUEUE_HH__

@@ -50,7 +50,6 @@
 #include <vector>
 
 #include "base/callback.hh"
-#include "base/hashmap.hh"
 #include "base/statistics.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/PrefetchBit.hh"

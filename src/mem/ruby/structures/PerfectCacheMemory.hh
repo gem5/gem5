@@ -29,7 +29,8 @@
 #ifndef __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__
 #define __MEM_RUBY_STRUCTURES_PERFECTCACHEMEMORY_HH__
 
-#include "base/hashmap.hh"
+#include <unordered_map>
+
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 
@@ -87,7 +88,7 @@ class PerfectCacheMemory
     PerfectCacheMemory& operator=(const PerfectCacheMemory& obj);
 
     // Data Members (m_prefix)
-    m5::hash_map<Addr, PerfectCacheLineState<ENTRY> > m_map;
+    std::unordered_map<Addr, PerfectCacheLineState<ENTRY> > m_map;
 };
 
 template<class ENTRY>

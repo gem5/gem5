@@ -52,8 +52,7 @@ class MemTraceProbe : public BaseMemProbe
     MemTraceProbe(MemTraceProbeParams *params);
 
   protected:
-    void handleRequest(const ProbePoints::PacketInfo &pkt_info) \
-        M5_ATTR_OVERRIDE;
+    void handleRequest(const ProbePoints::PacketInfo &pkt_info) override;
 
     /**
      * Callback to flush and close all open output streams on exit. If

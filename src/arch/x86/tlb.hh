@@ -148,8 +148,8 @@ namespace X86ISA
         TlbEntry * insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
         /**
          * Get the table walker master port. This is used for

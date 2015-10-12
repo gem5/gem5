@@ -117,8 +117,8 @@ class TLB : public BaseTLB
     static Fault checkCacheability(RequestPtr &req, bool itb = false);
 
     // Checkpointing
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     // Most recently used page table entries
     TlbEntry *EntryCache[3];

@@ -52,9 +52,9 @@
 #define __MEM_XBAR_HH__
 
 #include <deque>
+#include <unordered_map>
 
 #include "base/addr_range_map.hh"
-#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/qport.hh"
@@ -114,7 +114,7 @@ class BaseXBar : public MemObject
          *
          * @return 1 if busy or waiting to retry, or 0 if idle
          */
-        DrainState drain() M5_ATTR_OVERRIDE;
+        DrainState drain() override;
 
         /**
          * Get the crossbar layer's name
@@ -327,7 +327,7 @@ class BaseXBar : public MemObject
      * the underlying Request pointer inside the Packet stays
      * constant.
      */
-    m5::unordered_map<RequestPtr, PortID> routeTo;
+    std::unordered_map<RequestPtr, PortID> routeTo;
 
     /** all contigous ranges seen by this crossbar */
     AddrRangeList xbarRanges;

@@ -891,8 +891,8 @@ class TableWalker : public MemObject
     bool haveLargeAsid64() const { return _haveLargeAsid64; }
     /** Checks if all state is cleared and if so, completes drain */
     void completeDrain();
-    DrainState drain() M5_ATTR_OVERRIDE;
-    virtual void drainResume() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
+    virtual void drainResume() override;
 
     virtual BaseMasterPort& getMasterPort(const std::string &if_name,
                                           PortID idx = InvalidPortID);

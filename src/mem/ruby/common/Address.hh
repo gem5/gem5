@@ -33,7 +33,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include "base/hashmap.hh"
 #include "base/types.hh"
 
 const uint32_t ADDRESS_WIDTH = 64; // address width in bytes

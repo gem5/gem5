@@ -38,10 +38,10 @@
 #define __MEM_PAGE_TABLE_HH__
 
 #include <string>
+#include <unordered_map>
 
 #include "arch/isa_traits.hh"
 #include "arch/tlb.hh"
-#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "mem/request.hh"
@@ -200,7 +200,7 @@ class PageTableBase : public Serializable
 class FuncPageTable : public PageTableBase
 {
   private:
-    typedef m5::hash_map<Addr, TheISA::TlbEntry> PTable;
+    typedef std::unordered_map<Addr, TheISA::TlbEntry> PTable;
     typedef PTable::iterator PTableItr;
     PTable pTable;
 
@@ -235,8 +235,8 @@ class FuncPageTable : public PageTableBase
      */
     bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 /**

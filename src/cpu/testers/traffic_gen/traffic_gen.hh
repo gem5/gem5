@@ -41,7 +41,8 @@
 #ifndef __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 #define __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 
-#include "base/hashmap.hh"
+#include <unordered_map>
+
 #include "base/statistics.hh"
 #include "cpu/testers/traffic_gen/generators.hh"
 #include "mem/mem_object.hh"
@@ -135,7 +136,7 @@ class TrafficGen : public MemObject
     uint32_t currState;
 
     /** Map of generator states */
-    m5::hash_map<uint32_t, BaseGen*> states;
+    std::unordered_map<uint32_t, BaseGen*> states;
 
     /** Master port specialisation for the traffic generator */
     class TrafficGenPort : public MasterPort
@@ -198,10 +199,10 @@ class TrafficGen : public MemObject
 
     void initState();
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     /** Register statistics */
     void regStats();

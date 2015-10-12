@@ -164,8 +164,8 @@ class Ticked : public Serializable
     }
 
     /** Checkpoint lastStopped */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     /** Action to call on the clock tick */
     virtual void evaluate() = 0;
@@ -199,8 +199,8 @@ class TickedObject : public ClockedObject, public Ticked
 
     /** Pass on regStats, serialize etc. onto Ticked */
     void regStats();
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 #endif /* __SIM_TICKED_OBJECT_HH__ */

@@ -113,7 +113,7 @@ CacheMemory::findTagInSet(int64_t cacheSet, Addr tag) const
 {
     assert(tag == makeLineAddress(tag));
     // search the set for the tags
-    m5::hash_map<Addr, int>::const_iterator it = m_tag_index.find(tag);
+    auto it = m_tag_index.find(tag);
     if (it != m_tag_index.end())
         if (m_cache[cacheSet][it->second]->m_Permission !=
             AccessPermission_NotPresent)
@@ -129,7 +129,7 @@ CacheMemory::findTagInSetIgnorePermissions(int64_t cacheSet,
 {
     assert(tag == makeLineAddress(tag));
     // search the set for the tags
-    m5::hash_map<Addr, int>::const_iterator it = m_tag_index.find(tag);
+    auto it = m_tag_index.find(tag);
     if (it != m_tag_index.end())
         return it->second;
     return -1; // Not found

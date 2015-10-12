@@ -76,23 +76,23 @@ class KvmGic : public BaseGic
     KvmGic(const KvmGicParams *p);
     ~KvmGic();
 
-    void startup() M5_ATTR_OVERRIDE { verifyMemoryMode(); }
-    void drainResume() M5_ATTR_OVERRIDE { verifyMemoryMode(); }
+    void startup() override { verifyMemoryMode(); }
+    void drainResume() override { verifyMemoryMode(); }
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(Checkpoint *cp, const std::string &sec)  M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(Checkpoint *cp, const std::string &sec)  override;
 
   public: // PioDevice
     AddrRangeList getAddrRanges() const { return addrRanges; }
-    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
-    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
   public: // BaseGic
-    void sendInt(uint32_t num) M5_ATTR_OVERRIDE;
-    void clearInt(uint32_t num) M5_ATTR_OVERRIDE;
+    void sendInt(uint32_t num) override;
+    void clearInt(uint32_t num) override;
 
-    void sendPPInt(uint32_t num, uint32_t cpu) M5_ATTR_OVERRIDE;
-    void clearPPInt(uint32_t num, uint32_t cpu) M5_ATTR_OVERRIDE;
+    void sendPPInt(uint32_t num, uint32_t cpu) override;
+    void clearPPInt(uint32_t num, uint32_t cpu) override;
 
   protected:
     /**

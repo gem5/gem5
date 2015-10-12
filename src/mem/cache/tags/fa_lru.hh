@@ -49,8 +49,8 @@
 #define __MEM_CACHE_TAGS_FA_LRU_HH__
 
 #include <list>
+#include <unordered_map>
 
-#include "base/hashmap.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/packet.hh"
@@ -109,7 +109,7 @@ class FALRU : public BaseTags
     FALRUBlk *tail;
 
     /** Hash table type mapping addresses to cache block pointers. */
-    typedef m5::hash_map<Addr, FALRUBlk *, m5::hash<Addr> > hash_t;
+    typedef std::unordered_map<Addr, FALRUBlk *, std::hash<Addr> > hash_t;
     /** Iterator into the address hash table. */
     typedef hash_t::const_iterator tagIterator;
 
@@ -322,7 +322,7 @@ public:
      *
      * \param visitor Visitor to call on each block.
      */
-    void forEachBlk(CacheBlkVisitor &visitor) M5_ATTR_OVERRIDE {
+    void forEachBlk(CacheBlkVisitor &visitor) override {
         for (int i = 0; i < numBlocks; i++) {
             if (!visitor(blks[i]))
                 return;

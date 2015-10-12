@@ -148,7 +148,7 @@ class DmaPort : public MasterPort, public Drainable
 
     bool dmaPending() const { return pendingCount > 0; }
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 };
 
 class DmaDevice : public PioDevice
@@ -238,11 +238,11 @@ class DmaReadFifo : public Drainable, public Serializable
     ~DmaReadFifo();
 
   public: // Serializable
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: // Drainable
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
   public: // FIFO access
     /**

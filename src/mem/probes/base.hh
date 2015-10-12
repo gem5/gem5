@@ -65,7 +65,7 @@ class BaseMemProbe : public SimObject
   public:
     BaseMemProbe(BaseMemProbeParams *params);
 
-    void regProbeListeners() M5_ATTR_OVERRIDE;
+    void regProbeListeners() override;
 
   protected:
     /**
@@ -82,7 +82,7 @@ class BaseMemProbe : public SimObject
             : ProbeListenerArgBase(pm, name),
               parent(_parent) {}
 
-        void notify(const ProbePoints::PacketInfo &pkt_info) M5_ATTR_OVERRIDE {
+        void notify(const ProbePoints::PacketInfo &pkt_info) override {
             parent.handleRequest(pkt_info);
         }
 

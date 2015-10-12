@@ -338,9 +338,8 @@ class FullO3CPU : public BaseO3CPU
     /** Is the CPU draining? */
     bool isDraining() const { return drainState() == DrainState::Draining; }
 
-    void serializeThread(CheckpointOut &cp,
-                         ThreadID tid) const M5_ATTR_OVERRIDE;
-    void unserializeThread(CheckpointIn &cp, ThreadID tid) M5_ATTR_OVERRIDE;
+    void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
   public:
     /** Executes a syscall.
@@ -350,10 +349,10 @@ class FullO3CPU : public BaseO3CPU
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     /** Resumes execution after a drain. */
-    void drainResume() M5_ATTR_OVERRIDE;
+    void drainResume() override;
 
     /**
      * Commit has reached a safe point to drain a thread.
@@ -640,7 +639,7 @@ class FullO3CPU : public BaseO3CPU
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
 
-    virtual void wakeup(ThreadID tid) M5_ATTR_OVERRIDE;
+    virtual void wakeup(ThreadID tid) override;
 
     /** Gets a free thread id. Use if thread ids change across system. */
     ThreadID getFreeTid();

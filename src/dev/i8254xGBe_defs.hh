@@ -759,7 +759,7 @@ struct Regs : public Serializable {
 
     uint32_t sw_fw_sync;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    void serialize(CheckpointOut &cp) const override
     {
         paramOut(cp, "ctrl", ctrl._data);
         paramOut(cp, "sts", sts._data);
@@ -805,7 +805,7 @@ struct Regs : public Serializable {
         SERIALIZE_SCALAR(sw_fw_sync);
     }
 
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    void unserialize(CheckpointIn &cp) override
     {
         paramIn(cp, "ctrl", ctrl._data);
         paramIn(cp, "sts", sts._data);

@@ -97,8 +97,8 @@ class DummyISADevice : public BaseISADevice
         : BaseISADevice() {}
     ~DummyISADevice() {}
 
-    void setMiscReg(int misc_reg, MiscReg val) M5_ATTR_OVERRIDE;
-    MiscReg readMiscReg(int misc_reg) M5_ATTR_OVERRIDE;
+    void setMiscReg(int misc_reg, MiscReg val) override;
+    MiscReg readMiscReg(int misc_reg) override;
 };
 
 }

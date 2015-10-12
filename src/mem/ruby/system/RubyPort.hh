@@ -161,7 +161,7 @@ class RubyPort : public MemObject
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
     uint32_t getId() { return m_version; }
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
   protected:
     void ruby_hit_callback(PacketPtr pkt);

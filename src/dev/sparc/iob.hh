@@ -142,8 +142,8 @@ class Iob : public PioDevice
 
     AddrRangeList getAddrRanges() const;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 #endif //__DEV_SPARC_IOB_HH__

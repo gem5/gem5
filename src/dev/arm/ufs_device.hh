@@ -173,10 +173,10 @@ class UFSHostDevice : public DmaDevice
 
     UFSHostDevice(const UFSHostDeviceParams* p);
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
     void checkDrain();
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     /**

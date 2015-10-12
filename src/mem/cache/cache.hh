@@ -435,8 +435,8 @@ class Cache : public BaseCache
     /** serialize the state of the caches
      * We currently don't support checkpointing cache state, so this panics.
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 /**
@@ -455,7 +455,7 @@ class CacheBlkVisitorWrapper : public CacheBlkVisitor
     CacheBlkVisitorWrapper(Cache &_cache, VisitorPtr _visitor)
         : cache(_cache), visitor(_visitor) {}
 
-    bool operator()(CacheBlk &blk) M5_ATTR_OVERRIDE {
+    bool operator()(CacheBlk &blk) override {
         return (cache.*visitor)(blk);
     }
 
@@ -477,7 +477,7 @@ class CacheBlkIsDirtyVisitor : public CacheBlkVisitor
     CacheBlkIsDirtyVisitor()
         : _isDirty(false) {}
 
-    bool operator()(CacheBlk &blk) M5_ATTR_OVERRIDE {
+    bool operator()(CacheBlk &blk) override {
         if (blk.isDirty()) {
             _isDirty = true;
             return false;

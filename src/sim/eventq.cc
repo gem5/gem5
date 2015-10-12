@@ -35,9 +35,9 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/smt.hh"
@@ -319,7 +319,7 @@ EventQueue::dump() const
 bool
 EventQueue::debugVerify() const
 {
-    m5::hash_map<long, bool> map;
+    std::unordered_map<long, bool> map;
 
     Tick time = 0;
     short priority = 0;

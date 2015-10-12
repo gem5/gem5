@@ -197,7 +197,7 @@ class PhysicalMemory : public Serializable
      *
      * @param os stream to serialize to
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
 
     /**
      * Serialize a specific store.
@@ -214,7 +214,7 @@ class PhysicalMemory : public Serializable
      * serialization, this action is independent of how the address
      * ranges are mapped to logical memories in the guest system.
      */
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) override;
 
     /**
      * Unserialize a specific backing store, identified by a section.

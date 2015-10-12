@@ -284,7 +284,7 @@ struct TlbEntry : public Serializable
     }
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         SERIALIZE_SCALAR(longDescFormat);
         SERIALIZE_SCALAR(pfn);
@@ -314,7 +314,7 @@ struct TlbEntry : public Serializable
         paramOut(cp, "domain", domain_);
     }
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         UNSERIALIZE_SCALAR(longDescFormat);
         UNSERIALIZE_SCALAR(pfn);

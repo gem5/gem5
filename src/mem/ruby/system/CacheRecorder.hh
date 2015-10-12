@@ -37,7 +37,6 @@
 
 #include <vector>
 
-#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"

@@ -93,7 +93,7 @@ class BaseSimpleCPU : public BaseCPU
   public:
     BaseSimpleCPU(BaseSimpleCPUParams *params);
     virtual ~BaseSimpleCPU();
-    void wakeup(ThreadID tid) M5_ATTR_OVERRIDE;
+    void wakeup(ThreadID tid) override;
     virtual void init();
   public:
     Trace::InstRecord *traceData;
@@ -152,9 +152,8 @@ class BaseSimpleCPU : public BaseCPU
     virtual Counter totalInsts() const;
     virtual Counter totalOps() const;
 
-    void serializeThread(CheckpointOut &cp,
-                         ThreadID tid) const M5_ATTR_OVERRIDE;
-    void unserializeThread(CheckpointIn &cp, ThreadID tid) M5_ATTR_OVERRIDE;
+    void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
 };
 

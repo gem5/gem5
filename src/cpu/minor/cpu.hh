@@ -128,7 +128,7 @@ class MinorCPU : public BaseCPU
     /** Starting, waking and initialisation */
     void init();
     void startup();
-    void wakeup(ThreadID tid) M5_ATTR_OVERRIDE;
+    void wakeup(ThreadID tid) override;
 
     Addr dbg_vtophys(Addr addr);
 
@@ -142,17 +142,16 @@ class MinorCPU : public BaseCPU
     Counter totalInsts() const;
     Counter totalOps() const;
 
-    void serializeThread(CheckpointOut &cp,
-                         ThreadID tid) const M5_ATTR_OVERRIDE;
-    void unserializeThread(CheckpointIn &cp, ThreadID tid) M5_ATTR_OVERRIDE;
+    void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
     /** Serialize pipeline data */
     void serialize(CheckpointOut &cp) const;
     void unserialize(CheckpointIn &cp);
 
     /** Drain interface */
-    DrainState drain() M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
+    void drainResume() override;
     /** Signal from Pipeline that MinorCPU should signal that a drain
      *  is complete and set its drainState */
     void signalDrainDone();

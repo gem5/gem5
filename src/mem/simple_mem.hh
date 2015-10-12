@@ -185,7 +185,7 @@ class SimpleMemory : public AbstractMemory
 
     SimpleMemory(const SimpleMemoryParams *p);
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     BaseSlavePort& getSlavePort(const std::string& if_name,
                                 PortID idx = InvalidPortID);

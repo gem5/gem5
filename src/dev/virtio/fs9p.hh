@@ -216,8 +216,8 @@ class VirtIO9PProxy : public VirtIO9PBase
     VirtIO9PProxy(Params *params);
     virtual ~VirtIO9PProxy();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   protected:
     void recvTMsg(const P9MsgHeader &header, const uint8_t *data, size_t size);

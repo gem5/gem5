@@ -307,7 +307,7 @@ class BaseCPU : public MemObject
     virtual void startup();
     virtual void regStats();
 
-    void regProbePoints() M5_ATTR_OVERRIDE;
+    void regProbePoints() override;
 
     void registerThreadContexts();
 
@@ -399,7 +399,7 @@ class BaseCPU : public MemObject
      *
      * @param os The stream to serialize to.
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
 
     /**
      * Reconstruct the state of this object from a checkpoint.
@@ -412,7 +412,7 @@ class BaseCPU : public MemObject
      * @param cp The checkpoint use.
      * @param section The section name of this object.
      */
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) override;
 
     /**
      * Serialize a single thread.

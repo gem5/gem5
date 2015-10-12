@@ -95,18 +95,18 @@ class HDLcd: public AmbaDmaDevice
     HDLcd(const HDLcdParams *p);
     ~HDLcd();
 
-    void regStats() M5_ATTR_OVERRIDE;
+    void regStats() override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-    void drainResume() M5_ATTR_OVERRIDE;
+    void drainResume() override;
 
   public: // IO device interface
-    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
-    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
-    AddrRangeList getAddrRanges() const M5_ATTR_OVERRIDE { return addrRanges; }
+    AddrRangeList getAddrRanges() const override { return addrRanges; }
 
   protected: // Parameters
     VncInput *vnc;
@@ -328,16 +328,16 @@ class HDLcd: public AmbaDmaDevice
         void dumpSettings();
 
       protected:
-        bool nextPixel(Pixel &p) M5_ATTR_OVERRIDE { return parent.pxlNext(p); }
+        bool nextPixel(Pixel &p) override { return parent.pxlNext(p); }
 
-        void onVSyncBegin() M5_ATTR_OVERRIDE { return parent.pxlVSyncBegin(); }
-        void onVSyncEnd() M5_ATTR_OVERRIDE { return parent.pxlVSyncEnd(); }
+        void onVSyncBegin() override { return parent.pxlVSyncBegin(); }
+        void onVSyncEnd() override { return parent.pxlVSyncEnd(); }
 
-        void onUnderrun(unsigned x, unsigned y) M5_ATTR_OVERRIDE {
+        void onUnderrun(unsigned x, unsigned y) override {
             parent.pxlUnderrun();
         }
 
-        void onFrameDone() M5_ATTR_OVERRIDE { parent.pxlFrameDone(); }
+        void onFrameDone() override { parent.pxlFrameDone(); }
 
       protected:
         HDLcd &parent;
@@ -366,12 +366,12 @@ class HDLcd: public AmbaDmaDevice
         void abortFrame();
         void dumpSettings();
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
       protected:
-        void onEndOfBlock() M5_ATTR_OVERRIDE;
-        void onIdle() M5_ATTR_OVERRIDE;
+        void onEndOfBlock() override;
+        void onIdle() override;
 
         HDLcd &parent;
         const size_t lineSize;

@@ -73,8 +73,8 @@ class Base : public EtherDevBase
  * Serialization stuff
  */
   public:
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
 /**
  * Construction/Destruction/Parameters
@@ -271,7 +271,7 @@ class Device : public Base
   public:
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
-    virtual void drainResume() M5_ATTR_OVERRIDE;
+    virtual void drainResume() override;
 
     void prepareIO(ContextID cpu, int index);
     void prepareRead(ContextID cpu, int index);
@@ -297,8 +297,8 @@ class Device : public Base
  * Serialization stuff
  */
   public:
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public:
     Device(const Params *p);

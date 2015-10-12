@@ -105,14 +105,14 @@ class PCStateBase : public Serializable
     }
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         SERIALIZE_SCALAR(_pc);
         SERIALIZE_SCALAR(_npc);
     }
 
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         UNSERIALIZE_SCALAR(_pc);
         UNSERIALIZE_SCALAR(_npc);
@@ -248,7 +248,7 @@ class UPCState : public SimplePCState<MachInst>
     }
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_upc);
@@ -256,7 +256,7 @@ class UPCState : public SimplePCState<MachInst>
     }
 
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_upc);
@@ -329,14 +329,14 @@ class DelaySlotPCState : public SimplePCState<MachInst>
     }
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_nnpc);
     }
 
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_nnpc);
@@ -426,7 +426,7 @@ class DelaySlotUPCState : public DelaySlotPCState<MachInst>
     }
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_upc);
@@ -434,7 +434,7 @@ class DelaySlotUPCState : public DelaySlotPCState<MachInst>
     }
 
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_upc);

@@ -96,10 +96,10 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     void addEventProbe(unsigned int id, SimObject *obj, const char *name);
 
   public: // SimObject and related interfaces
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-    void drainResume() M5_ATTR_OVERRIDE;
+    void drainResume() override;
 
 
   public: // ISA Device interface
@@ -109,14 +109,14 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
      * @param misc_reg Register number (see miscregs.hh)
      * @param val Value to store
      */
-    void setMiscReg(int misc_reg, MiscReg val) M5_ATTR_OVERRIDE;
+    void setMiscReg(int misc_reg, MiscReg val) override;
     /**
      * Read a register within the PMU.
      *
      * @param misc_reg Register number (see miscregs.hh)
      * @return Register value.
      */
-    MiscReg readMiscReg(int misc_reg) M5_ATTR_OVERRIDE;
+    MiscReg readMiscReg(int misc_reg) override;
 
   protected: // PMU register types and constants
     BitUnion32(PMCR_t)
@@ -269,7 +269,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
             : ProbeListenerArgBase(pm, name),
               pmu(_pmu), id(_id) {}
 
-        void notify(const uint64_t &val) M5_ATTR_OVERRIDE
+        void notify(const uint64_t &val) override
         {
             pmu.handleEvent(id, val);
         }
@@ -329,8 +329,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
             listeners.reserve(4);
         }
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp)  M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp)  override;
 
         /**
          * Add an event count to the counter and check for overflow.

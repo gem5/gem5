@@ -407,7 +407,7 @@ public:
      *
      * \param visitor Visitor to call on each block.
      */
-    void forEachBlk(CacheBlkVisitor &visitor) M5_ATTR_OVERRIDE {
+    void forEachBlk(CacheBlkVisitor &visitor) override {
         for (unsigned i = 0; i < numSets * assoc; ++i) {
             if (!visitor(blks[i]))
                 return;

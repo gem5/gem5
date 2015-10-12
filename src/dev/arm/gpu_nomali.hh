@@ -55,13 +55,13 @@ class NoMaliGpu : public PioDevice
     virtual ~NoMaliGpu();
 
   public: /* Checkpointing */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: /* IO device interfaces */
-    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
-    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
-    AddrRangeList getAddrRanges() const M5_ATTR_OVERRIDE;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
+    AddrRangeList getAddrRanges() const override;
 
   private:
     /**

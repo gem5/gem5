@@ -120,10 +120,8 @@ class PS2Mouse : public PS2Device
 
     bool processData(uint8_t data);
 
-    void serialize(const std::string &base,
-                   CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(const std::string &base,
-                     CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(const std::string &base, CheckpointOut &cp) const override;
+    void unserialize(const std::string &base, CheckpointIn &cp) override;
 };
 
 class PS2Keyboard : public PS2Device
@@ -249,8 +247,8 @@ class I8042 : public BasicPioDevice
 
     Tick write(PacketPtr pkt);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 } // namespace X86ISA

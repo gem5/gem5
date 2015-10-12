@@ -191,8 +191,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
   public:
 
-    DrainState drain() M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
+    void drainResume() override;
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);

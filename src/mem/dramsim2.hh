@@ -45,8 +45,8 @@
 #define __MEM_DRAMSIM2_HH__
 
 #include <queue>
+#include <unordered_map>
 
-#include "base/hashmap.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/dramsim2_wrapper.hh"
 #include "mem/qport.hh"
@@ -114,8 +114,8 @@ class DRAMSim2 : public AbstractMemory
      * done so that we can return the right packet on completion from
      * DRAMSim.
      */
-    m5::hash_map<Addr, std::queue<PacketPtr> > outstandingReads;
-    m5::hash_map<Addr, std::queue<PacketPtr> > outstandingWrites;
+    std::unordered_map<Addr, std::queue<PacketPtr> > outstandingReads;
+    std::unordered_map<Addr, std::queue<PacketPtr> > outstandingWrites;
 
     /**
      * Count the number of outstanding transactions so that we can
@@ -189,7 +189,7 @@ class DRAMSim2 : public AbstractMemory
      */
     void writeComplete(unsigned id, uint64_t addr, uint64_t cycle);
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);

@@ -171,17 +171,17 @@ class RealViewCtrl : public BasicPioDevice
      * @param pkt The memory request.
      * @param data Where to put the data.
      */
-    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    Tick read(PacketPtr pkt) override;
 
     /**
      * All writes are simply ignored.
      * @param pkt The memory request.
      * @param data the data
      */
-    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    Tick write(PacketPtr pkt) override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public:
     void registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
@@ -206,14 +206,14 @@ class RealViewOsc
     RealViewOsc(RealViewOscParams *p);
     virtual ~RealViewOsc() {};
 
-    void startup() M5_ATTR_OVERRIDE;
+    void startup() override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: // RealViewCtrl::Device interface
-    uint32_t read() const M5_ATTR_OVERRIDE;
-    void write(uint32_t freq) M5_ATTR_OVERRIDE;
+    uint32_t read() const override;
+    void write(uint32_t freq) override;
 
   protected:
     void clockPeriod(Tick clock_period);

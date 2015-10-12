@@ -189,8 +189,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
     Counter numLoad;
     Counter startNumLoad;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
@@ -380,7 +380,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     Fault hwrei() { return thread->hwrei(); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
-    void wakeup(ThreadID tid) M5_ATTR_OVERRIDE { }
+    void wakeup(ThreadID tid) override { }
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
     void syscall(int64_t callnum) { }

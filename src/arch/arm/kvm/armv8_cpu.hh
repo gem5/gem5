@@ -83,11 +83,11 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     ArmV8KvmCPU(ArmV8KvmCPUParams *params);
     virtual ~ArmV8KvmCPU();
 
-    void dump() M5_ATTR_OVERRIDE;
+    void dump() override;
 
   protected:
-    void updateKvmState() M5_ATTR_OVERRIDE;
-    void updateThreadContext() M5_ATTR_OVERRIDE;
+    void updateKvmState() override;
+    void updateThreadContext() override;
 
   protected:
     /** Mapping between integer registers in gem5 and KVM */

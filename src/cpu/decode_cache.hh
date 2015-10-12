@@ -31,9 +31,10 @@
 #ifndef __CPU_DECODE_CACHE_HH__
 #define __CPU_DECODE_CACHE_HH__
 
+#include <unordered_map>
+
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
-#include "base/hashmap.hh"
 #include "config/the_isa.hh"
 #include "cpu/static_inst_fwd.hh"
 
@@ -46,7 +47,7 @@ namespace DecodeCache
 {
 
 /// Hash for decoded instructions.
-typedef m5::hash_map<TheISA::ExtMachInst, StaticInstPtr> InstMap;
+typedef std::unordered_map<TheISA::ExtMachInst, StaticInstPtr> InstMap;
 
 /// A sparse map from an Addr to a Value, stored in page chunks.
 template<class Value>
@@ -58,7 +59,7 @@ class AddrMap
         Value items[TheISA::PageBytes];
     };
     // A map of cache pages which allows a sparse mapping.
-    typedef typename m5::hash_map<Addr, CachePage *> PageMap;
+    typedef typename std::unordered_map<Addr, CachePage *> PageMap;
     typedef typename PageMap::iterator PageIt;
     // Mini cache of recent lookups.
     PageIt recent[2];
@@ -75,7 +76,7 @@ class AddrMap
 
     /// Attempt to find the CacheePage which goes with a particular
     /// address. First check the small cache of recent results, then
-    /// actually look in the hash_map.
+    /// actually look in the hash map.
     /// @param addr The address to look up.
     CachePage *
     getPage(Addr addr)

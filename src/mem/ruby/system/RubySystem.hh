@@ -94,9 +94,9 @@ class RubySystem : public ClockedObject
     void resetStats();
 
     void memWriteback();
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void drainResume() override;
     void process();
     void startup();
     bool functionalRead(Packet *ptr);

@@ -872,14 +872,14 @@ class DRAMCtrl : public AbstractMemory
 
     DRAMCtrl(const DRAMCtrlParams* p);
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);
 
-    virtual void init() M5_ATTR_OVERRIDE;
-    virtual void startup() M5_ATTR_OVERRIDE;
-    virtual void drainResume() M5_ATTR_OVERRIDE;
+    virtual void init() override;
+    virtual void startup() override;
+    virtual void drainResume() override;
 
   protected:
 

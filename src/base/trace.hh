@@ -101,9 +101,9 @@ class OstreamLogger : public Logger
     { }
 
     void logMessage(Tick when, const std::string &name,
-                    const std::string &message) M5_ATTR_OVERRIDE;
+                    const std::string &message) override;
 
-    std::ostream &getOstream() M5_ATTR_OVERRIDE { return stream; }
+    std::ostream &getOstream() override { return stream; }
 };
 
 /** Get the current global debug logger.  This takes ownership of the given
