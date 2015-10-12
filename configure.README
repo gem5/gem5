@@ -1,2 +1,2 @@
 sudo apt-get install git mercurial scons build-essential swig python-dev python-pip python-pydot zlib1g-dev libgoogle-perftools-dev protobuf-compiler libprotobuf-dev
-pip install objectpath yattag
+pip install objectpath yattag lxml
