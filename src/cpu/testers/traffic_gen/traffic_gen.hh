@@ -192,12 +192,12 @@ class TrafficGen : public MemObject
 
     ~TrafficGen() {}
 
-    virtual BaseMasterPort& getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    BaseMasterPort& getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID) override;
 
-    void init();
+    void init() override;
 
-    void initState();
+    void initState() override;
 
     DrainState drain() override;
 
@@ -205,7 +205,7 @@ class TrafficGen : public MemObject
     void unserialize(CheckpointIn &cp) override;
 
     /** Register statistics */
-    void regStats();
+    void regStats() override;
 
 };
 

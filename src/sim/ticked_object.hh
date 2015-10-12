@@ -198,7 +198,7 @@ class TickedObject : public ClockedObject, public Ticked
     using ClockedObject::unserialize;
 
     /** Pass on regStats, serialize etc. onto Ticked */
-    void regStats();
+    void regStats() override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };

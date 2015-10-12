@@ -85,21 +85,21 @@ class TLB : public BaseTLB
     TLB(const Params *p);
     virtual ~TLB();
 
-    void takeOverFrom(BaseTLB *otlb) {}
+    void takeOverFrom(BaseTLB *otlb) override {}
 
-    virtual void regStats();
+    void regStats() override;
 
     int getsize() const { return table.size(); }
 
     TlbEntry &index(bool advance = true);
     void insert(Addr vaddr, TlbEntry &entry);
 
-    void flushAll();
+    void flushAll() override;
     void flushProcesses();
     void flushAddr(Addr addr, uint8_t asn);
 
     void
-    demapPage(Addr vaddr, uint64_t asn)
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         assert(asn < (1 << 8));
         flushAddr(vaddr, asn);

@@ -111,7 +111,7 @@ class VoltageDomain : public SimObject
      * Startup has all SrcClockDomains registered with this voltage domain, so
      * try to make sure that all perf level requests from them are met.
      */
-    void startup();
+    void startup() override;
 
     /**
      * Recomputes the highest (fastest, i.e., numerically lowest) requested
@@ -126,7 +126,7 @@ class VoltageDomain : public SimObject
      */
     bool sanitiseVoltages();
 
-    void regStats();
+    void regStats() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

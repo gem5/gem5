@@ -60,7 +60,7 @@ class DMASequencer : public MemObject
   public:
     typedef DMASequencerParams Params;
     DMASequencer(const Params *);
-    void init();
+    void init() override;
     RubySystem *m_ruby_system;
 
   public:
@@ -95,7 +95,7 @@ class DMASequencer : public MemObject
     };
 
     BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID);
+                                PortID idx = InvalidPortID) override;
 
     /* external interface */
     RequestStatus makeRequest(PacketPtr pkt);

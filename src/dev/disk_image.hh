@@ -132,10 +132,10 @@ class CowDiskImage : public DiskImage
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    virtual std::streampos size() const;
+    std::streampos size() const override;
 
-    virtual std::streampos read(uint8_t *data, std::streampos offset) const;
-    virtual std::streampos write(const uint8_t *data, std::streampos offset);
+    std::streampos read(uint8_t *data, std::streampos offset) const override;
+    std::streampos write(const uint8_t *data, std::streampos offset) override;
 };
 
 void SafeRead(std::ifstream &stream, void *data, int count);

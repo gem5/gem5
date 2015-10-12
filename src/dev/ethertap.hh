@@ -110,7 +110,7 @@ class EtherTap : public EtherObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 
     virtual bool recvPacket(EthPacketPtr packet);
     virtual void sendDone();

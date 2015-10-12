@@ -55,7 +55,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     TimingSimpleCPU(TimingSimpleCPUParams * params);
     virtual ~TimingSimpleCPU();
 
-    virtual void init();
+    void init() override;
 
   private:
 
@@ -265,28 +265,29 @@ class TimingSimpleCPU : public BaseSimpleCPU
   protected:
 
      /** Return a reference to the data port. */
-    virtual MasterPort &getDataPort() { return dcachePort; }
+    MasterPort &getDataPort() override { return dcachePort; }
 
     /** Return a reference to the instruction port. */
-    virtual MasterPort &getInstPort() { return icachePort; }
+    MasterPort &getInstPort() override { return icachePort; }
 
   public:
 
     DrainState drain() override;
     void drainResume() override;
 
-    void switchOut();
-    void takeOverFrom(BaseCPU *oldCPU);
+    void switchOut() override;
+    void takeOverFrom(BaseCPU *oldCPU) override;
 
-    void verifyMemoryMode() const;
+    void verifyMemoryMode() const override;
 
-    virtual void activateContext(ThreadID thread_num);
-    virtual void suspendContext(ThreadID thread_num);
+    void activateContext(ThreadID thread_num) override;
+    void suspendContext(ThreadID thread_num) override;
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size,
+                  unsigned flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res);
+                   Addr addr, unsigned flags, uint64_t *res) override;
 
     void fetch();
     void sendFetch(const Fault &fault, RequestPtr req, ThreadContext *tc);

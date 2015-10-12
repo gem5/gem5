@@ -152,7 +152,7 @@ public:
      * @return The number of sets.
      */
     unsigned
-    getNumSets() const
+    getNumSets() const override
     {
         return numSets;
     }
@@ -162,7 +162,7 @@ public:
      * @return The number of ways.
      */
     unsigned
-    getNumWays() const
+    getNumWays() const override
     {
         return assoc;
     }
@@ -173,13 +173,13 @@ public:
      * @param way The way of the block.
      * @return The cache block.
      */
-    CacheBlk *findBlockBySetAndWay(int set, int way) const;
+    CacheBlk *findBlockBySetAndWay(int set, int way) const override;
 
     /**
      * Invalidate the given block.
      * @param blk The block to invalidate.
      */
-    void invalidate(CacheBlk *blk)
+    void invalidate(CacheBlk *blk) override
     {
         assert(blk);
         assert(blk->isValid());
@@ -203,7 +203,7 @@ public:
      * @return Pointer to the cache block if found.
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
-                                 int context_src)
+                          int context_src) override
     {
         Addr tag = extractTag(addr);
         int set = extractSet(addr);
@@ -242,7 +242,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const;
+    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find an invalid block to evict for the address provided.
@@ -251,7 +251,7 @@ public:
      * @param addr The addr to a find a replacement candidate for.
      * @return The candidate block.
      */
-    CacheBlk* findVictim(Addr addr)
+    CacheBlk* findVictim(Addr addr) override
     {
         BlkType *blk = NULL;
         int set = extractSet(addr);
@@ -271,7 +271,7 @@ public:
      * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-     void insertBlock(PacketPtr pkt, CacheBlk *blk)
+     void insertBlock(PacketPtr pkt, CacheBlk *blk) override
      {
          Addr addr = pkt->getAddr();
          MasterID master_id = pkt->req->masterId();
@@ -324,7 +324,7 @@ public:
      * Limit the allocation for the cache ways.
      * @param ways The maximum number of ways available for replacement.
      */
-    virtual void setWayAllocationMax(int ways)
+    virtual void setWayAllocationMax(int ways) override
     {
         fatal_if(ways < 1, "Allocation limit must be greater than zero");
         allocAssoc = ways;
@@ -334,7 +334,7 @@ public:
      * Get the way allocation mask limit.
      * @return The maximum number of ways available for replacement.
      */
-    virtual int getWayAllocationMax() const
+    virtual int getWayAllocationMax() const override
     {
         return allocAssoc;
     }
@@ -344,7 +344,7 @@ public:
      * @param addr The address to get the tag from.
      * @return The tag of the address.
      */
-    Addr extractTag(Addr addr) const
+    Addr extractTag(Addr addr) const override
     {
         return (addr >> tagShift);
     }
@@ -354,7 +354,7 @@ public:
      * @param addr The address to get the set from.
      * @return The set index of the address.
      */
-    int extractSet(Addr addr) const
+    int extractSet(Addr addr) const override
     {
         return ((addr >> setShift) & setMask);
     }
@@ -375,7 +375,7 @@ public:
      * @param set The set of the block.
      * @return The block address.
      */
-    Addr regenerateBlkAddr(Addr tag, unsigned set) const
+    Addr regenerateBlkAddr(Addr tag, unsigned set) const override
     {
         return ((tag << tagShift) | ((Addr)set << setShift));
     }
@@ -383,17 +383,17 @@ public:
     /**
      * Called at end of simulation to complete average block reference stats.
      */
-    virtual void cleanupRefs();
+    void cleanupRefs() override;
 
     /**
      * Print all tags used
      */
-    virtual std::string print() const;
+    std::string print() const override;
 
     /**
      * Called prior to dumping stats to compute task occupancy
      */
-    virtual void computeStats();
+    void computeStats() override;
 
     /**
      * Visit each block in the tag store and apply a visitor to the

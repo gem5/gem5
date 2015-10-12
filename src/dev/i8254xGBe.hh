@@ -342,13 +342,13 @@ class IGbE : public EtherDevice
     class RxDescCache : public DescCache<iGbReg::RxDesc>
     {
       protected:
-        virtual Addr descBase() const { return igbe->regs.rdba(); }
-        virtual long descHead() const { return igbe->regs.rdh(); }
-        virtual long descLen() const { return igbe->regs.rdlen() >> 4; }
-        virtual long descTail() const { return igbe->regs.rdt(); }
-        virtual void updateHead(long h) { igbe->regs.rdh(h); }
-        virtual void enableSm();
-        virtual void fetchAfterWb() {
+        Addr descBase() const override { return igbe->regs.rdba(); }
+        long descHead() const override { return igbe->regs.rdh(); }
+        long descLen() const override { return igbe->regs.rdlen() >> 4; }
+        long descTail() const override { return igbe->regs.rdt(); }
+        void updateHead(long h) override { igbe->regs.rdh(h); }
+        void enableSm() override;
+        void fetchAfterWb() override {
             if (!igbe->rxTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
@@ -391,7 +391,7 @@ class IGbE : public EtherDevice
         EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktHdrEvent;
         EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktDataEvent;
 
-        virtual bool hasOutstandingEvents();
+        bool hasOutstandingEvents() override;
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
@@ -403,14 +403,14 @@ class IGbE : public EtherDevice
     class TxDescCache  : public DescCache<iGbReg::TxDesc>
     {
       protected:
-        virtual Addr descBase() const { return igbe->regs.tdba(); }
-        virtual long descHead() const { return igbe->regs.tdh(); }
-        virtual long descTail() const { return igbe->regs.tdt(); }
-        virtual long descLen() const { return igbe->regs.tdlen() >> 4; }
-        virtual void updateHead(long h) { igbe->regs.tdh(h); }
-        virtual void enableSm();
-        virtual void actionAfterWb();
-        virtual void fetchAfterWb() {
+        Addr descBase() const override { return igbe->regs.tdba(); }
+        long descHead() const override { return igbe->regs.tdh(); }
+        long descTail() const override { return igbe->regs.tdt(); }
+        long descLen() const override { return igbe->regs.tdlen() >> 4; }
+        void updateHead(long h) override { igbe->regs.tdh(h); }
+        void enableSm() override;
+        void actionAfterWb() override;
+        void fetchAfterWb() override {
             if (!igbe->txTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
@@ -497,7 +497,7 @@ class IGbE : public EtherDevice
             completionEnabled = enabled;
         }
 
-        virtual bool hasOutstandingEvents();
+        bool hasOutstandingEvents() override;
 
         void nullCallback() {
             DPRINTF(EthernetDesc, "Completion writeback complete\n");
@@ -521,16 +521,16 @@ class IGbE : public EtherDevice
 
     IGbE(const Params *params);
     ~IGbE();
-    virtual void init();
+    void init() override;
 
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 
     Tick lastInterrupt;
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
-    virtual Tick writeConfig(PacketPtr pkt);
+    Tick writeConfig(PacketPtr pkt) override;
 
     bool ethRxPkt(EthPacketPtr packet);
     void ethTxDone();

@@ -168,13 +168,13 @@ public:
      * Register the stats for this object.
      * @param name The name to prepend to the stats name.
      */
-    void regStats();
+    void regStats() override;
 
     /**
      * Invalidate a cache block.
      * @param blk The block to invalidate.
      */
-    void invalidate(CacheBlk *blk);
+    void invalidate(CacheBlk *blk) override;
 
     /**
      * Access block and update replacement data.  May not succeed, in which case
@@ -195,7 +195,7 @@ public:
      * Just a wrapper of above function to conform with the base interface.
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
-                          int context_src);
+                          int context_src) override;
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -204,16 +204,16 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block.
      */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const;
+    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find a replacement block for the address provided.
      * @param pkt The request to a find a replacement candidate for.
      * @return The block to place the replacement in.
      */
-    CacheBlk* findVictim(Addr addr);
+    CacheBlk* findVictim(Addr addr) override;
 
-    void insertBlock(PacketPtr pkt, CacheBlk *blk);
+    void insertBlock(PacketPtr pkt, CacheBlk *blk) override;
 
     /**
      * Return the block size of this cache.
@@ -240,7 +240,7 @@ public:
      * @return The number of sets.
      */
     unsigned
-    getNumSets() const
+    getNumSets() const override
     {
         return 1;
     }
@@ -250,7 +250,7 @@ public:
      * @return The number of ways.
      */
     unsigned
-    getNumWays() const
+    getNumWays() const override
     {
         return numBlocks;
     }
@@ -261,7 +261,7 @@ public:
      * @param way The way of the block.
      * @return The cache block.
      */
-    CacheBlk* findBlockBySetAndWay(int set, int way) const;
+    CacheBlk* findBlockBySetAndWay(int set, int way) const override;
 
     /**
      * Align an address to the block size.
@@ -279,7 +279,7 @@ public:
      * @param addr The address to get the tag from.
      * @return The tag.
      */
-    Addr extractTag(Addr addr) const
+    Addr extractTag(Addr addr) const override
     {
         return blkAlign(addr);
     }
@@ -289,7 +289,7 @@ public:
      * @param addr The address to get the set from.
      * @return 0.
      */
-    int extractSet(Addr addr) const
+    int extractSet(Addr addr) const override
     {
         return 0;
     }
@@ -300,7 +300,7 @@ public:
      * @param set The set the block belongs to.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(Addr tag, unsigned set) const
+    Addr regenerateBlkAddr(Addr tag, unsigned set) const override
     {
         return (tag);
     }
@@ -308,7 +308,7 @@ public:
     /**
      * @todo Implement as in lru. Currently not used
      */
-    virtual std::string print() const { return ""; }
+    virtual std::string print() const override { return ""; }
 
     /**
      * Visit each block in the tag store and apply a visitor to the

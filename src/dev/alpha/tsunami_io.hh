@@ -123,8 +123,8 @@ class TsunamiIO : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
     /**
      * Post an PIC interrupt to the CPU via the CChip
@@ -144,7 +144,7 @@ class TsunamiIO : public BasicPioDevice
     /**
      * Start running.
      */
-    virtual void startup();
+    void startup() override;
 
 };
 

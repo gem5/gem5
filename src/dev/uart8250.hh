@@ -97,14 +97,14 @@ class Uart8250 : public Uart
     }
     Uart8250(const Params *p);
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
-    virtual AddrRangeList getAddrRanges() const;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
+    AddrRangeList getAddrRanges() const override;
 
     /**
      * Inform the uart that there is data available.
      */
-    virtual void dataAvailable();
+    void dataAvailable() override;
 
 
     /**

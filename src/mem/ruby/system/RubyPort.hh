@@ -143,12 +143,12 @@ class RubyPort : public MemObject
     RubyPort(const Params *p);
     virtual ~RubyPort() {}
 
-    void init();
+    void init() override;
 
     BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID);
+                                  PortID idx = InvalidPortID) override;
     BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID);
+                                PortID idx = InvalidPortID) override;
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;

@@ -120,7 +120,7 @@ class Process : public SimObject
     // constructor
     Process(ProcessParams *params);
 
-    virtual void initState();
+    void initState() override;
 
     DrainState drain() override;
 
@@ -156,7 +156,7 @@ class Process : public SimObject
     void inheritFDArray(Process *p);
 
     // override of virtual SimObject method: register statistics
-    virtual void regStats();
+    void regStats() override;
 
     // After getting registered with system object, tell process which
     // system-wide context id it is assigned.

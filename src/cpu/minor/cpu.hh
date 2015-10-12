@@ -114,10 +114,10 @@ class MinorCPU : public BaseCPU
 
   protected:
      /** Return a reference to the data port. */
-    MasterPort &getDataPort();
+    MasterPort &getDataPort() override;
 
     /** Return a reference to the instruction port. */
-    MasterPort &getInstPort();
+    MasterPort &getInstPort() override;
 
   public:
     MinorCPU(MinorCPUParams *params);
@@ -126,8 +126,8 @@ class MinorCPU : public BaseCPU
 
   public:
     /** Starting, waking and initialisation */
-    void init();
-    void startup();
+    void init() override;
+    void startup() override;
     void wakeup(ThreadID tid) override;
 
     Addr dbg_vtophys(Addr addr);
@@ -136,18 +136,18 @@ class MinorCPU : public BaseCPU
     Minor::MinorStats stats;
 
     /** Stats interface from SimObject (by way of BaseCPU) */
-    void regStats();
+    void regStats() override;
 
     /** Simple inst count interface from BaseCPU */
-    Counter totalInsts() const;
-    Counter totalOps() const;
+    Counter totalInsts() const override;
+    Counter totalOps() const override;
 
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
     /** Serialize pipeline data */
-    void serialize(CheckpointOut &cp) const;
-    void unserialize(CheckpointIn &cp);
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     /** Drain interface */
     DrainState drain() override;
@@ -155,15 +155,15 @@ class MinorCPU : public BaseCPU
     /** Signal from Pipeline that MinorCPU should signal that a drain
      *  is complete and set its drainState */
     void signalDrainDone();
-    void memWriteback();
+    void memWriteback() override;
 
     /** Switching interface from BaseCPU */
-    void switchOut();
-    void takeOverFrom(BaseCPU *old_cpu);
+    void switchOut() override;
+    void takeOverFrom(BaseCPU *old_cpu) override;
 
     /** Thread activation interface from BaseCPU. */
-    void activateContext(ThreadID thread_id);
-    void suspendContext(ThreadID thread_id);
+    void activateContext(ThreadID thread_id) override;
+    void suspendContext(ThreadID thread_id) override;
 
     /** Interface for stages to signal that they have become active after
      *  a callback or eventq event where the pipeline itself may have

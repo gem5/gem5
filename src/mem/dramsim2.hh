@@ -192,10 +192,10 @@ class DRAMSim2 : public AbstractMemory
     DrainState drain() override;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
+                                        PortID idx = InvalidPortID) override;
 
-    virtual void init();
-    virtual void startup();
+    void init() override;
+    void startup() override;
 
   protected:
 

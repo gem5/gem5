@@ -353,12 +353,12 @@ class NSGigE : public EtherDevBase
     NSGigE(Params *params);
     ~NSGigE();
 
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 
-    virtual Tick writeConfig(PacketPtr pkt);
+    Tick writeConfig(PacketPtr pkt) override;
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }

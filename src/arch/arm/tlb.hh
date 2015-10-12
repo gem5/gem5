@@ -155,10 +155,10 @@ class TLB : public BaseTLB
 
     virtual ~TLB();
 
-    void takeOverFrom(BaseTLB *otlb);
+    void takeOverFrom(BaseTLB *otlb) override;
 
     /// setup all the back pointers
-    virtual void init();
+    void init() override;
 
     TableWalker *getTableWalker() { return tableWalker; }
 
@@ -197,7 +197,7 @@ class TLB : public BaseTLB
     /** Reset the entire TLB. Used for CPU switching to prevent stale
      * translations after multiple switches
      */
-    void flushAll()
+    void flushAll() override
     {
         flushAllSecurity(false, 0, true);
         flushAllSecurity(true, 0, true);
@@ -230,13 +230,11 @@ class TLB : public BaseTLB
 
     void printTlb() const;
 
-    void demapPage(Addr vaddr, uint64_t asn)
+    void demapPage(Addr vaddr, uint64_t asn) override
     {
         // needed for x86 only
         panic("demapPage() is not implemented.\n");
     }
-
-    static bool validVirtualAddress(Addr vaddr);
 
     /**
      * Do a functional lookup on the TLB (for debugging)
@@ -290,7 +288,7 @@ class TLB : public BaseTLB
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    void regStats();
+    void regStats() override;
 
     void regProbePoints() override;
 
@@ -304,7 +302,7 @@ class TLB : public BaseTLB
      *
      * @return A pointer to the walker master port
      */
-    virtual BaseMasterPort* getMasterPort();
+    BaseMasterPort* getMasterPort() override;
 
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.

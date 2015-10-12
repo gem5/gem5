@@ -237,7 +237,7 @@ class SrcClockDomain : public ClockDomain
         return freqOpPoints[perf_level];
     }
 
-    void startup();
+    void startup() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

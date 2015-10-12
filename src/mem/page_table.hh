@@ -211,14 +211,14 @@ class FuncPageTable : public PageTableBase
 
     ~FuncPageTable();
 
-    void initState(ThreadContext* tc)
+    void initState(ThreadContext* tc) override
     {
     }
 
     void map(Addr vaddr, Addr paddr, int64_t size,
-             uint64_t flags = 0);
-    void remap(Addr vaddr, int64_t size, Addr new_vaddr);
-    void unmap(Addr vaddr, int64_t size);
+             uint64_t flags = 0) override;
+    void remap(Addr vaddr, int64_t size, Addr new_vaddr) override;
+    void unmap(Addr vaddr, int64_t size) override;
 
     /**
      * Check if any pages in a region are already allocated
@@ -226,14 +226,14 @@ class FuncPageTable : public PageTableBase
      * @param size The length of the region.
      * @return True if no pages in the region are mapped.
      */
-    bool isUnmapped(Addr vaddr, int64_t size);
+    bool isUnmapped(Addr vaddr, int64_t size) override;
 
     /**
      * Lookup function
      * @param vaddr The virtual address.
      * @return entry The page table entry corresponding to vaddr.
      */
-    bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
+    bool lookup(Addr vaddr, TheISA::TlbEntry &entry) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

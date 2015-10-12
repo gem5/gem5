@@ -80,7 +80,7 @@ class Tsunami : public Platform
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];
 
-    void init();
+    void init() override;
 
   public:
     typedef TsunamiParams Params;
@@ -89,40 +89,40 @@ class Tsunami : public Platform
     /**
      * Cause the cpu to post a serial interrupt to the CPU.
      */
-    virtual void postConsoleInt();
+    void postConsoleInt() override;
 
     /**
      * Clear a posted CPU interrupt (id=55)
      */
-    virtual void clearConsoleInt();
+    void clearConsoleInt() override;
 
     /**
      * Cause the chipset to post a cpi interrupt to the CPU.
      */
-    virtual void postPciInt(int line);
+    void postPciInt(int line) override;
 
     /**
      * Clear a posted PCI->CPU interrupt
      */
-    virtual void clearPciInt(int line);
+    void clearPciInt(int line) override;
 
 
-    virtual Addr pciToDma(Addr pciAddr) const;
+    Addr pciToDma(Addr pciAddr) const override;
 
     /**
      * Calculate the configuration address given a bus/dev/func.
      */
-    virtual Addr calcPciConfigAddr(int bus, int dev, int func);
+    Addr calcPciConfigAddr(int bus, int dev, int func) override;
 
     /**
      * Calculate the address for an IO location on the PCI bus.
      */
-    virtual Addr calcPciIOAddr(Addr addr);
+    Addr calcPciIOAddr(Addr addr) override;
 
     /**
      * Calculate the address for a memory location on the PCI bus.
      */
-    virtual Addr calcPciMemAddr(Addr addr);
+    Addr calcPciMemAddr(Addr addr) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

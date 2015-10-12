@@ -97,9 +97,9 @@ class System : public MemObject
         SystemPort(const std::string &_name, MemObject *_owner)
             : MasterPort(_name, _owner)
         { }
-        bool recvTimingResp(PacketPtr pkt)
+        bool recvTimingResp(PacketPtr pkt) override
         { panic("SystemPort does not receive timing!\n"); return false; }
-        void recvReqRetry()
+        void recvReqRetry() override
         { panic("SystemPort does not expect retry!\n"); }
     };
 
@@ -111,7 +111,7 @@ class System : public MemObject
      * After all objects have been created and all ports are
      * connected, check that the system port is connected.
      */
-    virtual void init();
+    void init() override;
 
     /**
      * Get a reference to the system port that can be used by
@@ -127,7 +127,7 @@ class System : public MemObject
      * Additional function to return the Port of a memory object.
      */
     BaseMasterPort& getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID);
+                                  PortID idx = InvalidPortID) override;
 
     /** @{ */
     /**
@@ -335,7 +335,7 @@ class System : public MemObject
         return masterIds.size();
     }
 
-    virtual void regStats();
+    void regStats() override;
     /**
      * Called by pseudo_inst to track the number of work items started by this
      * system.
@@ -487,7 +487,7 @@ class System : public MemObject
     System(Params *p);
     ~System();
 
-    void initState();
+    void initState() override;
 
     const Params *params() const { return (const Params *)_params; }
 

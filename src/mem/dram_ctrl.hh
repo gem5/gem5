@@ -868,14 +868,14 @@ class DRAMCtrl : public AbstractMemory
 
   public:
 
-    void regStats();
+    void regStats() override;
 
     DRAMCtrl(const DRAMCtrlParams* p);
 
     DrainState drain() override;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
+                                        PortID idx = InvalidPortID) override;
 
     virtual void init() override;
     virtual void startup() override;

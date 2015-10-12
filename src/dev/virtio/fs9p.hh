@@ -220,7 +220,8 @@ class VirtIO9PProxy : public VirtIO9PBase
     void unserialize(CheckpointIn &cp) override;
 
   protected:
-    void recvTMsg(const P9MsgHeader &header, const uint8_t *data, size_t size);
+    void recvTMsg(const P9MsgHeader &header, const uint8_t *data,
+                  size_t size) override;
 
     /** Notification of pending data from server */
     void serverDataReady();

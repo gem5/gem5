@@ -53,15 +53,15 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
   public:
     typedef RubyMemoryControlParams Params;
     RubyMemoryControl(const Params *p);
-    void init();
+    void init() override;
     void reset();
 
     ~RubyMemoryControl();
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
+                                        PortID idx = InvalidPortID) override;
     DrainState drain() override;
-    void wakeup();
+    void wakeup() override;
 
     void setDescription(const std::string& name) { m_description = name; };
     std::string getDescription() { return m_description; };
@@ -72,8 +72,8 @@ class RubyMemoryControl : public AbstractMemory, public Consumer
     void enqueueMemRef(MemoryNode *memRef);
     bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
-    void print(std::ostream& out) const;
-    void regStats();
+    void print(std::ostream& out) const override;
+    void regStats() override;
 
     const int getBank(const Addr addr) const;
     const int getRank(const Addr addr) const;

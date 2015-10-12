@@ -134,8 +134,8 @@ class DmaPort : public MasterPort, public Drainable
 
   protected:
 
-    bool recvTimingResp(PacketPtr pkt);
-    void recvReqRetry() ;
+    bool recvTimingResp(PacketPtr pkt) override;
+    void recvReqRetry() override;
 
     void queueDma(PacketPtr pkt);
 
@@ -175,12 +175,12 @@ class DmaDevice : public PioDevice
 
     bool dmaPending() const { return dmaPort.dmaPending(); }
 
-    virtual void init();
+    void init() override;
 
     unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
 
-    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID) override;
 
 };
 

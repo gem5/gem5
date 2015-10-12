@@ -88,9 +88,9 @@ class LocalSimLoopExitEvent : public Event
     const std::string getCause() const { return cause; }
     const int getCode() const { return code; }
 
-    void process();     // process event
+    void process() override;     // process event
 
-    virtual const char *description() const;
+    const char *description() const override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -107,7 +107,7 @@ class CountedDrainEvent : public Event
   public:
     CountedDrainEvent();
 
-    void process();
+    void process() override;
 
     void setCount(int _count) { count = _count; }
 
@@ -128,9 +128,9 @@ class CountedExitEvent : public Event
   public:
     CountedExitEvent(const std::string &_cause, int &_downCounter);
 
-    void process();     // process event
+    void process() override;     // process event
 
-    virtual const char *description() const;
+    const char *description() const override;
 };
 
 

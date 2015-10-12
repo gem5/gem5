@@ -75,7 +75,7 @@ class BPredUnit : public SimObject
     /**
      * Registers statistics.
      */
-    void regStats();
+    void regStats() override;
 
     void regProbePoints() override;
 

@@ -110,7 +110,7 @@ class Root : public SimObject
 
     /** Schedule the timesync event at initState() when not unserializing
      */
-    void initState();
+    void initState() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

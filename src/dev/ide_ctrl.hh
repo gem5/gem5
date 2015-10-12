@@ -146,13 +146,13 @@ class IdeController : public PciDevice
 
     void intrPost();
 
-    Tick writeConfig(PacketPtr pkt);
-    Tick readConfig(PacketPtr pkt);
+    Tick writeConfig(PacketPtr pkt) override;
+    Tick readConfig(PacketPtr pkt) override;
 
     void setDmaComplete(IdeDisk *disk);
 
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

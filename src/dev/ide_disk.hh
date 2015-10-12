@@ -276,7 +276,7 @@ class IdeDisk : public SimObject
     /**
      * Register Statistics
      */
-    void regStats();
+    void regStats() override;
 
     /**
      * Set the controller for this device

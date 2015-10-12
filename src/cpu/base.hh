@@ -189,7 +189,7 @@ class BaseCPU : public MemObject
      * @return a reference to the port with the given name
      */
     BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID);
+                                  PortID idx = InvalidPortID) override;
 
     /** Get cpu task id */
     uint32_t taskId() const { return _taskId; }
@@ -303,9 +303,9 @@ class BaseCPU : public MemObject
     BaseCPU(Params *params, bool is_checker = false);
     virtual ~BaseCPU();
 
-    virtual void init();
-    virtual void startup();
-    virtual void regStats();
+    void init() override;
+    void startup() override;
+    void regStats() override;
 
     void regProbePoints() override;
 

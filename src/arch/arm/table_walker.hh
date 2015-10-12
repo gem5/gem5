@@ -884,7 +884,7 @@ class TableWalker : public MemObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual void init();
+    void init() override;
 
     bool haveLPAE() const { return _haveLPAE; }
     bool haveVirtualization() const { return _haveVirtualization; }
@@ -892,12 +892,12 @@ class TableWalker : public MemObject
     /** Checks if all state is cleared and if so, completes drain */
     void completeDrain();
     DrainState drain() override;
-    virtual void drainResume() override;
+    void drainResume() override;
 
-    virtual BaseMasterPort& getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    BaseMasterPort& getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID) override;
 
-    void regStats();
+    void regStats() override;
 
     Fault walk(RequestPtr req, ThreadContext *tc, uint16_t asid, uint8_t _vmid,
                bool _isHyp, TLB::Mode mode, TLB::Translation *_trans,

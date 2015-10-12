@@ -69,7 +69,6 @@ class NetworkLink_d : public ClockedObject, public Consumer
   private:
     const int m_id;
     const Cycles m_latency;
-    const int channel_width;
 
     flitBuffer_d *linkBuffer;
     Consumer *link_consumer;

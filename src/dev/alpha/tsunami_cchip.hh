@@ -92,9 +92,9 @@ class TsunamiCChip : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
     /**
      * post an RTC interrupt to the CPU

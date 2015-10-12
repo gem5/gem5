@@ -42,8 +42,6 @@ class NetworkLink_d(ClockedObject):
                               "virtual channels per virtual network")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
-    channel_width = Param.Int(Parent.bandwidth_factor,
-                              "channel width == bw factor")
 
 class CreditLink_d(NetworkLink_d):
     type = 'CreditLink_d'

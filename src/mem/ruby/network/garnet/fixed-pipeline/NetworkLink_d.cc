@@ -33,7 +33,7 @@
 
 NetworkLink_d::NetworkLink_d(const Params *p)
     : ClockedObject(p), Consumer(this), m_id(p->link_id),
-      m_latency(p->link_latency),  channel_width(p->channel_width),
+      m_latency(p->link_latency),
       linkBuffer(new flitBuffer_d()), link_consumer(nullptr),
       link_srcQueue(nullptr), m_link_utilized(0),
       m_vc_load(p->vcs_per_vnet * p->virt_nets)
