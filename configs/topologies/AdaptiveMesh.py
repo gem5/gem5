@@ -11,6 +11,7 @@ class AdaptiveMesh(SimpleTopology):
 
     # Makes a generic mesh assuming an equal number of cache and directory cntrls
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
+        # TODO
         nodes = self.nodes
 
         num_routers = options.num_cpus
