@@ -1,10 +1,9 @@
 1. Integration of NUMA architecture modeling support.
 2. Integration of Linux kernel 3.19.
-3. Integration of PARSEC and CPU2006 benchmark suite.
+3. Integration of CPU2006 benchmark suite.
 4. Multiple workload mapping and running.
 5. Automated experiment and plot scripting support.
-6. McPAT integration.
-7. Specify number of instructions/cycles to be simulated in detailed/FS simulation phase.
+6. Specify number of instructions/cycles to be simulated in detailed/FS simulation phase.
 
 -------------------------------------------------
 
