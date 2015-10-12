@@ -1,8 +1,8 @@
-1. Integration of NUMA architecture modeling support.
-2. Integration of Linux kernel 3.19.
-3. Integration of CPU2006 benchmark suite.
-4. Multiple workload mapping and running.
-5. Automated experiment and plot scripting support.
+1. Enable CC-NUMA architecture simulation in FS mode.
+2. Support running of Linux kernel 3.19.
+3. Support running of CPU2006.
+4. Test multiple workload mapping and running.
+5. Add automated experiment and plot scripting.
 6. Specify number of instructions/cycles to be simulated in detailed/FS simulation phase.
 
 -------------------------------------------------
