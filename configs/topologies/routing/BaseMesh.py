@@ -1,17 +1,20 @@
 from m5.params import *
 from m5.objects import *
+from m5.util import addToPath
 
 from BaseTopology import SimpleTopology
 
-class AdaptiveMesh(SimpleTopology):
-    description='AdaptiveMesh'
+addToPath('../topologies')
+
+# TODO
+class BaseMesh(SimpleTopology):
+    description='BaseMesh'
 
     def __init__(self, controllers):
         self.nodes = controllers
 
     # Makes a generic mesh assuming an equal number of cache and directory cntrls
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
-        # TODO
         nodes = self.nodes
 
         num_routers = options.num_cpus
