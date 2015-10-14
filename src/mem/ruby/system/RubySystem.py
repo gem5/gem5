@@ -41,11 +41,13 @@ class RubySystem(ClockedObject):
     memory_size_bits = Param.UInt32(64,
         "number of bits that a memory address requires");
 
-    # Profiler related configuration variables
-    hot_lines = Param.Bool(False, "")
-    all_instructions = Param.Bool(False, "")
-    num_of_sequencers = Param.Int("")
     phys_mem = Param.SimpleMemory(NULL, "")
 
     access_backing_store = Param.Bool(False, "Use phys_mem as the functional \
         store and only use ruby for timing.")
+
+    # Profiler related configuration variables
+    hot_lines = Param.Bool(False, "")
+    all_instructions = Param.Bool(False, "")
+    num_of_sequencers = Param.Int("")
+    number_of_virtual_networks = Param.Unsigned("")
