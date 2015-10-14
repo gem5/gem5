@@ -344,6 +344,12 @@ CommMonitor::recvTimingSnoopResp(PacketPtr pkt)
     return masterPort.sendTimingSnoopResp(pkt);
 }
 
+void
+CommMonitor::recvRetrySnoopResp()
+{
+    slavePort.sendRetrySnoopResp();
+}
+
 bool
 CommMonitor::isSnooping() const
 {

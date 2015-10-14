@@ -167,6 +167,11 @@ class CommMonitor : public MemObject
             mon.recvReqRetry();
         }
 
+        void recvRetrySnoopResp()
+        {
+            mon.recvRetrySnoopResp();
+        }
+
       private:
 
         CommMonitor& mon;
@@ -247,6 +252,8 @@ class CommMonitor : public MemObject
     void recvTimingSnoopReq(PacketPtr pkt);
 
     bool recvTimingSnoopResp(PacketPtr pkt);
+
+    void recvRetrySnoopResp();
 
     AddrRangeList getAddrRanges() const;
 
