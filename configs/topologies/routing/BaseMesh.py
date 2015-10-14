@@ -53,7 +53,7 @@ class BaseMesh(SimpleTopology):
                                     int_node=routers[router_id]))
             link_count += 1
 
-        # Connect the remainding nodes to router 0.  These should only be
+        # Connect the remaining nodes to router 0.  These should only be
         # DMA nodes.
         for (i, node) in enumerate(remainder_nodes):
             assert(node.type == 'DMA_Controller')
