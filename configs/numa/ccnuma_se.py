@@ -52,7 +52,7 @@ num_cpus_per_domain = option.num_cpus_per_domain
 
 isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
 
-binary = 'tests/test-progs/hello/bin/' + isa + '/linux/hello'
+binary = 'tests/test-progs/hello/bin/' + isa + '/linux/hello' #TODO: binary should not be hardcoded
 
 class Domain:
     def __init__(self, id = -1):
