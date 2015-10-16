@@ -53,12 +53,12 @@ from m5.util import addToPath, fatal
 
 addToPath('../common')
 
-from FSConfig import *
+from ccnuma_FSConfig import *
 from SysPaths import *
 from Benchmarks import *
 import Simulation
-import CacheConfig
-import MemConfig
+import ccnuma_CacheConfig
+import ccnuma_MemConfig
 from Caches import *
 import Options
 
@@ -125,8 +125,8 @@ def build_test_system(np):
     for i in xrange(np):
         test_sys.cpu[i].createThreads()
 
-    CacheConfig.config_cache(options, test_sys)
-    MemConfig.config_mem(options, test_sys)
+    ccnuma_CacheConfig.config_cache(options, test_sys)
+    ccnuma_MemConfig.config_mem(options, test_sys)
 
     return test_sys
 
