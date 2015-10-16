@@ -88,27 +88,22 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.tsunami.ethernet.pio = self.iobus.master
     self.tsunami.ethernet.config = self.iobus.master
 
-    if ruby:
-        # Store the dma devices for later connection to dma ruby ports.
-        # Append an underscore to dma_ports to avoid the SimObjectVector check.
-        self._dma_ports = [self.tsunami.ide.dma, self.tsunami.ethernet.dma]
-    else:
-        self.membus = MemBus()
+    self.membus = MemBus() #TODO:NUMA
 
-        # By default the bridge responds to all addresses above the I/O
-        # base address (including the PCI config space)
-        IO_address_space_base = 0x80000000000
-        self.bridge = Bridge(delay='50ns',
+    # By default the bridge responds to all addresses above the I/O
+    # base address (including the PCI config space)
+    IO_address_space_base = 0x80000000000
+    self.bridge = Bridge(delay='50ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
-        self.bridge.master = self.iobus.slave
-        self.bridge.slave = self.membus.master
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master #TODO:NUMA
 
-        self.tsunami.ide.dma = self.iobus.slave
-        self.tsunami.ethernet.dma = self.iobus.slave
+    self.tsunami.ide.dma = self.iobus.slave
+    self.tsunami.ethernet.dma = self.iobus.slave
 
-        self.system_port = self.membus.slave
+    self.system_port = self.membus.slave #TODO:NUMA
 
-    self.mem_ranges = [AddrRange(mdesc.mem())]
+    self.mem_ranges = [AddrRange(mdesc.mem())] #TODO:NUMA
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())

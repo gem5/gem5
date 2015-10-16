@@ -151,26 +151,11 @@ def config_mem(options, system):
     them.
     """
 
-    if options.tlm_memory:
-        system.external_memory = m5.objects.ExternalSlave(
-            port_type="tlm",
-            port_data=options.tlm_memory,
-            port=system.membus.master,
-            addr_ranges=system.mem_ranges)
-        system.kernel_addr_check = False
-        return
-
-    if options.external_memory_system:
-        system.external_memory = m5.objects.ExternalSlave(
-            port_type=options.external_memory_system,
-            port_data="init_mem0", port=system.membus.master,
-            addr_ranges=system.mem_ranges)
-        system.kernel_addr_check = False
-        return
-
     nbr_mem_ctrls = options.mem_channels
+
     import math
     from m5.util import fatal
+
     intlv_bits = int(math.log(nbr_mem_ctrls, 2))
     if 2 ** intlv_bits != nbr_mem_ctrls:
         fatal("Number of memory channels must be a power of 2")
@@ -199,8 +184,8 @@ def config_mem(options, system):
 
             mem_ctrls.append(mem_ctrl)
 
-    system.mem_ctrls = mem_ctrls
+    system.mem_ctrls = mem_ctrls #TODO:NUMA
 
     # Connect the controllers to the membus
     for i in xrange(len(system.mem_ctrls)):
-        system.mem_ctrls[i].port = system.membus.master
+        system.mem_ctrls[i].port = system.membus.master #TODO:NUMA

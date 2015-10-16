@@ -56,13 +56,13 @@ def config_cache(options, system):
     # same clock as the CPUs.
     system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
                                size=options.l2_size,
-                               assoc=options.l2_assoc)
+                               assoc=options.l2_assoc) #TODO:NUMA
 
-    system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
-    system.l2.cpu_side = system.tol2bus.master
-    system.l2.mem_side = system.membus.slave
+    system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain) #TODO:NUMA
+    system.l2.cpu_side = system.tol2bus.master #TODO:NUMA
+    system.l2.mem_side = system.membus.slave #TODO:NUMA
 
-    for i in xrange(options.num_cpus):
+    for i in xrange(options.num_cpus): #TODO:NUMA
         icache = icache_class(size=options.l1i_size,
                               assoc=options.l1i_assoc)
         dcache = dcache_class(size=options.l1d_size,

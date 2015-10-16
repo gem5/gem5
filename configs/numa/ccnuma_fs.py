@@ -115,10 +115,10 @@ def build_test_system(np):
 
     # For now, assign all the CPUs to the same clock domain
     test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
-                    for i in xrange(np)]
+                    for i in xrange(np)] #TODO:NUMA
 
     # By default the IOCache runs at the system clock
-    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
+    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges) #TODO:NUMA
     test_sys.iocache.cpu_side = test_sys.iobus.master
     test_sys.iocache.mem_side = test_sys.membus.slave
 
