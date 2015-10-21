@@ -27,6 +27,7 @@ for bench in benches:
         cmd_first_run = 'build/ALPHA_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --num-cpus=' \
                         + str(num_thread) + ' --script=ext/parsec/2.1/run_scripts/' \
                         + bench + '_' + str(num_thread) + 'c_simsmall_ckpts.rcS'
+        print cmd_first_run
         os.system(cmd_first_run)
 
         cmd_second_run = 'build/ALPHA_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --cpu-type=timing' \
@@ -35,4 +36,5 @@ for bench in benches:
                          + ' --caches --ruby --l2cache --num-l2caches=1' \
                          + ' --topology=Mesh --mesh-rows=' + str(num_dirs) + ' --garnet-network=fixed' \
                          + ' --l1d_size=32kB --l1i_size=32kB --l2_size=256kB --checkpoint-restore=1 --restore-with-cpu=timing'
+        print cmd_second_run
         os.system(cmd_second_run)
