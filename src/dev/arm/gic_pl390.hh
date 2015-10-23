@@ -260,17 +260,17 @@ class Pl390 : public BaseGic
     /** Return the address ranges used by the Gic
      * This is the distributor address + all cpu addresses
      */
-    virtual AddrRangeList getAddrRanges() const;
+    AddrRangeList getAddrRanges() const override;
 
     /** A PIO read to the device, immediately split up into
      * readDistributor() or readCpu()
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
     /** A PIO read to the device, immediately split up into
      * writeDistributor() or writeCpu()
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
     /** @} */
 
     /** @{ */
@@ -278,18 +278,18 @@ class Pl390 : public BaseGic
      * Depending on the configuration, the gic will pass this interrupt
      * on through to a CPU.
      * @param number number of interrupt to send */
-    void sendInt(uint32_t number);
+    void sendInt(uint32_t number) override;
 
     /** Interface call for private peripheral interrupts  */
-    void sendPPInt(uint32_t num, uint32_t cpu);
+    void sendPPInt(uint32_t num, uint32_t cpu) override;
 
     /** Clear an interrupt from a device that is connected to the Gic
      * Depending on the configuration, the gic may de-assert it's cpu line
      * @param number number of interrupt to send */
-    void clearInt(uint32_t number);
+    void clearInt(uint32_t number) override;
 
     /** Clear a (level-sensitive) PPI */
-    void clearPPInt(uint32_t num, uint32_t cpu);
+    void clearPPInt(uint32_t num, uint32_t cpu) override;
     /** @} */
 
     /** @{ */

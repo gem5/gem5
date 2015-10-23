@@ -368,8 +368,8 @@ class Pl111: public AmbaDmaDevice
     Pl111(const Params *p);
     ~Pl111();
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -379,7 +379,7 @@ class Pl111: public AmbaDmaDevice
      *
      * @return a list of non-overlapping address ranges
      */
-    AddrRangeList getAddrRanges() const;
+    AddrRangeList getAddrRanges() const override;
 };
 
 #endif

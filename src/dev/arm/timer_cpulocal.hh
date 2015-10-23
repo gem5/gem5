@@ -177,14 +177,14 @@ class CpuLocalTimer : public BasicPioDevice
      * @param pkt The memory request.
      * @return Returns latency of device read
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
     /**
      * Handle a write to the device.
      * @param pkt The memory request.
      * @return Returns latency of device write
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

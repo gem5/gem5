@@ -124,19 +124,19 @@ class EnergyCtrl : public BasicPioDevice
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
     /**
      * Write command sent to the device
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    void startup();
-    void init();
+    void startup() override;
+    void init() override;
 
   private:
     DVFSHandler *dvfsHandler;

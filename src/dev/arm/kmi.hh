@@ -151,11 +151,11 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
 
     Pl050(const Params *p);
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
-    virtual void mouseAt(uint16_t x, uint16_t y, uint8_t buttons);
-    virtual void keyPress(uint32_t key, bool down);
+    void mouseAt(uint16_t x, uint16_t y, uint8_t buttons) override;
+    void keyPress(uint32_t key, bool down) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

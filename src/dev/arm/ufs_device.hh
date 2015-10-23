@@ -823,13 +823,13 @@ class UFSHostDevice : public DmaDevice
     /**
      * Address range functions
      */
-    AddrRangeList getAddrRanges() const;
+    AddrRangeList getAddrRanges() const override;
 
     /**
      * register access functions
      */
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
     // end of access functions
 
     /**
@@ -988,7 +988,7 @@ class UFSHostDevice : public DmaDevice
     void readGarbage();
 
     /**register statistics*/
-    void regStats();
+    void regStats() override;
 
     /**
      * Host controller information

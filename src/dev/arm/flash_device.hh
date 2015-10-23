@@ -107,18 +107,19 @@ class FlashDevice : public AbstractNVM
     };
 
     /** Device access functions Inherrited from AbstractNVM*/
-    virtual void initializeMemory(uint64_t disk_size, uint32_t sector_size)
+    void initializeMemory(uint64_t disk_size, uint32_t sector_size) override
     {
         initializeFlash(disk_size, sector_size);
     }
 
-    virtual void readMemory(uint64_t address, uint32_t amount,
-                            Callback *event)
+    void readMemory(uint64_t address, uint32_t amount,
+                    Callback *event) override
     {
         accessDevice(address, amount, event, ActionRead);
     }
-    virtual void writeMemory(uint64_t address, uint32_t amount,
-                             Callback *event)
+
+    void writeMemory(uint64_t address, uint32_t amount,
+                     Callback *event) override
     {
         accessDevice(address, amount, event, ActionWrite);
     }
@@ -146,7 +147,7 @@ class FlashDevice : public AbstractNVM
     bool getUnknownPages(uint32_t index);
 
     /**Stats register function*/
-    void regStats();
+    void regStats() override;
 
     /** Disk sizes in bytes */
     uint64_t diskSize;

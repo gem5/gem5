@@ -150,14 +150,14 @@ class Sp804 : public AmbaPioDevice
      * @param pkt The memory request.
      * @param data Where to put the data.
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
     /**
      * All writes are simply ignored.
      * @param pkt The memory request.
      * @param data the data
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
 
     void serialize(CheckpointOut &cp) const override;
