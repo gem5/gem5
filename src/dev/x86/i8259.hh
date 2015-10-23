@@ -89,8 +89,8 @@ class I8259 : public BasicPioDevice, public IntDevice
 
     I8259(Params * p);
 
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
     void
     maskAll()
@@ -104,9 +104,9 @@ class I8259 : public BasicPioDevice, public IntDevice
         IMR = 0x00;
     }
 
-    void signalInterrupt(int line);
-    void raiseInterruptPin(int number);
-    void lowerInterruptPin(int number);
+    void signalInterrupt(int line) override;
+    void raiseInterruptPin(int number) override;
+    void lowerInterruptPin(int number) override;
     int getVector();
 
     void serialize(CheckpointOut &cp) const override;

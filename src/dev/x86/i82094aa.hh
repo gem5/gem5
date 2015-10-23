@@ -92,24 +92,24 @@ class I82094AA : public BasicPioDevice, public IntDevice
 
     I82094AA(Params *p);
 
-    void init();
+    void init() override;
 
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
-    AddrRangeList getIntAddrRange() const;
+    AddrRangeList getIntAddrRange() const override;
 
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
     BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID);
+                                  PortID idx = InvalidPortID) override;
 
     Tick recvResponse(PacketPtr pkt) override;
 
-    void signalInterrupt(int line);
-    void raiseInterruptPin(int number);
-    void lowerInterruptPin(int number);
+    void signalInterrupt(int line) override;
+    void raiseInterruptPin(int number) override;
+    void lowerInterruptPin(int number) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

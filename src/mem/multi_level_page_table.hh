@@ -145,14 +145,14 @@ public:
                         System *_sys);
     ~MultiLevelPageTable();
 
-    void initState(ThreadContext* tc);
+    void initState(ThreadContext* tc) override;
 
     void map(Addr vaddr, Addr paddr, int64_t size,
-             uint64_t flags = 0);
-    void remap(Addr vaddr, int64_t size, Addr new_vaddr);
-    void unmap(Addr vaddr, int64_t size);
-    bool isUnmapped(Addr vaddr, int64_t size);
-    bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
+             uint64_t flags = 0) override;
+    void remap(Addr vaddr, int64_t size, Addr new_vaddr) override;
+    void unmap(Addr vaddr, int64_t size) override;
+    bool isUnmapped(Addr vaddr, int64_t size) override;
+    bool lookup(Addr vaddr, TheISA::TlbEntry &entry) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };

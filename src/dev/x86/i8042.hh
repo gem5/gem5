@@ -118,7 +118,7 @@ class PS2Mouse : public PS2Device
     PS2Mouse() : PS2Device(), status(0), resolution(4), sampleRate(100)
     {}
 
-    bool processData(uint8_t data);
+    bool processData(uint8_t data) override;
 
     void serialize(const std::string &base, CheckpointOut &cp) const override;
     void unserialize(const std::string &base, CheckpointIn &cp) override;
@@ -151,7 +151,7 @@ class PS2Keyboard : public PS2Device
     };
 
   public:
-    bool processData(uint8_t data);
+    bool processData(uint8_t data) override;
 };
 
 class I8042 : public BasicPioDevice
@@ -241,11 +241,11 @@ class I8042 : public BasicPioDevice
 
     I8042(Params *p);
 
-    AddrRangeList getAddrRanges() const;
+    AddrRangeList getAddrRanges() const override;
 
-    Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
-    Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

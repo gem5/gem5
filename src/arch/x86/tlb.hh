@@ -74,7 +74,7 @@ namespace X86ISA
         typedef X86TLBParams Params;
         TLB(const Params *p);
 
-        void takeOverFrom(BaseTLB *otlb) {}
+        void takeOverFrom(BaseTLB *otlb) override {}
 
         TlbEntry *lookup(Addr va, bool update_lru = true);
 
@@ -89,11 +89,11 @@ namespace X86ISA
       public:
         Walker *getWalker();
 
-        void flushAll();
+        void flushAll() override;
 
         void flushNonGlobal();
 
-        void demapPage(Addr va, uint64_t asn);
+        void demapPage(Addr va, uint64_t asn) override;
 
       protected:
         uint32_t size;
@@ -161,7 +161,7 @@ namespace X86ISA
          *
          * @return A pointer to the walker master port
          */
-        virtual BaseMasterPort *getMasterPort();
+        BaseMasterPort *getMasterPort() override;
     };
 }
 

@@ -81,9 +81,9 @@ class I8254 : public BasicPioDevice
             pit(p->name, this), intPin(p->int_pin)
     {
     }
-    Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
-    Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
     bool
     outputHigh(unsigned int num)
@@ -112,7 +112,7 @@ class I8254 : public BasicPioDevice
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    virtual void startup();
+    void startup() override;
 
 };
 
