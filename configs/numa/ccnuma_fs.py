@@ -61,6 +61,7 @@ import ccnuma_CacheConfig
 import ccnuma_MemConfig
 from Caches import *
 import Options
+from optparse import OptionParser
 
 def cmd_line_template():
     if options.command_line and options.command_line_file:
@@ -72,6 +73,38 @@ def cmd_line_template():
     if options.command_line_file:
         return open(options.command_line_file).read().strip()
     return None
+
+class Domain:
+    def __init__(self, id = -1):
+        self.id = id
+
+        self.mem_ranges = AddrRange(Addr(str(self.id * 512) + 'MB'), size = options.mem_size_per_domain) # TODO: 512 should not be hardcoded
+
+        self.membus = SystemXBar()
+
+        self.mem_ctrl = DDR3_1600_x64(range = self.mem_ranges, port = self.membus.master)
+
+        self.l2bus = L2XBar()
+
+        self.l2cache = L2Cache(size = options.l2_size)
+        self.l2cache.cpu_side = self.l2bus.master
+        self.l2cache.mem_side = self.membus.slave
+
+        self.system_port = self.membus.slave
+
+        self.cpu = [TimingSimpleCPU(cpu_id = num_cpus_per_domain * self.id + i,
+                                     icache = L1_ICache(size = options.l1i_size), dcache = L1_DCache(size = options.l1d_size))
+                     for i in range(num_cpus_per_domain)]
+
+        for cpu in self.cpu:
+            cpu.icache.cpu_side = cpu.icache_port
+            cpu.icache.mem_side = self.l2bus.slave
+
+            cpu.dcache.cpu_side = cpu.dcache_port
+            cpu.dcache.mem_side = self.l2bus.slave
+
+            cpu.createThreads()
+            cpu.createInterruptController()
 
 def build_test_system(np):
     cmdline = cmd_line_template()
@@ -99,6 +132,61 @@ def build_test_system(np):
                                              voltage_domain =
                                              test_sys.cpu_voltage_domain)
 
+    domains = [Domain(id = i) for i in range(num_domains)]
+
+    test_sys.systembus = SystemXBar()
+
+    numa_cache_downward = []
+    numa_cache_upward = []
+    mem_ctrl = []
+    membus = []
+    l2bus = []
+    l2cache = []
+    cpu = []
+
+    for domain in domains:
+        domain.numa_cache_downward = IOCache()
+        domain.numa_cache_upward = IOCache()
+
+        domain.numa_cache_downward.addr_ranges = []
+        domain.numa_cache_upward.addr_ranges = []
+
+        for r in range(num_domains):
+            addr_range = AddrRange(Addr(str(r * 512) + 'MB'), size = options.mem_size_per_domain) # TODO: 512 should not be hardcoded
+            if r != domain.id:
+                domain.numa_cache_downward.addr_ranges.append(addr_range)
+            else:
+                domain.numa_cache_upward.addr_ranges.append(addr_range)
+
+    #     domain.numa_cache_downward.cpu_side = domain.membus.master
+    #     domain.numa_cache_downward.mem_side = test_sys.systembus.slave
+    #
+    #     domain.numa_cache_upward.cpu_side = test_sys.systembus.master
+    #     domain.numa_cache_upward.mem_side = domain.membus.slave
+    #
+    #     numa_cache_downward.append(domain.numa_cache_downward)
+    #     numa_cache_upward.append(domain.numa_cache_upward)
+
+        test_sys.mem_ranges.append(domain.mem_ranges)
+
+        mem_ctrl.append(domain.mem_ctrl)
+
+        membus.append(domain.membus)
+
+        l2bus.append(domain.l2bus)
+
+        l2cache.append(domain.l2cache)
+
+        cpu += domain.cpu
+
+    # test_sys.numa_cache_downward = numa_cache_downward
+    # test_sys.numa_cache_upward = numa_cache_upward
+    test_sys.mem_ctrl = mem_ctrl
+    test_sys.membus = membus
+    test_sys.l2bus = l2bus
+    test_sys.l2cache = l2cache
+    test_sys.cpu = cpu
+    
     if options.kernel is not None:
         test_sys.kernel = binary(options.kernel)
 
@@ -135,7 +223,17 @@ parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
 
+# parser.add_option('--l1i_size', type='string', default='32kB', help = 'L1 instruction cache size')
+# parser.add_option('--l1d_size', type='string', default='64kB', help = 'L1 data cache size')
+# parser.add_option('--l2_size', type='string', default='512kB', help = 'L2 cache size')
+parser.add_option('--num_domains', type='int', default=2, help = 'Number of NUMA domains')
+parser.add_option('--num_cpus_per_domain', type='int', default=2, help = 'Number of CPUs per NUMA domain')
+parser.add_option('--mem_size_per_domain', type='string', default='512MB', help = 'Memory size per NUMA domain')
+
 (options, args) = parser.parse_args()
+
+num_domains = options.num_domains
+num_cpus_per_domain = options.num_cpus_per_domain
 
 if args:
     print "Error: script doesn't take any positional arguments"
