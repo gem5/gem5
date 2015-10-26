@@ -54,26 +54,26 @@ with open(stats_file_name) as stats_file:
             pass
 
 def gen_core(tag, i):
-    #def gen_predictor():
-    #    with tag('component', id = 'system.core' + str(i) + '.predictor', name = 'PBT', type = 'BranchPredictor'):
-    #        with tag('param', name = 'assoc', value = '1'):
-    #            pass
-    #        with tag('param', name = 'nbanks', value = '1'):
-    #            pass
-    #        with tag('param', name = 'local_l1_predictor_size', value = '12'):
-    #            pass
-    #        with tag('param', name = 'local_l2_predictor_size', value = '4'):
-    #            pass
-    #        with tag('param', name = 'local_predictor_entries', value = '8192'):
-    #            pass
-    #        with tag('param', name = 'global_predictor_entries', value = '8192'):
-    #            pass
-    #        with tag('param', name = 'global_predictor_bits', value = '4'):
-    #            pass
-    #        with tag('param', name = 'chooser_predictor_entries', value = '8192'):
-    #            pass
-    #        with tag('param', name = 'chooser_predictor_bits', value = '4'):
-    #            pass
+    def gen_predictor():
+        with tag('component', id = 'system.core' + str(i) + '.predictor', name = 'PBT', type = 'BranchPredictor'):
+            with tag('param', name = 'assoc', value = '1'):
+                pass
+            with tag('param', name = 'nbanks', value = '1'):
+                pass
+            with tag('param', name = 'local_l1_predictor_size', value = '12'):
+                pass
+            with tag('param', name = 'local_l2_predictor_size', value = '4'):
+                pass
+            with tag('param', name = 'local_predictor_entries', value = '8192'):
+                pass
+            with tag('param', name = 'global_predictor_entries', value = '8192'):
+                pass
+            with tag('param', name = 'global_predictor_bits', value = '4'):
+                pass
+            with tag('param', name = 'chooser_predictor_entries', value = '8192'):
+                pass
+            with tag('param', name = 'chooser_predictor_bits', value = '4'):
+                pass
 
     def gen_itlb():
         with tag('component', id = 'system.core' + str(i) + '.itlb', name = 'itlb', type = 'InstructionTLB'):
