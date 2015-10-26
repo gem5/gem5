@@ -54,31 +54,32 @@ with open(stats_file_name) as stats_file:
             pass
 
 def gen_core(tag, i):
-    def gen_predictor():
-        with tag('component', id = 'system.core' + str(i) + '.predictor', name = 'PBT', type = 'BranchPredictor'):
-            with tag('param', name = 'assoc', value = '1'):
-                pass
-            with tag('param', name = 'nbanks', value = '1'):
-                pass
-            with tag('param', name = 'local_l1_predictor_size', value = '12'):
-                pass
-            with tag('param', name = 'local_l2_predictor_size', value = '4'):
-                pass
-            with tag('param', name = 'local_predictor_entries', value = '8192'):
-                pass
-            with tag('param', name = 'global_predictor_entries', value = '8192'):
-                pass
-            with tag('param', name = 'global_predictor_bits', value = '4'):
-                pass
-            with tag('param', name = 'chooser_predictor_entries', value = '8192'):
-                pass
-            with tag('param', name = 'chooser_predictor_bits', value = '4'):
-                pass
+    #def gen_predictor():
+    #    with tag('component', id = 'system.core' + str(i) + '.predictor', name = 'PBT', type = 'BranchPredictor'):
+    #        with tag('param', name = 'assoc', value = '1'):
+    #            pass
+    #        with tag('param', name = 'nbanks', value = '1'):
+    #            pass
+    #        with tag('param', name = 'local_l1_predictor_size', value = '12'):
+    #            pass
+    #        with tag('param', name = 'local_l2_predictor_size', value = '4'):
+    #            pass
+    #        with tag('param', name = 'local_predictor_entries', value = '8192'):
+    #            pass
+    #        with tag('param', name = 'global_predictor_entries', value = '8192'):
+    #            pass
+    #        with tag('param', name = 'global_predictor_bits', value = '4'):
+    #            pass
+    #        with tag('param', name = 'chooser_predictor_entries', value = '8192'):
+    #            pass
+    #        with tag('param', name = 'chooser_predictor_bits', value = '4'):
+    #            pass
 
     def gen_itlb():
         with tag('component', id = 'system.core' + str(i) + '.itlb', name = 'itlb', type = 'InstructionTLB'):
-            with tag('param', name = 'number_entries', value = '512'): # TODO
-                pass
+            with tag('param', name = 'number_entries', value = config_tree.execute('$.system.cpu[' + str(i) + '].itb.size')):
+                pass# TODO
+
             with tag('param', name = 'latency', value = '8'): # TODO
                 pass
             with tag('param', name = 'throughput', value = '3'):
@@ -87,9 +88,9 @@ def gen_core(tag, i):
                 pass
             with tag('param', name = 'nbanks', value = '1'):
                 pass
-            with tag('stat', name = 'total_accesses', value = '50'): # TODO
+            with tag('stat', name = 'total_accesses', value = str(int(stats['system.cpu'+str(i)+'.itb.fetch_accesses']))): # TODO
                 pass
-            with tag('stat', name = 'total_misses', value = '0'): # TODO
+            with tag('stat', name = 'total_misses', value = str(int(stats['system.cpu'+str(i)+'.itb.fetch_misses']))): # TODO
                 pass
             with tag('stat', name = 'conflicts', value = '0'): # TODO
                 pass
@@ -210,13 +211,13 @@ def gen_core(tag, i):
                 pass
             with tag('param', name = 'pure_ram', value = '0'):
                 pass
-            with tag('stat', name = 'read_accesses', value = '50'): # TODO
+            with tag('stat', name = 'read_accesses', value = str(int(stats['system.cpu'+str(i)+'.icache.ReadReq_accesses::total']))): # TODO
                 pass
-            with tag('stat', name = 'read_misses', value = '12'): # TODO
+            with tag('stat', name = 'read_misses', value = str(int(stats['system.cpu'+str(i)+'.icache.ReadReq_misses::total']))): # TODO
                 pass
-            with tag('stat', name = 'conflicts', value = '1'): # TODO
+            with tag('stat', name = 'conflicts', value = '0'): # TODO
                 pass
-            with tag('stat', name = 'duty_cycle', value = '1'): # TODO
+            with tag('stat', name = 'duty_cycle', value = '0'): # TODO
                 pass
 
     def gen_dtlb():
@@ -231,11 +232,11 @@ def gen_core(tag, i):
                 pass
             with tag('param', name = 'nbanks', value = '1'):
                 pass
-            with tag('stat', name = 'read_accesses', value = '65'): # TODO
+            with tag('stat', name = 'read_accesses', value = str(int(stats['system.cpu'+str(i)+'.dtb.read_accesses']))): # TODO
                 pass
-            with tag('stat', name = 'read_misses', value = '0'): # TODO
+            with tag('stat', name = 'read_misses', value = str(int(stats['system.cpu'+str(i)+'.dtb.read_misses']))): # TODO
                 pass
-            with tag('stat', name = 'conflicts', value = '0'): # TODO
+            with tag('stat', name = 'conflicts', value = str(int(stats['system.cpu'+str(i)+'.dtb.fetch_acv']))): # TODO
                 pass
 
     def gen_l1d():
@@ -354,13 +355,13 @@ def gen_core(tag, i):
                 pass
             with tag('param', name = 'pure_ram', value = '0'):
                 pass
-            with tag('stat', name = 'read_accesses', value = '50'): # TODO
+            with tag('stat', name = 'read_accesses', value = str(int(stats['system.cpu'+str(i)+'.dcache.ReadReq_accesses::total']))): # TODO
                 pass
-            with tag('stat', name = 'write_accesses', value = '15'): # TODO
+            with tag('stat', name = 'write_accesses', value = str(int(stats['system.cpu'+str(i)+'.dcache.WriteReq_accesses::total']))): # TODO
                 pass
-            with tag('stat', name = 'read_misses', value = '12'): # TODO
+            with tag('stat', name = 'read_misses', value = str(int(stats['system.cpu'+str(i)+'.dcache.ReadReq_misses::total']))): # TODO
                 pass
-            with tag('stat', name = 'write_misses', value = '3'): # TODO
+            with tag('stat', name = 'write_misses', value = str(int(stats['system.cpu'+str(i)+'.dcache.WriteReq_misses::total']))): # TODO
                 pass
             with tag('stat', name = 'conflicts', value = '1'): # TODO
                 pass
@@ -547,29 +548,29 @@ def gen_core(tag, i):
             pass
         with tag('param', name = 'instruction_buffer_tag_width', value = '0'):
             pass
-        with tag('stat', name = 'total_instructions', value = '100'): # TODO
+        with tag('stat', name = 'total_instructions', value = str(int(stats['system.cpu'+str(i)+'.num_int_insts'])+int(stats['system.cpu'+str(i)+'.num_fp_insts']))): # TODO
             pass
-        with tag('stat', name = 'int_instructions', value = '80'): # TODO
+        with tag('stat', name = 'int_instructions', value =str(int(stats['system.cpu'+str(i)+'.num_int_insts']))): # TODO
             pass
-        with tag('stat', name = 'fp_instructions', value = '20'): # TODO
+        with tag('stat', name = 'fp_instructions', value = str(int(stats['system.cpu'+str(i)+'.num_fp_insts']))): # TODO
             pass
         with tag('stat', name = 'branch_instructions', value = '25'): # TODO
             pass
         with tag('stat', name = 'branch_mispredictions', value = '2'): # TODO
             pass
-        with tag('stat', name = 'load_instructions', value = '50'): # TODO
+        with tag('stat', name = 'load_instructions', value = str(int(stats['system.cpu'+str(i)+'.num_load_insts']))): # TODO
             pass
-        with tag('stat', name = 'store_instructions', value = '15'): # TODO
+        with tag('stat', name = 'store_instructions', value = str(int(stats['system.cpu'+str(i)+'.num_store_insts']))): # TODO
             pass
-        with tag('stat', name = 'committed_instructions', value = '100'): # TODO
+        with tag('stat', name = 'committed_instructions', value = str(int(stats['system.cpu'+str(i)+'.num_int_insts'])+int(stats['system.cpu'+str(i)+'.num_fp_insts']))): # TODO
             pass
-        with tag('stat', name = 'committed_int_instructions', value = '80'): # TODO
+        with tag('stat', name = 'committed_int_instructions', value =str(int(stats['system.cpu'+str(i)+'.num_int_insts']))): # TODO
             pass
-        with tag('stat', name = 'committed_fp_instructions', value = '20'): # TODO
+        with tag('stat', name = 'committed_fp_instructions', value = str(int(stats['system.cpu'+str(i)+'.num_fp_insts']))): # TODO
             pass
         with tag('stat', name = 'pipeline_duty_cycle', value = '1'): # TODO
             pass
-        with tag('stat', name = 'total_cycles', value = '150'): # TODO
+        with tag('stat', name = 'total_cycles', value = str(int(stats['system.cpu'+str(i)+'.numCycles']))): # TODO
             pass
         with tag('stat', name = 'ROB_reads', value = '100'): # TODO
             pass
@@ -603,13 +604,13 @@ def gen_core(tag, i):
             pass
         with tag('stat', name = 'float_regfile_writes', value = '20'): # TODO
             pass
-        with tag('stat', name = 'function_calls', value = '0'): # TODO
+        with tag('stat', name = 'function_calls', value = str(int(stats['system.cpu'+str(i)+'.num_func_calls']))): # TODO
             pass
         with tag('stat', name = 'context_switches', value = '0'): # TODO
             pass
-        with tag('stat', name = 'ialu_accesses', value = '70'): # TODO
+        with tag('stat', name = 'ialu_accesses', value = str(int(stats['system.cpu'+str(i)+'.num_int_alu_accesses']))): # TODO
             pass
-        with tag('stat', name = 'fpu_accesses', value = '20'): # TODO
+        with tag('stat', name = 'fpu_accesses', value = str(int(stats['system.cpu'+str(i)+'.num_fp_alu_accesses']))): # TODO
             pass
         with tag('stat', name = 'mul_accesses', value = '10'): # TODO
             pass
@@ -763,14 +764,15 @@ def gen_l2(tag):
             pass
         with tag('param', name = 'pure_ram', value = '0'):
             pass
-        with tag('stat', name = 'read_accesses', value = '50'): # TODO
-            pass
-        with tag('stat', name = 'write_accesses', value = '15'): # TODO
-            pass
-        with tag('stat', name = 'read_misses', value = '12'): # TODO
-            pass
-        with tag('stat', name = 'write_misses', value = '3'): # TODO
-            pass
+        #with tag('stat', name = 'read_accesses', value = str(int(stats['system.l2.ReadExReq_accesses::total ']))): # TODO
+        #    pass
+        #with tag('stat', name = 'write_accesses', value = str(int(stats['system.cpu'+str(i)+'.WriteExReq_accesses::total']))): # TODO
+        #    pass
+        #with tag('stat', name = 'read_misses', value = str(int(stats['system.cpu'+str(i)+'.ReadExReq_misses::total']))): # TODO
+        #    pass
+        #with tag('stat', name = 'write_misses', value = str(int(stats['system.cpu'+str(i)+'.WriteExReq_misses::total']))): # TODO
+        #    pass
+
         with tag('stat', name = 'conflicts', value = '1'): # TODO
             pass
         with tag('stat', name = 'duty_cycle', value = '1'): # TODO
@@ -861,7 +863,7 @@ def gen_system(tag):
         pass
     with tag('param', name = 'broadcast_addr_din_over_ver_htrees', value = '0'):
         pass
-    with tag('stat', name = 'total_cycles', value = '100'): # TODO
+    with tag('stat', name = 'total_cycles', value = '65271180'): # TODO
         pass
 
     np = config_tree.execute('len($.system.cpu)')
