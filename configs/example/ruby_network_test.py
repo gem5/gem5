@@ -36,6 +36,7 @@ import os, optparse, sys
 addToPath('../common')
 addToPath('../ruby')
 addToPath('../topologies')
+addToPath('../topologies/routing')
 
 import Options
 import Ruby

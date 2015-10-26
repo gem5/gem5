@@ -62,6 +62,7 @@ RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
     m_router->vcarb_req();
 }
 
+//TODO: add different routing policies here
 int
 RoutingUnit_d::routeCompute(flit_d *t_flit)
 {

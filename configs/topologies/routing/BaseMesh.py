@@ -1,10 +1,14 @@
 from m5.params import *
 from m5.objects import *
+from m5.util import addToPath
 
 from BaseTopology import SimpleTopology
 
-class AdaptiveMesh(SimpleTopology):
-    description='AdaptiveMesh'
+addToPath('../topologies')
+
+# TODO
+class BaseMesh(SimpleTopology):
+    description='BaseMesh'
 
     def __init__(self, controllers):
         self.nodes = controllers
@@ -49,7 +53,7 @@ class AdaptiveMesh(SimpleTopology):
                                     int_node=routers[router_id]))
             link_count += 1
 
-        # Connect the remainding nodes to router 0.  These should only be
+        # Connect the remaining nodes to router 0.  These should only be
         # DMA nodes.
         for (i, node) in enumerate(remainder_nodes):
             assert(node.type == 'DMA_Controller')

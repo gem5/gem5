@@ -52,7 +52,7 @@ num_cpus_per_domain = option.num_cpus_per_domain
 
 isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
 
-binary = 'tests/test-progs/hello/bin/' + isa + '/linux/hello'
+binary = 'tests/test-progs/hello/bin/' + isa + '/linux/hello' #TODO: binary should not be hardcoded
 
 class Domain:
     def __init__(self, id = -1):
@@ -101,7 +101,8 @@ domains = [Domain(id = i) for i in range(num_domains)]
 
 system.systembus = SystemXBar()
 
-numa_cache = []
+numa_cache_downward = []
+numa_cache_upward = []
 mem_ctrl = []
 membus = []
 l2bus = []
@@ -109,18 +110,27 @@ l2cache = []
 cpu = []
 
 for domain in domains:
-    domain.numa_cache = IOCache()
+    domain.numa_cache_downward = IOCache()
+    domain.numa_cache_upward = IOCache()
 
-    domain.numa_cache.addr_ranges = []
+    domain.numa_cache_downward.addr_ranges = []
+    domain.numa_cache_upward.addr_ranges = []
+
     for r in range(num_domains):
+        addr_range = AddrRange(Addr(str(r * 512) + 'MB'), size = option.mem_size_per_domain) # TODO: 512 should not be hardcoded
         if r != domain.id:
-            addr_range = AddrRange(Addr(str(r * 512) + 'MB'), size = option.mem_size_per_domain) # TODO: 512 should not be hardcoded
-            domain.numa_cache.addr_ranges.append(addr_range)
+            domain.numa_cache_downward.addr_ranges.append(addr_range)
+        else:
+            domain.numa_cache_upward.addr_ranges.append(addr_range)
 
-    domain.numa_cache.cpu_side = domain.membus.master
-    domain.numa_cache.mem_side = system.systembus.slave
+    domain.numa_cache_downward.cpu_side = domain.membus.master
+    domain.numa_cache_downward.mem_side = system.systembus.slave
 
-    numa_cache.append(domain.numa_cache)
+    domain.numa_cache_upward.cpu_side = system.systembus.master
+    domain.numa_cache_upward.mem_side = domain.membus.slave
+
+    numa_cache_downward.append(domain.numa_cache_downward)
+    numa_cache_upward.append(domain.numa_cache_upward)
 
     system.mem_ranges.append(domain.mem_ranges)
 
@@ -134,7 +144,8 @@ for domain in domains:
 
     cpu += domain.cpu
 
-system.numa_cache = numa_cache
+system.numa_cache_downward = numa_cache_downward
+system.numa_cache_upward = numa_cache_upward
 system.mem_ctrl = mem_ctrl
 system.membus = membus
 system.l2bus = l2bus
