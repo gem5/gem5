@@ -605,7 +605,7 @@ FlashDevice::drain()
 void
 FlashDevice::checkDrain()
 {
-    if (drainState() == DrainState::Draining)
+    if (drainState() != DrainState::Draining)
         return;
 
     if (planeEvent.when() > curTick()) {
