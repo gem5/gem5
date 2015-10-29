@@ -379,7 +379,8 @@ FlashDevice::remap(uint64_t logic_page_addr)
         block = locationTable[logic_page_addr].block * pagesPerBlock;
 
         //assumption: clean will improve locality
-        for (uint32_t count = 0; count < pageSize; count++) {
+        for (uint32_t count = 0; count < pagesPerBlock; count++) {
+            assert(block + count < pagesPerDisk);
             locationTable[block + count].page = (block + count) %
                 pagesPerBlock;
             ++count;
