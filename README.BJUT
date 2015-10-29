@@ -14,8 +14,8 @@ git clone https://github.com/mcai/gem5 --verbose
 cd gem5/;.compile_ALPHA.sh
 
 5. Download disk images and Linux kernel files as required for full-system ALPHA simulation in gem5:
-    a) Full System Files : http://www.m5sim.org/dist/current/m5_system_2.0b3.tar.bz2
-    b) linux-dist :http://www.m5sim.org/dist/current/linux-dist.tgz
+    a) Full System Files: http://www.m5sim.org/dist/current/m5_system_2.0b3.tar.bz2
+    b) linux-dist: http://www.m5sim.org/dist/current/linux-dist.tgz
    Extract these files and put them in /home/<current_user>/Tools/GEM5/system/.
    The prepared directory layout should look like:
    .
