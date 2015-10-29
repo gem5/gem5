@@ -46,7 +46,15 @@ from m5.objects import *
 from Caches import *
 
 def config_cache(options, system, domain):
+    if options.external_memory_system:
+        print "external memory system is not currently supported."
+        sys.exit(-1)
+
     dcache_class, icache_class, l2_cache_class = L1_DCache, L1_ICache, L2Cache
+
+    # if not options.l2cache:
+    #     print "l2cache should be present"
+    #     sys.exit(-1)
 
     # Provide a clock for the L2 and the L1-to-L2 bus here as they
     # are not connected using addTwoLevelCacheHierarchy. Use the

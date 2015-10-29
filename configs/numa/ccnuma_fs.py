@@ -62,6 +62,14 @@ import ccnuma_MemConfig
 from Caches import *
 import Options
 
+
+# Check if KVM support has been enabled, we might need to do VM
+# configuration if that's the case.
+have_kvm_support = 'BaseKvmCPU' in globals()
+def is_kvm_cpu(cpu_class):
+    return have_kvm_support and cpu_class != None and \
+        issubclass(cpu_class, BaseKvmCPU)
+
 def cmd_line_template():
     if options.command_line and options.command_line_file:
         print "Error: --command-line and --command-line-file are " \
@@ -110,6 +118,20 @@ def build_test_system(np):
                                              voltage_domain =
                                              test_sys.cpu_voltage_domain)
 
+    if options.kernel is not None:
+        test_sys.kernel = binary(options.kernel)
+
+    if options.script is not None:
+        test_sys.readfile = options.script
+
+    if options.lpae:
+        test_sys.have_lpae = True
+
+    if options.virtualisation:
+        test_sys.have_virtualization = True
+
+    test_sys.init_param = options.init_param
+
     domains = [Domain(id = i) for i in range(options.num_domains)]
 
     numa_cache_downward = []
@@ -144,20 +166,6 @@ def build_test_system(np):
 
         numa_cache_downward.append(domain.numa_cache_downward)
         numa_cache_upward.append(domain.numa_cache_upward)
-    
-    if options.kernel is not None:
-        test_sys.kernel = binary(options.kernel)
-
-    if options.script is not None:
-        test_sys.readfile = options.script
-
-    if options.lpae:
-        test_sys.have_lpae = True
-
-    if options.virtualisation:
-        test_sys.have_virtualization = True
-
-    test_sys.init_param = options.init_param
 
     # By default the IOCache runs at the system clock
     test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
@@ -216,13 +224,21 @@ if args:
 # Match the memories with the CPUs, based on the options for the test system
 TestMemClass = Simulation.setMemClass(options)
 
-bm = [SysConfig(disk=options.disk_image, rootdev=options.root_device,
-                mem=options.mem_size, os_type=options.os_type)]
+if options.benchmark or options.dual:
+    print "options.benchmark or options.dual are not supported. "
+    sys.exit(1)
+else:
+    bm = [SysConfig(disk=options.disk_image, rootdev=options.root_device,
+                mem=-1, os_type=options.os_type)]
 
 np = options.num_cpus
 
 test_sys = build_test_system(np)
-root = Root(full_system=True, system=test_sys)
+if len(bm) != 1:
+    print "Error I only know how to create one system."
+    sys.exit(1)
+else:
+    root = Root(full_system=True, system=test_sys)
 
 if options.timesync:
     root.time_sync_enable = True
