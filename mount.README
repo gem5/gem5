@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+sudo mkdir -p ~/system
+
+###############################
+
+$ parted ~/Tools/GEM5/system/disks/BigDataBench-gem5.img
+WARNING: You are not superuser.  Watch out for permissions.
+GNU Parted 3.2
+Using /home/itecgo/Tools/GEM5/system/disks/BigDataBench-gem5.img
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) unit
+Unit?  [compact]? B
+(parted) print
+Model:  (file)
+Disk /home/itecgo/Tools/GEM5/system/disks/BigDataBench-gem5.img: 5000000000B
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags:
+
+Number  Start   End          Size         Type     File system  Flags
+ 1      16384B  4992744959B  4992728576B  primary  ext3
+
+(parted)
+
+###############################
+
+#sudo mount -o loop,offset=32256 ~/Tools/GEM5/system/disks/linux-x86.img ~/system
+#sudo mount -o loop,offset=32256 ~/Tools/GEM5/system/disks/x86root-parsec.img ~/system
+#sudo mount -o loop,offset=32256 ~/Tools/GEM5/system/disks/linux-parsec-2-1-m5-with-test-inputs.img ~/system
+sudo mount -o loop,offset=16384 ~/Tools/GEM5/system/disks/BigDataBench-gem5.img ~/system
+
+###############################
+
+#sudo mkdir -p ~/system/hello
+#sudo cp -r tests/test-progs/hello/bin/x86/linux/* ~/system/hello
+
+###############################
+
+#sudo umount -l ~/system/
