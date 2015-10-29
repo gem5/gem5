@@ -282,7 +282,7 @@ class MSHR : public Packet::SenderState, public Printable
 
     bool promoteDeferredTargets();
 
-    void handleFill(PacketPtr pkt, CacheBlk *blk);
+    void promoteExclusive();
 
     bool checkFunctional(PacketPtr pkt);
 

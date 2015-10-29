@@ -1190,7 +1190,6 @@ Cache::recvTimingResp(PacketPtr pkt)
 
     // Initial target is used just for stats
     MSHR::Target *initial_tgt = mshr->getTarget();
-    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick() - initial_tgt->recvTime;
     PacketList writebacks;
@@ -1212,15 +1211,19 @@ Cache::recvTimingResp(PacketPtr pkt)
             miss_latency;
     }
 
+    // upgrade deferred targets if we got exclusive
+    if (!pkt->sharedAsserted()) {
+        mshr->promoteExclusive();
+    }
+
     bool is_fill = !mshr->isForward &&
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
+
+    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
 
     if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
                 pkt->getAddr());
-
-        // give mshr a chance to do some dirty work
-        mshr->handleFill(pkt, blk);
 
         blk = handleFill(pkt, blk, writebacks);
         assert(blk != NULL);
@@ -1262,9 +1265,10 @@ Cache::recvTimingResp(PacketPtr pkt)
             // from above.
             if (tgt_pkt->cmd == MemCmd::WriteLineReq) {
                 assert(!is_error);
-
+                // we got the block in exclusive state, so promote any
+                // deferred targets if possible
+                mshr->promoteExclusive();
                 // NB: we use the original packet here and not the response!
-                mshr->handleFill(tgt_pkt, blk);
                 blk = handleFill(tgt_pkt, blk, writebacks);
                 assert(blk != NULL);
 

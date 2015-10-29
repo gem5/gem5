@@ -430,11 +430,10 @@ MSHR::promoteDeferredTargets()
 
 
 void
-MSHR::handleFill(PacketPtr pkt, CacheBlk *blk)
+MSHR::promoteExclusive()
 {
-    if (!pkt->sharedAsserted()
-        && !(hasPostInvalidate() || hasPostDowngrade())
-        && deferredTargets.needsExclusive) {
+    if (deferredTargets.needsExclusive &&
+        !(hasPostInvalidate() || hasPostDowngrade())) {
         // We got an exclusive response, but we have deferred targets
         // which are waiting to request an exclusive copy (not because
         // of a pending invalidate).  This can happen if the original
