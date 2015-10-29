@@ -523,6 +523,10 @@ TableWalker::processWalk()
         flag.set(Request::UNCACHEABLE);
     }
 
+    if (currState->isSecure) {
+        flag.set(Request::SECURE);
+    }
+
     bool delayed;
     delayed = fetchDescriptor(l1desc_addr, (uint8_t*)&currState->l1Desc.data,
                               sizeof(uint32_t), flag, L1, &doL1DescEvent,
@@ -684,9 +688,6 @@ TableWalker::processWalkLPAE()
     if (currState->sctlr.c == 0) {
         flag.set(Request::UNCACHEABLE);
     }
-
-    if (currState->isSecure)
-        flag.set(Request::SECURE);
 
     currState->longDesc.lookupLevel = start_lookup_level;
     currState->longDesc.aarch64 = false;
@@ -932,6 +933,10 @@ TableWalker::processWalkAArch64()
     Request::Flags flag = Request::PT_WALK;
     if (currState->sctlr.c == 0) {
         flag.set(Request::UNCACHEABLE);
+    }
+
+    if (currState->isSecure) {
+        flag.set(Request::SECURE);
     }
 
     currState->longDesc.lookupLevel = start_lookup_level;
