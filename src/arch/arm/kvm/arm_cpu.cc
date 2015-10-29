@@ -270,8 +270,8 @@ ArmKvmCPU::startup()
 Tick
 ArmKvmCPU::kvmRun(Tick ticks)
 {
-    bool simFIQ(interrupts->checkRaw(INT_FIQ));
-    bool simIRQ(interrupts->checkRaw(INT_IRQ));
+    bool simFIQ(interrupts[0]->checkRaw(INT_FIQ));
+    bool simIRQ(interrupts[0]->checkRaw(INT_IRQ));
 
     if (fiqAsserted != simFIQ) {
         fiqAsserted = simFIQ;

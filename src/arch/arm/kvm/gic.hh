@@ -80,7 +80,7 @@ class KvmGic : public BaseGic
     void drainResume() override { verifyMemoryMode(); }
 
     void serialize(CheckpointOut &cp) const override;
-    void unserialize(Checkpoint *cp, const std::string &sec)  override;
+    void unserialize(CheckpointIn &cp)  override;
 
   public: // PioDevice
     AddrRangeList getAddrRanges() const { return addrRanges; }

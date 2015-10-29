@@ -123,7 +123,7 @@ ArmV8KvmCPU::~ArmV8KvmCPU()
 }
 
 void
-ArmV8KvmCPU::dump()
+ArmV8KvmCPU::dump() const
 {
     inform("Integer registers:\n");
     inform("  PC: %s\n", getAndFormatOneReg(INT_REG(regs.pc)));

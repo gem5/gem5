@@ -83,7 +83,7 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     ArmV8KvmCPU(ArmV8KvmCPUParams *params);
     virtual ~ArmV8KvmCPU();
 
-    void dump() override;
+    void dump() const override;
 
   protected:
     void updateKvmState() override;
