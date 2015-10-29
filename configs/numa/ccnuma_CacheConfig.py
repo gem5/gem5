@@ -45,32 +45,28 @@ import m5
 from m5.objects import *
 from Caches import *
 
-def config_cache(options, system):
+def config_cache(options, system, domain):
     dcache_class, icache_class, l2_cache_class = L1_DCache, L1_ICache, L2Cache
-
-    # Set the cache line size of the system
-    system.cache_line_size = options.cacheline_size
 
     # Provide a clock for the L2 and the L1-to-L2 bus here as they
     # are not connected using addTwoLevelCacheHierarchy. Use the
     # same clock as the CPUs.
-    system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
-                               size=options.l2_size,
-                               assoc=options.l2_assoc) #TODO:NUMA
+    domain.l2 = l2_cache_class(size=options.l2_size,
+                               assoc=options.l2_assoc)
 
-    system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain) #TODO:NUMA
-    system.l2.cpu_side = system.tol2bus.master #TODO:NUMA
-    system.l2.mem_side = system.membus.slave #TODO:NUMA
+    domain.tol2bus = L2XBar()
+    domain.l2.cpu_side = domain.tol2bus.master
+    domain.l2.mem_side = domain.membus.slave
 
-    for i in xrange(options.num_cpus): #TODO:NUMA
+    for cpu in domain.cpu:
         icache = icache_class(size=options.l1i_size,
                               assoc=options.l1i_assoc)
         dcache = dcache_class(size=options.l1d_size,
                               assoc=options.l1d_assoc)
 
-        system.cpu[i].addPrivateSplitL1Caches(icache, dcache)
+        cpu.addPrivateSplitL1Caches(icache, dcache)
 
-        system.cpu[i].createInterruptController()
-        system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
+        cpu.createInterruptController()
+        cpu.connectAllPorts(domain.tol2bus, domain.membus)
 
-    return system
+    return domain

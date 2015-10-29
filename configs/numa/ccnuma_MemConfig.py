@@ -140,7 +140,7 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
                                       intlvMatch = i)
     return ctrl
 
-def config_mem(options, system):
+def config_mem(options, system, domain):
     """
     Create the memory controllers based on the options and attach them.
 
@@ -172,7 +172,7 @@ def config_mem(options, system):
     # For every range (most systems will only have one), create an
     # array of controllers and set their parameters to match their
     # address mapping in the case of a DRAM
-    for r in system.mem_ranges:
+    for r in domain.mem_ranges:
         for i in xrange(nbr_mem_ctrls):
             mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,
                                        intlv_size)
@@ -184,8 +184,8 @@ def config_mem(options, system):
 
             mem_ctrls.append(mem_ctrl)
 
-    system.mem_ctrls = mem_ctrls #TODO:NUMA
+    domain.mem_ctrls = mem_ctrls
 
     # Connect the controllers to the membus
-    for i in xrange(len(system.mem_ctrls)):
-        system.mem_ctrls[i].port = system.membus.master #TODO:NUMA
+    for i in xrange(len(domain.mem_ctrls)):
+        domain.mem_ctrls[i].port = domain.membus.master

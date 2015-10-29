@@ -1,5 +1,5 @@
-# Copyright (c) 2015 Min Cai
 # Copyright (c) 2010-2013 ARM Limited
+# Copyright (c) 2015 Min Cai
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,7 +49,7 @@ import sys
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, fatal
+from m5.util import *
 
 addToPath('../common')
 
@@ -61,7 +61,6 @@ import ccnuma_CacheConfig
 import ccnuma_MemConfig
 from Caches import *
 import Options
-from optparse import OptionParser
 
 def cmd_line_template():
     if options.command_line and options.command_line_file:
@@ -78,33 +77,12 @@ class Domain:
     def __init__(self, id = -1):
         self.id = id
 
-        self.mem_ranges = AddrRange(Addr(str(self.id * 512) + 'MB'), size = options.mem_size_per_domain) # TODO: 512 should not be hardcoded
+        self.mem_ranges = [AddrRange(Addr(str(self.id * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded
 
         self.membus = SystemXBar()
 
-        self.mem_ctrl = DDR3_1600_x64(range = self.mem_ranges, port = self.membus.master)
-
-        self.l2bus = L2XBar()
-
-        self.l2cache = L2Cache(size = options.l2_size)
-        self.l2cache.cpu_side = self.l2bus.master
-        self.l2cache.mem_side = self.membus.slave
-
-        self.system_port = self.membus.slave
-
-        self.cpu = [TimingSimpleCPU(cpu_id = num_cpus_per_domain * self.id + i,
-                                     icache = L1_ICache(size = options.l1i_size), dcache = L1_DCache(size = options.l1d_size))
-                     for i in range(num_cpus_per_domain)]
-
-        for cpu in self.cpu:
-            cpu.icache.cpu_side = cpu.icache_port
-            cpu.icache.mem_side = self.l2bus.slave
-
-            cpu.dcache.cpu_side = cpu.dcache_port
-            cpu.dcache.mem_side = self.l2bus.slave
-
-            cpu.createThreads()
-            cpu.createInterruptController()
+        self.cpu = [TestCPUClass(cpu_id = options.num_cpus_per_domain * self.id + i)
+                     for i in range(options.num_cpus_per_domain)]
 
 def build_test_system(np):
     cmdline = cmd_line_template()
@@ -132,17 +110,15 @@ def build_test_system(np):
                                              voltage_domain =
                                              test_sys.cpu_voltage_domain)
 
-    domains = [Domain(id = i) for i in range(num_domains)]
-
-    test_sys.systembus = SystemXBar()
+    domains = [Domain(id = i) for i in range(options.num_domains)]
 
     numa_cache_downward = []
     numa_cache_upward = []
-    mem_ctrl = []
+    mem_ctrls = []
     membus = []
     l2bus = []
     l2cache = []
-    cpu = []
+    cpus = []
 
     for domain in domains:
         domain.numa_cache_downward = IOCache()
@@ -151,41 +127,23 @@ def build_test_system(np):
         domain.numa_cache_downward.addr_ranges = []
         domain.numa_cache_upward.addr_ranges = []
 
-        for r in range(num_domains):
-            addr_range = AddrRange(Addr(str(r * 512) + 'MB'), size = options.mem_size_per_domain) # TODO: 512 should not be hardcoded
+        for r in range(options.num_domains):
+            addr_range = [AddrRange(Addr(str(r * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded
             if r != domain.id:
-                domain.numa_cache_downward.addr_ranges.append(addr_range)
+                domain.numa_cache_downward.addr_ranges += addr_range
             else:
-                domain.numa_cache_upward.addr_ranges.append(addr_range)
+                domain.numa_cache_upward.addr_ranges += addr_range
 
-    #     domain.numa_cache_downward.cpu_side = domain.membus.master
-    #     domain.numa_cache_downward.mem_side = test_sys.systembus.slave
-    #
-    #     domain.numa_cache_upward.cpu_side = test_sys.systembus.master
-    #     domain.numa_cache_upward.mem_side = domain.membus.slave
-    #
-    #     numa_cache_downward.append(domain.numa_cache_downward)
-    #     numa_cache_upward.append(domain.numa_cache_upward)
+        domain.numa_cache_downward.addr_ranges += test_sys.bridge.ranges
 
-        test_sys.mem_ranges.append(domain.mem_ranges)
+        domain.numa_cache_downward.cpu_side = domain.membus.master
+        domain.numa_cache_downward.mem_side = test_sys.systembus.slave
 
-        mem_ctrl.append(domain.mem_ctrl)
+        domain.numa_cache_upward.cpu_side = test_sys.systembus.master
+        domain.numa_cache_upward.mem_side = domain.membus.slave
 
-        membus.append(domain.membus)
-
-        l2bus.append(domain.l2bus)
-
-        l2cache.append(domain.l2cache)
-
-        cpu += domain.cpu
-
-    # test_sys.numa_cache_downward = numa_cache_downward
-    # test_sys.numa_cache_upward = numa_cache_upward
-    test_sys.mem_ctrl = mem_ctrl
-    test_sys.membus = membus
-    test_sys.l2bus = l2bus
-    test_sys.l2cache = l2cache
-    test_sys.cpu = cpu
+        numa_cache_downward.append(domain.numa_cache_downward)
+        numa_cache_upward.append(domain.numa_cache_upward)
     
     if options.kernel is not None:
         test_sys.kernel = binary(options.kernel)
@@ -201,20 +159,39 @@ def build_test_system(np):
 
     test_sys.init_param = options.init_param
 
-    # For now, assign all the CPUs to the same clock domain
-    test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
-                    for i in xrange(np)] #TODO:NUMA
-
     # By default the IOCache runs at the system clock
-    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges) #TODO:NUMA
+    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
     test_sys.iocache.cpu_side = test_sys.iobus.master
-    test_sys.iocache.mem_side = test_sys.membus.slave
+    test_sys.iocache.mem_side = test_sys.systembus.slave
+
+    for domain in domains:
+        ccnuma_CacheConfig.config_cache(options, test_sys, domain)
+        ccnuma_MemConfig.config_mem(options, test_sys, domain)
+
+        test_sys.mem_ranges += domain.mem_ranges
+        mem_ctrls += domain.mem_ctrls
+        membus.append(domain.membus)
+
+        domain.tol2bus.clk_domain = test_sys.cpu_clk_domain
+        l2bus.append(domain.tol2bus)
+
+        domain.l2.clk_domain = test_sys.cpu_clk_domain
+        l2cache.append(domain.l2)
+
+        for cpu in domain.cpu:
+            cpu.clk_domain = test_sys.cpu_clk_domain
+        cpus += domain.cpu
+
+    test_sys.numa_cache_downward = numa_cache_downward
+    test_sys.numa_cache_upward = numa_cache_upward
+    test_sys.mem_ctrls = mem_ctrls
+    test_sys.membus = membus
+    test_sys.l2bus = l2bus
+    test_sys.l2cache = l2cache
+    test_sys.cpu = cpus
 
     for i in xrange(np):
         test_sys.cpu[i].createThreads()
-
-    ccnuma_CacheConfig.config_cache(options, test_sys)
-    ccnuma_MemConfig.config_mem(options, test_sys)
 
     return test_sys
 
@@ -223,17 +200,11 @@ parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
 
-# parser.add_option('--l1i_size', type='string', default='32kB', help = 'L1 instruction cache size')
-# parser.add_option('--l1d_size', type='string', default='64kB', help = 'L1 data cache size')
-# parser.add_option('--l2_size', type='string', default='512kB', help = 'L2 cache size')
 parser.add_option('--num_domains', type='int', default=2, help = 'Number of NUMA domains')
 parser.add_option('--num_cpus_per_domain', type='int', default=2, help = 'Number of CPUs per NUMA domain')
 parser.add_option('--mem_size_per_domain', type='string', default='512MB', help = 'Memory size per NUMA domain')
 
 (options, args) = parser.parse_args()
-
-num_domains = options.num_domains
-num_cpus_per_domain = options.num_cpus_per_domain
 
 if args:
     print "Error: script doesn't take any positional arguments"
