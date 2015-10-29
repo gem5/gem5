@@ -1,0 +1,56 @@
+gem5 README.BJUT
+
+(一) 用户态模拟:
+    1.	确认系统是否为ubuntu较新版本：ubuntu ...> 12.04
+    2.	安装必要的包：sudo apt-get install python-dev build-essential scons swig m4 zlibc zlib1g zlib1g-dev
+    3.	编译：cd gem5../;scons ./build/X86/gem5.opt
+    4.	运行：build/ALPHA/gem5.opt configs/example/se.py -c tests/test-progs/hello/bin/alpha/linux/hello
+
+(二) 全系统模拟:
+(1)alpha:
+    1.  到官网下载Alpha full system需要的包：
+        Full System Files : http://www.m5sim.org/dist/current/m5_system_2.0b3.tar.bz2
+        linux-dist :http://www.m5sim.org/dist/current/linux-dist.tgz
+
+    2.  为硬盘镜像文件创建目录，并将m5_system_2.03.tar.bz2和linux-dist.gz拷贝至该目录下：mkdir dist
+        进入该目录对m5_system_2.03.tar.bz2解压：tar -xvf m5_system_2.03.tar.bz2
+        将解压后的m5_system_2.03里的binaries和disks移动到上层目录：mv./binaries/ ../binaries和mv./disks/ ../disks
+        修改$GEM5/config/common/SysPaths.py 文件：
+        把except KeyError:
+        path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system
+        修改成
+        except KeyError:
+        path = [ '/dist/m5/system', ' /…/dist' <你为alpha硬盘镜像文件创建目录的路径>]
+
+    3.  编译：cd gem5../ ; scons ./build/ALPHA/gem5.opt
+
+    4.  运行：./build/ALPHA/gem5.opt ./configs/example/fs.py
+
+    5.  交互：打开另外一个终端并进入/util/term：cd ./util/term
+        接下来执行命令：make;sudo make install
+        使用M5Term来与simulated system进行交互: m5term localhost 3456; 这样就进入了模拟出来的系统。
+
+(2)X86：
+    1.  到官网下载X86 full system需要的包：
+        Full System Files : http://www.m5sim.org/dist/current/x86/x86-system.tar.bz2
+        Config files : http://www.m5sim.org/dist/current/x86/config-x86.tar.bz2
+
+    2.  为硬盘镜像文件创建目录，并将x86-system.tar.bz2和config-x86.tar.bz2拷贝至该目录下：mkdir x86dist。
+        进入该目录对x86-system.tar.bz2解压：tar -xvf x86-system.tar.bz2
+
+    3.  修改$GEM5/config/common/SysPaths.py 文件：
+        把except KeyError:
+        path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system
+        修改成
+        except KeyError:
+        path = [ '/dist/m5/system', ' /…/x86dist' <你为x86硬盘镜像文件创建目录的路径>]
+
+    4.  进入 ./configs/common/Benchmarks.py下修改Benchmarks.py：把
+        return env.get('LINUX_IMAGE',disk('x86root.img'))改成
+        return env.get('LINUX_IMAGE', disk('linux-x86.img'))
+
+    5.  要将alpha的full system下载的包Full System Files解压后的dist/disks/linux-bigswap2.img拷贝到目录/…/x86dist/disks/下。
+
+    6.  编译：cd gem5../ ; scons ./build/X86/gem5.opt
+
+    7.  运行：./build/X86/gem5.opt ./configs/example/fs.py --kernel=x86_64-vmlinux-2.6.22.9.smp
