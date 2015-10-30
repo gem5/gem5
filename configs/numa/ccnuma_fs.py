@@ -89,9 +89,6 @@ class Domain:
 
         self.membus = SystemXBar()
 
-        self.cpu = [TestCPUClass(cpu_id = options.num_cpus_per_domain * self.id + i)
-                     for i in range(options.num_cpus_per_domain)]
-
 def build_test_system(np):
     cmdline = cmd_line_template()
     if buildEnv['TARGET_ISA'] == "alpha":
@@ -134,6 +131,11 @@ def build_test_system(np):
 
     domains = [Domain(id = i) for i in range(options.num_domains)]
 
+    # For now, assign all the CPUs to the same clock domain
+    for domain in domains:
+        domain.cpu = [TestCPUClass(cpu_id = options.num_cpus_per_domain * domain.id + i)
+                    for i in range(options.num_cpus_per_domain)]
+
     numa_cache_downward = []
     numa_cache_upward = []
     mem_ctrls = []
@@ -173,21 +175,16 @@ def build_test_system(np):
     # By default the IOCache runs at the system clock
     if options.caches or options.l2cache:
         test_sys.iocache = IOCache(addr_ranges = [])
-    else:
-        test_sys.iobridge = Bridge(delay = '50ns', ranges = [])
-
-    for domain in domains:
-        if options.caches or options.l2cache:
-            test_sys.iocache.addr_ranges += domain.mem_ranges
-        else:
-            test_sys.iobridge.ranges += domain.mem_ranges
-
-    if options.caches or options.l2cache:
         test_sys.iocache.cpu_side = test_sys.iobus.master
         test_sys.iocache.mem_side = test_sys.systembus.slave
+        for domain in domains:
+            test_sys.iocache.addr_ranges += domain.mem_ranges
     else:
+        test_sys.iobridge = Bridge(delay = '50ns', ranges = [])
         test_sys.iobridge.slave = test_sys.iobus.master
         test_sys.iobridge.master = test_sys.systembus.slave
+        for domain in domains:
+            test_sys.iobridge.ranges += domain.mem_ranges
 
     for domain in domains:
         ccnuma_CacheConfig.config_cache(options, test_sys, domain)
