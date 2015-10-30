@@ -168,7 +168,11 @@ def build_test_system(np):
         numa_cache_upward.append(domain.numa_cache_upward)
 
     # By default the IOCache runs at the system clock
-    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
+    test_sys.iocache = IOCache(addr_ranges = [])
+
+    for domain in domains:
+        test_sys.iocache.addr_ranges += domain.mem_ranges
+
     test_sys.iocache.cpu_side = test_sys.iobus.master
     test_sys.iocache.mem_side = test_sys.systembus.slave
 
@@ -201,7 +205,7 @@ def build_test_system(np):
     for i in xrange(np):
         test_sys.cpu[i].createThreads()
 
-    return test_sys
+    return test_sys, domains
 
 # Add options
 parser = optparse.OptionParser()
@@ -233,7 +237,34 @@ else:
 
 np = options.num_cpus
 
-test_sys = build_test_system(np)
+test_sys, domains = build_test_system(np)
+
+def addr_range_to_str(range):
+    return '[0x%x:0x%x]' % (range.start, range.end)
+
+def print_addr_ranges(label, ranges):
+    print label
+    for range in ranges:
+        print addr_range_to_str(range)
+    print ''
+
+for domain in domains:
+    for cpu in domain.cpu:
+        print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.icache.addr_ranges: ', cpu.icache.addr_ranges)
+        print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.dcache.addr_ranges: ', cpu.dcache.addr_ranges)
+    print_addr_ranges('domain#' + str(domain.id) + '.l2.addr_ranges: ', domain.l2.addr_ranges)
+
+    print 'domain#' + str(domain.id) + '.mem_ctrls.ranges: '
+    for mem_ctrl in domain.mem_ctrls:
+        print 'mem_ctrl.range: ' + addr_range_to_str(mem_ctrl.range)
+    print ''
+
+    print_addr_ranges('domain#' + str(domain.id) + '.numa_cache_downward.addr_ranges: ', domain.numa_cache_downward.addr_ranges)
+    print_addr_ranges('domain#' + str(domain.id) + '.numa_cache_upward.addr_ranges: ', domain.numa_cache_upward.addr_ranges)
+
+print_addr_ranges('test_sys.bridge.ranges: ', test_sys.bridge.ranges)
+print_addr_ranges('test_sys.iocache.addr_ranges: ', test_sys.iocache.addr_ranges)
+
 if len(bm) != 1:
     print "Error I only know how to create one system."
     sys.exit(1)

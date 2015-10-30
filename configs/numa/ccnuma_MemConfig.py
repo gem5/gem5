@@ -140,6 +140,15 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
                                       intlvMatch = i)
     return ctrl
 
+def addr_range_to_str(range):
+    return '[0x%x:0x%x]' % (range.start, range.end)
+
+def print_addr_ranges(label, ranges):
+    print label
+    for range in ranges:
+        print addr_range_to_str(range)
+    print ''
+
 def config_mem(options, system, domain):
     """
     Create the memory controllers based on the options and attach them.
@@ -172,6 +181,9 @@ def config_mem(options, system, domain):
     # For every range (most systems will only have one), create an
     # array of controllers and set their parameters to match their
     # address mapping in the case of a DRAM
+
+    print_addr_ranges('domain#' + str(domain.id) + '.mem_ranges: ', domain.mem_ranges)
+
     for r in domain.mem_ranges:
         for i in xrange(nbr_mem_ctrls):
             mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,

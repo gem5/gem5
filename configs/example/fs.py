@@ -325,6 +325,29 @@ else:
 np = options.num_cpus
 
 test_sys = build_test_system(np)
+
+def addr_range_to_str(range):
+    return '[0x%x:0x%x]' % (range.start, range.end)
+
+def print_addr_ranges(label, ranges):
+    print label
+    for range in ranges:
+        print addr_range_to_str(range)
+    print ''
+
+for cpu in test_sys.cpu:
+    print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.icache.addr_ranges: ', cpu.icache.addr_ranges)
+    print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.dcache.addr_ranges: ', cpu.dcache.addr_ranges)
+print_addr_ranges('test_sys.l2.addr_ranges: ', test_sys.l2.addr_ranges)
+
+print 'test_sys.mem_ctrls.ranges: '
+for mem_ctrl in test_sys.mem_ctrls:
+    print 'mem_ctrl.range: ' + addr_range_to_str(mem_ctrl.range)
+print ''
+
+print_addr_ranges('test_sys.bridge.ranges: ', test_sys.bridge.ranges)
+print_addr_ranges('test_sys.iocache.addr_ranges: ', test_sys.iocache.addr_ranges)
+
 if len(bm) == 2:
     drive_sys = build_drive_system(np)
     root = makeDualRoot(True, test_sys, drive_sys, options.etherdump)
