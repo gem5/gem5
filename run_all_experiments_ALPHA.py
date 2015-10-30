@@ -8,17 +8,17 @@
 
 import os
 
-benches = ['blackscholes', 'bodytrack', 'canneal', 'dedup', 'facesim',
-           'ferret', 'fluidanimate', 'freqmine', 'streamcluster',
-           'swaptions', 'vips', 'x264']
-# benches = ['blackscholes']
+# benches = ['blackscholes', 'bodytrack', 'canneal', 'dedup', 'facesim',
+#            'ferret', 'fluidanimate', 'freqmine', 'streamcluster',
+#            'swaptions', 'vips', 'x264']
+benches = ['blackscholes']
 
 # num_threads = [1, 2, 4, 8, 16, 32]
 num_threads = [4]
 
-# l2_tags_range = ['LRU']
+l2_tags_range = ['LRU']
 # l2_tags_range = ['Random']
-l2_tags_range = ['LRU', 'Random']
+# l2_tags_range = ['LRU', 'Random']
 
 for bench in benches:
     for l2_tags in l2_tags_range:
@@ -30,13 +30,13 @@ for bench in benches:
 
             os.system('mkdir -p ' + dir)
 
-            cmd_first_run = 'build/ALPHA_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --num-cpus=' \
+            cmd_first_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/example/fs.py --num-cpus=' \
                             + str(num_thread) + ' --script=ext/parsec/2.1/run_scripts/' \
                             + bench + '_' + str(num_thread) + 'c_simsmall_ckpts.rcS'
             print cmd_first_run
             os.system(cmd_first_run)
 
-            cmd_second_run = 'build/ALPHA_MESI_Two_Level/gem5.fast -d ' + dir + ' configs/example/fs.py --cpu-type=timing --num-cpus=' \
+            cmd_second_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/example/fs.py --cpu-type=timing --num-cpus=' \
                              + str(num_thread) \
                              + ' --caches --l2cache --num-l2caches=1' \
                              + ' --l1d_size=32kB --l1i_size=32kB --l2_size=256kB --l2_tags=' + l2_tags \
