@@ -77,6 +77,15 @@ def config_cache(options, system):
                                    size=options.l2_size,
                                    assoc=options.l2_assoc)
 
+        if options.l2_tags:
+            if options.l2_tags == 'LRU':
+                system.l2.tags = LRU()
+            elif options.l2_tags == 'Random':
+                system.l2.tags = RandomRepl()
+            else:
+                print 'L2 tags: ' + options.l2_tags + ' is not supported.'
+                sys.exit(-1)
+
         system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave

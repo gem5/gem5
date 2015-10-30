@@ -122,6 +122,7 @@ def addCommonOptions(parser):
     parser.add_option("--l1i_assoc", type="int", default=2)
     parser.add_option("--l2_assoc", type="int", default=8)
     parser.add_option("--l3_assoc", type="int", default=16)
+    parser.add_option("--l2_tags", type="string", default="LRU")
     parser.add_option("--cacheline_size", type="int", default=64)
 
     # Enable Ruby
