@@ -88,7 +88,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.tsunami.ethernet.pio = self.iobus.master
     self.tsunami.ethernet.config = self.iobus.master
 
-    self.systembus = MemBus()
+    self.systembus = IOXBar()
 
     # By default the bridge responds to all addresses above the I/O
     # base address (including the PCI config space)
