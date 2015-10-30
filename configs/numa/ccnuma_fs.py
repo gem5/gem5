@@ -138,8 +138,11 @@ def build_test_system(np):
     numa_cache_upward = []
     mem_ctrls = []
     membus = []
-    l2bus = []
-    l2cache = []
+
+    if options.l2cache:
+        l2bus = []
+        l2cache = []
+
     cpus = []
 
     for domain in domains:
@@ -168,13 +171,23 @@ def build_test_system(np):
         numa_cache_upward.append(domain.numa_cache_upward)
 
     # By default the IOCache runs at the system clock
-    test_sys.iocache = IOCache(addr_ranges = [])
+    if options.caches or options.l2cache:
+        test_sys.iocache = IOCache(addr_ranges = [])
+    else:
+        test_sys.iobridge = Bridge(delay = '50ns', ranges = [])
 
     for domain in domains:
-        test_sys.iocache.addr_ranges += domain.mem_ranges
+        if options.caches or options.l2cache:
+            test_sys.iocache.addr_ranges += domain.mem_ranges
+        else:
+            test_sys.iobridge.ranges += domain.mem_ranges
 
-    test_sys.iocache.cpu_side = test_sys.iobus.master
-    test_sys.iocache.mem_side = test_sys.systembus.slave
+    if options.caches or options.l2cache:
+        test_sys.iocache.cpu_side = test_sys.iobus.master
+        test_sys.iocache.mem_side = test_sys.systembus.slave
+    else:
+        test_sys.iobridge.slave = test_sys.iobus.master
+        test_sys.iobridge.master = test_sys.systembus.slave
 
     for domain in domains:
         ccnuma_CacheConfig.config_cache(options, test_sys, domain)
@@ -184,11 +197,12 @@ def build_test_system(np):
         mem_ctrls += domain.mem_ctrls
         membus.append(domain.membus)
 
-        domain.tol2bus.clk_domain = test_sys.cpu_clk_domain
-        l2bus.append(domain.tol2bus)
+        if options.l2cache:
+            domain.tol2bus.clk_domain = test_sys.cpu_clk_domain
+            l2bus.append(domain.tol2bus)
 
-        domain.l2.clk_domain = test_sys.cpu_clk_domain
-        l2cache.append(domain.l2)
+            domain.l2.clk_domain = test_sys.cpu_clk_domain
+            l2cache.append(domain.l2)
 
         for cpu in domain.cpu:
             cpu.clk_domain = test_sys.cpu_clk_domain
@@ -198,8 +212,11 @@ def build_test_system(np):
     test_sys.numa_cache_upward = numa_cache_upward
     test_sys.mem_ctrls = mem_ctrls
     test_sys.membus = membus
-    test_sys.l2bus = l2bus
-    test_sys.l2cache = l2cache
+
+    if options.l2cache:
+        test_sys.l2bus = l2bus
+        test_sys.l2cache = l2cache
+
     test_sys.cpu = cpus
 
     for i in xrange(np):
@@ -250,9 +267,11 @@ def print_addr_ranges(label, ranges):
 
 for domain in domains:
     for cpu in domain.cpu:
-        print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.icache.addr_ranges: ', cpu.icache.addr_ranges)
-        print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.dcache.addr_ranges: ', cpu.dcache.addr_ranges)
-    print_addr_ranges('domain#' + str(domain.id) + '.l2.addr_ranges: ', domain.l2.addr_ranges)
+        if options.caches or options.l2cache:
+            print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.icache.addr_ranges: ', cpu.icache.addr_ranges)
+            print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.dcache.addr_ranges: ', cpu.dcache.addr_ranges)
+    if options.l2cache:
+        print_addr_ranges('domain#' + str(domain.id) + '.l2.addr_ranges: ', domain.l2.addr_ranges)
 
     print 'domain#' + str(domain.id) + '.mem_ctrls.ranges: '
     for mem_ctrl in domain.mem_ctrls:
@@ -263,7 +282,11 @@ for domain in domains:
     print_addr_ranges('domain#' + str(domain.id) + '.numa_cache_upward.addr_ranges: ', domain.numa_cache_upward.addr_ranges)
 
 print_addr_ranges('test_sys.bridge.ranges: ', test_sys.bridge.ranges)
-print_addr_ranges('test_sys.iocache.addr_ranges: ', test_sys.iocache.addr_ranges)
+
+if options.caches or options.l2cache:
+    print_addr_ranges('test_sys.iocache.addr_ranges: ', test_sys.iocache.addr_ranges)
+else:
+    print_addr_ranges('test_sys.iobridge.addr_ranges: ', test_sys.iobridge.ranges)
 
 if len(bm) != 1:
     print "Error I only know how to create one system."

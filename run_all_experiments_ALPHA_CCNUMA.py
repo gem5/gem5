@@ -22,10 +22,9 @@ for bench in benches:
 
         os.system('mkdir -p ' + dir)
 
-        cmd_first_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/numa/ccnuma_fs.py --cpu-type=timing --num-cpus=' \
+        cmd_first_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/numa/ccnuma_fs.py --num-cpus=' \
                         + str(num_thread) + ' --script=ext/parsec/2.1/run_scripts/' \
                         + bench + '_' + str(num_thread) + 'c_simsmall_ckpts.rcS' \
-                        + ' --caches --l2cache --num-l2caches=1' \
                         + ' --num_domains=2 --num_cpus_per_domain=2 --mem_size_per_domain=512MB'
         print cmd_first_run
         os.system(cmd_first_run)
