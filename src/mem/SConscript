@@ -42,6 +42,7 @@ SimObject('ExternalSlave.py')
 SimObject('MemObject.py')
 SimObject('SimpleMemory.py')
 SimObject('XBar.py')
+SimObject('HMCController.py')
 
 Source('abstract_mem.cc')
 Source('addr_mapper.cc')
@@ -64,6 +65,7 @@ Source('snoop_filter.cc')
 Source('stack_dist_calc.cc')
 Source('tport.cc')
 Source('xbar.cc')
+Source('hmc_controller.cc')
 
 if env['TARGET_ISA'] != 'null':
     Source('fs_translating_port_proxy.cc')
@@ -101,6 +103,7 @@ DebugFlag('MemoryAccess')
 DebugFlag('PacketQueue')
 DebugFlag('StackDist')
 DebugFlag("DRAMSim2")
+DebugFlag('HMCController')
 
 DebugFlag("MemChecker")
 DebugFlag("MemCheckerMonitor")
