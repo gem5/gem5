@@ -137,7 +137,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
 
     return self
 
-def makeSparcSystem(mem_mode, mdesc=None):
+def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
     # Constants from iob.cc and uart8250.cc
     iob_man_addr = 0x9800000000
     uart_pio_size = 8
