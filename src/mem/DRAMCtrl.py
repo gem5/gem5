@@ -12,6 +12,7 @@
 #
 # Copyright (c) 2013 Amin Farmahini-Farahani
 # Copyright (c) 2015 University of Kaiserslautern
+# Copyright (c) 2015 The University of Bologna
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,6 +42,7 @@
 #          Ani Udipi
 #          Omar Naji
 #          Matthias Jung
+#          Erfan Azarkhish
 
 from m5.params import *
 from AbstractMemory import *
@@ -382,8 +384,8 @@ class DDR3_1600_x64(DRAMCtrl):
 # developed at the University of Kaiserslautern. This high level tool
 # uses RC (resistance-capacitance) and CV (capacitance-voltage) models to
 # estimate the DRAM bank latency and power numbers.
-# [2] A Logic-base Interconnect for Supporting Near Memory Computation in the
-# Hybrid Memory Cube (E. Azarkhish et. al)
+# [2] High performance AXI-4.0 based interconnect for extensible smart memory
+# cubes (E. Azarkhish et. al)
 # Assumed for the HMC model is a 30 nm technology node.
 # The modelled HMC consists of 4 Gbit layers which sum up to 2GB of memory (4
 # layers).
@@ -397,8 +399,8 @@ class DDR3_1600_x64(DRAMCtrl):
 # devices per rank (DDR) => devices per layer ( 1 for HMC).
 # The parameters for which no input is available are inherited from the DDR3
 # configuration.
-# This configuration includes the latencies from the DRAM to the logic layer of
-# the HMC
+# This configuration includes the latencies from the DRAM to the logic layer
+# of the HMC
 class HMC_2500_x32(DDR3_1600_x64):
     # size of device
     # two banks per device with each bank 4MB [2]
@@ -441,7 +443,8 @@ class HMC_2500_x32(DDR3_1600_x64):
     # cycles (Assumption)
     tRRD = '3.2ns'
 
-    # activation limit is set to 0 since there are only 2 banks per vault layer.
+    # activation limit is set to 0 since there are only 2 banks per vault
+    # layer.
     activation_limit = 0
 
     # Values using DRAMSpec HMC model [1]
@@ -449,19 +452,32 @@ class HMC_2500_x32(DDR3_1600_x64):
     tWR = '8ns'
     tRTP = '4.9ns'
 
-    # Default different rank bus delay assumed to 1 CK for TSVs, @1250 MHz = 0.8
-    # ns (Assumption)
+    # Default different rank bus delay assumed to 1 CK for TSVs, @1250 MHz =
+    # 0.8 ns (Assumption)
     tCS = '0.8ns'
 
     # Value using DRAMSpec HMC model [1]
     tREFI = '3.9us'
 
-    # Set default controller parameters
-    page_policy = 'close'
-    write_buffer_size = 8
-    read_buffer_size = 8
+    # The default page policy in the vault controllers is simple closed page
+    # [2] nevertheless 'close' policy opens and closes the row multiple times
+    # for bursts largers than 32Bytes. For this reason we use 'close_adaptive'
+    page_policy = 'close_adaptive'
+
+    # RoCoRaBaCh resembles the default address mapping in HMC
     addr_mapping = 'RoCoRaBaCh'
     min_writes_per_switch = 8
+
+    # These parameters do not directly correlate with buffer_size in real
+    # hardware. Nevertheless, their value has been tuned to achieve a
+    # bandwidth similar to the cycle-accurate model in [2]
+    write_buffer_size = 32
+    read_buffer_size = 32
+
+    # The static latency of the vault controllers is estimated to be smaller
+    # than a full DRAM channel controller
+    static_backend_latency='4ns'
+    static_frontend_latency='4ns'
 
 # A single DDR3-2133 x64 channel refining a selected subset of the
 # options for the DDR-1600 configuration, based on the same DDR3-1600

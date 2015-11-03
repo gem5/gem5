@@ -340,7 +340,7 @@ class BaseXBar : public MemObject
      *
      * @param master_port_id id of the port that received the change
      */
-    void recvRangeChange(PortID master_port_id);
+    virtual void recvRangeChange(PortID master_port_id);
 
     /** Find which port connected to this crossbar (if any) should be
      * given a packet with this address.
