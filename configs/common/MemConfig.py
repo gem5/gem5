@@ -39,6 +39,7 @@
 import m5.objects
 import inspect
 import sys
+import HMC
 from textwrap import  TextWrapper
 
 # Dictionary of mapping names of real memory controller models to
@@ -151,6 +152,14 @@ def config_mem(options, system):
     them.
     """
 
+    if ( options.mem_type == "HMC_2500_x32"):
+        HMC.config_hmc(options, system)
+        subsystem = system.hmc
+        xbar = system.hmc.xbar
+    else:
+        subsystem = system
+        xbar = system.membus
+
     if options.tlm_memory:
         system.external_memory = m5.objects.ExternalSlave(
             port_type="tlm",
@@ -161,11 +170,11 @@ def config_mem(options, system):
         return
 
     if options.external_memory_system:
-        system.external_memory = m5.objects.ExternalSlave(
+        subsystem.external_memory = m5.objects.ExternalSlave(
             port_type=options.external_memory_system,
-            port_data="init_mem0", port=system.membus.master,
+            port_data="init_mem0", port=xbar.master,
             addr_ranges=system.mem_ranges)
-        system.kernel_addr_check = False
+        subsystem.kernel_addr_check = False
         return
 
     nbr_mem_ctrls = options.mem_channels
@@ -199,8 +208,8 @@ def config_mem(options, system):
 
             mem_ctrls.append(mem_ctrl)
 
-    system.mem_ctrls = mem_ctrls
+    subsystem.mem_ctrls = mem_ctrls
 
     # Connect the controllers to the membus
-    for i in xrange(len(system.mem_ctrls)):
-        system.mem_ctrls[i].port = system.membus.master
+    for i in xrange(len(subsystem.mem_ctrls)):
+        subsystem.mem_ctrls[i].port = xbar.master

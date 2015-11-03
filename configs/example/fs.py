@@ -215,6 +215,7 @@ def build_test_system(np):
             test_sys.cpu[i].createThreads()
 
         CacheConfig.config_cache(options, test_sys)
+
         MemConfig.config_mem(options, test_sys)
 
     return test_sys
