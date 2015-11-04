@@ -84,7 +84,7 @@ import m5
 from m5.objects import *
 
 # A single Hybrid Memory Cube (HMC)
-class HMCSystem(SimOject):
+class HMCSystem(SimObject):
 
     #*****************************CROSSBAR PARAMETERS*************************
     # Flit size of the main interconnect [1]
