@@ -205,6 +205,8 @@ def addCommonOptions(parser):
         help="switch from timing to Detailed CPU after warmup period of <N>")
     parser.add_option("-p", "--prog-interval", type="str",
         help="CPU Progress Interval")
+    parser.add_option("--two-phase", action="store",
+                      help="switch from atomic to timing CPU after kernel boots")
 
     # Fastforwarding and simpoint related materials
     parser.add_option("-W", "--warmup-insts", action="store", type="int",

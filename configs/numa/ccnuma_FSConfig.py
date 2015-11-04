@@ -54,6 +54,15 @@ class CowIdeDisk(IdeDisk):
         self.image.child.image_file = ci
 
 class MemBus(SystemXBar):
+    # pass
+    badaddr_responder = BadAddr()
+    default = Self.badaddr_responder.pio
+
+class CoherentSystemBus(SystemXBar):
+    badaddr_responder = BadAddr()
+    default = Self.badaddr_responder.pio
+
+class NonCoherentSystemBus(IOXBar):
     badaddr_responder = BadAddr()
     default = Self.badaddr_responder.pio
 
@@ -64,7 +73,7 @@ def fillInCmdline(mdesc, template, **kwargs):
     kwargs.setdefault('script', mdesc.script())
     return template % kwargs
 
-def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
+def makeLinuxAlphaSystem(mem_mode, options, mdesc=None, cmdline=None):
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
@@ -88,7 +97,13 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.tsunami.ethernet.pio = self.iobus.master
     self.tsunami.ethernet.config = self.iobus.master
 
-    self.systembus = IOXBar()
+    self.systembus = MemBus()
+    # self.systembus = IOXBar()
+
+    # if options.caches or options.l2cache:
+    #     self.systembus = CoherentSystemBus()
+    # else:
+    #     self.systembus = NonCoherentSystemBus()
 
     # By default the bridge responds to all addresses above the I/O
     # base address (including the PCI config space)

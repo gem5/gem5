@@ -81,6 +81,14 @@ def cmd_line_template():
         return open(options.command_line_file).read().strip()
     return None
 
+class NUMACache(Cache):
+    assoc = 8
+    hit_latency = 50
+    response_latency = 50
+    mshrs = 20
+    size = '1kB'
+    tgts_per_mshr = 12
+
 class Domain:
     def __init__(self, id = -1):
         self.id = id
@@ -92,7 +100,7 @@ class Domain:
 def build_test_system(np):
     cmdline = cmd_line_template()
     if buildEnv['TARGET_ISA'] == "alpha":
-        test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0], options.ruby,
+        test_sys = makeLinuxAlphaSystem(test_mem_mode, options, bm[0],
                                         cmdline=cmdline)
     else:
         fatal("Incapable of building %s full system!", buildEnv['TARGET_ISA'])
@@ -154,8 +162,10 @@ def build_test_system(np):
 
     for domain in domains:
         if  options.caches or options.l2cache:
-            domain.numa_cache_downward = IOCache(addr_ranges = [])
+            # domain.numa_cache_downward = IOCache(addr_ranges = [])
             domain.numa_cache_upward = IOCache(addr_ranges = [])
+            domain.numa_cache_downward = NUMACache(addr_ranges = [])
+            # domain.numa_cache_upward = NUMACache(addr_ranges = [])
 
             for r in range(options.num_domains):
                 addr_range = [AddrRange(Addr(str(r * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded

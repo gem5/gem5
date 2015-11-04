@@ -78,7 +78,7 @@ def setCPUClass(options):
         if options.restore_with_cpu != options.cpu_type:
             CPUClass = TmpClass
             TmpClass, test_mem_mode = getCPUClass(options.restore_with_cpu)
-    elif options.fast_forward:
+    elif options.fast_forward or options.two_phase:
         CPUClass = TmpClass
         TmpClass = AtomicSimpleCPU
         test_mem_mode = 'atomic'
@@ -633,6 +633,9 @@ def run(options, root, testsys, cpu_class):
             print "Switch at instruction count:%s" % \
                     str(testsys.cpu[0].max_insts_any_thread)
             exit_event = m5.simulate()
+        elif options.two_phase:
+            print "Switch after kernel boots"
+            exit_event = m5.simulate()
         else:
             print "Switch at curTick count:%s" % str(10000)
             exit_event = m5.simulate(10000)
@@ -682,7 +685,7 @@ def run(options, root, testsys, cpu_class):
         restoreSimpointCheckpoint()
 
     else:
-        if options.fast_forward:
+        if options.fast_forward or options.two_phase:
             m5.stats.reset()
         print "**** REAL SIMULATION ****"
 

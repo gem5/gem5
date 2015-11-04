@@ -20,6 +20,8 @@ num_threads = [4]
 for bench in benches:
     for num_thread in num_threads:
         dir = 'results/alpha_ruby_garnet/' + bench + '/' + str(num_thread) + 'c/'
+
+        os.system('rm -fr ' + dir)
         os.system('mkdir -p ' + dir)
 
         num_dirs = 2 # TODO: should not be hardcoded!!!

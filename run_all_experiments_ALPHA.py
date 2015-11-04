@@ -28,6 +28,7 @@ for bench in benches:
             else:
                 dir = 'results/alpha/' + l2_tags + '/' + bench +'/' + str(num_thread) + 'c/'
 
+            os.system('rm -fr ' + dir)
             os.system('mkdir -p ' + dir)
 
             cmd_first_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/example/fs.py --num-cpus=' \
