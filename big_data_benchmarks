@@ -1,0 +1,19 @@
+1. Microbenchmarks
+	sort
+	grep
+	wordcount
+	BFS
+2. SearchEngine
+	PageRank
+	Index
+3. SNS
+	Kmeans
+	connected_components
+4. E-commerce
+	naivebayes
+	recommendator
+
+sudo ln -sf /bin/bash /bin/sh
+sudo apt-get install gnuplot	
+	
+
