@@ -77,9 +77,11 @@ OutputDirectory::checkForStdio(const string &name) const
 
 ostream *
 OutputDirectory::openFile(const string &filename,
-                          ios_base::openmode mode)
+                          ios_base::openmode mode, bool no_gz)
 {
-    if (filename.find(".gz", filename.length()-3) < filename.length()) {
+    bool gz = !no_gz;
+    gz = gz && filename.find(".gz", filename.length()-3) < filename.length();
+    if (gz) {
         ogzstream *file = new ogzstream(filename.c_str(), mode);
         if (!file->is_open())
             fatal("Cannot open file %s", filename);
@@ -153,7 +155,7 @@ OutputDirectory::resolve(const string &name) const
 }
 
 ostream *
-OutputDirectory::create(const string &name, bool binary)
+OutputDirectory::create(const string &name, bool binary, bool no_gz)
 {
     ostream *file = checkForStdio(name);
     if (file)
@@ -162,7 +164,7 @@ OutputDirectory::create(const string &name, bool binary)
     string filename = resolve(name);
     ios_base::openmode mode =
         ios::trunc | (binary ? ios::binary : (ios::openmode)0);
-    file = openFile(filename, mode);
+    file = openFile(filename, mode, no_gz);
 
     return file;
 }

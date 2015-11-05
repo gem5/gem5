@@ -86,10 +86,13 @@ class OutputDirectory
      *
      * @param filename file to open
      * @param mode attributes to open file with
+     * @param no_gz true to disable opening the file as a gzip compressed output
+     *     stream; false otherwise
      * @return stream pointer to opened file; will cause sim fail on error
      */
     std::ostream *openFile(const std::string &filename,
-                        std::ios_base::openmode mode = std::ios::trunc);
+                        std::ios_base::openmode mode = std::ios::trunc,
+                        bool no_gz = false);
 
     /**
      * Sets name of this directory.
@@ -111,9 +114,12 @@ class OutputDirectory
      * @param name name of file to create (without this directory's name
      *          leading it)
      * @param binary true to create a binary file; false otherwise
+     * @param no_gz true to disable creating a gzip compressed output stream;
+     *     false otherwise
      * @return stream to the opened file
      */
-    std::ostream *create(const std::string &name, bool binary = false);
+    std::ostream *create(const std::string &name, bool binary = false,
+                         bool no_gz = false);
 
     /**
      * Closes a file stream.

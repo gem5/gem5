@@ -565,13 +565,13 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
 
     if (offset == 0) {
         // create a new file (truncate)
-        os = simout.create(filename, true);
+        os = simout.create(filename, true, true);
     } else {
         // do not truncate file if offset is non-zero
         // (ios::in flag is required as well to keep the existing data
         //  intact, otherwise existing data will be zeroed out.)
         os = simout.openFile(simout.directory() + filename,
-                            ios::in | ios::out | ios::binary);
+                            ios::in | ios::out | ios::binary, true);
     }
     if (!os)
         panic("could not open file %s\n", filename);
