@@ -508,9 +508,12 @@ class BaseCache : public MemObject
 
     MSHR *allocateWriteBuffer(PacketPtr pkt, Tick time)
     {
-        // should only see clean evictions in a read-only cache
-        assert(!isReadOnly || pkt->cmd == MemCmd::CleanEvict);
-        assert(pkt->isWrite() && !pkt->isRead());
+        // should only see writes or clean evicts here
+        assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
+
+        // if this is a read-only cache we should never see any writes
+        assert(!(isReadOnly && pkt->isWrite()));
+
         return allocateBufferInternal(&writeBuffer,
                                       blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, true);
