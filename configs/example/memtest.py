@@ -177,7 +177,7 @@ else:
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = Cache(size = '32kB', assoc = 4,
                  hit_latency = 1, response_latency = 1,
-                 tgts_per_mshr = 8)
+                 tgts_per_mshr = 8, clusivity = 'mostly_incl')
 
 if options.blocking:
      proto_l1.mshrs = 1
@@ -197,6 +197,15 @@ for scale in cachespec[:-1]:
      next.response_latency = prev.response_latency * 10
      next.assoc = prev.assoc * scale
      next.mshrs = prev.mshrs * scale
+
+     # Swap the inclusivity/exclusivity at each level. L2 is mostly
+     # exclusive with respect to L1, L3 mostly inclusive, L4 mostly
+     # exclusive etc.
+     if (prev.clusivity.value == 'mostly_incl'):
+          next.clusivity = 'mostly_excl'
+     else:
+          next.clusivity = 'mostly_incl'
+
      cache_proto.insert(0, next)
 
 # Make a prototype for the tester to be used throughout
