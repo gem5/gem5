@@ -586,12 +586,6 @@ DRAMCtrl::printQs() const {
 bool
 DRAMCtrl::recvTimingReq(PacketPtr pkt)
 {
-    /// @todo temporary hack to deal with memory corruption issues until
-    /// 4-phase transactions are complete
-    for (int x = 0; x < pendingDelete.size(); x++)
-        delete pendingDelete[x];
-    pendingDelete.clear();
-
     // This is where we enter from the outside world
     DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -600,7 +594,7 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
     if (pkt->memInhibitAsserted() ||
         pkt->cmd == MemCmd::CleanEvict) {
         DPRINTF(DRAM, "Inhibited packet or clean evict -- Dropping it now\n");
-        pendingDelete.push_back(pkt);
+        pendingDelete.reset(pkt);
         return true;
     }
 
@@ -872,7 +866,7 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
     } else {
         // @todo the packet is going to be deleted, and the DRAMPacket
         // is still having a pointer to it
-        pendingDelete.push_back(pkt);
+        pendingDelete.reset(pkt);
     }
 
     DPRINTF(DRAM, "Done\n");

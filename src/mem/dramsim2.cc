@@ -178,16 +178,10 @@ DRAMSim2::recvTimingReq(PacketPtr pkt)
     // we should never see a new request while in retry
     assert(!retryReq);
 
-    // @todo temporary hack to deal with memory corruption issues until
-    // 4-phase transactions are complete
-    for (int x = 0; x < pendingDelete.size(); x++)
-        delete pendingDelete[x];
-    pendingDelete.clear();
-
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
         // still target's responsibility to delete packet
-        pendingDelete.push_back(pkt);
+        pendingDelete.reset(pkt);
         return true;
     }
 
@@ -281,9 +275,8 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
         if (!retryResp && !sendResponseEvent.scheduled())
             schedule(sendResponseEvent, time);
     } else {
-        // @todo the packet is going to be deleted, and the DRAMPacket
-        // is still having a pointer to it
-        pendingDelete.push_back(pkt);
+        // queue the packet for deletion
+        pendingDelete.reset(pkt);
     }
 }
 

@@ -274,11 +274,10 @@ class CoherentXBar : public BaseXBar
     const Cycles snoopResponseLatency;
 
     /**
-     * @todo this is a temporary workaround until the 4-phase code is committed.
-     * upstream caches need this packet until true is returned, so hold it for
-     * deletion until a subsequent call
+     * Upstream caches need this packet until true is returned, so
+     * hold it for deletion until a subsequent call
      */
-    std::vector<PacketPtr> pendingDelete;
+    std::unique_ptr<Packet> pendingDelete;
 
     /** Function called by the port when the crossbar is recieving a Timing
       request packet.*/

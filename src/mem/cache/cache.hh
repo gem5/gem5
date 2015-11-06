@@ -195,11 +195,10 @@ class Cache : public BaseCache
     const bool prefetchOnAccess;
 
     /**
-     * @todo this is a temporary workaround until the 4-phase code is committed.
-     * upstream caches need this packet until true is returned, so hold it for
-     * deletion until a subsequent call
+     * Upstream caches need this packet until true is returned, so
+     * hold it for deletion until a subsequent call
      */
-    std::vector<PacketPtr> pendingDelete;
+    std::unique_ptr<Packet> pendingDelete;
 
     /**
      * Does all the processing necessary to perform the provided request.

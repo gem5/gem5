@@ -97,16 +97,10 @@ SimpleMemory::recvFunctional(PacketPtr pkt)
 bool
 SimpleMemory::recvTimingReq(PacketPtr pkt)
 {
-    /// @todo temporary hack to deal with memory corruption issues until
-    /// 4-phase transactions are complete
-    for (int x = 0; x < pendingDelete.size(); x++)
-        delete pendingDelete[x];
-    pendingDelete.clear();
-
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
         // still target's responsibility to delete packet
-        pendingDelete.push_back(pkt);
+        pendingDelete.reset(pkt);
         return true;
     }
 
@@ -165,7 +159,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         if (!retryResp && !dequeueEvent.scheduled())
             schedule(dequeueEvent, packetQueue.back().tick);
     } else {
-        pendingDelete.push_back(pkt);
+        pendingDelete.reset(pkt);
     }
 
     return true;

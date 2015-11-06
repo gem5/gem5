@@ -160,11 +160,11 @@ class DRAMSim2 : public AbstractMemory
      */
     EventWrapper<DRAMSim2, &DRAMSim2::tick> tickEvent;
 
-    /** @todo this is a temporary workaround until the 4-phase code is
-     * committed. upstream caches needs this packet until true is returned, so
-     * hold onto it for deletion until a subsequent call
+    /**
+     * Upstream caches need this packet until true is returned, so
+     * hold it for deletion until a subsequent call
      */
-    std::vector<PacketPtr> pendingDelete;
+    std::unique_ptr<Packet> pendingDelete;
 
   public:
 

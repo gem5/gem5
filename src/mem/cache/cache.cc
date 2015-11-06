@@ -542,15 +542,6 @@ bool
 Cache::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(CacheTags, "%s tags: %s\n", __func__, tags->print());
-//@todo Add back in MemDebug Calls
-//    MemDebug::cacheAccess(pkt);
-
-
-    /// @todo temporary hack to deal with memory corruption issue until
-    /// 4-phase transactions are complete
-    for (int x = 0; x < pendingDelete.size(); x++)
-        delete pendingDelete[x];
-    pendingDelete.clear();
 
     assert(pkt->isRequest());
 
@@ -602,10 +593,9 @@ Cache::recvTimingReq(PacketPtr pkt)
             // main memory will delete the packet
         }
 
-        /// @todo nominally we should just delete the packet here,
-        /// however, until 4-phase stuff we can't because sending
-        /// cache is still relying on it.
-        pendingDelete.push_back(pkt);
+        // queue for deletion, as the sending cache is still relying
+        // on the packet
+        pendingDelete.reset(pkt);
 
         // no need to take any action in this particular cache as the
         // caches along the path to memory are allowed to keep lines
@@ -678,12 +668,11 @@ Cache::recvTimingReq(PacketPtr pkt)
             // by access(), that calls accessBlock() function.
             cpuSidePort->schedTimingResp(pkt, request_time);
         } else {
-            /// @todo nominally we should just delete the packet here,
-            /// however, until 4-phase stuff we can't because sending cache is
-            /// still relying on it. If the block is found in access(),
-            /// CleanEvict and Writeback messages will be deleted here as
-            /// well.
-            pendingDelete.push_back(pkt);
+            // queue the packet for deletion, as the sending cache is
+            // still relying on it; if the block is found in access(),
+            // CleanEvict and Writeback messages will be deleted
+            // here as well
+            pendingDelete.reset(pkt);
         }
     } else {
         // miss
@@ -754,7 +743,7 @@ Cache::recvTimingReq(PacketPtr pkt)
                 // CleanEvicts corresponding to blocks which have outstanding
                 // requests in MSHRs can be deleted here.
                 if (pkt->cmd == MemCmd::CleanEvict) {
-                    pendingDelete.push_back(pkt);
+                    pendingDelete.reset(pkt);
                 } else {
                     DPRINTF(Cache, "%s coalescing MSHR for %s addr %#llx size %d\n",
                             __func__, pkt->cmdString(), pkt->getAddr(),
