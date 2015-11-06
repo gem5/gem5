@@ -176,8 +176,7 @@ class PacketQueue : public Drainable
      *
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
-     * @param force_order Do not reorder packets despite timing, but keep them
-     *                    in insertion order.
+     * @param force_order Force insertion order for packets with same address
      */
     void schedSendTiming(PacketPtr pkt, Tick when, bool force_order = false);
 

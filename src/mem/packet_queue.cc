@@ -119,29 +119,8 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool force_order)
               name());
     }
 
-    // if requested, force the timing to be in-order by changing the when
-    // parameter
-    if (force_order && !transmitList.empty()) {
-        Tick back = transmitList.back().tick;
-
-        // fudge timing if required; relies on the code below to do the right
-        // thing (push_back) with the updated time-stamp
-        if (when < back) {
-            DPRINTF(PacketQueue, "%s force_order shifted packet %s address "\
-                    "%x from %lu to %lu\n", __func__, pkt->cmdString(),
-                    pkt->getAddr(), when, back);
-            when = back;
-        }
-    }
-
-    // nothing on the list, or earlier than current front element,
-    // schedule an event
-    if (transmitList.empty() || when < transmitList.front().tick) {
-        // force_order-ed in here only when list is empty
-        assert(!force_order || transmitList.empty());
-        // note that currently we ignore a potentially outstanding retry
-        // and could in theory put a new packet at the head of the
-        // transmit list before retrying the existing packet
+    // nothing on the list
+    if (transmitList.empty()) {
         transmitList.emplace_front(when, pkt);
         schedSendEvent(when);
         return;
@@ -155,21 +134,19 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool force_order)
     // ourselves again before we had a chance to update waitingOnRetry
     // assert(waitingOnRetry || sendEvent.scheduled());
 
-    // list is non-empty and this belongs at the end
-    if (when >= transmitList.back().tick) {
-        transmitList.emplace_back(when, pkt);
-        return;
-    }
+    // this belongs in the middle somewhere, so search from the end to
+    // order by tick; however, if force_order is set, also make sure
+    // not to re-order in front of some existing packet with the same
+    // address
+    auto i = transmitList.end();
+    --i;
+    while (i != transmitList.begin() && when < i->tick &&
+           !(force_order && i->pkt->getAddr() == pkt->getAddr()))
+        --i;
 
-    // forced orders never need insertion in the middle
-    assert(!force_order);
-
-    // this belongs in the middle somewhere, insertion sort
-    auto i = transmitList.begin();
-    ++i; // already checked for insertion at front
-    while (i != transmitList.end() && when >= i->tick)
-        ++i;
-    transmitList.emplace(i, when, pkt);
+    // emplace inserts the element before the position pointed to by
+    // the iterator, so advance it one step
+    transmitList.emplace(++i, when, pkt);
 }
 
 void
