@@ -84,6 +84,22 @@ class BaseCache(MemObject):
 
     system = Param.System(Parent.any, "System we belong to")
 
+# Enum for cache clusivity, currently mostly inclusive or mostly
+# exclusive.
+class Clusivity(Enum): vals = ['mostly_incl', 'mostly_excl']
+
 class Cache(BaseCache):
     type = 'Cache'
     cxx_header = 'mem/cache/cache.hh'
+
+    # Control whether this cache should be mostly inclusive or mostly
+    # exclusive with respect to upstream caches. The behaviour on a
+    # fill is determined accordingly. For a mostly inclusive cache,
+    # blocks are allocated on all fill operations. Thus, L1 caches
+    # should be set as mostly inclusive even if they have no upstream
+    # caches. In the case of a mostly exclusive cache, fills are not
+    # allocating unless they came directly from a non-caching source,
+    # e.g. a table walker. Additionally, on a hit from an upstream
+    # cache a line is dropped for a mostly exclusive cache.
+    clusivity = Param.Clusivity('mostly_incl',
+                                "Clusivity with upstream cache")

@@ -68,7 +68,11 @@ Cache::Cache(const CacheParams *p)
       tags(p->tags),
       prefetcher(p->prefetcher),
       doFastWrites(true),
-      prefetchOnAccess(p->prefetch_on_access)
+      prefetchOnAccess(p->prefetch_on_access),
+      clusivity(p->clusivity),
+      tempBlockWriteback(nullptr),
+      writebackTempBlockAtomicEvent(this, false,
+                                    EventBase::Delayed_Writeback_Pri)
 {
     tempBlock = new CacheBlk();
     tempBlock->data = new uint8_t[blkSize];
@@ -198,10 +202,10 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
                 if (blk->isDirty()) {
                     pkt->assertMemInhibit();
                 }
-                // on ReadExReq we give up our copy unconditionally
-                if (blk != tempBlock)
-                    tags->invalidate(blk);
-                blk->invalidate();
+                // on ReadExReq we give up our copy unconditionally,
+                // even if this cache is mostly inclusive, we may want
+                // to revisit this
+                invalidateBlock(blk);
             } else if (blk->isWritable() && !pending_downgrade &&
                        !pkt->sharedAsserted() &&
                        pkt->cmd != MemCmd::ReadCleanReq) {
@@ -220,9 +224,30 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
                     if (!deferred_response) {
                         // if we are responding immediately and can
                         // signal that we're transferring ownership
-                        // along with exclusivity, do so
+                        // (inhibit set) along with exclusivity
+                        // (shared not set), do so
                         pkt->assertMemInhibit();
+
+                        // if this cache is mostly inclusive, we keep
+                        // the block as writable (exclusive), and pass
+                        // it upwards as writable and dirty
+                        // (modified), hence we have multiple caches
+                        // considering the same block writable,
+                        // something that we get away with due to the
+                        // fact that: 1) this cache has been
+                        // considered the ordering points and
+                        // responded to all snoops up till now, and 2)
+                        // we always snoop upwards before consulting
+                        // the local cache, both on a normal request
+                        // (snooping done by the crossbar), and on a
+                        // snoop
                         blk->status &= ~BlkDirty;
+
+                        // if this cache is mostly exclusive with
+                        // respect to the cache above, drop the block
+                        if (clusivity == Enums::mostly_excl) {
+                            invalidateBlock(blk);
+                        }
                     } else {
                         // if we're responding after our own miss,
                         // there's a window where the recipient didn't
@@ -241,9 +266,10 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
         // Upgrade or Invalidate, since we have it Exclusively (E or
         // M), we ack then invalidate.
         assert(pkt->isUpgrade() || pkt->isInvalidate());
-        assert(blk != tempBlock);
-        tags->invalidate(blk);
-        blk->invalidate();
+
+        // for invalidations we could be looking at the temp block
+        // (for upgrades we always allocate)
+        invalidateBlock(blk);
         DPRINTF(Cache, "%s for %s addr %#llx size %d (invalidation)\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     }
@@ -761,7 +787,8 @@ Cache::recvTimingReq(PacketPtr pkt)
                     // buffer and to schedule an event to the queued
                     // port and also takes into account the additional
                     // delay of the xbar.
-                    mshr->allocateTarget(pkt, forward_time, order++);
+                    mshr->allocateTarget(pkt, forward_time, order++,
+                                         allocOnFill(pkt->cmd));
                     if (mshr->getNumTargets() == numTarget) {
                         noTargetMSHR = mshr;
                         setBlocked(Blocked_NoTargets);
@@ -1027,13 +1054,15 @@ Cache::recvAtomic(PacketPtr pkt)
 
                     // write-line request to the cache that promoted
                     // the write to a whole line
-                    blk = handleFill(pkt, blk, writebacks);
+                    blk = handleFill(pkt, blk, writebacks,
+                                     allocOnFill(pkt->cmd));
                     satisfyCpuSideRequest(pkt, blk);
                 } else if (bus_pkt->isRead() ||
                            bus_pkt->cmd == MemCmd::UpgradeResp) {
                     // we're updating cache state to allow us to
                     // satisfy the upstream request from the cache
-                    blk = handleFill(bus_pkt, blk, writebacks);
+                    blk = handleFill(bus_pkt, blk, writebacks,
+                                     allocOnFill(pkt->cmd));
                     satisfyCpuSideRequest(pkt, blk);
                 } else {
                     // we're satisfying the upstream request without
@@ -1056,8 +1085,33 @@ Cache::recvAtomic(PacketPtr pkt)
     // immediately rather than calling requestMemSideBus() as we do
     // there).
 
-    // Handle writebacks (from the response handling) if needed
+    // do any writebacks resulting from the response handling
     doWritebacksAtomic(writebacks);
+
+    // if we used temp block, check to see if its valid and if so
+    // clear it out, but only do so after the call to recvAtomic is
+    // finished so that any downstream observers (such as a snoop
+    // filter), first see the fill, and only then see the eviction
+    if (blk == tempBlock && tempBlock->isValid()) {
+        // the atomic CPU calls recvAtomic for fetch and load/store
+        // sequentuially, and we may already have a tempBlock
+        // writeback from the fetch that we have not yet sent
+        if (tempBlockWriteback) {
+            // if that is the case, write the prevoius one back, and
+            // do not schedule any new event
+            writebackTempBlockAtomic();
+        } else {
+            // the writeback/clean eviction happens after the call to
+            // recvAtomic has finished (but before any successive
+            // calls), so that the response handling from the fill is
+            // allowed to happen first
+            schedule(writebackTempBlockAtomicEvent, curTick());
+        }
+
+        tempBlockWriteback = blk->isDirty() ? writebackBlk(blk) :
+            cleanEvictBlk(blk);
+        blk->invalidate();
+    }
 
     if (pkt->needsResponse()) {
         pkt->makeAtomicResponse();
@@ -1214,7 +1268,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
                 pkt->getAddr());
 
-        blk = handleFill(pkt, blk, writebacks);
+        blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill);
         assert(blk != NULL);
     }
 
@@ -1258,7 +1312,7 @@ Cache::recvTimingResp(PacketPtr pkt)
                 // deferred targets if possible
                 mshr->promoteExclusive();
                 // NB: we use the original packet here and not the response!
-                blk = handleFill(tgt_pkt, blk, writebacks);
+                blk = handleFill(tgt_pkt, blk, writebacks, mshr->allocOnFill);
                 assert(blk != NULL);
 
                 // treat as a fill, and discard the invalidation
@@ -1362,9 +1416,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         // should not invalidate the block, so check if the
         // invalidation should be discarded
         if (is_invalidate || mshr->hasPostInvalidate()) {
-            assert(blk != tempBlock);
-            tags->invalidate(blk);
-            blk->invalidate();
+            invalidateBlock(blk);
         } else if (mshr->hasPostDowngrade()) {
             blk->status &= ~BlkWritable;
         }
@@ -1588,6 +1640,13 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
     return blk;
 }
 
+void
+Cache::invalidateBlock(CacheBlk *blk)
+{
+    if (blk != tempBlock)
+        tags->invalidate(blk);
+    blk->invalidate();
+}
 
 // Note that the reason we return a list of writebacks rather than
 // inserting them directly in the write buffer is that this function
@@ -1595,7 +1654,8 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 // mode we don't mess with the write buffer (we just perform the
 // writebacks atomically once the original request is complete).
 CacheBlk*
-Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
+Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
+                  bool allocate)
 {
     assert(pkt->isResponse() || pkt->cmd == MemCmd::WriteLineReq);
     Addr addr = pkt->getAddr();
@@ -1619,11 +1679,14 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks)
         // happens in the subsequent satisfyCpuSideRequest.
         assert(pkt->isRead() || pkt->cmd == MemCmd::WriteLineReq);
 
-        // need to do a replacement
-        blk = allocateBlock(addr, is_secure, writebacks);
+        // need to do a replacement if allocating, otherwise we stick
+        // with the temporary storage
+        blk = allocate ? allocateBlock(addr, is_secure, writebacks) : NULL;
+
         if (blk == NULL) {
-            // No replaceable block... just use temporary storage to
-            // complete the current request and then get rid of it
+            // No replaceable block or a mostly exclusive
+            // cache... just use temporary storage to complete the
+            // current request and then get rid of it
             assert(!tempBlock->isValid());
             blk = tempBlock;
             tempBlock->set = tags->extractSet(addr);
@@ -1877,6 +1940,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // applies both to reads and writes and that for writes it
         // works thanks to the fact that we still have dirty data and
         // will write it back at a later point
+        assert(!pkt->memInhibitAsserted());
         pkt->assertMemInhibit();
         if (have_exclusive) {
             // in the case of an uncacheable request there is no point
@@ -1911,9 +1975,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     // Do this last in case it deallocates block data or something
     // like that
     if (invalidate) {
-        if (blk != tempBlock)
-            tags->invalidate(blk);
-        blk->invalidate();
+        invalidateBlock(blk);
     }
 
     DPRINTF(Cache, "new state is %s\n", blk->print());

@@ -161,6 +161,9 @@ class MSHR : public Packet::SenderState, public Printable
     /** True if the request is just a simple forward from an upper level */
     bool isForward;
 
+    /** Keep track of whether we should allocate on fill or not */
+    bool allocOnFill;
+
     /** The pending* and post* flags are only valid if inService is
      *  true.  Using the accessor functions lets us detect if these
      *  flags are accessed improperly.
@@ -218,9 +221,10 @@ class MSHR : public Packet::SenderState, public Printable
      * @param pkt The original miss.
      * @param when_ready When should the MSHR be ready to act upon.
      * @param _order The logical order of this MSHR
+     * @param alloc_on_fill Should the cache allocate a block on fill
      */
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                  Tick when_ready, Counter _order);
+                  Tick when_ready, Counter _order, bool alloc_on_fill);
 
     bool markInService(bool pending_dirty_resp);
 
@@ -235,7 +239,8 @@ class MSHR : public Packet::SenderState, public Printable
      * Add a request to the list of targets.
      * @param target The target.
      */
-    void allocateTarget(PacketPtr target, Tick when, Counter order);
+    void allocateTarget(PacketPtr target, Tick when, Counter order,
+                        bool alloc_on_fill);
     bool handleSnoop(PacketPtr target, Counter order);
 
     /** A simple constructor. */

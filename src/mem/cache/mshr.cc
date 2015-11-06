@@ -66,7 +66,8 @@ MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
                postInvalidate(false), postDowngrade(false),
                queue(NULL), order(0), blkAddr(0),
                blkSize(0), isSecure(false), inService(false),
-               isForward(false), threadNum(InvalidThreadID), data(NULL)
+               isForward(false), allocOnFill(false),
+               threadNum(InvalidThreadID), data(NULL)
 {
 }
 
@@ -202,7 +203,7 @@ MSHR::TargetList::print(std::ostream &os, int verbosity,
 
 void
 MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
-               Tick when_ready, Counter _order)
+               Tick when_ready, Counter _order, bool alloc_on_fill)
 {
     blkAddr = blk_addr;
     blkSize = blk_size;
@@ -211,6 +212,7 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     order = _order;
     assert(target);
     isForward = false;
+    allocOnFill = alloc_on_fill;
     _isUncacheable = target->req->isUncacheable();
     inService = false;
     downstreamPending = false;
@@ -274,7 +276,8 @@ MSHR::deallocate()
  * Adds a target to an MSHR
  */
 void
-MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
+MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
+                     bool alloc_on_fill)
 {
     // assume we'd never issue a prefetch when we've got an
     // outstanding miss
@@ -284,6 +287,10 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
     // accesses ignore any uncacheable MSHRs, thus we should never
     // have targets addded if originally allocated uncacheable
     assert(!_isUncacheable);
+
+    // potentially re-evaluate whether we should allocate on a fill or
+    // not
+    allocOnFill = allocOnFill || alloc_on_fill;
 
     // if there's a request already in service for this MSHR, we will
     // have to defer the new target until after the response if any of
@@ -478,6 +485,7 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              prefix, blkAddr, blkAddr + blkSize - 1,
              isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
+             allocOnFill ? "AllocOnFill" : "",
              isForwardNoResponse() ? "ForwNoResp" : "",
              needsExclusive() ? "Excl" : "",
              _isUncacheable ? "Unc" : "",

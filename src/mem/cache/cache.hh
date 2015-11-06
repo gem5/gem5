@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,7 @@
 #define __MEM_CACHE_CACHE_HH__
 
 #include "base/misc.hh" // fatal, panic, and warn
+#include "enums/Clusivity.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/mshr.hh"
@@ -194,11 +195,47 @@ class Cache : public BaseCache
      */
     const bool prefetchOnAccess;
 
+     /**
+     * Clusivity with respect to the upstream cache, determining if we
+     * fill into both this cache and the cache above on a miss. Note
+     * that we currently do not support strict clusivity policies.
+     */
+    const Enums::Clusivity clusivity;
+
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call
      */
     std::unique_ptr<Packet> pendingDelete;
+
+    /**
+     * Writebacks from the tempBlock, resulting on the response path
+     * in atomic mode, must happen after the call to recvAtomic has
+     * finished (for the right ordering of the packets). We therefore
+     * need to hold on to the packets, and have a method and an event
+     * to send them.
+     */
+    PacketPtr tempBlockWriteback;
+
+    /**
+     * Send the outstanding tempBlock writeback. To be called after
+     * recvAtomic finishes in cases where the block we filled is in
+     * fact the tempBlock, and now needs to be written back.
+     */
+    void writebackTempBlockAtomic() {
+        assert(tempBlockWriteback != nullptr);
+        PacketList writebacks{tempBlockWriteback};
+        doWritebacksAtomic(writebacks);
+        tempBlockWriteback = nullptr;
+    }
+
+    /**
+     * An event to writeback the tempBlock after recvAtomic
+     * finishes. To avoid other calls to recvAtomic getting in
+     * between, we create this event with a higher priority.
+     */
+    EventWrapper<Cache, &Cache::writebackTempBlockAtomic> \
+        writebackTempBlockAtomicEvent;
 
     /**
      * Does all the processing necessary to perform the provided request.
@@ -226,17 +263,47 @@ class Cache : public BaseCache
     CacheBlk *allocateBlock(Addr addr, bool is_secure, PacketList &writebacks);
 
     /**
+     * Invalidate a cache block.
+     *
+     * @param blk Block to invalidate
+     */
+    void invalidateBlock(CacheBlk *blk);
+
+    /**
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
      * @param pkt The memory request with the fill data.
      * @param blk The cache block if it already exists.
      * @param writebacks List for any writebacks that need to be performed.
+     * @param allocate Whether to allocate a block or use the temp block
      * @return Pointer to the new cache block.
      */
     CacheBlk *handleFill(PacketPtr pkt, CacheBlk *blk,
-                        PacketList &writebacks);
+                         PacketList &writebacks, bool allocate);
 
+    /**
+     * Determine whether we should allocate on a fill or not. If this
+     * cache is mostly inclusive with regards to the upstream cache(s)
+     * we always allocate (for any non-forwarded and cacheable
+     * requests). In the case of a mostly exclusive cache, we allocate
+     * on fill if the packet did not come from a cache, thus if we:
+     * are dealing with a whole-line write (the latter behaves much
+     * like a writeback), the original target packet came from a
+     * non-caching source, or if we are performing a prefetch or LLSC.
+     *
+     * @param cmd Command of the incoming requesting packet
+     * @return Whether we should allocate on the fill
+     */
+    inline bool allocOnFill(MemCmd cmd) const
+    {
+        return clusivity == Enums::mostly_incl ||
+            cmd == MemCmd::WriteLineReq ||
+            cmd == MemCmd::ReadReq ||
+            cmd == MemCmd::WriteReq ||
+            cmd.isPrefetch() ||
+            cmd.isLLSC();
+    }
 
     /**
      * Performs the access specified by the request.

@@ -152,13 +152,14 @@ class MSHRQueue : public Drainable
      * @param pkt The original miss.
      * @param when_ready When should the MSHR be ready to act upon.
      * @param order The logical order of this MSHR
+     * @param alloc_on_fill Should the cache allocate a block on fill
      *
      * @return The a pointer to the MSHR allocated.
      *
      * @pre There are free entries.
      */
     MSHR *allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                   Tick when_ready, Counter order);
+                   Tick when_ready, Counter order, bool alloc_on_fill);
 
     /**
      * Removes the given MSHR from the queue. This places the MSHR on the
