@@ -177,7 +177,8 @@ else:
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = Cache(size = '32kB', assoc = 4,
                  hit_latency = 1, response_latency = 1,
-                 tgts_per_mshr = 8, clusivity = 'mostly_incl')
+                 tgts_per_mshr = 8, clusivity = 'mostly_incl',
+                 writeback_clean = True)
 
 if options.blocking:
      proto_l1.mshrs = 1
@@ -201,6 +202,7 @@ for scale in cachespec[:-1]:
      # Swap the inclusivity/exclusivity at each level. L2 is mostly
      # exclusive with respect to L1, L3 mostly inclusive, L4 mostly
      # exclusive etc.
+     next.writeback_clean = not prev.writeback_clean
      if (prev.clusivity.value == 'mostly_incl'):
           next.clusivity = 'mostly_excl'
      else:
