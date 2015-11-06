@@ -4,11 +4,11 @@ sim_seconds                                  2.783867                       # Nu
 sim_ticks                                2783867052000                       # Number of ticks simulated
 final_tick                               2783867052000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1159279                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1411237                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            22604281025                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 628452                       # Number of bytes of host memory used
-host_seconds                                   123.16                       # Real time elapsed on the host
+host_inst_rate                                1280554                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1558869                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            24968967598                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 628580                       # Number of bytes of host memory used
+host_seconds                                   111.49                       # Real time elapsed on the host
 sim_insts                                   142772879                       # Number of instructions simulated
 sim_ops                                     173803124                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -209,6 +209,8 @@ system.cpu.itb.accesses                     147044108                       # DT
 system.cpu.numCycles                       5567737188                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
+system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
+system.cpu.kern.inst.quiesce                     3083                       # number of quiesce instructions executed
 system.cpu.committedInsts                   142772879                       # Number of instructions committed
 system.cpu.committedOps                     173803124                       # Number of ops (including micro ops) committed
 system.cpu.num_int_alu_accesses             153162683                       # Number of integer alu accesses
@@ -266,8 +268,6 @@ system.cpu.op_class::MemWrite                24083392     13.59%    100.00% # Cl
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::total                  177219912                       # Class of executed instruction
-system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
-system.cpu.kern.inst.quiesce                     3083                       # number of quiesce instructions executed
 system.cpu.dcache.tags.replacements            819402                       # number of replacements
 system.cpu.dcache.tags.tagsinuse           511.997174                       # Cycle average of tags in use
 system.cpu.dcache.tags.total_refs            53784483                       # Total number of references to valid blocks.
@@ -400,6 +400,8 @@ system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                     
 system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
+system.cpu.icache.writebacks::writebacks      1699214                       # number of writebacks
+system.cpu.icache.writebacks::total           1699214                       # number of writebacks
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.l2cache.tags.replacements           109913                       # number of replacements
 system.cpu.l2cache.tags.tagsinuse        65155.309141                       # Cycle average of tags in use
@@ -433,8 +435,10 @@ system.cpu.l2cache.tags.data_accesses        40582495                       # Nu
 system.cpu.l2cache.ReadReq_hits::cpu.dtb.walker         7601                       # number of ReadReq hits
 system.cpu.l2cache.ReadReq_hits::cpu.itb.walker         3621                       # number of ReadReq hits
 system.cpu.l2cache.ReadReq_hits::total          11222                       # number of ReadReq hits
-system.cpu.l2cache.Writeback_hits::writebacks       682040                       # number of Writeback hits
-system.cpu.l2cache.Writeback_hits::total       682040                       # number of Writeback hits
+system.cpu.l2cache.WritebackDirty_hits::writebacks       682040                       # number of WritebackDirty hits
+system.cpu.l2cache.WritebackDirty_hits::total       682040                       # number of WritebackDirty hits
+system.cpu.l2cache.WritebackClean_hits::writebacks      1667206                       # number of WritebackClean hits
+system.cpu.l2cache.WritebackClean_hits::total      1667206                       # number of WritebackClean hits
 system.cpu.l2cache.UpgradeReq_hits::cpu.data           28                       # number of UpgradeReq hits
 system.cpu.l2cache.UpgradeReq_hits::total           28                       # number of UpgradeReq hits
 system.cpu.l2cache.ReadExReq_hits::cpu.data       151146                       # number of ReadExReq hits
@@ -479,8 +483,10 @@ system.cpu.l2cache.overall_misses::total       181651                       # nu
 system.cpu.l2cache.ReadReq_accesses::cpu.dtb.walker         7608                       # number of ReadReq accesses(hits+misses)
 system.cpu.l2cache.ReadReq_accesses::cpu.itb.walker         3623                       # number of ReadReq accesses(hits+misses)
 system.cpu.l2cache.ReadReq_accesses::total        11231                       # number of ReadReq accesses(hits+misses)
-system.cpu.l2cache.Writeback_accesses::writebacks       682040                       # number of Writeback accesses(hits+misses)
-system.cpu.l2cache.Writeback_accesses::total       682040                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.WritebackDirty_accesses::writebacks       682040                       # number of WritebackDirty accesses(hits+misses)
+system.cpu.l2cache.WritebackDirty_accesses::total       682040                       # number of WritebackDirty accesses(hits+misses)
+system.cpu.l2cache.WritebackClean_accesses::writebacks      1667206                       # number of WritebackClean accesses(hits+misses)
+system.cpu.l2cache.WritebackClean_accesses::total      1667206                       # number of WritebackClean accesses(hits+misses)
 system.cpu.l2cache.UpgradeReq_accesses::cpu.data         2756                       # number of UpgradeReq accesses(hits+misses)
 system.cpu.l2cache.UpgradeReq_accesses::total         2756                       # number of UpgradeReq accesses(hits+misses)
 system.cpu.l2cache.SCUpgradeReq_accesses::cpu.data            2                       # number of SCUpgradeReq accesses(hits+misses)
@@ -545,8 +551,9 @@ system.cpu.toL2Bus.trans_dist::ReadReq          67802                       # Tr
 system.cpu.toL2Bus.trans_dist::ReadResp       2288542                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WriteReq         27546                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WriteResp        27546                       # Transaction distribution
-system.cpu.toL2Bus.trans_dist::Writeback       682040                       # Transaction distribution
-system.cpu.toL2Bus.trans_dist::CleanEvict      1797302                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::WritebackDirty       682040                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::WritebackClean      1667206                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::CleanEvict       130096                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::UpgradeReq         2756                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::SCUpgradeReq            2                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::UpgradeResp         2758                       # Transaction distribution
@@ -559,11 +566,11 @@ system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_
 system.cpu.toL2Bus.pkt_count_system.cpu.itb.walker.dma::system.cpu.l2cache.cpu_side        18430                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count_system.cpu.dtb.walker.dma::system.cpu.l2cache.cpu_side        37000                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count::total           7714878                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side    108818936                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side    215520120                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side     96308833                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.itb.walker.dma::system.cpu.l2cache.cpu_side        36860                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.dtb.walker.dma::system.cpu.l2cache.cpu_side        74000                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_size::total          205238629                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_size::total          311939813                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.snoops                      182974                       # Total snoops (count)
 system.cpu.toL2Bus.snoop_fanout::samples      5319191                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::mean        0.018482                       # Request fanout histogram
@@ -683,7 +690,7 @@ system.membus.trans_dist::ReadReq               40087                       # Tr
 system.membus.trans_dist::ReadResp              74202                       # Transaction distribution
 system.membus.trans_dist::WriteReq              27546                       # Transaction distribution
 system.membus.trans_dist::WriteResp             27546                       # Transaction distribution
-system.membus.trans_dist::Writeback            138139                       # Transaction distribution
+system.membus.trans_dist::WritebackDirty       138139                       # Transaction distribution
 system.membus.trans_dist::CleanEvict             7977                       # Transaction distribution
 system.membus.trans_dist::UpgradeReq             4507                       # Transaction distribution
 system.membus.trans_dist::SCUpgradeReq              2                       # Transaction distribution

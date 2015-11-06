@@ -4,10 +4,10 @@ sim_seconds                                  0.000030                       # Nu
 sim_ticks                                    29949500                       # Number of ticks simulated
 final_tick                                   29949500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 110305                       # Simulator instruction rate (inst/s)
-host_op_rate                                   129095                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              716958322                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 313816                       # Number of bytes of host memory used
+host_inst_rate                                 117235                       # Simulator instruction rate (inst/s)
+host_op_rate                                   137200                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              761957462                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 313960                       # Number of bytes of host memory used
 host_seconds                                     0.04                       # Real time elapsed on the host
 sim_insts                                        4605                       # Number of instructions simulated
 sim_ops                                          5391                       # Number of ops (including micro ops) simulated
@@ -567,6 +567,8 @@ system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                     
 system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.cache_copies                      0                       # number of cache copies performed
+system.cpu.icache.writebacks::writebacks            3                       # number of writebacks
+system.cpu.icache.writebacks::total                 3                       # number of writebacks
 system.cpu.icache.ReadReq_mshr_misses::cpu.inst          322                       # number of ReadReq MSHR misses
 system.cpu.icache.ReadReq_mshr_misses::total          322                       # number of ReadReq MSHR misses
 system.cpu.icache.demand_mshr_misses::cpu.inst          322                       # number of demand (read+write) MSHR misses
@@ -609,6 +611,8 @@ system.cpu.l2cache.tags.age_task_id_blocks_1024::1          253                 
 system.cpu.l2cache.tags.occ_task_id_percent::1024     0.011536                       # Percentage of cache occupancy per task id
 system.cpu.l2cache.tags.tag_accesses             4181                       # Number of tag accesses
 system.cpu.l2cache.tags.data_accesses            4181                       # Number of data accesses
+system.cpu.l2cache.WritebackClean_hits::writebacks            2                       # number of WritebackClean hits
+system.cpu.l2cache.WritebackClean_hits::total            2                       # number of WritebackClean hits
 system.cpu.l2cache.ReadCleanReq_hits::cpu.inst           17                       # number of ReadCleanReq hits
 system.cpu.l2cache.ReadCleanReq_hits::total           17                       # number of ReadCleanReq hits
 system.cpu.l2cache.ReadSharedReq_hits::cpu.data           22                       # number of ReadSharedReq hits
@@ -643,6 +647,8 @@ system.cpu.l2cache.demand_miss_latency::total     31692000                      
 system.cpu.l2cache.overall_miss_latency::cpu.inst     22597500                       # number of overall miss cycles
 system.cpu.l2cache.overall_miss_latency::cpu.data      9094500                       # number of overall miss cycles
 system.cpu.l2cache.overall_miss_latency::total     31692000                       # number of overall miss cycles
+system.cpu.l2cache.WritebackClean_accesses::writebacks            2                       # number of WritebackClean accesses(hits+misses)
+system.cpu.l2cache.WritebackClean_accesses::total            2                       # number of WritebackClean accesses(hits+misses)
 system.cpu.l2cache.ReadExReq_accesses::cpu.data           43                       # number of ReadExReq accesses(hits+misses)
 system.cpu.l2cache.ReadExReq_accesses::total           43                       # number of ReadExReq accesses(hits+misses)
 system.cpu.l2cache.ReadCleanReq_accesses::cpu.inst          322                       # number of ReadCleanReq accesses(hits+misses)
@@ -749,7 +755,7 @@ system.cpu.toL2Bus.snoop_filter.tot_snoops            0                       # 
 system.cpu.toL2Bus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.cpu.toL2Bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.cpu.toL2Bus.trans_dist::ReadResp           425                       # Transaction distribution
-system.cpu.toL2Bus.trans_dist::CleanEvict            2                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::WritebackClean            2                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExReq           43                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExResp           43                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadCleanReq          322                       # Transaction distribution
@@ -757,22 +763,22 @@ system.cpu.toL2Bus.trans_dist::ReadSharedReq          103                       
 system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side          646                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side          292                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count::total               938                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side        20608                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side        20736                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side         9344                       # Cumulative packet size per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_size::total              29952                       # Cumulative packet size per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_size::total              30080                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.snoops                           0                       # Total snoops (count)
-system.cpu.toL2Bus.snoop_fanout::samples          471                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::mean        0.101911                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::stdev       0.302853                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::samples          468                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::mean        0.100427                       # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::stdev       0.300891                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::0                423     89.81%     89.81% # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::1                 48     10.19%    100.00% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::0                421     89.96%     89.96% # Request fanout histogram
+system.cpu.toL2Bus.snoop_fanout::1                 47     10.04%    100.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::2                  0      0.00%    100.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::overflows            0      0.00%    100.00% # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::min_value            0                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::max_value            1                       # Request fanout histogram
-system.cpu.toL2Bus.snoop_fanout::total            471                       # Request fanout histogram
-system.cpu.toL2Bus.reqLayer0.occupancy         235500                       # Layer occupancy (ticks)
+system.cpu.toL2Bus.snoop_fanout::total            468                       # Request fanout histogram
+system.cpu.toL2Bus.reqLayer0.occupancy         238500                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.reqLayer0.utilization          0.8                       # Layer utilization (%)
 system.cpu.toL2Bus.respLayer0.occupancy        483000                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.respLayer0.utilization          1.6                       # Layer utilization (%)

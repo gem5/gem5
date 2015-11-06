@@ -4,11 +4,11 @@ sim_seconds                                  2.783867                       # Nu
 sim_ticks                                2783867052000                       # Number of ticks simulated
 final_tick                               2783867052000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1174884                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1430233                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            22908545755                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 623708                       # Number of bytes of host memory used
-host_seconds                                   121.52                       # Real time elapsed on the host
+host_inst_rate                                1268879                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1544656                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            24741311872                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 623824                       # Number of bytes of host memory used
+host_seconds                                   112.52                       # Real time elapsed on the host
 sim_insts                                   142772879                       # Number of instructions simulated
 sim_ops                                     173803124                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -226,6 +226,8 @@ system.cpu0.itb.accesses                     74781709                       # DT
 system.cpu0.numCycles                      5536444792                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
+system.cpu0.kern.inst.quiesce                    3083                       # number of quiesce instructions executed
 system.cpu0.committedInsts                   72626333                       # Number of instructions committed
 system.cpu0.committedOps                     87972335                       # Number of ops (including micro ops) committed
 system.cpu0.num_int_alu_accesses             77485858                       # Number of integer alu accesses
@@ -283,8 +285,6 @@ system.cpu0.op_class::MemWrite               11749540     13.09%    100.00% # Cl
 system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                  89742700                       # Class of executed instruction
-system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu0.kern.inst.quiesce                    3083                       # number of quiesce instructions executed
 system.cpu0.dcache.tags.replacements           819402                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.997174                       # Cycle average of tags in use
 system.cpu0.dcache.tags.total_refs           53784414                       # Total number of references to valid blocks.
@@ -459,6 +459,8 @@ system.cpu0.icache.avg_blocked_cycles::no_mshrs          nan                    
 system.cpu0.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
+system.cpu0.icache.writebacks::writebacks      1699214                       # number of writebacks
+system.cpu0.icache.writebacks::total          1699214                       # number of writebacks
 system.cpu0.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu1.dstage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
 system.cpu1.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
@@ -599,6 +601,8 @@ system.cpu1.itb.accesses                     72262399                       # DT
 system.cpu1.numCycles                        88040649                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
+system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.cpu1.committedInsts                   70146546                       # Number of instructions committed
 system.cpu1.committedOps                     85830789                       # Number of ops (including micro ops) committed
 system.cpu1.num_int_alu_accesses             75676825                       # Number of integer alu accesses
@@ -656,8 +660,6 @@ system.cpu1.op_class::MemWrite               12333852     14.10%    100.00% # Cl
 system.cpu1.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::total                  87477212                       # Class of executed instruction
-system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
-system.cpu1.kern.inst.quiesce                       0                       # number of quiesce instructions executed
 system.iobus.trans_dist::ReadReq                30164                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               30164                       # Transaction distribution
 system.iobus.trans_dist::WriteReq               59002                       # Transaction distribution
@@ -801,8 +803,10 @@ system.l2c.ReadReq_hits::cpu0.itb.walker         2287                       # nu
 system.l2c.ReadReq_hits::cpu1.dtb.walker         5001                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu1.itb.walker         2453                       # number of ReadReq hits
 system.l2c.ReadReq_hits::total                  14441                       # number of ReadReq hits
-system.l2c.Writeback_hits::writebacks          682264                       # number of Writeback hits
-system.l2c.Writeback_hits::total               682264                       # number of Writeback hits
+system.l2c.WritebackDirty_hits::writebacks       682264                       # number of WritebackDirty hits
+system.l2c.WritebackDirty_hits::total          682264                       # number of WritebackDirty hits
+system.l2c.WritebackClean_hits::writebacks      1667206                       # number of WritebackClean hits
+system.l2c.WritebackClean_hits::total         1667206                       # number of WritebackClean hits
 system.l2c.UpgradeReq_hits::cpu0.data              13                       # number of UpgradeReq hits
 system.l2c.UpgradeReq_hits::cpu1.data              15                       # number of UpgradeReq hits
 system.l2c.UpgradeReq_hits::total                  28                       # number of UpgradeReq hits
@@ -872,8 +876,10 @@ system.l2c.ReadReq_accesses::cpu0.itb.walker         2288                       
 system.l2c.ReadReq_accesses::cpu1.dtb.walker         5003                       # number of ReadReq accesses(hits+misses)
 system.l2c.ReadReq_accesses::cpu1.itb.walker         2453                       # number of ReadReq accesses(hits+misses)
 system.l2c.ReadReq_accesses::total              14449                       # number of ReadReq accesses(hits+misses)
-system.l2c.Writeback_accesses::writebacks       682264                       # number of Writeback accesses(hits+misses)
-system.l2c.Writeback_accesses::total           682264                       # number of Writeback accesses(hits+misses)
+system.l2c.WritebackDirty_accesses::writebacks       682264                       # number of WritebackDirty accesses(hits+misses)
+system.l2c.WritebackDirty_accesses::total       682264                       # number of WritebackDirty accesses(hits+misses)
+system.l2c.WritebackClean_accesses::writebacks      1667206                       # number of WritebackClean accesses(hits+misses)
+system.l2c.WritebackClean_accesses::total      1667206                       # number of WritebackClean accesses(hits+misses)
 system.l2c.UpgradeReq_accesses::cpu0.data         1262                       # number of UpgradeReq accesses(hits+misses)
 system.l2c.UpgradeReq_accesses::cpu1.data         1494                       # number of UpgradeReq accesses(hits+misses)
 system.l2c.UpgradeReq_accesses::total            2756                       # number of UpgradeReq accesses(hits+misses)
@@ -955,7 +961,7 @@ system.membus.trans_dist::ReadReq               40087                       # Tr
 system.membus.trans_dist::ReadResp              74196                       # Transaction distribution
 system.membus.trans_dist::WriteReq              27546                       # Transaction distribution
 system.membus.trans_dist::WriteResp             27546                       # Transaction distribution
-system.membus.trans_dist::Writeback            138133                       # Transaction distribution
+system.membus.trans_dist::WritebackDirty       138133                       # Transaction distribution
 system.membus.trans_dist::CleanEvict             7977                       # Transaction distribution
 system.membus.trans_dist::UpgradeReq             4507                       # Transaction distribution
 system.membus.trans_dist::SCUpgradeReq              2                       # Transaction distribution
@@ -1044,8 +1050,9 @@ system.toL2Bus.trans_dist::ReadReq              71244                       # Tr
 system.toL2Bus.trans_dist::ReadResp           2291984                       # Transaction distribution
 system.toL2Bus.trans_dist::WriteReq             27546                       # Transaction distribution
 system.toL2Bus.trans_dist::WriteResp            27546                       # Transaction distribution
-system.toL2Bus.trans_dist::Writeback           682264                       # Transaction distribution
-system.toL2Bus.trans_dist::CleanEvict         1797078                       # Transaction distribution
+system.toL2Bus.trans_dist::WritebackDirty       682264                       # Transaction distribution
+system.toL2Bus.trans_dist::WritebackClean      1667206                       # Transaction distribution
+system.toL2Bus.trans_dist::CleanEvict          129872                       # Transaction distribution
 system.toL2Bus.trans_dist::UpgradeReq            2756                       # Transaction distribution
 system.toL2Bus.trans_dist::SCUpgradeReq             2                       # Transaction distribution
 system.toL2Bus.trans_dist::UpgradeResp           2758                       # Transaction distribution
@@ -1058,11 +1065,11 @@ system.toL2Bus.pkt_count_system.cpu0.dcache.mem_side::system.l2c.cpu_side      2
 system.toL2Bus.pkt_count_system.cpu0.itb.walker.dma::system.l2c.cpu_side        20804                       # Packet count per connected master and slave (bytes)
 system.toL2Bus.pkt_count_system.cpu0.dtb.walker.dma::system.l2c.cpu_side        41510                       # Packet count per connected master and slave (bytes)
 system.toL2Bus.pkt_count::total               7721762                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_size_system.cpu0.icache.mem_side::system.l2c.cpu_side    108818936                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size_system.cpu0.icache.mem_side::system.l2c.cpu_side    215520120                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu0.dcache.mem_side::system.l2c.cpu_side     96323169                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu0.itb.walker.dma::system.l2c.cpu_side        41608                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu0.dtb.walker.dma::system.l2c.cpu_side        83020                       # Cumulative packet size per connected master and slave (bytes)
-system.toL2Bus.pkt_size::total              205266733                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size::total              311967917                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.snoops                          182968                       # Total snoops (count)
 system.toL2Bus.snoop_fanout::samples          5322627                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::mean            0.018535                       # Request fanout histogram
