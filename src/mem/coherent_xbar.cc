@@ -832,6 +832,14 @@ CoherentXBar::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
                 pkt->cmdString());
     }
 
+    for (const auto& p : slavePorts) {
+        if (p->checkFunctional(pkt)) {
+            if (pkt->needsResponse())
+                pkt->makeResponse();
+            return;
+        }
+    }
+
     // forward to all snoopers
     forwardFunctional(pkt, InvalidPortID);
 }
