@@ -84,11 +84,16 @@ MemCmd::commandInfo[] =
             WriteResp, "WriteReq" },
     /* WriteResp */
     { SET3(IsWrite, NeedsExclusive, IsResponse), InvalidCmd, "WriteResp" },
-    /* Writeback */
-    { SET4(IsWrite, NeedsExclusive, IsRequest, HasData),
-            InvalidCmd, "Writeback" },
+    /* WritebackDirty */
+    { SET4(IsWrite, IsRequest, IsEviction, HasData),
+            InvalidCmd, "WritebackDirty" },
+    /* WritebackClean - This allows the upstream cache to writeback a
+     * line to the downstream cache without it being considered
+     * dirty. */
+    { SET4(IsWrite, IsRequest, IsEviction, HasData),
+            InvalidCmd, "WritebackClean" },
     /* CleanEvict */
-    { SET1(IsRequest), InvalidCmd, "CleanEvict" },
+    { SET2(IsRequest, IsEviction), InvalidCmd, "CleanEvict" },
     /* SoftPFReq */
     { SET4(IsRead, IsRequest, IsSWPrefetch, NeedsResponse),
             SoftPFResp, "SoftPFReq" },

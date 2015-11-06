@@ -199,7 +199,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
                     sf_res.second);
 
-            if (pkt->evictingBlock()) {
+            if (pkt->isEviction()) {
                 // for block-evicting packets, i.e. writebacks and
                 // clean evictions, there is no need to snoop up, as
                 // all we do is determine if the block is cached or
@@ -220,10 +220,11 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     }
 
     // forwardTiming snooped into peer caches of the sender, and if
-    // this is a clean evict, but the packet is found in a cache, do
-    // not forward it
-    if (pkt->cmd == MemCmd::CleanEvict && pkt->isBlockCached()) {
-        DPRINTF(CoherentXBar, "recvTimingReq: Clean evict 0x%x still cached, "
+    // this is a clean evict or clean writeback, but the packet is
+    // found in a cache, do not forward it
+    if ((pkt->cmd == MemCmd::CleanEvict ||
+         pkt->cmd == MemCmd::WritebackClean) && pkt->isBlockCached()) {
+        DPRINTF(CoherentXBar, "Clean evict/writeback %#llx still cached, "
                 "not forwarding\n", pkt->getAddr());
 
         // update the layer state and schedule an idle event
@@ -634,8 +635,9 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     // forwardAtomic snooped into peer caches of the sender, and if
     // this is a clean evict, but the packet is found in a cache, do
     // not forward it
-    if (pkt->cmd == MemCmd::CleanEvict && pkt->isBlockCached()) {
-        DPRINTF(CoherentXBar, "recvAtomic: Clean evict 0x%x still cached, "
+    if ((pkt->cmd == MemCmd::CleanEvict ||
+         pkt->cmd == MemCmd::WritebackClean) && pkt->isBlockCached()) {
+        DPRINTF(CoherentXBar, "Clean evict/writeback %#llx still cached, "
                 "not forwarding\n", pkt->getAddr());
         return 0;
     }

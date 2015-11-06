@@ -55,6 +55,8 @@ class L1Cache(Cache):
 
 class L1_ICache(L1Cache):
     is_read_only = True
+    # Writeback clean lines as well
+    writeback_clean = True
 
 class L1_DCache(L1Cache):
     pass
@@ -89,3 +91,5 @@ class PageTableWalkerCache(Cache):
         is_read_only = False
     else:
         is_read_only = True
+        # Writeback clean lines as well
+        writeback_clean = True

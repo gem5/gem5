@@ -151,6 +151,8 @@ class O3_ARM_v7a_ICache(Cache):
     assoc = 2
     forward_snoops = False
     is_read_only = True
+    # Writeback clean lines as well
+    writeback_clean = True
 
 # Data Cache
 class O3_ARM_v7a_DCache(Cache):
@@ -161,6 +163,8 @@ class O3_ARM_v7a_DCache(Cache):
     size = '32kB'
     assoc = 2
     write_buffers = 16
+    # Consider the L2 a victim cache also for clean lines
+    writeback_clean = True
 
 # TLB Cache
 # Use a cache as a L2 TLB
@@ -174,6 +178,8 @@ class O3_ARM_v7aWalkCache(Cache):
     write_buffers = 16
     forward_snoops = False
     is_read_only = True
+    # Writeback clean lines as well
+    writeback_clean = True
 
 # L2 Cache
 class O3_ARM_v7aL2(Cache):

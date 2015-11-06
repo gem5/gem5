@@ -128,7 +128,7 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
                     __func__,  sf_item.requested, sf_item.holder);
         }
     } else { // if (!cpkt->needsResponse())
-        assert(cpkt->evictingBlock());
+        assert(cpkt->isEviction());
         // make sure that the sender actually had the line
         panic_if(!(sf_item.holder & req_port), "requester %x is not a " \
                  "holder :( SF value %x.%x\n", req_port,
@@ -207,7 +207,7 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
     // not the invalidation. Previously Writebacks did not generate upward
     // snoops so this was never an aissue. Now that Writebacks generate snoops
     // we need to special case for Writebacks.
-    assert(cpkt->cmd == MemCmd::Writeback || cpkt->req->isUncacheable() ||
+    assert(cpkt->isWriteback() || cpkt->req->isUncacheable() ||
            (cpkt->isInvalidate() == cpkt->needsExclusive()));
     if (cpkt->isInvalidate() && !sf_item.requested) {
         // Early clear of the holder, if no other request is currently going on
@@ -270,7 +270,7 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
         //assert(sf_item.holder == 0);
         sf_item.holder = 0;
     }
-    assert(cpkt->cmd != MemCmd::Writeback);
+    assert(!cpkt->isWriteback());
     sf_item.holder |=  req_mask;
     sf_item.requested &= ~req_mask;
     assert(sf_item.requested | sf_item.holder);

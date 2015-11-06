@@ -103,3 +103,11 @@ class Cache(BaseCache):
     # cache a line is dropped for a mostly exclusive cache.
     clusivity = Param.Clusivity('mostly_incl',
                                 "Clusivity with upstream cache")
+
+    # Determine if this cache sends out writebacks for clean lines, or
+    # simply clean evicts. In cases where a downstream cache is mostly
+    # exclusive with respect to this cache (acting as a victim cache),
+    # the clean writebacks are essential for performance. In general
+    # this should be set to True for anything but the last-level
+    # cache.
+    writeback_clean = Param.Bool(False, "Writeback clean lines")

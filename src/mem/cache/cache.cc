@@ -70,6 +70,7 @@ Cache::Cache(const CacheParams *p)
       doFastWrites(true),
       prefetchOnAccess(p->prefetch_on_access),
       clusivity(p->clusivity),
+      writebackClean(p->writeback_clean),
       tempBlockWriteback(nullptr),
       writebackTempBlockAtomicEvent(this, false,
                                     EventBase::Delayed_Writeback_Pri)
@@ -317,7 +318,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // flush and invalidate any existing block
         CacheBlk *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
         if (old_blk && old_blk->isValid()) {
-            if (old_blk->isDirty())
+            if (old_blk->isDirty() || writebackClean)
                 writebacks.push_back(writebackBlk(old_blk));
             else
                 writebacks.push_back(cleanEvictBlk(old_blk));
@@ -343,7 +344,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             blk ? "hit " + blk->print() : "miss");
 
 
-    if (pkt->evictingBlock()) {
+    if (pkt->isEviction()) {
         // We check for presence of block in above caches before issuing
         // Writeback or CleanEvict to write buffer. Therefore the only
         // possible cases can be of a CleanEvict packet coming from above
@@ -356,26 +357,49 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         if (writeBuffer.findMatches(pkt->getAddr(), pkt->isSecure(),
                                    outgoing)) {
             assert(outgoing.size() == 1);
-            PacketPtr wbPkt = outgoing[0]->getTarget()->pkt;
-            assert(pkt->cmd == MemCmd::CleanEvict &&
-                   wbPkt->cmd == MemCmd::Writeback);
-            // As the CleanEvict is coming from above, it would have snooped
-            // into other peer caches of the same level while traversing the
-            // crossbar. If a copy of the block had been found, the CleanEvict
-            // would have been deleted in the crossbar. Now that the
-            // CleanEvict is here we can be sure none of the other upper level
-            // caches connected to this cache have the block, so we can clear
-            // the BLOCK_CACHED flag in the Writeback if set and discard the
-            // CleanEvict by returning true.
-            wbPkt->clearBlockCached();
-            return true;
+            MSHR *wb_entry = outgoing[0];
+            assert(wb_entry->getNumTargets() == 1);
+            PacketPtr wbPkt = wb_entry->getTarget()->pkt;
+            assert(wbPkt->isWriteback());
+
+            if (pkt->isCleanEviction()) {
+                // The CleanEvict and WritebackClean snoops into other
+                // peer caches of the same level while traversing the
+                // crossbar. If a copy of the block is found, the
+                // packet is deleted in the crossbar. Hence, none of
+                // the other upper level caches connected to this
+                // cache have the block, so we can clear the
+                // BLOCK_CACHED flag in the Writeback if set and
+                // discard the CleanEvict by returning true.
+                wbPkt->clearBlockCached();
+                return true;
+            } else {
+                assert(pkt->cmd == MemCmd::WritebackDirty);
+                // Dirty writeback from above trumps our clean
+                // writeback... discard here
+                // Note: markInService will remove entry from writeback buffer.
+                markInService(wb_entry, false);
+                delete wbPkt;
+            }
         }
     }
 
     // Writeback handling is special case.  We can write the block into
     // the cache without having a writeable copy (or any copy at all).
-    if (pkt->cmd == MemCmd::Writeback) {
+    if (pkt->isWriteback()) {
         assert(blkSize == pkt->getSize());
+
+        // we could get a clean writeback while we are having
+        // outstanding accesses to a block, do the simple thing for
+        // now and drop the clean writeback so that we do not upset
+        // any ordering/decisions about ownership already taken
+        if (pkt->cmd == MemCmd::WritebackClean &&
+            mshrQueue.findMatch(pkt->getAddr(), pkt->isSecure())) {
+            DPRINTF(Cache, "Clean writeback %#llx to block with MSHR, "
+                    "dropping\n", pkt->getAddr());
+            return true;
+        }
+
         if (blk == NULL) {
             // need to do a replacement
             blk = allocateBlock(pkt->getAddr(), pkt->isSecure(), writebacks);
@@ -391,7 +415,11 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 blk->status |= BlkSecure;
             }
         }
-        blk->status |= BlkDirty;
+        // only mark the block dirty if we got a writeback command,
+        // and leave it as is for a clean writeback
+        if (pkt->cmd == MemCmd::WritebackDirty) {
+            blk->status |= BlkDirty;
+        }
         // if shared is not asserted we got the writeback in modified
         // state, if it is asserted we are in the owned state
         if (!pkt->sharedAsserted()) {
@@ -463,7 +491,13 @@ Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
                 // this is a non-snoop request packet which does not require a
                 // response.
                 delete wbPkt;
+            } else if (wbPkt->cmd == MemCmd::WritebackClean) {
+                // clean writeback, do not send since the block is
+                // still cached above
+                assert(writebackClean);
+                delete wbPkt;
             } else {
+                assert(wbPkt->cmd == MemCmd::WritebackDirty);
                 // Set BLOCK_CACHED flag in Writeback and send below, so that
                 // the Writeback does not reset the bit corresponding to this
                 // address in the snoop filter below.
@@ -490,7 +524,7 @@ Cache::doWritebacksAtomic(PacketList& writebacks)
         // isCachedAbove returns true we set BLOCK_CACHED flag in Writebacks
         // and discard CleanEvicts.
         if (isCachedAbove(wbPkt, false)) {
-            if (wbPkt->cmd == MemCmd::Writeback) {
+            if (wbPkt->cmd == MemCmd::WritebackDirty) {
                 // Set BLOCK_CACHED flag in Writeback and send below,
                 // so that the Writeback does not reset the bit
                 // corresponding to this address in the snoop filter
@@ -694,6 +728,10 @@ Cache::recvTimingReq(PacketPtr pkt)
             // by access(), that calls accessBlock() function.
             cpuSidePort->schedTimingResp(pkt, request_time, true);
         } else {
+            DPRINTF(Cache, "%s satisfied %s addr %#llx, no response needed\n",
+                    __func__, pkt->cmdString(), pkt->getAddr(),
+                    pkt->getSize());
+
             // queue the packet for deletion, as the sending cache is
             // still relying on it; if the block is found in access(),
             // CleanEvict and Writeback messages will be deleted
@@ -765,9 +803,9 @@ Cache::recvTimingReq(PacketPtr pkt)
 
             // Coalesce unless it was a software prefetch (see above).
             if (pkt) {
-                assert(pkt->cmd != MemCmd::Writeback);
-                // CleanEvicts corresponding to blocks which have outstanding
-                // requests in MSHRs can be deleted here.
+                assert(!pkt->isWriteback());
+                // CleanEvicts corresponding to blocks which have
+                // outstanding requests in MSHRs are simply sunk here
                 if (pkt->cmd == MemCmd::CleanEvict) {
                     pendingDelete.reset(pkt);
                 } else {
@@ -820,7 +858,7 @@ Cache::recvTimingReq(PacketPtr pkt)
                 mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
             }
 
-            if (pkt->evictingBlock() ||
+            if (pkt->isEviction() ||
                 (pkt->req->isUncacheable() && pkt->isWrite())) {
                 // We use forward_time here because there is an
                 // uncached memory write, forwarded to WriteBuffer.
@@ -888,7 +926,7 @@ Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 
     if (!blkValid &&
         (cpu_pkt->isUpgrade() ||
-         cpu_pkt->evictingBlock())) {
+         cpu_pkt->isEviction())) {
         // Writebacks that weren't allocated in access() and upgrades
         // from upper-level caches that missed completely just go
         // through.
@@ -1108,8 +1146,8 @@ Cache::recvAtomic(PacketPtr pkt)
             schedule(writebackTempBlockAtomicEvent, curTick());
         }
 
-        tempBlockWriteback = blk->isDirty() ? writebackBlk(blk) :
-            cleanEvictBlk(blk);
+        tempBlockWriteback = (blk->isDirty() || writebackClean) ?
+            writebackBlk(blk) : cleanEvictBlk(blk);
         blk->invalidate();
     }
 
@@ -1458,7 +1496,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         // Writebacks/CleanEvicts to write buffer. It specifies the latency to
         // allocate an internal buffer and to schedule an event to the
         // queued port.
-        if (blk->isDirty()) {
+        if (blk->isDirty() || writebackClean) {
             PacketPtr wbPkt = writebackBlk(blk);
             allocateWriteBuffer(wbPkt, forward_time);
             // Set BLOCK_CACHED flag if cached above.
@@ -1484,41 +1522,50 @@ Cache::recvTimingResp(PacketPtr pkt)
 PacketPtr
 Cache::writebackBlk(CacheBlk *blk)
 {
-    chatty_assert(!isReadOnly, "Writeback from read-only cache");
-    assert(blk && blk->isValid() && blk->isDirty());
+    chatty_assert(!isReadOnly || writebackClean,
+                  "Writeback from read-only cache");
+    assert(blk && blk->isValid() && (blk->isDirty() || writebackClean));
 
     writebacks[Request::wbMasterId]++;
 
-    Request *writebackReq =
-        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
-                Request::wbMasterId);
+    Request *req = new Request(tags->regenerateBlkAddr(blk->tag, blk->set),
+                               blkSize, 0, Request::wbMasterId);
     if (blk->isSecure())
-        writebackReq->setFlags(Request::SECURE);
+        req->setFlags(Request::SECURE);
 
-    writebackReq->taskId(blk->task_id);
+    req->taskId(blk->task_id);
     blk->task_id= ContextSwitchTaskId::Unknown;
     blk->tickInserted = curTick();
 
-    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
+    PacketPtr pkt =
+        new Packet(req, blk->isDirty() ?
+                   MemCmd::WritebackDirty : MemCmd::WritebackClean);
+
+    DPRINTF(Cache, "Create Writeback %#llx writable: %d, dirty: %d\n",
+            pkt->getAddr(), blk->isWritable(), blk->isDirty());
+
     if (blk->isWritable()) {
         // not asserting shared means we pass the block in modified
         // state, mark our own block non-writeable
         blk->status &= ~BlkWritable;
     } else {
         // we are in the owned state, tell the receiver
-        writeback->assertShared();
+        pkt->assertShared();
     }
 
-    writeback->allocate();
-    std::memcpy(writeback->getPtr<uint8_t>(), blk->data, blkSize);
-
+    // make sure the block is not marked dirty
     blk->status &= ~BlkDirty;
-    return writeback;
+
+    pkt->allocate();
+    std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+
+    return pkt;
 }
 
 PacketPtr
 Cache::cleanEvictBlk(CacheBlk *blk)
 {
+    assert(!writebackClean);
     assert(blk && blk->isValid() && !blk->isDirty());
     // Creating a zero sized write, a message to the snoop filter
     Request *req =
@@ -1628,7 +1675,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 
             // Will send up Writeback/CleanEvict snoops via isCachedAbove
             // when pushing this writeback list into the write buffer.
-            if (blk->isDirty()) {
+            if (blk->isDirty() || writebackClean) {
                 // Save writeback packet for handling by caller
                 writebacks.push_back(writebackBlk(blk));
             } else {
@@ -2051,9 +2098,9 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
         // Writebacks/CleanEvicts.
         assert(wb_entry->getNumTargets() == 1);
         PacketPtr wb_pkt = wb_entry->getTarget()->pkt;
-        assert(wb_pkt->evictingBlock());
+        assert(wb_pkt->isEviction());
 
-        if (pkt->evictingBlock()) {
+        if (pkt->isEviction()) {
             // if the block is found in the write queue, set the BLOCK_CACHED
             // flag for Writeback/CleanEvict snoop. On return the snoop will
             // propagate the BLOCK_CACHED flag in Writeback packets and prevent
@@ -2064,7 +2111,7 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
             return;
         }
 
-        if (wb_pkt->cmd == MemCmd::Writeback) {
+        if (wb_pkt->cmd == MemCmd::WritebackDirty) {
             assert(!pkt->memInhibitAsserted());
             pkt->assertMemInhibit();
             if (!pkt->needsExclusive()) {
@@ -2082,18 +2129,26 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
             doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
                                    false, false);
         } else {
-            assert(wb_pkt->cmd == MemCmd::CleanEvict);
+            // on hitting a clean writeback we play it safe and do not
+            // provide a response, the block may be dirty somewhere
+            // else
+            assert(wb_pkt->isCleanEviction());
             // The cache technically holds the block until the
-            // corresponding CleanEvict message reaches the crossbar
+            // corresponding message reaches the crossbar
             // below. Therefore when a snoop encounters a CleanEvict
-            // message we must set assertShared (just like when it
-            // encounters a Writeback) to avoid the snoop filter
-            // prematurely clearing the holder bit in the crossbar
-            // below
-            if (!pkt->needsExclusive())
+            // or WritebackClean message we must set assertShared
+            // (just like when it encounters a Writeback) to avoid the
+            // snoop filter prematurely clearing the holder bit in the
+            // crossbar below
+            if (!pkt->needsExclusive()) {
                 pkt->assertShared();
-            else
+                // the writeback is no longer passing exclusivity (the
+                // receiving cache should consider the block owned
+                // rather than modified)
+                wb_pkt->assertShared();
+            } else {
                 assert(pkt->isInvalidate());
+            }
         }
 
         if (pkt->isInvalidate()) {
@@ -2243,7 +2298,7 @@ Cache::isCachedAbove(PacketPtr pkt, bool is_timing) const
         // Assert that packet is either Writeback or CleanEvict and not a
         // prefetch request because prefetch requests need an MSHR and may
         // generate a snoop response.
-        assert(pkt->evictingBlock());
+        assert(pkt->isEviction());
         snoop_pkt.senderState = NULL;
         cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
         // Writeback/CleanEvict snoops do not generate a snoop response.
@@ -2312,7 +2367,7 @@ Cache::getTimingPacket()
                     mshr->blkAddr);
 
             // Deallocate the mshr target
-            if (tgt_pkt->cmd != MemCmd::Writeback) {
+            if (!tgt_pkt->isWriteback()) {
                 if (mshr->queue->forceDeallocateTarget(mshr)) {
                     // Clear block if this deallocation resulted freed an
                     // mshr when all had previously been utilized

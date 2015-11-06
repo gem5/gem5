@@ -86,7 +86,8 @@ class MemCmd
         ReadRespWithInvalidate,
         WriteReq,
         WriteResp,
-        Writeback,
+        WritebackDirty,
+        WritebackClean,
         CleanEvict,
         SoftPFReq,
         HardPFReq,
@@ -144,6 +145,7 @@ class MemCmd
         IsRequest,      //!< Issued by requester
         IsResponse,     //!< Issue by responder
         NeedsResponse,  //!< Requester needs response from target
+        IsEviction,
         IsSWPrefetch,
         IsHWPrefetch,
         IsLlsc,         //!< Alpha/MIPS LL or SC access
@@ -192,6 +194,13 @@ class MemCmd
     bool needsExclusive() const    { return testCmdAttrib(NeedsExclusive); }
     bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
+    bool isEviction() const        { return testCmdAttrib(IsEviction); }
+
+    /**
+     * A writeback is an eviction that carries data.
+     */
+    bool isWriteback() const       { return testCmdAttrib(IsEviction) &&
+                                            testCmdAttrib(HasData); }
 
     /**
      * Check if this particular packet type carries payload data. Note
@@ -491,6 +500,8 @@ class Packet : public Printable
     bool needsExclusive() const      { return cmd.needsExclusive(); }
     bool needsResponse() const       { return cmd.needsResponse(); }
     bool isInvalidate() const        { return cmd.isInvalidate(); }
+    bool isEviction() const          { return cmd.isEviction(); }
+    bool isWriteback() const         { return cmd.isWriteback(); }
     bool hasData() const             { return cmd.hasData(); }
     bool isLLSC() const              { return cmd.isLLSC(); }
     bool isError() const             { return cmd.isError(); }
@@ -1008,24 +1019,23 @@ class Packet : public Printable
     }
 
     /**
-     * Is this request notification of a clean or dirty eviction from the cache.
-     **/
-    bool
-    evictingBlock() const
-    {
-        return (cmd == MemCmd::Writeback ||
-                cmd == MemCmd::CleanEvict);
-    }
-
-    /**
      * Does the request need to check for cached copies of the same block
      * in the memory hierarchy above.
      **/
     bool
     mustCheckAbove() const
     {
-        return (cmd == MemCmd::HardPFReq ||
-                evictingBlock());
+        return cmd == MemCmd::HardPFReq || isEviction();
+    }
+
+    /**
+     * Is this packet a clean eviction, including both actual clean
+     * evict packets, but also clean writebacks.
+     */
+    bool
+    isCleanEviction() const
+    {
+        return cmd == MemCmd::CleanEvict || cmd == MemCmd::WritebackClean;
     }
 
     /**

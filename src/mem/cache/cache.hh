@@ -202,6 +202,15 @@ class Cache : public BaseCache
      */
     const Enums::Clusivity clusivity;
 
+     /**
+     * Determine if clean lines should be written back or not. In
+     * cases where a downstream cache is mostly inclusive we likely
+     * want it to act as a victim cache also for lines that have not
+     * been modified. Hence, we cannot simply drop the line (or send a
+     * clean evict), but rather need to send the actual data.
+     */
+    const bool writebackClean;
+
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call
