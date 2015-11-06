@@ -97,17 +97,15 @@ SimpleMemory::recvFunctional(PacketPtr pkt)
 bool
 SimpleMemory::recvTimingReq(PacketPtr pkt)
 {
+    // sink inhibited packets without further action
     if (pkt->memInhibitAsserted()) {
-        // snooper will supply based on copy of packet
-        // still target's responsibility to delete packet
         pendingDelete.reset(pkt);
         return true;
     }
 
-    // we should never get a new request after committing to retry the
-    // current one, the bus violates the rule as it simply sends a
-    // retry to the next one waiting on the retry list, so simply
-    // ignore it
+    // we should not get a new request after committing to retry the
+    // current one, but unfortunately the CPU violates this rule, so
+    // simply ignore it for now
     if (retryReq)
         return false;
 

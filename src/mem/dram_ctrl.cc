@@ -590,10 +590,8 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
     DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
-    // simply drop inhibited packets and clean evictions
-    if (pkt->memInhibitAsserted() ||
-        pkt->cmd == MemCmd::CleanEvict) {
-        DPRINTF(DRAM, "Inhibited packet or clean evict -- Dropping it now\n");
+    // sink inhibited packets without further action
+    if (pkt->memInhibitAsserted()) {
         pendingDelete.reset(pkt);
         return true;
     }

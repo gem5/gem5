@@ -175,15 +175,17 @@ DRAMSim2::recvFunctional(PacketPtr pkt)
 bool
 DRAMSim2::recvTimingReq(PacketPtr pkt)
 {
-    // we should never see a new request while in retry
-    assert(!retryReq);
-
+    // sink inhibited packets without further action
     if (pkt->memInhibitAsserted()) {
-        // snooper will supply based on copy of packet
-        // still target's responsibility to delete packet
         pendingDelete.reset(pkt);
         return true;
     }
+
+    // we should not get a new request after committing to retry the
+    // current one, but unfortunately the CPU violates this rule, so
+    // simply ignore it for now
+    if (retryReq)
+        return false;
 
     // if we cannot accept we need to send a retry once progress can
     // be made
