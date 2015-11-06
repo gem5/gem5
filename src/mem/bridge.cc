@@ -136,10 +136,14 @@ Bridge::BridgeMasterPort::recvTimingResp(PacketPtr pkt)
 
     DPRINTF(Bridge, "Request queue size: %d\n", transmitList.size());
 
-    // @todo: We need to pay for this and not just zero it out
+    // technically the packet only reaches us after the header delay,
+    // and typically we also need to deserialise any payload (unless
+    // the two sides of the bridge are synchronous)
+    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    slavePort.schedTimingResp(pkt, bridge.clockEdge(delay));
+    slavePort.schedTimingResp(pkt, bridge.clockEdge(delay) +
+                              receive_delay);
 
     return true;
 }
@@ -191,10 +195,15 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
         }
 
         if (!retryReq) {
-            // @todo: We need to pay for this and not just zero it out
+            // technically the packet only reaches us after the header
+            // delay, and typically we also need to deserialise any
+            // payload (unless the two sides of the bridge are
+            // synchronous)
+            Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
             pkt->headerDelay = pkt->payloadDelay = 0;
 
-            masterPort.schedTimingReq(pkt, bridge.clockEdge(delay));
+            masterPort.schedTimingReq(pkt, bridge.clockEdge(delay) +
+                                      receive_delay);
         }
     }
 

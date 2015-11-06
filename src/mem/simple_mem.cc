@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -116,7 +116,10 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         return false;
     }
 
-    // @todo someone should pay for this
+    // technically the packet only reaches us after the header delay,
+    // and since this is a memory controller we also need to
+    // deserialise the payload before performing any write operation
+    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
 
     // update the release time according to the bandwidth limit, and
@@ -150,10 +153,24 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         // recvAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
-        // to keep things simple (and in order), we put the packet at
-        // the end even if the latency suggests it should be sent
-        // before the packet(s) before it
-        packetQueue.emplace_back(pkt, curTick() + getLatency());
+
+        Tick when_to_send = curTick() + receive_delay + getLatency();
+
+        // typically this should be added at the end, so start the
+        // insertion sort with the last element, also make sure not to
+        // re-order in front of some existing packet with the same
+        // address, the latter is important as this memory effectively
+        // hands out exclusive copies (shared is not asserted)
+        auto i = packetQueue.end();
+        --i;
+        while (i != packetQueue.begin() && when_to_send < i->tick &&
+               i->pkt->getAddr() != pkt->getAddr())
+            --i;
+
+        // emplace inserts the element before the position pointed to by
+        // the iterator, so advance it one step
+        packetQueue.emplace(++i, pkt, when_to_send);
+
         if (!retryResp && !dequeueEvent.scheduled())
             schedule(dequeueEvent, packetQueue.back().tick);
     } else {

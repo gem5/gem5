@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -54,12 +54,14 @@ PioPort::PioPort(PioDevice *dev)
 Tick
 PioPort::recvAtomic(PacketPtr pkt)
 {
-    // @todo: We need to pay for this and not just zero it out
+    // technically the packet only reaches us after the header delay,
+    // and typically we also need to deserialise any payload
+    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
 
     const Tick delay(pkt->isRead() ? device->read(pkt) : device->write(pkt));
     assert(pkt->isResponse() || pkt->isError());
-    return delay;
+    return delay + receive_delay;
 }
 
 AddrRangeList

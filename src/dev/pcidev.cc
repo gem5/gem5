@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,9 +79,15 @@ PciDevice::PciConfigPort::recvAtomic(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= configAddr &&
            pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
-    // @todo someone should pay for this
+
+    // technically the packet only reaches us after the header delay,
+    // and typically we also need to deserialise any payload
+    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
-    return pkt->isRead() ? device->readConfig(pkt) : device->writeConfig(pkt);
+
+    const Tick delay(pkt->isRead() ? device->readConfig(pkt) :
+                     device->writeConfig(pkt));
+    return delay + receive_delay;
 }
 
 AddrRangeList

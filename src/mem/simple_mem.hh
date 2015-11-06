@@ -49,7 +49,7 @@
 #ifndef __SIMPLE_MEMORY_HH__
 #define __SIMPLE_MEMORY_HH__
 
-#include <deque>
+#include <list>
 
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
@@ -125,7 +125,7 @@ class SimpleMemory : public AbstractMemory
      * actual memory access. Note that this is where the packet spends
      * the memory latency.
      */
-    std::deque<DeferredPacket> packetQueue;
+    std::list<DeferredPacket> packetQueue;
 
     /**
      * Bandwidth in ticks per byte. The regulation affects the
