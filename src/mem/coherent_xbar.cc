@@ -198,7 +198,18 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
                     " SF size: %i lat: %i\n", src_port->name(),
                     pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
                     sf_res.second);
-            forwardTiming(pkt, slave_port_id, sf_res.first);
+
+            if (pkt->evictingBlock()) {
+                // for block-evicting packets, i.e. writebacks and
+                // clean evictions, there is no need to snoop up, as
+                // all we do is determine if the block is cached or
+                // not, instead just set it here based on the snoop
+                // filter result
+                if (!sf_res.first.empty())
+                    pkt->setBlockCached();
+            } else {
+                forwardTiming(pkt, slave_port_id, sf_res.first);
+            }
         } else {
             forwardTiming(pkt, slave_port_id);
         }
