@@ -359,8 +359,6 @@ std::pair< uint64_t, bool>
 StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
 {
     Node* newLeafNode;
-    // Return index if the address was already present in stack
-    uint64_t r_index = index;
 
     auto ai = aiMap.lower_bound(r_address);
 
@@ -380,7 +378,7 @@ StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
         // key already exists
         // save the index counter value when this address was
         // encountered before and update it to the current index value
-        r_index = ai->second;
+        uint64_t r_index = ai->second;
 
         if (addNewNode) {
             // Update aiMap aiMap(Address) = current index
@@ -462,8 +460,6 @@ StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
 std::pair< uint64_t, bool>
 StackDistCalc::calcStackDist(const Addr r_address, bool mark)
 {
-    // Return index if the address was already present in stack
-    uint64_t r_index = index;
     // Default value of isMarked flag for each node.
     bool _mark = false;
 
@@ -480,7 +476,7 @@ StackDistCalc::calcStackDist(const Addr r_address, bool mark)
         // key already exists
         // save the index counter value when this address was
         // encountered before
-        r_index = ai->second;
+        uint64_t r_index = ai->second;
 
         // Get the value of mark flag if previously marked
         _mark = tree[0][r_index]->isMarked;
@@ -569,7 +565,6 @@ void
 StackDistCalc::printStack(int n) const
 {
     Node* node;
-    uint64_t r_index;
     int count = 0;
 
     DPRINTF(StackDist, "Printing last %d entries in tree\n", n);
@@ -578,7 +573,7 @@ StackDistCalc::printStack(int n) const
     for (auto it = tree[0].rbegin(); (count < n) && (it != tree[0].rend());
          ++it, ++count) {
         node = it->second;
-        r_index = node->nodeIndex;
+        uint64_t r_index = node->nodeIndex;
 
         // Lookup aiMap using the index returned by the leaf iterator
         for (auto ai = aiMap.rbegin(); ai != aiMap.rend(); ++ai) {

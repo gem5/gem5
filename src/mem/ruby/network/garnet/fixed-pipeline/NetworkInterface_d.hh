@@ -70,7 +70,7 @@ class NetworkInterface_d : public ClockedObject, public Consumer
 
   private:
     GarnetNetwork_d *m_net_ptr;
-    const NodeID m_id;
+    const NodeID M5_CLASS_VAR_USED m_id;
     const int m_virtual_networks, m_vc_per_vnet, m_num_vcs;
     std::vector<OutVcState_d *> m_out_vc_state;
     std::vector<int> m_vc_allocator;

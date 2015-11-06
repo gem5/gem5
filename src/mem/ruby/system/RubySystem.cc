@@ -370,7 +370,7 @@ RubySystem::startup()
         }
 
         // Restore eventq head
-        eventq_head = eventq->replaceHead(eventq_head);
+        eventq->replaceHead(eventq_head);
         // Restore curTick and Ruby System's clock
         setCurTick(curtick_original);
         resetClock();

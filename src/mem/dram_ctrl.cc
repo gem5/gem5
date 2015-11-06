@@ -341,9 +341,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
-        // lastly, get the row bits
+        // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-        addr = addr / rowsPerBank;
     } else if (addrMapping == Enums::RoRaBaCoCh) {
         // take out the lower-order column bits
         addr = addr / columnsPerStripe;
@@ -364,9 +363,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
-        // lastly, get the row bits
+        // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-        addr = addr / rowsPerBank;
     } else if (addrMapping == Enums::RoCoRaBaCh) {
         // optimise for closed page mode and utilise maximum
         // parallelism of the DRAM (at the cost of power)
@@ -391,9 +389,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         // next, the higher-order column bites
         addr = addr / (columnsPerRowBuffer / columnsPerStripe);
 
-        // lastly, get the row bits
+        // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-        addr = addr / rowsPerBank;
     } else
         panic("Unknown address mapping policy chosen!");
 
