@@ -666,7 +666,7 @@ Cache::recvTimingReq(PacketPtr pkt)
             // lat, neglecting responseLatency, modelling hit latency
             // just as lookupLatency or or the value of lat overriden
             // by access(), that calls accessBlock() function.
-            cpuSidePort->schedTimingResp(pkt, request_time);
+            cpuSidePort->schedTimingResp(pkt, request_time, true);
         } else {
             // queue the packet for deletion, as the sending cache is
             // still relying on it; if the block is found in access(),
@@ -723,7 +723,7 @@ Cache::recvTimingReq(PacketPtr pkt)
             std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
             // request_time is used here, taking into account lat and the delay
             // charged if the packet comes from the xbar.
-            cpuSidePort->schedTimingResp(pkt, request_time);
+            cpuSidePort->schedTimingResp(pkt, request_time, true);
 
             // If an outstanding request is in progress (we found an
             // MSHR) this is set to null
@@ -1330,7 +1330,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             }
             // Reset the bus additional time as it is now accounted for
             tgt_pkt->headerDelay = tgt_pkt->payloadDelay = 0;
-            cpuSidePort->schedTimingResp(tgt_pkt, completion_time);
+            cpuSidePort->schedTimingResp(tgt_pkt, completion_time, true);
             break;
 
           case MSHR::Target::FromPrefetcher:

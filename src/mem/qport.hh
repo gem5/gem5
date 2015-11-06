@@ -88,8 +88,8 @@ class QueuedSlavePort : public SlavePort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingResp(PacketPtr pkt, Tick when)
-    { respQueue.schedSendTiming(pkt, when); }
+    void schedTimingResp(PacketPtr pkt, Tick when, bool force_order = false)
+    { respQueue.schedSendTiming(pkt, when, force_order); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
