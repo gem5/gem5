@@ -11,7 +11,7 @@ pip install objectpath yattag pytz
 git clone https://github.com/mcai/gem5 --verbose
 
 4. Build gem5:
-cd gem5/;.compile_ALPHA.sh
+cd gem5/;./compile_ALPHA.sh
 
 5. Download disk images and Linux kernel files as required for full-system ALPHA simulation in gem5:
     a) Full System Files: http://www.m5sim.org/dist/current/m5_system_2.0b3.tar.bz2
