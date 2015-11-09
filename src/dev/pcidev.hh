@@ -190,8 +190,10 @@ class PciDevice : public DmaDevice
         return true;
     }
 
-  protected:
+  private:
     Platform *platform;
+
+  protected:
     Tick pioDelay;
     Tick configDelay;
     PciConfigPort configPort;

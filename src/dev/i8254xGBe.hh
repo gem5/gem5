@@ -263,7 +263,7 @@ class IGbE : public EtherDevice
         EthPacketPtr pktPtr;
 
         /** Shortcut for DMA address translation */
-        Addr pciToDma(Addr a) { return igbe->platform->pciToDma(a); }
+        Addr pciToDma(Addr a) { return igbe->pciToDma(a); }
 
       public:
         /** Annotate sm*/
