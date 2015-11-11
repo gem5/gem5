@@ -60,6 +60,7 @@ Pl390::Pl390(const Params *p)
     itLinesLog2 = ceilLog2(itLines);
 
     for (int x = 0; x < CPU_MAX; x++) {
+        iccrpr[x] = 0xff;
         cpuEnabled[x] = false;
         cpuPriority[x] = 0xff;
         cpuBpr[x] = 0;
