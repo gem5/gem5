@@ -124,9 +124,9 @@ class Pipeline : public Ticked
 
     /** A custom evaluate allows report in the right place (between
      *  stages and pipeline advance) */
-    void evaluate();
+    void evaluate() override;
 
-    void countCycles(Cycles delta) M5_ATTR_OVERRIDE
+    void countCycles(Cycles delta) override
     {
         cpu.ppCycles->notify(delta);
     }

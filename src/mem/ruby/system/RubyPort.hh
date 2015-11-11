@@ -143,12 +143,12 @@ class RubyPort : public MemObject
     RubyPort(const Params *p);
     virtual ~RubyPort() {}
 
-    void init();
+    void init() override;
 
     BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID);
+                                  PortID idx = InvalidPortID) override;
     BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID);
+                                PortID idx = InvalidPortID) override;
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;
@@ -161,7 +161,7 @@ class RubyPort : public MemObject
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
     uint32_t getId() { return m_version; }
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
   protected:
     void ruby_hit_callback(PacketPtr pkt);

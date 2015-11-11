@@ -63,8 +63,8 @@ struct DisplayTimings : public Serializable
                    unsigned hbp, unsigned h_sync, unsigned hfp,
                    unsigned vbp, unsigned v_sync, unsigned vfp);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     /** How many pixel clocks are required for one line? */
     Cycles cyclesPerLine() const {
@@ -151,8 +151,8 @@ class BasePixelPump
     BasePixelPump(EventManager &em, ClockDomain &pxl_clk, unsigned pixel_chunk);
     virtual ~BasePixelPump();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: // Public API
     /** Starting pushing pixels using the supplied display timings. */
@@ -257,14 +257,14 @@ class BasePixelPump
       public:
         PixelEvent(const char *name, BasePixelPump *parent, CallbackType func);
 
-        DrainState drain() M5_ATTR_OVERRIDE;
-        void drainResume() M5_ATTR_OVERRIDE;
+        DrainState drain() override;
+        void drainResume() override;
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
-        const std::string name() const M5_ATTR_OVERRIDE { return _name; }
-        void process() M5_ATTR_OVERRIDE {
+        const std::string name() const override { return _name; }
+        void process() override {
             (parent.*func)();
         }
 

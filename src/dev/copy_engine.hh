@@ -106,11 +106,11 @@ class CopyEngine : public PciDevice
         void channelRead(PacketPtr pkt, Addr daddr, int size);
         void channelWrite(PacketPtr pkt, Addr daddr, int size);
 
-        DrainState drain() M5_ATTR_OVERRIDE;
-        void drainResume() M5_ATTR_OVERRIDE;
+        DrainState drain() override;
+        void drainResume() override;
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
       private:
         void fetchDescriptor(Addr address);
@@ -196,16 +196,16 @@ class CopyEngine : public PciDevice
     CopyEngine(const Params *params);
     ~CopyEngine();
 
-    void regStats();
+    void regStats() override;
 
-    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID) override;
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 #endif //__DEV_COPY_ENGINE_HH__

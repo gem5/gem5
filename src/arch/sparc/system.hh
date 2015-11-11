@@ -54,8 +54,8 @@ class SparcSystem : public System
  * Serialization stuff
  */
   public:
-    void serializeSymtab(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserializeSymtab(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serializeSymtab(CheckpointOut &cp) const override;
+    void unserializeSymtab(CheckpointIn &cp) override;
 
     /** reset binary symbol table */
     SymbolTable *resetSymtab;

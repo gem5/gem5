@@ -101,9 +101,9 @@ class OstreamLogger : public Logger
     { }
 
     void logMessage(Tick when, const std::string &name,
-                    const std::string &message) M5_ATTR_OVERRIDE;
+                    const std::string &message) override;
 
-    std::ostream &getOstream() M5_ATTR_OVERRIDE { return stream; }
+    std::ostream &getOstream() override { return stream; }
 };
 
 /** Get the current global debug logger.  This takes ownership of the given
@@ -116,8 +116,9 @@ std::ostream &output();
 /** Delete the current global logger and assign a new one */
 void setDebugLogger(Logger *logger);
 
-/** Enable debug logging */
-extern bool enabled;
+/** Enable/disable debug logging */
+void enable();
+void disable();
 
 } // namespace Trace
 
@@ -160,7 +161,7 @@ class Named
 
 #if TRACING_ON
 
-#define DTRACE(x) ((Debug::x) && Trace::enabled)
+#define DTRACE(x) (Debug::x)
 
 #define DDUMP(x, data, count) do {                                        \
     using namespace Debug;                                                \

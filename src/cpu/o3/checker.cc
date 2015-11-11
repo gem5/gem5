@@ -86,7 +86,6 @@ O3CheckerParams::create()
     params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
-    params->interrupts = NULL;
     params->workload = workload;
 
     O3Checker *cpu = new O3Checker(params);

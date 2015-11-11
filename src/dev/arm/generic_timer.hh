@@ -93,8 +93,8 @@ class SystemCounter : public Serializable
     void setKernelControl(uint32_t val) { _regCntkctl = val; }
     uint32_t getKernelControl() { return _regCntkctl; }
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     // Disable copying
@@ -189,8 +189,8 @@ class ArchTimer : public Serializable
     /// Returns the value of the counter which this timer relies on.
     uint64_t value() const;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     // Disable copying
@@ -202,8 +202,8 @@ class GenericTimer : public SimObject
   public:
     GenericTimer(GenericTimerParams *p);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public:
     void setMiscReg(int misc_reg, unsigned cpu, ArmISA::MiscReg val);
@@ -262,10 +262,10 @@ class GenericTimerISA : public ArmISA::BaseISADevice
     GenericTimerISA(GenericTimer &_parent, unsigned _cpu)
         : parent(_parent), cpu(_cpu) {}
 
-    void setMiscReg(int misc_reg, ArmISA::MiscReg val) M5_ATTR_OVERRIDE {
+    void setMiscReg(int misc_reg, ArmISA::MiscReg val) override {
         parent.setMiscReg(misc_reg, cpu, val);
     }
-    ArmISA::MiscReg readMiscReg(int misc_reg) M5_ATTR_OVERRIDE {
+    ArmISA::MiscReg readMiscReg(int misc_reg) override {
         return parent.readMiscReg(misc_reg, cpu);
     }
 
@@ -279,13 +279,13 @@ class GenericTimerMem : public PioDevice
   public:
     GenericTimerMem(GenericTimerMemParams *p);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: // PioDevice
-    AddrRangeList getAddrRanges() const M5_ATTR_OVERRIDE { return addrRanges; }
-    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
-    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    AddrRangeList getAddrRanges() const override { return addrRanges; }
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
   protected:
     uint64_t ctrlRead(Addr addr, size_t size) const;

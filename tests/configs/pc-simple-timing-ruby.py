@@ -87,9 +87,9 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.itb.walker.port = system.ruby._cpu_ports[i].slave
     cpu.dtb.walker.port = system.ruby._cpu_ports[i].slave
 
-    cpu.interrupts.pio = system.ruby._cpu_ports[i].master
-    cpu.interrupts.int_master = system.ruby._cpu_ports[i].slave
-    cpu.interrupts.int_slave = system.ruby._cpu_ports[i].master
+    cpu.interrupts[0].pio = system.ruby._cpu_ports[i].master
+    cpu.interrupts[0].int_master = system.ruby._cpu_ports[i].slave
+    cpu.interrupts[0].int_slave = system.ruby._cpu_ports[i].master
 
 root = Root(full_system = True, system = system)
 m5.ticks.setGlobalFrequency('1THz')

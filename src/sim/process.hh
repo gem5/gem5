@@ -120,9 +120,9 @@ class Process : public SimObject
     // constructor
     Process(ProcessParams *params);
 
-    virtual void initState();
+    void initState() override;
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
   public:
 
@@ -156,7 +156,7 @@ class Process : public SimObject
     void inheritFDArray(Process *p);
 
     // override of virtual SimObject method: register statistics
-    virtual void regStats();
+    void regStats() override;
 
     // After getting registered with system object, tell process which
     // system-wide context id it is assigned.
@@ -223,8 +223,8 @@ class Process : public SimObject
      */
     bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 //
@@ -238,6 +238,7 @@ class LiveProcess : public Process
     std::vector<std::string> argv;
     std::vector<std::string> envp;
     std::string cwd;
+    std::string executable;
 
     LiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
@@ -294,7 +295,7 @@ class LiveProcess : public Process
     inline uint64_t ppid() {return __ppid;}
 
     // provide program name for debug messages
-    virtual const char *progName() const { return argv[0].c_str(); }
+    virtual const char *progName() const { return executable.c_str(); }
 
     std::string
     fullPath(const std::string &filename)

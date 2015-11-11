@@ -109,7 +109,10 @@ DtbObject::addBootCmdLine(const char* _args, size_t len)
         // try adding the node by walking dtb tree to proper insertion point
         offset = fdt_path_offset((void*)fdt_buf_w_space, root_path);
         offset = fdt_add_subnode((void*)fdt_buf_w_space, offset, node_name);
-        offset = fdt_path_offset((void*)fdt_buf_w_space, full_path_node_name);
+        // if we successfully add the subnode, get the offset
+        if (offset >= 0)
+          offset = fdt_path_offset((void*)fdt_buf_w_space, full_path_node_name);
+
         if (offset < 0) {
             warn("Error finding or adding \"chosen\" subnode to flattened "
                  "device tree, errno: %d\n", offset);

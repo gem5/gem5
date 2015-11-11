@@ -1,5 +1,7 @@
 // Copyright (c) 2007 The Hewlett-Packard Development Company
 // Copyright (c) 2012-13 Mark D. Hill and David A. Wood
+// Copyright (c) 2015 Advanced Micro Devices, Inc.
+//
 // All rights reserved.
 //
 // The license below extends only to copyright in the software and shall
@@ -36,6 +38,7 @@
 //
 // Authors: Gabe Black
 //          Nilay Vaish
+//          Steve Reinhardt
 
 format WarnUnimpl {
     0x1B: decode OPCODE_OP_BOTTOM3 {
@@ -174,7 +177,7 @@ format WarnUnimpl {
         0x3: decode MODRM_REG {
             0x0: decode MODRM_MOD {
                 0x3: fcmovnb();
-                default: fild();
+                default: Inst::FILD(Md); // 32-bit int
             }
             0x1: decode MODRM_MOD {
                 0x3: fcmovne();
@@ -197,7 +200,9 @@ format WarnUnimpl {
                 default: Inst::UD2();
             }
             0x5: decode MODRM_MOD {
-                0x3: fucomi();
+                // 'R' insists on having a size qualifier, so I picked 'q',
+                // but I don't think it has any effect
+                0x3: Inst::FUCOMI(Rq);
                 // 80-bit load
                 default: Inst::FLD80(M);
             }
@@ -331,7 +336,7 @@ format WarnUnimpl {
                 // The ffreep instruction isn't entirely real. It should work
                 // the same as ffree but then also pop the register stack.
                 0x3: ffreep();
-                default: fild();
+                default: Inst::FILD(Mw); // 16-bit int
             }
             0x1: decode MODRM_MOD {
                 0x3: Inst::UD2();
@@ -353,8 +358,10 @@ format WarnUnimpl {
                 default: fbld();
             }
             0x5: decode MODRM_MOD {
-                0x3: fucomip();
-                default: fild();
+                // 'R' insists on having a size qualifier, so I picked 'q',
+                // but I don't think it has any effect
+                0x3: Inst::FUCOMIP(Rq);
+                default: Inst::FILD(Mq); // 64-bit int
             }
             0x6: decode MODRM_MOD {
                 0x3: fcomip();

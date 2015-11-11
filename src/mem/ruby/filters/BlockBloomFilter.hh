@@ -30,7 +30,6 @@
 #define __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -39,7 +38,7 @@
 class BlockBloomFilter : public AbstractBloomFilter
 {
   public:
-    BlockBloomFilter(std::string config);
+    BlockBloomFilter(int size);
     ~BlockBloomFilter();
 
     void clear();
@@ -64,7 +63,6 @@ class BlockBloomFilter : public AbstractBloomFilter
     std::vector<int> m_filter;
     int m_filter_size;
     int m_filter_size_bits;
-
 };
 
 #endif // __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__

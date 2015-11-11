@@ -133,7 +133,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       numThreads(p->numThreads), system(p->system),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
-      addressMonitor()
+      addressMonitor(p->numThreads)
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
@@ -237,8 +237,10 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     // The interrupts should always be present unless this CPU is
     // switched in later or in case it is a checker CPU
     if (!params()->switched_out && !is_checker) {
-        if (interrupts) {
-            interrupts->setCPU(this);
+        if (!interrupts.empty()) {
+            for (ThreadID tid = 0; tid < numThreads; tid++) {
+                interrupts[tid]->setCPU(this);
+            }
         } else {
             fatal("CPU %s has no interrupt controller.\n"
                   "Ensure createInterruptController() is called.\n", name());
@@ -271,39 +273,48 @@ BaseCPU::~BaseCPU()
 }
 
 void
-BaseCPU::armMonitor(Addr address)
+BaseCPU::armMonitor(ThreadID tid, Addr address)
 {
-    addressMonitor.armed = true;
-    addressMonitor.vAddr = address;
-    addressMonitor.pAddr = 0x0;
-    DPRINTF(Mwait,"Armed monitor (vAddr=0x%lx)\n", address);
+    assert(tid < numThreads);
+    AddressMonitor &monitor = addressMonitor[tid];
+
+    monitor.armed = true;
+    monitor.vAddr = address;
+    monitor.pAddr = 0x0;
+    DPRINTF(Mwait,"[tid:%d] Armed monitor (vAddr=0x%lx)\n", tid, address);
 }
 
 bool
-BaseCPU::mwait(PacketPtr pkt)
+BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
 {
-    if(addressMonitor.gotWakeup == false) {
+    assert(tid < numThreads);
+    AddressMonitor &monitor = addressMonitor[tid];
+
+    if(monitor.gotWakeup == false) {
         int block_size = cacheLineSize();
         uint64_t mask = ~((uint64_t)(block_size - 1));
 
         assert(pkt->req->hasPaddr());
-        addressMonitor.pAddr = pkt->getAddr() & mask;
-        addressMonitor.waiting = true;
+        monitor.pAddr = pkt->getAddr() & mask;
+        monitor.waiting = true;
 
-        DPRINTF(Mwait,"mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
-                addressMonitor.vAddr, addressMonitor.pAddr);
+        DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, "
+                "line's paddr=0x%lx)\n", tid, monitor.vAddr, monitor.pAddr);
         return true;
     } else {
-        addressMonitor.gotWakeup = false;
+        monitor.gotWakeup = false;
         return false;
     }
 }
 
 void
-BaseCPU::mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb)
+BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb)
 {
+    assert(tid < numThreads);
+    AddressMonitor &monitor = addressMonitor[tid];
+
     Request req;
-    Addr addr = addressMonitor.vAddr;
+    Addr addr = monitor.vAddr;
     int block_size = cacheLineSize();
     uint64_t mask = ~((uint64_t)(block_size - 1));
     int size = block_size;
@@ -320,11 +331,11 @@ BaseCPU::mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb)
     Fault fault = dtb->translateAtomic(&req, tc, BaseTLB::Read);
     assert(fault == NoFault);
 
-    addressMonitor.pAddr = req.getPaddr() & mask;
-    addressMonitor.waiting = true;
+    monitor.pAddr = req.getPaddr() & mask;
+    monitor.waiting = true;
 
-    DPRINTF(Mwait,"mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
-            addressMonitor.vAddr, addressMonitor.pAddr);
+    DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
+            tid, monitor.vAddr, monitor.pAddr);
 }
 
 void
@@ -436,21 +447,17 @@ BaseCPU::getMasterPort(const string &if_name, PortID idx)
 void
 BaseCPU::registerThreadContexts()
 {
+    assert(system->multiThread || numThreads == 1);
+
     ThreadID size = threadContexts.size();
     for (ThreadID tid = 0; tid < size; ++tid) {
         ThreadContext *tc = threadContexts[tid];
 
-        /** This is so that contextId and cpuId match where there is a
-         * 1cpu:1context relationship.  Otherwise, the order of registration
-         * could affect the assignment and cpu 1 could have context id 3, for
-         * example.  We may even want to do something like this for SMT so that
-         * cpu 0 has the lowest thread contexts and cpu N has the highest, but
-         * I'll just do this for now
-         */
-        if (numThreads == 1)
-            tc->setContextId(system->registerThreadContext(tc, _cpuId));
-        else
+        if (system->multiThread) {
             tc->setContextId(system->registerThreadContext(tc));
+        } else {
+            tc->setContextId(system->registerThreadContext(tc, _cpuId));
+        }
 
         if (!FullSystem)
             tc->getProcessPtr()->assignThreadContext(tc->contextId());
@@ -578,8 +585,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     }
 
     interrupts = oldCPU->interrupts;
-    interrupts->setCPU(this);
-    oldCPU->interrupts = NULL;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        interrupts[tid]->setCPU(this);
+    }
+    oldCPU->interrupts.clear();
 
     if (FullSystem) {
         for (ThreadID i = 0; i < size; ++i)
@@ -651,11 +660,10 @@ BaseCPU::serialize(CheckpointOut &cp) const
          * system. */
         SERIALIZE_SCALAR(_pid);
 
-        interrupts->serialize(cp);
-
         // Serialize the threads, this is done by the CPU implementation.
         for (ThreadID i = 0; i < numThreads; ++i) {
             ScopedCheckpointSection sec(cp, csprintf("xc.%i", i));
+            interrupts[i]->serialize(cp);
             serializeThread(cp, i);
         }
     }
@@ -668,11 +676,11 @@ BaseCPU::unserialize(CheckpointIn &cp)
 
     if (!_switchedOut) {
         UNSERIALIZE_SCALAR(_pid);
-        interrupts->unserialize(cp);
 
         // Unserialize the threads, this is done by the CPU implementation.
         for (ThreadID i = 0; i < numThreads; ++i) {
             ScopedCheckpointSection sec(cp, csprintf("xc.%i", i));
+            interrupts[i]->unserialize(cp);
             unserializeThread(cp, i);
         }
     }

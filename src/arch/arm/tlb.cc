@@ -78,7 +78,7 @@ TLB::TLB(const ArmTLBParams *p)
       stage2Mmu(NULL), rangeMRU(1),
       aarch64(false), aarch64EL(EL0), isPriv(false), isSecure(false),
       isHyp(false), asid(0), vmid(0), dacr(0),
-      miscRegValid(false), curTranType(NormalTran)
+      miscRegValid(false), miscRegContext(0), curTranType(NormalTran)
 {
     tableWalker->setTlb(this);
 
@@ -1204,7 +1204,8 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
     // check if the regs have changed, or the translation mode is different.
     // NOTE: the tran type doesn't affect stage 2 TLB's as they only handle
     // one type of translation anyway
-    if (miscRegValid && ((tranType == curTranType) || isStage2)) {
+    if (miscRegValid && miscRegContext == tc->contextId() &&
+            ((tranType == curTranType) || isStage2)) {
         return;
     }
 
@@ -1300,6 +1301,7 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
         }
     }
     miscRegValid = true;
+    miscRegContext = tc->contextId();
     curTranType  = tranType;
 }
 

@@ -863,11 +863,12 @@ class BaseDynInst : public ExecContext, public RefCounted
 
   public:
     // monitor/mwait funtions
-    void armMonitor(Addr address) { cpu->armMonitor(address); }
-    bool mwait(PacketPtr pkt) { return cpu->mwait(pkt); }
+    void armMonitor(Addr address) { cpu->armMonitor(threadNumber, address); }
+    bool mwait(PacketPtr pkt) { return cpu->mwait(threadNumber, pkt); }
     void mwaitAtomic(ThreadContext *tc)
-    { return cpu->mwaitAtomic(tc, cpu->dtb); }
-    AddressMonitor *getAddrMonitor() { return cpu->getCpuAddrMonitor(); }
+    { return cpu->mwaitAtomic(threadNumber, tc, cpu->dtb); }
+    AddressMonitor *getAddrMonitor()
+    { return cpu->getCpuAddrMonitor(threadNumber); }
 };
 
 template<class Impl>

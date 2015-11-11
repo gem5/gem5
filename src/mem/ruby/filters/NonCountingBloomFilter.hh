@@ -30,7 +30,6 @@
 #define __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -39,7 +38,7 @@
 class NonCountingBloomFilter : public AbstractBloomFilter
 {
   public:
-    NonCountingBloomFilter(std::string config);
+    NonCountingBloomFilter(int head, int tail);
     ~NonCountingBloomFilter();
 
     void clear();

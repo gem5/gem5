@@ -47,10 +47,10 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "base/loader/symtab.hh"
-#include "base/hashmap.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/AnnotateQ.hh"
@@ -127,7 +127,7 @@ class CPA
 /**
  * Provide a hash function for the CPI Id type
  */
-__hash_namespace_begin
+namespace std {
 template <>
 struct hash<std::pair<std::string, uint64_t> >
 {
@@ -139,7 +139,7 @@ struct hash<std::pair<std::string, uint64_t> >
     }
 
 };
-__hash_namespace_end
+}
 
 class CPA : SimObject
 {
@@ -202,8 +202,8 @@ class CPA : SimObject
         uint8_t  cpu;
         bool dump;
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     typedef std::shared_ptr<AnnotateData> AnnDataPtr;
@@ -236,12 +236,12 @@ class CPA : SimObject
     uint64_t conId;
 
     // Convert state strings into state ids
-    typedef m5::hash_map<std::string, int> SCache;
+    typedef std::unordered_map<std::string, int> SCache;
     typedef std::vector<SCache> StCache;
 
     // Convert sm and queue name,id into queue id
     typedef std::pair<std::string, uint64_t> Id;
-    typedef m5::hash_map<Id, int> IdHCache;
+    typedef std::unordered_map<Id, int> IdHCache;
     typedef std::vector<IdHCache> IdCache;
 
     // Hold mapping of sm and queues to output python
@@ -266,7 +266,7 @@ class CPA : SimObject
     typedef std::map<int, int> LinkMap;
 
     // SC Links
-    typedef m5::hash_map<Id, AnnDataPtr> ScHCache;
+    typedef std::unordered_map<Id, AnnDataPtr> ScHCache;
     typedef std::vector<ScHCache> ScCache;
 
 
@@ -540,8 +540,8 @@ class CPA : SimObject
     void dump(bool all);
     void dumpKey();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 #endif // !CP_ANNOTATE
 

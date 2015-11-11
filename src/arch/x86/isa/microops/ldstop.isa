@@ -427,6 +427,25 @@ let {{
         }
     ''', big = False)
 
+    # Load integer from memory into x87 top-of-stack register.
+    # Used to implement fild instruction.
+    defineMicroLoadOp('Ldifp87', code='''
+        switch (dataSize)
+        {
+          case 2:
+            FpData_df = (int64_t)sext<16>(Mem);
+            break;
+          case 4:
+            FpData_df = (int64_t)sext<32>(Mem);
+            break;
+          case 8:
+            FpData_df = (int64_t)Mem;
+            break;
+          default:
+            panic("Unhandled data size in LdIFp87.\\n");
+        }
+    ''', big = False)
+
     def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0"):
         global header_output
         global decoder_output

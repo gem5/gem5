@@ -74,17 +74,17 @@ class CommMonitor : public MemObject
      */
     CommMonitor(Params* params);
 
-    void init() M5_ATTR_OVERRIDE;
-    void regStats() M5_ATTR_OVERRIDE;
-    void startup() M5_ATTR_OVERRIDE;
-    void regProbePoints() M5_ATTR_OVERRIDE;
+    void init() override;
+    void regStats() override;
+    void startup() override;
+    void regProbePoints() override;
 
   public: // MemObject interfaces
     BaseMasterPort& getMasterPort(const std::string& if_name,
-                                  PortID idx = InvalidPortID) M5_ATTR_OVERRIDE;
+                                  PortID idx = InvalidPortID) override;
 
     BaseSlavePort& getSlavePort(const std::string& if_name,
-                                PortID idx = InvalidPortID) M5_ATTR_OVERRIDE;
+                                PortID idx = InvalidPortID) override;
 
   private:
 
@@ -167,6 +167,11 @@ class CommMonitor : public MemObject
             mon.recvReqRetry();
         }
 
+        void recvRetrySnoopResp()
+        {
+            mon.recvRetrySnoopResp();
+        }
+
       private:
 
         CommMonitor& mon;
@@ -247,6 +252,8 @@ class CommMonitor : public MemObject
     void recvTimingSnoopReq(PacketPtr pkt);
 
     bool recvTimingSnoopResp(PacketPtr pkt);
+
+    void recvRetrySnoopResp();
 
     AddrRangeList getAddrRanges() const;
 

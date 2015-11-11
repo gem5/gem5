@@ -159,13 +159,15 @@
                     "peer": "system.membus.slave[1]", 
                     "role": "MASTER"
                 }, 
-                "interrupts": {
-                    "eventq_index": 0, 
-                    "path": "system.cpu.interrupts", 
-                    "type": "AlphaInterrupts", 
-                    "name": "interrupts", 
-                    "cxx_class": "AlphaISA::Interrupts"
-                }, 
+                "interrupts": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu.interrupts", 
+                        "type": "AlphaInterrupts", 
+                        "name": "interrupts", 
+                        "cxx_class": "AlphaISA::Interrupts"
+                    }
+                ], 
                 "dcache_port": {
                     "peer": "system.membus.slave[2]", 
                     "role": "MASTER"
@@ -190,7 +192,7 @@
                         "path": "system.cpu.workload", 
                         "max_stack_size": 67108864, 
                         "type": "EioProcess", 
-                        "input": "None"
+                        "input": "cin"
                     }
                 ], 
                 "name": "cpu", 
@@ -226,9 +228,10 @@
                 }
             }
         ], 
-        "num_work_ids": 16, 
+        "multi_thread": false, 
+        "work_begin_cpu_id_exit": -1, 
         "work_item_id": -1, 
-        "work_begin_cpu_id_exit": -1
+        "num_work_ids": 16
     }, 
     "time_sync_period": 100000000000, 
     "eventq_index": 0, 

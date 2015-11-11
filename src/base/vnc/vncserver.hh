@@ -307,8 +307,8 @@ class VncServer : public VncInput
     static const PixelConverter pixelConverter;
 
   public:
-    void setDirty() M5_ATTR_OVERRIDE;
-    void frameBufferResized() M5_ATTR_OVERRIDE;
+    void setDirty() override;
+    void frameBufferResized() override;
 };
 
 #endif

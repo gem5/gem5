@@ -80,6 +80,7 @@ int System::numSystemsRunning = 0;
 System::System(Params *p)
     : MemObject(p), _systemPort("system_port", this),
       _numContexts(0),
+      multiThread(p->multi_thread),
       pagePtr(0),
       init_param(p->init_param),
       physProxy(_systemPort, p->cache_line_size),

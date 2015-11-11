@@ -33,7 +33,6 @@
 
 #include "arch/generic/types.hh"
 #include "base/bitunion.hh"
-#include "base/hashmap.hh"
 #include "base/types.hh"
 
 namespace PowerISA
@@ -89,7 +88,7 @@ typedef GenericISA::SimplePCState<MachInst> PCState;
 
 } // PowerISA namespace
 
-__hash_namespace_begin
+namespace std {
 
 template<>
 struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
@@ -98,6 +97,6 @@ struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
     };
 };
 
-__hash_namespace_end
+}
 
 #endif // __ARCH_POWER_TYPES_HH__

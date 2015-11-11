@@ -73,8 +73,8 @@ class Base : public EtherDevBase
  * Serialization stuff
  */
   public:
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
 /**
  * Construction/Destruction/Parameters
@@ -238,7 +238,7 @@ class Device : public Base
   public:
     bool recvPacket(EthPacketPtr packet);
     void transferDone();
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 
 /**
  * DMA parameters
@@ -269,9 +269,9 @@ class Device : public Base
  * Memory Interface
  */
   public:
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
-    virtual void drainResume() M5_ATTR_OVERRIDE;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
+    virtual void drainResume() override;
 
     void prepareIO(ContextID cpu, int index);
     void prepareRead(ContextID cpu, int index);
@@ -290,15 +290,15 @@ class Device : public Base
     int _maxVnicDistance;
 
   public:
-    virtual void regStats();
-    virtual void resetStats();
+    void regStats() override;
+    void resetStats() override;
 
 /**
  * Serialization stuff
  */
   public:
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public:
     Device(const Params *p);

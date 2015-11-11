@@ -149,8 +149,8 @@ namespace X86ISA
             return (1 << logBytes);
         }
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     /** The size of each level of the page table expressed in base 2

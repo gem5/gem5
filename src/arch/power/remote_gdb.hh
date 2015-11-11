@@ -32,39 +32,42 @@
  *          Timothy M. Jones
  */
 
-#ifndef __ARCH_ARM_REMOTE_GDB_HH__
-#define __ARCH_ARM_REMOTE_GDB_HH__
+#ifndef __ARCH_POWER_REMOTE_GDB_HH__
+#define __ARCH_POWER_REMOTE_GDB_HH__
 
+#include "arch/power/registers.hh"
+#include "arch/power/remote_gdb.hh"
 #include "base/remote_gdb.hh"
 
 namespace PowerISA
 {
 
+const int GDB_REG_BYTES =
+        NumIntArchRegs * 4 +
+        NumFloatArchRegs * 8 +
+        4 + /* PC  */
+        4 + /* MSR */
+        4 + /* CR  */
+        4 + /* LR  */
+        4 + /* CTR */
+        4;  /* XER */
+const int GdbFirstGPRIndex = 0;
+const int GdbFirstFPRIndex = 16;
+const int GdbPCIndex  = 96;
+const int GdbMSRIndex = 97;
+const int GdbCRIndex  = 98;
+const int GdbLRIndex  = 99;
+const int GdbCTRIndex = 100;
+const int GdbXERIndex = 101;
+
 class RemoteGDB : public BaseRemoteGDB
 {
   public:
-    RemoteGDB(System *system, ThreadContext *context)
-        : BaseRemoteGDB(system, context, 1)
-    {
-    }
-
-    bool
-    acc(Addr, size_t)
-    {
-        panic("acc not implemented for POWER!");
-    }
-
-    void
-    getregs()
-    {
-        panic("getregs not implemented for POWER!");
-    }
-
-    void
-    setregs()
-    {
-        panic("setregs not implemented for POWER!");
-    }
+    RemoteGDB(System *_system, ThreadContext *tc);
+  protected:
+    bool acc(Addr addr, size_t len);
+    void getregs();
+    void setregs();
 };
 
 } // namespace PowerISA

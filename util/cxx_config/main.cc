@@ -117,7 +117,7 @@ main(int argc, char **argv)
     Stats::initSimStats();
     Stats::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
 
-    Trace::enabled = true;
+    Trace::enable();
     setDebugFlag("Terminal");
     // setDebugFlag("CxxConfig");
 

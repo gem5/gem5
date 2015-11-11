@@ -39,6 +39,7 @@
 namespace SparcISA
 {
 
+class ISA;
 class Decoder
 {
   protected:
@@ -48,7 +49,7 @@ class Decoder
     MiscReg asi;
 
   public:
-    Decoder() : instDone(false), asi(0)
+    Decoder(ISA* isa = nullptr) : instDone(false), asi(0)
     {}
 
     void process() {}

@@ -45,7 +45,6 @@
 #include "arch/generic/types.hh"
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
-#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
@@ -346,7 +345,7 @@ namespace X86ISA
 
 }
 
-__hash_namespace_begin
+namespace std {
     template<>
     struct hash<X86ISA::ExtMachInst> {
         size_t operator()(const X86ISA::ExtMachInst &emi) const {
@@ -362,7 +361,7 @@ __hash_namespace_begin
                     emi.stackSize ^ emi.dispSize;
         };
     };
-__hash_namespace_end
+}
 
 // These two functions allow ExtMachInst to be used with SERIALIZE_SCALAR
 // and UNSERIALIZE_SCALAR.

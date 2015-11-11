@@ -31,9 +31,9 @@
 #define __MEM_RUBY_STRUCTURES_CACHEMEMORY_HH__
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "base/hashmap.hh"
 #include "base/statistics.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/CacheResourceType.hh"
@@ -168,7 +168,7 @@ class CacheMemory : public SimObject
 
     // The first index is the # of cache lines.
     // The second index is the the amount associativity.
-    m5::hash_map<Addr, int> m_tag_index;
+    std::unordered_map<Addr, int> m_tag_index;
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
     AbstractReplacementPolicy *m_replacementPolicy_ptr;

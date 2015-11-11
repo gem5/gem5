@@ -88,6 +88,15 @@ X86ISA::I82094AA::getIntAddrRange() const
 }
 
 Tick
+X86ISA::I82094AA::recvResponse(PacketPtr pkt)
+{
+    // Packet instantiated calling sendMessage() in signalInterrupt()
+    delete pkt->req;
+    delete pkt;
+    return 0;
+}
+
+Tick
 X86ISA::I82094AA::read(PacketPtr pkt)
 {
     assert(pkt->getSize() == 4);
@@ -215,7 +224,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         } else {
             for (int i = 0; i < numContexts; i++) {
                 Interrupts *localApic = sys->getThreadContext(i)->
-                    getCpuPtr()->getInterruptController();
+                    getCpuPtr()->getInterruptController(0);
                 if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
                         message.destination) {
                     apics.push_back(localApic->getInitialApicId());

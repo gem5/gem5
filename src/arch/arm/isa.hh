@@ -50,6 +50,7 @@
 #include "arch/arm/types.hh"
 #include "debug/Checkpoint.hh"
 #include "sim/sim_object.hh"
+#include "enums/DecoderFlavour.hh"
 
 struct ArmISAParams;
 struct DummyArmISADeviceParams;
@@ -131,6 +132,9 @@ namespace ArmISA
       protected:
         // Parent system
         ArmSystem *system;
+
+        // Micro Architecture
+        const Enums::DecoderFlavour _decoderFlavour;
 
         /** Dummy device for to handle non-existing ISA devices */
         DummyISADevice dummyDevice;
@@ -428,6 +432,8 @@ namespace ArmISA
         }
 
         void startup(ThreadContext *tc) {}
+
+        Enums::DecoderFlavour decoderFlavour() const { return _decoderFlavour; }
 
         /// Explicitly import the otherwise hidden startup
         using SimObject::startup;

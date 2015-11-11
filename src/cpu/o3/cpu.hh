@@ -265,13 +265,13 @@ class FullO3CPU : public BaseO3CPU
     ~FullO3CPU();
 
     /** Registers statistics. */
-    void regStats();
+    void regStats() override;
 
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
     ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
 
     /** Register probe points. */
-    void regProbePoints();
+    void regProbePoints() override;
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
@@ -295,9 +295,9 @@ class FullO3CPU : public BaseO3CPU
     void tick();
 
     /** Initialize the CPU */
-    void init();
+    void init() override;
 
-    void startup();
+    void startup() override;
 
     /** Returns the Number of Active Threads in the CPU */
     int numActiveThreads()
@@ -316,21 +316,21 @@ class FullO3CPU : public BaseO3CPU
     void removeThread(ThreadID tid);
 
     /** Count the Total Instructions Committed in the CPU. */
-    virtual Counter totalInsts() const;
+    Counter totalInsts() const override;
 
     /** Count the Total Ops (including micro ops) committed in the CPU. */
-    virtual Counter totalOps() const;
+    Counter totalOps() const override;
 
     /** Add Thread to Active Threads List. */
-    void activateContext(ThreadID tid);
+    void activateContext(ThreadID tid) override;
 
     /** Remove Thread from Active Threads List */
-    void suspendContext(ThreadID tid);
+    void suspendContext(ThreadID tid) override;
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
-    void haltContext(ThreadID tid);
+    void haltContext(ThreadID tid) override;
 
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
@@ -338,9 +338,8 @@ class FullO3CPU : public BaseO3CPU
     /** Is the CPU draining? */
     bool isDraining() const { return drainState() == DrainState::Draining; }
 
-    void serializeThread(CheckpointOut &cp,
-                         ThreadID tid) const M5_ATTR_OVERRIDE;
-    void unserializeThread(CheckpointIn &cp, ThreadID tid) M5_ATTR_OVERRIDE;
+    void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
   public:
     /** Executes a syscall.
@@ -350,10 +349,10 @@ class FullO3CPU : public BaseO3CPU
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     /** Resumes execution after a drain. */
-    void drainResume() M5_ATTR_OVERRIDE;
+    void drainResume() override;
 
     /**
      * Commit has reached a safe point to drain a thread.
@@ -365,12 +364,12 @@ class FullO3CPU : public BaseO3CPU
     void commitDrained(ThreadID tid);
 
     /** Switches out this CPU. */
-    virtual void switchOut();
+    void switchOut() override;
 
     /** Takes over from another CPU. */
-    virtual void takeOverFrom(BaseCPU *oldCPU);
+    void takeOverFrom(BaseCPU *oldCPU) override;
 
-    void verifyMemoryMode() const;
+    void verifyMemoryMode() const override;
 
     /** Get the current instruction sequence number, and increment it. */
     InstSeqNum getAndIncrementInstSeq()
@@ -392,12 +391,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }
-
-    /** Check if this address is a valid instruction address. */
-    bool validInstAddr(Addr addr) { return true; }
-
-    /** Check if this address is a valid data address. */
-    bool validDataAddr(Addr addr) { return true; }
 
     /** Register accessors.  Index refers to the physical register index. */
 
@@ -640,7 +633,7 @@ class FullO3CPU : public BaseO3CPU
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
 
-    virtual void wakeup();
+    virtual void wakeup(ThreadID tid) override;
 
     /** Gets a free thread id. Use if thread ids change across system. */
     ThreadID getFreeTid();
@@ -700,10 +693,10 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
-    virtual MasterPort &getInstPort() { return icachePort; }
+    MasterPort &getInstPort() override { return icachePort; }
 
     /** Get the dcache port (used to find block size for translations). */
-    virtual MasterPort &getDataPort() { return dcachePort; }
+    MasterPort &getDataPort() override { return dcachePort; }
 
     /** Stat for total number of times the CPU is descheduled. */
     Stats::Scalar timesIdled;

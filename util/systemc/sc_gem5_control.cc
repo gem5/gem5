@@ -241,7 +241,7 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
     Stats::initSimStats();
     Stats::registerHandlers(CxxConfig::statsReset, CxxConfig::statsDump);
 
-    Trace::enabled = true;
+    Trace::enable();
 
     config_file = new CxxIniFile();
 

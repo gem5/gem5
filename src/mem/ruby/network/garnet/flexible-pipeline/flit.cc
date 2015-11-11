@@ -31,14 +31,10 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/flit.hh"
 
 flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr, Cycles curTime)
+    : m_id(id), m_vnet(vnet), m_vc(vc), m_size(size), m_creation_time(curTime)
 {
-    m_size = size;
     m_msg_ptr = msg_ptr;
-    m_enqueue_time = curTime;
     m_time = curTime;
-    m_id = id;
-    m_vnet = vnet;
-    m_vc = vc;
 
     if (size == 1) {
         m_type = HEAD_TAIL_;
@@ -52,78 +48,6 @@ flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr, Cycles curTime)
         m_type = BODY_;
 }
 
-int
-flit::get_size()
-{
-    return m_size;
-}
-
-int
-flit::get_id()
-{
-    return m_id;
-}
-
-Cycles
-flit::get_time()
-{
-    return m_time;
-}
-
-Cycles
-flit::get_enqueue_time()
-{
-    return m_enqueue_time;
-}
-
-void
-flit::set_time(Cycles time)
-{
-    m_time = time;
-}
-
-int
-flit::get_vnet()
-{
-    return m_vnet;
-}
-
-int
-flit::get_vc()
-{
-    return m_vc;
-}
-
-void
-flit::set_vc(int vc)
-{
-    m_vc = vc;
-}
-
-MsgPtr&
-flit::get_msg_ptr()
-{
-    return m_msg_ptr;
-}
-
-flit_type
-flit::get_type()
-{
-    return m_type;
-}
-
-void
-flit::set_delay(Cycles delay)
-{
-    src_delay = delay;
-}
-
-Cycles
-flit::get_delay()
-{
-    return src_delay;
-}
-
 void
 flit::print(std::ostream& out) const
 {
@@ -132,7 +56,7 @@ flit::print(std::ostream& out) const
     out << "Type=" << m_type << " ";
     out << "Vnet=" << m_vnet << " ";
     out << "VC=" << m_vc << " ";
-    out << "Enqueue Time=" << m_enqueue_time << " ";
+    out << "Creation Time=" << m_creation_time << " ";
     out << "]";
 }
 

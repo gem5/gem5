@@ -98,19 +98,18 @@ class TCPIface : public MultiIface
 
     virtual void
     sendRaw(void *buf, unsigned length,
-            const MultiHeaderPkt::AddressType dest_addr=nullptr)
-        M5_ATTR_OVERRIDE
+            const MultiHeaderPkt::AddressType dest_addr=nullptr) override
     {
         sendTCP(sock, buf, length);
     }
 
-    virtual bool recvRaw(void *buf, unsigned length) M5_ATTR_OVERRIDE
+    virtual bool recvRaw(void *buf, unsigned length) override
     {
         return recvTCP(sock, buf, length);
     }
 
     virtual void syncRaw(MultiHeaderPkt::MsgType sync_req,
-                         Tick sync_tick) M5_ATTR_OVERRIDE;
+                         Tick sync_tick) override;
 
   public:
     /**
@@ -128,7 +127,7 @@ class TCPIface : public MultiIface
              unsigned multi_rank, Tick sync_start, Tick sync_repeat,
              EventManager *em);
 
-    ~TCPIface() M5_ATTR_OVERRIDE;
+    ~TCPIface() override;
 };
 
 #endif

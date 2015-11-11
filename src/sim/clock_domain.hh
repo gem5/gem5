@@ -237,10 +237,10 @@ class SrcClockDomain : public ClockDomain
         return freqOpPoints[perf_level];
     }
 
-    void startup();
+    void startup() override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     /**

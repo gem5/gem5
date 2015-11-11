@@ -222,14 +222,14 @@ class MultiEtherLink : public EtherObject
     }
 
     virtual EtherInt *getEthPort(const std::string &if_name,
-                                 int idx) M5_ATTR_OVERRIDE;
+                                 int idx) override;
 
-    void memWriteback() M5_ATTR_OVERRIDE;
-    void init() M5_ATTR_OVERRIDE;
-    void startup() M5_ATTR_OVERRIDE;
+    void memWriteback() override;
+    void init() override;
+    void startup() override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 #endif // __DEV_MULTIETHERLINK_HH__

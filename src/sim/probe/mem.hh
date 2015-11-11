@@ -47,6 +47,24 @@
 namespace ProbePoints {
 
 /**
+ * A struct to hold on to the essential fields from a packet, so that
+ * the packet and underlying request can be safely passed on, and
+ * consequently modified or even deleted.
+ */
+struct PacketInfo {
+    MemCmd cmd;
+    Addr addr;
+    uint32_t size;
+    Request::FlagsType flags;
+
+    explicit PacketInfo(const PacketPtr& pkt) :
+        cmd(pkt->cmd),
+        addr(pkt->getAddr()),
+        size(pkt->getSize()),
+        flags(pkt->req->getFlags()) { }
+};
+
+/**
  * Packet probe point
  *
  * This probe point provides a unified interface for components that
@@ -79,7 +97,7 @@ namespace ProbePoints {
  * </ul>
  *
  */
-typedef ProbePointArg< ::PacketPtr> Packet;
+typedef ProbePointArg<PacketInfo> Packet;
 typedef std::unique_ptr<Packet> PacketUPtr;
 
 }

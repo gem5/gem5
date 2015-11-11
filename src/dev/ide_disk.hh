@@ -276,7 +276,7 @@ class IdeDisk : public SimObject
     /**
      * Register Statistics
      */
-    void regStats();
+    void regStats() override;
 
     /**
      * Set the controller for this device
@@ -365,8 +365,8 @@ class IdeDisk : public SimObject
 
     inline Addr pciToDma(Addr pciAddr);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 

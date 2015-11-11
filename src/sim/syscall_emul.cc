@@ -407,25 +407,38 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
     if (path != "/proc/self/exe") {
         result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
     } else {
-        // readlink() will return the path of the binary given
-        // with the -c option, however it is possible that this
-        // will still result in incorrect behavior if one binary
-        // runs another, e.g., -c time -o "my_binary" where
-        // my_binary calls readlink(). this is a very unlikely case,
-        // so we issue a warning.
-        warn_once("readlink may yield unexpected results if multiple "
-                  "binaries are used\n");
-        if (strlen(p->progName()) > bufsiz) {
+        // Emulate readlink() called on '/proc/self/exe' should return the
+        // absolute path of the binary running in the simulated system (the
+        // LiveProcess' executable). It is possible that using this path in
+        // the simulated system will result in unexpected behavior if:
+        //  1) One binary runs another (e.g., -c time -o "my_binary"), and
+        //     called binary calls readlink().
+        //  2) The host's full path to the running benchmark changes from one
+        //     simulation to another. This can result in different simulated
+        //     performance since the simulated system will process the binary
+        //     path differently, even if the binary itself does not change.
+
+        // Get the absolute canonical path to the running application
+        char real_path[PATH_MAX];
+        char *check_real_path = realpath(p->progName(), real_path);
+        if (!check_real_path) {
+            fatal("readlink('/proc/self/exe') unable to resolve path to "
+                  "executable: %s", p->progName());
+        }
+        strncpy((char*)buf.bufferPtr(), real_path, bufsiz);
+        size_t real_path_len = strlen(real_path);
+        if (real_path_len > bufsiz) {
             // readlink will truncate the contents of the
             // path to ensure it is no more than bufsiz
-            strncpy((char*)buf.bufferPtr(), p->progName(), bufsiz);
             result = bufsiz;
         } else {
-            // return the program's working path rather
-            // than the one for the gem5 binary itself.
-            strcpy((char*)buf.bufferPtr(), p->progName());
-            result = strlen((char*)buf.bufferPtr());
+            result = real_path_len;
         }
+
+        // Issue a warning about potential unexpected results
+        warn_once("readlink() called on '/proc/self/exe' may yield unexpected "
+                  "results in various settings.\n      Returning '%s'\n",
+                  (char*)buf.bufferPtr());
     }
 
     buf.copyOut(tc->getMemProxy());

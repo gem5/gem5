@@ -96,9 +96,6 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
         snoopRespPorts.push_back(new SnoopRespPort(*bp, *this));
     }
 
-    if (snoopFilter)
-        snoopFilter->setSlavePorts(slavePorts);
-
     clearPortCache();
 }
 
@@ -133,17 +130,16 @@ CoherentXBar::init()
 
     if (snoopPorts.empty())
         warn("CoherentXBar %s has no snooping ports attached!\n", name());
+
+    // inform the snoop filter about the slave ports so it can create
+    // its own internal representation
+    if (snoopFilter)
+        snoopFilter->setSlavePorts(slavePorts);
 }
 
 bool
 CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 {
-    // @todo temporary hack to deal with memory corruption issue until
-    // 4-phase transactions are complete
-    for (int x = 0; x < pendingDelete.size(); x++)
-        delete pendingDelete[x];
-    pendingDelete.clear();
-
     // determine the source port based on the id
     SlavePort *src_port = slavePorts[slave_port_id];
 
@@ -187,36 +183,56 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
     if (!system->bypassCaches()) {
+        assert(pkt->snoopDelay == 0);
+
         // the packet is a memory-mapped request and should be
         // broadcasted to our snoopers but the source
         if (snoopFilter) {
             // check with the snoop filter where to forward this packet
             auto sf_res = snoopFilter->lookupRequest(pkt, *src_port);
-            // If SnoopFilter is enabled, the total time required by a packet
-            // to be delivered through the xbar has to be charged also with
-            // to lookup latency of the snoop filter (sf_res.second).
+            // the time required by a packet to be delivered through
+            // the xbar has to be charged also with to lookup latency
+            // of the snoop filter
             pkt->headerDelay += sf_res.second * clockPeriod();
-            packetFinishTime += sf_res.second * clockPeriod();
             DPRINTF(CoherentXBar, "recvTimingReq: src %s %s 0x%x"\
                     " SF size: %i lat: %i\n", src_port->name(),
                     pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
                     sf_res.second);
-            forwardTiming(pkt, slave_port_id, sf_res.first);
+
+            if (pkt->isEviction()) {
+                // for block-evicting packets, i.e. writebacks and
+                // clean evictions, there is no need to snoop up, as
+                // all we do is determine if the block is cached or
+                // not, instead just set it here based on the snoop
+                // filter result
+                if (!sf_res.first.empty())
+                    pkt->setBlockCached();
+            } else {
+                forwardTiming(pkt, slave_port_id, sf_res.first);
+            }
         } else {
             forwardTiming(pkt, slave_port_id);
         }
+
+        // add the snoop delay to our header delay, and then reset it
+        pkt->headerDelay += pkt->snoopDelay;
+        pkt->snoopDelay = 0;
     }
 
     // forwardTiming snooped into peer caches of the sender, and if
-    // this is a clean evict, but the packet is found in a cache, do
-    // not forward it
-    if (pkt->cmd == MemCmd::CleanEvict && pkt->isBlockCached()) {
-        DPRINTF(CoherentXBar, "recvTimingReq: Clean evict 0x%x still cached, "
+    // this is a clean evict or clean writeback, but the packet is
+    // found in a cache, do not forward it
+    if ((pkt->cmd == MemCmd::CleanEvict ||
+         pkt->cmd == MemCmd::WritebackClean) && pkt->isBlockCached()) {
+        DPRINTF(CoherentXBar, "Clean evict/writeback %#llx still cached, "
                 "not forwarding\n", pkt->getAddr());
 
         // update the layer state and schedule an idle event
         reqLayers[master_port_id]->succeededTiming(packetFinishTime);
-        pendingDelete.push_back(pkt);
+
+        // queue the packet for deletion
+        pendingDelete.reset(pkt);
+
         return true;
     }
 
@@ -225,24 +241,12 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     const bool expect_response = pkt->needsResponse() &&
         !pkt->memInhibitAsserted();
 
-    // Note: Cannot create a copy of the full packet, here.
-    MemCmd orig_cmd(pkt->cmd);
-
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
 
     if (snoopFilter && !system->bypassCaches()) {
-        // The packet may already be overwritten by the sendTimingReq function.
-        // The snoop filter needs to see the original request *and* the return
-        // status of the send operation, so we need to recreate the original
-        // request.  Atomic mode does not have the issue, as there the send
-        // operation and the response happen instantaneously and don't need two
-        // phase tracking.
-        MemCmd tmp_cmd(pkt->cmd);
-        pkt->cmd = orig_cmd;
         // Let the snoop filter know about the success of the send operation
-        snoopFilter->updateRequest(pkt, *src_port, !success);
-        pkt->cmd = tmp_cmd;
+        snoopFilter->finishRequest(!success, pkt);
     }
 
     // check if we were successful in sending the packet onwards
@@ -378,13 +382,22 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // we should only see express snoops from caches
     assert(pkt->isExpressSnoop());
 
+    // set the packet header and payload delay, for now use forward latency
+    // @todo Assess the choice of latency further
+    calcPacketTiming(pkt, forwardLatency * clockPeriod());
+
     // remeber if the packet is inhibited so we can see if it changes
     const bool is_inhibited = pkt->memInhibitAsserted();
+
+    assert(pkt->snoopDelay == 0);
 
     if (snoopFilter) {
         // let the Snoop Filter work its magic and guide probing
         auto sf_res = snoopFilter->lookupSnoop(pkt);
-        // No timing here: packetFinishTime += sf_res.second * clockPeriod();
+        // the time required by a packet to be delivered through
+        // the xbar has to be charged also with to lookup latency
+        // of the snoop filter
+        pkt->headerDelay += sf_res.second * clockPeriod();
         DPRINTF(CoherentXBar, "recvTimingSnoopReq: src %s %s 0x%x"\
                 " SF size: %i lat: %i\n", masterPorts[master_port_id]->name(),
                 pkt->cmdString(), pkt->getAddr(), sf_res.first.size(),
@@ -395,6 +408,10 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     } else {
         forwardTiming(pkt, InvalidPortID);
     }
+
+    // add the snoop delay to our header delay, and then reset it
+    pkt->headerDelay += pkt->snoopDelay;
+    pkt->snoopDelay = 0;
 
     // if we can expect a response, remember how to route it
     if (!is_inhibited && pkt->memInhibitAsserted()) {
@@ -599,6 +616,13 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
                     " SF size: %i lat: %i\n", __func__,
                     slavePorts[slave_port_id]->name(), pkt->cmdString(),
                     pkt->getAddr(), sf_res.first.size(), sf_res.second);
+
+            // let the snoop filter know about the success of the send
+            // operation, and do it even before sending it onwards to
+            // avoid situations where atomic upward snoops sneak in
+            // between and change the filter state
+            snoopFilter->finishRequest(false, pkt);
+
             snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
                                          sf_res.first);
         } else {
@@ -606,6 +630,16 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         }
         snoop_response_cmd = snoop_result.first;
         snoop_response_latency += snoop_result.second;
+    }
+
+    // forwardAtomic snooped into peer caches of the sender, and if
+    // this is a clean evict, but the packet is found in a cache, do
+    // not forward it
+    if ((pkt->cmd == MemCmd::CleanEvict ||
+         pkt->cmd == MemCmd::WritebackClean) && pkt->isBlockCached()) {
+        DPRINTF(CoherentXBar, "Clean evict/writeback %#llx still cached, "
+                "not forwarding\n", pkt->getAddr());
+        return 0;
     }
 
     // even if we had a snoop response, we must continue and also
@@ -620,8 +654,8 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     // forward the request to the appropriate destination
     Tick response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
 
-    // Lower levels have replied, tell the snoop filter
-    if (snoopFilter && !system->bypassCaches() && pkt->isResponse()) {
+    // if lower levels have replied, tell the snoop filter
+    if (!system->bypassCaches() && snoopFilter && pkt->isResponse()) {
         snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
     }
 
@@ -806,6 +840,14 @@ CoherentXBar::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
                 "recvFunctionalSnoop: packet src %s addr 0x%x cmd %s\n",
                 masterPorts[master_port_id]->name(), pkt->getAddr(),
                 pkt->cmdString());
+    }
+
+    for (const auto& p : slavePorts) {
+        if (p->checkFunctional(pkt)) {
+            if (pkt->needsResponse())
+                pkt->makeResponse();
+            return;
+        }
     }
 
     // forward to all snoopers

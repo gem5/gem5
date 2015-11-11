@@ -75,9 +75,6 @@ class ExeTracer : public InstTracer
         if (!Debug::ExecEnable)
             return NULL;
 
-        if (!Trace::enabled)
-            return NULL;
-
         return new ExeTracerRecord(when, tc,
                 staticInst, pc, macroStaticInst);
     }

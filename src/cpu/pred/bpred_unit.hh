@@ -75,9 +75,9 @@ class BPredUnit : public SimObject
     /**
      * Registers statistics.
      */
-    void regStats();
+    void regStats() override;
 
-    void regProbePoints() M5_ATTR_OVERRIDE;
+    void regProbePoints() override;
 
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;

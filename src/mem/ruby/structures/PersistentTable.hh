@@ -30,8 +30,8 @@
 #define __MEM_RUBY_STRUCTURES_PERSISTENTTABLE_HH__
 
 #include <iostream>
+#include <unordered_map>
 
-#include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/MachineID.hh"
@@ -77,7 +77,7 @@ class PersistentTable
     PersistentTable& operator=(const PersistentTable& obj);
 
     // Data Members (m_prefix)
-    typedef m5::hash_map<Addr, PersistentTableEntry> AddressMap;
+    typedef std::unordered_map<Addr, PersistentTableEntry> AddressMap;
     AddressMap m_map;
 };
 

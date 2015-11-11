@@ -54,9 +54,11 @@ ignore(const char *expr)
     Trace::getDebugLogger()->setIgnore(ignore);
 }
 
-using Trace::enabled;
+inline void enable()  { Trace::enable(); }
+inline void disable() { Trace::disable(); }
 %}
 
 extern void output(const char *string);
 extern void ignore(const char *expr);
-extern bool enabled;
+extern void enable();
+extern void disable();

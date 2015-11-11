@@ -681,7 +681,7 @@ void
 Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (FullSystem) {
-        tc->getCpuPtr()->clearInterrupts();
+        tc->getCpuPtr()->clearInterrupts(tc->threadId());
         tc->clearArchRegs();
     }
     if (!ArmSystem::highestELIs64(tc)) {
@@ -938,7 +938,7 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
 
     if (source == ArmFault::AsynchronousExternalAbort) {
-        tc->getCpuPtr()->clearInterrupt(INT_ABT, 0);
+        tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     }
     // Get effective fault source encoding
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
@@ -1353,7 +1353,7 @@ SystemError::SystemError()
 void
 SystemError::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    tc->getCpuPtr()->clearInterrupt(INT_ABT, 0);
+    tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     ArmFault::invoke(tc, inst);
 }
 
@@ -1404,7 +1404,7 @@ ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     // SEV execution and let pipeline continue as pcState is still
     // valid.
     tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
-    tc->getCpuPtr()->clearInterrupt(INT_SEV, 0);
+    tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_SEV, 0);
 }
 
 // Instantiate all the templates to make the linker happy

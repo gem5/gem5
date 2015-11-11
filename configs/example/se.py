@@ -178,6 +178,9 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 mem_ranges = [AddrRange(options.mem_size)],
                 cache_line_size = options.cacheline_size)
 
+if numThreads > 1:
+    system.multi_thread = True
+
 # Create a top-level voltage domain
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
 
@@ -262,9 +265,9 @@ if options.ruby:
         system.cpu[i].icache_port = ruby_port.slave
         system.cpu[i].dcache_port = ruby_port.slave
         if buildEnv['TARGET_ISA'] == 'x86':
-            system.cpu[i].interrupts.pio = ruby_port.master
-            system.cpu[i].interrupts.int_master = ruby_port.slave
-            system.cpu[i].interrupts.int_slave = ruby_port.master
+            system.cpu[i].interrupts[0].pio = ruby_port.master
+            system.cpu[i].interrupts[0].int_master = ruby_port.slave
+            system.cpu[i].interrupts[0].int_slave = ruby_port.master
             system.cpu[i].itb.walker.port = ruby_port.slave
             system.cpu[i].dtb.walker.port = ruby_port.slave
 else:

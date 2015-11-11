@@ -73,7 +73,6 @@ DummyCheckerParams::create()
     params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
-    params->interrupts = NULL;
     params->workload = workload;
 
     DummyChecker *cpu = new DummyChecker(params);

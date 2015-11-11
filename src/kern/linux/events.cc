@@ -85,7 +85,13 @@ UDelayEvent::process(ThreadContext *tc)
 
     SkipFuncEvent::process(tc);
 
-    PseudoInst::quiesceNs(tc, time);
+    // Currently, only ARM full-system simulation uses UDelayEvents to skip
+    // __delay and __loop_delay functions. One form involves setting quiesce
+    // time to 0 with the assumption that quiesce will not happen. To avoid
+    // the quiesce handling in this case, only execute the quiesce if time > 0.
+    if (time > 0) {
+        PseudoInst::quiesceNs(tc, time);
+    }
 }
 
 

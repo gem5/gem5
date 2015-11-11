@@ -192,8 +192,8 @@ class VGic : public PioDevice
         uint8_t VMBP;
         uint8_t VMPriMask;
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     struct std::array<vcpuIntData, VGIC_CPU_MAX>  vcpuData;
@@ -207,13 +207,13 @@ class VGic : public PioDevice
     }
     VGic(const Params *p);
 
-    virtual AddrRangeList getAddrRanges() const;
+    AddrRangeList getAddrRanges() const override;
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     Tick readVCpu(PacketPtr pkt);

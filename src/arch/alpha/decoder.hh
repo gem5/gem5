@@ -39,6 +39,7 @@
 namespace AlphaISA
 {
 
+class ISA;
 class Decoder
 {
   protected:
@@ -47,7 +48,7 @@ class Decoder
     bool instDone;
 
   public:
-    Decoder() : instDone(false)
+    Decoder(ISA* isa = nullptr) : instDone(false)
     {}
 
     void

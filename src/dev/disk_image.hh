@@ -36,8 +36,8 @@
 #define __DISK_IMAGE_HH__
 
 #include <fstream>
+#include <unordered_map>
 
-#include "base/hashmap.hh"
 #include "params/CowDiskImage.hh"
 #include "params/DiskImage.hh"
 #include "params/RawDiskImage.hh"
@@ -111,7 +111,7 @@ class CowDiskImage : public DiskImage
     struct Sector {
         uint8_t data[SectorSize];
     };
-    typedef m5::hash_map<uint64_t, Sector *> SectorTable;
+    typedef std::unordered_map<uint64_t, Sector *> SectorTable;
 
   protected:
     std::string filename;
@@ -129,13 +129,13 @@ class CowDiskImage : public DiskImage
     void save(const std::string &file) const;
     void writeback();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-    virtual std::streampos size() const;
+    std::streampos size() const override;
 
-    virtual std::streampos read(uint8_t *data, std::streampos offset) const;
-    virtual std::streampos write(const uint8_t *data, std::streampos offset);
+    std::streampos read(uint8_t *data, std::streampos offset) const override;
+    std::streampos write(const uint8_t *data, std::streampos offset) override;
 };
 
 void SafeRead(std::ifstream &stream, void *data, int count);

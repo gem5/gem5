@@ -275,7 +275,7 @@ class MultiIface : public Drainable
          * This is a global event so process() will be called by each
          * simulation threads. (See further comments in the .cc file.)
          */
-        void process() M5_ATTR_OVERRIDE;
+        void process() override;
         /**
          * Schedule periodic sync when resuming from a checkpoint.
          */
@@ -471,7 +471,7 @@ class MultiIface : public Drainable
      */
     void initRandom();
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     /**
      * Callback when draining is complete.

@@ -341,9 +341,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
-        // lastly, get the row bits
+        // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-        addr = addr / rowsPerBank;
     } else if (addrMapping == Enums::RoRaBaCoCh) {
         // take out the lower-order column bits
         addr = addr / columnsPerStripe;
@@ -364,9 +363,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         rank = addr % ranksPerChannel;
         addr = addr / ranksPerChannel;
 
-        // lastly, get the row bits
+        // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-        addr = addr / rowsPerBank;
     } else if (addrMapping == Enums::RoCoRaBaCh) {
         // optimise for closed page mode and utilise maximum
         // parallelism of the DRAM (at the cost of power)
@@ -391,9 +389,8 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
         // next, the higher-order column bites
         addr = addr / (columnsPerRowBuffer / columnsPerStripe);
 
-        // lastly, get the row bits
+        // lastly, get the row bits, no need to remove them from addr
         row = addr % rowsPerBank;
-        addr = addr / rowsPerBank;
     } else
         panic("Unknown address mapping policy chosen!");
 
@@ -589,21 +586,13 @@ DRAMCtrl::printQs() const {
 bool
 DRAMCtrl::recvTimingReq(PacketPtr pkt)
 {
-    /// @todo temporary hack to deal with memory corruption issues until
-    /// 4-phase transactions are complete
-    for (int x = 0; x < pendingDelete.size(); x++)
-        delete pendingDelete[x];
-    pendingDelete.clear();
-
     // This is where we enter from the outside world
     DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
-    // simply drop inhibited packets and clean evictions
-    if (pkt->memInhibitAsserted() ||
-        pkt->cmd == MemCmd::CleanEvict) {
-        DPRINTF(DRAM, "Inhibited packet or clean evict -- Dropping it now\n");
-        pendingDelete.push_back(pkt);
+    // sink inhibited packets without further action
+    if (pkt->memInhibitAsserted()) {
+        pendingDelete.reset(pkt);
         return true;
     }
 
@@ -871,11 +860,11 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 
         // queue the packet in the response queue to be sent out after
         // the static latency has passed
-        port.schedTimingResp(pkt, response_time);
+        port.schedTimingResp(pkt, response_time, true);
     } else {
         // @todo the packet is going to be deleted, and the DRAMPacket
         // is still having a pointer to it
-        pendingDelete.push_back(pkt);
+        pendingDelete.reset(pkt);
     }
 
     DPRINTF(DRAM, "Done\n");

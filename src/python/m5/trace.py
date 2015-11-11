@@ -32,7 +32,7 @@ import util
 from internal.trace import output, ignore
 
 def disable():
-    internal.trace.cvar.enabled = False
+    internal.trace.disable()
 
 def enable():
-    internal.trace.cvar.enabled = True
+    internal.trace.enable()

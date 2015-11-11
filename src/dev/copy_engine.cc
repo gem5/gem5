@@ -445,14 +445,14 @@ CopyEngine::CopyEngineChannel::fetchDescriptor(Addr address)
     anDq();
     anBegin("FetchDescriptor");
     DPRINTF(DMACopyEngine, "Reading descriptor from at memory location %#x(%#x)\n",
-           address, ce->platform->pciToDma(address));
+           address, ce->pciToDma(address));
     assert(address);
     busy = true;
 
     DPRINTF(DMACopyEngine, "dmaAction: %#x, %d bytes, to addr %#x\n",
-            ce->platform->pciToDma(address), sizeof(DmaDesc), curDmaDesc);
+            ce->pciToDma(address), sizeof(DmaDesc), curDmaDesc);
 
-    cePort.dmaAction(MemCmd::ReadReq, ce->platform->pciToDma(address),
+    cePort.dmaAction(MemCmd::ReadReq, ce->pciToDma(address),
                      sizeof(DmaDesc), &fetchCompleteEvent,
                      (uint8_t*)curDmaDesc, latBeforeBegin);
     lastDescriptorAddr = address;
@@ -495,8 +495,8 @@ CopyEngine::CopyEngineChannel::readCopyBytes()
     anBegin("ReadCopyBytes");
     DPRINTF(DMACopyEngine, "Reading %d bytes from buffer to memory location %#x(%#x)\n",
            curDmaDesc->len, curDmaDesc->dest,
-           ce->platform->pciToDma(curDmaDesc->src));
-    cePort.dmaAction(MemCmd::ReadReq, ce->platform->pciToDma(curDmaDesc->src),
+           ce->pciToDma(curDmaDesc->src));
+    cePort.dmaAction(MemCmd::ReadReq, ce->pciToDma(curDmaDesc->src),
                      curDmaDesc->len, &readCompleteEvent, copyBuffer, 0);
 }
 
@@ -516,9 +516,9 @@ CopyEngine::CopyEngineChannel::writeCopyBytes()
     anBegin("WriteCopyBytes");
     DPRINTF(DMACopyEngine, "Writing %d bytes from buffer to memory location %#x(%#x)\n",
            curDmaDesc->len, curDmaDesc->dest,
-           ce->platform->pciToDma(curDmaDesc->dest));
+           ce->pciToDma(curDmaDesc->dest));
 
-    cePort.dmaAction(MemCmd::WriteReq, ce->platform->pciToDma(curDmaDesc->dest),
+    cePort.dmaAction(MemCmd::WriteReq, ce->pciToDma(curDmaDesc->dest),
                      curDmaDesc->len, &writeCompleteEvent, copyBuffer, 0);
 
     ce->bytesCopied[channelId] += curDmaDesc->len;
@@ -585,10 +585,10 @@ CopyEngine::CopyEngineChannel::writeCompletionStatus()
     anBegin("WriteCompletionStatus");
     DPRINTF(DMACopyEngine, "Writing completion status %#x to address %#x(%#x)\n",
             completionDataReg, cr.completionAddr,
-            ce->platform->pciToDma(cr.completionAddr));
+            ce->pciToDma(cr.completionAddr));
 
     cePort.dmaAction(MemCmd::WriteReq,
-                     ce->platform->pciToDma(cr.completionAddr),
+                     ce->pciToDma(cr.completionAddr),
                      sizeof(completionDataReg), &statusCompleteEvent,
                      (uint8_t*)&completionDataReg, latAfterCompletion);
 }
@@ -607,7 +607,7 @@ CopyEngine::CopyEngineChannel::fetchNextAddr(Addr address)
     DPRINTF(DMACopyEngine, "Fetching next address...\n");
     busy = true;
     cePort.dmaAction(MemCmd::ReadReq,
-                     ce->platform->pciToDma(address + offsetof(DmaDesc, next)),
+                     ce->pciToDma(address + offsetof(DmaDesc, next)),
                      sizeof(Addr), &addrCompleteEvent,
                      (uint8_t*)curDmaDesc + offsetof(DmaDesc, next), 0);
 }

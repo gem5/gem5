@@ -1822,6 +1822,8 @@ UFSHostDevice::generateInterrupt()
     pendingDoorbells = 0;
     DPRINTF(UFSHostDevice, "Clear doorbell %X\n", UFSHCIMem.TRUTRLDBR);
 
+    checkDrain();
+
     /**step6 raise interrupt*/
     gic->sendInt(intNum);
     DPRINTF(UFSHostDevice, "Send interrupt @ transaction: 0x%8x!\n",
@@ -1837,6 +1839,8 @@ UFSHostDevice::clearInterrupt()
 {
     gic->clearInt(intNum);
     DPRINTF(UFSHostDevice, "Clear interrupt: 0x%8x!\n", countInt);
+
+    checkDrain();
 
     if (!(UFSHCIMem.TRUTRLDBR)) {
         idlePhaseStart = curTick();

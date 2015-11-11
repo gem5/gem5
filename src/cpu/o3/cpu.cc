@@ -118,9 +118,10 @@ template <class Impl>
 void
 FullO3CPU<Impl>::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
-    // X86 ISA: Snooping an invalidation for monitor/mwait
-    if(cpu->getCpuAddrMonitor()->doMonitor(pkt)) {
-        cpu->wakeup();
+    for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
+        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            cpu->wakeup(tid);
+        }
     }
     lsq->recvTimingSnoopReq(pkt);
 }
@@ -391,7 +392,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     }
 
     // FullO3CPU always requires an interrupt controller.
-    if (!params->switched_out && !interrupts) {
+    if (!params->switched_out && interrupts.empty()) {
         fatal("FullO3CPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n", name());
     }
@@ -934,7 +935,7 @@ Fault
 FullO3CPU<Impl>::getInterrupts()
 {
     // Check if there are any outstanding interrupts
-    return this->interrupts->getInterrupt(this->threadContexts[0]);
+    return this->interrupts[0]->getInterrupt(this->threadContexts[0]);
 }
 
 template <class Impl>
@@ -948,7 +949,7 @@ FullO3CPU<Impl>::processInterrupts(const Fault &interrupt)
     // @todo: Allow other threads to handle interrupts.
 
     assert(interrupt != NoFault);
-    this->interrupts->updateIntrInfo(this->threadContexts[0]);
+    this->interrupts[0]->updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
     this->trap(interrupt, 0, nullptr);
@@ -1632,15 +1633,15 @@ FullO3CPU<Impl>::wakeCPU()
 
 template <class Impl>
 void
-FullO3CPU<Impl>::wakeup()
+FullO3CPU<Impl>::wakeup(ThreadID tid)
 {
-    if (this->thread[0]->status() != ThreadContext::Suspended)
+    if (this->thread[tid]->status() != ThreadContext::Suspended)
         return;
 
     this->wakeCPU();
 
     DPRINTF(Quiesce, "Suspended Processor woken\n");
-    this->threadContexts[0]->activate();
+    this->threadContexts[tid]->activate();
 }
 
 template <class Impl>

@@ -60,15 +60,15 @@ class Pl011 : public Uart, public AmbaDevice
   public:
     Pl011(const Pl011Params *p);
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: // PioDevice
-    Tick read(PacketPtr pkt) M5_ATTR_OVERRIDE;
-    Tick write(PacketPtr pkt) M5_ATTR_OVERRIDE;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
   public: // Uart
-    void dataAvailable() M5_ATTR_OVERRIDE;
+    void dataAvailable() override;
 
 
   protected: // Interrupt handling

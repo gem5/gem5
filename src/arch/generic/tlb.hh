@@ -123,7 +123,7 @@ class GenericTLB : public BaseTLB
     {}
 
   public:
-    void demapPage(Addr vaddr, uint64_t asn);
+    void demapPage(Addr vaddr, uint64_t asn) override;
 
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,

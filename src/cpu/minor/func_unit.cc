@@ -223,7 +223,7 @@ FUPipeline::findTiming(const StaticInstPtr &inst)
                 "Found extra timing match (pattern %d '%s')"
                 " %s %16x (type %s)\n",
                 i, timing.description, inst->disassemble(0), mach_inst,
-                typeid(*inst).name());
+                typeid(inst).name());
 
             return &timing;
         }

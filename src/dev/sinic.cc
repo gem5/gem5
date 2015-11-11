@@ -871,8 +871,7 @@ Device::rxKick()
         if (dmaPending() || drainState() != DrainState::Running)
             goto exit;
 
-        rxDmaAddr = params()->platform->pciToDma(
-                Regs::get_RxData_Addr(vnic->RxData));
+        rxDmaAddr = pciToDma(Regs::get_RxData_Addr(vnic->RxData));
         rxDmaLen = min<unsigned>(Regs::get_RxData_Len(vnic->RxData),
                                  vnic->rxPacketBytes);
 
@@ -1071,8 +1070,7 @@ Device::txKick()
         if (dmaPending() || drainState() != DrainState::Running)
             goto exit;
 
-        txDmaAddr = params()->platform->pciToDma(
-                Regs::get_TxData_Addr(vnic->TxData));
+        txDmaAddr = pciToDma(Regs::get_TxData_Addr(vnic->TxData));
         txDmaLen = Regs::get_TxData_Len(vnic->TxData);
         txDmaData = txPacket->data + txPacketOffset;
         txState = txCopy;

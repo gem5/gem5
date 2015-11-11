@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -216,11 +216,12 @@ class VirtIO9PProxy : public VirtIO9PBase
     VirtIO9PProxy(Params *params);
     virtual ~VirtIO9PProxy();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   protected:
-    void recvTMsg(const P9MsgHeader &header, const uint8_t *data, size_t size);
+    void recvTMsg(const P9MsgHeader &header, const uint8_t *data,
+                  size_t size) override;
 
     /** Notification of pending data from server */
     void serverDataReady();
@@ -268,6 +269,17 @@ class VirtIO9PProxy : public VirtIO9PBase
      * @param len Number of bytes to write.
      */
     void writeAll(const uint8_t *data, size_t len);
+
+    /**
+     * Bool to track if the device has been used or not.
+     *
+     * We need to keep track of if the device has been used as we are
+     * unable to checkpoint the device in the event that the device
+     * has been mounted in the guest system. This is due to the fact
+     * that we do not, and cannot, track the complete state across
+     * host and guest.
+     */
+     bool deviceUsed;
 };
 
 struct VirtIO9PDiodParams;

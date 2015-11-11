@@ -145,8 +145,8 @@ class CpuLocalTimer : public BasicPioDevice
         /** Handle write for a single timer */
         void write(PacketPtr pkt, Addr daddr);
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
 
         friend class CpuLocalTimer;
     };
@@ -177,17 +177,17 @@ class CpuLocalTimer : public BasicPioDevice
      * @param pkt The memory request.
      * @return Returns latency of device read
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
     /**
      * Handle a write to the device.
      * @param pkt The memory request.
      * @return Returns latency of device write
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 

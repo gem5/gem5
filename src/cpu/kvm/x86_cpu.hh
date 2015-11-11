@@ -47,7 +47,7 @@ class X86KvmCPU : public BaseKvmCPU
     void startup();
 
     /** @{ */
-    void dump() const M5_ATTR_OVERRIDE;
+    void dump() const override;
     void dumpFpuRegs() const;
     void dumpIntRegs() const;
     void dumpSpecRegs() const;

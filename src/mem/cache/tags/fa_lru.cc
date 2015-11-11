@@ -67,7 +67,7 @@ FALRU::FALRU(const Params *p)
     numCaches = floorLog2(size) - 17;
     if (numCaches >0){
         cacheBoundaries = new FALRUBlk *[numCaches];
-        cacheMask = (1 << numCaches) - 1;
+        cacheMask = (ULL(1) << numCaches) - 1;
     } else {
         cacheMask = 0;
     }

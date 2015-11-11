@@ -11,7 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2003-2005 The Regents of The University of Michigan
-# Copyright (c) 2013 Advanced Micro Devices, Inc.
+# Copyright (c) 2013,2015 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -88,42 +88,17 @@ def fixPythonIndentation(s):
     return s
 
 class ISAParserError(Exception):
-    """Error handler for parser errors"""
+    """Exception class for parser errors"""
     def __init__(self, first, second=None):
         if second is None:
             self.lineno = 0
             self.string = first
         else:
-            if hasattr(first, 'lexer'):
-                first = first.lexer.lineno
             self.lineno = first
             self.string = second
 
-    def display(self, filename_stack, print_traceback=debug):
-        # Output formatted to work under Emacs compile-mode.  Optional
-        # 'print_traceback' arg, if set to True, prints a Python stack
-        # backtrace too (can be handy when trying to debug the parser
-        # itself).
-
-        spaces = ""
-        for (filename, line) in filename_stack[:-1]:
-            print "%sIn file included from %s:" % (spaces, filename)
-            spaces += "  "
-
-        # Print a Python stack backtrace if requested.
-        if print_traceback or not self.lineno:
-            traceback.print_exc()
-
-        line_str = "%s:" % (filename_stack[-1][0], )
-        if self.lineno:
-            line_str += "%d:" % (self.lineno, )
-
-        return "%s%s %s" % (spaces, line_str, self.string)
-
-    def exit(self, filename_stack, print_traceback=debug):
-        # Just call exit.
-
-        sys.exit(self.display(filename_stack, print_traceback))
+    def __str__(self):
+        return self.string
 
 def error(*args):
     raise ISAParserError(*args)
@@ -1022,8 +997,8 @@ class SubOperandList(OperandList):
             # find this op in the master list
             op_desc = master_list.find_base(op_base)
             if not op_desc:
-                error('Found operand %s which is not in the master list!' \
-                      ' This is an internal error' % op_base)
+                error('Found operand %s which is not in the master list!'
+                      % op_base)
             else:
                 # See if we've already found this operand
                 op_desc = self.find_base(op_base)
@@ -1186,6 +1161,39 @@ class Stack(list):
 
     def top(self):
         return self[-1]
+
+# Format a file include stack backtrace as a string
+def backtrace(filename_stack):
+    fmt = "In file included from %s:"
+    return "\n".join([fmt % f for f in filename_stack])
+
+
+#######################
+#
+# LineTracker: track filenames along with line numbers in PLY lineno fields
+#     PLY explicitly doesn't do anything with 'lineno' except propagate
+#     it.  This class lets us tie filenames with the line numbers with a
+#     minimum of disruption to existing increment code.
+#
+
+class LineTracker(object):
+    def __init__(self, filename, lineno=1):
+        self.filename = filename
+        self.lineno = lineno
+
+    # Overload '+=' for increments.  We need to create a new object on
+    # each update else every token ends up referencing the same
+    # constantly incrementing instance.
+    def __iadd__(self, incr):
+        return LineTracker(self.filename, self.lineno + incr)
+
+    def __str__(self):
+        return "%s:%d" % (self.filename, self.lineno)
+
+    # In case there are places where someone really expects a number
+    def __int__(self):
+        return self.lineno
+
 
 #######################
 #
@@ -1515,7 +1523,7 @@ class ISAParser(Grammar):
         try:
             t.value = int(t.value,0)
         except ValueError:
-            error(t, 'Integer value "%s" too large' % t.value)
+            error(t.lexer.lineno, 'Integer value "%s" too large' % t.value)
             t.value = 0
         return t
 
@@ -1544,13 +1552,13 @@ class ISAParser(Grammar):
         return t
 
     def t_NEWFILE(self, t):
-        r'^\#\#newfile\s+"[^"]*"'
-        self.fileNameStack.push((t.value[11:-1], t.lexer.lineno))
-        t.lexer.lineno = 0
+        r'^\#\#newfile\s+"[^"]*"\n'
+        self.fileNameStack.push(t.lexer.lineno)
+        t.lexer.lineno = LineTracker(t.value[11:-2])
 
     def t_ENDFILE(self, t):
-        r'^\#\#endfile'
-        (old_filename, t.lexer.lineno) = self.fileNameStack.pop()
+        r'^\#\#endfile\n'
+        t.lexer.lineno = self.fileNameStack.pop()
 
     #
     # The functions t_NEWLINE, t_ignore, and t_error are
@@ -1571,7 +1579,7 @@ class ISAParser(Grammar):
 
     # Error handler
     def t_error(self, t):
-        error(t, "illegal character '%s'" % t.value[0])
+        error(t.lexer.lineno, "illegal character '%s'" % t.value[0])
         t.skip(1)
 
     #####################################################################
@@ -1727,7 +1735,7 @@ del wrap
         except Exception, exc:
             if debug:
                 raise
-            error(t, 'error: %s in global let block "%s".' % (exc, t[2]))
+            error(t.lineno(1), 'In global let block: %s' % exc)
         GenCode(self,
                 header_output=self.exportContext["header_output"],
                 decoder_output=self.exportContext["decoder_output"],
@@ -1743,21 +1751,22 @@ del wrap
         except Exception, exc:
             if debug:
                 raise
-            error(t,
-                  'error: %s in def operand_types block "%s".' % (exc, t[3]))
+            error(t.lineno(1),
+                  'In def operand_types: %s' % exc)
 
     # Define the mapping from operand names to operand classes and
     # other traits.  Stored in operandNameMap.
     def p_def_operands(self, t):
         'def_operands : DEF OPERANDS CODELIT SEMI'
         if not hasattr(self, 'operandTypeMap'):
-            error(t, 'error: operand types must be defined before operands')
+            error(t.lineno(1),
+                  'error: operand types must be defined before operands')
         try:
             user_dict = eval('{' + t[3] + '}', self.exportContext)
         except Exception, exc:
             if debug:
                 raise
-            error(t, 'error: %s in def operands block "%s".' % (exc, t[3]))
+            error(t.lineno(1), 'In def operands: %s' % exc)
         self.buildOperandNameMap(user_dict, t.lexer.lineno)
 
     # A bitfield definition looks like:
@@ -1784,7 +1793,8 @@ del wrap
     def p_def_bitfield_struct(self, t):
         'def_bitfield_struct : DEF opt_signed BITFIELD ID id_with_dot SEMI'
         if (t[2] != ''):
-            error(t, 'error: structure bitfields are always unsigned.')
+            error(t.lineno(1),
+                  'error: structure bitfields are always unsigned.')
         expr = 'machInst.%s' % t[5]
         hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
         GenCode(self, header_output=hash_define).emit()
@@ -1938,7 +1948,7 @@ StaticInstPtr
     def p_decode_stmt_list_1(self, t):
         'decode_stmt_list : decode_stmt decode_stmt_list'
         if (t[1].has_decode_default and t[2].has_decode_default):
-            error(t, 'Two default cases in decode block')
+            error(t.lineno(1), 'Two default cases in decode block')
         t[0] = t[1] + t[2]
 
     #
@@ -1985,7 +1995,7 @@ StaticInstPtr
             self.formatStack.push(self.formatMap[t[1]])
             t[0] = ('', '// format %s' % t[1])
         except KeyError:
-            error(t, 'instruction format "%s" not defined.' % t[1])
+            error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
 
     # Nested decode block: if the value of the current field matches
     # the specified constant(s), do a nested decode on some other field.
@@ -2065,7 +2075,7 @@ StaticInstPtr
         try:
             format = self.formatMap[t[1]]
         except KeyError:
-            error(t, 'instruction format "%s" not defined.' % t[1])
+            error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
 
         codeObj = format.defineInst(self, t[3], t[5], t.lexer.lineno)
         comment = '\n// %s::%s(%s)\n' % (t[1], t[3], t[5])
@@ -2158,7 +2168,7 @@ StaticInstPtr
     # t.value)
     def p_error(self, t):
         if t:
-            error(t, "syntax error at '%s'" % t.value)
+            error(t.lexer.lineno, "syntax error at '%s'" % t.value)
         else:
             error("unknown syntax error")
 
@@ -2362,7 +2372,7 @@ StaticInstPtr
         except IOError:
             error('Error including file "%s"' % filename)
 
-        self.fileNameStack.push((filename, 0))
+        self.fileNameStack.push(LineTracker(filename))
 
         # Find any includes and include them
         def replace(matchobj):
@@ -2396,8 +2406,8 @@ StaticInstPtr
         # do this up front.
         isa_desc = self.read_and_flatten(isa_desc_file)
 
-        # Initialize filename stack with outer file.
-        self.fileNameStack.push((isa_desc_file, 0))
+        # Initialize lineno tracker
+        self.lex.lineno = LineTracker(isa_desc_file)
 
         # Parse.
         self.parse_string(isa_desc)
@@ -2408,7 +2418,10 @@ StaticInstPtr
         try:
             self._parse_isa_desc(*args, **kwargs)
         except ISAParserError, e:
-            e.exit(self.fileNameStack)
+            print backtrace(self.fileNameStack)
+            print "At %s:" % e.lineno
+            print e
+            sys.exit(1)
 
 # Called as script: get args from command line.
 # Args are: <isa desc file> <output dir>

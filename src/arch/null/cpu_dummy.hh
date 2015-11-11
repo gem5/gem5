@@ -47,7 +47,7 @@ class BaseCPU
   public:
     static int numSimulatedInsts() { return 0; }
     static int numSimulatedOps() { return 0; }
-    static void wakeup() { ; }
+    static void wakeup(ThreadID tid) { ; }
 };
 
 #endif // __ARCH_NULL_CPU_DUMMY_HH__

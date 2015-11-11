@@ -30,7 +30,6 @@
 #define __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -39,7 +38,7 @@
 class MultiGrainBloomFilter : public AbstractBloomFilter
 {
   public:
-    MultiGrainBloomFilter(std::string str);
+    MultiGrainBloomFilter(int head, int tail);
     ~MultiGrainBloomFilter();
 
     void clear();

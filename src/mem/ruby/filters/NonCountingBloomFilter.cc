@@ -33,18 +33,11 @@
 
 using namespace std;
 
-NonCountingBloomFilter::NonCountingBloomFilter(string str)
+NonCountingBloomFilter::NonCountingBloomFilter(int head, int tail)
 {
-    string head, tail;
-#ifndef NDEBUG
-    bool success =
-#endif
-        split_first(str, head, tail, '_');
-    assert(success);
-
     // head contains filter size, tail contains bit offset from block number
-    m_filter_size = atoi(head.c_str());
-    m_offset = atoi(tail.c_str());
+    m_filter_size = head;
+    m_offset = tail;
     m_filter_size_bits = floorLog2(m_filter_size);
 
     m_filter.resize(m_filter_size);

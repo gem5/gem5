@@ -59,8 +59,6 @@ X86ISA::IntDevice::IntMasterPort::sendMessage(ApicList apics,
             assert(pkt->isResponse());
             // also ignore the latency in handling the response
             recvResponse(pkt);
-            delete pkt->req;
-            delete pkt;
         }
     }
 }

@@ -97,14 +97,14 @@ class Uart8250 : public Uart
     }
     Uart8250(const Params *p);
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
-    virtual AddrRangeList getAddrRanges() const;
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
+    AddrRangeList getAddrRanges() const override;
 
     /**
      * Inform the uart that there is data available.
      */
-    virtual void dataAvailable();
+    void dataAvailable() override;
 
 
     /**
@@ -113,8 +113,8 @@ class Uart8250 : public Uart
      */
     virtual bool intStatus() { return status ? true : false; }
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 #endif // __TSUNAMI_UART_HH__

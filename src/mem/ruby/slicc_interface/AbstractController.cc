@@ -328,6 +328,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
     }
 
     getMemoryQueue()->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
+    delete pkt->req;
     delete pkt;
 }
 

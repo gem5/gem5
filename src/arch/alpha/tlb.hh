@@ -85,21 +85,21 @@ class TLB : public BaseTLB
     TLB(const Params *p);
     virtual ~TLB();
 
-    void takeOverFrom(BaseTLB *otlb) {}
+    void takeOverFrom(BaseTLB *otlb) override {}
 
-    virtual void regStats();
+    void regStats() override;
 
     int getsize() const { return table.size(); }
 
     TlbEntry &index(bool advance = true);
     void insert(Addr vaddr, TlbEntry &entry);
 
-    void flushAll();
+    void flushAll() override;
     void flushProcesses();
     void flushAddr(Addr addr, uint8_t asn);
 
     void
-    demapPage(Addr vaddr, uint64_t asn)
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         assert(asn < (1 << 8));
         flushAddr(vaddr, asn);
@@ -117,8 +117,8 @@ class TLB : public BaseTLB
     static Fault checkCacheability(RequestPtr &req, bool itb = false);
 
     // Checkpointing
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     // Most recently used page table entries
     TlbEntry *EntryCache[3];

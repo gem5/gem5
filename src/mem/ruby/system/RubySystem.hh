@@ -89,16 +89,16 @@ class RubySystem : public ClockedObject
         return m_profiler;
     }
 
-    void regStats() { m_profiler->regStats(name()); }
+    void regStats() override { m_profiler->regStats(name()); }
     void collateStats() { m_profiler->collateStats(); }
-    void resetStats();
+    void resetStats() override;
 
-    void memWriteback();
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    void memWriteback() override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void drainResume() override;
     void process();
-    void startup();
+    void startup() override;
     bool functionalRead(Packet *ptr);
     bool functionalWrite(Packet *ptr);
 

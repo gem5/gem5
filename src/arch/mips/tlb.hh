@@ -107,8 +107,8 @@ class TLB : public BaseTLB
     static Fault checkCacheability(RequestPtr &req);
 
     // Checkpointing
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     void regStats();
 

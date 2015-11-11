@@ -30,4 +30,3 @@ process1 = LiveProcess(cmd = 'hello', executable = binpath('hello'))
 process2 = LiveProcess(cmd = 'hello', executable = binpath('hello'))
 
 root.system.cpu[0].workload = [process1, process2]
-root.system.cpu[0].numThreads = 2

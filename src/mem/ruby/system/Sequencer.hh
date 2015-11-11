@@ -30,8 +30,8 @@
 #define __MEM_RUBY_SYSTEM_SEQUENCER_HH__
 
 #include <iostream>
+#include <unordered_map>
 
-#include "base/hashmap.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/SequencerRequestType.hh"
@@ -185,7 +185,7 @@ class Sequencer : public RubyPort
     Cycles m_data_cache_hit_latency;
     Cycles m_inst_cache_hit_latency;
 
-    typedef m5::hash_map<Addr, SequencerRequest*> RequestTable;
+    typedef std::unordered_map<Addr, SequencerRequest*> RequestTable;
     RequestTable m_writeRequestTable;
     RequestTable m_readRequestTable;
     // Global outstanding request count, across all request tables

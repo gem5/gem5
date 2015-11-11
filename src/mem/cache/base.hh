@@ -210,7 +210,8 @@ class BaseCache : public MemObject
         // overlap
         assert(addr == blockAlign(addr));
 
-        MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
+        MSHR *mshr = mq->allocate(addr, size, pkt, time, order++,
+                                  allocOnFill(pkt->cmd));
 
         if (mq->isFull()) {
             setBlocked((BlockedCause)mq->index);
@@ -232,6 +233,15 @@ class BaseCache : public MemObject
             clearBlocked((BlockedCause)mq->index);
         }
     }
+
+    /**
+     * Determine if we should allocate on a fill or not.
+     *
+     * @param cmd Packet command being added as an MSHR target
+     *
+     * @return Whether we should allocate on a fill or not
+     */
+    virtual bool allocOnFill(MemCmd cmd) const = 0;
 
     /**
      * Write back dirty blocks in the cache using functional accesses.
@@ -508,9 +518,9 @@ class BaseCache : public MemObject
 
     MSHR *allocateWriteBuffer(PacketPtr pkt, Tick time)
     {
-        // should only see clean evictions in a read-only cache
-        assert(!isReadOnly || pkt->cmd == MemCmd::CleanEvict);
-        assert(pkt->isWrite() && !pkt->isRead());
+        // should only see writes or clean evicts here
+        assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
+
         return allocateBufferInternal(&writeBuffer,
                                       blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, true);

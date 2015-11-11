@@ -189,7 +189,7 @@ class BaseCPU : public MemObject
      * @return a reference to the port with the given name
      */
     BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID);
+                                  PortID idx = InvalidPortID) override;
 
     /** Get cpu task id */
     uint32_t taskId() const { return _taskId; }
@@ -207,41 +207,45 @@ class BaseCPU : public MemObject
     TheISA::MicrocodeRom microcodeRom;
 
   protected:
-    TheISA::Interrupts *interrupts;
+    std::vector<TheISA::Interrupts*> interrupts;
 
   public:
     TheISA::Interrupts *
-    getInterruptController()
+    getInterruptController(ThreadID tid)
     {
-        return interrupts;
+        if (interrupts.empty())
+            return NULL;
+
+        assert(interrupts.size() > tid);
+        return interrupts[tid];
     }
 
-    virtual void wakeup() = 0;
+    virtual void wakeup(ThreadID tid) = 0;
 
     void
-    postInterrupt(int int_num, int index)
+    postInterrupt(ThreadID tid, int int_num, int index)
     {
-        interrupts->post(int_num, index);
+        interrupts[tid]->post(int_num, index);
         if (FullSystem)
-            wakeup();
+            wakeup(tid);
     }
 
     void
-    clearInterrupt(int int_num, int index)
+    clearInterrupt(ThreadID tid, int int_num, int index)
     {
-        interrupts->clear(int_num, index);
+        interrupts[tid]->clear(int_num, index);
     }
 
     void
-    clearInterrupts()
+    clearInterrupts(ThreadID tid)
     {
-        interrupts->clearAll();
+        interrupts[tid]->clearAll();
     }
 
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return FullSystem && interrupts->checkInterrupts(tc);
+        return FullSystem && interrupts[tc->threadId()]->checkInterrupts(tc);
     }
 
     class ProfileEvent : public Event
@@ -299,11 +303,11 @@ class BaseCPU : public MemObject
     BaseCPU(Params *params, bool is_checker = false);
     virtual ~BaseCPU();
 
-    virtual void init();
-    virtual void startup();
-    virtual void regStats();
+    void init() override;
+    void startup() override;
+    void regStats() override;
 
-    void regProbePoints() M5_ATTR_OVERRIDE;
+    void regProbePoints() override;
 
     void registerThreadContexts();
 
@@ -395,7 +399,7 @@ class BaseCPU : public MemObject
      *
      * @param os The stream to serialize to.
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
 
     /**
      * Reconstruct the state of this object from a checkpoint.
@@ -408,7 +412,7 @@ class BaseCPU : public MemObject
      * @param cp The checkpoint use.
      * @param section The section name of this object.
      */
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void unserialize(CheckpointIn &cp) override;
 
     /**
      * Serialize a single thread.
@@ -559,14 +563,17 @@ class BaseCPU : public MemObject
     Stats::Scalar numWorkItemsCompleted;
 
   private:
-    AddressMonitor addressMonitor;
+    std::vector<AddressMonitor> addressMonitor;
 
   public:
-    void armMonitor(Addr address);
-    bool mwait(PacketPtr pkt);
-    void mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb);
-    AddressMonitor *getCpuAddrMonitor() { return &addressMonitor; }
-    void atomicNotify(Addr address);
+    void armMonitor(ThreadID tid, Addr address);
+    bool mwait(ThreadID tid, PacketPtr pkt);
+    void mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb);
+    AddressMonitor *getCpuAddrMonitor(ThreadID tid)
+    {
+        assert(tid < numThreads);
+        return &addressMonitor[tid];
+    }
 };
 
 #endif // THE_ISA == NULL_ISA

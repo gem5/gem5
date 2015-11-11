@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 ARM Limited
+// Copyright (c) 2011-2015 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -46,8 +46,10 @@ namespace Aarch64
     StaticInstPtr decodeLoadsStores(ExtMachInst machInst);
     StaticInstPtr decodeDataProcReg(ExtMachInst machInst);
 
+    template <typename DecoderFeatures>
     StaticInstPtr decodeFpAdvSIMD(ExtMachInst machInst);
     StaticInstPtr decodeFp(ExtMachInst machInst);
+    template <typename DecoderFeatures>
     StaticInstPtr decodeAdvSIMD(ExtMachInst machInst);
     StaticInstPtr decodeAdvSIMDScalar(ExtMachInst machInst);
 
@@ -1278,12 +1280,13 @@ namespace Aarch64
 output decoder {{
 namespace Aarch64
 {
+    template <typename DecoderFeatures>
     StaticInstPtr
     decodeAdvSIMD(ExtMachInst machInst)
     {
         if (bits(machInst, 24) == 1) {
             if (bits(machInst, 10) == 0) {
-                return decodeNeonIndexedElem(machInst);
+                return decodeNeonIndexedElem<DecoderFeatures>(machInst);
             } else if (bits(machInst, 23) == 1) {
                 return new Unknown64(machInst);
             } else {
@@ -1295,7 +1298,7 @@ namespace Aarch64
             }
         } else if (bits(machInst, 21) == 1) {
             if (bits(machInst, 10) == 1) {
-                return decodeNeon3Same(machInst);
+                return decodeNeon3Same<DecoderFeatures>(machInst);
             } else if (bits(machInst, 11) == 0) {
                 return decodeNeon3Diff(machInst);
             } else if (bits(machInst, 20, 17) == 0x0) {
@@ -1957,13 +1960,14 @@ namespace Aarch64
 output decoder {{
 namespace Aarch64
 {
+    template <typename DecoderFeatures>
     StaticInstPtr
     decodeFpAdvSIMD(ExtMachInst machInst)
     {
 
         if (bits(machInst, 28) == 0) {
             if (bits(machInst, 31) == 0) {
-                return decodeAdvSIMD(machInst);
+                return decodeAdvSIMD<DecoderFeatures>(machInst);
             } else {
                 return new Unknown64(machInst);
             }
@@ -1976,6 +1980,18 @@ namespace Aarch64
         }
     }
 }
+}};
+
+let {{
+    decoder_output ='''
+namespace Aarch64
+{'''
+    for decoderFlavour, type_dict in decoders.iteritems():
+        decoder_output +='''
+template StaticInstPtr decodeFpAdvSIMD<%(df)sDecoder>(ExtMachInst machInst);
+''' % { "df" : decoderFlavour }
+    decoder_output +='''
+}'''
 }};
 
 output decoder {{
@@ -2041,7 +2057,10 @@ def format Aarch64() {{
             return decodeGem5Ops(machInst);
         } else {
             // bit 27:25=111
-            return decodeFpAdvSIMD(machInst);
+            switch(decoderFlavour){
+            default:
+                return decodeFpAdvSIMD<GenericDecoder>(machInst);
+            }
         }
     }
     '''

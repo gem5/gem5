@@ -99,6 +99,9 @@ class System(MemObject):
             "Address to mask loading binaries with")
     load_offset = Param.UInt64(0, "Address to offset loading binaries with")
 
+    multi_thread = Param.Bool(False,
+            "Supports multi-threaded CPUs? Impacts Thread/Context IDs")
+
     # Dynamic voltage and frequency handler for the system, disabled by default
     # Provide list of domains that need to be controlled by the handler
     dvfs_handler = DVFSHandler()

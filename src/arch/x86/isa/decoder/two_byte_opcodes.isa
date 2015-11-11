@@ -463,7 +463,7 @@
                     0x0: MOVMSKPS(Gd,VRo);
                     0x1: SQRTPS(Vo,Wo);
                     0x2: WarnUnimpl::rqsrtps_Vo_Wo();
-                    0x3: WarnUnimpl::rcpps_Vo_Wo();
+                    0x3: RCPPS(Vo,Wo);
                     0x4: ANDPS(Vo,Wo);
                     0x5: ANDNPS(Vo,Wo);
                     0x6: ORPS(Vo,Wo);
@@ -473,7 +473,7 @@
                 0x4: decode OPCODE_OP_BOTTOM3 {
                     0x1: SQRTSS(Vd,Wd);
                     0x2: WarnUnimpl::rsqrtss_Vd_Wd();
-                    0x3: WarnUnimpl::rcpss_Vd_Wd();
+                    0x3: RCPSS(Vd,Wd);
                     default: UD2();
                 }
                 // operand size (0x66)

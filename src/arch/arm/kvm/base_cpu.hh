@@ -52,10 +52,10 @@ class BaseArmKvmCPU : public BaseKvmCPU
     BaseArmKvmCPU(BaseArmKvmCPUParams *params);
     virtual ~BaseArmKvmCPU();
 
-    void startup() M5_ATTR_OVERRIDE;
+    void startup() override;
 
   protected:
-    Tick kvmRun(Tick ticks) M5_ATTR_OVERRIDE;
+    Tick kvmRun(Tick ticks) override;
 
 
     /** Cached state of the IRQ line */

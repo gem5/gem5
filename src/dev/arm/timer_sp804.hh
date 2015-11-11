@@ -121,8 +121,8 @@ class Sp804 : public AmbaPioDevice
         /** Handle write for a single timer */
         void write(PacketPtr pkt, Addr daddr);
 
-        void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-        void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     /** Pointer to the GIC for causing an interrupt */
@@ -150,18 +150,18 @@ class Sp804 : public AmbaPioDevice
      * @param pkt The memory request.
      * @param data Where to put the data.
      */
-    virtual Tick read(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
 
     /**
      * All writes are simply ignored.
      * @param pkt The memory request.
      * @param data the data
      */
-    virtual Tick write(PacketPtr pkt);
+    Tick write(PacketPtr pkt) override;
 
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 

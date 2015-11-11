@@ -274,7 +274,8 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
                 // architecture specifies that an event is
                 // automatically generated when clearing the exclusive
                 // monitor to wake up the processor in WFE.
-                system()->getThreadContext(i->contextId)->getCpuPtr()->wakeup();
+                ThreadContext* ctx = system()->getThreadContext(i->contextId);
+                ctx->getCpuPtr()->wakeup(ctx->threadId());
                 i = lockedAddrList.erase(i);
             } else {
                 i++;
@@ -328,7 +329,7 @@ AbstractMemory::access(PacketPtr pkt)
         return;
     }
 
-    if (pkt->cmd == MemCmd::CleanEvict) {
+    if (pkt->cmd == MemCmd::CleanEvict || pkt->cmd == MemCmd::WritebackClean) {
         DPRINTF(MemoryAccess, "CleanEvict  on 0x%x: not responding\n",
                 pkt->getAddr());
       return;

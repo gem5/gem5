@@ -110,13 +110,13 @@ class EtherTap : public EtherObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 
     virtual bool recvPacket(EthPacketPtr packet);
     virtual void sendDone();
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 class EtherTapInt : public EtherInt

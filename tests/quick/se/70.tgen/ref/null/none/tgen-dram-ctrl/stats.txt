@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                             8340026204                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 263964                       # Number of bytes of host memory used
-host_seconds                                    11.99                       # Real time elapsed on the host
+host_tick_rate                             8352384426                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 264628                       # Number of bytes of host memory used
+host_seconds                                    11.97                       # Real time elapsed on the host
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::cpu              106649408                       # Number of bytes read from this memory
@@ -285,7 +285,7 @@ system.membus.pkt_size_system.monitor-master::system.physmem.port    213329664  
 system.membus.pkt_size::total               213329664                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.reqLayer0.occupancy         11679751447                       # Layer occupancy (ticks)
 system.membus.reqLayer0.utilization              11.7                       # Layer utilization (%)
-system.membus.respLayer0.occupancy        11025639931                       # Layer occupancy (ticks)
+system.membus.respLayer0.occupancy        11025969759                       # Layer occupancy (ticks)
 system.membus.respLayer0.utilization             11.0                       # Layer utilization (%)
 system.monitor.readBurstLengthHist::samples      1666397                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
@@ -392,21 +392,21 @@ system.monitor.writeBandwidthHist::total          100                       # Hi
 system.monitor.averageWriteBandwidth       1066802560      0.00%      0.00% # Average write bandwidth (bytes/s)
 system.monitor.totalWrittenBytes            106680256                       # Number of bytes written
 system.monitor.readLatencyHist::samples       1666397                       # Read request-response latency
-system.monitor.readLatencyHist::mean     80828.076592                       # Read request-response latency
-system.monitor.readLatencyHist::gmean    75646.741335                       # Read request-response latency
-system.monitor.readLatencyHist::stdev    40157.798719                       # Read request-response latency
+system.monitor.readLatencyHist::mean     80828.757102                       # Read request-response latency
+system.monitor.readLatencyHist::gmean    75647.211665                       # Read request-response latency
+system.monitor.readLatencyHist::stdev    40158.670662                       # Read request-response latency
 system.monitor.readLatencyHist::0-32767            22      0.00%      0.00% # Read request-response latency
-system.monitor.readLatencyHist::32768-65535       453129     27.19%     27.19% # Read request-response latency
-system.monitor.readLatencyHist::65536-98303      1001108     60.08%     87.27% # Read request-response latency
+system.monitor.readLatencyHist::32768-65535       453126     27.19%     27.19% # Read request-response latency
+system.monitor.readLatencyHist::65536-98303      1001111     60.08%     87.27% # Read request-response latency
 system.monitor.readLatencyHist::98304-131071        83302      5.00%     92.27% # Read request-response latency
 system.monitor.readLatencyHist::131072-163839        62543      3.75%     96.02% # Read request-response latency
 system.monitor.readLatencyHist::163840-196607        26583      1.60%     97.62% # Read request-response latency
 system.monitor.readLatencyHist::196608-229375         8788      0.53%     98.14% # Read request-response latency
-system.monitor.readLatencyHist::229376-262143         7679      0.46%     98.61% # Read request-response latency
+system.monitor.readLatencyHist::229376-262143         7677      0.46%     98.61% # Read request-response latency
 system.monitor.readLatencyHist::262144-294911         7849      0.47%     99.08% # Read request-response latency
-system.monitor.readLatencyHist::294912-327679         7873      0.47%     99.55% # Read request-response latency
+system.monitor.readLatencyHist::294912-327679         7874      0.47%     99.55% # Read request-response latency
 system.monitor.readLatencyHist::327680-360447         4044      0.24%     99.79% # Read request-response latency
-system.monitor.readLatencyHist::360448-393215         1554      0.09%     99.88% # Read request-response latency
+system.monitor.readLatencyHist::360448-393215         1555      0.09%     99.88% # Read request-response latency
 system.monitor.readLatencyHist::393216-425983          891      0.05%     99.94% # Read request-response latency
 system.monitor.readLatencyHist::425984-458751          671      0.04%     99.98% # Read request-response latency
 system.monitor.readLatencyHist::458752-491519          316      0.02%    100.00% # Read request-response latency
@@ -417,9 +417,9 @@ system.monitor.readLatencyHist::589824-622591            0      0.00%    100.00%
 system.monitor.readLatencyHist::622592-655359            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::total         1666397                       # Read request-response latency
 system.monitor.writeLatencyHist::samples      1666878                       # Write request-response latency
-system.monitor.writeLatencyHist::mean    19578.682028                       # Write request-response latency
-system.monitor.writeLatencyHist::gmean   19571.486505                       # Write request-response latency
-system.monitor.writeLatencyHist::stdev     552.701557                       # Write request-response latency
+system.monitor.writeLatencyHist::mean    19652.383883                       # Write request-response latency
+system.monitor.writeLatencyHist::gmean   19632.845881                       # Write request-response latency
+system.monitor.writeLatencyHist::stdev     964.266043                       # Write request-response latency
 system.monitor.writeLatencyHist::0-2047             0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::2048-4095            0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::4096-6143            0      0.00%      0.00% # Write request-response latency
@@ -429,13 +429,13 @@ system.monitor.writeLatencyHist::10240-12287            0      0.00%      0.00% 
 system.monitor.writeLatencyHist::12288-14335            0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::14336-16383            0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::16384-18431            0      0.00%      0.00% # Write request-response latency
-system.monitor.writeLatencyHist::18432-20479      1622054     97.31%     97.31% # Write request-response latency
-system.monitor.writeLatencyHist::20480-22527        29447      1.77%     99.08% # Write request-response latency
-system.monitor.writeLatencyHist::22528-24575        12825      0.77%     99.85% # Write request-response latency
-system.monitor.writeLatencyHist::24576-26623         2552      0.15%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::26624-28671            0      0.00%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::28672-30719            0      0.00%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::30720-32767            0      0.00%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::18432-20479      1607382     96.43%     96.43% # Write request-response latency
+system.monitor.writeLatencyHist::20480-22527        29447      1.77%     98.20% # Write request-response latency
+system.monitor.writeLatencyHist::22528-24575        12825      0.77%     98.97% # Write request-response latency
+system.monitor.writeLatencyHist::24576-26623         7107      0.43%     99.39% # Write request-response latency
+system.monitor.writeLatencyHist::26624-28671         4858      0.29%     99.68% # Write request-response latency
+system.monitor.writeLatencyHist::28672-30719         4531      0.27%     99.96% # Write request-response latency
+system.monitor.writeLatencyHist::30720-32767          728      0.04%    100.00% # Write request-response latency
 system.monitor.writeLatencyHist::32768-34815            0      0.00%    100.00% # Write request-response latency
 system.monitor.writeLatencyHist::34816-36863            0      0.00%    100.00% # Write request-response latency
 system.monitor.writeLatencyHist::36864-38911            0      0.00%    100.00% # Write request-response latency

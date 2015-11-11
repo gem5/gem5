@@ -836,11 +836,11 @@ class DRAMCtrl : public AbstractMemory
     // timestamp offset
     uint64_t timeStampOffset;
 
-    /** @todo this is a temporary workaround until the 4-phase code is
-     * committed. upstream caches needs this packet until true is returned, so
-     * hold onto it for deletion until a subsequent call
+    /**
+     * Upstream caches need this packet until true is returned, so
+     * hold it for deletion until a subsequent call
      */
-    std::vector<PacketPtr> pendingDelete;
+    std::unique_ptr<Packet> pendingDelete;
 
     /**
      * This function increments the energy when called. If stats are
@@ -868,18 +868,18 @@ class DRAMCtrl : public AbstractMemory
 
   public:
 
-    void regStats();
+    void regStats() override;
 
     DRAMCtrl(const DRAMCtrlParams* p);
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
-                                        PortID idx = InvalidPortID);
+                                        PortID idx = InvalidPortID) override;
 
-    virtual void init() M5_ATTR_OVERRIDE;
-    virtual void startup() M5_ATTR_OVERRIDE;
-    virtual void drainResume() M5_ATTR_OVERRIDE;
+    virtual void init() override;
+    virtual void startup() override;
+    virtual void drainResume() override;
 
   protected:
 

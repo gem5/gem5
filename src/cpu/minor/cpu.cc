@@ -167,14 +167,12 @@ MinorCPU::dbg_vtophys(Addr addr)
 }
 
 void
-MinorCPU::wakeup()
+MinorCPU::wakeup(ThreadID tid)
 {
-    DPRINTF(Drain, "MinorCPU wakeup\n");
+    DPRINTF(Drain, "[tid:%d] MinorCPU wakeup\n", tid);
 
-    for (auto i = threads.begin(); i != threads.end(); i ++) {
-        if ((*i)->status() == ThreadContext::Suspended)
-            (*i)->activate();
-    }
+    if (threads[tid]->status() == ThreadContext::Suspended)
+        threads[tid]->activate();
 
     DPRINTF(Drain,"Suspended Processor awoke\n");
 }
@@ -241,7 +239,8 @@ MinorCPU::drainResume()
             "'timing' mode.\n");
     }
 
-    wakeup();
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        wakeup(tid);
     pipeline->drainResume();
 }
 

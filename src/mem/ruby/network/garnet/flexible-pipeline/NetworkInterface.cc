@@ -274,7 +274,7 @@ NetworkInterface::wakeup()
 
         int vnet = t_flit->get_vnet();
         m_net_ptr->increment_received_flits(vnet);
-        Cycles network_delay = curCycle() - t_flit->get_enqueue_time();
+        Cycles network_delay = curCycle() - t_flit->get_creation_time();
         Cycles queueing_delay = t_flit->get_delay();
 
         m_net_ptr->increment_network_latency(network_delay, vnet);

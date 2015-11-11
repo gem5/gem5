@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #define __CPU_SIMPLE_TIMING_HH__
 
 #include "cpu/simple/base.hh"
+#include "cpu/simple/exec_context.hh"
 #include "cpu/translation.hh"
 #include "params/TimingSimpleCPU.hh"
 
@@ -54,7 +55,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     TimingSimpleCPU(TimingSimpleCPUParams * params);
     virtual ~TimingSimpleCPU();
 
-    virtual void init();
+    void init() override;
 
   private:
 
@@ -131,6 +132,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     };
     FetchTranslation fetchTranslation;
 
+    void threadSnoop(PacketPtr pkt, ThreadID sender);
     void sendData(RequestPtr req, uint8_t *data, uint64_t *res, bool read);
     void sendSplitData(RequestPtr req1, RequestPtr req2, RequestPtr req,
                        uint8_t *data, bool read);
@@ -263,28 +265,29 @@ class TimingSimpleCPU : public BaseSimpleCPU
   protected:
 
      /** Return a reference to the data port. */
-    virtual MasterPort &getDataPort() { return dcachePort; }
+    MasterPort &getDataPort() override { return dcachePort; }
 
     /** Return a reference to the instruction port. */
-    virtual MasterPort &getInstPort() { return icachePort; }
+    MasterPort &getInstPort() override { return icachePort; }
 
   public:
 
-    DrainState drain() M5_ATTR_OVERRIDE;
-    void drainResume() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
+    void drainResume() override;
 
-    void switchOut();
-    void takeOverFrom(BaseCPU *oldCPU);
+    void switchOut() override;
+    void takeOverFrom(BaseCPU *oldCPU) override;
 
-    void verifyMemoryMode() const;
+    void verifyMemoryMode() const override;
 
-    virtual void activateContext(ThreadID thread_num);
-    virtual void suspendContext(ThreadID thread_num);
+    void activateContext(ThreadID thread_num) override;
+    void suspendContext(ThreadID thread_num) override;
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size,
+                  unsigned flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res);
+                   Addr addr, unsigned flags, uint64_t *res) override;
 
     void fetch();
     void sendFetch(const Fault &fault, RequestPtr req, ThreadContext *tc);
@@ -342,7 +345,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * </ul>
      */
     bool isDrained() {
-        return microPC() == 0 && !stayAtPC && !fetchEvent.scheduled();
+        SimpleExecContext& t_info = *threadInfo[curThread];
+        SimpleThread* thread = t_info.thread;
+
+        return thread->microPC() == 0 && !t_info.stayAtPC &&
+               !fetchEvent.scheduled();
     }
 
     /**

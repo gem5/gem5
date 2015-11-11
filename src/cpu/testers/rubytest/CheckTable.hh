@@ -31,9 +31,9 @@
 #define __CPU_RUBYTEST_CHECKTABLE_HH__
 
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
-#include "base/hashmap.hh"
 #include "mem/ruby/common/Address.hh"
 
 class Check;
@@ -63,7 +63,7 @@ class CheckTable
     CheckTable& operator=(const CheckTable& obj);
 
     std::vector<Check*> m_check_vector;
-    m5::hash_map<Addr, Check*> m_lookup_map;
+    std::unordered_map<Addr, Check*> m_lookup_map;
 
     int m_num_writers;
     int m_num_readers;

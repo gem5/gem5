@@ -32,6 +32,7 @@
 #define __ARCH_X86_DECODER_HH__
 
 #include <cassert>
+#include <unordered_map>
 #include <vector>
 
 #include "arch/x86/regs/misc.hh"
@@ -47,6 +48,7 @@
 namespace X86ISA
 {
 
+class ISA;
 class Decoder
 {
   private:
@@ -222,15 +224,15 @@ class Decoder
 
     typedef DecodeCache::AddrMap<Decoder::InstBytes> DecodePages;
     DecodePages *decodePages;
-    typedef m5::hash_map<CacheKey, DecodePages *> AddrCacheMap;
+    typedef std::unordered_map<CacheKey, DecodePages *> AddrCacheMap;
     AddrCacheMap addrCacheMap;
 
     DecodeCache::InstMap *instMap;
-    typedef m5::hash_map<CacheKey, DecodeCache::InstMap *> InstCacheMap;
+    typedef std::unordered_map<CacheKey, DecodeCache::InstMap *> InstCacheMap;
     static InstCacheMap instCacheMap;
 
   public:
-    Decoder() : basePC(0), origPC(0), offset(0),
+    Decoder(ISA* isa = nullptr) : basePC(0), origPC(0), offset(0),
         outOfBytes(true), instDone(false),
         state(ResetState)
     {

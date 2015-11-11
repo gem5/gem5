@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2011-2013 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2015 The University of Bologna
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,35 +37,67 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Andreas Hansson
+ * Authors: Erfan Azarkhish
  */
 
-#ifndef __HASHMAP_HH__
-#define __HASHMAP_HH__
 
-// we stick with defines here until gcc >= 4.7 and clang >= 3.2 is
-// adopted as these are the minimum versions to support variadic
-// templates and template aliasing
-#define hash_map unordered_map
-#define hash_multimap unordered_multimap
-#define hash_set unordered_set
-#define hash_multiset unordered_multiset
+/**
+ * @file
+ * HMCController declaration
+ */
 
-// gcc >= 4.4 or clang with libc++ no longer rely on the transitional
-// tr1 namespace
-#include <unordered_map>
-#include <unordered_set>
-#define __hash_namespace std
-#define __hash_namespace_begin namespace std {
-#define __hash_namespace_end }
+#ifndef __HMC_CONTROLLER__
+#define __HMC_CONTROLLER__
 
-namespace m5 {
-    using ::__hash_namespace::hash_multimap;
-    using ::__hash_namespace::hash_multiset;
-    using ::__hash_namespace::hash_map;
-    using ::__hash_namespace::hash_set;
-    using ::__hash_namespace::hash;
-}
+#include "mem/noncoherent_xbar.hh"
+#include "mem/port.hh"
+#include "params/HMCController.hh"
 
-#endif // __HASHMAP_HH__
+/**
+ * HMC Controller, in general, is responsible for translating the host
+ * protocol (AXI for example) to serial links protocol. Plus, it should have
+ * large internal buffers to hide the access latency of the cube. It is also
+ * inferred from the standard [1] and the literature [2] that serial links
+ * share the same address range and packets can travel over any of them, so a
+ * load distribution mechanism is required.
+ * This model simply queues the incoming transactions (using a Bridge) and
+ * schedules them to the serial links using a simple round robin mechanism to
+ * balance the load among them. More advanced global scheduling policies and
+ * reordering and steering of transactions can be added to this model if
+ * required [3].
+ * [1] http://www.hybridmemorycube.org/specification-download/
+ * [2] Low-Power Hybrid Memory Cubes With Link Power Manageme and Two-Level
+ * Prefetching (J. Ahn et. al)
+ * [3] The Open-Silicon HMC Controller IP
+ * http://www.open-silicon.com/open-silicon-ips/hmc/
+ */
+
+class HMCController : public NoncoherentXBar
+{
+public:
+
+    HMCController(const HMCControllerParams *p);
+
+private:
+
+    // Receive range change only on one of the ports (because they all have
+    //  the same range)
+    virtual void recvRangeChange(PortID master_port_id);
+
+    // Receive a request and distribute it among slave ports
+    //  Simply forwards the packet to the next serial link based on a
+    //  Round-robin counter
+    virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
+
+    int n_master_ports;
+
+    // The round-robin counter
+    int rr_counter;
+    /**
+     * Function for rotating the round robin counter
+     * @return the next value of the counter
+     */
+    int rotate_counter();
+};
+
+#endif //__HMC_CONTROLLER__

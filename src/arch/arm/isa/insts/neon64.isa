@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2012-2013, 2015 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -42,6 +42,7 @@ let {{
 
     header_output = ""
     exec_output = ""
+    decoders = { 'Generic' : {} }
 
     # FP types (FP operations always work with unsigned representations)
     floatTypes = ("uint32_t", "uint64_t")
@@ -49,9 +50,9 @@ let {{
 
     def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
                            readDest=False, pairwise=False, scalar=False,
-                           byElem=False):
+                           byElem=False, decoder='Generic'):
         assert (not pairwise) or ((not byElem) and (not scalar))
-        global header_output, exec_output
+        global header_output, exec_output, decoders
         eWalkCode = simd64EnabledCheckCode + '''
         RegVect srcReg1, destReg;
         '''
@@ -3356,4 +3357,16 @@ let {{
     threeRegScrambleInstX("zip2", "Zip2QX", "SimdAluOp", unsignedTypes, 4,
                           zipCode % "eCount / 2")
 
+    for decoderFlavour, type_dict in decoders.iteritems():
+        header_output += '''
+        class %(decoder_flavour)sDecoder {
+        public:
+        ''' % { "decoder_flavour" : decoderFlavour }
+        for type,name in type_dict.iteritems():
+            header_output += '''
+            template<typename Elem> using %(type)s = %(new_name)s<Elem>;''' % {
+               "type" : type, "new_name" : name
+            }
+        header_output += '''
+        };'''
 }};

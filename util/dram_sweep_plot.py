@@ -116,7 +116,7 @@ def main():
         if match:
             peak_bw.append(float(match.groups(0)[0]))
 
-        match = re.match(".*averagePower\s+(\d+\.\d+)\s+#.*", line)
+        match = re.match(".*averagePower\s+(\d+\.?\d*)\s+#.*", line)
         if match:
             avg_pwr.append(float(match.groups(0)[0]))
     stats.close()

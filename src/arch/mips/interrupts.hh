@@ -116,13 +116,13 @@ class Interrupts : public SimObject
 
 
     void
-    serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    serialize(CheckpointOut &cp) const override
     {
         fatal("Serialization of Interrupts Unimplemented for MIPS");
     }
 
     void
-    unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    unserialize(CheckpointIn &cp) override
     {
         fatal("Unserialization of Interrupts Unimplemented for MIPS");
     }

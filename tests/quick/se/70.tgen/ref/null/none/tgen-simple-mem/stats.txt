@@ -4,9 +4,9 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                            16305869412                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 265756                       # Number of bytes of host memory used
-host_seconds                                     6.13                       # Real time elapsed on the host
+host_tick_rate                            16291006908                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 266948                       # Number of bytes of host memory used
+host_seconds                                     6.14                       # Real time elapsed on the host
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.bytes_read::cpu                     64                       # Number of bytes read from this memory
@@ -143,8 +143,8 @@ system.monitor.writeBandwidthHist::total          100                       # Hi
 system.monitor.averageWriteBandwidth          8533120      0.00%      0.00% # Average write bandwidth (bytes/s)
 system.monitor.totalWrittenBytes               853312                       # Number of bytes written
 system.monitor.readLatencyHist::samples             1                       # Read request-response latency
-system.monitor.readLatencyHist::mean            32000                       # Read request-response latency
-system.monitor.readLatencyHist::gmean    32000.000000                       # Read request-response latency
+system.monitor.readLatencyHist::mean            35000                       # Read request-response latency
+system.monitor.readLatencyHist::gmean    35000.000000                       # Read request-response latency
 system.monitor.readLatencyHist::stdev             nan                       # Read request-response latency
 system.monitor.readLatencyHist::0-2047              0      0.00%      0.00% # Read request-response latency
 system.monitor.readLatencyHist::2048-4095            0      0.00%      0.00% # Read request-response latency
@@ -161,15 +161,15 @@ system.monitor.readLatencyHist::22528-24575            0      0.00%      0.00% #
 system.monitor.readLatencyHist::24576-26623            0      0.00%      0.00% # Read request-response latency
 system.monitor.readLatencyHist::26624-28671            0      0.00%      0.00% # Read request-response latency
 system.monitor.readLatencyHist::28672-30719            0      0.00%      0.00% # Read request-response latency
-system.monitor.readLatencyHist::30720-32767            1    100.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::32768-34815            0      0.00%    100.00% # Read request-response latency
-system.monitor.readLatencyHist::34816-36863            0      0.00%    100.00% # Read request-response latency
+system.monitor.readLatencyHist::30720-32767            0      0.00%      0.00% # Read request-response latency
+system.monitor.readLatencyHist::32768-34815            0      0.00%      0.00% # Read request-response latency
+system.monitor.readLatencyHist::34816-36863            1    100.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::36864-38911            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::38912-40959            0      0.00%    100.00% # Read request-response latency
 system.monitor.readLatencyHist::total               1                       # Read request-response latency
 system.monitor.writeLatencyHist::samples        13333                       # Write request-response latency
-system.monitor.writeLatencyHist::mean    32000.024601                       # Write request-response latency
-system.monitor.writeLatencyHist::gmean   32000.024475                       # Write request-response latency
+system.monitor.writeLatencyHist::mean    39000.024601                       # Write request-response latency
+system.monitor.writeLatencyHist::gmean   39000.024498                       # Write request-response latency
 system.monitor.writeLatencyHist::stdev       2.840599                       # Write request-response latency
 system.monitor.writeLatencyHist::0-2047             0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::2048-4095            0      0.00%      0.00% # Write request-response latency
@@ -186,11 +186,11 @@ system.monitor.writeLatencyHist::22528-24575            0      0.00%      0.00% 
 system.monitor.writeLatencyHist::24576-26623            0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::26624-28671            0      0.00%      0.00% # Write request-response latency
 system.monitor.writeLatencyHist::28672-30719            0      0.00%      0.00% # Write request-response latency
-system.monitor.writeLatencyHist::30720-32767        13333    100.00%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::32768-34815            0      0.00%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::34816-36863            0      0.00%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::36864-38911            0      0.00%    100.00% # Write request-response latency
-system.monitor.writeLatencyHist::38912-40959            0      0.00%    100.00% # Write request-response latency
+system.monitor.writeLatencyHist::30720-32767            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::32768-34815            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::34816-36863            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::36864-38911            0      0.00%      0.00% # Write request-response latency
+system.monitor.writeLatencyHist::38912-40959        13333    100.00%    100.00% # Write request-response latency
 system.monitor.writeLatencyHist::total          13333                       # Write request-response latency
 system.monitor.ittReadRead::samples                 0                       # Read-to-read inter transaction time
 system.monitor.ittReadRead::mean                  nan                       # Read-to-read inter transaction time

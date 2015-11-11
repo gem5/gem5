@@ -125,7 +125,7 @@ struct Regs : public Serializable {
 
     uint32_t attnStatus; // Read clears
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    void serialize(CheckpointOut &cp) const override
     {
         SERIALIZE_SCALAR(chanCount);
         SERIALIZE_SCALAR(xferCap);
@@ -133,7 +133,7 @@ struct Regs : public Serializable {
         SERIALIZE_SCALAR(attnStatus);
     }
 
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    void unserialize(CheckpointIn &cp) override
     {
         UNSERIALIZE_SCALAR(chanCount);
         UNSERIALIZE_SCALAR(xferCap);
@@ -197,7 +197,7 @@ struct ChanRegs : public Serializable {
     };
     CHANERR error;
 
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE
+    void serialize(CheckpointOut &cp) const override
     {
         paramOut(cp, "ctrl", ctrl._data);
         paramOut(cp, "status", status._data);
@@ -207,7 +207,7 @@ struct ChanRegs : public Serializable {
         paramOut(cp, "error", error._data);
     }
 
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE
+    void unserialize(CheckpointIn &cp) override
     {
         paramIn(cp, "ctrl", ctrl._data);
         paramIn(cp, "status", status._data);

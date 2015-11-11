@@ -35,17 +35,9 @@
 
 using namespace std;
 
-BulkBloomFilter::BulkBloomFilter(string str)
+BulkBloomFilter::BulkBloomFilter(int size)
 {
-    string head, tail;
-
-#ifndef NDEBUG
-    bool success =
-#endif
-        split_first(str, head, tail, '_');
-    assert(success);
-
-    m_filter_size = atoi(head.c_str());
+    m_filter_size = size;
     m_filter_size_bits = floorLog2(m_filter_size);
     // split the filter bits in half, c0 and c1
     m_sector_bits = m_filter_size_bits - 1;

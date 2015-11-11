@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2013, 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -42,6 +42,9 @@ from m5.SimObject import SimObject
 
 from ArmPMU import ArmPMU
 
+# Enum for DecoderFlavour
+class DecoderFlavour(Enum): vals = ['Generic']
+
 class ArmISA(SimObject):
     type = 'ArmISA'
     cxx_class = 'ArmISA::ISA'
@@ -50,6 +53,7 @@ class ArmISA(SimObject):
     system = Param.System(Parent.any, "System this ISA object belongs to")
 
     pmu = Param.ArmPMU(NULL, "Performance Monitoring Unit")
+    decoderFlavour = Param.DecoderFlavour('Generic', "Decoder flavour specification")
 
     midr = Param.UInt32(0x410fc0f0, "MIDR value")
 

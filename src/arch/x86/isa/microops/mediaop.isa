@@ -1,4 +1,6 @@
-/// Copyright (c) 2009 The Regents of The University of Michigan
+// Copyright (c) 2009 The Regents of The University of Michigan
+// Copyright (c) 2015 Advanced Micro Devices, Inc.
+//
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -686,6 +688,41 @@ let {{
                     di.d = sqrt(di.d);
                     argBits = di.i;
                 }
+                result = insertBits(result, hiIndex, loIndex, argBits);
+            }
+            FpDestReg_uqw = result;
+        '''
+
+    # compute approximate reciprocal --- single-precision only
+    class Mrcp(MediaOp):
+        def __init__(self, dest, src, \
+                size = None, destSize = None, srcSize = None, ext = None):
+            super(Mrcp, self).__init__(dest, src,\
+                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+
+            assert(srcSize == 4);  // ISA defines single-precision only
+            assert(srcSize == destSize);
+            const int size = 4;
+            const int sizeBits = size * 8;
+            int items = numItems(size);
+            uint64_t result = FpDestReg_uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t argBits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+
+                floatInt fi;
+                fi.i = argBits;
+                // This is more accuracy than HW provides, but oh well
+                fi.f = 1.0 / fi.f;
+                argBits = fi.i;
                 result = insertBits(result, hiIndex, loIndex, argBits);
             }
             FpDestReg_uqw = result;

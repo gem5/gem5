@@ -134,8 +134,8 @@ class DmaPort : public MasterPort, public Drainable
 
   protected:
 
-    bool recvTimingResp(PacketPtr pkt);
-    void recvReqRetry() ;
+    bool recvTimingResp(PacketPtr pkt) override;
+    void recvReqRetry() override;
 
     void queueDma(PacketPtr pkt);
 
@@ -148,7 +148,7 @@ class DmaPort : public MasterPort, public Drainable
 
     bool dmaPending() const { return pendingCount > 0; }
 
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 };
 
 class DmaDevice : public PioDevice
@@ -175,12 +175,12 @@ class DmaDevice : public PioDevice
 
     bool dmaPending() const { return dmaPort.dmaPending(); }
 
-    virtual void init();
+    void init() override;
 
     unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
 
-    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    BaseMasterPort &getMasterPort(const std::string &if_name,
+                                  PortID idx = InvalidPortID) override;
 
 };
 
@@ -238,11 +238,11 @@ class DmaReadFifo : public Drainable, public Serializable
     ~DmaReadFifo();
 
   public: // Serializable
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   public: // Drainable
-    DrainState drain() M5_ATTR_OVERRIDE;
+    DrainState drain() override;
 
   public: // FIFO access
     /**

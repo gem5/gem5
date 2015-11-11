@@ -197,7 +197,7 @@ class AbstractMemory : public MemObject
     /**
      * Initialise this memory.
      */
-    void init();
+    void init() override;
 
     /**
      * See if this is a null memory that should never store data and
@@ -304,7 +304,7 @@ class AbstractMemory : public MemObject
     /**
      * Register Statistics
      */
-    virtual void regStats();
+    void regStats() override;
 
 };
 

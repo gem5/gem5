@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2015 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,7 @@
 #define __MEM_CACHE_CACHE_HH__
 
 #include "base/misc.hh" // fatal, panic, and warn
+#include "enums/Clusivity.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/mshr.hh"
@@ -194,12 +195,56 @@ class Cache : public BaseCache
      */
     const bool prefetchOnAccess;
 
-    /**
-     * @todo this is a temporary workaround until the 4-phase code is committed.
-     * upstream caches need this packet until true is returned, so hold it for
-     * deletion until a subsequent call
+     /**
+     * Clusivity with respect to the upstream cache, determining if we
+     * fill into both this cache and the cache above on a miss. Note
+     * that we currently do not support strict clusivity policies.
      */
-    std::vector<PacketPtr> pendingDelete;
+    const Enums::Clusivity clusivity;
+
+     /**
+     * Determine if clean lines should be written back or not. In
+     * cases where a downstream cache is mostly inclusive we likely
+     * want it to act as a victim cache also for lines that have not
+     * been modified. Hence, we cannot simply drop the line (or send a
+     * clean evict), but rather need to send the actual data.
+     */
+    const bool writebackClean;
+
+    /**
+     * Upstream caches need this packet until true is returned, so
+     * hold it for deletion until a subsequent call
+     */
+    std::unique_ptr<Packet> pendingDelete;
+
+    /**
+     * Writebacks from the tempBlock, resulting on the response path
+     * in atomic mode, must happen after the call to recvAtomic has
+     * finished (for the right ordering of the packets). We therefore
+     * need to hold on to the packets, and have a method and an event
+     * to send them.
+     */
+    PacketPtr tempBlockWriteback;
+
+    /**
+     * Send the outstanding tempBlock writeback. To be called after
+     * recvAtomic finishes in cases where the block we filled is in
+     * fact the tempBlock, and now needs to be written back.
+     */
+    void writebackTempBlockAtomic() {
+        assert(tempBlockWriteback != nullptr);
+        PacketList writebacks{tempBlockWriteback};
+        doWritebacksAtomic(writebacks);
+        tempBlockWriteback = nullptr;
+    }
+
+    /**
+     * An event to writeback the tempBlock after recvAtomic
+     * finishes. To avoid other calls to recvAtomic getting in
+     * between, we create this event with a higher priority.
+     */
+    EventWrapper<Cache, &Cache::writebackTempBlockAtomic> \
+        writebackTempBlockAtomicEvent;
 
     /**
      * Does all the processing necessary to perform the provided request.
@@ -227,17 +272,47 @@ class Cache : public BaseCache
     CacheBlk *allocateBlock(Addr addr, bool is_secure, PacketList &writebacks);
 
     /**
+     * Invalidate a cache block.
+     *
+     * @param blk Block to invalidate
+     */
+    void invalidateBlock(CacheBlk *blk);
+
+    /**
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
      * @param pkt The memory request with the fill data.
      * @param blk The cache block if it already exists.
      * @param writebacks List for any writebacks that need to be performed.
+     * @param allocate Whether to allocate a block or use the temp block
      * @return Pointer to the new cache block.
      */
     CacheBlk *handleFill(PacketPtr pkt, CacheBlk *blk,
-                        PacketList &writebacks);
+                         PacketList &writebacks, bool allocate);
 
+    /**
+     * Determine whether we should allocate on a fill or not. If this
+     * cache is mostly inclusive with regards to the upstream cache(s)
+     * we always allocate (for any non-forwarded and cacheable
+     * requests). In the case of a mostly exclusive cache, we allocate
+     * on fill if the packet did not come from a cache, thus if we:
+     * are dealing with a whole-line write (the latter behaves much
+     * like a writeback), the original target packet came from a
+     * non-caching source, or if we are performing a prefetch or LLSC.
+     *
+     * @param cmd Command of the incoming requesting packet
+     * @return Whether we should allocate on the fill
+     */
+    inline bool allocOnFill(MemCmd cmd) const
+    {
+        return clusivity == Enums::mostly_incl ||
+            cmd == MemCmd::WriteLineReq ||
+            cmd == MemCmd::ReadReq ||
+            cmd == MemCmd::WriteReq ||
+            cmd.isPrefetch() ||
+            cmd.isLLSC();
+    }
 
     /**
      * Performs the access specified by the request.
@@ -250,6 +325,11 @@ class Cache : public BaseCache
      * Insert writebacks into the write buffer
      */
     void doWritebacks(PacketList& writebacks, Tick forward_time);
+
+    /**
+     * Send writebacks down the memory hierarchy in atomic mode
+     */
+    void doWritebacksAtomic(PacketList& writebacks);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
@@ -300,12 +380,19 @@ class Cache : public BaseCache
                                 bool already_copied, bool pending_inval);
 
     /**
-     * Sets the blk to the new state.
-     * @param blk The cache block being snooped.
-     * @param new_state The new coherence state for the block.
+     * Perform an upward snoop if needed, and update the block state
+     * (possibly invalidating the block). Also create a response if required.
+     *
+     * @param pkt Snoop packet
+     * @param blk Cache block being snooped
+     * @param is_timing Timing or atomic for the response
+     * @param is_deferred Is this a deferred snoop or not?
+     * @param pending_inval Do we have a pending invalidation?
+     *
+     * @return The snoop delay incurred by the upwards snoop
      */
-    void handleSnoop(PacketPtr ptk, CacheBlk *blk,
-                     bool is_timing, bool is_deferred, bool pending_inval);
+    uint32_t handleSnoop(PacketPtr pkt, CacheBlk *blk,
+                         bool is_timing, bool is_deferred, bool pending_inval);
 
     /**
      * Create a writeback request for the given block.
@@ -322,9 +409,9 @@ class Cache : public BaseCache
     PacketPtr cleanEvictBlk(CacheBlk *blk);
 
 
-    void memWriteback();
-    void memInvalidate();
-    bool isDirty() const;
+    void memWriteback() override;
+    void memInvalidate() override;
+    bool isDirty() const override;
 
     /**
      * Cache block visitor that writes back dirty cache blocks using
@@ -368,7 +455,7 @@ class Cache : public BaseCache
      * Send up a snoop request and find cached copies. If cached copies are
      * found, set the BLOCK_CACHED flag in pkt.
      */
-    bool isCachedAbove(const PacketPtr pkt) const;
+    bool isCachedAbove(PacketPtr pkt, bool is_timing = true) const;
 
     /**
      * Selects an outstanding request to service.  Called when the
@@ -398,11 +485,11 @@ class Cache : public BaseCache
         return tags->findBlock(addr, is_secure);
     }
 
-    bool inCache(Addr addr, bool is_secure) const {
+    bool inCache(Addr addr, bool is_secure) const override {
         return (tags->findBlock(addr, is_secure) != 0);
     }
 
-    bool inMissQueue(Addr addr, bool is_secure) const {
+    bool inMissQueue(Addr addr, bool is_secure) const override {
         return (mshrQueue.findMatch(addr, is_secure) != 0);
     }
 
@@ -418,13 +505,13 @@ class Cache : public BaseCache
     /** Non-default destructor is needed to deallocate memory. */
     virtual ~Cache();
 
-    void regStats();
+    void regStats() override;
 
     /** serialize the state of the caches
      * We currently don't support checkpointing cache state, so this panics.
      */
-    void serialize(CheckpointOut &cp) const M5_ATTR_OVERRIDE;
-    void unserialize(CheckpointIn &cp) M5_ATTR_OVERRIDE;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 /**
@@ -443,7 +530,7 @@ class CacheBlkVisitorWrapper : public CacheBlkVisitor
     CacheBlkVisitorWrapper(Cache &_cache, VisitorPtr _visitor)
         : cache(_cache), visitor(_visitor) {}
 
-    bool operator()(CacheBlk &blk) M5_ATTR_OVERRIDE {
+    bool operator()(CacheBlk &blk) override {
         return (cache.*visitor)(blk);
     }
 
@@ -465,7 +552,7 @@ class CacheBlkIsDirtyVisitor : public CacheBlkVisitor
     CacheBlkIsDirtyVisitor()
         : _isDirty(false) {}
 
-    bool operator()(CacheBlk &blk) M5_ATTR_OVERRIDE {
+    bool operator()(CacheBlk &blk) override {
         if (blk.isDirty()) {
             _isDirty = true;
             return false;

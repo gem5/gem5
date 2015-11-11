@@ -87,11 +87,9 @@ class SimpleNetwork : public Network
     std::vector<Switch*> m_switches;
     std::vector<MessageBuffer*> m_int_link_buffers;
     int m_num_connected_buffers;
-    std::vector<Switch*> m_endpoint_switches;
-
-    int m_buffer_size;
-    int m_endpoint_bandwidth;
-    bool m_adaptive_routing;
+    const int m_buffer_size;
+    const int m_endpoint_bandwidth;
+    const bool m_adaptive_routing;
 
     //Statistical variables
     Stats::Formula m_msg_counts[MessageSizeType_NUM];

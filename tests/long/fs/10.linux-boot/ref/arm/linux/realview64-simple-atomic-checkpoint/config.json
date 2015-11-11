@@ -6,7 +6,7 @@
         "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "highest_el_is_64": false, 
-        "kernel": "/scratch/nilay/GEM5/system/binaries/vmlinux.aarch64.20140821", 
+        "kernel": "/home/joel/research/gem5/full_system_files/binaries/vmlinux.aarch64.20140821", 
         "iobus": {
             "slave": {
                 "peer": [
@@ -68,7 +68,7 @@
             "frontend_latency": 2
         }, 
         "symbolfile": "", 
-        "readfile": "/scratch/nilay/GEM5/gem5/tests/halt.sh", 
+        "readfile": "/home/joel/research/gem5/gem5/tests/halt.sh", 
         "have_large_asid_64": false, 
         "phys_addr_range_64": 40, 
         "have_lpae": false, 
@@ -87,7 +87,8 @@
         "multi_proc": true, 
         "early_kernel_symbols": false, 
         "panic_on_oops": true, 
-        "dtb_filename": "/scratch/nilay/GEM5/system/binaries/vexpress.aarch64.20140821.dtb", 
+        "dtb_filename": "/home/joel/research/gem5/full_system_files/binaries/vexpress.aarch64.20140821.dtb", 
+        "panic_on_panic": true, 
         "enable_context_switch_stats_dump": false, 
         "work_begin_ckpt_count": 0, 
         "clk_domain": {
@@ -896,7 +897,7 @@
                 "MSIXCAPNextCapability": 0, 
                 "PXCAPLinkCtrl": 0, 
                 "Revision": 0, 
-                "hardware_address": "<m5.params.EthernetAddr object at 0x511b690>", 
+                "hardware_address": "<m5.params.EthernetAddr object at 0x7f5e39f1b590>", 
                 "LegacyIOBase": 0, 
                 "pio_latency": 30000, 
                 "platform": "system.realview", 
@@ -1168,7 +1169,7 @@
             "use_default_range": false, 
             "frontend_latency": 3
         }, 
-        "panic_on_panic": true, 
+        "multi_thread": false, 
         "eventq_index": 0, 
         "iocache": {
             "cpu_side": {
@@ -1382,7 +1383,16 @@
                         "role": "SLAVE"
                     }, 
                     "name": "toL2Bus", 
-                    "snoop_filter": null, 
+                    "snoop_filter": {
+                        "name": "snoop_filter", 
+                        "system": "system", 
+                        "max_capacity": 8388608, 
+                        "eventq_index": 0, 
+                        "cxx_class": "SnoopFilter", 
+                        "path": "system.cpu.toL2Bus.snoop_filter", 
+                        "type": "SnoopFilter", 
+                        "lookup_latency": 0
+                    }, 
                     "forward_latency": 0, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "system": "system", 
@@ -1457,13 +1467,15 @@
                     "sequential_access": false, 
                     "assoc": 1
                 }, 
-                "interrupts": {
-                    "eventq_index": 0, 
-                    "path": "system.cpu.interrupts", 
-                    "type": "ArmInterrupts", 
-                    "name": "interrupts", 
-                    "cxx_class": "ArmISA::Interrupts"
-                }, 
+                "interrupts": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu.interrupts", 
+                        "type": "ArmInterrupts", 
+                        "name": "interrupts", 
+                        "cxx_class": "ArmISA::Interrupts"
+                    }
+                ], 
                 "dcache_port": {
                     "peer": "system.cpu.dcache.cpu_side", 
                     "role": "MASTER"
@@ -1704,7 +1716,7 @@
                     "eventq_index": 0, 
                     "cxx_class": "RawDiskImage", 
                     "path": "system.cf0.image.child", 
-                    "image_file": "/scratch/nilay/GEM5/system/disks/linaro-minimal-aarch64.img", 
+                    "image_file": "/home/joel/research/gem5/full_system_files/disks/linaro-minimal-aarch64.img", 
                     "type": "RawDiskImage"
                 }, 
                 "path": "system.cf0.image", 
@@ -1744,7 +1756,7 @@
             "system.realview.vram"
         ], 
         "work_begin_cpu_id_exit": -1, 
-        "boot_loader": "/scratch/nilay/GEM5/system/binaries/boot_emm.arm64", 
+        "boot_loader": "/home/joel/research/gem5/full_system_files/binaries/boot_emm.arm64", 
         "num_work_ids": 16
     }, 
     "time_sync_period": 100000000000, 

@@ -44,7 +44,6 @@
 #include "debug/EthernetAll.hh"
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
-#include "dev/pciconfigall.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
