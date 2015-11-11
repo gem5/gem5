@@ -58,14 +58,6 @@ class MemBus(SystemXBar):
     badaddr_responder = BadAddr()
     default = Self.badaddr_responder.pio
 
-class CoherentSystemBus(SystemXBar):
-    badaddr_responder = BadAddr()
-    default = Self.badaddr_responder.pio
-
-class NonCoherentSystemBus(IOXBar):
-    badaddr_responder = BadAddr()
-    default = Self.badaddr_responder.pio
-
 def fillInCmdline(mdesc, template, **kwargs):
     kwargs.setdefault('disk', mdesc.disk())
     kwargs.setdefault('rootdev', mdesc.rootdev())
@@ -97,26 +89,15 @@ def makeLinuxAlphaSystem(mem_mode, options, mdesc=None, cmdline=None):
     self.tsunami.ethernet.pio = self.iobus.master
     self.tsunami.ethernet.config = self.iobus.master
 
-    self.systembus = MemBus()
-    # self.systembus = IOXBar()
-
-    # if options.caches or options.l2cache:
-    #     self.systembus = CoherentSystemBus()
-    # else:
-    #     self.systembus = NonCoherentSystemBus()
-
     # By default the bridge responds to all addresses above the I/O
     # base address (including the PCI config space)
     IO_address_space_base = 0x80000000000
     self.bridge = Bridge(delay='50ns',
                          ranges = [AddrRange(IO_address_space_base, Addr.max)])
     self.bridge.master = self.iobus.slave
-    self.bridge.slave = self.systembus.master
 
     self.tsunami.ide.dma = self.iobus.slave
     self.tsunami.ethernet.dma = self.iobus.slave
-
-    self.system_port = self.systembus.slave
 
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')

@@ -144,81 +144,15 @@ def build_test_system(np):
         domain.cpu = [TestCPUClass(cpu_id = options.num_cpus_per_domain * domain.id + i)
                     for i in range(options.num_cpus_per_domain)]
 
-    if options.caches or options.l2cache:
-        numa_cache_downward = []
-        numa_cache_upward = []
-    else:
-        numa_bridge_downward = []
-        numa_bridge_upward = []
+    numa_caches = []
 
     mem_ctrls = []
     membus = []
 
-    if options.l2cache:
-        l2bus = []
-        l2cache = []
+    l2bus = []
+    l2cache = []
 
     cpus = []
-
-    for domain in domains:
-        if  options.caches or options.l2cache:
-            # domain.numa_cache_downward = IOCache(addr_ranges = [])
-            domain.numa_cache_upward = IOCache(addr_ranges = [])
-            domain.numa_cache_downward = NUMACache(addr_ranges = [])
-            # domain.numa_cache_upward = NUMACache(addr_ranges = [])
-
-            for r in range(options.num_domains):
-                addr_range = [AddrRange(Addr(str(r * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded
-                if r != domain.id:
-                    domain.numa_cache_downward.addr_ranges += addr_range
-                else:
-                    domain.numa_cache_upward.addr_ranges += addr_range
-
-            domain.numa_cache_downward.addr_ranges += test_sys.bridge.ranges
-
-            domain.numa_cache_downward.cpu_side = domain.membus.master
-            domain.numa_cache_downward.mem_side = test_sys.systembus.slave
-
-            domain.numa_cache_upward.cpu_side = test_sys.systembus.master
-            domain.numa_cache_upward.mem_side = domain.membus.slave
-
-            numa_cache_downward.append(domain.numa_cache_downward)
-            numa_cache_upward.append(domain.numa_cache_upward)
-        else:
-            domain.numa_bridge_downward = Bridge(delay = '50ns', ranges = [])
-            domain.numa_bridge_upward = Bridge(delay = '50ns', ranges = [])
-
-            for r in range(options.num_domains):
-                addr_range = [AddrRange(Addr(str(r * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded
-                if r != domain.id:
-                    domain.numa_bridge_downward.ranges += addr_range
-                else:
-                    domain.numa_bridge_upward.ranges += addr_range
-
-            domain.numa_bridge_downward.ranges += test_sys.bridge.ranges
-
-            domain.numa_bridge_downward.slave = domain.membus.master
-            domain.numa_bridge_downward.master = test_sys.systembus.slave
-
-            domain.numa_bridge_upward.slave = test_sys.systembus.master
-            domain.numa_bridge_upward.master = domain.membus.slave
-
-            numa_bridge_downward.append(domain.numa_bridge_downward)
-            numa_bridge_upward.append(domain.numa_bridge_upward)
-
-    # By default the IOCache runs at the system clock
-    if options.caches or options.l2cache:
-        test_sys.iocache = IOCache(addr_ranges = [])
-        test_sys.iocache.cpu_side = test_sys.iobus.master
-        test_sys.iocache.mem_side = test_sys.systembus.slave
-        for domain in domains:
-            test_sys.iocache.addr_ranges += domain.mem_ranges
-    else:
-        test_sys.iobridge = Bridge(delay = '50ns', ranges = [])
-        test_sys.iobridge.slave = test_sys.iobus.master
-        test_sys.iobridge.master = test_sys.systembus.slave
-        for domain in domains:
-            test_sys.iobridge.ranges += domain.mem_ranges
 
     for domain in domains:
         ccnuma_CacheConfig.config_cache(options, test_sys, domain)
@@ -228,30 +162,43 @@ def build_test_system(np):
         mem_ctrls += domain.mem_ctrls
         membus.append(domain.membus)
 
-        if options.l2cache:
-            domain.tol2bus.clk_domain = test_sys.cpu_clk_domain
-            l2bus.append(domain.tol2bus)
+        domain.tol2bus.clk_domain = test_sys.cpu_clk_domain
+        l2bus.append(domain.tol2bus)
 
-            domain.l2.clk_domain = test_sys.cpu_clk_domain
-            l2cache.append(domain.l2)
+        domain.l2.clk_domain = test_sys.cpu_clk_domain
+        l2cache.append(domain.l2)
 
         for cpu in domain.cpu:
             cpu.clk_domain = test_sys.cpu_clk_domain
         cpus += domain.cpu
 
-    if options.caches or options.l2cache:
-        test_sys.numa_cache_downward = numa_cache_downward
-        test_sys.numa_cache_upward = numa_cache_upward
-    else:
-        test_sys.numa_bridge_downward = numa_bridge_downward
-        test_sys.numa_bridge_upward = numa_bridge_upward
+    for domainX in domains:
+        for domainY in domains:
+            if domainX.id != domainY.id:
+                numa_cache = NUMACache(addr_ranges = domainY.mem_ranges)
+                numa_cache.cpu_side = domainX.membus.master
+                numa_cache.mem_side = domainY.membus.slave
+
+                if domainY.id == 0:
+                    numa_cache.addr_ranges += test_sys.bridge.ranges
+
+                numa_caches.append(numa_cache)
+
+    # By default the IOCache runs at the system clock
+    test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
+    test_sys.iocache.cpu_side = test_sys.iobus.master
+
+    test_sys.numa_caches = numa_caches
 
     test_sys.mem_ctrls = mem_ctrls
     test_sys.membus = membus
 
-    if options.l2cache:
-        test_sys.l2bus = l2bus
-        test_sys.l2cache = l2cache
+    test_sys.iocache.mem_side = test_sys.membus[0].slave
+    test_sys.bridge.slave = test_sys.membus[0].master
+    test_sys.system_port = test_sys.membus[0].slave
+
+    test_sys.l2bus = l2bus
+    test_sys.l2cache = l2cache
 
     test_sys.cpu = cpus
 
@@ -303,30 +250,21 @@ def print_addr_ranges(label, ranges):
 
 for domain in domains:
     for cpu in domain.cpu:
-        if options.caches or options.l2cache:
-            print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.icache.addr_ranges: ', cpu.icache.addr_ranges)
-            print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.dcache.addr_ranges: ', cpu.dcache.addr_ranges)
-    if options.l2cache:
-        print_addr_ranges('domain#' + str(domain.id) + '.l2.addr_ranges: ', domain.l2.addr_ranges)
+        print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.icache.addr_ranges: ', cpu.icache.addr_ranges)
+        print_addr_ranges('cpu#' + str(cpu.cpu_id) + '.dcache.addr_ranges: ', cpu.dcache.addr_ranges)
+    print_addr_ranges('domain#' + str(domain.id) + '.l2.addr_ranges: ', domain.l2.addr_ranges)
 
     print 'domain#' + str(domain.id) + '.mem_ctrls.ranges: '
     for mem_ctrl in domain.mem_ctrls:
         print 'mem_ctrl.range: ' + addr_range_to_str(mem_ctrl.range)
     print ''
 
-    if options.caches or options.l2cache:
-        print_addr_ranges('domain#' + str(domain.id) + '.numa_cache_downward.addr_ranges: ', domain.numa_cache_downward.addr_ranges)
-        print_addr_ranges('domain#' + str(domain.id) + '.numa_cache_upward.addr_ranges: ', domain.numa_cache_upward.addr_ranges)
-    else:
-        print_addr_ranges('domain#' + str(domain.id) + '.numa_bridge_downward.addr_ranges: ', domain.numa_bridge_downward.ranges)
-        print_addr_ranges('domain#' + str(domain.id) + '.numa_bridge_upward.addr_ranges: ', domain.numa_bridge_upward.ranges)
+for numa_cache in test_sys.numa_caches:
+    print_addr_ranges('numa_cache#' + numa_cache.get_name() + '.addr_ranges: ', numa_cache.addr_ranges)
 
 print_addr_ranges('test_sys.bridge.ranges: ', test_sys.bridge.ranges)
 
-if options.caches or options.l2cache:
-    print_addr_ranges('test_sys.iocache.addr_ranges: ', test_sys.iocache.addr_ranges)
-else:
-    print_addr_ranges('test_sys.iobridge.addr_ranges: ', test_sys.iobridge.ranges)
+print_addr_ranges('test_sys.iocache.addr_ranges: ', test_sys.iocache.addr_ranges)
 
 if len(bm) != 1:
     print "Error I only know how to create one system."

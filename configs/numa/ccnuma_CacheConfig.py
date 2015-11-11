@@ -52,31 +52,26 @@ def config_cache(options, system, domain):
 
     dcache_class, icache_class, l2_cache_class = L1_DCache, L1_ICache, L2Cache
 
-    if options.l2cache:
-        # Provide a clock for the L2 and the L1-to-L2 bus here as they
-        # are not connected using addTwoLevelCacheHierarchy. Use the
-        # same clock as the CPUs.
-        domain.l2 = l2_cache_class(size=options.l2_size,
-                                   assoc=options.l2_assoc)
+    # Provide a clock for the L2 and the L1-to-L2 bus here as they
+    # are not connected using addTwoLevelCacheHierarchy. Use the
+    # same clock as the CPUs.
+    domain.l2 = l2_cache_class(size=options.l2_size,
+                               assoc=options.l2_assoc)
 
-        domain.tol2bus = L2XBar()
-        domain.l2.cpu_side = domain.tol2bus.master
-        domain.l2.mem_side = domain.membus.slave
+    domain.tol2bus = L2XBar()
+    domain.l2.cpu_side = domain.tol2bus.master
+    domain.l2.mem_side = domain.membus.slave
 
     for cpu in domain.cpu:
-        if options.caches:
-            icache = icache_class(size=options.l1i_size,
-                                  assoc=options.l1i_assoc)
-            dcache = dcache_class(size=options.l1d_size,
-                                  assoc=options.l1d_assoc)
+        icache = icache_class(size=options.l1i_size,
+                              assoc=options.l1i_assoc)
+        dcache = dcache_class(size=options.l1d_size,
+                              assoc=options.l1d_assoc)
 
-            cpu.addPrivateSplitL1Caches(icache, dcache)
+        cpu.addPrivateSplitL1Caches(icache, dcache)
 
         cpu.createInterruptController()
 
-        if options.l2cache:
-            cpu.connectAllPorts(domain.tol2bus, domain.membus)
-        else:
-            cpu.connectAllPorts(domain.membus)
+        cpu.connectAllPorts(domain.tol2bus, domain.membus)
 
     return domain

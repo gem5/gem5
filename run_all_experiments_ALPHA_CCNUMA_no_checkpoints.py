@@ -23,7 +23,7 @@ for bench in benches:
         os.system('rm -fr ' + dir)
         os.system('mkdir -p ' + dir)
 
-        cmd_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/numa/ccnuma_fs.py --two-phase --cpu-type=timing --num-cpus=' \
+        cmd_run = 'build/ALPHA_MESI_Two_Level/gem5.debug --debug-flags=Cache,XBar,MemoryAccess -d ' + dir + ' configs/numa/ccnuma_fs.py --two-phase --cpu-type=timing --num-cpus=' \
                          + str(num_thread) + ' --script=ext/parsec/2.1/run_scripts/' \
                           + bench + '_' + str(num_thread) + 'c_simsmall.rcS' \
                           + ' --caches --l2cache --num-l2caches=1' \
