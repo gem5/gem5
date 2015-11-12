@@ -851,7 +851,8 @@ CoherentXBar::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
     }
 
     // forward to all snoopers
-    forwardFunctional(pkt, InvalidPortID);
+//    forwardFunctional(pkt, InvalidPortID);
+    forwardFunctional(pkt, master_port_id); //TODO: to exclude opposite port for NUMA via config
 }
 
 void
