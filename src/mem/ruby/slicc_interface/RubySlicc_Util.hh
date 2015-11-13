@@ -65,6 +65,13 @@ addressToInt(Addr addr)
     return addr;
 }
 
+inline Addr
+intToAddress(int addr)
+{
+    assert(!(addr & 0xffffffff00000000));
+    return addr;
+}
+
 inline int
 mod(int val, int mod)
 {
