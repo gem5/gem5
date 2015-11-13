@@ -763,13 +763,13 @@ def gen_l2(tag):
             pass
         with tag('param', name = 'pure_ram', value = '0'):
             pass
-        with tag('stat', name = 'read_accesses', value = str(int(stats['system.l2.ReadExReq_accesses::total']))): # TODO
+        with tag('stat', name = 'read_accesses', value = str(int(stats['system.l2.ReadExReq_accesses::total'])+int(stats['system.l2.ReadCleanReq_accesses::total'])+int(stats['system.l2.ReadSharedReq_accesses::total']))): # TODO
            pass
-        with tag('stat', name = 'write_accesses', value = str(int(stats['system.l2.WriteExReq_accesses::total']))): # TODO
+        with tag('stat', name = 'write_accesses', value = str(int(stats['system.l2.Writeback_accesses::total']))): # TODO
            pass
-        with tag('stat', name = 'read_misses', value = str(int(stats['system.l2.ReadExReq_misses::total']))): # TODO
+        with tag('stat', name = 'read_misses', value = str(int(stats['system.l2.ReadExReq_misses::total'])+int(stats['system.l2.ReadSharedReq_misses::total'])+int(stats['system.l2.ReadCleanReq_misses::total']))): # TODO
            pass
-        with tag('stat', name = 'write_misses', value = str(int(stats['system.l2.WriteExReq_misses::total']))): # TODO
+        with tag('stat', name = 'write_misses', value = str(int(stats['system.l2.overall_misses::total'])-int(stats['system.l2.ReadExReq_misses::total'])-int(stats['system.l2.ReadSharedReq_misses::total'])-int(stats['system.l2.ReadCleanReq_misses::total']))): # TODO
            pass
 
         with tag('stat', name = 'conflicts', value = '1'): # TODO
