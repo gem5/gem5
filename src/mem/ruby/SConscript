@@ -115,6 +115,7 @@ MakeInclude('slicc_interface/RubyRequest.hh')
 
 # External types
 MakeInclude('common/Address.hh')
+MakeInclude('common/BoolVec.hh')
 MakeInclude('common/DataBlock.hh')
 MakeInclude('common/MachineID.hh')
 MakeInclude('common/NetDest.hh')

@@ -1,7 +1,15 @@
-
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,24 +33,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Brad Beckmann
  */
 
-// Miscallaneous Functions
+#include <ostream>
+#include <vector>
 
-void error(std::string msg);
-void assert(bool condition);
-int random(int number);
-Cycles zero_time();
-NodeID intToID(int nodenum);
-int IDToInt(NodeID id);
-int addressToInt(Addr addr);
-void procProfileCoherenceRequest(NodeID node, bool needCLB);
-void dirProfileCoherenceRequest(NodeID node, bool needCLB);
-int max_tokens();
-Addr setOffset(Addr addr, int offset);
-Addr makeLineAddress(Addr addr);
-int getOffset(Addr addr);
-int mod(int val, int mod);
-structure(BoolVec, external="yes") {
-}
-int countBoolVec(BoolVec bVec);
+typedef std::vector<bool> BoolVec;
+
+std::ostream& operator<<(std::ostream& os, const std::vector<bool>& myvector);

@@ -38,6 +38,7 @@
 #include "debug/RubySlicc.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/BoolVec.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
@@ -123,6 +124,18 @@ testAndWrite(Addr addr, DataBlock& blk, Packet *pkt)
         return true;
     }
     return false;
+}
+
+inline int
+countBoolVec(BoolVec bVec)
+{
+    int count = 0;
+    for (const auto &it: bVec) {
+        if (it) {
+            count++;
+        }
+    }
+    return count;
 }
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
