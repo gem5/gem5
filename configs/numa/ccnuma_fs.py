@@ -222,6 +222,10 @@ if args:
     print "Error: script doesn't take any positional arguments"
     sys.exit(1)
 
+if (not options.caches) or (not options.l2cache):
+    print "Only configurations with caches and l2cache on is supported"
+    sys.exit(-1)
+
 # system under test can be any CPU
 (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
