@@ -1,14 +1,22 @@
-1. Enable CC-NUMA architecture simulation in FS mode.
-2. Support running of Linux kernel 3.19.
-3. Support running of CPU2006.
-4. Test multiple workload mapping and running.
-5. Add automated experiment and plot scripting.
-6. Specify number of instructions/cycles to be simulated in detailed/FS simulation phase.
-7. add custom statistics in gem5 (e.g., formula)
-
+Urgent TODOs
 -------------------------------------------------
+1. Fix potential bugs caused by code hacks in coherent_xbar.cc.
+2. Use formula in place of hardcoded memory sizes in ccnuma_fs.py.
+3. Write driver scripts to run multicore and CC-NUMA experiments.
 
-parsec
+
+Normal TODOs
+-------------------------------------------------
+1. Support running of Linux kernel 3.19.
+2. Support running of CPU2006.
+3. Test multiple workload mapping and running.
+4. Add automated experiment and plot scripting.
+5. Specify number of instructions/cycles to be simulated in detailed/FS simulation phase.
+6. add custom statistics in gem5 (e.g., formula)
+
+
+PARSEC
+-------------------------------------------------
 http://comments.gmane.org/gmane.comp.emulators.m5.users/12503
 http://www.cs.utexas.edu/~parsec_m5/
 http://www.cs.utexas.edu/~parsec_m5/TR-09-32.pdf
@@ -16,24 +24,19 @@ http://www.m5sim.org/PARSEC_benchmarks#Running_PARSEC_in_gem5
 https://schen26.wordpress.com/2012/11/16/parsec-on-m5-with-x86_fs/
 http://yulistic.com/problems-solutions/230   [Gem5] Make a new boot image
 
--------------------------------------------------
 
-general
+General
+-------------------------------------------------
 https://github.com/lzyerste/gem5_doc/wiki
 
--------------------------------------------------
-
-arch research
-http://arc.zju.edu.cn/research
-
--------------------------------------------------
 
 gem5 horrors and solutions
+-------------------------------------------------
 http://www.lowepower.com/jason/gem5-horrors-and-what-we-can-do-about-it.html
 
--------------------------------------------------
 
-numa
+NUMA
+-------------------------------------------------
 http://qa.gem5.org/1395/how-to-simulate-a-numa-system?show=1395#q1395
 https://www.mail-archive.com/gem5-users@gem5.org/msg09699.html
 https://www.mail-archive.com/gem5-users@gem5.org/msg09709.html
