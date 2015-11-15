@@ -31,7 +31,7 @@ for bench in benches:
         for l2_assoc in l2_assoc_range:
             for l2_tags in l2_tags_range:
                 for num_thread in num_threads:
-                    dir = 'results/alpha/' + bench +'/' + l2_size + '/' + l2_assoc + '/' + l2_tags + '/' + str(num_thread) + 'c/'
+                    dir = 'results/alpha/' + bench +'/' + l2_size + '/' + l2_assoc + 'way/' + l2_tags + '/' + str(num_thread) + 'c/'
 
                     os.system('rm -fr ' + dir)
                     os.system('mkdir -p ' + dir)
