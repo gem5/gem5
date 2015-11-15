@@ -13,7 +13,7 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain):
     num_threads = num_domains * num_cpus_per_domain
 
     dir = 'results/alpha_ccnuma_no_checkpoints/' + bench + '/' + l2_size + '/' + l2_assoc + 'way/' + l2_tags + '/' + str(
-        num_domains) + 'd/' + str(num_cpus_per_domain) + 't/'
+        num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
 
     os.system('rm -fr ' + dir)
     os.system('mkdir -p ' + dir)
