@@ -763,15 +763,14 @@ def gen_l2(tag):
             pass
         with tag('param', name = 'pure_ram', value = '0'):
             pass
-        with tag('stat', name = 'read_accesses', value = str(int(stats['system.l2.ReadExReq_accesses::total'])+int(stats['system.l2.ReadCleanReq_accesses::total'])+int(stats['system.l2.ReadSharedReq_accesses::total']))): # TODO
+        with tag('stat', name = 'read_accesses', value = str(int(stats['system.l2.ReadExReq_accesses::total'])+int(stats['system.l2.ReadCleanReq_accesses::total'])+int(stats['system.l2.ReadSharedReq_accesses::total']))):
            pass
-        with tag('stat', name = 'write_accesses', value = str(int(stats['system.l2.Writeback_accesses::total']))): # TODO
+        with tag('stat', name = 'write_accesses', value = str(int(stats['system.l2.overall_accesses::total'])-int(stats['system.l2.ReadExReq_accesses::total'])-int(stats['system.l2.ReadSharedReq_accesses::total'])-int(stats['system.l2.ReadCleanReq_accesses::total']))):
            pass
-        with tag('stat', name = 'read_misses', value = str(int(stats['system.l2.ReadExReq_misses::total'])+int(stats['system.l2.ReadSharedReq_misses::total'])+int(stats['system.l2.ReadCleanReq_misses::total']))): # TODO
+        with tag('stat', name = 'read_misses', value = str(int(stats['system.l2.ReadExReq_misses::total'])+int(stats['system.l2.ReadSharedReq_misses::total'])+int(stats['system.l2.ReadCleanReq_misses::total']))):
            pass
-        with tag('stat', name = 'write_misses', value = str(int(stats['system.l2.overall_misses::total'])-int(stats['system.l2.ReadExReq_misses::total'])-int(stats['system.l2.ReadSharedReq_misses::total'])-int(stats['system.l2.ReadCleanReq_misses::total']))): # TODO
+        with tag('stat', name = 'write_misses', value = str(int(stats['system.l2.overall_misses::total'])-int(stats['system.l2.ReadExReq_misses::total'])-int(stats['system.l2.ReadSharedReq_misses::total'])-int(stats['system.l2.ReadCleanReq_misses::total']))):
            pass
-
         with tag('stat', name = 'conflicts', value = '1'): # TODO
             pass
         with tag('stat', name = 'duty_cycle', value = '1'): # TODO
@@ -862,7 +861,7 @@ def gen_system(tag):
         pass
     with tag('param', name = 'broadcast_addr_din_over_ver_htrees', value = '0'):
         pass
-    with tag('stat', name = 'total_cycles', value = str(int(stats['system.cpu0.numCycles']))): # TODO
+    with tag('stat', name = 'total_cycles', value = str(int(stats['system.cpu0.numCycles']))):
         pass
 
     np = config_tree.execute('len($.system.cpu)')
