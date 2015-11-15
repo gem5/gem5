@@ -56,7 +56,8 @@
 
 CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter),
-      snoopResponseLatency(p->snoop_response_latency)
+      snoopResponseLatency(p->snoop_response_latency),
+      numa(p->numa)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -852,7 +853,8 @@ CoherentXBar::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
 
     // forward to all snoopers
 //    forwardFunctional(pkt, InvalidPortID);
-    forwardFunctional(pkt, master_port_id); //TODO: to exclude opposite port for NUMA via config
+    //TODO: the slave ID to exclude is not necessarily equivalent to the master port ID
+    forwardFunctional(pkt, numa ? master_port_id : InvalidPortID);
 }
 
 void

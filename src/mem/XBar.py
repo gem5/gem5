@@ -102,6 +102,8 @@ class CoherentXBar(BaseXBar):
 
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
+    numa = Param.Bool(False, "Whether the crossbar serves a pair of NUMA caches or not")
+
 class SnoopFilter(SimObject):
     type = 'SnoopFilter'
     cxx_header = "mem/snoop_filter.hh"

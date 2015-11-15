@@ -95,7 +95,7 @@ class Domain:
 
         self.mem_ranges = [AddrRange(Addr(str(self.id * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded
 
-        self.membus = MemBus()
+        self.membus = MemBus(numa=True)
 
 def build_test_system(np):
     cmdline = cmd_line_template()

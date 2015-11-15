@@ -273,6 +273,9 @@ class CoherentXBar : public BaseXBar
     /** Cycles of snoop response latency.*/
     const Cycles snoopResponseLatency;
 
+    /** Whether the crossbar serves a pair of NUMA caches or not. */
+    bool numa;
+
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call
