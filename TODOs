@@ -2,7 +2,6 @@ Urgent TODOs
 -------------------------------------------------
 1. Fix potential bugs caused by code hacks in coherent_xbar.cc.
 2. Use formula in place of hardcoded memory sizes in ccnuma_fs.py.
-3. Write driver scripts to run multicore and CC-NUMA experiments.
 
 
 Normal TODOs
