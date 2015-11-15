@@ -93,7 +93,7 @@ class Domain:
     def __init__(self, id = -1):
         self.id = id
 
-        self.mem_ranges = [AddrRange(Addr(str(self.id * 512) + 'MB'), size = options.mem_size_per_domain)] # TODO: 512 should not be hardcoded
+        self.mem_ranges = [AddrRange(Addr(str(self.id * 256) + 'MB'), size = options.mem_size_per_domain)] # TODO: 256 should not be hardcoded
 
         self.membus = MemBus(numa=True)
 
@@ -214,7 +214,7 @@ Options.addFSOptions(parser)
 
 parser.add_option('--num_domains', type='int', default=2, help = 'Number of NUMA domains')
 parser.add_option('--num_cpus_per_domain', type='int', default=2, help = 'Number of CPUs per NUMA domain')
-parser.add_option('--mem_size_per_domain', type='string', default='512MB', help = 'Memory size per NUMA domain')
+parser.add_option('--mem_size_per_domain', type='string', default='256MB', help = 'Memory size per NUMA domain')
 
 (options, args) = parser.parse_args()
 
