@@ -37,7 +37,7 @@ config_tree = Tree(config)
 num_cpus = config_tree.execute('len($.system.cpu)')
 num_l2caches = config_tree.execute('len($.system.l2cache)')
 
-numa = config_tree.execute('len($.system.numa_caches)') > 0
+numa = config_tree.execute('len($.system.numa_caches_upward)') > 0
 
 stat_rule = Word(printables) + Word('nan.%' + nums) + Optional(restOfLine)
 
