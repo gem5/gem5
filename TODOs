@@ -95,3 +95,48 @@ Hi Faris,
 >             connect their membus instances with a "glue" cache.
 >
 >             Andreas
+
+
+Understanding stat.txt file with multiple regions
+-------------------------------------------------
+https://www.mail-archive.com/gem5-users@gem5.org/msg08083.html
+
+Hi Fulya,
+
+
+> I am running Parsec on X86 FS mode using the precompiled Parsec binaries
+> for X86. When i examine the stats.txt file, I see 4 sets of simulation
+> statistics. I am using the .rcS script:
+> #!/bin/sh
+> # File to run the canneal benchmark
+> cd /parsec/install/bin
+> /sbin/m5 switchcpu
+> */sbin/m5 dumpstats
+> /sbin/m5 resetstats*
+> ./canneal 4 15000 2000 /parsec/install/inputs/canneal/200000.nets 64
+> echo "Done :D"
+> /sbin/m5 exit
+> /sbin/m5 exit
+> I am assuming the first set of stats correspond to the m5 command
+> "dumpstats" that i have in .rcS script right before the benchmark starts
+> execution. I am also assuming that the Parsec binaries themselves have
+> been instrumented to dump stats based on specific regions of the program
+> (like ROI). Could you confirm that? Also could you tell me what the next 3
+> sets of stats correspond to? I am trying to figure out how many
+> instructions are executed until the beginning of ROI.
+>
+
+That is correct that the PARSEC benchmarks on both the ALPHA and x86 disk
+images from our website (http://www.cs.utexas.edu/~parsec_m5/) will dump
+and reset statistics at the beginning and end of the benchmark region of
+interest.  Based on your run script above, you should see 4 separate sets
+of statistics at the end of simulation corresponding to: (1) the start of
+simulation until the dump in the runscript (above), (2) the beginning of
+the benchmark up to the beginning of the ROI in the benchmark, (3) the
+benchmark ROI, and (4) from the end of the ROI to when the simulation exits
+on '/sbin/m5 exit' (above).  If you are interested in the number of
+instructions leading up to the ROI, you'll be interested in the stats from
+the first two stats segments.
+
+  Hope this helps,
+  Joel
