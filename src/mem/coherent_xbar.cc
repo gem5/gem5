@@ -56,8 +56,7 @@
 
 CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter),
-      snoopResponseLatency(p->snoop_response_latency),
-      numa(p->numa)
+      snoopResponseLatency(p->snoop_response_latency)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -851,10 +850,36 @@ CoherentXBar::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
         }
     }
 
-    // forward to all snoopers
-//    forwardFunctional(pkt, InvalidPortID);
-    //TODO: the slave ID to exclude is not necessarily equivalent to the master port ID
-    forwardFunctional(pkt, numa ? master_port_id : InvalidPortID);
+    if(masterPorts[master_port_id]->getSlavePort().getOwner().isNUMACache())
+    {
+        // forward to all snoopers but the slave port ID corresponding to the master port ID.
+        PortID slave_port_id = getSlavePortIDFromNUMACache(master_port_id);
+        assert(slave_port_id != InvalidPortID);
+
+        forwardFunctional(pkt, slave_port_id);
+    }
+    else
+    {
+        // forward to all snoopers
+        forwardFunctional(pkt, InvalidPortID);
+    }
+}
+
+PortID
+CoherentXBar::getSlavePortIDFromNUMACache(PortID master_port_id)
+{
+    for (const auto& p : slavePorts)
+    {
+        if(p->getMasterPort().getOwner().isNUMACache())
+        {
+            return p->getId();
+        }
+    }
+
+    fatal("Can't find the slave port from a NUMA cache corresponding to the master port '%s'\n",
+        masterPorts[master_port_id]->name());
+
+    return InvalidPortID;
 }
 
 void

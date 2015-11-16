@@ -44,7 +44,8 @@
 #include "mem/mem_object.hh"
 
 MemObject::MemObject(const Params *params)
-    : ClockedObject(params)
+    : ClockedObject(params),
+      numa(params->numa)
 {
 }
 

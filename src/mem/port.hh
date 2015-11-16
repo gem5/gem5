@@ -101,6 +101,9 @@ class Port
     /** Get the port id. */
     PortID getId() const { return id; }
 
+    /** Get the owner. */
+    MemObject& getOwner() { return owner; }
+
 };
 
 /** Forward declaration */

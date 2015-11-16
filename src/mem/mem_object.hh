@@ -66,6 +66,9 @@ class MemObject : public ClockedObject
 
     MemObject(const Params *params);
 
+    /** Whether it is a NUMA cache or not. */
+    bool isNUMACache() { return numa; }
+
     /**
      * Get a master port with a given name and index. This is used at
      * binding time and returns a reference to a protocol-agnostic
@@ -91,6 +94,8 @@ class MemObject : public ClockedObject
      */
     virtual BaseSlavePort& getSlavePort(const std::string& if_name,
                                         PortID idx = InvalidPortID);
+
+    bool numa;
 };
 
 #endif //__MEM_MEM_OBJECT_HH__

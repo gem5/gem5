@@ -273,9 +273,6 @@ class CoherentXBar : public BaseXBar
     /** Cycles of snoop response latency.*/
     const Cycles snoopResponseLatency;
 
-    /** Whether the crossbar serves a pair of NUMA caches or not. */
-    bool numa;
-
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call
@@ -386,6 +383,10 @@ class CoherentXBar : public BaseXBar
      * @param exclude_slave_port_id Id of slave port to exclude
      */
     void forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id);
+
+    /** Get the corresponding slave port from the NUMA cache to which
+     the specified master port is connected */
+    PortID getSlavePortIDFromNUMACache(PortID master_port_id);
 
     Stats::Scalar snoops;
     Stats::Distribution snoopFanout;

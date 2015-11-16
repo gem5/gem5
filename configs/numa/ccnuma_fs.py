@@ -88,6 +88,7 @@ class NUMACache(Cache):
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
+    numa = True
 
 class Domain:
     def __init__(self, id = -1):
@@ -95,7 +96,7 @@ class Domain:
 
         self.mem_ranges = [AddrRange(Addr(str(self.id * 256) + 'MB'), size = options.mem_size_per_domain)] # TODO: 256 should not be hardcoded
 
-        self.membus = MemBus(numa=True)
+        self.membus = MemBus()
 
 def build_test_system(np):
     cmdline = cmd_line_template()
@@ -144,7 +145,8 @@ def build_test_system(np):
         domain.cpu = [TestCPUClass(cpu_id = options.num_cpus_per_domain * domain.id + i)
                     for i in range(options.num_cpus_per_domain)]
 
-    numa_caches = []
+    numa_caches_downward = []
+    numa_caches_upward = []
 
     mem_ctrls = []
     membus = []
@@ -172,23 +174,35 @@ def build_test_system(np):
             cpu.clk_domain = test_sys.cpu_clk_domain
         cpus += domain.cpu
 
-    for domainX in domains:
-        for domainY in domains:
-            if domainX.id != domainY.id:
-                numa_cache = NUMACache(addr_ranges = domainY.mem_ranges)
-                numa_cache.cpu_side = domainX.membus.master
-                numa_cache.mem_side = domainY.membus.slave
+    test_sys.system_bus = SystemXBar()
 
-                if domainY.id == 0:
-                    numa_cache.addr_ranges += test_sys.bridge.ranges
+    for domain in domains:
+        numa_cache_downward = NUMACache(addr_ranges=[])
+        numa_cache_downward.cpu_side = domain.membus.master
+        numa_cache_downward.mem_side = test_sys.system_bus.slave
 
-                numa_caches.append(numa_cache)
+        numa_cache_upward = NUMACache(addr_ranges=domain.mem_ranges)
+        numa_cache_upward.cpu_side = test_sys.system_bus.master
+        numa_cache_upward.mem_side = domain.membus.slave
+
+        for other_domain in domains:
+            if other_domain.id != domain.id:
+                numa_cache_downward.addr_ranges += other_domain.mem_ranges
+
+        if domain.id == 0:
+            numa_cache_upward.addr_ranges += test_sys.bridge.ranges
+        else:
+            numa_cache_downward.addr_ranges += test_sys.bridge.ranges
+
+        numa_caches_downward.append(numa_cache_downward)
+        numa_caches_upward.append(numa_cache_upward)
 
     # By default the IOCache runs at the system clock
     test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
     test_sys.iocache.cpu_side = test_sys.iobus.master
 
-    test_sys.numa_caches = numa_caches
+    test_sys.numa_caches_downward = numa_caches_downward
+    test_sys.numa_caches_upward = numa_caches_upward
 
     test_sys.mem_ctrls = mem_ctrls
     test_sys.membus = membus
@@ -263,8 +277,11 @@ for domain in domains:
         print 'mem_ctrl.range: ' + addr_range_to_str(mem_ctrl.range)
     print ''
 
-for numa_cache in test_sys.numa_caches:
-    print_addr_ranges('numa_cache#' + numa_cache.get_name() + '.addr_ranges: ', numa_cache.addr_ranges)
+for numa_cache in test_sys.numa_caches_downward:
+    print_addr_ranges(numa_cache.get_name() + '.addr_ranges: ', numa_cache.addr_ranges)
+
+for numa_cache in test_sys.numa_caches_upward:
+    print_addr_ranges(numa_cache.get_name() + '.addr_ranges: ', numa_cache.addr_ranges)
 
 print_addr_ranges('test_sys.bridge.ranges: ', test_sys.bridge.ranges)
 
