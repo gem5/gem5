@@ -622,7 +622,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
         nextState = Waiting;
         if (timingFault == NoFault) {
             /*
-             * Finish the translation. Now that we now the right entry is
+             * Finish the translation. Now that we know the right entry is
              * in the TLB, this should work with no memory accesses.
              * There could be new faults unrelated to the table walk like
              * permissions violations, so we'll need the return value as
