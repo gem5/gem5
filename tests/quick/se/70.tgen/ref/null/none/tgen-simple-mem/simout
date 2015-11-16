@@ -1,10 +1,12 @@
+Redirecting stdout to build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem/simout
+Redirecting stderr to build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 17 2015 08:02:53
-gem5 started Jun 17 2015 09:01:31
-gem5 executing on e104799-lin
-command line: build/NULL/gem5.opt -d build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem -re /work/gem5/outgoing/gem5_2/tests/run.py build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem
+gem5 compiled Nov 15 2015 14:58:33
+gem5 started Nov 15 2015 14:58:46
+gem5 executing on ribera.cs.wisc.edu, pid 5048
+command line: build/NULL/gem5.opt -d build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem -re /scratch/nilay/GEM5/gem5/tests/run.py build/NULL/tests/opt/quick/se/70.tgen/null/none/tgen-simple-mem
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

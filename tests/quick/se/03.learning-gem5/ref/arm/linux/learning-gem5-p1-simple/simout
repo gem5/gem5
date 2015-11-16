@@ -1,10 +1,12 @@
+Redirecting stdout to build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple/simout
+Redirecting stderr to build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  8 2015 14:23:26
-gem5 started Jul  8 2015 14:24:31
-gem5 executing on galapagos-15.cs.wisc.edu
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple -re /afs/cs.wisc.edu/p/multifacet/users/powerjg/gem5-tutorial/gem5/tests/run.py build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple
+gem5 compiled Nov 15 2015 15:24:37
+gem5 started Nov 15 2015 15:28:21
+gem5 executing on ribera.cs.wisc.edu, pid 11118
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!

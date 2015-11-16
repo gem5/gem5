@@ -3,10 +3,11 @@ Redirecting stderr to build/SPARC/tests/opt/quick/se/40.m5threads-test-atomic/sp
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 11 2014 05:01:31
-gem5 started Oct 11 2014 05:01:48
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Nov 15 2015 15:07:43
+gem5 started Nov 15 2015 15:08:11
+gem5 executing on ribera.cs.wisc.edu, pid 7751
 command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/40.m5threads-test-atomic/sparc/linux/simple-atomic-mp -re /scratch/nilay/GEM5/gem5/tests/run.py build/SPARC/tests/opt/quick/se/40.m5threads-test-atomic/sparc/linux/simple-atomic-mp
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Init done

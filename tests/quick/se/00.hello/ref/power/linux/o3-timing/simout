@@ -1,12 +1,14 @@
+Redirecting stdout to build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing/simout
+Redirecting stderr to build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr 22 2015 08:07:28
-gem5 started Apr 22 2015 08:13:52
-gem5 executing on phenom
-command line: build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing
+gem5 compiled Nov 15 2015 15:02:54
+gem5 started Nov 15 2015 15:03:14
+gem5 executing on ribera.cs.wisc.edu, pid 6374
+command line: build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 20101000 because target called exit()
+Exiting @ tick 19923000 because target called exit()

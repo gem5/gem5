@@ -3,9 +3,9 @@ Redirecting stderr to build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/o3-tim
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 20:54:01
-gem5 started Sep 14 2015 21:14:59
-gem5 executing on ribera.cs.wisc.edu
+gem5 compiled Nov 15 2015 14:28:00
+gem5 started Nov 15 2015 14:30:08
+gem5 executing on ribera.cs.wisc.edu, pid 29145
 command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/o3-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second

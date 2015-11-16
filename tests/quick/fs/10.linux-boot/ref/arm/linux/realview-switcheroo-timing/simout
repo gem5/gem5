@@ -1,9 +1,11 @@
+Redirecting stdout to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing/simout
+Redirecting stderr to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug  7 2015 10:13:08
-gem5 started Aug  7 2015 10:13:41
-gem5 executing on e104799-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing
+gem5 compiled Nov 15 2015 15:24:37
+gem5 started Nov 15 2015 15:25:11
+gem5 executing on ribera.cs.wisc.edu, pid 11032
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing
 
 Global frequency set at 1000000000000 ticks per second

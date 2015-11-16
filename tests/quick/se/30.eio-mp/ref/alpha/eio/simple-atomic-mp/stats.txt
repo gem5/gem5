@@ -4,11 +4,11 @@ sim_seconds                                  0.000250                       # Nu
 sim_ticks                                   250015500                       # Number of ticks simulated
 final_tick                                  250015500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1088528                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1088500                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              136068763                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 242992                       # Number of bytes of host memory used
-host_seconds                                     1.84                       # Real time elapsed on the host
+host_inst_rate                                1830318                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1830286                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              228795713                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 302752                       # Number of bytes of host memory used
+host_seconds                                     1.09                       # Real time elapsed on the host
 sim_insts                                     2000004                       # Number of instructions simulated
 sim_ops                                       2000004                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -257,6 +257,8 @@ system.cpu0.icache.avg_blocked_cycles::no_mshrs          nan                    
 system.cpu0.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
+system.cpu0.icache.writebacks::writebacks          152                       # number of writebacks
+system.cpu0.icache.writebacks::total              152                       # number of writebacks
 system.cpu0.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu1.dtb.fetch_hits                          0                       # ITB hits
 system.cpu1.dtb.fetch_misses                        0                       # ITB misses
@@ -455,6 +457,8 @@ system.cpu1.icache.avg_blocked_cycles::no_mshrs          nan                    
 system.cpu1.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
+system.cpu1.icache.writebacks::writebacks          152                       # number of writebacks
+system.cpu1.icache.writebacks::total              152                       # number of writebacks
 system.cpu1.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu2.dtb.fetch_hits                          0                       # ITB hits
 system.cpu2.dtb.fetch_misses                        0                       # ITB misses
@@ -653,6 +657,8 @@ system.cpu2.icache.avg_blocked_cycles::no_mshrs          nan                    
 system.cpu2.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu2.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu2.icache.cache_copies                     0                       # number of cache copies performed
+system.cpu2.icache.writebacks::writebacks          152                       # number of writebacks
+system.cpu2.icache.writebacks::total              152                       # number of writebacks
 system.cpu2.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu3.dtb.fetch_hits                          0                       # ITB hits
 system.cpu3.dtb.fetch_misses                        0                       # ITB misses
@@ -851,6 +857,8 @@ system.cpu3.icache.avg_blocked_cycles::no_mshrs          nan                    
 system.cpu3.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu3.icache.fast_writes                      0                       # number of fast writes performed
 system.cpu3.icache.cache_copies                     0                       # number of cache copies performed
+system.cpu3.icache.writebacks::writebacks          152                       # number of writebacks
+system.cpu3.icache.writebacks::total              152                       # number of writebacks
 system.cpu3.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.l2c.tags.replacements                        0                       # number of replacements
 system.l2c.tags.tagsinuse                 1962.780232                       # Cycle average of tags in use
@@ -884,8 +892,10 @@ system.l2c.tags.age_task_id_blocks_1024::2         1836                       # 
 system.l2c.tags.occ_task_id_percent::1024     0.044739                       # Percentage of cache occupancy per task id
 system.l2c.tags.tag_accesses                    39936                       # Number of tag accesses
 system.l2c.tags.data_accesses                   39936                       # Number of data accesses
-system.l2c.Writeback_hits::writebacks             116                       # number of Writeback hits
-system.l2c.Writeback_hits::total                  116                       # number of Writeback hits
+system.l2c.WritebackDirty_hits::writebacks          116                       # number of WritebackDirty hits
+system.l2c.WritebackDirty_hits::total             116                       # number of WritebackDirty hits
+system.l2c.WritebackClean_hits::writebacks          608                       # number of WritebackClean hits
+system.l2c.WritebackClean_hits::total             608                       # number of WritebackClean hits
 system.l2c.ReadCleanReq_hits::cpu0.inst            60                       # number of ReadCleanReq hits
 system.l2c.ReadCleanReq_hits::cpu1.inst            60                       # number of ReadCleanReq hits
 system.l2c.ReadCleanReq_hits::cpu2.inst            60                       # number of ReadCleanReq hits
@@ -947,8 +957,10 @@ system.l2c.overall_misses::cpu2.data              454                       # nu
 system.l2c.overall_misses::cpu3.inst              403                       # number of overall misses
 system.l2c.overall_misses::cpu3.data              454                       # number of overall misses
 system.l2c.overall_misses::total                 3428                       # number of overall misses
-system.l2c.Writeback_accesses::writebacks          116                       # number of Writeback accesses(hits+misses)
-system.l2c.Writeback_accesses::total              116                       # number of Writeback accesses(hits+misses)
+system.l2c.WritebackDirty_accesses::writebacks          116                       # number of WritebackDirty accesses(hits+misses)
+system.l2c.WritebackDirty_accesses::total          116                       # number of WritebackDirty accesses(hits+misses)
+system.l2c.WritebackClean_accesses::writebacks          608                       # number of WritebackClean accesses(hits+misses)
+system.l2c.WritebackClean_accesses::total          608                       # number of WritebackClean accesses(hits+misses)
 system.l2c.ReadExReq_accesses::cpu0.data          139                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::cpu1.data          139                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::cpu2.data          139                       # number of ReadExReq accesses(hits+misses)
@@ -1050,8 +1062,9 @@ system.toL2Bus.snoop_filter.tot_snoops              0                       # To
 system.toL2Bus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.toL2Bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.toL2Bus.trans_dist::ReadResp              3148                       # Transaction distribution
-system.toL2Bus.trans_dist::Writeback              116                       # Transaction distribution
-system.toL2Bus.trans_dist::CleanEvict             736                       # Transaction distribution
+system.toL2Bus.trans_dist::WritebackDirty          116                       # Transaction distribution
+system.toL2Bus.trans_dist::WritebackClean          608                       # Transaction distribution
+system.toL2Bus.trans_dist::CleanEvict             128                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadExReq              556                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadExResp             556                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadCleanReq          1852                       # Transaction distribution
@@ -1065,15 +1078,15 @@ system.toL2Bus.pkt_count_system.cpu2.dcache.mem_side::system.l2c.cpu_side       
 system.toL2Bus.pkt_count_system.cpu3.icache.mem_side::system.l2c.cpu_side         1078                       # Packet count per connected master and slave (bytes)
 system.toL2Bus.pkt_count_system.cpu3.dcache.mem_side::system.l2c.cpu_side          987                       # Packet count per connected master and slave (bytes)
 system.toL2Bus.pkt_count::total                  8260                       # Packet count per connected master and slave (bytes)
-system.toL2Bus.pkt_size_system.cpu0.icache.mem_side::system.l2c.cpu_side        29632                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size_system.cpu0.icache.mem_side::system.l2c.cpu_side        39360                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu0.dcache.mem_side::system.l2c.cpu_side        31488                       # Cumulative packet size per connected master and slave (bytes)
-system.toL2Bus.pkt_size_system.cpu1.icache.mem_side::system.l2c.cpu_side        29632                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size_system.cpu1.icache.mem_side::system.l2c.cpu_side        39360                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu1.dcache.mem_side::system.l2c.cpu_side        31488                       # Cumulative packet size per connected master and slave (bytes)
-system.toL2Bus.pkt_size_system.cpu2.icache.mem_side::system.l2c.cpu_side        29632                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size_system.cpu2.icache.mem_side::system.l2c.cpu_side        39360                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu2.dcache.mem_side::system.l2c.cpu_side        31488                       # Cumulative packet size per connected master and slave (bytes)
-system.toL2Bus.pkt_size_system.cpu3.icache.mem_side::system.l2c.cpu_side        29632                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size_system.cpu3.icache.mem_side::system.l2c.cpu_side        39360                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.pkt_size_system.cpu3.dcache.mem_side::system.l2c.cpu_side        31488                       # Cumulative packet size per connected master and slave (bytes)
-system.toL2Bus.pkt_size::total                 244480                       # Cumulative packet size per connected master and slave (bytes)
+system.toL2Bus.pkt_size::total                 283392                       # Cumulative packet size per connected master and slave (bytes)
 system.toL2Bus.snoops                               0                       # Total snoops (count)
 system.toL2Bus.snoop_fanout::samples             4556                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::mean                   0                       # Request fanout histogram

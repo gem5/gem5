@@ -1,12 +1,15 @@
+Redirecting stdout to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing/simout
+Redirecting stderr to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 16:53:01
-gem5 started Jan 22 2014 17:28:24
-gem5 executing on u200540-lin
-command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing -re tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing
+gem5 compiled Nov 15 2015 14:56:12
+gem5 started Nov 15 2015 14:56:35
+gem5 executing on ribera.cs.wisc.edu, pid 4274
+command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 31633000 because target called exit()
+Exiting @ tick 33912500 because target called exit()

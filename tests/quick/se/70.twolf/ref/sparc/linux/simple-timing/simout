@@ -1,12 +1,13 @@
+Redirecting stdout to build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-timing/simout
+Redirecting stderr to build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:04:27
-gem5 started Jan 22 2014 19:50:23
-gem5 executing on u200540-lin
-command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing -re tests/run.py build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing
-Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/smred.sav
-Couldn't unlink  build/SPARC/tests/opt/long/se/70.twolf/sparc/linux/simple-timing/smred.sv2
+gem5 compiled Nov 15 2015 15:07:43
+gem5 started Nov 15 2015 15:08:10
+gem5 executing on ribera.cs.wisc.edu, pid 7747
+command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-timing
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -23,4 +24,4 @@ Authors: Carl Sechen, Bill Swartz
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
 info: Increasing stack size by one page.
-122 123 124 Exiting @ tick 270563082000 because target called exit()
+122 123 124 Exiting @ tick 270599529500 because target called exit()
