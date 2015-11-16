@@ -43,15 +43,21 @@ stat_rule = Word(printables) + Word('nan.%' + nums) + Optional(restOfLine)
 
 stats = collections.OrderedDict()
 
+section_num_to_use = 2 if numa else 1
+
 with open(stats_file_name) as stats_file:
+    i = 0
     for stat_line in stats_file:
-        try:
-            stat = stat_rule.parseString(stat_line)
-            key = stat[0]
-            value = stat[1]
-            stats[key] = value
-        except ParseException, err:
-            pass
+        if 'End Simulation Statistics' in stat_line:
+            i += 1
+        elif i == section_num_to_use:
+            try:
+                stat = stat_rule.parseString(stat_line)
+                key = stat[0]
+                value = stat[1]
+                stats[key] = value
+            except ParseException, err:
+                pass
 
 
 def cpu_id(i, l1=False):
