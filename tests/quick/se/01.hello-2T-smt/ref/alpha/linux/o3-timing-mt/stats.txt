@@ -574,18 +574,12 @@ system.cpu.iew.wb_producers::total              10445                       # nu
 system.cpu.iew.wb_consumers::0                   6868                       # num instructions consuming a value
 system.cpu.iew.wb_consumers::1                   6926                       # num instructions consuming a value
 system.cpu.iew.wb_consumers::total              13794                       # num instructions consuming a value
-system.cpu.iew.wb_penalized::0                      0                       # number of instrctions required to write to 'other' IQ
-system.cpu.iew.wb_penalized::1                      0                       # number of instrctions required to write to 'other' IQ
-system.cpu.iew.wb_penalized::total                  0                       # number of instrctions required to write to 'other' IQ
 system.cpu.iew.wb_rate::0                    0.196110                       # insts written-back per cycle
 system.cpu.iew.wb_rate::1                    0.199191                       # insts written-back per cycle
 system.cpu.iew.wb_rate::total                0.395301                       # insts written-back per cycle
 system.cpu.iew.wb_fanout::0                  0.755533                       # average fanout of values written-back
 system.cpu.iew.wb_fanout::1                  0.758880                       # average fanout of values written-back
 system.cpu.iew.wb_fanout::total              0.757213                       # average fanout of values written-back
-system.cpu.iew.wb_penalized_rate::0                 0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu.iew.wb_penalized_rate::1                 0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu.iew.wb_penalized_rate::total             0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu.commit.commitSquashedInsts           14447                       # The number of squashed insts skipped by commit
 system.cpu.commit.commitNonSpecStalls              34                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu.commit.branchMispredicts              1048                       # The number of times a branch was mispredicted

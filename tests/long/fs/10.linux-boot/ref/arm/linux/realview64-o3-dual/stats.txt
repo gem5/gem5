@@ -815,10 +815,8 @@ system.cpu0.iew.wb_sent                     557331942                       # cu
 system.cpu0.iew.wb_count                    556570150                       # cumulative count of insts written-back
 system.cpu0.iew.wb_producers                270940614                       # num instructions producing a value
 system.cpu0.iew.wb_consumers                444738310                       # num instructions consuming a value
-system.cpu0.iew.wb_penalized                        0                       # number of instrctions required to write to 'other' IQ
 system.cpu0.iew.wb_rate                      0.705154                       # insts written-back per cycle
 system.cpu0.iew.wb_fanout                    0.609214                       # average fanout of values written-back
-system.cpu0.iew.wb_penalized_rate                   0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu0.commit.commitSquashedInsts       45776609                       # The number of squashed insts skipped by commit
 system.cpu0.commit.commitNonSpecStalls       14653410                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu0.commit.branchMispredicts          4520969                       # The number of times a branch was mispredicted
@@ -2128,10 +2126,8 @@ system.cpu1.iew.wb_sent                     580075402                       # cu
 system.cpu1.iew.wb_count                    579337102                       # cumulative count of insts written-back
 system.cpu1.iew.wb_producers                280158358                       # num instructions producing a value
 system.cpu1.iew.wb_consumers                458852190                       # num instructions consuming a value
-system.cpu1.iew.wb_penalized                        0                       # number of instrctions required to write to 'other' IQ
 system.cpu1.iew.wb_rate                      0.763134                       # insts written-back per cycle
 system.cpu1.iew.wb_fanout                    0.610563                       # average fanout of values written-back
-system.cpu1.iew.wb_penalized_rate                   0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu1.commit.commitSquashedInsts       47675638                       # The number of squashed insts skipped by commit
 system.cpu1.commit.commitNonSpecStalls       16303859                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu1.commit.branchMispredicts          4608134                       # The number of times a branch was mispredicted
