@@ -209,10 +209,11 @@ use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                  'PYTHONPATH', 'RANLIB', 'SWIG', 'TERM' ])
 
 use_prefixes = [
-    "M5",           # M5 configuration (e.g., path to kernels)
-    "DISTCC_",      # distcc (distributed compiler wrapper) configuration
-    "CCACHE_",      # ccache (caching compiler wrapper) configuration
-    "CCC_",         # clang static analyzer configuration
+    "CCACHE_",         # ccache (caching compiler wrapper) configuration
+    "CCC_",            # clang static analyzer configuration
+    "DISTCC_",         # distcc (distributed compiler wrapper) configuration
+    "INCLUDE_SERVER_", # distcc pump server settings
+    "M5",              # M5 configuration (e.g., path to kernels)
     ]
 
 use_env = {}

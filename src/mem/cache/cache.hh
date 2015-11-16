@@ -304,7 +304,7 @@ class Cache : public BaseCache
      * @param cmd Command of the incoming requesting packet
      * @return Whether we should allocate on the fill
      */
-    inline bool allocOnFill(MemCmd cmd) const
+    inline bool allocOnFill(MemCmd cmd) const override
     {
         return clusivity == Enums::mostly_incl ||
             cmd == MemCmd::WriteLineReq ||
