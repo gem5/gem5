@@ -273,19 +273,6 @@ DefaultIEW<Impl>::regStats()
         .desc("num instructions consuming a value")
         .flags(total);
 
-    wbPenalized
-        .init(cpu->numThreads)
-        .name(name() + ".wb_penalized")
-        .desc("number of instrctions required to write to 'other' IQ")
-        .flags(total);
-
-    wbPenalizedRate
-        .name(name() + ".wb_penalized_rate")
-        .desc ("fraction of instructions written-back that wrote to 'other' IQ")
-        .flags(total);
-
-    wbPenalizedRate = wbPenalized / writebackCount;
-
     wbFanout
         .name(name() + ".wb_fanout")
         .desc("average fanout of values written-back")

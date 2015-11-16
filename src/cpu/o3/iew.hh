@@ -471,16 +471,10 @@ class DefaultIEW
     Stats::Vector producerInst;
     /** Number of instructions that wake up from producers. */
     Stats::Vector consumerInst;
-    /** Number of instructions that were delayed in writing back due
-     * to resource contention.
-     */
-    Stats::Vector wbPenalized;
     /** Number of instructions per cycle written back. */
     Stats::Formula wbRate;
     /** Average number of woken instructions per writeback. */
     Stats::Formula wbFanout;
-    /** Number of instructions per cycle delayed in writing back . */
-    Stats::Formula wbPenalizedRate;
 };
 
 #endif // __CPU_O3_IEW_HH__
