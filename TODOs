@@ -71,7 +71,7 @@ F. IO devices are connected to the first node.
 
 > Hi Faris,
 >
-> I do not thing there are any existing examples out there. In essence,
+> I do not think there are any existing examples out there. In essence,
 > this is what I would suggest (and believe should work):
 >
 > 1 change an existing script to create two completely separate CC-UMA
