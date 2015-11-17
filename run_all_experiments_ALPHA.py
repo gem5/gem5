@@ -74,7 +74,7 @@ def run_experiments(bench):
     run(bench, '256kB', 8, 'LRU', 8)
     run(bench, '256kB', 8, 'LRU', 16)
 
-run_experiments('blacksholes')
+run_experiments('blackscholes')
 # run_experiments('bodytrack')
 # run_experiments('canneal')
 # run_experiments('dedup')
