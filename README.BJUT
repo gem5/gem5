@@ -8,7 +8,7 @@ sudo apt-get install git mercurial scons build-essential swig python-dev python-
 pip install objectpath yattag pytz
 
 3. Checkout gem5:
-git clone https://github.com/mcai/gem5 --verbose
+git clone https://github.com/mcai/gem5
 
 4. Build gem5:
 cd gem5/;./compile_ALPHA.sh
