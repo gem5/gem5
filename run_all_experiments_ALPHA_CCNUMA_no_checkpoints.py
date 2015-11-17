@@ -64,18 +64,18 @@ l2_tags_range = ['LRU']
 
 
 def run_experiments(bench):
-    run(bench, '256KB', 8, 'LRU', 2, 2)
-    run(bench, '512KB', 8, 'LRU', 2, 2)
+    run(bench, '256kB', 8, 'LRU', 2, 2)
+    run(bench, '512kB', 8, 'LRU', 2, 2)
     run(bench, '1MB', 8, 'LRU', 2, 2)
     run(bench, '2MB', 8, 'LRU', 2, 2)
     run(bench, '4MB', 8, 'LRU', 2, 2)
     run(bench, '8MB', 8, 'LRU', 2, 2)
 
-    run(bench, '256KB', 8, 'LRU', 2, 1)
-    run(bench, '256KB', 8, 'LRU', 2, 2)
-    run(bench, '256KB', 8, 'LRU', 4, 1)
-    run(bench, '256KB', 8, 'LRU', 4, 2)
-    run(bench, '256KB', 8, 'LRU', 4, 4)
+    run(bench, '256kB', 8, 'LRU', 2, 1)
+    run(bench, '256kB', 8, 'LRU', 2, 2)
+    run(bench, '256kB', 8, 'LRU', 4, 1)
+    run(bench, '256kB', 8, 'LRU', 4, 2)
+    run(bench, '256kB', 8, 'LRU', 4, 4)
 
 run_experiments('blacksholes')
 # run_experiments('bodytrack')
