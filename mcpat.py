@@ -43,7 +43,7 @@ stat_rule = Word(printables) + Word('nan.%' + nums) + Optional(restOfLine)
 
 stats = collections.OrderedDict()
 
-section_num_to_use = 2 if numa else 1
+section_num_to_use = 2
 
 with open(stats_file_name) as stats_file:
     i = 0
@@ -61,7 +61,7 @@ with open(stats_file_name) as stats_file:
 
 
 def cpu_id(i, l1=False):
-    return config_tree.execute('$.system.' + ('switch_cpus' if not l1 and numa else 'cpu') + '[' + str(i) + '].name')
+    return config_tree.execute('$.system.' + ('switch_cpus' if not l1 else 'cpu') + '[' + str(i) + '].name')
 
 
 def l2_id(i=None):
