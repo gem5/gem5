@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #
-# A Python script to run all checkpoint-based experiments for PARSEC 2.1 benchmarks.
+# A Python script to run all CC-NUMA multi-core experiments for PARSEC 2.1 benchmarks.
 #
 # Copyright (C) Min Cai 2015
 #
@@ -33,49 +33,21 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain):
     os.system(cmd_mcpat)
 
 
-# benches = ['blackscholes', 'bodytrack', 'canneal', 'dedup', 'facesim',
-#            'ferret', 'fluidanimate', 'freqmine', 'streamcluster',
-#            'swaptions', 'vips', 'x264']
-benches = ['blackscholes']
-
-# num_domains_range = [2, 4]
-num_domains_range = [2]
-
-# num_cpus_per_domain_range = [1, 2, 4]
-num_cpus_per_domain_range = [2]
-
-# l2_size_range = ['256kB', '512kB', '1MB', '2MB']
-l2_size_range = ['256kB']
-
-# l2_assoc_range = [4, 8, 16, 32]
-l2_assoc_range = [8]
-
-# l2_tags_range = ['LRU', 'Random']
-l2_tags_range = ['LRU']
-# l2_tags_range = ['Random']
-
-# for bench in benches:
-#     for l2_size in l2_size_range:
-#         for l2_assoc in l2_assoc_range:
-#             for l2_tags in l2_tags_range:
-#                 for num_domains in num_domains_range:
-#                     for num_cpus_per_domain in num_cpus_per_domain_range:
-#                         run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain)
-
-
 def run_experiments(bench):
-    run(bench, '256kB', 8, 'LRU', 2, 2)
-    run(bench, '512kB', 8, 'LRU', 2, 2)
-    run(bench, '1MB', 8, 'LRU', 2, 2)
-    run(bench, '2MB', 8, 'LRU', 2, 2)
-    run(bench, '4MB', 8, 'LRU', 2, 2)
-    run(bench, '8MB', 8, 'LRU', 2, 2)
-
-    run(bench, '256kB', 8, 'LRU', 2, 1)
-    run(bench, '256kB', 8, 'LRU', 2, 2)
-    run(bench, '256kB', 8, 'LRU', 4, 1)
-    run(bench, '256kB', 8, 'LRU', 4, 2)
-    run(bench, '256kB', 8, 'LRU', 4, 4)
+    # run(bench, '256kB', 8, 'LRU', 2, 2)
+    # run(bench, '512kB', 8, 'LRU', 2, 2)
+    # run(bench, '1MB', 8, 'LRU', 2, 2)
+    # run(bench, '2MB', 8, 'LRU', 2, 2)
+    # run(bench, '4MB', 8, 'LRU', 2, 2)
+    # run(bench, '8MB', 8, 'LRU', 2, 2)
+    #
+    # run(bench, '256kB', 8, 'LRU', 2, 1)
+    # run(bench, '256kB', 8, 'LRU', 2, 2)
+    run(bench, '256kB', 8, 'LRU', 2, 4)
+    run(bench, '256kB', 8, 'LRU', 2, 8)
+    # run(bench, '256kB', 8, 'LRU', 4, 1)
+    # run(bench, '256kB', 8, 'LRU', 4, 2)
+    # run(bench, '256kB', 8, 'LRU', 4, 4)
 
 run_experiments('blackscholes')
 # run_experiments('bodytrack')
