@@ -48,8 +48,6 @@ def run_experiments(bench):
     # run(bench, '256kB', 8, 'LRU', 4, 1)
     # run(bench, '256kB', 8, 'LRU', 4, 2)
     # run(bench, '256kB', 8, 'LRU', 4, 4)
-    run(bench, '256kB', 8, 'LRU', 8, 1)
-    run(bench, '256kB', 8, 'LRU', 8, 2)
 
 run_experiments('blackscholes')
 # run_experiments('bodytrack')
