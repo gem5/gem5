@@ -23,10 +23,6 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_threads):
     print cmd_run
     os.system(cmd_run)
 
-    cmd_mcpat = './mcpat.py --config=' + dir + 'config.json --stats=' + dir + 'stats.txt --mcpat_in=' + dir + 'mcpat_in.xml --mcpat_out=' + dir + 'mcpat_out.txt'
-    print cmd_mcpat
-    os.system(cmd_mcpat)
-
 
 def run_experiments(bench):
     run(bench, '256kB', 8, 'LRU', 4)
@@ -38,7 +34,6 @@ def run_experiments(bench):
     #
     # run(bench, '256kB', 8, 'LRU', 1)
     # run(bench, '256kB', 8, 'LRU', 2)
-    # run(bench, '256kB', 8, 'LRU', 4)
     # run(bench, '256kB', 8, 'LRU', 8)
     # run(bench, '256kB', 8, 'LRU', 16)
 

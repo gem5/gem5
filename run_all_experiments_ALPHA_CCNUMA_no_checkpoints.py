@@ -28,13 +28,9 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain):
     print cmd_run
     os.system(cmd_run)
 
-    cmd_mcpat = './mcpat.py --config=' + dir + 'config.json --stats=' + dir + 'stats.txt --mcpat_in=' + dir + 'mcpat_in.xml --mcpat_out=' + dir + 'mcpat_out.txt'
-    print cmd_mcpat
-    os.system(cmd_mcpat)
-
 
 def run_experiments(bench):
-    # run(bench, '256kB', 8, 'LRU', 2, 2)
+    run(bench, '256kB', 8, 'LRU', 2, 2)
     # run(bench, '512kB', 8, 'LRU', 2, 2)
     # run(bench, '1MB', 8, 'LRU', 2, 2)
     # run(bench, '2MB', 8, 'LRU', 2, 2)
@@ -42,9 +38,8 @@ def run_experiments(bench):
     # run(bench, '8MB', 8, 'LRU', 2, 2)
     #
     # run(bench, '256kB', 8, 'LRU', 2, 1)
-    # run(bench, '256kB', 8, 'LRU', 2, 2)
-    run(bench, '256kB', 8, 'LRU', 2, 4)
-    run(bench, '256kB', 8, 'LRU', 2, 8)
+    # run(bench, '256kB', 8, 'LRU', 2, 4)
+    # run(bench, '256kB', 8, 'LRU', 2, 8)
     # run(bench, '256kB', 8, 'LRU', 4, 1)
     # run(bench, '256kB', 8, 'LRU', 4, 2)
     # run(bench, '256kB', 8, 'LRU', 4, 4)
