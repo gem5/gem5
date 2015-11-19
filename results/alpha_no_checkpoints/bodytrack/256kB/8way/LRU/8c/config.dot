@@ -1,0 +1,2297 @@
+digraph G {
+ranksep="1.3";
+subgraph cluster_root {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;full_system&#61;true&#10;sim_quantum&#61;0&#10;time_sync_enable&#61;false&#10;time_sync_period&#61;100000000000&#10;time_sync_spin_threshold&#61;100000000";
+label="root \n: Root";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="boot_cpu_frequency&#61;500&#10;boot_osflags&#61;root=/dev/hda1 console=ttyS0&#10;cache_line_size&#61;64&#10;clk_domain&#61;system.clk_domain&#10;console&#61;/home/tick/Tools/GEM5/system/binaries/console&#10;eventq_index&#61;0&#10;init_param&#61;0&#10;kernel&#61;/home/tick/Tools/GEM5/system/binaries/vmlinux_2.6.27-gcc_4.3.4&#10;kernel_addr_check&#61;true&#10;load_addr_mask&#61;1099511627775&#10;load_offset&#61;0&#10;mem_mode&#61;atomic&#10;mem_ranges&#61;0:536870911&#10;memories&#61;system.mem_ctrls&#10;mmap_using_noreserve&#61;false&#10;multi_thread&#61;false&#10;num_work_ids&#61;16&#10;numa&#61;false&#10;pal&#61;/home/tick/Tools/GEM5/system/binaries/tsb_osfpal&#10;readfile&#61;ext/parsec/2.1/run_scripts/bodytrack_8c_simsmall.rcS&#10;symbolfile&#61;&#10;system_rev&#61;1024&#10;system_type&#61;34&#10;work_begin_ckpt_count&#61;0&#10;work_begin_cpu_id_exit&#61;-1&#10;work_begin_exit_count&#61;0&#10;work_cpus_ckpt_count&#61;0&#10;work_end_ckpt_count&#61;0&#10;work_end_exit_count&#61;0&#10;work_item_id&#61;-1";
+label="system \n: LinuxAlphaSystem";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#e4e7eb";
+fontcolor="#000000";
+system_system_port [fontname=Arial, color="#000000", style="rounded, filled", label=system_port, shape=Mrecord, fontsize=14, fillcolor="#b6b8bc", fontcolor="#000000"];
+subgraph cluster_system_tol2bus {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;forward_latency&#61;0&#10;frontend_latency&#61;1&#10;numa&#61;false&#10;response_latency&#61;1&#10;snoop_filter&#61;system.tol2bus.snoop_filter&#10;snoop_response_latency&#61;1&#10;system&#61;system&#10;use_default_range&#61;false&#10;width&#61;32";
+label="tol2bus \n: L2XBar";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6f798c";
+fontcolor="#000000";
+system_tol2bus_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_tol2bus_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+subgraph cluster_system_tol2bus_snoop_filter {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;lookup_latency&#61;0&#10;max_capacity&#61;8388608&#10;system&#61;system";
+label="snoop_filter \n: SnoopFilter";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_membus {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;forward_latency&#61;4&#10;frontend_latency&#61;3&#10;numa&#61;false&#10;response_latency&#61;2&#10;snoop_filter&#61;Null&#10;snoop_response_latency&#61;4&#10;system&#61;system&#10;use_default_range&#61;false&#10;width&#61;16";
+label="membus \n: MemBus";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6f798c";
+fontcolor="#000000";
+system_membus_default [fontname=Arial, color="#000000", style="rounded, filled", label=default, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_membus_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_membus_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+subgraph cluster_system_membus_badaddr_responder {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;0&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;true&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="badaddr_responder \n: BadAddr";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_membus_badaddr_responder_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_voltage_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;voltage&#61;1.000000";
+label="voltage_domain \n: VoltageDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_iocache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:536870911&#10;assoc&#61;8&#10;clk_domain&#61;system.clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;false&#10;hit_latency&#61;50&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;20&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;50&#10;sequential_access&#61;false&#10;size&#61;1024&#10;system&#61;system&#10;tags&#61;system.iocache.tags&#10;tgts_per_mshr&#61;12&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="iocache \n: IOCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_iocache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_iocache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_iocache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;8&#10;block_size&#61;64&#10;clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;50&#10;sequential_access&#61;false&#10;size&#61;1024";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_bridge {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;delay&#61;50000&#10;eventq_index&#61;0&#10;numa&#61;false&#10;ranges&#61;8796093022208:18446744073709551615&#10;req_size&#61;16&#10;resp_size&#61;16";
+label="bridge \n: Bridge";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_bridge_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_bridge_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+}
+
+subgraph cluster_system_disk0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="delay&#61;1000000&#10;driveID&#61;master&#10;eventq_index&#61;0&#10;image&#61;system.disk0.image";
+label="disk0 \n: CowIdeDisk";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_disk0_image {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="child&#61;system.disk0.image.child&#10;eventq_index&#61;0&#10;image_file&#61;&#10;read_only&#61;false&#10;table_size&#61;65536";
+label="image \n: CowDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_disk0_image_child {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;image_file&#61;/home/tick/Tools/GEM5/system/disks/linux-parsec-2-1-m5-with-test-inputs.img&#10;read_only&#61;true";
+label="child \n: RawDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+}
+
+}
+
+subgraph cluster_system_disk2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="delay&#61;1000000&#10;driveID&#61;master&#10;eventq_index&#61;0&#10;image&#61;system.disk2.image";
+label="disk2 \n: CowIdeDisk";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_disk2_image {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="child&#61;system.disk2.image.child&#10;eventq_index&#61;0&#10;image_file&#61;&#10;read_only&#61;false&#10;table_size&#61;65536";
+label="image \n: CowDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+subgraph cluster_system_disk2_image_child {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;image_file&#61;/home/tick/Tools/GEM5/system/disks/linux-bigswap2.img&#10;read_only&#61;true";
+label="child \n: RawDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#84827c";
+fontcolor="#000000";
+}
+
+}
+
+}
+
+subgraph cluster_system_terminal {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;intr_control&#61;system.intrctrl&#10;number&#61;0&#10;output&#61;true&#10;port&#61;3456";
+label="terminal \n: Terminal";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_clk_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clock&#61;1000&#10;domain_id&#61;-1&#10;eventq_index&#61;0&#10;init_perf_level&#61;0&#10;voltage_domain&#61;system.voltage_domain";
+label="clk_domain \n: SrcClockDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_intrctrl {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;sys&#61;system";
+label="intrctrl \n: IntrControl";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_simple_disk {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="disk&#61;system.simple_disk.disk&#10;eventq_index&#61;0&#10;system&#61;system";
+label="simple_disk \n: SimpleDisk";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_simple_disk_disk {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;image_file&#61;/home/tick/Tools/GEM5/system/disks/linux-parsec-2-1-m5-with-test-inputs.img&#10;read_only&#61;true";
+label="disk \n: RawDiskImage";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_tsunami {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;intrctrl&#61;system.intrctrl&#10;system&#61;system";
+label="tsunami \n: BaseTsunami";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+subgraph cluster_system_tsunami_fake_uart1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848696&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart1 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart1_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_uart2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848936&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart2 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart2_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_uart3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848680&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart3 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart3_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_uart4 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848944&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_uart4 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_uart4_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_ppc {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848891&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_ppc \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_ppc_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_cchip {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;numa&#61;false&#10;pio_addr&#61;8803072344064&#10;pio_latency&#61;100000&#10;system&#61;system&#10;tsunami&#61;system.tsunami";
+label="cchip \n: TsunamiCChip";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_cchip_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_io {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;frequency&#61;976562500&#10;numa&#61;false&#10;pio_addr&#61;8804615847936&#10;pio_latency&#61;100000&#10;system&#61;system&#10;time&#61;Thu Jan  1 00:00:00 2009&#10;tsunami&#61;system.tsunami&#10;year_is_bcd&#61;false";
+label="io \n: TsunamiIO";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_io_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_pciconfig {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="bus&#61;0&#10;clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;numa&#61;false&#10;pio_addr&#61;0&#10;pio_latency&#61;30000&#10;platform&#61;system.tsunami&#10;size&#61;16777216&#10;system&#61;system";
+label="pciconfig \n: PciConfigAll";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_pciconfig_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_ata1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848304&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_ata1 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_ata1_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_ata0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848432&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_ata0 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_ata0_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_backdoor {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;cpu&#61;system.cpu0&#10;disk&#61;system.simple_disk&#10;eventq_index&#61;0&#10;numa&#61;false&#10;pio_addr&#61;8804682956800&#10;pio_latency&#61;100000&#10;platform&#61;system.tsunami&#10;system&#61;system&#10;terminal&#61;system.terminal";
+label="backdoor \n: AlphaBackdoor";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_backdoor_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848643&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read3 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read3_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848579&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read2 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read2_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848515&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read1 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read1_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848451&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read0 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read0_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read7 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848899&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read7 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read7_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read6 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848835&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read6 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read6_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read5 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848771&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read5 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read5_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_read4 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848707&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_read4 \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_read4_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_write {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615850617&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_write \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_write_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;devicename&#61;FrameBuffer&#10;eventq_index&#61;0&#10;numa&#61;false&#10;pio_addr&#61;8804615848912&#10;pio_latency&#61;100000&#10;system&#61;system";
+label="fb \n: BadDevice";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fb_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_pchip {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;numa&#61;false&#10;pio_addr&#61;8802535473152&#10;pio_latency&#61;100000&#10;system&#61;system&#10;tsunami&#61;system.tsunami";
+label="pchip \n: TsunamiPChip";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_pchip_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_OROM {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8796093677568&#10;pio_latency&#61;100000&#10;pio_size&#61;393216&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_OROM \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_OROM_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_uart {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;numa&#61;false&#10;pio_addr&#61;8804615848952&#10;pio_latency&#61;100000&#10;platform&#61;system.tsunami&#10;system&#61;system&#10;terminal&#61;system.terminal";
+label="uart \n: Uart8250";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_uart_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_sm_chip {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848816&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_sm_chip \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_sm_chip_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_fake_pnp_addr {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;fake_mem&#61;false&#10;numa&#61;false&#10;pio_addr&#61;8804615848569&#10;pio_latency&#61;100000&#10;pio_size&#61;8&#10;ret_bad_addr&#61;false&#10;ret_data16&#61;65535&#10;ret_data32&#61;4294967295&#10;ret_data64&#61;18446744073709551615&#10;ret_data8&#61;255&#10;system&#61;system&#10;update_data&#61;false&#10;warn_access&#61;";
+label="fake_pnp_addr \n: IsaFake";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_fake_pnp_addr_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_ethernet {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="BAR0&#61;1&#10;BAR0LegacyIO&#61;false&#10;BAR0Size&#61;256&#10;BAR1&#61;0&#10;BAR1LegacyIO&#61;false&#10;BAR1Size&#61;4096&#10;BAR2&#61;0&#10;BAR2LegacyIO&#61;false&#10;BAR2Size&#61;0&#10;BAR3&#61;0&#10;BAR3LegacyIO&#61;false&#10;BAR3Size&#61;0&#10;BAR4&#61;0&#10;BAR4LegacyIO&#61;false&#10;BAR4Size&#61;0&#10;BAR5&#61;0&#10;BAR5LegacyIO&#61;false&#10;BAR5Size&#61;0&#10;BIST&#61;0&#10;CacheLineSize&#61;0&#10;CapabilityPtr&#61;0&#10;CardbusCIS&#61;0&#10;ClassCode&#61;2&#10;Command&#61;0&#10;DeviceID&#61;34&#10;ExpansionROM&#61;0&#10;HeaderType&#61;0&#10;InterruptLine&#61;30&#10;InterruptPin&#61;1&#10;LatencyTimer&#61;0&#10;LegacyIOBase&#61;0&#10;MSICAPBaseOffset&#61;0&#10;MSICAPCapId&#61;0&#10;MSICAPMaskBits&#61;0&#10;MSICAPMsgAddr&#61;0&#10;MSICAPMsgCtrl&#61;0&#10;MSICAPMsgData&#61;0&#10;MSICAPMsgUpperAddr&#61;0&#10;MSICAPNextCapability&#61;0&#10;MSICAPPendingBits&#61;0&#10;MSIXCAPBaseOffset&#61;0&#10;MSIXCAPCapId&#61;0&#10;MSIXCAPNextCapability&#61;0&#10;MSIXMsgCtrl&#61;0&#10;MSIXPbaOffset&#61;0&#10;MSIXTableOffset&#61;0&#10;MaximumLatency&#61;52&#10;MinimumGrant&#61;176&#10;PMCAPBaseOffset&#61;0&#10;PMCAPCapId&#61;0&#10;PMCAPCapabilities&#61;0&#10;PMCAPCtrlStatus&#61;0&#10;PMCAPNextCapability&#61;0&#10;PXCAPBaseOffset&#61;0&#10;PXCAPCapId&#61;0&#10;PXCAPCapabilities&#61;0&#10;PXCAPDevCap2&#61;0&#10;PXCAPDevCapabilities&#61;0&#10;PXCAPDevCtrl&#61;0&#10;PXCAPDevCtrl2&#61;0&#10;PXCAPDevStatus&#61;0&#10;PXCAPLinkCap&#61;0&#10;PXCAPLinkCtrl&#61;0&#10;PXCAPLinkStatus&#61;0&#10;PXCAPNextCapability&#61;0&#10;ProgIF&#61;0&#10;Revision&#61;0&#10;Status&#61;656&#10;SubClassCode&#61;0&#10;SubsystemID&#61;0&#10;SubsystemVendorID&#61;0&#10;VendorID&#61;4107&#10;clk_domain&#61;system.clk_domain&#10;config_latency&#61;20000&#10;dma_data_free&#61;false&#10;dma_desc_free&#61;false&#10;dma_no_allocate&#61;true&#10;dma_read_delay&#61;0&#10;dma_read_factor&#61;0&#10;dma_write_delay&#61;0&#10;dma_write_factor&#61;0&#10;eventq_index&#61;0&#10;hardware_address&#61;00:90:00:00:00:01&#10;intr_delay&#61;10000000&#10;numa&#61;false&#10;pci_bus&#61;0&#10;pci_dev&#61;1&#10;pci_func&#61;0&#10;pio_latency&#61;30000&#10;platform&#61;system.tsunami&#10;rss&#61;false&#10;rx_delay&#61;1000000&#10;rx_fifo_size&#61;524288&#10;rx_filter&#61;true&#10;rx_thread&#61;false&#10;system&#61;system&#10;tx_delay&#61;1000000&#10;tx_fifo_size&#61;524288&#10;tx_thread&#61;false";
+label="ethernet \n: NSGigE";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_ethernet_config [fontname=Arial, color="#000000", style="rounded, filled", label=config, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ethernet_dma [fontname=Arial, color="#000000", style="rounded, filled", label=dma, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ethernet_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+subgraph cluster_system_tsunami_ide {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="BAR0&#61;1&#10;BAR0LegacyIO&#61;false&#10;BAR0Size&#61;8&#10;BAR1&#61;1&#10;BAR1LegacyIO&#61;false&#10;BAR1Size&#61;4&#10;BAR2&#61;1&#10;BAR2LegacyIO&#61;false&#10;BAR2Size&#61;8&#10;BAR3&#61;1&#10;BAR3LegacyIO&#61;false&#10;BAR3Size&#61;4&#10;BAR4&#61;1&#10;BAR4LegacyIO&#61;false&#10;BAR4Size&#61;16&#10;BAR5&#61;1&#10;BAR5LegacyIO&#61;false&#10;BAR5Size&#61;0&#10;BIST&#61;0&#10;CacheLineSize&#61;0&#10;CapabilityPtr&#61;0&#10;CardbusCIS&#61;0&#10;ClassCode&#61;1&#10;Command&#61;0&#10;DeviceID&#61;28945&#10;ExpansionROM&#61;0&#10;HeaderType&#61;0&#10;InterruptLine&#61;31&#10;InterruptPin&#61;1&#10;LatencyTimer&#61;0&#10;LegacyIOBase&#61;0&#10;MSICAPBaseOffset&#61;0&#10;MSICAPCapId&#61;0&#10;MSICAPMaskBits&#61;0&#10;MSICAPMsgAddr&#61;0&#10;MSICAPMsgCtrl&#61;0&#10;MSICAPMsgData&#61;0&#10;MSICAPMsgUpperAddr&#61;0&#10;MSICAPNextCapability&#61;0&#10;MSICAPPendingBits&#61;0&#10;MSIXCAPBaseOffset&#61;0&#10;MSIXCAPCapId&#61;0&#10;MSIXCAPNextCapability&#61;0&#10;MSIXMsgCtrl&#61;0&#10;MSIXPbaOffset&#61;0&#10;MSIXTableOffset&#61;0&#10;MaximumLatency&#61;0&#10;MinimumGrant&#61;0&#10;PMCAPBaseOffset&#61;0&#10;PMCAPCapId&#61;0&#10;PMCAPCapabilities&#61;0&#10;PMCAPCtrlStatus&#61;0&#10;PMCAPNextCapability&#61;0&#10;PXCAPBaseOffset&#61;0&#10;PXCAPCapId&#61;0&#10;PXCAPCapabilities&#61;0&#10;PXCAPDevCap2&#61;0&#10;PXCAPDevCapabilities&#61;0&#10;PXCAPDevCtrl&#61;0&#10;PXCAPDevCtrl2&#61;0&#10;PXCAPDevStatus&#61;0&#10;PXCAPLinkCap&#61;0&#10;PXCAPLinkCtrl&#61;0&#10;PXCAPLinkStatus&#61;0&#10;PXCAPNextCapability&#61;0&#10;ProgIF&#61;133&#10;Revision&#61;0&#10;Status&#61;640&#10;SubClassCode&#61;1&#10;SubsystemID&#61;0&#10;SubsystemVendorID&#61;0&#10;VendorID&#61;32902&#10;clk_domain&#61;system.clk_domain&#10;config_latency&#61;20000&#10;ctrl_offset&#61;0&#10;disks&#61;system.disk0 system.disk2&#10;eventq_index&#61;0&#10;io_shift&#61;0&#10;numa&#61;false&#10;pci_bus&#61;0&#10;pci_dev&#61;0&#10;pci_func&#61;0&#10;pio_latency&#61;30000&#10;platform&#61;system.tsunami&#10;system&#61;system";
+label="ide \n: IdeController";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#c7a793";
+fontcolor="#000000";
+system_tsunami_ide_config [fontname=Arial, color="#000000", style="rounded, filled", label=config, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ide_dma [fontname=Arial, color="#000000", style="rounded, filled", label=dma, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+system_tsunami_ide_pio [fontname=Arial, color="#000000", style="rounded, filled", label=pio, shape=Mrecord, fontsize=14, fillcolor="#9f8575", fontcolor="#000000"];
+}
+
+}
+
+subgraph cluster_system_l2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;8&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;20&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;20&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;20&#10;sequential_access&#61;false&#10;size&#61;262144&#10;system&#61;system&#10;tags&#61;system.l2.tags&#10;tgts_per_mshr&#61;12&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="l2 \n: L2Cache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_l2_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_l2_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_l2_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;8&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;20&#10;sequential_access&#61;false&#10;size&#61;262144";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu_voltage_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;voltage&#61;1.000000";
+label="cpu_voltage_domain \n: VoltageDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_mem_ctrls {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="IDD0&#61;0.075000&#10;IDD02&#61;0.000000&#10;IDD2N&#61;0.050000&#10;IDD2N2&#61;0.000000&#10;IDD2P0&#61;0.000000&#10;IDD2P02&#61;0.000000&#10;IDD2P1&#61;0.000000&#10;IDD2P12&#61;0.000000&#10;IDD3N&#61;0.057000&#10;IDD3N2&#61;0.000000&#10;IDD3P0&#61;0.000000&#10;IDD3P02&#61;0.000000&#10;IDD3P1&#61;0.000000&#10;IDD3P12&#61;0.000000&#10;IDD4R&#61;0.187000&#10;IDD4R2&#61;0.000000&#10;IDD4W&#61;0.165000&#10;IDD4W2&#61;0.000000&#10;IDD5&#61;0.220000&#10;IDD52&#61;0.000000&#10;IDD6&#61;0.000000&#10;IDD62&#61;0.000000&#10;VDD&#61;1.500000&#10;VDD2&#61;0.000000&#10;activation_limit&#61;4&#10;addr_mapping&#61;RoRaBaCoCh&#10;bank_groups_per_rank&#61;0&#10;banks_per_rank&#61;8&#10;burst_length&#61;8&#10;channels&#61;1&#10;clk_domain&#61;system.clk_domain&#10;conf_table_reported&#61;true&#10;device_bus_width&#61;8&#10;device_rowbuffer_size&#61;1024&#10;device_size&#61;536870912&#10;devices_per_rank&#61;8&#10;dll&#61;true&#10;eventq_index&#61;0&#10;in_addr_map&#61;true&#10;max_accesses_per_row&#61;16&#10;mem_sched_policy&#61;frfcfs&#10;min_writes_per_switch&#61;16&#10;null&#61;false&#10;numa&#61;false&#10;page_policy&#61;open_adaptive&#10;range&#61;0:536870911&#10;ranks_per_channel&#61;2&#10;read_buffer_size&#61;32&#10;static_backend_latency&#61;10000&#10;static_frontend_latency&#61;10000&#10;tBURST&#61;5000&#10;tCCD_L&#61;0&#10;tCK&#61;1250&#10;tCL&#61;13750&#10;tCS&#61;2500&#10;tRAS&#61;35000&#10;tRCD&#61;13750&#10;tREFI&#61;7800000&#10;tRFC&#61;260000&#10;tRP&#61;13750&#10;tRRD&#61;6000&#10;tRRD_L&#61;0&#10;tRTP&#61;7500&#10;tRTW&#61;2500&#10;tWR&#61;15000&#10;tWTR&#61;7500&#10;tXAW&#61;30000&#10;tXP&#61;0&#10;tXPDLL&#61;0&#10;tXS&#61;0&#10;tXSDLL&#61;0&#10;write_buffer_size&#61;64&#10;write_high_thresh_perc&#61;85&#10;write_low_thresh_perc&#61;50";
+label="mem_ctrls \n: DDR3_1600_x64";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#5e5958";
+fontcolor="#000000";
+system_mem_ctrls_port [fontname=Arial, color="#000000", style="rounded, filled", label=port, shape=Mrecord, fontsize=14, fillcolor="#4b4746", fontcolor="#000000"];
+}
+
+subgraph cluster_system_dvfs_handler {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="domains&#61;&#10;enable&#61;false&#10;eventq_index&#61;0&#10;sys_clk_domain&#61;system.clk_domain&#10;transition_latency&#61;100000000";
+label="dvfs_handler \n: DVFSHandler";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_iobus {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;forward_latency&#61;1&#10;frontend_latency&#61;2&#10;numa&#61;false&#10;response_latency&#61;2&#10;use_default_range&#61;true&#10;width&#61;16";
+label="iobus \n: IOXBar";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#6f798c";
+fontcolor="#000000";
+system_iobus_default [fontname=Arial, color="#000000", style="rounded, filled", label=default, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_iobus_master [fontname=Arial, color="#000000", style="rounded, filled", label=master, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+system_iobus_slave [fontname=Arial, color="#000000", style="rounded, filled", label=slave, shape=Mrecord, fontsize=14, fillcolor="#586070", fontcolor="#000000"];
+}
+
+subgraph cluster_system_cpu_clk_domain {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="clock&#61;500&#10;domain_id&#61;-1&#10;eventq_index&#61;0&#10;init_perf_level&#61;0&#10;voltage_domain&#61;system.cpu_voltage_domain";
+label="cpu_clk_domain \n: SrcClockDomain";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;0&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu0.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu0.interrupts&#10;isa&#61;system.cpu0.isa&#10;itb&#61;system.cpu0.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu0.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu0 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu0_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu0_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu0_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu0.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu0_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu0_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu0_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu0_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu0.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu0_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu0_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu0_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu0_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu0_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;1&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu1.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu1.interrupts&#10;isa&#61;system.cpu1.isa&#10;itb&#61;system.cpu1.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu1.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu1 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu1_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu1_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu1_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu1.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu1_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu1_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu1_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu1_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu1.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu1_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu1_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu1_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu1_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu1_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;2&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu2.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu2.interrupts&#10;isa&#61;system.cpu2.isa&#10;itb&#61;system.cpu2.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu2.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu2 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu2_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu2_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu2_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu2.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu2_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu2_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu2_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu2_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu2.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu2_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu2_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu2_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu2_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu2_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;3&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu3.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu3.interrupts&#10;isa&#61;system.cpu3.isa&#10;itb&#61;system.cpu3.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu3.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu3 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu3_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu3_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu3_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu3.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu3_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu3_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu3_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu3_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu3.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu3_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu3_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu3_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu3_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu3_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu4 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;4&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu4.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu4.interrupts&#10;isa&#61;system.cpu4.isa&#10;itb&#61;system.cpu4.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu4.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu4 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu4_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu4_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu4_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu4.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu4_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu4_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu4_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu4_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu4_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu4_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu4_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu4.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu4_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu4_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu4_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu4_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu4_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu5 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;5&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu5.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu5.interrupts&#10;isa&#61;system.cpu5.isa&#10;itb&#61;system.cpu5.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu5.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu5 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu5_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu5_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu5_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu5.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu5_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu5_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu5_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu5_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu5_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu5_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu5_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu5.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu5_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu5_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu5_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu5_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu5_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu6 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;6&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu6.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu6.interrupts&#10;isa&#61;system.cpu6.isa&#10;itb&#61;system.cpu6.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu6.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu6 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu6_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu6_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu6_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu6.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu6_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu6_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu6_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu6_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu6_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu6_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu6_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu6.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu6_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu6_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu6_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu6_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu6_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu7 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;7&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu7.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu7.interrupts&#10;isa&#61;system.cpu7.isa&#10;itb&#61;system.cpu7.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu7.tracer&#10;width&#61;1&#10;workload&#61;";
+label="cpu7 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+system_cpu7_icache_port [fontname=Arial, color="#000000", style="rounded, filled", label=icache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+system_cpu7_dcache_port [fontname=Arial, color="#000000", style="rounded, filled", label=dcache_port, shape=Mrecord, fontsize=14, fillcolor="#959ead", fontcolor="#000000"];
+subgraph cluster_system_cpu7_icache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu7.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true";
+label="icache \n: L1_ICache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu7_icache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu7_icache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu7_icache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu7_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu7_interrupts {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="interrupts \n: AlphaInterrupts";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu7_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu7_dcache {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu7.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false";
+label="dcache \n: L1_DCache";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+system_cpu7_dcache_mem_side [fontname=Arial, color="#000000", style="rounded, filled", label=mem_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+system_cpu7_dcache_cpu_side [fontname=Arial, color="#000000", style="rounded, filled", label=cpu_side, shape=Mrecord, fontsize=14, fillcolor="#94918b", fontcolor="#000000"];
+subgraph cluster_system_cpu7_dcache_tags {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="assoc&#61;2&#10;block_size&#61;64&#10;clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;hit_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768";
+label="tags \n: LRU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#9f9c95";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_cpu7_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_cpu7_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus0 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;0&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus0.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus0.isa&#10;itb&#61;system.switch_cpus0.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus0.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus0 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus0_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus0_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus0_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus0_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus1 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;1&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus1.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus1.isa&#10;itb&#61;system.switch_cpus1.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus1.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus1 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus1_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus1_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus1_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus1_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus2 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;2&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus2.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus2.isa&#10;itb&#61;system.switch_cpus2.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus2.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus2 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus2_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus2_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus2_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus2_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus3 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;3&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus3.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus3.isa&#10;itb&#61;system.switch_cpus3.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus3.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus3 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus3_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus3_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus3_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus3_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus4 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;4&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus4.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus4.isa&#10;itb&#61;system.switch_cpus4.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus4.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus4 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus4_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus4_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus4_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus4_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus5 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;5&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus5.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus5.isa&#10;itb&#61;system.switch_cpus5.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus5.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus5 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus5_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus5_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus5_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus5_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus6 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;6&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus6.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus6.isa&#10;itb&#61;system.switch_cpus6.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus6.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus6 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus6_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus6_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus6_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus6_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+subgraph cluster_system_switch_cpus7 {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;7&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.switch_cpus7.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;&#10;isa&#61;system.switch_cpus7.isa&#10;itb&#61;system.switch_cpus7.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;0&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;true&#10;system&#61;system&#10;tracer&#61;system.switch_cpus7.tracer&#10;width&#61;1&#10;workload&#61;";
+label="switch_cpus7 \n: AtomicSimpleCPU";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bbc6d9";
+fontcolor="#000000";
+subgraph cluster_system_switch_cpus7_dtb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;64";
+label="dtb \n: AlphaDTB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus7_isa {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;system&#61;system";
+label="isa \n: AlphaISA";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus7_itb {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0&#10;size&#61;48";
+label="itb \n: AlphaITB";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+subgraph cluster_system_switch_cpus7_tracer {
+fontname=Arial;
+color="#000000";
+style="rounded, filled";
+tooltip="eventq_index&#61;0";
+label="tracer \n: ExeTracer";
+shape=Mrecord;
+fontsize=14;
+fillcolor="#bab6ae";
+fontcolor="#000000";
+}
+
+}
+
+}
+
+}
+
+system_system_port -> system_membus_slave;
+system_tol2bus_master -> system_l2_cpu_side;
+system_membus_default -> system_membus_badaddr_responder_pio;
+system_membus_master -> system_bridge_slave;
+system_membus_master -> system_mem_ctrls_port;
+system_iocache_mem_side -> system_membus_slave;
+system_bridge_master -> system_iobus_slave;
+system_tsunami_ethernet_dma -> system_iobus_slave;
+system_tsunami_ide_dma -> system_iobus_slave;
+system_l2_mem_side -> system_membus_slave;
+system_iobus_default -> system_tsunami_pciconfig_pio;
+system_iobus_master -> system_tsunami_cchip_pio;
+system_iobus_master -> system_tsunami_pchip_pio;
+system_iobus_master -> system_tsunami_fake_sm_chip_pio;
+system_iobus_master -> system_tsunami_fake_uart1_pio;
+system_iobus_master -> system_tsunami_fake_uart2_pio;
+system_iobus_master -> system_tsunami_fake_uart3_pio;
+system_iobus_master -> system_tsunami_fake_uart4_pio;
+system_iobus_master -> system_tsunami_fake_ppc_pio;
+system_iobus_master -> system_tsunami_fake_OROM_pio;
+system_iobus_master -> system_tsunami_fake_pnp_addr_pio;
+system_iobus_master -> system_tsunami_fake_pnp_write_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read0_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read1_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read2_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read3_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read4_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read5_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read6_pio;
+system_iobus_master -> system_tsunami_fake_pnp_read7_pio;
+system_iobus_master -> system_tsunami_fake_ata0_pio;
+system_iobus_master -> system_tsunami_fake_ata1_pio;
+system_iobus_master -> system_tsunami_fb_pio;
+system_iobus_master -> system_tsunami_io_pio;
+system_iobus_master -> system_tsunami_uart_pio;
+system_iobus_master -> system_tsunami_backdoor_pio;
+system_iobus_master -> system_tsunami_ide_pio;
+system_iobus_master -> system_tsunami_ide_config;
+system_iobus_master -> system_tsunami_ethernet_pio;
+system_iobus_master -> system_tsunami_ethernet_config;
+system_iobus_master -> system_iocache_cpu_side;
+system_cpu0_icache_port -> system_cpu0_icache_cpu_side;
+system_cpu0_dcache_port -> system_cpu0_dcache_cpu_side;
+system_cpu0_icache_mem_side -> system_tol2bus_slave;
+system_cpu0_dcache_mem_side -> system_tol2bus_slave;
+system_cpu1_icache_port -> system_cpu1_icache_cpu_side;
+system_cpu1_dcache_port -> system_cpu1_dcache_cpu_side;
+system_cpu1_icache_mem_side -> system_tol2bus_slave;
+system_cpu1_dcache_mem_side -> system_tol2bus_slave;
+system_cpu2_icache_port -> system_cpu2_icache_cpu_side;
+system_cpu2_dcache_port -> system_cpu2_dcache_cpu_side;
+system_cpu2_icache_mem_side -> system_tol2bus_slave;
+system_cpu2_dcache_mem_side -> system_tol2bus_slave;
+system_cpu3_icache_port -> system_cpu3_icache_cpu_side;
+system_cpu3_dcache_port -> system_cpu3_dcache_cpu_side;
+system_cpu3_icache_mem_side -> system_tol2bus_slave;
+system_cpu3_dcache_mem_side -> system_tol2bus_slave;
+system_cpu4_icache_port -> system_cpu4_icache_cpu_side;
+system_cpu4_dcache_port -> system_cpu4_dcache_cpu_side;
+system_cpu4_icache_mem_side -> system_tol2bus_slave;
+system_cpu4_dcache_mem_side -> system_tol2bus_slave;
+system_cpu5_icache_port -> system_cpu5_icache_cpu_side;
+system_cpu5_dcache_port -> system_cpu5_dcache_cpu_side;
+system_cpu5_icache_mem_side -> system_tol2bus_slave;
+system_cpu5_dcache_mem_side -> system_tol2bus_slave;
+system_cpu6_icache_port -> system_cpu6_icache_cpu_side;
+system_cpu6_dcache_port -> system_cpu6_dcache_cpu_side;
+system_cpu6_icache_mem_side -> system_tol2bus_slave;
+system_cpu6_dcache_mem_side -> system_tol2bus_slave;
+system_cpu7_icache_port -> system_cpu7_icache_cpu_side;
+system_cpu7_dcache_port -> system_cpu7_dcache_cpu_side;
+system_cpu7_icache_mem_side -> system_tol2bus_slave;
+system_cpu7_dcache_mem_side -> system_tol2bus_slave;
+}

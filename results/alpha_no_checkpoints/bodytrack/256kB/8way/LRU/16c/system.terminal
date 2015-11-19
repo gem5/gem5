@@ -1,0 +1,206 @@
+M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
+Got Configuration 623
+memsize 20000000 pages 10000 
+First free page after ROM 0xFFFFFC0000018000
+HWRPB 0xFFFFFC0000018000 l1pt 0xFFFFFC0000040000 l2pt 0xFFFFFC0000042000 l3pt_rpb 0xFFFFFC0000044000 l3pt_kernel 0xFFFFFC0000048000 l2reserv 0xFFFFFC0000046000
+kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000899860, kentry = 0xFFFFFC0000310000, numCPUs = 0x10
+CPU Clock at 2000 MHz IntrClockFrequency=1024 
+Booting with 16 processor(s) 
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+Console Callback at 0x0, fixup at 0x0, crb offset: 0x2A90
+Memory cluster 0 [0 - 392]
+Memory cluster 1 [392 - 65144]
+Initalizing mdt_bitmap addr 0xFFFFFC0000038000 mem_pages 10000 
+ConsoleDispatch at virt 10002BD8 phys 1ABD8 val FFFFFC00000100A8
+Bootstraping CPU 1 with sp=0xFFFFFC0000076000
+Bootstraping CPU 2 with sp=0xFFFFFC0000078000
+Bootstraping CPU 3 with sp=0xFFFFFC000007A000
+Bootstraping CPU 4 with sp=0xFFFFFC000007C000
+Bootstraping CPU 5 with sp=0xFFFFFC000007E000
+Bootstraping CPU 6 with sp=0xFFFFFC0000080000
+Entering slaveloop for cpu 1 my_rpb=FFFFFC0000018400
+Bootstraping CPU 7 with sp=0xFFFFFC0000082000
+Entering slaveloop for cpu 2 my_rpb=FFFFFC0000018680
+Bootstraping CPU 8 with sp=0xFFFFFC0000084000
+Entering slaveloop for cpu 3 my_rpb=FFFFFC0000018900
+Entering slaveloop for cpu 4 my_rpb=FFFFFC0000018B80
+Bootstraping CPU 9 with sp=0xFFFFFC0000086000
+Entering slaveloop for cpu 5 my_rpb=FFFFFC0000018E00
+Bootstraping CPU 10 with sp=0xFFFFFC0000088000
+Bootstraping CPU 11 with sp=0xFFFFFC000008A000
+Bootstraping CPU 12 with sp=0xFFFFFC000008C000
+Bootstraping CPU 13 with sp=0xFFFFFC000008E000
+Bootstraping CPU 14 with sp=0xFFFFFC0000090000
+Bootstraping CPU 15 with sp=0xFFFFFC0000092000
+unix_boot_mem ends at FFFFFC0000094000 
+k_argc = 0 
+jumping to kernel at 0xFFFFFC0000310000, (PCBB 0xFFFFFC0000018180 pfn 1101)
+CallbackFixup 0 18000, t7=FFFFFC0000814000
+Entering slaveloop for cpu 6 my_rpb=FFFFFC0000019080
+Entering slaveloop for cpu 7 my_rpb=FFFFFC0000019300
+Entering slaveloop for cpu 8 my_rpb=FFFFFC0000019580
+Entering slaveloop for cpu 9 my_rpb=FFFFFC0000019800
+Entering slaveloop for cpu 10 my_rpb=FFFFFC0000019A80
+Entering slaveloop for cpu 11 my_rpb=FFFFFC0000019D00
+Entering slaveloop for cpu 12 my_rpb=FFFFFC0000019F80
+Entering slaveloop for cpu 13 my_rpb=FFFFFC000001A200
+Entering slaveloop for cpu 14 my_rpb=FFFFFC000001A480
+Entering slaveloop for cpu 15 my_rpb=FFFFFC000001A700
+Linux version 2.6.27.6-dirty (joel@capillary) (gcc version 4.3.4 (crosstool-NG-1.5.2) ) #1 SMP Sat Mar 6 19:10:44 CST 2010
+Booting GENERIC on Tsunami variation DP264 using machine vector DP264 from SRM
+Major Options: SMP LEGACY_START VERBOSE_MCHECK 
+Command line: root=/dev/hda1 console=ttyS0
+memcluster 0, usage 1, start        0, end      392
+memcluster 1, usage 0, start      392, end    65536
+freeing pages 1103:65536
+reserving pages 1103:1104
+SMP: 16 CPUs probed -- cpu_present_map = ffff
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 65088
+Kernel command line: root=/dev/hda1 console=ttyS0
+PID hash table entries: 2048 (order: 11, 16384 bytes)
+Using epoch = 1900
+Console: colour dummy device 80x25
+console [ttyS0] enabled
+Dentry cache hash table entries: 65536 (order: 6, 524288 bytes)
+Inode-cache hash table entries: 32768 (order: 5, 262144 bytes)
+Memory: 509528k/524288k available (3757k kernel code, 10992k reserved, 261k data, 208k init)
+Mount-cache hash table entries: 512
+SMP starting up secondaries.
+Slave CPU 1 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018400 my_rpb_phys 18400
+Slave CPU 2 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018680 my_rpb_phys 18680
+Slave CPU 3 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018900 my_rpb_phys 18900
+Slave CPU 4 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018B80 my_rpb_phys 18B80
+Slave CPU 5 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018E00 my_rpb_phys 18E00
+Slave CPU 6 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019080 my_rpb_phys 19080
+Slave CPU 7 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019300 my_rpb_phys 19300
+Slave CPU 8 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019580 my_rpb_phys 19580
+Slave CPU 9 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019800 my_rpb_phys 19800
+Slave CPU 10 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019A80 my_rpb_phys 19A80
+Slave CPU 11 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019D00 my_rpb_phys 19D00
+Slave CPU 12 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019F80 my_rpb_phys 19F80
+Slave CPU 13 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC000001A200 my_rpb_phys 1A200
+Slave CPU 14 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC000001A480 my_rpb_phys 1A480
+Slave CPU 15 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC000001A700 my_rpb_phys 1A700
+Brought up 16 CPUs
+SMP: Total of 16 processors activated (63965.49 BogoMIPS).
+net_namespace: 552 bytes
+NET: Registered protocol family 16
+EISA bus registered
+pci: enabling save/restore of SRM state
+bus: 00 index 0 io port: [0, 1ffffff]
+bus: 00 index 1 mmio: [0, 3fffffff]
+SCSI subsystem initialized
+NET: Registered protocol family 2
+IP route cache hash table entries: 4096 (order: 2, 32768 bytes)
+TCP established hash table entries: 16384 (order: 5, 262144 bytes)
+TCP bind hash table entries: 16384 (order: 5, 262144 bytes)
+TCP: Hash tables configured (established 16384 bind 16384)
+TCP reno registered
+NET: Registered protocol family 1
+srm_env: version 0.0.6 loaded successfully
+Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
+msgmni has been set to 996
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+rtc: Standard PC (1900) epoch (1900) detected
+Real Time Clock Driver v1.12ac
+Serial: 8250/16550 driver1 ports, IRQ sharing disabled
+serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 8250
+loop: module loaded
+nbd: registered device at major 43
+Intel(R) PRO/1000 Network Driver - version 7.3.20-k3-NAPI
+Copyright (c) 1999-2006 Intel Corporation.
+e1000e: Intel(R) PRO/1000 Network Driver - 0.3.3.3-k6
+e1000e: Copyright (c) 1999-2008 Intel Corporation.
+ns83820.c: National Semiconductor DP83820 10/100/1000 driver.
+ns83820 0000:00:01.0: enabling device (0000 -> 0003)
+PCI: Setting latency timer of device 0000:00:01.0 to 64
+eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
+eth0: enabling optical transceiver
+eth0: using 64 bit addressing.
+eth0: ns83820 v0.23: DP83820 v1.3: 00:90:00:00:00:01 io=0x09000000 irq=30 f=h,sg
+tun: Universal TUN/TAP device driver, 1.6
+tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+Uniform Multi-Platform E-IDE driver
+piix 0000:00:00.0: IDE controller (0x8086:0x7111 rev 0x00)
+pci 0000:00:00.0: enabling device (0000 -> 0001)
+piix 0000:00:00.0: 100% native mode on irq 31
+PCI: Setting latency timer of device 0000:00:00.0 to 64
+    ide0: BM-DMA at 0x8400-0x8407
+    ide1: BM-DMA at 0x8408-0x840f
+hda: M5 IDE Disk, ATA DISK drive
+hdb: M5 IDE Disk, ATA DISK drive
+hda: UDMA/33 mode selected
+hdb: UDMA/33 mode selected
+ide0 at 0x8410-0x8417,0x8422 on irq 31
+ide1 at 0x8418-0x841f,0x8426 on irq 31
+ide_generic: please use "probe_mask=0x3f" module parameter for probing all legacy ISA IDE ports
+ide2 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide3 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 128KiB
+hda: 2866752 sectors (1467 MB), CHS=2844/16/63
+ hda: hda1
+hdb: max request size: 128KiB
+hdb: 4177920 sectors (2139 MB), CHS=4144/16/63
+ hdb: unknown partition table
+Loading iSCSI transport class v2.0-870.
+Driver 'sd' needs updating - please use bus_type methods
+mice: PS/2 mouse device common for all mice
+TCP cubic registered
+Initializing XFRM netlink socket
+NET: Registered protocol family 17
+NET: Registered protocol family 15
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
+All bugs added by David S. Miller <davem@redhat.com>
+VFS: Mounted root (ext2 filesystem) readonly.
+Freeing unused kernel memory: 208k freed
+init started:  BusyBox v1.1.0 (2007.03.04-01:07+0000) multi-call binary
+mounting filesystems...
+loading script...
+PARSEC Benchmark Suite Version 2.1
+[HOOKS] PARSEC Hooks Version 1.2
+Threading with Posix Threads
+Number of threads : 16
+Using dataset : /parsec/install/inputs/bodytrack/sequenceB_1/
+1000 particles with 5 annealing layers
+
+[HOOKS] Entering ROI
+Processing frame 0
+[HOOKS] Leaving ROI
+[HOOKS] Total time spent in ROI: 0.090s
+[HOOKS] Terminating
+Done :D
