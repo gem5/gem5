@@ -12,7 +12,7 @@ import csv
 
 
 def multicore(bench, l2_size, l2_assoc, l2_tags, num_threads):
-    work_dir = 'results/alpha_no_checkpoints/' + bench + '/' + l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + str(num_threads) + 'c/'
+    work_dir = '../../results/alpha_no_checkpoints/' + bench + '/' + l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + str(num_threads) + 'c/'
 
     experiment = MulticoreExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags)
     experiment.num_threads = num_threads
