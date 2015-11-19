@@ -29,7 +29,7 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_threads):
     print cmd_second_run
     os.system(cmd_second_run)
 
-    cmd_mcpat = './mcpat.py --config=' + dir + 'config.json --stats=' + dir + 'stats.txt --mcpat_in=' + dir + 'mcpat_in.xml --mcpat_out=' + dir + 'mcpat_out.txt'
+    cmd_mcpat = 'ext/bjut/mcpat.py --dir=' + dir
     print cmd_mcpat
     os.system(cmd_mcpat)
 
