@@ -93,6 +93,7 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
         writer.writerow(experiment_cls.dump_head_row())
 
         for experiment in experiments:
+            print 'Generating CSV row for experiment under "' + experiment.dir + '"'
             writer.writerow(experiment.dump_row())
 
 generate_mcpat_xml_files('../../results/alpha_multicore_no_checkpoints/')
