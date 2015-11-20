@@ -75,3 +75,8 @@ class FALRU(BaseTags):
     type = 'FALRU'
     cxx_class = 'FALRU'
     cxx_header = "mem/cache/tags/fa_lru.hh"
+
+class IbRDP(BaseSetAssoc):
+    type = 'IbRDP'
+    cxx_class = 'IbRDP'
+    cxx_header = "mem/cache/tags/ibrdp.hh"

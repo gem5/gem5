@@ -25,7 +25,7 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_threads):
 
 
 def run_experiments(bench):
-    run(bench, '256kB', 8, 'LRU', 4)
+    # run(bench, '256kB', 8, 'LRU', 4)
     # run(bench, '512kB', 8, 'LRU', 4)
     # run(bench, '1MB', 8, 'LRU', 4)
     # run(bench, '2MB', 8, 'LRU', 4)
@@ -36,6 +36,8 @@ def run_experiments(bench):
     # run(bench, '256kB', 8, 'LRU', 2)
     # run(bench, '256kB', 8, 'LRU', 8)
     # run(bench, '256kB', 8, 'LRU', 16)
+
+    run(bench, '256kB', 8, 'IbRDP', 4)
 
 run_experiments('blackscholes')
 # run_experiments('bodytrack')
