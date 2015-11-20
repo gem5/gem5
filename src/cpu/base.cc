@@ -237,14 +237,12 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
     // The interrupts should always be present unless this CPU is
     // switched in later or in case it is a checker CPU
     if (!params()->switched_out && !is_checker) {
-        if (!interrupts.empty()) {
-            for (ThreadID tid = 0; tid < numThreads; tid++) {
-                interrupts[tid]->setCPU(this);
-            }
-        } else {
-            fatal("CPU %s has no interrupt controller.\n"
-                  "Ensure createInterruptController() is called.\n", name());
-        }
+        fatal_if(interrupts.size() != numThreads,
+                 "CPU %s has %i interrupt controllers, but is expecting one "
+                 "per thread (%i)\n",
+                 name(), interrupts.size(), numThreads);
+        for (ThreadID tid = 0; tid < numThreads; tid++)
+            interrupts[tid]->setCPU(this);
     }
 
     if (FullSystem) {
