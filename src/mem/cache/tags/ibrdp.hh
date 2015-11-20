@@ -49,7 +49,7 @@
 #define __MEM_CACHE_TAGS_IBRDP_HH__
 
 #include "mem/cache/tags/base_set_assoc.hh"
-#include "params/IBRD.hh"
+#include "params/IbRDP.hh"
 
 // Works by finding position of MSB set.
 static inline int CRC_FloorLog2(uint32_t n)
