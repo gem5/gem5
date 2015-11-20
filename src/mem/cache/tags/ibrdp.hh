@@ -42,7 +42,7 @@
 
 /**
  * @file
- * Declaration of a IBRD tag store.
+ * Declaration of an IbRDP tag store.
  */
 
 #ifndef __MEM_CACHE_TAGS_IBRDP_HH__
