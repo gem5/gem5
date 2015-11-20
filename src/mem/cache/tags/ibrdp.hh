@@ -183,24 +183,11 @@ class RDSampler
     void Update( uint32_t address, uint32_t pc, uint32_t accessType );
 };
 
-/**
- * A fully associative cache block.
- */
-class IBRDBlk : public CacheBlk
-{
-public:
-    /** Has this block been touched? */
-    bool isTouched;
-};
-
 class IbRDP : public BaseSetAssoc
 {
   public:
     /** Convenience typedef. */
     typedef IbRDPParams Params;
-
-    /** Typedef the block type used in this tag store. */
-    typedef IbRDPBlk BlkType;
 
     /**
      * Construct and initialize this tag store.

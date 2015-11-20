@@ -46,7 +46,7 @@
  */
 
 #include "debug/CacheRepl.hh"
-#include "mem/cache/tags/ibrd.hh"
+#include "mem/cache/tags/ibrdp.hh"
 #include "mem/cache/base.hh"
 
 IbRDP::IbRDP(const Params *p)
@@ -104,7 +104,7 @@ IbRDP::invalidate(CacheBlk *blk)
 IbRDP*
 IbRDPParams::create()
 {
-    return new IBRD(this);
+    return new IbRDP(this);
 }
 
 //---------------------------------------------------------------------------///
