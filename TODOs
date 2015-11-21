@@ -1,9 +1,8 @@
 Urgent TODOs
 -------------------------------------------------
-1. Fix potential bugs caused by code hacks in coherent_xbar.cc.
+1. Add experiments on NUMA cache sizes, replacement policies.
 2. Use formula in place of hardcoded memory sizes in ccnuma_fs.py.
 3. Incorporate energy efficient caching.
-4. Incorporate cache replacement/partitioning policies.
 
 Normal TODOs
 -------------------------------------------------
