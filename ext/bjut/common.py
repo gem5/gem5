@@ -86,6 +86,9 @@ class Experiment:
     def l2_id(self, i=None):
         return '' if self.configs is None else ('l2' if i is None else self.configs.execute('$.system.l2cache[' + str(i) + '].name'))
 
+    def sim_ticks(self):
+        return -1 if self.stats is None else str(int(self.stats['sim_ticks']))
+
     def num_cycles(self):
         return -1 if self.stats is None else str(int(self.stats['system.' + self.cpu_id(0) + '.numCycles']))
 

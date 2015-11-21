@@ -9,11 +9,14 @@
 import os
 
 
-def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain):
+def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain,
+        numa_cache_size, numa_cache_assoc, numa_cache_tags):
     num_threads = num_domains * num_cpus_per_domain
 
-    dir = 'results/alpha_ccnuma_no_checkpoints/' + bench + '/' + l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + str(
-        num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
+    dir = 'results/alpha_ccnuma_no_checkpoints/' + bench + '/' + \
+          l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
+          str(num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
+          # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
 
     os.system('rm -fr ' + dir)
     os.system('mkdir -p ' + dir)
@@ -24,37 +27,39 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain):
               + ' --caches --l2cache --num-l2caches=1' \
               + ' --l1d_size=32kB --l1i_size=32kB --l2_size=' + l2_size + ' --l2_assoc=' + str(l2_assoc) + ' --l2_tags=' + l2_tags \
               + ' --num_domains=' + str(num_domains) + ' --num_cpus_per_domain=' + str(num_cpus_per_domain) \
+              + ' --numa_cache_size=' + numa_cache_size + ' --numa_cache_assoc=' + str(numa_cache_assoc) + ' --numa_cache_tags=' + numa_cache_tags \
               + ' --mem_size_per_domain=256MB'
     print cmd_run
     os.system(cmd_run)
 
 
 def run_experiments(bench):
-    # run(bench, '256kB', 8, 'LRU', 2, 2)
-    # run(bench, '512kB', 8, 'LRU', 2, 2)
-    # run(bench, '1MB', 8, 'LRU', 2, 2)
-    # run(bench, '2MB', 8, 'LRU', 2, 2)
-    # run(bench, '4MB', 8, 'LRU', 2, 2)
-    # run(bench, '8MB', 8, 'LRU', 2, 2)
+    # run(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    # run(bench, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    # run(bench, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    # run(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    # run(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    # run(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
     #
-    # run(bench, '256kB', 8, 'LRU', 2, 1)
-    # run(bench, '256kB', 8, 'LRU', 2, 4)
-    # run(bench, '256kB', 8, 'LRU', 2, 8)
-    # run(bench, '256kB', 8, 'LRU', 4, 1)
-    # run(bench, '256kB', 8, 'LRU', 4, 2)
-    # run(bench, '256kB', 8, 'LRU', 4, 4)
+    # run(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')
+    # run(bench, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU')
+    # run(bench, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU')
+    # run(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')
+    # run(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')
+    # run(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')
 
-    run(bench, '256kB', 8, 'IbRDP', 2, 2)
+    run(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
+
 
 run_experiments('blackscholes')
-# run_experiments('bodytrack')
-# run_experiments('canneal')
-# run_experiments('dedup')
-# run_experiments('facesim')
-# run_experiments('ferret')
-# run_experiments('fluidanimate')
-# run_experiments('freqmine')
-# run_experiments('streamcluster')
-# run_experiments('swaptions')
-# run_experiments('vips')
-# run_experiments('x264')
+run_experiments('bodytrack')
+run_experiments('canneal')
+run_experiments('dedup')
+run_experiments('facesim')
+run_experiments('ferret')
+run_experiments('fluidanimate')
+run_experiments('freqmine')
+run_experiments('streamcluster')
+run_experiments('swaptions')
+run_experiments('vips')
+run_experiments('x264')

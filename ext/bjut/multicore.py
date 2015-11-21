@@ -18,6 +18,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
             'l2_assoc',
             'l2_tags',
             'num_threads',
+            'sim_ticks',
             'num_cycles',
             'l2_miss_rate'
         ]
@@ -29,6 +30,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
             self.l2_assoc,
             self.l2_tags,
             self.num_threads,
+            self.sim_ticks(),
             self.num_cycles(),
             self.l2_miss_rate()
         ]

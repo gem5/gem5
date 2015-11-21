@@ -177,11 +177,15 @@ def build_test_system(np):
     test_sys.system_bus = SystemXBar()
 
     for domain in domains:
-        numa_cache_downward = NUMACache(addr_ranges=[])
+        numa_cache_downward = NUMACache(
+            size=options.numa_cache_size, assoc=options.numa_cache_assoc,
+            addr_ranges=[])
         numa_cache_downward.cpu_side = domain.membus.master
         numa_cache_downward.mem_side = test_sys.system_bus.slave
 
-        numa_cache_upward = NUMACache(addr_ranges=domain.mem_ranges)
+        numa_cache_upward = NUMACache(
+            size=options.numa_cache_size, assoc=options.numa_cache_assoc,
+            addr_ranges=domain.mem_ranges)
         numa_cache_upward.cpu_side = test_sys.system_bus.master
         numa_cache_upward.mem_side = domain.membus.slave
 
@@ -193,6 +197,20 @@ def build_test_system(np):
             numa_cache_upward.addr_ranges += test_sys.bridge.ranges
         else:
             numa_cache_downward.addr_ranges += test_sys.bridge.ranges
+
+        if options.numa_cache_tags:
+            if options.numa_cache_tags == 'LRU':
+                numa_cache_upward.tags = LRU()
+                numa_cache_downward.tags = LRU()
+            elif options.numa_cache_tags == 'Random':
+                numa_cache_upward.tags = RandomRepl()
+                numa_cache_downward.tags = RandomRepl()
+            elif options.numa_cache_tags == 'IbRDP':
+                numa_cache_upward.tags = IbRDP()
+                numa_cache_downward.tags = IbRDP()
+            else:
+                print 'NUMA cache tags: ' + options.numa_cache_tags + ' is not supported.'
+                sys.exit(-1)
 
         numa_caches_downward.append(numa_cache_downward)
         numa_caches_upward.append(numa_cache_upward)
@@ -229,6 +247,10 @@ Options.addFSOptions(parser)
 parser.add_option('--num_domains', type='int', default=2, help = 'Number of NUMA domains')
 parser.add_option('--num_cpus_per_domain', type='int', default=2, help = 'Number of CPUs per NUMA domain')
 parser.add_option('--mem_size_per_domain', type='string', default='256MB', help = 'Memory size per NUMA domain')
+
+parser.add_option("--numa_cache_size", type="string", default="2MB")
+parser.add_option("--numa_cache_assoc", type="int", default=8)
+parser.add_option("--numa_cache_tags", type="string", default="LRU")
 
 (options, args) = parser.parse_args()
 
