@@ -115,22 +115,22 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
 # generate_mcpat_xml_files('../../results/alpha_no_checkpoints/')
 # generate_mcpat_xml_files('../../results/alpha_ccnuma_no_checkpoints/')
 
-generate_csv_multicore_experiments(
-    [
-        'blackscholes',
-        'bodytrack',
-        'canneal',
-        'dedup',
-        'facesim',
-        'ferret',
-        'fluidanimate',
-        'freqmine',
-        'streamcluster',
-        'swaptions',
-        'vips',
-        'x264'
-    ]
-)
+# generate_csv_multicore_experiments(
+#     [
+#         'blackscholes',
+#         'bodytrack',
+#         'canneal',
+#         'dedup',
+#         'facesim',
+#         'ferret',
+#         'fluidanimate',
+#         'freqmine',
+#         'streamcluster',
+#         'swaptions',
+#         'vips',
+#         'x264'
+#     ]
+# )
 
 
 generate_csv_ccnuma_experiments(
