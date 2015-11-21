@@ -101,9 +101,6 @@ static inline int CRC_CeilLog2(uint32_t n)
 #define IBRDP_SETS 16
 #define IBRDP_WAYS 16
 
-// Selective Caching controls the use of cache bypassing
-#define SELECTIVE_CACHING
-
 //---------------------------------------------------------------------------///
 //---------------------------------------------------------------------------///
 //---            INSTRUCTION BASED REUSE DISTANCE PREDICTOR               ---///

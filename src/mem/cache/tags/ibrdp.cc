@@ -122,83 +122,55 @@ IbRDP::Get_IBRDP_Victim( uint32_t setIndex, Addr PC, Addr paddr )
                                 // or will be used farthest in the future
     uint32_t victim_time = 0;     // The idle or left time for the victim_way
 
-    uint32_t new_prediction = 0 ; // new_prediction is set to zero, unless
-                                // Selective Caching is activated. That forces
-                                // all conditions which control cache bypassing
-                                // to be always false
-
-#if defined( SELECTIVE_CACHING )
-    new_prediction = predictor->Lookup( TransformPC( PC ) );
-#endif
-
-    // If the predicted quantized reuse distance for the new line has the
-    // maximum value, it almost certainly doesn't fit in the cache
-    if( new_prediction == MAX_VALUE_PREDICTION )
+    // We search the set to find the line which will be used farthest in
+    // the future / was used farthest in the past
+    for( way = 0; way < assoc; way++ )
     {
-        victim_way = -1;
-    }
-    else
-    {
-        // We search the set to find the line which will be used farthest in
-        // the future / was used farthest in the past
-        for( way = 0; way < assoc; way++ )
+        // ---> Un-Quantize all the needed variables <---
+
+        // 'timestamp' refers to a point in the past, so it should be less
+        // than 'accessesCounterHigh'. If this is not the case, it means
+        // that the accesses counter has overflowed since the last access,
+        // so we have to add to accessesCounterHigh 'MAX_VALUE_TIMESTAMP+1'
+        CacheBlk *blk = findBlockBySetAndWay(setIndex, way);
+
+        if( blk->timestamp > accessesCounterHigh )
+            now = UnQuantizeTimestamp( accessesCounterHigh + MAX_VALUE_TIMESTAMP + 1 );
+        else
+            now = UnQuantizeTimestamp( accessesCounterHigh );
+
+        timestamp  = UnQuantizeTimestamp( blk->timestamp );
+        prediction = UnQuantizePrediction( blk->prediction );
+
+        // ---> Look at the future <---
+
+        // Calculate Time Left until next access
+        if( timestamp + prediction > now )
+            time_left = timestamp + prediction - now;
+        else
+            time_left = 0;
+
+        // If the line is going to be used farther in the future than the
+        // previously selected victim, then we replace the selected victim
+        if( time_left > victim_time )
         {
-            // ---> Un-Quantize all the needed variables <---
-
-            // 'timestamp' refers to a point in the past, so it should be less
-            // than 'accessesCounterHigh'. If this is not the case, it means
-            // that the accesses counter has overflowed since the last access,
-            // so we have to add to accessesCounterHigh 'MAX_VALUE_TIMESTAMP+1'
-            CacheBlk *blk = findBlockBySetAndWay(setIndex, way);
-
-            if( blk->timestamp > accessesCounterHigh )
-                now = UnQuantizeTimestamp( accessesCounterHigh + MAX_VALUE_TIMESTAMP + 1 );
-            else
-                now = UnQuantizeTimestamp( accessesCounterHigh );
-
-            timestamp  = UnQuantizeTimestamp( blk->timestamp );
-            prediction = UnQuantizePrediction( blk->prediction );
-
-            // ---> Look at the future <---
-
-            // Calculate Time Left until next access
-            if( timestamp + prediction > now )
-                time_left = timestamp + prediction - now;
-            else
-                time_left = 0;
-
-            // If the line is going to be used farther in the future than the
-            // previously selected victim, then we replace the selected victim
-            if( time_left > victim_time )
-            {
-                victim_time = time_left;
-                victim_way  = way;
-            }
-
-            // ---> Look at the past <---
-
-            // Calculate time passed since last access
-            time_idle = now - timestamp;
-
-            // If the line was used farther in the past than the previously
-            // selected victim, then we replace the selected victim
-            if( time_idle > victim_time )
-            {
-                victim_time = time_idle;
-                victim_way  = way;
-            }
+            victim_time = time_left;
+            victim_way  = way;
         }
-        // If the reuse-distance prediction for the new line is greater than
-        // the victim_time, then the new line is less likely to fit in the
-        // cache than the selected victim, so we choose to bypass the cache
-        if( UnQuantizePrediction( new_prediction ) > victim_time )
-            victim_way = -1;
-    }
 
-    // If we bypass the cache, then the ReplPolicy won't be updated, so we
-    // have to update some things from here
-    if (victim_way == -1)
-        UpdateOnEveryAccess( TransformAddress( paddr >> 6 ), TransformPC( PC ) );
+        // ---> Look at the past <---
+
+        // Calculate time passed since last access
+        time_idle = now - timestamp;
+
+        // If the line was used farther in the past than the previously
+        // selected victim, then we replace the selected victim
+        if( time_idle > victim_time )
+        {
+            victim_time = time_idle;
+            victim_way  = way;
+        }
+    }
 
     return victim_way;
 
