@@ -406,7 +406,10 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         if (blk == NULL) {
             // need to do a replacement
-            blk = allocateBlock(pkt->getAddr(), pkt->isSecure(), writebacks);
+            Addr pc = pkt->req->hasPC() ?
+                pkt->req->getPC() : 0;
+
+            blk = allocateBlock(pc, pkt->getAddr(), pkt->isSecure(), writebacks);
             if (blk == NULL) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
@@ -1652,9 +1655,9 @@ Cache::invalidateVisitor(CacheBlk &blk)
 }
 
 CacheBlk*
-Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
+Cache::allocateBlock(Addr pc, Addr addr, bool is_secure, PacketList &writebacks)
 {
-    CacheBlk *blk = tags->findVictim(addr);
+    CacheBlk *blk = tags->findVictim(pc, addr);
 
     // It is valid to return NULL if there is no victim
     if (!blk)
@@ -1709,6 +1712,8 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
                   bool allocate)
 {
     assert(pkt->isResponse() || pkt->cmd == MemCmd::WriteLineReq);
+    Addr pc = pkt->req->hasPC() ?
+        pkt->req->getPC() : 0;
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
 #if TRACING_ON
@@ -1732,7 +1737,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
-        blk = allocate ? allocateBlock(addr, is_secure, writebacks) : NULL;
+        blk = allocate ? allocateBlock(pc, addr, is_secure, writebacks) : NULL;
 
         if (blk == NULL) {
             // No replaceable block or a mostly exclusive

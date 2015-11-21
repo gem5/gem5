@@ -71,7 +71,7 @@ class LRU : public BaseSetAssoc
 
     CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
-    CacheBlk* findVictim(Addr addr);
+    CacheBlk* findVictim(Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
     void invalidate(CacheBlk *blk);
 };

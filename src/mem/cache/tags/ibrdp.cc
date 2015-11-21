@@ -64,25 +64,22 @@ IbRDP::accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat, int master_i
     CacheBlk *blk = BaseSetAssoc::accessBlock(pc, addr, is_secure, lat, master_id);
 
     if (blk != NULL) {
-        sets[blk->set].moveToHead(blk);
+        UpdateIBRDP( blk->set, blk->way, pc, true );
     }
 
     return blk;
 }
 
 CacheBlk*
-IbRDP::findVictim(Addr addr)
+IbRDP::findVictim(Addr pc, Addr addr)
 {
-    int set = extractSet(addr);
-    BlkType *blk = NULL;
-    for (int i = assoc - 1; i >= 0; i--) {
-        BlkType *b = sets[set].blks[i];
-        if (b->way < allocAssoc) {
-            blk = b;
-            break;
-        }
+    CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
+    unsigned set = extractSet(addr);
+
+    // if all blocks are valid, pick a replacement at random
+    if (blk && blk->isValid()) {
+        blk = findBlockBySetAndWay(set, Get_IBRDP_Victim( set, pc, addr ));
     }
-    assert(!blk || blk->way < allocAssoc);
 
     return blk;
 }
@@ -93,16 +90,16 @@ IbRDP::insertBlock(PacketPtr pkt, BlkType *blk)
     BaseSetAssoc::insertBlock(pkt, blk);
 
     int set = extractSet(pkt->getAddr());
-    sets[set].moveToHead(blk);
+    Addr pc = pkt->req->hasPC() ?
+        pkt->req->getPC() : 0;
+
+    UpdateIBRDP( set, blk->way, pc, false );
 }
 
 void
 IbRDP::invalidate(CacheBlk *blk)
 {
     BaseSetAssoc::invalidate(blk);
-
-    int set = blk->set;
-    sets[set].moveToTail(blk);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

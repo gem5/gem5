@@ -71,7 +71,7 @@ LRU::accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat, int master_id)
 }
 
 CacheBlk*
-LRU::findVictim(Addr addr)
+LRU::findVictim(Addr pc, Addr addr)
 {
     int set = extractSet(addr);
     // grab a replacement candidate
