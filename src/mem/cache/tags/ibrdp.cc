@@ -74,7 +74,7 @@ CacheBlk*
 IbRDP::findVictim(Addr pc, Addr addr)
 {
     CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
-    unsigned set = extractSet(addr);
+    int set = extractSet(addr);
 
     // if all blocks are valid, pick a replacement at random
     if (blk && blk->isValid()) {
@@ -326,10 +326,7 @@ RDSampler::Update( uint32_t address, uint32_t pc )
     {
         sampler[index].valid = 0;
 
-//        if( accessType == ACCESS_STORE )
-//            position = sampler[index].FifoPosition + 8;
-//        else
-            position = sampler[index].FifoPosition;
+        position = sampler[index].FifoPosition;
 
         observation = QuantizePrediction( position * period );
         predictor->Update( sampler[index].pc, observation );
