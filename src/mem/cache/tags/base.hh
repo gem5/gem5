@@ -223,7 +223,7 @@ class BaseTags : public ClockedObject
 
     virtual void invalidate(CacheBlk *blk) = 0;
 
-    virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+    virtual CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
                                   int context_src) = 0;
 
     virtual Addr extractTag(Addr addr) const = 0;

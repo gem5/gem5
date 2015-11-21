@@ -180,7 +180,7 @@ class RDSampler
     // 2) It takes a new sample every period accesses and it enqueues it
     //    in the sampler. If the dequeued entry was still valid, we update
     //    the predictor using the entries pc and the MAX_VALUE_PREDICTION
-    void Update( uint32_t address, uint32_t pc, uint32_t accessType );
+    void Update( uint32_t address, uint32_t pc );
 };
 
 class IbRDP : public BaseSetAssoc
@@ -199,11 +199,31 @@ class IbRDP : public BaseSetAssoc
      */
     ~IbRDP() {}
 
-    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
     CacheBlk* findVictim(Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
     void invalidate(CacheBlk *blk);
+
+  private:
+    void UpdateOnEveryAccess( uint32_t address, uint32_t PC );
+
+    int Get_IBRDP_Victim( uint32_t setIndex, Addr PC, Addr paddr );
+
+    void UpdateIBRDP( uint32_t setIndex, int updateWayID, Addr PC, bool cacheHit );
+
+    // 1) We use the 17 bit accessesCounter instead of the 'timer' variable
+    //    because we wish to count the accesses caused only by loads and stores
+    // 2) We break the accessesCounter into a lower and a higher part, just
+    //    to make our lives easier: Since only the 3 higher order bits of
+    //    the accessesCounter are used directly by our policy, we keep them
+    //    separated by the lower 14 bits. One could very well merge the two
+    //    parts in one variable and just write some extra code to isolate
+    //    the three higher order bits.
+    uint32_t accessesCounterLow;  // Lower 14 bits of acccessesCounter
+    uint32_t accessesCounterHigh; // Higher 3 bits of accessesCounter
+    IBRDPredictor *predictor;   // Reference to the IbRDPredictor
+    RDSampler *rdsampler;       // Reference to the RDSampler
 };
 
 // -----------------------------------------------------------------------------

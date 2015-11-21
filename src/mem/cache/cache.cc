@@ -334,9 +334,13 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     ContextID id = pkt->req->hasContextId() ?
         pkt->req->contextId() : InvalidContextID;
+
+    Addr pc = pkt->req->hasPC() ?
+        pkt->req->getPC() : 0;
+
     // Here lat is the value passed as parameter to accessBlock() function
     // that can modify its value.
-    blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), lat, id);
+    blk = tags->accessBlock(pc, pkt->getAddr(), pkt->isSecure(), lat, id);
 
     DPRINTF(Cache, "%s%s addr %#llx size %d (%s) %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",

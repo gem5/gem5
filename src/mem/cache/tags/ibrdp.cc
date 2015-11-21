@@ -52,12 +52,16 @@
 IbRDP::IbRDP(const Params *p)
     : BaseSetAssoc(p)
 {
+    accessesCounterLow  = 0;
+    accessesCounterHigh = 1;
+    predictor = new IBRDPredictor( IBRDP_SETS, IBRDP_WAYS );
+    rdsampler = new RDSampler( SAMPLER_PERIOD, SAMPLER_MAX_RD, predictor );
 }
 
 CacheBlk*
-IbRDP::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
+IbRDP::accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat, int master_id)
 {
-    CacheBlk *blk = BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
+    CacheBlk *blk = BaseSetAssoc::accessBlock(pc, addr, is_secure, lat, master_id);
 
     if (blk != NULL) {
         sets[blk->set].moveToHead(blk);
@@ -99,6 +103,154 @@ IbRDP::invalidate(CacheBlk *blk)
 
     int set = blk->set;
     sets[set].moveToTail(blk);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// This function finds the IBRDP victim in the cache set                      //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+int
+IbRDP::Get_IBRDP_Victim( uint32_t setIndex, Addr PC, Addr paddr )
+{
+    uint32_t way;
+                                // All local variables hold unquantized values
+    uint32_t now;                 // Current time
+    uint32_t timestamp;           // The line's time of last use
+    uint32_t prediction;          // The line's reuse distance prediction
+    uint32_t time_left;           // The line's predicted time left until reuse
+    uint32_t time_idle;           // The line's elapsed time since last use
+
+    int victim_way  = 0;      // The line which was used farthest in the past
+                                // or will be used farthest in the future
+    uint32_t victim_time = 0;     // The idle or left time for the victim_way
+
+    uint32_t new_prediction = 0 ; // new_prediction is set to zero, unless
+                                // Selective Caching is activated. That forces
+                                // all conditions which control cache bypassing
+                                // to be always false
+
+#if defined( SELECTIVE_CACHING )
+    new_prediction = predictor->Lookup( TransformPC( PC ) );
+#endif
+
+    // If the predicted quantized reuse distance for the new line has the
+    // maximum value, it almost certainly doesn't fit in the cache
+    if( new_prediction == MAX_VALUE_PREDICTION )
+    {
+        victim_way = -1;
+    }
+    else
+    {
+        // We search the set to find the line which will be used farthest in
+        // the future / was used farthest in the past
+        for( way = 0; way < assoc; way++ )
+        {
+            // ---> Un-Quantize all the needed variables <---
+
+            // 'timestamp' refers to a point in the past, so it should be less
+            // than 'accessesCounterHigh'. If this is not the case, it means
+            // that the accesses counter has overflowed since the last access,
+            // so we have to add to accessesCounterHigh 'MAX_VALUE_TIMESTAMP+1'
+            CacheBlk *blk = findBlockBySetAndWay(setIndex, way);
+
+            if( blk->timestamp > accessesCounterHigh )
+                now = UnQuantizeTimestamp( accessesCounterHigh + MAX_VALUE_TIMESTAMP + 1 );
+            else
+                now = UnQuantizeTimestamp( accessesCounterHigh );
+
+            timestamp  = UnQuantizeTimestamp( blk->timestamp );
+            prediction = UnQuantizePrediction( blk->prediction );
+
+            // ---> Look at the future <---
+
+            // Calculate Time Left until next access
+            if( timestamp + prediction > now )
+                time_left = timestamp + prediction - now;
+            else
+                time_left = 0;
+
+            // If the line is going to be used farther in the future than the
+            // previously selected victim, then we replace the selected victim
+            if( time_left > victim_time )
+            {
+                victim_time = time_left;
+                victim_way  = way;
+            }
+
+            // ---> Look at the past <---
+
+            // Calculate time passed since last access
+            time_idle = now - timestamp;
+
+            // If the line was used farther in the past than the previously
+            // selected victim, then we replace the selected victim
+            if( time_idle > victim_time )
+            {
+                victim_time = time_idle;
+                victim_way  = way;
+            }
+        }
+        // If the reuse-distance prediction for the new line is greater than
+        // the victim_time, then the new line is less likely to fit in the
+        // cache than the selected victim, so we choose to bypass the cache
+        if( UnQuantizePrediction( new_prediction ) > victim_time )
+            victim_way = -1;
+    }
+
+    // If we bypass the cache, then the ReplPolicy won't be updated, so we
+    // have to update some things from here
+    if (victim_way == -1)
+        UpdateOnEveryAccess( TransformAddress( paddr >> 6 ), TransformPC( PC ) );
+
+    return victim_way;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// This function implements the IBRDP update routine                          //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+void
+IbRDP::UpdateIBRDP( uint32_t setIndex, int updateWayID, Addr PC, bool cacheHit )
+{
+    uint32_t prediction = 0;
+    uint32_t myPC = TransformPC( PC );
+
+    CacheBlk *blk = findBlockBySetAndWay(setIndex, updateWayID);
+
+    uint32_t myAddress = TransformAddress( ( blk->tag << setShift ) + setIndex );
+
+    // Update the accesses counter and the sampler
+    UpdateOnEveryAccess( myAddress, myPC );
+
+    // Get the prediction information for the accessed line
+    prediction = predictor->Lookup( myPC );
+
+    // Fill the accessed line with the replacement policy information
+    blk->timestamp  = accessesCounterHigh;
+    blk->prediction = prediction;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// This function updates the IBRDP elements that must be updated              //
+// for every access: the accessesCounter and the the Sampler                  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+void
+IbRDP::UpdateOnEveryAccess( uint32_t address, uint32_t PC )
+{
+    accessesCounterLow++;
+    if( accessesCounterLow == QUANTUM_TIMESTAMP )
+    {
+        accessesCounterLow = 0;
+        accessesCounterHigh++;
+        if( accessesCounterHigh > MAX_VALUE_TIMESTAMP )
+            accessesCounterHigh = 0;
+    }
+    rdsampler->Update( address, PC );
 }
 
 IbRDP*
@@ -153,7 +305,7 @@ RDSampler::RDSampler( uint32_t _period, uint32_t _max_rd, IBRDPredictor *_predic
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 void
-RDSampler::Update( uint32_t address, uint32_t pc, uint32_t accessType )
+RDSampler::Update( uint32_t address, uint32_t pc )
 {
     uint32_t observation;
     uint32_t position;

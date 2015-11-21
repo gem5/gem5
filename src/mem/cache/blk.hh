@@ -123,6 +123,9 @@ class CacheBlk
 
     Tick tickInserted;
 
+    uint32_t timestamp;       // 3 bits Quantized timestamp
+    uint32_t prediction;      // 4 bits Quantized reuse distance prediction
+
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on

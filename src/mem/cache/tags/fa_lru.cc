@@ -170,13 +170,13 @@ FALRU::invalidate(CacheBlk *blk)
 }
 
 CacheBlk*
-FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int context_src)
+FALRU::accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat, int context_src)
 {
-    return accessBlock(addr, is_secure, lat, context_src, 0);
+    return accessBlock(pc, addr, is_secure, lat, context_src, 0);
 }
 
 CacheBlk*
-FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int context_src,
+FALRU::accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat, int context_src,
                    int *inCache)
 {
     accesses++;
