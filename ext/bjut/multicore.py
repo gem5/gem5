@@ -20,7 +20,8 @@ class MulticoreExperiment(McPATEnabledExperiment):
             'num_threads',
             'sim_ticks',
             'num_cycles',
-            'l2_miss_rate'
+            'l2_miss_rate',
+            'l2_replacements'
         ]
 
     def dump_row(self):
@@ -32,5 +33,6 @@ class MulticoreExperiment(McPATEnabledExperiment):
             self.num_threads,
             self.sim_ticks(),
             self.num_cycles(),
-            self.l2_miss_rate()
+            self.l2_miss_rate(),
+            self.l2_replacements()
         ]

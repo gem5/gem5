@@ -27,6 +27,7 @@ class CCNUMAExperiment(McPATEnabledExperiment):
             'sim_ticks',
             'num_cycles',
             'l2_miss_rate',
+            'l2_replacements',
             'numa_cache_downward_miss_rate',
             'numa_cache_upward_miss_rate',
             'system_bus_snoops'
@@ -43,6 +44,7 @@ class CCNUMAExperiment(McPATEnabledExperiment):
             self.sim_ticks(),
             self.num_cycles(),
             self.l2_miss_rate(),
+            self.l2_replacements(),
             self.numa_cache_downward_miss_rate(),
             self.numa_cache_upward_miss_rate(),
             self.system_bus_snoops()

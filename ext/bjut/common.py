@@ -106,6 +106,20 @@ class Experiment:
 
         return sum(miss_rates) / float(len(miss_rates))
 
+    def l2_replacements(self):
+        if self.stats is None:
+            return -1
+
+        replacements = []
+
+        if self.numa():
+            for i in range(self.num_l2caches()):
+                replacements.append(int(self.stats['system.' + self.l2_id(i) + '.tags.replacements']))
+        else:
+            replacements.append(int(self.stats['system.' + self.l2_id() + '.tags.replacements']))
+
+        return sum(replacements)
+
     @classmethod
     def dump_head_row(cls):
         pass
