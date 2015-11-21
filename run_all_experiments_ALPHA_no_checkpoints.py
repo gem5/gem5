@@ -39,10 +39,10 @@ def run_experiments(bench):
 
     run(bench, '256kB', 8, 'IbRDP', 4)
 
-run_experiments('blackscholes')
+# run_experiments('blackscholes')
 # run_experiments('bodytrack')
 # run_experiments('canneal')
-# run_experiments('dedup')
+run_experiments('dedup')
 # run_experiments('facesim')
 # run_experiments('ferret')
 # run_experiments('fluidanimate')
