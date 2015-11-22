@@ -80,3 +80,8 @@ class IbRDP(BaseSetAssoc):
     type = 'IbRDP'
     cxx_class = 'IbRDP'
     cxx_header = "mem/cache/tags/ibrdp.hh"
+
+class RRIP(BaseSetAssoc):
+    type = 'RRIP'
+    cxx_class = 'RRIP'
+    cxx_header = "mem/cache/tags/rrip.hh"

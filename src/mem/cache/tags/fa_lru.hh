@@ -188,13 +188,13 @@ public:
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                           int context_src, int *inCache);
 
     /**
      * Just a wrapper of above function to conform with the base interface.
      */
-    CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                           int context_src) override;
 
     /**

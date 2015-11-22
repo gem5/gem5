@@ -50,29 +50,7 @@
 
 #include "mem/cache/tags/base_set_assoc.hh"
 #include "params/IbRDP.hh"
-
-// Works by finding position of MSB set.
-static inline int CRC_FloorLog2(uint32_t n)
-{
-    int p = 0;
-
-    if (n == 0) return -1;
-
-    if (n & 0xffff0000) { p += 16; n >>= 16; }
-    if (n & 0x0000ff00) { p +=  8; n >>=  8; }
-    if (n & 0x000000f0) { p +=  4; n >>=  4; }
-    if (n & 0x0000000c) { p +=  2; n >>=  2; }
-    if (n & 0x00000002) { p +=  1; }
-
-    return p;
-}
-
-// Works by finding position of MSB set.
-// @returns -1 if n == 0.
-static inline int CRC_CeilLog2(uint32_t n)
-{
-    return CRC_FloorLog2(n - 1) + 1;
-}
+#include "utils.hh"
 
 // MAX and SAFE values for the IbRDPredictor confidence counters
 #define MAX_CONFIDENCE 3
@@ -196,7 +174,7 @@ class IbRDP : public BaseSetAssoc
      */
     ~IbRDP() {}
 
-    CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
     CacheBlk* findVictim(Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);

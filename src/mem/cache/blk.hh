@@ -126,6 +126,8 @@ class CacheBlk
     uint32_t timestamp;       // 3 bits Quantized timestamp
     uint32_t prediction;      // 4 bits Quantized reuse distance prediction
 
+    uint32_t  RPV;
+
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on

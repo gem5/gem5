@@ -84,6 +84,8 @@ def config_cache(options, system):
                 system.l2.tags = RandomRepl()
             elif options.l2_tags == 'IbRDP':
                 system.l2.tags = IbRDP()
+            elif options.l2_tags == 'RRIP':
+                system.l2.tags = RRIP()
             else:
                 print 'L2 tags: ' + options.l2_tags + ' is not supported.'
                 sys.exit(-1)

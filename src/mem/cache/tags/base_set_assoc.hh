@@ -202,7 +202,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                           int context_src) override
     {
         Addr tag = extractTag(addr);

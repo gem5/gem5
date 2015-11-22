@@ -592,6 +592,12 @@ class Request
         return _contextId;
     }
 
+    bool
+    hasThreadId() const
+    {
+        return privateFlags.isSet(VALID_THREAD_ID);
+    }
+
     /** Accessor function for thread ID. */
     ThreadID
     threadId() const

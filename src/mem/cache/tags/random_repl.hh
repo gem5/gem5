@@ -58,7 +58,7 @@ class RandomRepl : public BaseSetAssoc
      */
     ~RandomRepl() {}
 
-    CacheBlk* accessBlock(Addr pc, Addr addr, bool is_secure, Cycles &lat,
+    CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
     CacheBlk* findVictim(Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
