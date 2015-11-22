@@ -198,6 +198,9 @@ TrafficGen::update()
         } else {
             DPRINTF(TrafficGen, "Suppressed packet %s 0x%x\n",
                     pkt->cmdString(), pkt->getAddr());
+            delete pkt->req;
+            delete pkt;
+            pkt = nullptr;
         }
     }
 
