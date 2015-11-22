@@ -42,7 +42,7 @@
 
 /**
  * @file
- * Declaration of an RRIP tag store.
+ * Declaration of a RRIP tag store.
  */
 
 #ifndef __MEM_CACHE_TAGS_RRIP_HH__

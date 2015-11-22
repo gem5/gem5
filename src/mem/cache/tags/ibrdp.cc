@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 Min Cai
+ * Copyright (C) Pavlos Petoumenos <ppetoumenos@ece.upatras.gr>
+ * Copyright (c) 2015 Min Cai <min.cai.china@gmail.com>
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -37,7 +38,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Min Cai
+ * Authors: Pavlos Petoumenos, Min Cai
  */
 
 /**
