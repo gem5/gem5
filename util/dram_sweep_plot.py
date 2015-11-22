@@ -38,10 +38,8 @@
 # Authors: Andreas Hansson
 
 try:
-
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import cm
-    from matplotlib.ticker import LinearLocator, FormatStrFormatter
     import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
@@ -74,13 +72,13 @@ def main():
     try:
         stats = open(sys.argv[2] + '/stats.txt', 'r')
     except IOError:
-        print "Failed to open ", sys.argv[1] + '/stats.txt', " for reading"
+        print "Failed to open ", sys.argv[2] + '/stats.txt', " for reading"
         exit(-1)
 
     try:
         simout = open(sys.argv[2] + '/simout', 'r')
     except IOError:
-        print "Failed to open ", sys.argv[1] + '/simout', " for reading"
+        print "Failed to open ", sys.argv[2] + '/simout', " for reading"
         exit(-1)
 
     # Get the burst size, number of banks and the maximum stride from

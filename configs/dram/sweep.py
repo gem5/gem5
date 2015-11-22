@@ -94,7 +94,7 @@ mem_range = AddrRange('256MB')
 system.mem_ranges = [mem_range]
 
 # do not worry about reserving space for the backing store
-mmap_using_noreserve = True
+system.mmap_using_noreserve = True
 
 # force a single channel to match the assumptions in the DRAM traffic
 # generator
@@ -145,8 +145,8 @@ burst_size = int((system.mem_ctrls[0].devices_per_rank.value *
 page_size = system.mem_ctrls[0].devices_per_rank.value * \
     system.mem_ctrls[0].device_rowbuffer_size.value
 
-# match the maximum bandwidth of the memory, the parameter is in ns
-# and we need it in ticks
+# match the maximum bandwidth of the memory, the parameter is in seconds
+# and we need it in ticks (ps)
 itt = system.mem_ctrls[0].tBURST.value * 1000000000000
 
 # assume we start at 0
