@@ -522,28 +522,18 @@ FlashDevice::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(planeMask);
 
-    int unknown_pages_size = unknownPages.size();
-    SERIALIZE_SCALAR(unknown_pages_size);
-    for (uint32_t count = 0; count < unknownPages.size(); count++)
-        SERIALIZE_SCALAR(unknownPages[count]);
+    SERIALIZE_CONTAINER(unknownPages);
+    SERIALIZE_CONTAINER(blockValidEntries);
+    SERIALIZE_CONTAINER(blockEmptyEntries);
 
     int location_table_size = locationTable.size();
     SERIALIZE_SCALAR(location_table_size);
     for (uint32_t count = 0; count < location_table_size; count++) {
-        SERIALIZE_SCALAR(locationTable[count].page);
-        SERIALIZE_SCALAR(locationTable[count].block);
-        }
-
-    int block_valid_entries_size = blockValidEntries.size();
-    SERIALIZE_SCALAR(block_valid_entries_size);
-    for (uint32_t count = 0; count < blockValidEntries.size(); count++)
-        SERIALIZE_SCALAR(blockValidEntries[count]);
-
-    int block_empty_entries_size = blockEmptyEntries.size();
-    SERIALIZE_SCALAR(block_empty_entries_size);
-    for (uint32_t count = 0; count < blockEmptyEntries.size(); count++)
-        SERIALIZE_SCALAR(blockEmptyEntries[count]);
-
+        paramOut(cp, csprintf("locationTable[%d].page", count),
+                 locationTable[count].page);
+        paramOut(cp, csprintf("locationTable[%d].block", count),
+                 locationTable[count].block);
+    }
 };
 
 /**
@@ -555,32 +545,19 @@ FlashDevice::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(planeMask);
 
-    int unknown_pages_size;
-    UNSERIALIZE_SCALAR(unknown_pages_size);
-    unknownPages.resize(unknown_pages_size);
-    for (uint32_t count = 0; count < unknown_pages_size; count++)
-        UNSERIALIZE_SCALAR(unknownPages[count]);
+    UNSERIALIZE_CONTAINER(unknownPages);
+    UNSERIALIZE_CONTAINER(blockValidEntries);
+    UNSERIALIZE_CONTAINER(blockEmptyEntries);
 
     int location_table_size;
     UNSERIALIZE_SCALAR(location_table_size);
     locationTable.resize(location_table_size);
     for (uint32_t count = 0; count < location_table_size; count++) {
-        UNSERIALIZE_SCALAR(locationTable[count].page);
-        UNSERIALIZE_SCALAR(locationTable[count].block);
-        }
-
-    int block_valid_entries_size;
-    UNSERIALIZE_SCALAR(block_valid_entries_size);
-    blockValidEntries.resize(block_valid_entries_size);
-    for (uint32_t count = 0; count < block_valid_entries_size; count++)
-        UNSERIALIZE_SCALAR(blockValidEntries[count]);
-
-    int block_empty_entries_size;
-    UNSERIALIZE_SCALAR(block_empty_entries_size);
-    blockEmptyEntries.resize(block_empty_entries_size);
-    for (uint32_t count = 0; count < block_empty_entries_size; count++)
-        UNSERIALIZE_SCALAR(blockEmptyEntries[count]);
-
+        paramIn(cp, csprintf("locationTable[%d].page", count),
+                locationTable[count].page);
+        paramIn(cp, csprintf("locationTable[%d].block", count),
+                locationTable[count].block);
+    }
 };
 
 /**
