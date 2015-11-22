@@ -101,7 +101,10 @@ lsr64(uint64_t x, uint32_t shift)
 static inline void
 lsl128(uint64_t *r0, uint64_t *r1, uint64_t x0, uint64_t x1, uint32_t shift)
 {
-    if (shift < 64) {
+    if (shift == 0) {
+        *r1 = x1;
+        *r0 = x0;
+    } else if (shift < 64) {
         *r1 = x1 << shift | x0 >> (64 - shift);
         *r0 = x0 << shift;
     } else if (shift < 128) {
@@ -116,7 +119,10 @@ lsl128(uint64_t *r0, uint64_t *r1, uint64_t x0, uint64_t x1, uint32_t shift)
 static inline void
 lsr128(uint64_t *r0, uint64_t *r1, uint64_t x0, uint64_t x1, uint32_t shift)
 {
-    if (shift < 64) {
+    if (shift == 0) {
+        *r1 = x1;
+        *r0 = x0;
+    } else if (shift < 64) {
         *r0 = x0 >> shift | x1 << (64 - shift);
         *r1 = x1 >> shift;
     } else if (shift < 128) {
