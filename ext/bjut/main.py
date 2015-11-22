@@ -61,6 +61,7 @@ def generate_csv_multicore_experiments(benches):
     for bench in benches:
         experiments_l2tags.append(multicore(bench, '256kB', 8, 'LRU', 4))
         experiments_l2tags.append(multicore(bench, '256kB', 8, 'IbRDP', 4))
+        experiments_l2tags.append(multicore(bench, '256kB', 8, 'RRIP', 4))
 
     generate_csv(MulticoreExperiment, '../../multicore_l2tags.csv', experiments_l2tags)
 
@@ -96,6 +97,7 @@ def generate_csv_ccnuma_experiments(benches):
     for bench in benches:
         experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
         experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
 
     generate_csv(CCNUMAExperiment, '../../ccnuma_l2tags.csv', experiments_l2tags)
 
@@ -126,22 +128,22 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
 # generate_mcpat_xml_files('../../results/alpha_no_checkpoints/')
 # generate_mcpat_xml_files('../../results/alpha_ccnuma_no_checkpoints/')
 
-generate_csv_multicore_experiments(
-    [
-        'blackscholes',
-        'bodytrack',
-        'canneal',
-        'dedup',
-        'facesim',
-        'ferret',
-        'fluidanimate',
-        'freqmine',
-        'streamcluster',
-        'swaptions',
-        'vips',
-        'x264'
-    ]
-)
+# generate_csv_multicore_experiments(
+#     [
+#         'blackscholes',
+#         'bodytrack',
+#         'canneal',
+#         'dedup',
+#         'facesim',
+#         'ferret',
+#         'fluidanimate',
+#         'freqmine',
+#         'streamcluster',
+#         'swaptions',
+#         'vips',
+#         'x264'
+#     ]
+# )
 
 
 generate_csv_ccnuma_experiments(
