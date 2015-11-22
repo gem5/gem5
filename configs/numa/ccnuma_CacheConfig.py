@@ -58,6 +58,17 @@ def config_cache(options, system, domain):
     domain.l2 = l2_cache_class(size=options.l2_size,
                                assoc=options.l2_assoc)
 
+    if options.l2_tags:
+        if options.l2_tags == 'LRU':
+            domain.l2.tags = LRU()
+        elif options.l2_tags == 'Random':
+            domain.l2.tags = RandomRepl()
+        elif options.l2_tags == 'IbRDP':
+            domain.l2.tags = IbRDP()
+        else:
+            print 'L2 tags: ' + options.l2_tags + ' is not supported.'
+            sys.exit(-1)
+
     domain.tol2bus = L2XBar()
     domain.l2.cpu_side = domain.tol2bus.master
     domain.l2.mem_side = domain.membus.slave
