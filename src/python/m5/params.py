@@ -930,6 +930,9 @@ class EthernetAddr(ParamValue):
         from m5.internal.params import EthAddr
         return EthAddr(self.value)
 
+    def __str__(self):
+        return self.value
+
     def ini_str(self):
         return self.value
 

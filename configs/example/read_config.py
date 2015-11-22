@@ -101,6 +101,7 @@ param_parsers = {
     'NumericParamValue': simple_parser(cast=long),
     'TickParamValue': tick_parser(),
     'Frequency': tick_parser(cast=m5.objects.Latency),
+    'Current': simple_parser(suffix='A'),
     'Voltage': simple_parser(suffix='V'),
     'Enum': simple_parser(),
     'MemorySize': simple_parser(suffix='B'),
@@ -108,7 +109,8 @@ param_parsers = {
     'AddrRange': addr_range_parser,
     'String': simple_parser(),
     'MemoryBandwidth': memory_bandwidth_parser,
-    'Time': simple_parser()
+    'Time': simple_parser(),
+    'EthernetAddr': simple_parser()
     }
 
 for name, parser in param_parsers.iteritems():
