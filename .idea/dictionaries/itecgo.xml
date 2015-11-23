@@ -1,7 +1,12 @@
 <component name="ProjectDictionaryState">
   <dictionary name="itecgo">
     <words>
+      <w>ccnuma</w>
+      <w>cpus</w>
+      <w>mcpat</w>
+      <w>multicore</w>
       <w>numa</w>
+      <w>subthreshold</w>
     </words>
   </dictionary>
 </component>
