@@ -36,7 +36,7 @@
     <param name="print_detail" value="1"/>
     <param name="add_ecc_b_" value="1"/>
     <param name="broadcast_addr_din_over_ver_htrees" value="0"/>
-    <stat name="total_cycles" value="6750692833"/>
+    <stat name="total_cycles" value="6750684452"/>
     <component type="Core" id="system.core0" name="core0">
       <param name="clock_rate" value="1000"/>
       <param name="opt_local" value="0"/>
@@ -117,18 +117,18 @@
       <param name="instruction_buffer_assoc" value="1"/>
       <param name="instruction_buffer_nbanks" value="1"/>
       <param name="instruction_buffer_tag_width" value="0"/>
-      <stat name="total_instructions" value="8095901837"/>
-      <stat name="int_instructions" value="3711897145"/>
+      <stat name="total_instructions" value="8095901714"/>
+      <stat name="int_instructions" value="3711897022"/>
       <stat name="fp_instructions" value="4384004692"/>
       <stat name="branch_instructions" value="25"/>
       <stat name="branch_mispredictions" value="2"/>
-      <stat name="load_instructions" value="1637564020"/>
-      <stat name="store_instructions" value="730366854"/>
-      <stat name="committed_instructions" value="8095901837"/>
-      <stat name="committed_int_instructions" value="3711897145"/>
+      <stat name="load_instructions" value="1637563980"/>
+      <stat name="store_instructions" value="730366835"/>
+      <stat name="committed_instructions" value="8095901714"/>
+      <stat name="committed_int_instructions" value="3711897022"/>
       <stat name="committed_fp_instructions" value="4384004692"/>
       <stat name="pipeline_duty_cycle" value="1"/>
-      <stat name="total_cycles" value="6750692833"/>
+      <stat name="total_cycles" value="6750684452"/>
       <stat name="ROB_reads" value="100"/>
       <stat name="ROB_writes" value="100"/>
       <stat name="rename_reads" value="100"/>
@@ -145,9 +145,9 @@
       <stat name="float_regfile_reads" value="40"/>
       <stat name="int_regfile_writes" value="80"/>
       <stat name="float_regfile_writes" value="20"/>
-      <stat name="function_calls" value="29064615"/>
+      <stat name="function_calls" value="29064611"/>
       <stat name="context_switches" value="0"/>
-      <stat name="ialu_accesses" value="3711897145"/>
+      <stat name="ialu_accesses" value="3711897022"/>
       <stat name="fpu_accesses" value="4384004692"/>
       <stat name="mul_accesses" value="10"/>
       <stat name="cdb_alu_accesses" value="70"/>
@@ -242,8 +242,8 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="6264295040"/>
-        <stat name="read_misses" value="11779066"/>
+        <stat name="read_accesses" value="6264294915"/>
+        <stat name="read_misses" value="11779090"/>
         <stat name="conflicts" value="0"/>
         <stat name="duty_cycle" value="0"/>
       </component>
@@ -315,10 +315,10 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="1620497082"/>
-        <stat name="write_accesses" value="727965299"/>
+        <stat name="read_accesses" value="1620497042"/>
+        <stat name="write_accesses" value="727965281"/>
         <stat name="read_misses" value="51004143"/>
-        <stat name="write_misses" value="3773588"/>
+        <stat name="write_misses" value="3772771"/>
         <stat name="conflicts" value="1"/>
         <stat name="duty_cycle" value="1"/>
       </component>
@@ -414,18 +414,18 @@
       <param name="instruction_buffer_assoc" value="1"/>
       <param name="instruction_buffer_nbanks" value="1"/>
       <param name="instruction_buffer_tag_width" value="0"/>
-      <stat name="total_instructions" value="7778921089"/>
-      <stat name="int_instructions" value="3530593049"/>
+      <stat name="total_instructions" value="7778921065"/>
+      <stat name="int_instructions" value="3530593025"/>
       <stat name="fp_instructions" value="4248328040"/>
       <stat name="branch_instructions" value="25"/>
       <stat name="branch_mispredictions" value="2"/>
-      <stat name="load_instructions" value="1580472044"/>
-      <stat name="store_instructions" value="710885588"/>
-      <stat name="committed_instructions" value="7778921089"/>
-      <stat name="committed_int_instructions" value="3530593049"/>
+      <stat name="load_instructions" value="1580472032"/>
+      <stat name="store_instructions" value="710885587"/>
+      <stat name="committed_instructions" value="7778921065"/>
+      <stat name="committed_int_instructions" value="3530593025"/>
       <stat name="committed_fp_instructions" value="4248328040"/>
       <stat name="pipeline_duty_cycle" value="1"/>
-      <stat name="total_cycles" value="6750638602"/>
+      <stat name="total_cycles" value="6750630221"/>
       <stat name="ROB_reads" value="100"/>
       <stat name="ROB_writes" value="100"/>
       <stat name="rename_reads" value="100"/>
@@ -444,7 +444,7 @@
       <stat name="float_regfile_writes" value="20"/>
       <stat name="function_calls" value="28346594"/>
       <stat name="context_switches" value="0"/>
-      <stat name="ialu_accesses" value="3530593049"/>
+      <stat name="ialu_accesses" value="3530593025"/>
       <stat name="fpu_accesses" value="4248328040"/>
       <stat name="mul_accesses" value="10"/>
       <stat name="cdb_alu_accesses" value="70"/>
@@ -539,8 +539,8 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="5973319063"/>
-        <stat name="read_misses" value="11650945"/>
+        <stat name="read_accesses" value="5973319037"/>
+        <stat name="read_misses" value="11650955"/>
         <stat name="conflicts" value="0"/>
         <stat name="duty_cycle" value="0"/>
       </component>
@@ -612,10 +612,10 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="1568626293"/>
-        <stat name="write_accesses" value="709000179"/>
-        <stat name="read_misses" value="44504577"/>
-        <stat name="write_misses" value="3753030"/>
+        <stat name="read_accesses" value="1568626282"/>
+        <stat name="write_accesses" value="709000178"/>
+        <stat name="read_misses" value="44504592"/>
+        <stat name="write_misses" value="3754093"/>
         <stat name="conflicts" value="1"/>
         <stat name="duty_cycle" value="1"/>
       </component>
@@ -711,18 +711,18 @@
       <param name="instruction_buffer_assoc" value="1"/>
       <param name="instruction_buffer_nbanks" value="1"/>
       <param name="instruction_buffer_tag_width" value="0"/>
-      <stat name="total_instructions" value="8170380759"/>
-      <stat name="int_instructions" value="3798623624"/>
-      <stat name="fp_instructions" value="4371757135"/>
+      <stat name="total_instructions" value="8170749665"/>
+      <stat name="int_instructions" value="3798985197"/>
+      <stat name="fp_instructions" value="4371764468"/>
       <stat name="branch_instructions" value="25"/>
       <stat name="branch_mispredictions" value="2"/>
-      <stat name="load_instructions" value="1649844271"/>
-      <stat name="store_instructions" value="781046357"/>
-      <stat name="committed_instructions" value="8170380759"/>
-      <stat name="committed_int_instructions" value="3798623624"/>
-      <stat name="committed_fp_instructions" value="4371757135"/>
+      <stat name="load_instructions" value="1649892248"/>
+      <stat name="store_instructions" value="781049465"/>
+      <stat name="committed_instructions" value="8170749665"/>
+      <stat name="committed_int_instructions" value="3798985197"/>
+      <stat name="committed_fp_instructions" value="4371764468"/>
       <stat name="pipeline_duty_cycle" value="1"/>
-      <stat name="total_cycles" value="6750692778"/>
+      <stat name="total_cycles" value="6750684397"/>
       <stat name="ROB_reads" value="100"/>
       <stat name="ROB_writes" value="100"/>
       <stat name="rename_reads" value="100"/>
@@ -739,10 +739,10 @@
       <stat name="float_regfile_reads" value="40"/>
       <stat name="int_regfile_writes" value="80"/>
       <stat name="float_regfile_writes" value="20"/>
-      <stat name="function_calls" value="35217680"/>
+      <stat name="function_calls" value="35217682"/>
       <stat name="context_switches" value="0"/>
-      <stat name="ialu_accesses" value="3798623624"/>
-      <stat name="fpu_accesses" value="4371757135"/>
+      <stat name="ialu_accesses" value="3798985197"/>
+      <stat name="fpu_accesses" value="4371764468"/>
       <stat name="mul_accesses" value="10"/>
       <stat name="cdb_alu_accesses" value="70"/>
       <stat name="cdb_mul_accesses" value="10"/>
@@ -774,8 +774,8 @@
         <param name="throughput" value="3"/>
         <param name="assoc" value="0"/>
         <param name="nbanks" value="1"/>
-        <stat name="total_accesses" value="6265120520"/>
-        <stat name="total_misses" value="1262"/>
+        <stat name="total_accesses" value="6265581727"/>
+        <stat name="total_misses" value="1265"/>
         <stat name="conflicts" value="0"/>
       </component>
       <component type="CacheUnit" id="system.core2.icache" name="Instruction Cache">
@@ -836,8 +836,8 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="6314435171"/>
-        <stat name="read_misses" value="11232917"/>
+        <stat name="read_accesses" value="6314896459"/>
+        <stat name="read_misses" value="11233023"/>
         <stat name="conflicts" value="0"/>
         <stat name="duty_cycle" value="0"/>
       </component>
@@ -847,8 +847,8 @@
         <param name="throughput" value="3"/>
         <param name="assoc" value="0"/>
         <param name="nbanks" value="1"/>
-        <stat name="read_accesses" value="1632845545"/>
-        <stat name="read_misses" value="13909059"/>
+        <stat name="read_accesses" value="1632880249"/>
+        <stat name="read_misses" value="13928170"/>
         <stat name="conflicts" value="0"/>
       </component>
       <component type="CacheUnit" id="system.core2.dcache" name="Data Cache">
@@ -909,10 +909,10 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="1635797719"/>
-        <stat name="write_accesses" value="778785978"/>
-        <stat name="read_misses" value="44386782"/>
-        <stat name="write_misses" value="6912346"/>
+        <stat name="read_accesses" value="1635826586"/>
+        <stat name="write_accesses" value="778785992"/>
+        <stat name="read_misses" value="44390248"/>
+        <stat name="write_misses" value="6913081"/>
         <stat name="conflicts" value="1"/>
         <stat name="duty_cycle" value="1"/>
       </component>
@@ -1008,18 +1008,18 @@
       <param name="instruction_buffer_assoc" value="1"/>
       <param name="instruction_buffer_nbanks" value="1"/>
       <param name="instruction_buffer_tag_width" value="0"/>
-      <stat name="total_instructions" value="8060829892"/>
-      <stat name="int_instructions" value="3715624532"/>
-      <stat name="fp_instructions" value="4345205360"/>
+      <stat name="total_instructions" value="8060813799"/>
+      <stat name="int_instructions" value="3715610229"/>
+      <stat name="fp_instructions" value="4345203570"/>
       <stat name="branch_instructions" value="25"/>
       <stat name="branch_mispredictions" value="2"/>
-      <stat name="load_instructions" value="1627887787"/>
-      <stat name="store_instructions" value="726078347"/>
-      <stat name="committed_instructions" value="8060829892"/>
-      <stat name="committed_int_instructions" value="3715624532"/>
-      <stat name="committed_fp_instructions" value="4345205360"/>
+      <stat name="load_instructions" value="1627885041"/>
+      <stat name="store_instructions" value="726079089"/>
+      <stat name="committed_instructions" value="8060813799"/>
+      <stat name="committed_int_instructions" value="3715610229"/>
+      <stat name="committed_fp_instructions" value="4345203570"/>
       <stat name="pipeline_duty_cycle" value="1"/>
-      <stat name="total_cycles" value="6750638359"/>
+      <stat name="total_cycles" value="6750629978"/>
       <stat name="ROB_reads" value="100"/>
       <stat name="ROB_writes" value="100"/>
       <stat name="rename_reads" value="100"/>
@@ -1038,8 +1038,8 @@
       <stat name="float_regfile_writes" value="20"/>
       <stat name="function_calls" value="28829492"/>
       <stat name="context_switches" value="0"/>
-      <stat name="ialu_accesses" value="3715624532"/>
-      <stat name="fpu_accesses" value="4345205360"/>
+      <stat name="ialu_accesses" value="3715610229"/>
+      <stat name="fpu_accesses" value="4345203570"/>
       <stat name="mul_accesses" value="10"/>
       <stat name="cdb_alu_accesses" value="70"/>
       <stat name="cdb_mul_accesses" value="10"/>
@@ -1071,8 +1071,8 @@
         <param name="throughput" value="3"/>
         <param name="assoc" value="0"/>
         <param name="nbanks" value="1"/>
-        <stat name="total_accesses" value="6244016197"/>
-        <stat name="total_misses" value="345"/>
+        <stat name="total_accesses" value="6243997845"/>
+        <stat name="total_misses" value="331"/>
         <stat name="conflicts" value="0"/>
       </component>
       <component type="CacheUnit" id="system.core3.icache" name="Instruction Cache">
@@ -1133,8 +1133,8 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="6250508103"/>
-        <stat name="read_misses" value="11730285"/>
+        <stat name="read_accesses" value="6250489765"/>
+        <stat name="read_misses" value="11730253"/>
         <stat name="conflicts" value="0"/>
         <stat name="duty_cycle" value="0"/>
       </component>
@@ -1144,8 +1144,8 @@
         <param name="throughput" value="3"/>
         <param name="assoc" value="0"/>
         <param name="nbanks" value="1"/>
-        <stat name="read_accesses" value="1614058385"/>
-        <stat name="read_misses" value="18282571"/>
+        <stat name="read_accesses" value="1614056191"/>
+        <stat name="read_misses" value="18280972"/>
         <stat name="conflicts" value="0"/>
       </component>
       <component type="CacheUnit" id="system.core3.dcache" name="Data Cache">
@@ -1206,10 +1206,10 @@
         <param name="wb_buff_se_rd_ports" value="0"/>
         <param name="wb_buff_search_ports" value="1"/>
         <param name="pure_ram" value="0"/>
-        <stat name="read_accesses" value="1609580635"/>
+        <stat name="read_accesses" value="1609579488"/>
         <stat name="write_accesses" value="723231159"/>
-        <stat name="read_misses" value="48439484"/>
-        <stat name="write_misses" value="4035530"/>
+        <stat name="read_misses" value="48439219"/>
+        <stat name="write_misses" value="4035344"/>
         <stat name="conflicts" value="1"/>
         <stat name="duty_cycle" value="1"/>
       </component>
@@ -1283,10 +1283,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="118944216"/>
-      <stat name="write_accesses" value="7486616"/>
-      <stat name="read_misses" value="68099321"/>
-      <stat name="write_misses" value="4140502"/>
+      <stat name="read_accesses" value="118943992"/>
+      <stat name="write_accesses" value="7486609"/>
+      <stat name="read_misses" value="68427242"/>
+      <stat name="write_misses" value="4021586"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>
@@ -1348,10 +1348,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="115794855"/>
-      <stat name="write_accesses" value="10910070"/>
-      <stat name="read_misses" value="67211300"/>
-      <stat name="write_misses" value="7099931"/>
+      <stat name="read_accesses" value="115798340"/>
+      <stat name="write_accesses" value="10911108"/>
+      <stat name="read_misses" value="68030093"/>
+      <stat name="write_misses" value="7097652"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>
