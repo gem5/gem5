@@ -14,14 +14,28 @@ class MulticoreExperiment(McPATEnabledExperiment):
     def dump_head_row(cls):
         return [
             'bench',
+
             'l2_size',
             'l2_assoc',
             'l2_tags',
+
             'num_threads',
+
             'sim_ticks',
             'num_cycles',
+
+            'system_subthreshold_leakage_power',
+            'system_gate_leakage_power',
+            'system_runtime_dynamic_power',
+            'system_runtime_dynamic_energy',
             'system_total_runtime_energy',
+
+            'l2_subthreshold_leakage_power',
+            'l2_gate_leakage_power',
+            'l2_runtime_dynamic_power',
+            'l2_runtime_dynamic_energy',
             'l2_total_runtime_energy',
+
             'l2_miss_rate',
             'l2_replacements'
         ]
@@ -29,14 +43,28 @@ class MulticoreExperiment(McPATEnabledExperiment):
     def dump_row(self):
         return [
             self.bench,
+
             self.l2_size,
             self.l2_assoc,
             self.l2_tags,
+
             self.num_threads,
+
             self.sim_ticks(),
             self.num_cycles(),
+
+            self.system_subthreshold_leakage_power(),
+            self.system_gate_leakage_power(),
+            self.system_runtime_dynamic_power(),
+            self.system_runtime_dynamic_energy(),
             self.system_total_runtime_energy(),
+
+            self.l2_subthreshold_leakage_power(),
+            self.l2_gate_leakage_power(),
+            self.l2_runtime_dynamic_power(),
+            self.l2_runtime_dynamic_energy(),
             self.l2_total_runtime_energy(),
+
             self.l2_miss_rate(),
             self.l2_replacements()
         ]

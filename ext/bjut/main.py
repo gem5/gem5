@@ -125,25 +125,25 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
             print 'Generating CSV row for experiment under "' + experiment.dir + '"'
             writer.writerow(experiment.dump_row())
 
-gen_mcpat_xml_file = True
-# gen_mcpat_xml_file = False
+# gen_mcpat_xml_file = True
+gen_mcpat_xml_file = False
 
-# generate_csv_multicore_experiments(
-#     [
-#         'blackscholes',
-#         'bodytrack',
-#         'canneal',
-#         'dedup',
-#         'facesim',
-#         'ferret',
-#         'fluidanimate',
-#         'freqmine',
-#         'streamcluster',
-#         'swaptions',
-#         'vips',
-#         'x264'
-#     ]
-# )
+generate_csv_multicore_experiments(
+    [
+        'blackscholes',
+        'bodytrack',
+        'canneal',
+        'dedup',
+        'facesim',
+        'ferret',
+        'fluidanimate',
+        'freqmine',
+        'streamcluster',
+        'swaptions',
+        'vips',
+        'x264'
+    ]
+)
 
 
 generate_csv_ccnuma_experiments(

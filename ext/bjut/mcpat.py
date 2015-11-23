@@ -783,26 +783,18 @@ class McPATEnabledExperiment(Experiment):
             with tag('param', name='pure_ram', value='0'):
                 pass
             with tag('stat', name='read_accesses',
-                     value=str(int(self.stats['system.' + self.l2_id(i) + '.ReadExReq_accesses::total']) + int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadCleanReq_accesses::total']) + int(
+                     value=str(int(self.stats['system.' + self.l2_id(i) + '.ReadCleanReq_accesses::total']) + int(
                          self.stats['system.' + self.l2_id(i) + '.ReadSharedReq_accesses::total']))):
                 pass
             with tag('stat', name='write_accesses',
-                     value=str(int(self.stats['system.' + self.l2_id(i) + '.overall_accesses::total']) - int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadExReq_accesses::total']) - int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadSharedReq_accesses::total']) - int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadCleanReq_accesses::total']))):
+                     value=str(int(self.stats['system.' + self.l2_id(i) + '.ReadExReq_accesses::total']))):
                 pass
             with tag('stat', name='read_misses',
-                     value=str(int(self.stats['system.' + self.l2_id(i) + '.ReadExReq_misses::total']) + int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadSharedReq_misses::total']) + int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadCleanReq_misses::total']))):
+                     value=str(int(self.stats['system.' + self.l2_id(i) + '.ReadCleanReq_misses::total']) + int(
+                         self.stats['system.' + self.l2_id(i) + '.ReadSharedReq_misses::total']))):
                 pass
             with tag('stat', name='write_misses',
-                     value=str(int(self.stats['system.' + self.l2_id(i) + '.overall_misses::total']) - int(
-                             self.stats['system.' + self.l2_id(i) + '.ReadExReq_misses::total']) - int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadSharedReq_misses::total']) - int(
-                         self.stats['system.' + self.l2_id(i) + '.ReadCleanReq_misses::total']))):
+                     value=str(int(self.stats['system.' + self.l2_id(i) + '.ReadExReq_misses::total']))):
                 pass
             with tag('stat', name='conflicts', value='1'):  # TODO
                 pass
@@ -930,13 +922,7 @@ class McPATEnabledExperiment(Experiment):
         except:
             traceback.print_exc()
 
-    def read_mcpat_stats(self):
-        stat_rule = Suppress(Literal('Total') + Literal('Runtime') + Literal('Energy') + Literal('=')) + \
-                    Word('.' + nums) + \
-                    Suppress(Literal('J') + Optional(restOfLine))
-
-        mcpat_stats = collections.OrderedDict()
-
+    def read_mcpat_stats_by_key(self, key, stat_rule, mcpat_stats):
         try:
             with open(self.mcpat_out_file_name()) as stats_file:
                 i = 0
@@ -952,10 +938,10 @@ class McPATEnabledExperiment(Experiment):
                             stat = stat_rule.parseString(stat_line)
 
                             if read_system:
-                                key = 'system.total_runtime_energy'
+                                key_composed = 'system.' + key
                                 read_system = False
                             elif read_l2cache:
-                                key = 'system.' + self.l2_id(i if self.numa() else None) + '.total_runtime_energy'
+                                key_composed = 'system.' + self.l2_id(i if self.numa() else None) + '.' + key
                                 read_l2cache = False
                                 i += 1
                             else:
@@ -963,34 +949,94 @@ class McPATEnabledExperiment(Experiment):
                                 sys.exit(-1)
 
                             value = stat[0]
-                            mcpat_stats[key] = value
+                            mcpat_stats[key_composed] = value
                         except ParseException:
                             pass
-
-            return mcpat_stats
         except:
             traceback.print_exc()
-            return None
 
-    def system_total_runtime_energy(self):
+    def read_mcpat_stats(self):
+        mcpat_stats = collections.OrderedDict()
+
+        self.read_mcpat_stats_by_key('subthreshold_leakage_power',
+             Suppress(Literal('Subthreshold') + Literal('Leakage') + Literal('Power') + Literal('=')) +
+             Word('.' + nums) +
+             Suppress(Literal('W') + Optional(restOfLine)), mcpat_stats)
+
+        self.read_mcpat_stats_by_key('gate_leakage_power',
+             Suppress(Literal('Gate') + Literal('Leakage') + Literal('Power') + Literal('=')) +
+             Word('.' + nums) +
+             Suppress(Literal('W') + Optional(restOfLine)), mcpat_stats)
+
+        self.read_mcpat_stats_by_key('runtime_dynamic_power',
+             Suppress(Literal('Runtime') + Literal('Dynamic') + Literal('Power') + Literal('=')) +
+             Word('.' + nums) +
+             Suppress(Literal('W') + Optional(restOfLine)), mcpat_stats)
+
+        self.read_mcpat_stats_by_key('runtime_dynamic_energy',
+             Suppress(Literal('Runtime') + Literal('Dynamic') + Literal('Energy') + Literal('=')) +
+             Word('.' + nums) +
+             Suppress(Literal('J') + Optional(restOfLine)), mcpat_stats)
+
+        self.read_mcpat_stats_by_key('total_runtime_energy',
+             Suppress(Literal('Total') + Literal('Runtime') + Literal('Energy') + Literal('=')) +
+             Word('.' + nums) +
+             Suppress(Literal('J') + Optional(restOfLine)), mcpat_stats)
+
+        return mcpat_stats
+
+    def mcpat_system_stat(self, key):
         if self.mcpat_stats is None:
             return -1
 
-        return float(self.mcpat_stats['system.total_runtime_energy'])
+        key_composed = 'system.' + key
+        return -1 if self.mcpat_stats is None or key_composed not in self.mcpat_stats else float(self.mcpat_stats[key_composed])
 
-    def l2_total_runtime_energy(self):
+    def mcpat_l2_stat(self, key):
         if self.mcpat_stats is None:
             return -1
 
         total_runtime_energy = []
-
         if self.numa():
             for i in range(self.num_l2caches()):
-                total_runtime_energy.append(float(self.mcpat_stats['system.' + self.l2_id(i if self.numa() else None) + '.total_runtime_energy']))
+                key_composed = 'system.' + self.l2_id(i if self.numa() else None) + '.' + key
+                total_runtime_energy.append(
+                    -1 if self.mcpat_stats is None or key_composed not in self.mcpat_stats else float(self.mcpat_stats[key_composed]))
         else:
-            total_runtime_energy.append(float(self.mcpat_stats['system.' + self.l2_id() + '.total_runtime_energy']))
-
+            key_composed = 'system.' + self.l2_id() + '.' + key
+            total_runtime_energy.append(
+                -1 if self.mcpat_stats is None or key_composed not in self.mcpat_stats else float(self.mcpat_stats[key_composed]))
         return sum(total_runtime_energy)
+
+    def system_subthreshold_leakage_power(self):
+        return self.mcpat_system_stat('subthreshold_leakage_power')
+
+    def l2_subthreshold_leakage_power(self):
+        return self.mcpat_l2_stat('subthreshold_leakage_power')
+
+    def system_gate_leakage_power(self):
+        return self.mcpat_system_stat('gate_leakage_power')
+
+    def l2_gate_leakage_power(self):
+        return self.mcpat_l2_stat('gate_leakage_power')
+
+    def system_runtime_dynamic_power(self):
+        return self.mcpat_system_stat('runtime_dynamic_power')
+
+    def l2_runtime_dynamic_power(self):
+        return self.mcpat_l2_stat('runtime_dynamic_power')
+
+    def system_runtime_dynamic_energy(self):
+        return self.mcpat_system_stat('runtime_dynamic_energy')
+
+    def l2_runtime_dynamic_energy(self):
+        return self.mcpat_l2_stat('runtime_dynamic_energy')
+
+    def system_total_runtime_energy(self):
+        return self.mcpat_system_stat('total_runtime_energy')
+
+    def l2_total_runtime_energy(self):
+        return self.mcpat_l2_stat('total_runtime_energy')
 
 
 def generate_mcpat_xml_files(rootdir):
