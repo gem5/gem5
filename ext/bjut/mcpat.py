@@ -12,11 +12,17 @@ import traceback
 from lxml import etree
 from optparse import OptionParser
 from yattag import Doc
+from pyparsing import Word, Literal, Optional, Suppress, ParseException, nums, restOfLine
 
 
 class McPATEnabledExperiment(Experiment):
-    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None):
+    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, gen_mcpat_xml_file=False):
         Experiment.__init__(self, dir, bench, l2_size, l2_assoc, l2_tags)
+
+        if gen_mcpat_xml_file:
+            self.gen_mcpat_xml_file()
+
+        self.mcpat_stats = self.read_mcpat_stats()
 
     def gen_core(self, tag, i):
         def gen_predictor():
@@ -924,6 +930,68 @@ class McPATEnabledExperiment(Experiment):
         except:
             traceback.print_exc()
 
+    def read_mcpat_stats(self):
+        stat_rule = Suppress(Literal('Total') + Literal('Runtime') + Literal('Energy') + Literal('=')) + \
+                    Word('.' + nums) + \
+                    Suppress(Literal('J') + Optional(restOfLine))
+
+        mcpat_stats = collections.OrderedDict()
+
+        try:
+            with open(self.mcpat_out_file_name()) as stats_file:
+                i = 0
+                read_system = False
+                read_l2cache = False
+                for stat_line in stats_file:
+                    if 'System:' in stat_line:
+                        read_system = True
+                    elif 'L2 Cache:' in stat_line:
+                        read_l2cache = True
+                    elif read_system or (not i > self.num_l2caches() and read_l2cache):
+                        try:
+                            stat = stat_rule.parseString(stat_line)
+
+                            if read_system:
+                                key = 'system.total_runtime_energy'
+                                read_system = False
+                            elif read_l2cache:
+                                key = 'system.' + self.l2_id(i if self.numa() else None) + '.total_runtime_energy'
+                                read_l2cache = False
+                                i += 1
+                            else:
+                                print 'Cannot handle the stat line: ' + stat_line
+                                sys.exit(-1)
+
+                            value = stat[0]
+                            mcpat_stats[key] = value
+                        except ParseException:
+                            pass
+
+            return mcpat_stats
+        except:
+            traceback.print_exc()
+            return None
+
+    def system_total_runtime_energy(self):
+        if self.mcpat_stats is None:
+            return -1
+
+        return float(self.mcpat_stats['system.total_runtime_energy'])
+
+    def l2_total_runtime_energy(self):
+        if self.mcpat_stats is None:
+            return -1
+
+        total_runtime_energy = []
+
+        if self.numa():
+            for i in range(self.num_l2caches()):
+                total_runtime_energy.append(float(self.mcpat_stats['system.' + self.l2_id(i if self.numa() else None) + '.total_runtime_energy']))
+        else:
+            total_runtime_energy.append(float(self.mcpat_stats['system.' + self.l2_id() + '.total_runtime_energy']))
+
+        return sum(total_runtime_energy)
+
 
 def generate_mcpat_xml_files(rootdir):
     if os.path.exists(rootdir):
@@ -933,8 +1001,7 @@ def generate_mcpat_xml_files(rootdir):
                 stats_file_name = os.path.join(work_dir, 'stats.txt')
 
                 if os.path.isfile(stats_file_name):
-                    experiment = McPATEnabledExperiment(work_dir)
-                    experiment.gen_mcpat_xml_file()
+                    McPATEnabledExperiment(work_dir, gen_mcpat_xml_file=True)
 
 
 if __name__ == '__main__':

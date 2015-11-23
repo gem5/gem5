@@ -48,7 +48,8 @@ def run_experiments(bench):
     # run(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')
     # run(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')
 
-    run(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
+    # run(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
+    run(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')
 
 
 run_experiments('blackscholes')

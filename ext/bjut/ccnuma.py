@@ -26,6 +26,8 @@ class CCNUMAExperiment(McPATEnabledExperiment):
             'num_cpus_per_domain',
             'sim_ticks',
             'num_cycles',
+            'system_total_runtime_energy',
+            'l2_total_runtime_energy',
             'l2_miss_rate',
             'l2_replacements',
             'numa_cache_downward_miss_rate',
@@ -43,6 +45,8 @@ class CCNUMAExperiment(McPATEnabledExperiment):
             self.num_cpus_per_domain,
             self.sim_ticks(),
             self.num_cycles(),
+            self.system_total_runtime_energy(),
+            self.l2_total_runtime_energy(),
             self.l2_miss_rate(),
             self.l2_replacements(),
             self.numa_cache_downward_miss_rate(),
@@ -65,7 +69,7 @@ class CCNUMAExperiment(McPATEnabledExperiment):
         if self.numa():
             for i in range(self.num_numa_caches_downward()):
                 key = 'system.' + self.numa_cache_downward_id(i) + '.overall_miss_rate::total'
-                miss_rates.append(float(self.stats[key] if key in self.stats else 0))
+                miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
         else:
             print 'numa_cache_downward_miss_rate is meaningless in non-NUMA experiments.'
             sys.exit(-1)
@@ -73,10 +77,12 @@ class CCNUMAExperiment(McPATEnabledExperiment):
         return sum(miss_rates) / float(len(miss_rates))
 
     def numa_cache_upward_id(self, i=None):
-        return '' if self.configs is None else ('l2' if i is None else self.configs.execute('$.system.numa_caches_upward[' + str(i) + '].name'))
+        key = '$.system.numa_caches_upward[' + str(i) + '].name'
+        return '' if self.configs is None else ('l2' if i is None else self.configs.execute(key))
 
     def num_numa_caches_upward(self):
-        return -1 if self.configs is None else self.configs.execute('len($.system.numa_caches_upward)')
+        key = 'len($.system.numa_caches_upward)'
+        return -1 if self.configs is None else self.configs.execute(key)
 
     def numa_cache_upward_miss_rate(self):
         if self.stats is None:
@@ -87,7 +93,7 @@ class CCNUMAExperiment(McPATEnabledExperiment):
         if self.numa():
             for i in range(self.num_numa_caches_upward()):
                 key = 'system.' + self.numa_cache_upward_id(i) + '.overall_miss_rate::total'
-                miss_rates.append(float(self.stats[key] if key in self.stats else 0))
+                miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
         else:
             print 'numa_cache_upward_miss_rate is meaningless in non-NUMA experiments.'
             sys.exit(-1)
@@ -95,4 +101,5 @@ class CCNUMAExperiment(McPATEnabledExperiment):
         return sum(miss_rates) / float(len(miss_rates))
 
     def system_bus_snoops(self):
-        return -1 if self.stats is None else str(int(self.stats['system.system_bus.snoops']))
+        key = 'system.system_bus.snoops'
+        return -1 if self.stats is None or key not in self.stats else int(self.stats[key])

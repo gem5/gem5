@@ -75,7 +75,7 @@ class Experiment:
         return -1 if self.configs is None else self.configs.execute('len($.system.cpu)')
 
     def num_l2caches(self):
-        return -1 if self.configs is None else self.configs.execute('len($.system.l2cache)')
+        return -1 if self.configs is None else self.configs.execute('len($.system.l2cache)') if self.numa() else 1
 
     def numa(self):
         return False if self.configs is None else self.configs.execute('len($.system.numa_caches_upward)') > 0
@@ -87,10 +87,12 @@ class Experiment:
         return '' if self.configs is None else ('l2' if i is None else self.configs.execute('$.system.l2cache[' + str(i) + '].name'))
 
     def sim_ticks(self):
-        return -1 if self.stats is None else str(int(self.stats['sim_ticks']))
+        key = 'sim_ticks'
+        return -1 if self.stats is None or key not in self.stats else str(int(self.stats[key]))
 
     def num_cycles(self):
-        return -1 if self.stats is None else str(int(self.stats['system.' + self.cpu_id(0) + '.numCycles']))
+        key = 'system.' + self.cpu_id(0) + '.numCycles'
+        return -1 if self.stats is None or key not in self.stats else str(int(self.stats[key]))
 
     def l2_miss_rate(self):
         if self.stats is None:
@@ -100,9 +102,11 @@ class Experiment:
 
         if self.numa():
             for i in range(self.num_l2caches()):
-                miss_rates.append(float(self.stats['system.' + self.l2_id(i) + '.overall_miss_rate::total']))
+                key = 'system.' + self.l2_id(i) + '.overall_miss_rate::total'
+                miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
         else:
-            miss_rates.append(float(self.stats['system.' + self.l2_id() + '.overall_miss_rate::total']))
+            key = 'system.' + self.l2_id() + '.overall_miss_rate::total'
+            miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
 
         return sum(miss_rates) / float(len(miss_rates))
 
@@ -114,9 +118,11 @@ class Experiment:
 
         if self.numa():
             for i in range(self.num_l2caches()):
-                replacements.append(int(self.stats['system.' + self.l2_id(i) + '.tags.replacements']))
+                key = 'system.' + self.l2_id(i) + '.tags.replacements'
+                replacements.append(-1 if self.stats is None or key not in self.stats else int(self.stats[key]))
         else:
-            replacements.append(int(self.stats['system.' + self.l2_id() + '.tags.replacements']))
+            key = 'system.' + self.l2_id() + '.tags.replacements'
+            replacements.append(-1 if self.stats is None or key not in self.stats else int(self.stats[key]))
 
         return sum(replacements)
 

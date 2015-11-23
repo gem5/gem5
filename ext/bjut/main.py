@@ -16,7 +16,7 @@ def multicore(bench, l2_size, l2_assoc, l2_tags, num_threads):
                l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
                str(num_threads) + 'c/'
 
-    experiment = MulticoreExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags)
+    experiment = MulticoreExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags, gen_mcpat_xml_file=gen_mcpat_xml_file)
     experiment.num_threads = num_threads
     return experiment
 
@@ -29,7 +29,7 @@ def cc_numa(bench, l2_size, l2_assoc, l2_tags,
                str(num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
                # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
 
-    experiment = CCNUMAExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags)
+    experiment = CCNUMAExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags, gen_mcpat_xml_file=gen_mcpat_xml_file)
 
     experiment.num_domains = num_domains
     experiment.num_cpus_per_domain = num_cpus_per_domain
@@ -125,8 +125,8 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
             print 'Generating CSV row for experiment under "' + experiment.dir + '"'
             writer.writerow(experiment.dump_row())
 
-# generate_mcpat_xml_files('../../results/alpha_no_checkpoints/')
-# generate_mcpat_xml_files('../../results/alpha_ccnuma_no_checkpoints/')
+gen_mcpat_xml_file = True
+# gen_mcpat_xml_file = False
 
 # generate_csv_multicore_experiments(
 #     [
