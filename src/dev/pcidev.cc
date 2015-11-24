@@ -56,7 +56,6 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "debug/PCIDEV.hh"
-#include "dev/alpha/tsunamireg.h"
 #include "dev/pcidev.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
