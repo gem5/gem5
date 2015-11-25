@@ -211,6 +211,9 @@ def build_test_system(np):
             elif options.numa_cache_tags == 'RRIP':
                 numa_cache_upward.tags = RRIP()
                 numa_cache_downward.tags = RRIP()
+            elif options.numa_cache_tags == 'RECAP':
+                numa_cache_upward.tags = RECAP()
+                numa_cache_downward.tags = RECAP()
             else:
                 print 'NUMA cache tags: ' + options.numa_cache_tags + ' is not supported.'
                 sys.exit(-1)

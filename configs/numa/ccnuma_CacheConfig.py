@@ -67,6 +67,8 @@ def config_cache(options, system, domain):
             domain.l2.tags = IbRDP()
         elif options.l2_tags == 'RRIP':
             domain.l2.tags = RRIP()
+        elif options.l2_tags == 'RECAP':
+            domain.l2.tags = RECAP()
         else:
             print 'L2 tags: ' + options.l2_tags + ' is not supported.'
             sys.exit(-1)

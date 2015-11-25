@@ -77,7 +77,7 @@ IbRDP::findVictim(Addr pc, Addr addr)
     CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
     int set = extractSet(addr);
 
-    // if all blocks are valid, pick a replacement at random
+    // if all blocks are valid, pick a replacement by the algorithm
     if (blk && blk->isValid()) {
         blk = findBlockBySetAndWay(set, Get_IBRDP_Victim( set, pc, addr ));
     }

@@ -85,3 +85,8 @@ class RRIP(BaseSetAssoc):
     type = 'RRIP'
     cxx_class = 'RRIP'
     cxx_header = "mem/cache/tags/rrip.hh"
+
+class RECAP(BaseSetAssoc):
+    type = 'RECAP'
+    cxx_class = 'RECAP'
+    cxx_header = "mem/cache/tags/recap.hh"
