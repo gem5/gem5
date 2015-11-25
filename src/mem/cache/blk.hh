@@ -123,9 +123,16 @@ class CacheBlk
 
     Tick tickInserted;
 
+    /** the following three fields are used by the RECAP cache partitioning policy. */
+    std::vector<bool> apr_per_core;         // the per core fields of the access permission register (APR)
+    bool apr_flush;         // the flush field of the access permission register (APR)
+    bool apr_shared;        // the shared field of the access permission register (APR)
+
+    /** the following two fields are used by the RRIP cache replacement policy. */
     uint32_t timestamp;       // 3 bits Quantized timestamp
     uint32_t prediction;      // 4 bits Quantized reuse distance prediction
 
+    /** the following field is used by the IbRDP cache replacement policy */
     uint32_t  RPV;
 
   protected:
