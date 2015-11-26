@@ -159,13 +159,22 @@ DBRSP::UpdateSampler (UINT32 setIndex, Addr_t tag, UINT32 tid, Addr_t PC, INT32 
 	}
 
 	// update default replacement policy
-    sets[setIndex].moveToHead(findBlockBySetAndWay(setIndex, way));
+	CacheBlk *blk = findBlockBySetAndWay(setIndex, way);
+	if(blk->bypass)
+	{
+        sets[setIndex].moveToTail(blk);
+        blk->bypass = false;
+	}
+	else
+	{
+        sets[setIndex].moveToHead(blk);
+	}
 
 	// make the trace
 	unsigned int trace = make_trace (tid, samp->pred, PC);
 
 	// get the next prediction for this block using that trace
-	findBlockBySetAndWay(setIndex, way)->prediction = samp->pred->get_prediction (tid, trace, setIndex);
+	blk->dbrsp_prediction = samp->pred->get_prediction (tid, trace, setIndex);
 }
 
 // called to select a victim.  returns victim way, or -1 if the block should bypass
@@ -184,20 +193,26 @@ DBRSP::Get_Sampler_Victim ( UINT32 tid, UINT32 setIndex, UINT32 assoc, Addr_t PC
     }
     assert(!blk || blk->way < allocAssoc);
 
-    int r = blk->way;
-
 	// look for a predicted dead block
 	for (unsigned int i=0; i<assoc; i++) {
-		if (findBlockBySetAndWay(setIndex, i)->prediction)
+        BlkType *b = sets[setIndex].blks[i];
+		if (b->dbrsp_prediction)
 		{
 			// found a predicted dead block; this is our new victim
-			r = i;
+            blk = b;
 			break;
 		}
 	}
 
+	// predict whether this block is "dead on arrival"
+	unsigned int trace = make_trace (tid, samp->pred, PC);
+	int dbrsp_prediction = samp->pred->get_prediction (tid, trace, setIndex);
+
+	// if block is predicted dead, then it should bypass the cache
+	blk->bypass = dbrsp_prediction;
+
 	// return the selected victim
-	return r;
+	return blk->way;
 }
 
 // constructor for a sampler set
@@ -245,7 +260,7 @@ sampler::access (UINT32 tid, int set, Addr_t tag, Addr_t PC)
 		if (i == dan_sampler_assoc)
 		{
 			// find the LRU dead block
-			for (i=0; i<dan_sampler_assoc; i++) if (blocks[i].prediction) break;
+			for (i=0; i<dan_sampler_assoc; i++) if (blocks[i].dbrsp_prediction) break;
 		}
 
 		// no invalid or dead block?  use the LRU block
@@ -270,7 +285,7 @@ sampler::access (UINT32 tid, int set, Addr_t tag, Addr_t PC)
 	blocks[i].trace = make_trace (tid, pred, PC);
 
 	// get the next prediction for this entry
-	blocks[i].prediction = pred->get_prediction (tid, blocks[i].trace, -1);
+	blocks[i].dbrsp_prediction = pred->get_prediction (tid, blocks[i].trace, -1);
 
 	// now the replaced entry should be moved to the MRU position
 	unsigned int position = blocks[i].lru_stack_position;
@@ -297,7 +312,7 @@ sampler::sampler (int nsets, int assoc)
 	// figure out number of entries in each table
 	dan_predictor_table_entries = 1 << dan_predictor_index_bits;
 
-	nsampler_sets = 128; //TODO: should not be hardcoded
+	nsampler_sets = 256; //TODO: should not be hardcoded
 
 	// compute the maximum saturating counter value; predictor constructor
 	// needs this so we do it here

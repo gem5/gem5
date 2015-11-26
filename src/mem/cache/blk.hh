@@ -125,6 +125,7 @@ class CacheBlk
 
     /** the following three fields are used by the DBRSP cache partitioning policy. */
     bool dbrsp_prediction;
+    bool bypass;
 
     /** the following three fields are used by the RECAP cache partitioning policy. */
     std::vector<bool> apr_per_core;         // the per core fields of the access permission register (APR)

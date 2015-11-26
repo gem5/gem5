@@ -89,7 +89,7 @@ struct sampler_entry {
 		lru_stack_position,
 		tag,
 		trace,
-		prediction;
+		dbrsp_prediction;
 
 	bool
 		valid;
@@ -100,7 +100,7 @@ struct sampler_entry {
 		valid = false;
 		tag = 0;
 		trace = 0;
-		prediction = 0;
+		dbrsp_prediction = 0;
 	};
 };
 
