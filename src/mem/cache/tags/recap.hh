@@ -51,6 +51,15 @@
 #include "mem/cache/tags/base_set_assoc.hh"
 #include "params/RECAP.hh"
 
+/**
+1. push to git the latest files.
+2. use the LRU policy as the baseline for RECAP.
+3. add the contraction vector for each way.
+4. implement the algorithm. initial, ....
+ */
+
+#define NUM_CORES  8
+
 class RECAP : public BaseSetAssoc
 {
   public:
@@ -72,6 +81,9 @@ class RECAP : public BaseSetAssoc
     CacheBlk* findVictim(Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
     void invalidate(CacheBlk *blk);
+
+    void determine_cache_requirements();
+    double get_max_mu(uint32_t core_id);
 };
 
 #endif // __MEM_CACHE_TAGS_RECAP_HH__

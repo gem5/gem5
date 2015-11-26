@@ -43,6 +43,12 @@
 /**
  * @file
  * Definitions of a RECAP (Region-Aware Cache Partitioning) tag store.
+ *
+ * Each way contains an access permission register (APR) to control which cores
+ * have access to it.
+ *
+ * Data that is private to a particular thread is kept left-justified in the cache
+ * (i.e., in the low-numbered ways) whereas shared data is kept right-justified.
  */
 
 #include "debug/CacheRepl.hh"
@@ -52,6 +58,15 @@
 RECAP::RECAP(const Params *p)
     : BaseSetAssoc(p)
 {
+    for(uint32_t i = 0; i < numSets; i++)
+    {
+        CacheBlk *blk = findBlockBySetAndWay(i, 0);
+
+        for(int c = 0; c < NUM_CORES; c++)
+        {
+            blk->apr_per_core.push_back(true);
+        }
+    }
 }
 
 CacheBlk*
@@ -84,4 +99,33 @@ RECAP*
 RECAPParams::create()
 {
     return new RECAP(this);
+}
+
+void
+RECAP::determine_cache_requirements()
+{
+//    std::vector<int> blocks_req;
+
+    for(int c = 0; c < NUM_CORES; c++)
+    {
+
+    }
+}
+
+double
+RECAP::get_max_mu(uint32_t core_id)
+{
+    double max_mu = 0;
+
+    for(uint32_t j = 1; j <= assoc; j++)
+    {
+        int utility = 0; //TODO
+        double mu = utility / j;
+        if(mu > max_mu)
+        {
+            max_mu = mu;
+        }
+    }
+
+    return max_mu;
 }
