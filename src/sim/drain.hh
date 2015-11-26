@@ -275,6 +275,20 @@ class Drainable
     /** Return the current drain state of an object. */
     DrainState drainState() const { return _drainState; }
 
+    /**
+     * Notify a child process of a fork.
+     *
+     * When calling fork in gem5, we need to ensure that resources
+     * shared between the parent and the child are consistent. This
+     * method is intended to be overloaded to handle that. For
+     * example, an object could use this method to re-open input files
+     * to get a separate file description with a private file offset.
+     *
+     * This method is only called in the child of the fork. The call
+     * takes place in a drained system.
+     */
+    virtual void notifyFork() {};
+
   private:
     /** DrainManager interface to request a drain operation */
     DrainState dmDrain();

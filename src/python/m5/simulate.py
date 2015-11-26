@@ -308,4 +308,8 @@ def switchCpus(system, cpuList, verbose=True):
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
 
+def notifyFork(root):
+    for obj in root.descendants():
+        obj.notifyFork()
+
 from internal.core import disableAllListeners
