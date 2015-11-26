@@ -51,8 +51,15 @@
 #include "mem/cache/tags/base_set_assoc.hh"
 #include "params/DBRSP.hh"
 
+#include "utils.hh"
+
+struct sampler;
+
 class DBRSP : public BaseSetAssoc
 {
+  private:
+    sampler *samp;
+
   public:
     /** Convenience typedef. */
     typedef DBRSPParams Params;
@@ -72,6 +79,58 @@ class DBRSP : public BaseSetAssoc
     CacheBlk* findVictim(Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
     void invalidate(CacheBlk *blk);
+
+    INT32 Get_Sampler_Victim ( UINT32 tid, UINT32 setIndex, UINT32 assoc, Addr_t PC, Addr_t paddr, UINT32 accessType );
+    void   UpdateSampler ( UINT32 setIndex, Addr_t tag, UINT32 tid, Addr_t PC, INT32 updateWayID, bool hit);
+};
+
+struct sampler_entry {
+	unsigned int
+		lru_stack_position,
+		tag,
+		trace,
+		prediction;
+
+	bool
+		valid;
+
+	// constructor for sampler entry
+	sampler_entry (void) {
+		lru_stack_position = 0;
+		valid = false;
+		tag = 0;
+		trace = 0;
+		prediction = 0;
+	};
+};
+
+// one sampler set (just a pointer to the entries)
+struct sampler_set {
+	sampler_entry *blocks;
+
+	sampler_set (void);
+};
+
+// the dead block predictor
+struct predictor {
+	int **tables; 	// tables of two-bit counters
+
+	predictor (void);
+	unsigned int get_table_index (UINT32 tid, unsigned int, int t);
+	bool get_prediction (UINT32 tid, unsigned int trace, int set);
+	void block_is_dead (UINT32 tid, unsigned int, bool);
+};
+
+// the sampler
+struct sampler {
+	sampler_set *sets;
+	int
+		nsampler_sets,   // number of sampler sets
+		sampler_modulus; // determines which LLC sets are sampler sets
+
+	predictor *pred;
+	sampler (int nsets, int assoc);
+	void access (UINT32 tid, int set, Addr_t tag, Addr_t PC);
 };
 
 #endif // __MEM_CACHE_TAGS_DBRSP_HH__

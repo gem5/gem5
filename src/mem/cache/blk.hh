@@ -123,6 +123,9 @@ class CacheBlk
 
     Tick tickInserted;
 
+    /** the following three fields are used by the DBRSP cache partitioning policy. */
+    bool dbrsp_prediction;
+
     /** the following three fields are used by the RECAP cache partitioning policy. */
     std::vector<bool> apr_per_core;         // the per core fields of the access permission register (APR)
     bool apr_flush;         // the flush field of the access permission register (APR)
