@@ -409,10 +409,13 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         if (blk == NULL) {
             // need to do a replacement
+            ThreadID threadId = pkt->req->hasThreadId() ?
+                pkt->req->threadId() : 0;
+
             Addr pc = pkt->req->hasPC() ?
                 pkt->req->getPC() : 0;
 
-            blk = allocateBlock(pc, pkt->getAddr(), pkt->isSecure(), writebacks);
+            blk = allocateBlock(threadId, pc, pkt->getAddr(), pkt->isSecure(), writebacks);
             if (blk == NULL) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
@@ -1658,9 +1661,9 @@ Cache::invalidateVisitor(CacheBlk &blk)
 }
 
 CacheBlk*
-Cache::allocateBlock(Addr pc, Addr addr, bool is_secure, PacketList &writebacks)
+Cache::allocateBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, PacketList &writebacks)
 {
-    CacheBlk *blk = tags->findVictim(pc, addr);
+    CacheBlk *blk = tags->findVictim(threadId, pc, addr);
 
     // It is valid to return NULL if there is no victim
     if (!blk)
@@ -1740,7 +1743,10 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
-        blk = allocate ? allocateBlock(pc, addr, is_secure, writebacks) : NULL;
+        ThreadID threadId = pkt->req->hasThreadId() ?
+        pkt->req->threadId() : 0;
+
+        blk = allocate ? allocateBlock(threadId, pc, addr, is_secure, writebacks) : NULL;
 
         if (blk == NULL) {
             // No replaceable block or a mostly exclusive

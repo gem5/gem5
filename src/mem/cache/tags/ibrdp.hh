@@ -177,7 +177,7 @@ class IbRDP : public BaseSetAssoc
 
     CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
-    CacheBlk* findVictim(Addr pc, Addr addr);
+    CacheBlk* findVictim(ThreadID threadId, Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
     void invalidate(CacheBlk *blk);
 

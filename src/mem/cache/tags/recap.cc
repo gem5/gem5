@@ -77,9 +77,9 @@ RECAP::accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles
 }
 
 CacheBlk*
-RECAP::findVictim(Addr pc, Addr addr)
+RECAP::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
-    CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
+    CacheBlk *blk = BaseSetAssoc::findVictim(threadId, pc, addr);
     return blk;
 }
 

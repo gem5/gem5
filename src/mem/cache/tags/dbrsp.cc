@@ -92,14 +92,25 @@ CacheBlk*
 DBRSP::accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat, int master_id)
 {
     CacheBlk *blk = BaseSetAssoc::accessBlock(threadId, pc, addr, is_secure, lat, master_id);
+
+    if (blk != NULL) {
+		UpdateSampler (blk->set, blk->tag, threadId, pc, blk->way, true);
+    }
     return blk;
 }
 
 CacheBlk*
-DBRSP::findVictim(Addr pc, Addr addr)
+DBRSP::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
     // grab a replacement candidate
-    BlkType *blk = NULL;
+    BlkType *blk = BaseSetAssoc::findVictim(threadId, pc, addr);
+    int set = extractSet(addr);
+
+    // if all blocks are valid, pick a replacement at random
+    if (blk && blk->isValid())
+    {
+        blk = findBlockBySetAndWay(set, Get_Sampler_Victim( threadId, set, assoc, pc, addr ));
+    }
     return blk;
 }
 
@@ -107,12 +118,23 @@ void
 DBRSP::insertBlock(PacketPtr pkt, BlkType *blk)
 {
     BaseSetAssoc::insertBlock(pkt, blk);
+
+    ThreadID threadId = pkt->req->hasThreadId() ? pkt->req->threadId() : 0;
+
+    Addr pc = pkt->req->hasPC() ?
+        pkt->req->getPC() : 0;
+
+	UpdateSampler (blk->set, blk->tag, threadId, pc, blk->way, false);
 }
 
 void
 DBRSP::invalidate(CacheBlk *blk)
 {
     BaseSetAssoc::invalidate(blk);
+
+    // should be evicted before valid blocks
+    int set = blk->set;
+    sets[set].moveToTail(blk);
 }
 
 DBRSP*
@@ -131,7 +153,8 @@ void
 DBRSP::UpdateSampler (UINT32 setIndex, Addr_t tag, UINT32 tid, Addr_t PC, INT32 way, bool hit)
 {
 	// determine if this is a sampler set
-	if (setIndex % samp->sampler_modulus == 0) {
+	if (setIndex % samp->sampler_modulus == 0)
+	{
 		// this is a sampler set.  access the sampler.
 		int set = setIndex / samp->sampler_modulus;
 		if (set >= 0 && set < samp->nsampler_sets)
@@ -139,7 +162,7 @@ DBRSP::UpdateSampler (UINT32 setIndex, Addr_t tag, UINT32 tid, Addr_t PC, INT32 
 	}
 
 	// update default replacement policy
-//	UpdateLRU (setIndex, way); //TODO
+    sets[setIndex].moveToHead(findBlockBySetAndWay(setIndex, way));
 
 	// make the trace
 	unsigned int trace = make_trace (tid, samp->pred, PC);
@@ -150,27 +173,31 @@ DBRSP::UpdateSampler (UINT32 setIndex, Addr_t tag, UINT32 tid, Addr_t PC, INT32 
 
 // called to select a victim.  returns victim way, or -1 if the block should bypass
 INT32
-DBRSP::Get_Sampler_Victim ( UINT32 tid, UINT32 setIndex, UINT32 assoc, Addr_t PC, Addr_t paddr, UINT32 accessType )
+DBRSP::Get_Sampler_Victim ( UINT32 tid, UINT32 setIndex, UINT32 assoc, Addr_t PC, Addr_t paddr )
 {
 	// select a victim using default LRU policy
-//	int r = Get_LRU_Victim (setIndex); //TODO
-	int r = 0;
+    BlkType *blk = NULL;
+    for (int i = assoc - 1; i >= 0; i--)
+    {
+        BlkType *b = sets[setIndex].blks[i];
+        if (b->way < allocAssoc) {
+            blk = b;
+            break;
+        }
+    }
+    assert(!blk || blk->way < allocAssoc);
+
+    int r = blk->way;
 
 	// look for a predicted dead block
 	for (unsigned int i=0; i<assoc; i++) {
-		if (findBlockBySetAndWay(setIndex, i)->prediction) {
+		if (findBlockBySetAndWay(setIndex, i)->prediction)
+		{
 			// found a predicted dead block; this is our new victim
 			r = i;
 			break;
 		}
 	}
-
-	// predict whether this block is "dead on arrival"
-	unsigned int trace = make_trace (tid, samp->pred, PC);
-	int prediction = samp->pred->get_prediction (tid, trace, setIndex);
-
-	// if block is predicted dead, then it should bypass the cache
-	if (prediction) r = -1; // -1 means bypass //TODO
 
 	// return the selected victim
 	return r;
@@ -201,25 +228,32 @@ sampler::access (UINT32 tid, int set, Addr_t tag, Addr_t PC)
 	int i;
 
 	// search for a matching tag
-	for (i=0; i<dan_sampler_assoc; i++) if (blocks[i].valid && (blocks[i].tag == partial_tag)) {
-		// we know this block is not dead; inform the predictor
-		pred->block_is_dead (tid, blocks[i].trace, false);
-		break;
+	for (i=0; i<dan_sampler_assoc; i++)
+	{
+        if (blocks[i].valid && (blocks[i].tag == partial_tag))
+        {
+            // we know this block is not dead; inform the predictor
+            pred->block_is_dead (tid, blocks[i].trace, false);
+            break;
+        }
 	}
 
 	// did we find a match?
-	if (i == dan_sampler_assoc) {
+	if (i == dan_sampler_assoc)
+	{
 		// look for an invalid block to replace
-		for (i=0; i<dan_sampler_assoc; i++) if (blocks[i].valid == false) break;
+		for (i=0; i<dan_sampler_assoc; i++) if (!blocks[i].valid) break;
 
 		// no invalid block?  look for a dead block.
-		if (i == dan_sampler_assoc) {
+		if (i == dan_sampler_assoc)
+		{
 			// find the LRU dead block
 			for (i=0; i<dan_sampler_assoc; i++) if (blocks[i].prediction) break;
 		}
 
 		// no invalid or dead block?  use the LRU block
-		if (i == dan_sampler_assoc) {
+		if (i == dan_sampler_assoc)
+		{
 			int j;
 			for (j=0; j<dan_sampler_assoc; j++)
 				if (blocks[j].lru_stack_position == (unsigned int) (dan_sampler_assoc-1)) break;
@@ -250,9 +284,11 @@ sampler::access (UINT32 tid, int set, Addr_t tag, Addr_t PC)
 }
 
 // constructor for sampler
-sampler::sampler (int nsets, int assoc) {
+sampler::sampler (int nsets, int assoc)
+{
 	// four-core version gets slightly different parameters
-	if (nsets == 4096) {
+	if (nsets == 4096)
+	{
 		dan_sampler_assoc = 13;
 		dan_predictor_index_bits = 14;
 	}
@@ -323,19 +359,22 @@ sampler::sampler (int nsets, int assoc) {
 }
 
 // constructor for the predictor
-predictor::predictor (void) {
+predictor::predictor (void)
+{
 	// make the tables
 	tables = new int* [dan_predictor_tables];
 
 	// initialize each table to all 0s
-	for (int i=0; i<dan_predictor_tables; i++) {
+	for (int i=0; i<dan_predictor_tables; i++)
+	{
 		tables[i] = new int[dan_predictor_table_entries];
 		memset (tables[i], 0, sizeof (int) * dan_predictor_table_entries);
 	}
 }
 
 // hash three numbers into one
-inline unsigned int mix (unsigned int a, unsigned int b, unsigned int c) {
+inline unsigned int mix (unsigned int a, unsigned int b, unsigned int c)
+{
 	a=a-b;  a=a-c;  a=a^(c >> 13);
 	b=b-c;  b=b-a;  b=b^(a << 8);
 	c=c-a;  c=c-b;  c=c^(b >> 13);
@@ -343,44 +382,54 @@ inline unsigned int mix (unsigned int a, unsigned int b, unsigned int c) {
 }
 
 // first hash function
-inline unsigned int f1 (unsigned int x) {
+inline unsigned int f1 (unsigned int x)
+{
 	return mix (0xfeedface, 0xdeadb10c, x);
 }
 
 // second hash function
-inline unsigned int f2 (unsigned int x) {
+inline unsigned int f2 (unsigned int x)
+{
 	return mix (0xc001d00d, 0xfade2b1c, x);
 }
 
 // generalized hash function
-inline unsigned int fi (unsigned int x, int i) {
+inline unsigned int fi (unsigned int x, int i)
+{
 	return f1 (x) + (f2 (x) >> i);
 }
 
 // hash a trace, thread ID, and predictor table number into a predictor table index
-unsigned int predictor::get_table_index (UINT32 tid, unsigned int trace, int t) {
+unsigned int predictor::get_table_index (UINT32 tid, unsigned int trace, int t)
+{
 	unsigned int x = fi (trace ^ (tid << 2), t);
 	return x & ((1<<dan_predictor_index_bits)-1);
 }
 
 // inform the predictor that a block is either dead or not dead
 void
-predictor::block_is_dead (UINT32 tid, unsigned int trace, bool d) {
+predictor::block_is_dead (UINT32 tid, unsigned int trace, bool d)
+{
 	// for each predictor table...
-	for (int i=0; i<dan_predictor_tables; i++) {
+	for (int i=0; i<dan_predictor_tables; i++)
+	{
 		// ...get a pointer to the corresponding entry in that table
 		int *c = &tables[i][get_table_index (tid, trace, i)];
 
 		// if the block is dead, increment the counter
-		if (d) {
+		if (d)
+		{
 			if (*c < dan_counter_max) (*c)++;
-		} else {
+		}
+		else
+		{
 			// otherwise, decrease the counter
-
-			if (i & 1) {
+			if (i & 1)
+			{
 				// odd numbered tables decrease exponentially
 				(*c) >>= 1;
-			} else {
+			} else
+			{
 				// even numbered tables decrease by one
 				if (*c > 0) (*c)--;
 			}
@@ -390,12 +439,14 @@ predictor::block_is_dead (UINT32 tid, unsigned int trace, bool d) {
 
 // get a prediction for a given trace
 bool
-predictor::get_prediction (UINT32 tid, unsigned int trace, int set) {
+predictor::get_prediction (UINT32 tid, unsigned int trace, int set)
+{
 	// start the confidence sum as 0
 	int conf = 0;
 
 	// for each table...
-	for (int i=0; i<dan_predictor_tables; i++) {
+	for (int i=0; i<dan_predictor_tables; i++)
+	{
 		// ...get the counter value for that table...
 		int val = tables[i][get_table_index (tid, trace, i)];
 

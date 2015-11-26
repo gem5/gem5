@@ -71,7 +71,7 @@ LRU::accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &
 }
 
 CacheBlk*
-LRU::findVictim(Addr pc, Addr addr)
+LRU::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
     int set = extractSet(addr);
     // grab a replacement candidate

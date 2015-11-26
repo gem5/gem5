@@ -211,7 +211,7 @@ public:
      * @param pkt The request to a find a replacement candidate for.
      * @return The block to place the replacement in.
      */
-    CacheBlk* findVictim(Addr pc, Addr addr) override;
+    CacheBlk* findVictim(ThreadID threadId, Addr pc, Addr addr) override;
 
     void insertBlock(PacketPtr pkt, CacheBlk *blk) override;
 

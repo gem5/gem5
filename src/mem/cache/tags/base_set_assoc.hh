@@ -251,7 +251,7 @@ public:
      * @param addr The addr to a find a replacement candidate for.
      * @return The candidate block.
      */
-    CacheBlk* findVictim(Addr pc, Addr addr) override
+    CacheBlk* findVictim(ThreadID threadId, Addr pc, Addr addr) override
     {
         BlkType *blk = NULL;
         int set = extractSet(addr);

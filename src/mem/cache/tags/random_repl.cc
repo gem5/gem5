@@ -51,9 +51,9 @@ RandomRepl::accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, C
 }
 
 CacheBlk*
-RandomRepl::findVictim(Addr pc, Addr addr)
+RandomRepl::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
-    CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
+    CacheBlk *blk = BaseSetAssoc::findVictim(threadId, pc, addr);
     unsigned set = extractSet(addr);
 
     // if all blocks are valid, pick a replacement at random

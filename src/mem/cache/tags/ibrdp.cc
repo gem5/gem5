@@ -72,9 +72,9 @@ IbRDP::accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles
 }
 
 CacheBlk*
-IbRDP::findVictim(Addr pc, Addr addr)
+IbRDP::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
-    CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
+    CacheBlk *blk = BaseSetAssoc::findVictim(threadId, pc, addr);
     int set = extractSet(addr);
 
     // if all blocks are valid, pick a replacement by the algorithm

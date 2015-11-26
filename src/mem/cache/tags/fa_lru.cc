@@ -236,7 +236,7 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 }
 
 CacheBlk*
-FALRU::findVictim(Addr pc, Addr addr)
+FALRU::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
     FALRUBlk * blk = tail;
     assert(blk->inCache == 0);

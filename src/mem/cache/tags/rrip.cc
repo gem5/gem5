@@ -70,9 +70,9 @@ RRIP::accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles 
 }
 
 CacheBlk*
-RRIP::findVictim(Addr pc, Addr addr)
+RRIP::findVictim(ThreadID threadId, Addr pc, Addr addr)
 {
-    CacheBlk *blk = BaseSetAssoc::findVictim(pc, addr);
+    CacheBlk *blk = BaseSetAssoc::findVictim(threadId, pc, addr);
     int set = extractSet(addr);
 
     // if all blocks are valid, pick a replacement at random
@@ -165,10 +165,10 @@ INT32 RRIP::Get_RRIP_Victim( UINT32 setIndex )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// This function implements the RRIP update routine. The arguments to         //
-// the function are the physical way and set index.                           //
-//                                                                            //
+//                                                                                                                          //
+// This function implements the RRIP update routine. The arguments to                       //
+// the function are the physical way and set index.                                                    //
+//                                                                                                                          //
 ////////////////////////////////////////////////////////////////////////////////
 void RRIP::UpdateRRIP( UINT32 tid, UINT32 setIndex, INT32 updateWayID, bool cacheHit )
 {

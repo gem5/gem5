@@ -232,7 +232,7 @@ class BaseTags : public ClockedObject
 
     virtual Addr regenerateBlkAddr(Addr tag, unsigned set) const = 0;
 
-    virtual CacheBlk* findVictim(Addr pc, Addr addr) = 0;
+    virtual CacheBlk* findVictim(ThreadID threadId, Addr pc, Addr addr) = 0;
 
     virtual int extractSet(Addr addr) const = 0;
 

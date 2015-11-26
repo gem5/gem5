@@ -76,11 +76,11 @@ class DBRSP : public BaseSetAssoc
 
     CacheBlk* accessBlock(ThreadID threadId, Addr pc, Addr addr, bool is_secure, Cycles &lat,
                          int context_src);
-    CacheBlk* findVictim(Addr pc, Addr addr);
+    CacheBlk* findVictim(ThreadID threadId, Addr pc, Addr addr);
     void insertBlock(PacketPtr pkt, BlkType *blk);
     void invalidate(CacheBlk *blk);
 
-    INT32 Get_Sampler_Victim ( UINT32 tid, UINT32 setIndex, UINT32 assoc, Addr_t PC, Addr_t paddr, UINT32 accessType );
+    INT32 Get_Sampler_Victim ( UINT32 tid, UINT32 setIndex, UINT32 assoc, Addr_t PC, Addr_t paddr );
     void   UpdateSampler ( UINT32 setIndex, Addr_t tag, UINT32 tid, Addr_t PC, INT32 updateWayID, bool hit);
 };
 
