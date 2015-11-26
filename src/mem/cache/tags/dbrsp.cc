@@ -77,10 +77,7 @@ int
 	dan_predictor_table_entries,
 
 	// maximum value of saturating counter; derived from counter width
-	dan_counter_max,
-
-	// total number of bits used by all structures; computed in sampler::sampler
-	total_bits_used;
+	dan_counter_max;
 
 DBRSP::DBRSP(const Params *p)
     : BaseSetAssoc(p)
@@ -300,39 +297,7 @@ sampler::sampler (int nsets, int assoc)
 	// figure out number of entries in each table
 	dan_predictor_table_entries = 1 << dan_predictor_index_bits;
 
-	// compute the total number of bits used by the replacement policy
-	// total number of bits available for the contest
-	int nbits_total = (nsets * assoc * 8 + 1024);
-
-	// the real LRU policy consumes log(assoc) bits per block
-	int nbits_lru = assoc * nsets * (int) log2 (assoc);
-
-	// the dead block predictor consumes (counter width) * (number of tables)
-	// * (entries per table) bits
-	int nbits_predictor =
-		dan_counter_width * dan_predictor_tables * dan_predictor_table_entries;
-
-	// one prediction bit per cache block.
-	int nbits_cache = 1 * nsets * assoc;
-
-	// some extra bits we account for to be safe; figure we need about 85 bits
-	// for the various run-time constants and variables the CRC guys might want
-	// to charge us for.  in reality we leave a bigger surplus than this so we
-	// should be safe.
-	int nbits_extra = 85;
-
-	// number of bits left over for the sampler sets
-	int nbits_left_over =
-		nbits_total - (nbits_predictor + nbits_cache + nbits_lru + nbits_extra);
-
-	// number of bits in one sampler set: associativity of sampler * bits per sampler block entry
-	int nbits_one_sampler_set =
-		dan_sampler_assoc
-		// tag bits, valid bit, prediction bit, trace bits, lru stack position bits
-		* (dan_sampler_tag_bits + 1 + 1 + 4 + dan_sampler_trace_bits);
-
-	// maximum number of sampler of sets we can afford with the space left over
-	nsampler_sets = nbits_left_over / nbits_one_sampler_set;
+	nsampler_sets = 128; //TODO: should not be hardcoded
 
 	// compute the maximum saturating counter value; predictor constructor
 	// needs this so we do it here
@@ -341,9 +306,6 @@ sampler::sampler (int nsets, int assoc)
 	// make a predictor
 	pred = new predictor ();
 
-	// we should have at least one sampler set
-	assert (nsampler_sets >= 0);
-
 	// make the sampler sets
 	sets = new sampler_set [nsampler_sets];
 
@@ -351,11 +313,7 @@ sampler::sampler (int nsets, int assoc)
 	// considered a sampler set
 	sampler_modulus = nsets / nsampler_sets;
 
-	// compute total number of bits used; we can print this out to validate
-	// the computation in the paper
-	total_bits_used =
-		(nbits_total - nbits_left_over) + (nbits_one_sampler_set * nsampler_sets);
-	//fprintf (stderr, "total bits used %d\n", total_bits_used);
+	assert(sampler_modulus>0);
 }
 
 // constructor for the predictor
