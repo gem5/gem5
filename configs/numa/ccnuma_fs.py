@@ -211,6 +211,9 @@ def build_test_system(np):
             elif options.numa_cache_tags == 'RRIP':
                 numa_cache_upward.tags = RRIP()
                 numa_cache_downward.tags = RRIP()
+            elif options.numa_cache_tags == 'DBRSP':
+                numa_cache_upward.tags = DBRSP()
+                numa_cache_downward.tags = DBRSP()
             elif options.numa_cache_tags == 'RECAP':
                 numa_cache_upward.tags = RECAP()
                 numa_cache_downward.tags = RECAP()

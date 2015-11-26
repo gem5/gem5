@@ -86,6 +86,11 @@ class RRIP(BaseSetAssoc):
     cxx_class = 'RRIP'
     cxx_header = "mem/cache/tags/rrip.hh"
 
+class DBRSP(BaseSetAssoc):
+    type = 'DBRSP'
+    cxx_class = 'DBRSP'
+    cxx_header = "mem/cache/tags/dbrsp.hh"
+
 class RECAP(BaseSetAssoc):
     type = 'RECAP'
     cxx_class = 'RECAP'

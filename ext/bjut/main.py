@@ -62,6 +62,7 @@ def generate_csv_multicore_experiments(benches):
         experiments_l2tags.append(multicore(bench, '256kB', 8, 'LRU', 4))
         experiments_l2tags.append(multicore(bench, '256kB', 8, 'IbRDP', 4))
         experiments_l2tags.append(multicore(bench, '256kB', 8, 'RRIP', 4))
+        experiments_l2tags.append(multicore(bench, '256kB', 8, 'DBRSP', 4))
 
     generate_csv(MulticoreExperiment, '../../multicore_l2tags.csv', experiments_l2tags)
 
@@ -98,6 +99,7 @@ def generate_csv_ccnuma_experiments(benches):
         experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
         experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
         experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
 
     generate_csv(CCNUMAExperiment, '../../ccnuma_l2tags.csv', experiments_l2tags)
 

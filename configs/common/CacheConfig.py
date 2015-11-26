@@ -86,6 +86,8 @@ def config_cache(options, system):
                 system.l2.tags = IbRDP()
             elif options.l2_tags == 'RRIP':
                 system.l2.tags = RRIP()
+            elif options.l2_tags == 'DBRSP':
+                system.l2.tags = DBRSP()
             elif options.l2_tags == 'RECAP':
                 system.l2.tags = RECAP()
             else:
