@@ -82,6 +82,8 @@ class RawDiskImage : public DiskImage
     RawDiskImage(const Params *p);
     ~RawDiskImage();
 
+    void notifyFork() override;
+
     void close();
     void open(const std::string &filename, bool rd_only = false);
 
@@ -122,6 +124,8 @@ class CowDiskImage : public DiskImage
     typedef CowDiskImageParams Params;
     CowDiskImage(const Params *p);
     ~CowDiskImage();
+
+    void notifyFork() override;
 
     void initSectorTable(int hash_size);
     bool open(const std::string &file);
