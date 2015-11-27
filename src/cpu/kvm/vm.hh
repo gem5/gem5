@@ -295,6 +295,8 @@ class KvmVM : public SimObject
     KvmVM(KvmVMParams *params);
     virtual ~KvmVM();
 
+    void notifyFork();
+
     /**
      * Setup a shared three-page memory region used by the internals
      * of KVM. This is currently only needed by x86 implementations.
@@ -396,7 +398,7 @@ class KvmVM : public SimObject
     int createDevice(uint32_t type, uint32_t flags = 0);
 
     /** Global KVM interface */
-    Kvm kvm;
+    Kvm *kvm;
 
 #if defined(__aarch64__)
   public: // ARM-specific
@@ -504,7 +506,7 @@ class KvmVM : public SimObject
     System *system;
 
     /** KVM VM file descriptor */
-    const int vmFD;
+    int vmFD;
 
     /** Has delayedStartup() already been called? */
     bool started;

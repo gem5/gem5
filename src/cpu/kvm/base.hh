@@ -89,6 +89,7 @@ class BaseKvmCPU : public BaseCPU
 
     DrainState drain() override;
     void drainResume() override;
+    void notifyFork() override;
 
     void switchOut() override;
     void takeOverFrom(BaseCPU *cpu) override;

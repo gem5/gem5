@@ -519,7 +519,7 @@ X86KvmCPU::X86KvmCPU(X86KvmCPUParams *params)
     : BaseKvmCPU(params),
       useXSave(params->useXSave)
 {
-    Kvm &kvm(vm.kvm);
+    Kvm &kvm(*vm.kvm);
 
     if (!kvm.capSetTSSAddress())
         panic("KVM: Missing capability (KVM_CAP_SET_TSS_ADDR)\n");
@@ -649,7 +649,7 @@ X86KvmCPU::dumpVCpuEvents() const
 void
 X86KvmCPU::dumpMSRs() const
 {
-    const Kvm::MSRIndexVector &supported_msrs(vm.kvm.getSupportedMSRs());
+    const Kvm::MSRIndexVector &supported_msrs(vm.kvm->getSupportedMSRs());
     std::unique_ptr<struct kvm_msrs> msrs(
         newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
             supported_msrs.size()));
@@ -1539,7 +1539,7 @@ const Kvm::MSRIndexVector &
 X86KvmCPU::getMsrIntersection() const
 {
     if (cachedMsrIntersection.empty()) {
-        const Kvm::MSRIndexVector &kvm_msrs(vm.kvm.getSupportedMSRs());
+        const Kvm::MSRIndexVector &kvm_msrs(vm.kvm->getSupportedMSRs());
 
         DPRINTF(Kvm, "kvm-x86: Updating MSR intersection\n");
         for (auto it = kvm_msrs.cbegin(); it != kvm_msrs.cend(); ++it) {

@@ -125,7 +125,7 @@ BaseKvmCPU::startup()
     const BaseKvmCPUParams * const p(
         dynamic_cast<const BaseKvmCPUParams *>(params()));
 
-    Kvm &kvm(vm.kvm);
+    Kvm &kvm(*vm.kvm);
 
     BaseCPU::startup();
 
@@ -359,6 +359,29 @@ BaseKvmCPU::drainResume()
         _status = Running;
     } else {
         _status = Idle;
+    }
+}
+
+void
+BaseKvmCPU::notifyFork()
+{
+    // We should have drained prior to forking, which means that the
+    // tick event shouldn't be scheduled and the CPU is idle.
+    assert(!tickEvent.scheduled());
+    assert(_status == Idle);
+
+    if (vcpuFD != -1) {
+        if (close(vcpuFD) == -1)
+            warn("kvm CPU: notifyFork failed to close vcpuFD\n");
+
+        if (_kvmRun)
+            munmap(_kvmRun, vcpuMMapSize);
+
+        vcpuFD = -1;
+        _kvmRun = NULL;
+
+        hwInstructions.detach();
+        hwCycles.detach();
     }
 }
 
@@ -617,6 +640,9 @@ Tick
 BaseKvmCPU::kvmRun(Tick ticks)
 {
     Tick ticksExecuted;
+    fatal_if(vcpuFD == -1,
+             "Trying to run a KVM CPU in a forked child process. "
+             "This is not supported.\n");
     DPRINTF(KvmRun, "KVM: Executing for %i ticks\n", ticks);
 
     if (ticks == 0) {
