@@ -52,6 +52,8 @@
 #include "params/VncInput.hh"
 #include "sim/sim_object.hh"
 
+class OutputDirectory;
+
 /**
  * A device that expects to receive input from the vnc server should derrive
  * (through mulitple inheritence if necessary from VncKeyboard or VncMouse
@@ -219,7 +221,7 @@ class VncInput : public SimObject
     int captureCurrentFrame;
 
     /** Directory to store captured frames to */
-    std::string captureOutputDirectory;
+    OutputDirectory *captureOutputDirectory;
 
     /** Computed hash of the last captured frame */
     uint64_t captureLastHash;

@@ -82,7 +82,7 @@ class LinuxArmSystem : public GenericArmSystem
 
     /** This is a file that is placed in the run directory that prints out
      * mappings between taskIds and OS process IDs */
-    std::ostream* taskFile;
+    OutputStream* taskFile;
 
     LinuxArmSystem(Params *p);
     ~LinuxArmSystem();

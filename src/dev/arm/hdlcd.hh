@@ -81,6 +81,7 @@
 
 #include "base/bitmap.hh"
 #include "base/framebuffer.hh"
+#include "base/output.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/pixelpump.hh"
 #include "sim/serialize.hh"
@@ -347,7 +348,7 @@ class HDLcd: public AmbaDmaDevice
     Bitmap bmp;
 
     /** Picture of what the current frame buffer looks like */
-    std::ostream *pic;
+    OutputStream *pic;
 
     /** Cached pixel converter, set when the converter is enabled. */
     PixelConverter conv;

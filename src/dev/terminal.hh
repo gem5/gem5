@@ -46,6 +46,7 @@
 #include "params/Terminal.hh"
 #include "sim/sim_object.hh"
 
+class OutputStream;
 class TerminalListener;
 
 class Terminal : public SimObject
@@ -111,7 +112,7 @@ class Terminal : public SimObject
   protected:
     CircleBuf<char> txbuf;
     CircleBuf<char> rxbuf;
-    std::ostream *outfile;
+    OutputStream *outfile;
 #if TRACING_ON == 1
     CircleBuf<char> linebuf;
 #endif

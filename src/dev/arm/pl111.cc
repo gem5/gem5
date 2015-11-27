@@ -523,11 +523,12 @@ Pl111::dmaDone()
             DPRINTF(PL111, "-- write out frame buffer into bmp\n");
 
             if (!pic)
-                pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
+                pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()),
+                                    true);
 
             assert(pic);
-            pic->seekp(0);
-            bmp.write(*pic);
+            pic->stream()->seekp(0);
+            bmp.write(*pic->stream());
         }
 
         // schedule the next read based on when the last frame started

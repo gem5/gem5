@@ -544,8 +544,8 @@ HDLcd::pxlFrameDone()
         }
 
         assert(pic);
-        pic->seekp(0);
-        bmp.write(*pic);
+        pic->stream()->seekp(0);
+        bmp.write(*pic->stream());
     }
 }
 

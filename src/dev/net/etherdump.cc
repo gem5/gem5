@@ -45,7 +45,7 @@
 using std::string;
 
 EtherDump::EtherDump(const Params *p)
-    : SimObject(p), stream(simout.create(p->file, true)),
+    : SimObject(p), stream(simout.create(p->file, true)->stream()),
       maxlen(p->maxlen)
 {
 }

@@ -144,8 +144,10 @@ struct O3ThreadState : public ThreadState {
 
     void dumpFuncProfile()
     {
-        std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
-        profile->dump(tc, *os);
+        OutputStream *os(
+            simout.create(csprintf("profile.%s.dat", cpu->name())));
+        profile->dump(tc, *os->stream());
+        simout.close(os);
     }
 };
 

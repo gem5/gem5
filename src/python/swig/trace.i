@@ -38,12 +38,12 @@
 inline void
 output(const char *filename)
 {
-    std::ostream *file_stream = simout.find(filename);
+    OutputStream *file_stream = simout.find(filename);
 
     if (!file_stream)
         file_stream = simout.create(filename);
 
-    Trace::setDebugLogger(new Trace::OstreamLogger(*file_stream));
+    Trace::setDebugLogger(new Trace::OstreamLogger(*file_stream->stream()));
 }
 
 inline void

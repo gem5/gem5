@@ -1,4 +1,17 @@
 /*
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2013 Andreas Sandberg
  * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,6 +40,8 @@
  *
  * Authors: Nathan Binkert
  *          Chris Emmons
+ *          Andreas Sandberg
+ *          Sascha Bischoff
  */
 
 #include <sys/stat.h>
@@ -49,94 +64,127 @@ using namespace std;
 
 OutputDirectory simout;
 
+
+OutputStream::OutputStream(const std::string &name, std::ostream *stream)
+    : _name(name), _stream(stream)
+{
+}
+
+OutputStream::~OutputStream()
+{
+}
+
+void
+OutputStream::relocate(const OutputDirectory &dir)
+{
+}
+
+template<class StreamType>
+OutputFile<StreamType>::OutputFile(const OutputDirectory &dir,
+                                   const std::string &name,
+                                   std::ios_base::openmode mode,
+                                   bool recreateable)
+  : OutputStream(name, new stream_type_t()),
+    _mode(mode), _recreateable(recreateable),
+    _fstream(static_cast<stream_type_t *>(_stream))
+{
+    _fstream->open(dir.resolve(_name).c_str(), _mode);
+
+    assert(_fstream->is_open());
+}
+
+template<class StreamType>
+OutputFile<StreamType>::~OutputFile()
+{
+    if (_fstream->is_open())
+        _fstream->close();
+}
+
+template<class StreamType>
+void
+OutputFile<StreamType>::relocate(const OutputDirectory &dir)
+{
+    if (_recreateable) {
+        _fstream->close();
+        _fstream->open(dir.resolve(_name).c_str(), _mode);
+    }
+}
+
+OutputStream OutputDirectory::stdout("stdout", &cout);
+OutputStream OutputDirectory::stderr("stderr", &cerr);
+
 /**
  * @file This file manages creating / deleting output files for the simulator.
  */
 OutputDirectory::OutputDirectory()
 {}
 
+OutputDirectory::OutputDirectory(const std::string &name)
+{
+    setDirectory(name);
+}
+
 OutputDirectory::~OutputDirectory()
 {
-    for (map_t::iterator i = files.begin(); i != files.end(); i++) {
-        if (i->second)
-            delete i->second;
+    for (auto& f: files) {
+        if (f.second)
+            delete f.second;
     }
 }
 
-std::ostream *
-OutputDirectory::checkForStdio(const string &name) const
+OutputStream *
+OutputDirectory::checkForStdio(const string &name)
 {
     if (name == "cerr" || name == "stderr")
-        return &cerr;
+        return &stderr;
 
     if (name == "cout" || name == "stdout")
-        return &cout;
+        return &stdout;
 
     return NULL;
 }
 
-ostream *
-OutputDirectory::openFile(const string &filename,
-                          ios_base::openmode mode, bool no_gz)
-{
-    bool gz = !no_gz;
-    gz = gz && filename.find(".gz", filename.length()-3) < filename.length();
-    if (gz) {
-        gzofstream *file = new gzofstream(filename.c_str(), mode);
-        if (!file->is_open())
-            fatal("Cannot open file %s", filename);
-        assert(files.find(filename) == files.end());
-        files[filename] = file;
-        return file;
-    } else {
-        ofstream *file = new ofstream(filename.c_str(), mode);
-        if (!file->is_open())
-            fatal("Cannot open file %s", filename);
-        assert(files.find(filename) == files.end());
-        files[filename] = file;
-        return file;
-    }
-}
-
 void
-OutputDirectory::close(ostream *openStream) {
-    map_t::iterator i;
-    for (i = files.begin(); i != files.end(); i++) {
-        if (i->second != openStream)
-            continue;
-
-        ofstream *fs = dynamic_cast<ofstream*>(i->second);
-        if (fs) {
-            fs->close();
-            delete i->second;
-            break;
-        } else {
-            gzofstream *gfs = dynamic_cast<gzofstream*>(i->second);
-            if (gfs) {
-                gfs->close();
-                delete i->second;
-                break;
-            }
-        }
-    }
-
+OutputDirectory::close(OutputStream *file)
+{
+    auto i = files.find(file->name());
     if (i == files.end())
         fatal("Attempted to close an unregistred file stream");
 
     files.erase(i);
+
+    delete file;
 }
 
 void
 OutputDirectory::setDirectory(const string &d)
 {
-    if (!dir.empty())
-        panic("Output directory already set!\n");
+    const string old_dir(dir);
 
     dir = d;
 
     // guarantee that directory ends with a path separator
     if (dir[dir.size() - 1] != PATH_SEPARATOR)
         dir += PATH_SEPARATOR;
+
+    // Try to create the directory. If it already exists, that's ok;
+    // otherwise, fail if we couldn't create it.
+    if ((mkdir(dir.c_str(), 0755) != 0) && (errno != EEXIST))
+        fatal("Failed to create new output subdirectory '%s'\n", dir);
+
+    // Check if we need to recreate anything
+    if (!old_dir.empty()) {
+        // Recreate output files
+        for (file_map_t::iterator i = files.begin(); i != files.end(); ++i) {
+            i->second->relocate(*this);
+        }
+
+        // Relocate sub-directories
+        for (dir_map_t::iterator i = dirs.begin(); i != dirs.end(); ++i) {
+            i->second->setDirectory(dir + PATH_SEPARATOR + i->first);
+        }
+    }
+
 }
 
 const string &
@@ -151,43 +199,69 @@ OutputDirectory::directory() const
 string
 OutputDirectory::resolve(const string &name) const
 {
-    return (name[0] != PATH_SEPARATOR) ? dir + name : name;
+    return !isAbsolute(name) ? dir + name : name;
 }
 
-ostream *
+OutputStream *
 OutputDirectory::create(const string &name, bool binary, bool no_gz)
 {
-    ostream *file = checkForStdio(name);
+    OutputStream *file = checkForStdio(name);
     if (file)
         return file;
 
-    string filename = resolve(name);
-    ios_base::openmode mode =
-        ios::trunc | (binary ? ios::binary : (ios::openmode)0);
-    file = openFile(filename, mode, no_gz);
+    const ios_base::openmode mode(
+        ios::trunc | (binary ? ios::binary : (ios::openmode)0));
+    const bool recreateable(!isAbsolute(name));
 
-    return file;
+    return open(name, mode, recreateable, no_gz);
 }
 
-ostream *
+OutputStream *
+OutputDirectory::open(const std::string &name,
+                      ios_base::openmode mode,
+                      bool recreateable,
+                      bool no_gz)
+{
+    OutputStream *os;
+
+    if (!no_gz && name.find(".gz", name.length() - 3) < name.length()) {
+        // Although we are creating an output stream, we still need to pass the
+        // correct mode for gzofstream as this used directly to set the file
+        // mode.
+        mode |= std::ios::out;
+        os = new OutputFile<gzofstream>(*this, name, mode, recreateable);
+    } else {
+        os = new OutputFile<ofstream>(*this, name, mode, recreateable);
+    }
+
+    files[name] = os;
+
+    return os;
+}
+
+OutputStream *
 OutputDirectory::find(const string &name) const
 {
-    ostream *file = checkForStdio(name);
+    OutputStream *file = checkForStdio(name);
     if (file)
         return file;
 
-    const string filename = resolve(name);
-    map_t::const_iterator i = files.find(filename);
+    auto i = files.find(name);
     if (i != files.end())
         return (*i).second;
 
     return NULL;
 }
 
-bool
-OutputDirectory::isFile(const std::ostream *os)
+
+OutputStream *
+OutputDirectory::findOrCreate(const std::string &name, bool binary)
 {
-    return os && os != &cerr && os != &cout;
+    OutputStream *os(find(name));
+    if (os)
+        return os;
+    else
+        return create(name, binary);
 }
 
 bool
@@ -201,18 +275,17 @@ OutputDirectory::isFile(const string &name) const
     return (st == 0) && S_ISREG(st_buf.st_mode);
 }
 
-string
-OutputDirectory::createSubdirectory(const string &name) const
+OutputDirectory *
+OutputDirectory::createSubdirectory(const string &name)
 {
     const string new_dir = resolve(name);
     if (new_dir.find(directory()) == string::npos)
         fatal("Attempting to create subdirectory not in m5 output dir\n");
 
-    // if it already exists, that's ok; otherwise, fail if we couldn't create
-    if ((mkdir(new_dir.c_str(), 0755) != 0) && (errno != EEXIST))
-        fatal("Failed to create new output subdirectory '%s'\n", new_dir);
+    OutputDirectory *dir(new OutputDirectory(new_dir));
+    dirs[name] = dir;
 
-    return name + PATH_SEPARATOR;
+    return dir;
 }
 
 void
@@ -225,10 +298,10 @@ OutputDirectory::remove(const string &name, bool recursive)
 
     if (isFile(fname)) {
         // close and release file if we have it open
-        map_t::iterator itr = files.find(fname);
-        if (itr != files.end()) {
-            delete itr->second;
-            files.erase(itr);
+        auto i = files.find(fname);
+        if (i != files.end()) {
+            delete i->second;
+            files.erase(i);
         }
 
         if (::remove(fname.c_str()) != 0)
@@ -246,7 +319,7 @@ OutputDirectory::remove(const string &name, bool recursive)
             if (!subdir) {
                 perror("opendir");
                 fatal("Error opening directory for recursive removal '%s'\n",
-                    fname);
+                      fname);
             }
 
             struct dirent *de = readdir(subdir);

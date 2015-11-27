@@ -123,10 +123,9 @@ VncInput::captureFrameBuffer()
     const string frameFilename(frameFilenameBuffer);
 
     // create the compressed framebuffer file
-    ostream *fb_out = simout.create(captureOutputDirectory + frameFilename,
-                                    true);
-    captureBitmap->write(*fb_out);
-    simout.close(fb_out);
+    OutputStream *fb_out(captureOutputDirectory->create(frameFilename, true));
+    captureBitmap->write(*fb_out->stream());
+    captureOutputDirectory->close(fb_out);
 
     ++captureCurrentFrame;
 }

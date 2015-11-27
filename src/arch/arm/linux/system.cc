@@ -304,15 +304,15 @@ DumpStatsPCEvent::process(ThreadContext *tc)
     tc->getCpuPtr()->taskId(taskMap[pid]);
     tc->getCpuPtr()->setPid(pid);
 
-    std::ostream* taskFile = sys->taskFile;
+    OutputStream* taskFile = sys->taskFile;
 
     // Task file is read by cache occupancy plotting script or
     // Streamline conversion script.
-    ccprintf(*taskFile,
+    ccprintf(*(taskFile->stream()),
              "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
              curTick(), taskMap[pid], tc->cpuId(), (int) pid, (int) tgid,
              next_task_str);
-    taskFile->flush();
+    taskFile->stream()->flush();
 
     // Dump and reset statistics
     Stats::schedStatEvent(true, true, curTick(), 0);

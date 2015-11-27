@@ -740,11 +740,7 @@ initText(const string &filename, bool desc)
     static bool connected = false;
 
     if (!connected) {
-        ostream *os = simout.find(filename);
-        if (!os)
-            os = simout.create(filename);
-
-        text.open(*os);
+        text.open(*simout.findOrCreate(filename)->stream());
         text.descriptions = desc;
         connected = true;
     }

@@ -108,18 +108,14 @@ Terminal::DataEvent::process(int revent)
  */
 Terminal::Terminal(const Params *p)
     : SimObject(p), termDataAvail(NULL), listenEvent(NULL), dataEvent(NULL),
-      number(p->number), data_fd(-1), txbuf(16384), rxbuf(16384), outfile(NULL)
+      number(p->number), data_fd(-1), txbuf(16384), rxbuf(16384),
+      outfile(p->output ? simout.findOrCreate(p->name) : NULL)
 #if TRACING_ON == 1
       , linebuf(16384)
 #endif
 {
-    if (p->output) {
-        outfile = simout.find(p->name);
-        if (!outfile)
-            outfile = simout.create(p->name);
-
-        outfile->setf(ios::unitbuf);
-    }
+    if (outfile)
+        outfile->stream()->setf(ios::unitbuf);
 
     if (p->port)
         listen(p->port);
@@ -347,7 +343,7 @@ Terminal::out(char c)
         write(c);
 
     if (outfile)
-        outfile->write(&c, 1);
+        outfile->stream()->write(&c, 1);
 
     DPRINTF(TerminalVerbose, "out: \'%c\' %#02x\n",
             isprint(c) ? c : ' ', (int)c);

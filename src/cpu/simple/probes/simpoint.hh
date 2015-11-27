@@ -43,6 +43,7 @@
 
 #include <unordered_map>
 
+#include "base/output.hh"
 #include "cpu/simple_thread.hh"
 #include "params/SimPoint.hh"
 #include "sim/probe/probe.hh"
@@ -97,7 +98,7 @@ class SimPoint : public ProbeListenerObject
     /** Excess inst count from previous interval*/
     uint64_t intervalDrift;
     /** Pointer to SimPoint BBV output stream */
-    std::ostream *simpointStream;
+    OutputStream *simpointStream;
 
     /** Basic Block information */
     struct BBInfo {

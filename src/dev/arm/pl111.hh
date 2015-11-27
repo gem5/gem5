@@ -51,6 +51,7 @@
 
 #include "base/bitmap.hh"
 #include "base/framebuffer.hh"
+#include "base/output.hh"
 #include "dev/arm/amba_device.hh"
 #include "params/Pl111.hh"
 #include "sim/serialize.hh"
@@ -268,7 +269,7 @@ class Pl111: public AmbaDmaDevice
     Bitmap bmp;
 
     /** Picture of what the current frame buffer looks like */
-    std::ostream *pic;
+    OutputStream *pic;
 
     /** Frame buffer width - pixels per line */
     uint16_t width;
