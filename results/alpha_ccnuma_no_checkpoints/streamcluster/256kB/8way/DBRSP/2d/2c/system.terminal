@@ -136,6 +136,6 @@ PARSEC Benchmark Suite Version 2.1
 [HOOKS] Entering ROI
 read 4096 points
 [HOOKS] Leaving ROI
-[HOOKS] Total time spent in ROI: 0.400s
+[HOOKS] Total time spent in ROI: 0.401s
 [HOOKS] Terminating
 Done :D
