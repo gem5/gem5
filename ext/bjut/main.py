@@ -119,9 +119,6 @@ def generate_csv_ccnuma_experiments(benches):
 
 
 def generate_csv(experiment_cls, csv_file_name, experiments):
-    if not gen_csv_file:
-        return
-
     with open(csv_file_name, 'w') as csv_file:
         writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
@@ -133,9 +130,6 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
 
 
 def generate_plot(plot_file_name, benches, experiment_funcs, y_title, y_func):
-    if not gen_plot_file:
-        return
-
     bar_chart = pygal.Bar()
     bar_chart.y_title = y_title
     bar_chart.x_labels = map(str, benches)
@@ -144,7 +138,7 @@ def generate_plot(plot_file_name, benches, experiment_funcs, y_title, y_func):
         values = []
         for bench in benches:
             experiment = experiment_func(bench)
-            values.append(y_func(experiment))
+            values.append(y_func(bench, experiment))
         bar_chart.add(x_label, values)
 
     print 'Generating plot "' + plot_file_name + '"'
@@ -153,12 +147,6 @@ def generate_plot(plot_file_name, benches, experiment_funcs, y_title, y_func):
 
 # gen_mcpat_xml_file = True
 gen_mcpat_xml_file = False
-
-# gen_csv_file = True
-gen_csv_file = False
-
-gen_plot_file = True
-# gen_plot_file = False
 
 if __name__ == '__main__':
     generate_csv_multicore_experiments(
@@ -205,14 +193,14 @@ if __name__ == '__main__':
         ('2MB', lambda bench: multicore(bench, '2MB', 8, 'LRU', 4)),
         ('4MB', lambda bench: multicore(bench, '4MB', 8, 'LRU', 4)),
         ('8MB', lambda bench: multicore(bench, '8MB', 8, 'LRU', 4))
-    ], 'L2 Miss Rate', lambda experiment: experiment.l2_miss_rate())
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
 
     generate_plot('../../multicore_l2tags.png', benches, [
         ('LRU', lambda bench: multicore(bench, '256kB', 8, 'LRU', 4)),
         ('IbRDP', lambda bench: multicore(bench, '256kB', 8, 'IbRDP', 4)),
         ('RRIP', lambda bench: multicore(bench, '256kB', 8, 'RRIP', 4)),
         ('DBRSP', lambda bench: multicore(bench, '256kB', 8, 'DBRSP', 4))
-    ], 'L2 Miss Rate', lambda experiment: experiment.l2_miss_rate())
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
 
     generate_plot('../../multicore_topologies.png', benches, [
         ('1', lambda bench: multicore(bench, '256kB', 8, 'LRU', 1)),
@@ -220,7 +208,7 @@ if __name__ == '__main__':
         ('4', lambda bench: multicore(bench, '256kB', 8, 'LRU', 4)),
         ('8', lambda bench: multicore(bench, '256kB', 8, 'LRU', 8)),
         ('16', lambda bench: multicore(bench, '256kB', 8, 'LRU', 16)),
-    ], '# Cycles', lambda experiment: experiment.num_cycles())
+    ], 'Speedup', lambda bench, experiment: multicore(bench, '256kB', 8, 'LRU', 1).num_cycles() / float(experiment.num_cycles()))
 
     generate_plot('../../ccnuma_l2sizes.png', benches, [
         ('256kB', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
@@ -229,14 +217,14 @@ if __name__ == '__main__':
         ('2MB', lambda bench: ccnuma(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
         ('4MB', lambda bench: ccnuma(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
         ('8MB', lambda bench: ccnuma(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-    ], 'L2 Miss Rate', lambda experiment: experiment.l2_miss_rate())
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
 
     generate_plot('../../ccnuma_l2tags.png', benches, [
         ('LRU', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
         ('IbRDP', lambda bench: ccnuma(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')),
         ('RRIP', lambda bench: ccnuma(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')),
         ('DBRSP', lambda bench: ccnuma(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
-    ], 'L2 Miss Rate', lambda experiment: experiment.l2_miss_rate())
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
 
     generate_plot('../../ccnuma_topologies.png', benches, [
         ('[2, 1]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')),
@@ -246,4 +234,4 @@ if __name__ == '__main__':
         ('[4, 1]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')),
         ('[4, 2]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')),
         ('[4, 4]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')),
-    ], '# Cycles', lambda experiment: experiment.num_cycles())
+    ], 'Speedup', lambda bench, experiment: ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU').num_cycles() / float(experiment.num_cycles()))
