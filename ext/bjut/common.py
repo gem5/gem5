@@ -88,15 +88,15 @@ class Experiment:
 
     def sim_seconds(self):
         key = 'system.' + self.cpu_id(0) + '.sim_seconds'
-        return -1 if self.stats is None or key not in self.stats else str(int(self.stats[key]))
+        return -1 if self.stats is None or key not in self.stats else float(self.stats[key])
 
     def sim_ticks(self):
         key = 'sim_ticks'
-        return -1 if self.stats is None or key not in self.stats else str(int(self.stats[key]))
+        return -1 if self.stats is None or key not in self.stats else int(self.stats[key])
 
     def num_cycles(self):
         key = 'system.' + self.cpu_id(0) + '.numCycles'
-        return -1 if self.stats is None or key not in self.stats else str(int(self.stats[key]))
+        return -1 if self.stats is None or key not in self.stats else int(self.stats[key])
 
     def l2_miss_rate(self):
         if self.stats is None:

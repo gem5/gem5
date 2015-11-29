@@ -9,6 +9,7 @@
 from multicore import *
 from ccnuma import *
 import csv
+import pygal
 
 
 def multicore(bench, l2_size, l2_assoc, l2_tags, num_threads):
@@ -21,13 +22,13 @@ def multicore(bench, l2_size, l2_assoc, l2_tags, num_threads):
     return experiment
 
 
-def cc_numa(bench, l2_size, l2_assoc, l2_tags,
-            num_domains, num_cpus_per_domain,
-            numa_cache_size, numa_cache_assoc, numa_cache_tags):
+def ccnuma(bench, l2_size, l2_assoc, l2_tags,
+           num_domains, num_cpus_per_domain,
+           numa_cache_size, numa_cache_assoc, numa_cache_tags):
     work_dir = '../../results/alpha_ccnuma_no_checkpoints/' + bench + '/' + \
                l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
                str(num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
-               # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
+    # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
 
     experiment = CCNUMAExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags, gen_mcpat_xml_file=gen_mcpat_xml_file)
 
@@ -84,35 +85,35 @@ def generate_csv_ccnuma_experiments(benches):
     experiments_l2sizes = []
 
     for bench in benches:
-        experiments_l2sizes.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(cc_numa(bench, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(cc_numa(bench, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(cc_numa(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(cc_numa(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(cc_numa(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
 
     generate_csv(CCNUMAExperiment, '../../ccnuma_l2sizes.csv', experiments_l2sizes)
 
     experiments_l2tags = []
 
     for bench in benches:
-        experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(cc_numa(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
 
     generate_csv(CCNUMAExperiment, '../../ccnuma_l2tags.csv', experiments_l2tags)
 
     experiments_topologies = []
 
     for bench in benches:
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU'))
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU'))
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU'))
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU'))
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU'))
-        experiments_topologies.append(cc_numa(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU'))
 
     generate_csv(CCNUMAExperiment, '../../ccnuma_topologies.csv', experiments_topologies)
 
@@ -127,40 +128,110 @@ def generate_csv(experiment_cls, csv_file_name, experiments):
             print 'Generating CSV row for experiment under "' + experiment.dir + '"'
             writer.writerow(experiment.dump_row())
 
+
+def generate_plot(plot_file_name, benches, experiment_funcs, y_title, y_func):
+    bar_chart = pygal.Bar()
+    bar_chart.y_title = y_title
+    bar_chart.x_labels = map(str, benches)
+
+    for x_label, experiment_func in experiment_funcs:
+        values = []
+        for bench in benches:
+            experiment = experiment_func(bench)
+            values.append(y_func(bench, experiment))
+        bar_chart.add(x_label, values)
+
+    print 'Generating plot "' + plot_file_name + '"'
+    bar_chart.render_to_png(plot_file_name, dpi=300)
+
+
 # gen_mcpat_xml_file = True
 gen_mcpat_xml_file = False
 
-generate_csv_multicore_experiments(
-    [
-        'blackscholes',
-        'bodytrack',
-        'canneal',
-        'dedup',
-        'facesim',
-        'ferret',
-        'fluidanimate',
-        'freqmine',
-        'streamcluster',
-        'swaptions',
-        'vips',
-        'x264'
-    ]
-)
+if __name__ == '__main__':
+    generate_csv_multicore_experiments(
+        [
+            'blackscholes',
+            'bodytrack',
+            'canneal',
+            'dedup',
+            'facesim',
+            'ferret',
+            'fluidanimate',
+            'freqmine',
+            'streamcluster',
+            'swaptions',
+            'vips',
+            'x264'
+        ]
+    )
 
+    generate_csv_ccnuma_experiments(
+        [
+            'blackscholes',
+            'bodytrack',
+            'canneal',
+            'dedup',
+            'facesim',
+            'ferret',
+            'fluidanimate',
+            'freqmine',
+            'streamcluster',
+            'swaptions',
+            'vips',
+            'x264'
+        ]
+    )
 
-generate_csv_ccnuma_experiments(
-    [
-        'blackscholes',
-        'bodytrack',
-        'canneal',
-        'dedup',
-        'facesim',
-        'ferret',
-        'fluidanimate',
-        'freqmine',
-        'streamcluster',
-        'swaptions',
-        'vips',
-        'x264'
-    ]
-)
+    benches = ['blackscholes', 'bodytrack', 'canneal', 'dedup', 'facesim', 'ferret', 'fluidanimate', 'freqmine',
+          'streamcluster', 'swaptions', 'vips', 'x264']
+
+    generate_plot('../../multicore_l2sizes.png', benches, [
+        ('256kB', lambda bench: multicore(bench, '256kB', 8, 'LRU', 4)),
+        ('512kB', lambda bench: multicore(bench, '512kB', 8, 'LRU', 4)),
+        ('1MB', lambda bench: multicore(bench, '1MB', 8, 'LRU', 4)),
+        ('2MB', lambda bench: multicore(bench, '2MB', 8, 'LRU', 4)),
+        ('4MB', lambda bench: multicore(bench, '4MB', 8, 'LRU', 4)),
+        ('8MB', lambda bench: multicore(bench, '8MB', 8, 'LRU', 4))
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
+
+    generate_plot('../../multicore_l2tags.png', benches, [
+        ('LRU', lambda bench: multicore(bench, '256kB', 8, 'LRU', 4)),
+        ('IbRDP', lambda bench: multicore(bench, '256kB', 8, 'IbRDP', 4)),
+        ('RRIP', lambda bench: multicore(bench, '256kB', 8, 'RRIP', 4)),
+        ('DBRSP', lambda bench: multicore(bench, '256kB', 8, 'DBRSP', 4))
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
+
+    generate_plot('../../multicore_topologies.png', benches, [
+        ('1', lambda bench: multicore(bench, '256kB', 8, 'LRU', 1)),
+        ('2', lambda bench: multicore(bench, '256kB', 8, 'LRU', 2)),
+        ('4', lambda bench: multicore(bench, '256kB', 8, 'LRU', 4)),
+        ('8', lambda bench: multicore(bench, '256kB', 8, 'LRU', 8)),
+        ('16', lambda bench: multicore(bench, '256kB', 8, 'LRU', 16)),
+    ], 'Speedup', lambda bench, experiment: multicore(bench, '256kB', 8, 'LRU', 1).num_cycles() / float(experiment.num_cycles()))
+
+    generate_plot('../../ccnuma_l2sizes.png', benches, [
+        ('256kB', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('512kB', lambda bench: ccnuma(bench, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('1MB', lambda bench: ccnuma(bench, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('2MB', lambda bench: ccnuma(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('4MB', lambda bench: ccnuma(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('8MB', lambda bench: ccnuma(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
+
+    generate_plot('../../ccnuma_l2tags.png', benches, [
+        ('LRU', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('IbRDP', lambda bench: ccnuma(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')),
+        ('RRIP', lambda bench: ccnuma(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')),
+        ('DBRSP', lambda bench: ccnuma(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
+    ], 'L2 Miss Rate', lambda bench, experiment: experiment.l2_miss_rate())
+
+    generate_plot('../../ccnuma_topologies.png', benches, [
+        ('[2, 1]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')),
+        ('[2, 2]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')),
+        ('[2, 4]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU')),
+        ('[2, 8]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU')),
+        ('[4, 1]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')),
+        ('[4, 2]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')),
+        ('[4, 4]', lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')),
+    ], 'Speedup', lambda bench, experiment: ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU').num_cycles() / float(experiment.num_cycles()))
