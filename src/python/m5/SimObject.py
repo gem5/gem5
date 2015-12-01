@@ -1227,6 +1227,9 @@ class SimObject(object):
     def path(self):
         if not self._parent:
             return '<orphan %s>' % self.__class__
+        elif isinstance(self._parent, MetaSimObject):
+            return str(self.__class__)
+
         ppath = self._parent.path()
         if ppath == 'root':
             return self._name
