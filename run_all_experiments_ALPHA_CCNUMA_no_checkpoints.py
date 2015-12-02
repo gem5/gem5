@@ -9,11 +9,11 @@
 import os
 
 
-def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain,
-        numa_cache_size, numa_cache_assoc, numa_cache_tags):
+def run(bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain, numa_cache_size,
+        numa_cache_assoc, numa_cache_tags):
     num_threads = num_domains * num_cpus_per_domain
 
-    dir = 'results/alpha_ccnuma_no_checkpoints/' + bench + '/' + \
+    dir = 'results/alpha_ccnuma_no_checkpoints/' + bench + '/' + input_set + '/' + \
           l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
           str(num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
           # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
@@ -23,7 +23,7 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain,
 
     cmd_run = 'build/ALPHA_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/numa/ccnuma_fs.py --two-phase --cpu-type=timing --num-cpus=' \
               + str(num_threads) + ' --script=ext/parsec/2.1/run_scripts/' \
-              + bench + '_' + str(num_threads) + 'c_simsmall.rcS' \
+              + bench + '_' + str(num_threads) + 'c_' + input_set + '.rcS' \
               + ' --caches --l2cache --num-l2caches=1' \
               + ' --l1d_size=32kB --l1i_size=32kB --l2_size=' + l2_size + ' --l2_assoc=' + str(l2_assoc) + ' --l2_tags=' + l2_tags \
               + ' --num_domains=' + str(num_domains) + ' --num_cpus_per_domain=' + str(num_cpus_per_domain) \
@@ -33,35 +33,41 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain,
     os.system(cmd_run)
 
 
-def run_experiments(bench):
-    # run(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    # run(bench, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    # run(bench, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    # run(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    # run(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    # run(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    #
-    # run(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')
-    # run(bench, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU')
-    # run(bench, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU')
-    # run(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')
-    # run(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')
-    # run(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')
+def run_experiments(bench, input_set):
+    run(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
 
-    # run(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
-    # run(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')
-    run(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')
+
+    run(bench, input_set, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')
+    run(bench, input_set, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU')
 
 
-run_experiments('blackscholes')
-run_experiments('bodytrack')
-run_experiments('canneal')
-run_experiments('dedup')
-run_experiments('facesim')
-run_experiments('ferret')
-run_experiments('fluidanimate')
-run_experiments('freqmine')
-run_experiments('streamcluster')
-run_experiments('swaptions')
-run_experiments('vips')
-run_experiments('x264')
+# input_sets = ['simsmall', 'simmedium', 'simlarge']
+# input_sets = ['simsmall']
+input_sets = ['simmedium']
+# input_sets = ['simlarge']
+
+for input_set in input_sets:
+    run_experiments('blackscholes', input_set)
+    run_experiments('bodytrack', input_set)
+    run_experiments('canneal', input_set)
+    run_experiments('dedup', input_set)
+    run_experiments('facesim', input_set)
+    run_experiments('ferret', input_set)
+    run_experiments('fluidanimate', input_set)
+    run_experiments('freqmine', input_set)
+    run_experiments('streamcluster', input_set)
+    run_experiments('swaptions', input_set)
+    run_experiments('vips', input_set)
+    run_experiments('x264', input_set)

@@ -14,8 +14,8 @@ import pandas as pd
 import seaborn as sns
 
 
-def multicore(bench, l2_size, l2_assoc, l2_tags, num_threads):
-    work_dir = '../../results/alpha_no_checkpoints/' + bench + '/' + \
+def multicore(bench, input_set, l2_size, l2_assoc, l2_tags, num_threads):
+    work_dir = '../../results/alpha_no_checkpoints/' + bench + '/' + input_set + '/' + \
                l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
                str(num_threads) + 'c/'
 
@@ -24,10 +24,10 @@ def multicore(bench, l2_size, l2_assoc, l2_tags, num_threads):
     return experiment
 
 
-def ccnuma(bench, l2_size, l2_assoc, l2_tags,
+def ccnuma(bench, input_set, l2_size, l2_assoc, l2_tags,
            num_domains, num_cpus_per_domain,
            numa_cache_size, numa_cache_assoc, numa_cache_tags):
-    work_dir = '../../results/alpha_ccnuma_no_checkpoints/' + bench + '/' + \
+    work_dir = '../../results/alpha_ccnuma_no_checkpoints/' + bench + '/' + input_set + '/' + \
                l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
                str(num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
     # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
@@ -44,86 +44,86 @@ def ccnuma(bench, l2_size, l2_assoc, l2_tags,
     return experiment
 
 
-def generate_csv_multicore_experiments(benches):
+def generate_csv_multicore_experiments(benches, input_set):
     print 'Generating result CSV files for multicore experiments'
 
     experiments_l2sizes = []
 
     for bench in benches:
-        experiments_l2sizes.append(multicore(bench, '256kB', 8, 'LRU', 4))
-        experiments_l2sizes.append(multicore(bench, '512kB', 8, 'LRU', 4))
-        experiments_l2sizes.append(multicore(bench, '1MB', 8, 'LRU', 4))
-        experiments_l2sizes.append(multicore(bench, '2MB', 8, 'LRU', 4))
-        experiments_l2sizes.append(multicore(bench, '4MB', 8, 'LRU', 4))
-        experiments_l2sizes.append(multicore(bench, '8MB', 8, 'LRU', 4))
+        experiments_l2sizes.append(multicore(bench, input_set, '256kB', 8, 'LRU', 4))
+        experiments_l2sizes.append(multicore(bench, input_set, '512kB', 8, 'LRU', 4))
+        experiments_l2sizes.append(multicore(bench, input_set, '1MB', 8, 'LRU', 4))
+        experiments_l2sizes.append(multicore(bench, input_set, '2MB', 8, 'LRU', 4))
+        experiments_l2sizes.append(multicore(bench, input_set, '4MB', 8, 'LRU', 4))
+        experiments_l2sizes.append(multicore(bench, input_set, '8MB', 8, 'LRU', 4))
 
-    generate_csv(MulticoreExperiment, '../../multicore_l2sizes.csv', experiments_l2sizes,
-                 lambda bench: multicore(bench, '256kB', 8, 'LRU', 4))
+    generate_csv(MulticoreExperiment, '../../results/multicore_l2sizes_' + input_set + '.csv', experiments_l2sizes,
+                 lambda bench: multicore(bench, input_set, '256kB', 8, 'LRU', 4))
 
     experiments_l2tags = []
 
     for bench in benches:
-        experiments_l2tags.append(multicore(bench, '256kB', 8, 'LRU', 4))
-        experiments_l2tags.append(multicore(bench, '256kB', 8, 'IbRDP', 4))
-        experiments_l2tags.append(multicore(bench, '256kB', 8, 'RRIP', 4))
-        experiments_l2tags.append(multicore(bench, '256kB', 8, 'DBRSP', 4))
+        experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'LRU', 4))
+        experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'IbRDP', 4))
+        experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'RRIP', 4))
+        experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'DBRSP', 4))
 
-    generate_csv(MulticoreExperiment, '../../multicore_l2tags.csv', experiments_l2tags,
-                 lambda bench: multicore(bench, '256kB', 8, 'LRU', 4))
+    generate_csv(MulticoreExperiment, '../../results/multicore_l2tags_' + input_set + '.csv', experiments_l2tags,
+                 lambda bench: multicore(bench, input_set, '256kB', 8, 'LRU', 4))
 
     experiments_topologies = []
 
     for bench in benches:
-        experiments_topologies.append(multicore(bench, '256kB', 8, 'LRU', 1))
-        experiments_topologies.append(multicore(bench, '256kB', 8, 'LRU', 2))
-        experiments_topologies.append(multicore(bench, '256kB', 8, 'LRU', 4))
-        experiments_topologies.append(multicore(bench, '256kB', 8, 'LRU', 8))
-        experiments_topologies.append(multicore(bench, '256kB', 8, 'LRU', 16))
+        experiments_topologies.append(multicore(bench, input_set, '256kB', 8, 'LRU', 1))
+        experiments_topologies.append(multicore(bench, input_set, '256kB', 8, 'LRU', 2))
+        experiments_topologies.append(multicore(bench, input_set, '256kB', 8, 'LRU', 4))
+        experiments_topologies.append(multicore(bench, input_set, '256kB', 8, 'LRU', 8))
+        experiments_topologies.append(multicore(bench, input_set, '256kB', 8, 'LRU', 16))
 
-    generate_csv(MulticoreExperiment, '../../multicore_topologies.csv', experiments_topologies,
-                 lambda bench: multicore(bench, '256kB', 8, 'LRU', 1))
+    generate_csv(MulticoreExperiment, '../../results/multicore_topologies_' + input_set + '.csv', experiments_topologies,
+                 lambda bench: multicore(bench, input_set, '256kB', 8, 'LRU', 1))
 
 
-def generate_csv_ccnuma_experiments(benches):
+def generate_csv_ccnuma_experiments(benches, input_set):
     print 'Generating result CSV files for CC-NUMA experiments'
 
     experiments_l2sizes = []
 
     for bench in benches:
-        experiments_l2sizes.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(ccnuma(bench, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(ccnuma(bench, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(ccnuma(bench, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(ccnuma(bench, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2sizes.append(ccnuma(bench, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, input_set, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, input_set, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, input_set, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, input_set, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2sizes.append(ccnuma(bench, input_set, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
 
-    generate_csv(CCNUMAExperiment, '../../ccnuma_l2sizes.csv', experiments_l2sizes,
-                 lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+    generate_csv(CCNUMAExperiment, '../../results/ccnuma_l2sizes_' + input_set + '.csv', experiments_l2sizes,
+                 lambda bench: ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
 
     experiments_l2tags = []
 
     for bench in benches:
-        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(ccnuma(bench, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
+        experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
 
-    generate_csv(CCNUMAExperiment, '../../ccnuma_l2tags.csv', experiments_l2tags,
-                 lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+    generate_csv(CCNUMAExperiment, '../../results/ccnuma_l2tags_' + input_set + '.csv', experiments_l2tags,
+                 lambda bench: ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
 
     experiments_topologies = []
 
     for bench in benches:
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU'))
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU'))
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU'))
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU'))
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU'))
-        experiments_topologies.append(ccnuma(bench, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU'))
+        experiments_topologies.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU'))
 
-    generate_csv(CCNUMAExperiment, '../../ccnuma_topologies.csv', experiments_topologies,
-                 lambda bench: ccnuma(bench, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU'))
+    generate_csv(CCNUMAExperiment, '../../results/ccnuma_topologies_' + input_set + '.csv', experiments_topologies,
+                 lambda bench: ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU'))
 
 
 def generate_csv(experiment_cls, csv_file_name, experiments, baseline_experiment_func):
@@ -171,41 +171,47 @@ if __name__ == '__main__':
     benches = ['blackscholes', 'bodytrack', 'canneal', 'dedup', 'facesim', 'ferret', 'fluidanimate', 'freqmine',
           'streamcluster', 'swaptions', 'vips', 'x264']
 
-    generate_csv_multicore_experiments(benches)
-    generate_csv_ccnuma_experiments(benches)
+    # input_sets = ['simsmall', 'simmedium', 'simlarge']
+    input_sets = ['simsmall']
+    # input_sets = ['simmedium']
+    # input_sets = ['simlarge']
 
-    generate_plot('../../multicore_l2sizes.csv', '../../multicore_l2sizes-l2_miss_rate.pdf',
-                  'bench', 'l2_miss_rate', 'l2_size', 'L2 Miss Rate')
+    for input_set in input_sets:
+        generate_csv_multicore_experiments(benches, input_set)
+        generate_csv_ccnuma_experiments(benches, input_set)
 
-    generate_plot('../../multicore_l2sizes.csv', '../../multicore_l2sizes-l2_runtime_dynamic_energy.pdf',
-                  'bench', 'l2_runtime_dynamic_energy', 'l2_size', 'L2 Runtime Dynamic Energy (J)')
+        generate_plot('../../results/multicore_l2sizes_' + input_set + '.csv', '../../results/multicore_l2sizes-l2_miss_rate_' + input_set + '.pdf',
+                      'bench', 'l2_miss_rate', 'l2_size', 'L2 Miss Rate')
 
-    generate_plot('../../multicore_l2tags.csv', '../../multicore_l2tags-l2_miss_rate.pdf',
-                  'bench', 'l2_miss_rate', 'l2_tags', 'L2 Miss Rate')
+        generate_plot('../../results/multicore_l2sizes_' + input_set + '.csv', '../../results/multicore_l2sizes-l2_runtime_dynamic_energy_' + input_set + '.pdf',
+                      'bench', 'l2_runtime_dynamic_energy', 'l2_size', 'L2 Runtime Dynamic Energy (J)')
 
-    generate_plot('../../multicore_l2tags.csv', '../../multicore_l2tags-l2_runtime_dynamic_energy.pdf',
-                  'bench', 'l2_runtime_dynamic_energy', 'l2_tags', 'L2 Runtime Dynamic Energy (J)')
+        generate_plot('../../results/multicore_l2tags_' + input_set + '.csv', '../../results/multicore_l2tags-l2_miss_rate_' + input_set + '.pdf',
+                      'bench', 'l2_miss_rate', 'l2_tags', 'L2 Miss Rate')
 
-    generate_plot('../../multicore_topologies.csv', '../../multicore_topologies-speedup.pdf',
-                  'bench', 'speedup', 'num_threads', 'Speedup')
+        generate_plot('../../results/multicore_l2tags_' + input_set + '.csv', '../../results/multicore_l2tags-l2_runtime_dynamic_energy_' + input_set + '.pdf',
+                      'bench', 'l2_runtime_dynamic_energy', 'l2_tags', 'L2 Runtime Dynamic Energy (J)')
 
-    generate_plot('../../multicore_topologies.csv', '../../multicore_topologies-system_runtime_dynamic_energy.pdf',
-                  'bench', 'system_runtime_dynamic_energy', 'num_threads', 'System Runtime Dynamic Energy (J)')
+        generate_plot('../../results/multicore_topologies_' + input_set + '.csv', '../../results/multicore_topologies-speedup_' + input_set + '.pdf',
+                      'bench', 'speedup', 'num_threads', 'Speedup')
 
-    generate_plot('../../ccnuma_l2sizes.csv', '../../ccnuma_l2sizes-l2_miss_rate.pdf',
-                  'bench', 'l2_miss_rate', 'l2_size', 'L2 Miss Rate')
+        generate_plot('../../results/multicore_topologies_' + input_set + '.csv', '../../results/multicore_topologies-system_runtime_dynamic_energy_' + input_set + '.pdf',
+                      'bench', 'system_runtime_dynamic_energy', 'num_threads', 'System Runtime Dynamic Energy (J)')
 
-    generate_plot('../../ccnuma_l2sizes.csv', '../../ccnuma_l2sizes-l2_runtime_dynamic_energy.pdf',
-                  'bench', 'l2_runtime_dynamic_energy', 'l2_size', 'L2 Runtime Dynamic Energy (J)')
+        generate_plot('../../results/ccnuma_l2sizes_' + input_set + '.csv', '../../results/ccnuma_l2sizes-l2_miss_rate_' + input_set + '.pdf',
+                      'bench', 'l2_miss_rate', 'l2_size', 'L2 Miss Rate')
 
-    generate_plot('../../ccnuma_l2tags.csv', '../../ccnuma_l2tags-l2_miss_rate.pdf',
-                  'bench', 'l2_miss_rate', 'l2_tags', 'L2 Miss Rate')
+        generate_plot('../../results/ccnuma_l2sizes_' + input_set + '.csv', '../../results/ccnuma_l2sizes-l2_runtime_dynamic_energy_' + input_set + '.pdf',
+                      'bench', 'l2_runtime_dynamic_energy', 'l2_size', 'L2 Runtime Dynamic Energy (J)')
 
-    generate_plot('../../ccnuma_l2tags.csv', '../../ccnuma_l2tags-l2_runtime_dynamic_energy.pdf',
-                  'bench', 'l2_runtime_dynamic_energy', 'l2_tags', 'L2 Runtime Dynamic Energy (J)')
+        generate_plot('../../results/ccnuma_l2tags_' + input_set + '.csv', '../../results/ccnuma_l2tags-l2_miss_rate_' + input_set + '.pdf',
+                      'bench', 'l2_miss_rate', 'l2_tags', 'L2 Miss Rate')
 
-    generate_plot('../../ccnuma_topologies.csv', '../../ccnuma_topologies-speedup.pdf',
-                  'bench', 'speedup', 'topology', 'Speedup')
+        generate_plot('../../results/ccnuma_l2tags_' + input_set + '.csv', '../../results/ccnuma_l2tags-l2_runtime_dynamic_energy_' + input_set + '.pdf',
+                      'bench', 'l2_runtime_dynamic_energy', 'l2_tags', 'L2 Runtime Dynamic Energy (J)')
 
-    generate_plot('../../ccnuma_topologies.csv', '../../ccnuma_topologies-system_runtime_dynamic_energy.pdf',
-                  'bench', 'system_runtime_dynamic_energy', 'topology', 'System Runtime Dynamic Energy (J)')
+        generate_plot('../../results/ccnuma_topologies_' + input_set + '.csv', '../../results/ccnuma_topologies-speedup_' + input_set + '.pdf',
+                      'bench', 'speedup', 'topology', 'Speedup')
+
+        generate_plot('../../results/ccnuma_topologies_' + input_set + '.csv', '../../results/ccnuma_topologies-system_runtime_dynamic_energy_' + input_set + '.pdf',
+                      'bench', 'system_runtime_dynamic_energy', 'topology', 'System Runtime Dynamic Energy (J)')
