@@ -26,9 +26,11 @@ class CCNUMAExperiment(McPATEnabledExperiment):
 
             'num_domains',
             'num_cpus_per_domain',
+            'topology',
 
             'sim_ticks',
             'num_cycles',
+            'speedup',
 
             'system_subthreshold_leakage_power',
             'system_gate_leakage_power',
@@ -51,7 +53,7 @@ class CCNUMAExperiment(McPATEnabledExperiment):
             'system_bus_snoops'
         ]
 
-    def dump_row(self):
+    def dump_row(self, baseline_experiment):
         return [
             self.bench,
 
@@ -61,9 +63,11 @@ class CCNUMAExperiment(McPATEnabledExperiment):
 
             self.num_domains,
             self.num_cpus_per_domain,
+            '[' + str(self.num_domains) + ',' + str(self.num_cpus_per_domain) + ']',
 
             self.sim_ticks(),
             self.num_cycles(),
+            baseline_experiment.num_cycles() / float(self.num_cycles()),
 
             self.system_subthreshold_leakage_power(),
             self.system_gate_leakage_power(),
