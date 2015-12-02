@@ -4,11 +4,11 @@ sim_seconds                                  5.152314                       # Nu
 sim_ticks                                5152313559000                       # Number of ticks simulated
 final_tick                               5152313559000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 122296                       # Simulator instruction rate (inst/s)
-host_op_rate                                   241737                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1548372689                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 812680                       # Number of bytes of host memory used
-host_seconds                                  3327.57                       # Real time elapsed on the host
+host_inst_rate                                 120887                       # Simulator instruction rate (inst/s)
+host_op_rate                                   238950                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1530523119                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 767492                       # Number of bytes of host memory used
+host_seconds                                  3366.37                       # Real time elapsed on the host
 sim_insts                                   406949634                       # Number of instructions simulated
 sim_ops                                     804396566                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -512,8 +512,8 @@ system.cpu.iew.iewIQFullEvents                 383814                       # Nu
 system.cpu.iew.iewLSQFullEvents              14427518                       # Number of times the LSQ has become full, causing a stall
 system.cpu.iew.memOrderViolationEvents          13954                       # Number of memory order violations
 system.cpu.iew.predictedTakenIncorrect         477334                       # Number of branches that were predicted taken incorrectly
-system.cpu.iew.predictedNotTakenIncorrect       506559                       # Number of branches that were predicted not taken incorrectly
-system.cpu.iew.branchMispredicts               983893                       # Number of branch mispredicts detected at execute
+system.cpu.iew.predictedNotTakenIncorrect       506558                       # Number of branches that were predicted not taken incorrectly
+system.cpu.iew.branchMispredicts               983892                       # Number of branch mispredicts detected at execute
 system.cpu.iew.iewExecutedInsts             819301527                       # Number of executed instructions
 system.cpu.iew.iewExecLoadInsts              17680087                       # Number of load instructions executed
 system.cpu.iew.iewExecSquashedInsts           1386795                       # Number of squashed instructions skipped in execute
