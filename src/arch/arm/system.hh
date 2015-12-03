@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 #ifndef __ARCH_ARM_SYSTEM_HH__
 #define __ARCH_ARM_SYSTEM_HH__
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -63,6 +64,9 @@ class ArmSystem : public System
      * functionality
      */
     Linux::DebugPrintkEvent *debugPrintkEvent;
+
+    /** Bootloaders */
+    std::vector<std::unique_ptr<ObjectFile>> bootLoaders;
 
     /**
      * Pointer to the bootloader object
@@ -111,6 +115,16 @@ class ArmSystem : public System
      * True if ASID is 16 bits in AArch64 (ARMv8)
      */
     const bool _haveLargeAsid64;
+
+  protected:
+    /**
+     * Get a boot loader that matches the kernel.
+     *
+     * @param obj Kernel binary
+     * @return Pointer to boot loader ObjectFile or nullptr if there
+     *         is no matching boot loader.
+     */
+    ObjectFile *getBootLoader(ObjectFile *const obj);
 
   public:
     typedef ArmSystemParams Params;

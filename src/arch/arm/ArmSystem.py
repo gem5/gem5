@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -50,7 +50,10 @@ class ArmSystem(System):
     cxx_header = "arch/arm/system.hh"
     load_addr_mask = 0xffffffff
     multi_proc = Param.Bool(True, "Multiprocessor system?")
-    boot_loader = Param.String("", "File that contains the boot loader code if any")
+    boot_loader = VectorParam.String([],
+        "File that contains the boot loader code. Zero or more files may be "
+        "specified. The first boot loader that matches the kernel's "
+        "architecture will be used.")
     gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")
     flags_addr = Param.Addr(0, "Address of the flags register for MP booting")
     have_security = Param.Bool(False,

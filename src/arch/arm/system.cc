@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,7 +54,9 @@ using namespace std;
 using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)
-    : System(p), bootldr(NULL), _haveSecurity(p->have_security),
+    : System(p),
+      bootLoaders(), bootldr(nullptr),
+      _haveSecurity(p->have_security),
       _haveLPAE(p->have_lpae),
       _haveVirtualization(p->have_virtualization),
       _genericTimer(nullptr),
@@ -72,12 +74,27 @@ ArmSystem::ArmSystem(Params *p)
         fatal("Invalid physical address range (%d)\n", _physAddrRange64);
     }
 
-    if (p->boot_loader != "") {
-        bootldr = createObjectFile(p->boot_loader);
+    bootLoaders.reserve(p->boot_loader.size());
+    for (const auto &bl : p->boot_loader) {
+        std::unique_ptr<ObjectFile> obj;
+        obj.reset(createObjectFile(bl));
 
-        if (!bootldr)
-            fatal("Could not read bootloader: %s\n", p->boot_loader);
+        fatal_if(!obj, "Could not read bootloader: %s\n", bl);
+        bootLoaders.emplace_back(std::move(obj));
+    }
 
+    if (kernel) {
+        bootldr = getBootLoader(kernel);
+    } else if (!bootLoaders.empty()) {
+        // No kernel specified, default to the first boot loader
+        bootldr = bootLoaders[0].get();
+    }
+
+    if (!bootLoaders.empty() && !bootldr)
+        fatal("Can't find a matching boot loader / kernel combination!");
+
+    if (bootldr) {
+        bootldr->loadGlobalSymbols(debugSymbolTable);
         if ((bootldr->getArch() == ObjectFile::Arm64) && !_highestELIs64) {
             warn("Highest ARM exception-level set to AArch32 but bootloader "
                   "is for AArch64. Assuming you wanted these to match.\n");
@@ -87,10 +104,8 @@ ArmSystem::ArmSystem(Params *p)
                   "is for AArch32. Assuming you wanted these to match.\n");
             _highestELIs64 = false;
         }
-
-        bootldr->loadGlobalSymbols(debugSymbolTable);
-
     }
+
     debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
 }
 
@@ -166,6 +181,17 @@ ArmSystem::~ArmSystem()
 {
     if (debugPrintkEvent)
         delete debugPrintkEvent;
+}
+
+ObjectFile *
+ArmSystem::getBootLoader(ObjectFile *const obj)
+{
+    for (auto &bl : bootLoaders) {
+        if (bl->getArch() == obj->getArch())
+            return bl.get();
+    }
+
+    return nullptr;
 }
 
 bool
