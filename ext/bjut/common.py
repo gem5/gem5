@@ -134,5 +134,5 @@ class Experiment:
     def dump_head_row(cls):
         pass
 
-    def dump_row(self):
+    def dump_row(self, baseline_experiment):
         pass

@@ -23,6 +23,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
 
             'sim_ticks',
             'num_cycles',
+            'speedup',
 
             'system_subthreshold_leakage_power',
             'system_gate_leakage_power',
@@ -40,7 +41,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
             'l2_replacements'
         ]
 
-    def dump_row(self):
+    def dump_row(self, baseline_experiment):
         return [
             self.bench,
 
@@ -52,6 +53,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
 
             self.sim_ticks(),
             self.num_cycles(),
+            baseline_experiment.num_cycles() / float(self.num_cycles()),
 
             self.system_subthreshold_leakage_power(),
             self.system_gate_leakage_power(),

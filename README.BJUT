@@ -4,8 +4,8 @@ Instructions for downloading, compiling and running gem5 (BJUT/NUMA version).
 sudo apt-get update; sudo apt-get dist-upgrade
 
 2. Install the following essential packages:
-sudo apt-get install git mercurial scons build-essential swig python-dev python-pip python-lxml python-pydot zlib1g-dev libgoogle-perftools-dev protobuf-compiler libprotobuf-dev m4
-pip install objectpath yattag pytz pygal cairosvg tinycss cssselect
+sudo apt-get install git mercurial scons build-essential swig libfreetype6-dev python-dev python-pip python-lxml python-pydot zlib1g-dev libgoogle-perftools-dev protobuf-compiler libprotobuf-dev m4
+pip install objectpath yattag pytz pygal cairosvg tinycss cssselect seaborn matplotlib pandas
 
 3. Checkout gem5:
 git clone https://github.com/mcai/gem5
