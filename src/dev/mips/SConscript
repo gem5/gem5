@@ -39,4 +39,4 @@ if env['TARGET_ISA'] == 'mips':
     Source('malta.cc')
     Source('malta_cchip.cc')
     Source('malta_io.cc')
-    Source('malta_pchip.cc')
+

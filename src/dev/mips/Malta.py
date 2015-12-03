@@ -31,7 +31,6 @@ from m5.proxy import *
 
 from BadDevice import BadDevice
 from Device import BasicPioDevice
-from Pci import PciConfigAll
 from Platform import Platform
 from Uart import Uart8250
 
@@ -49,11 +48,6 @@ class MaltaIO(BasicPioDevice):
             "The RTC should interpret the year as a BCD value")
     malta = Param.Malta(Parent.any, "Malta")
     frequency = Param.Frequency('1024Hz', "frequency of interrupts")
-
-class MaltaPChip(BasicPioDevice):
-    type = 'MaltaPChip'
-    cxx_header = "dev/mips/malta_pchip.hh"
-    malta = Param.Malta(Parent.any, "Malta")
 
 class Malta(Platform):
     type = 'Malta'

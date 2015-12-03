@@ -43,7 +43,6 @@
 
 class IdeController;
 class MaltaCChip;
-class MaltaPChip;
 class MaltaIO;
 class System;
 
@@ -71,12 +70,6 @@ class Malta : public Platform
      * all the interrupt mask and status registers
      */
     MaltaCChip *cchip;
-
-    /** Pointer to the Malta PChip.
-     * The pchip is the interface to the PCI bus, in our case
-     * it does not have to do much.
-     */
-    MaltaPChip *pchip;
 
     int intr_sum_type[Malta::Max_CPUs];
     int ipi_pending[Malta::Max_CPUs];
