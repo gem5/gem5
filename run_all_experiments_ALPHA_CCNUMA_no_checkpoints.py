@@ -7,6 +7,7 @@
 #
 
 import os
+import multiprocessing as mp
 
 
 def run(bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain, numa_cache_size,
@@ -33,41 +34,63 @@ def run(bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_
     os.system(cmd_run)
 
 
-def run_experiments(bench, input_set):
-    run(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+def run_as_task(task):
+    bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain, numa_cache_size, numa_cache_assoc, numa_cache_tags = task
+    run(bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain, numa_cache_size, numa_cache_assoc, numa_cache_tags)
 
-    run(bench, input_set, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')
+tasks = []
 
-    run(bench, input_set, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')
-    run(bench, input_set, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU')
 
+def run_experiments():
+    num_processes = mp.cpu_count()
+    pool = mp.Pool(num_processes)
+    pool.map(run_as_task, tasks)
+
+    pool.close()
+    pool.join()
+
+
+def add_task(bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain, numa_cache_size, numa_cache_assoc, numa_cache_tags):
+    task = (bench, input_set, l2_size, l2_assoc, l2_tags, num_domains, num_cpus_per_domain, numa_cache_size, numa_cache_assoc, numa_cache_tags)
+    tasks.append(task)
 
 # input_sets = ['simsmall', 'simmedium', 'simlarge']
 # input_sets = ['simsmall']
-input_sets = ['simmedium']
-# input_sets = ['simlarge']
+# input_sets = ['simmedium']
+input_sets = ['simlarge']
+
+
+def add_tasks(bench, input_set):
+    add_task(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '4MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '8MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+
+    add_task(bench, input_set, '256kB', 8, 'LRU', 2, 1, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'LRU', 2, 4, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'LRU', 2, 8, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'LRU', 4, 1, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'LRU', 4, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'LRU', 4, 4, '1kB', 8, 'LRU')
+
+    add_task(bench, input_set, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU')
+    add_task(bench, input_set, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU')
 
 for input_set in input_sets:
-    run_experiments('blackscholes', input_set)
-    run_experiments('bodytrack', input_set)
-    run_experiments('canneal', input_set)
-    run_experiments('dedup', input_set)
-    run_experiments('facesim', input_set)
-    run_experiments('ferret', input_set)
-    run_experiments('fluidanimate', input_set)
-    run_experiments('freqmine', input_set)
-    run_experiments('streamcluster', input_set)
-    run_experiments('swaptions', input_set)
-    run_experiments('vips', input_set)
-    run_experiments('x264', input_set)
+    add_tasks('blackscholes', input_set)
+    add_tasks('bodytrack', input_set)
+    add_tasks('canneal', input_set)
+    add_tasks('dedup', input_set)
+    add_tasks('facesim', input_set)
+    add_tasks('ferret', input_set)
+    add_tasks('fluidanimate', input_set)
+    add_tasks('freqmine', input_set)
+    add_tasks('streamcluster', input_set)
+    add_tasks('swaptions', input_set)
+    add_tasks('vips', input_set)
+    add_tasks('x264', input_set)
+
+run_experiments()
