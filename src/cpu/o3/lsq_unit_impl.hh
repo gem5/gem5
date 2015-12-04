@@ -143,7 +143,8 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
-      isStoreBlocked(false), storeInFlight(false), hasPendingPkt(false)
+      isStoreBlocked(false), storeInFlight(false), hasPendingPkt(false),
+      pendingPkt(nullptr)
 {
 }
 
