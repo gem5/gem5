@@ -1,6 +1,15 @@
 /*
- * Copyright (c) 2008 The Hewlett-Packard Development Company
- * All rights reserved.
+ * Copyright (c) 2015 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,44 +34,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Andreas Sandberg
  */
 
-#ifndef __BASE_ATOMICIO_HH__
-#define __BASE_ATOMICIO_HH__
+#include "sim/backtrace.hh"
 
+#include <execinfo.h>
 #include <unistd.h>
 
-// These functions keep reading/writing, if possible, until all data
-// has been transferred.  Basically, try again when there's no error,
-// but there is data left also retry on EINTR.
-// This function blocks until it is done.
+#include "base/atomicio.hh"
 
-ssize_t atomic_read(int fd, void *s, size_t n);
-ssize_t atomic_write(int fd, const void *s, size_t n);
-
-/**
- * Statically allocate a string and write it to a file descriptor.
- *
- * @warning The return value will from atomic_write will be ignored
- * which means that errors will be ignored. This is normally fine as
- * this macro is intended to be used in fatal signal handlers where
- * error handling might not be feasible.
- */
-#define STATIC_MSG(fd, m)                                       \
+#define SAFE_MSG(m)                                             \
     do {                                                        \
         static const char msg[] = m;                            \
-        atomic_write(fd, msg, sizeof(msg) - 1);                 \
+        atomic_write(STDERR_FILENO, msg, sizeof(msg) - 1);      \
     } while(0)
 
-/**
- * Statically allocate a string and write it to STDERR.
- *
- * @warning The return value will from atomic_write will be ignored
- * which means that errors will be ignored. This is normally fine as
- * this macro is intended to be used in fatal signal handlers where
- * error handling might not be feasible.
- */
-#define STATIC_ERR(m) STATIC_MSG(STDERR_FILENO, m)
+void
+print_backtrace()
+{
+    void *buffer[32];
+    int size;
 
-#endif // __BASE_ATOMICIO_HH__
+    size = backtrace(buffer, sizeof(buffer) / sizeof(*buffer));
+
+    STATIC_ERR("--- BEGIN LIBC BACKTRACE ---\n");
+    backtrace_symbols_fd(buffer, size, STDERR_FILENO);
+    if (size == sizeof(buffer))
+        STATIC_ERR("Warning: Backtrace may have been truncated.\n");
+    STATIC_ERR("--- END LIBC BACKTRACE ---\n");
+}

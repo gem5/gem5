@@ -41,6 +41,7 @@ SimObject('SubSystem.py')
 
 Source('arguments.cc')
 Source('async.cc')
+Source('backtrace_%s.cc' % env['BACKTRACE_IMPL'])
 Source('core.cc')
 Source('tags.cc')
 Source('cxx_config.cc')

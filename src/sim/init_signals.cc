@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,17 +41,66 @@
  * Authors: Nathan Binkert
  */
 
+#include "sim/init_signals.hh"
+
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <csignal>
 #include <iostream>
 #include <string>
 
+#include "base/atomicio.hh"
 #include "base/cprintf.hh"
 #include "sim/async.hh"
+#include "sim/backtrace.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
-#include "sim/init_signals.hh"
 
 using namespace std;
+
+// Use an separate stack for fatal signal handlers
+static uint8_t fatalSigStack[2 * SIGSTKSZ];
+
+static bool
+setupAltStack()
+{
+    stack_t stack;
+    stack.ss_sp = fatalSigStack;
+    stack.ss_size = sizeof(fatalSigStack);
+    stack.ss_flags = 0;
+
+    return sigaltstack(&stack, NULL) == 0;
+}
+
+static void
+installSignalHandler(int signal, void (*handler)(int sigtype),
+                     int flags = SA_RESTART)
+{
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = handler;
+    sa.sa_flags = flags;
+
+    if (sigaction(signal, &sa, NULL) == -1)
+        panic("Failed to setup handler for signal %i\n", signal);
+}
+
+static void
+raiseFatalSignal(int signo)
+{
+    // The signal handler should have been reset and unmasked (it was
+    // registered with SA_RESETHAND | SA_NODEFER), just raise the
+    // signal again to invoke the default handler.
+    pthread_kill(pthread_self(), signo);
+
+    // Something is really wrong if the process is alive at this
+    // point, manually try to exit it.
+    STATIC_ERR("Failed to execute default signal handler!\n");
+    _exit(127);
+}
 
 /// Stats signal handler.
 void
@@ -87,7 +136,25 @@ exitNowHandler(int sigtype)
 void
 abortHandler(int sigtype)
 {
-    ccprintf(cerr, "Program aborted at tick %llu\n", curTick());
+    const EventQueue *const eq(curEventQueue());
+    if (eq) {
+        ccprintf(cerr, "Program aborted at tick %llu\n", eq->getCurTick());
+    } else {
+        STATIC_ERR("Program aborted\n\n");
+    }
+
+    print_backtrace();
+    raiseFatalSignal(sigtype);
+}
+
+/// Segmentation fault signal handler.
+static void
+segvHandler(int sigtype)
+{
+    STATIC_ERR("gem5 has encountered a segmentation fault!\n\n");
+
+    print_backtrace();
+    raiseFatalSignal(SIGSEGV);
 }
 
 // Handle SIGIO
@@ -98,20 +165,6 @@ ioHandler(int sigtype)
     async_io = true;
     /* Wake up some event queue to handle event */
     getEventQueue(0)->wakeup();
-}
-
-static void
-installSignalHandler(int signal, void (*handler)(int sigtype))
-{
-    struct sigaction sa;
-
-    memset(&sa, 0, sizeof(sa));
-    sigemptyset(&sa.sa_mask);
-    sa.sa_handler = handler;
-    sa.sa_flags = SA_RESTART;
-
-    if (sigaction(signal, &sa, NULL) == -1)
-        panic("Failed to setup handler for signal %i\n", signal);
 }
 
 /*
@@ -137,8 +190,19 @@ initSignals()
     // Exit cleanly on Interrupt (Ctrl-C)
     installSignalHandler(SIGINT, exitNowHandler);
 
-    // Print out cycle number on abort
-    installSignalHandler(SIGABRT, abortHandler);
+    // Print the current cycle number and a backtrace on abort. Make
+    // sure the signal is unmasked and the handler reset when a signal
+    // is delivered to be able to invoke the default handler.
+    installSignalHandler(SIGABRT, abortHandler, SA_RESETHAND | SA_NODEFER);
+
+    // Setup a SIGSEGV handler with a private stack
+    if (setupAltStack()) {
+        installSignalHandler(SIGSEGV, segvHandler,
+                             SA_RESETHAND | SA_NODEFER | SA_ONSTACK);
+    } else {
+        warn("Failed to setup stack for SIGSEGV handler, "
+             "using default signal handler.\n");
+    }
 
     // Install a SIGIO handler to handle asynchronous file IO. See the
     // PollQueue class.

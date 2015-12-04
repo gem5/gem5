@@ -983,6 +983,21 @@ if not GetOption('without_tcmalloc'):
               "installing tcmalloc (libgoogle-perftools-dev package "\
               "on Ubuntu or RedHat)." + termcap.Normal
 
+
+# Detect back trace implementations. The last implementation in the
+# list will be used by default.
+backtrace_impls = [ "none" ]
+
+if conf.CheckLibWithHeader(None, 'execinfo.h', 'C',
+                           'backtrace_symbols_fd((void*)0, 0, 0);'):
+    backtrace_impls.append("glibc")
+
+if backtrace_impls[-1] == "none":
+    default_backtrace_impl = "none"
+    print termcap.Yellow + termcap.Bold + \
+        "No suitable back trace implementation found." + \
+        termcap.Normal
+
 if not have_posix_clock:
     print "Can't find library for POSIX clocks."
 
@@ -1131,6 +1146,8 @@ sticky_vars.AddVariables(
     BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models', have_kvm),
     EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                   all_protocols),
+    EnumVariable('BACKTRACE_IMPL', 'Post-mortem dump implementation',
+                 backtrace_impls[-1], backtrace_impls)
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
