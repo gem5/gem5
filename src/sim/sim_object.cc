@@ -151,7 +151,7 @@ SimObject::serializeAll(CheckpointOut &cp)
         SimObject *obj = *ri;
         // This works despite name() returning a fully qualified name
         // since we are at the top level.
-        obj->serializeSectionOld(cp, obj->name());
+        obj->serializeSection(cp, obj->name());
    }
 }
 

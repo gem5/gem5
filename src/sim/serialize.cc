@@ -581,13 +581,6 @@ Serializable::serializeSection(CheckpointOut &cp, const char *name) const
 }
 
 void
-Serializable::serializeSectionOld(CheckpointOut &cp, const char *name)
-{
-    Serializable::ScopedCheckpointSection sec(cp, name);
-    serializeOld(cp);
-}
-
-void
 Serializable::unserializeSection(CheckpointIn &cp, const char *name)
 {
     Serializable::ScopedCheckpointSection sec(cp, name);
