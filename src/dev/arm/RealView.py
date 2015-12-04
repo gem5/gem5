@@ -55,6 +55,7 @@ from SimpleMemory import SimpleMemory
 from Gic import *
 from EnergyCtrl import EnergyCtrl
 from ClockDomain import SrcClockDomain
+from SubSystem import SubSystem
 
 class AmbaPioDevice(BasicPioDevice):
     type = 'AmbaPioDevice'
@@ -114,26 +115,40 @@ class RealViewOsc(ClockDomain):
 
     freq = Param.Clock("Default frequency")
 
-class VExpressCoreTileCtrl(RealViewCtrl):
-    class MotherBoardOsc(RealViewOsc):
+class VExpressMCC(SubSystem):
+    """ARM V2M-P1 Motherboard Configuration Controller
+
+This subsystem describes a subset of the devices that sit behind the
+motherboard configuration controller on the the ARM Motherboard
+Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
+    """
+
+    class Osc(RealViewOsc):
         site, position, dcc = (0, 0, 0)
 
-    class CoreTileOsc(RealViewOsc):
+    osc_mcc = Osc(device=0, freq="50MHz")
+    osc_clcd = Osc(device=1, freq="23.75MHz")
+    osc_peripheral = Osc(device=2, freq="24MHz")
+    osc_system_bus = Osc(device=4, freq="24MHz")
+
+class CoreTile2A15DCC(SubSystem):
+    """ARM CoreTile Express A15x2 Daughterboard Configuration Controller
+
+This subsystem describes a subset of the devices that sit behind the
+daughterboard configuration controller on a CoreTile Express A15x2. See
+ARM DUI 0604E for details.
+    """
+
+    class Osc(RealViewOsc):
         site, position, dcc = (1, 0, 0)
 
-    # See ARM DUI 0447J (ARM Motherboard Express uATX -- V2M-P1)
-    osc_mcc = MotherBoardOsc(device=0, freq="50MHz")
-    osc_clcd = MotherBoardOsc(device=1, freq="23.75MHz")
-    osc_peripheral = MotherBoardOsc(device=2, freq="24MHz")
-    osc_system_bus = MotherBoardOsc(device=4, freq="24MHz")
-
-    # See Table 2.8 in ARM DUI 0604E (CoreTile Express A15x2 TRM).
-    osc_cpu = CoreTileOsc(device=0, freq="60MHz")
-    osc_hsbm = CoreTileOsc(device=4, freq="40MHz")
-    osc_pxl = CoreTileOsc(device=5, freq="23.75MHz")
-    osc_smb = CoreTileOsc(device=6, freq="50MHz")
-    osc_sys = CoreTileOsc(device=7, freq="60MHz")
-    osc_ddr = CoreTileOsc(device=8, freq="40MHz")
+    # See Table 2.8 in ARM DUI 0604E (CoreTile Express A15x2 TRM)
+    osc_cpu = Osc(device=0, freq="60MHz")
+    osc_hsbm = Osc(device=4, freq="40MHz")
+    osc_pxl = Osc(device=5, freq="23.75MHz")
+    osc_smb = Osc(device=6, freq="50MHz")
+    osc_sys = Osc(device=7, freq="60MHz")
+    osc_ddr = Osc(device=8, freq="40MHz")
 
 class VGic(PioDevice):
     type = 'VGic'
@@ -273,7 +288,9 @@ class RealView(Platform):
 # Chapter 4: Programmer's Reference
 class RealViewPBX(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
-    realview_io = VExpressCoreTileCtrl(pio_addr=0x10000000)
+    realview_io = RealViewCtrl(pio_addr=0x10000000)
+    mcc = VExpressMCC()
+    dcc = CoreTile2A15DCC()
     gic = Pl390()
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
@@ -400,7 +417,9 @@ class RealViewPBX(RealView):
 # Chapter 4: Programmer's Reference
 class RealViewEB(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
-    realview_io = VExpressCoreTileCtrl(pio_addr=0x10000000, idreg=0x01400500)
+    realview_io = RealViewCtrl(pio_addr=0x10000000, idreg=0x01400500)
+    mcc = VExpressMCC()
+    dcc = CoreTile2A15DCC()
     gic = Pl390(dist_addr=0x10041000, cpu_addr=0x10040000)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
@@ -510,16 +529,18 @@ class VExpress_EMM(RealView):
     _mem_regions = [(Addr('2GB'), Addr('2GB'))]
     pci_cfg_base = 0x30000000
     uart = Pl011(pio_addr=0x1c090000, int_num=37)
-    realview_io = VExpressCoreTileCtrl(
+    realview_io = RealViewCtrl(
         proc_id0=0x14000000, proc_id1=0x14000000,
         idreg=0x02250000, pio_addr=0x1C010000)
+    mcc = VExpressMCC()
+    dcc = CoreTile2A15DCC()
     gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
     generic_timer = GenericTimer(int_phys=29, int_virt=27)
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
-    hdlcd  = HDLcd(pxl_clk=realview_io.osc_pxl,
+    hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
                    pio_addr=0x2b000000, int_num=117)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
     kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
