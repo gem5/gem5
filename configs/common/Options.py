@@ -45,6 +45,7 @@ from Benchmarks import *
 
 import CpuConfig
 import MemConfig
+import PlatformConfig
 
 from FSConfig import os_types
 
@@ -54,6 +55,10 @@ def _listCpuTypes(option, opt, value, parser):
 
 def _listMemTypes(option, opt, value, parser):
     MemConfig.print_mem_list()
+    sys.exit(0)
+
+def _listPlatformTypes(option, opt, value, parser):
+    PlatformConfig.print_platform_list()
     sys.exit(0)
 
 def addCommonOptions(parser):
@@ -263,8 +268,12 @@ def addFSOptions(parser):
     if buildEnv['TARGET_ISA'] == "arm":
         parser.add_option("--bare-metal", action="store_true",
                    help="Provide the raw system without the linux specific bits")
+        parser.add_option("--list-machine-types",
+                          action="callback", callback=_listPlatformTypes,
+                      help="List available platform types")
         parser.add_option("--machine-type", action="store", type="choice",
-                choices=ArmMachineType.map.keys(), default="VExpress_EMM")
+                choices=PlatformConfig.platform_names(),
+                default="VExpress_EMM")
         parser.add_option("--dtb-filename", action="store", type="string",
               help="Specifies device tree blob file to use with device-tree-"\
               "enabled kernels")

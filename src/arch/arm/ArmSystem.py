@@ -40,10 +40,13 @@ from m5.params import *
 from System import System
 
 class ArmMachineType(Enum):
-    map = {'RealView_EB' : 827,
-           'RealView_PBX' : 1901,
-           'VExpress_EMM' : 2272,
-           'VExpress_EMM64' : 2272}
+    map = {
+        'RealViewEB' : 827,
+        'RealViewPBX' : 1901,
+        'VExpress_EMM' : 2272,
+        'VExpress_EMM64' : 2272,
+        'DTOnly' : -1,
+    }
 
 class ArmSystem(System):
     type = 'ArmSystem'

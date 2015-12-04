@@ -42,6 +42,7 @@
 from m5.objects import *
 from Benchmarks import *
 from m5.util import *
+import PlatformConfig
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'alpha' : [ 'linux' ],
@@ -207,6 +208,20 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   external_memory=""):
     assert machine_type
 
+    default_dtbs = {
+        "RealViewEB": None,
+        "RealViewPBX": None,
+        "VExpress_EMM": "vexpress.aarch32.ll_20131205.0-gem5.%dcpu.dtb" % num_cpus,
+        "VExpress_EMM64": "vexpress.aarch64.20140821.dtb",
+    }
+
+    default_kernels = {
+        "RealViewEB": "vmlinux.arm.smp.fb.2.6.38.8",
+        "RealViewPBX": "vmlinux.arm.smp.fb.2.6.38.8",
+        "VExpress_EMM": "vmlinux.aarch32.ll_20131205.0-gem5",
+        "VExpress_EMM64": "vmlinux.aarch64.20140821",
+    }
+
     if bare_metal:
         self = ArmSystem()
     else:
@@ -226,24 +241,23 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     self.mem_mode = mem_mode
 
-    if machine_type == "RealView_PBX":
-        self.realview = RealViewPBX()
-    elif machine_type == "RealView_EB":
-        self.realview = RealViewEB()
-    elif machine_type == "VExpress_EMM":
-        self.realview = VExpress_EMM()
-        if not dtb_filename:
-            dtb_filename = 'vexpress.aarch32.ll_20131205.0-gem5.%dcpu.dtb' % num_cpus
-    elif machine_type == "VExpress_EMM64":
-        self.realview = VExpress_EMM64()
+    platform_class = PlatformConfig.get(machine_type)
+    # Resolve the real platform name, the original machine_type
+    # variable might have been an alias.
+    machine_type = platform_class.__name__
+    self.realview = platform_class()
+
+    if not dtb_filename and not bare_metal:
+        try:
+            dtb_filename = default_dtbs[machine_type]
+        except KeyError:
+            fatal("No DTB specified and no default DTB known for '%s'" % \
+                  machine_type)
+
+    if isinstance(self.realview, VExpress_EMM64):
         if os.path.split(mdesc.disk())[-1] == 'linux-aarch32-ael.img':
             print "Selected 64-bit ARM architecture, updating default disk image..."
             mdesc.diskname = 'linaro-minimal-aarch64.img'
-        if not dtb_filename:
-            dtb_filename = 'vexpress.aarch64.20140821.dtb'
-    else:
-        print "Unknown Machine Type"
-        sys.exit(1)
 
     self.cf0 = CowIdeDisk(driveID='master')
     self.cf0.childImage(mdesc.disk())
@@ -278,16 +292,15 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
     else:
-        if machine_type == "VExpress_EMM64":
-            self.kernel = binary('vmlinux.aarch64.20140821')
-        elif machine_type == "VExpress_EMM":
-            self.kernel = binary('vmlinux.aarch32.ll_20131205.0-gem5')
-        else:
-            self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
+        if machine_type in default_kernels:
+            self.kernel = binary(default_kernels[machine_type])
 
         if dtb_filename:
             self.dtb_filename = binary(dtb_filename)
-        self.machine_type = machine_type
+
+        self.machine_type = machine_type if machine_type in ArmMachineType.map \
+                            else "DTOnly"
+
         # Ensure that writes to the UART actually go out early in the boot
         if not cmdline:
             cmdline = 'earlyprintk=pl011,0x1c090000 console=ttyAMA0 ' + \
