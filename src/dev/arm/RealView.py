@@ -240,7 +240,7 @@ class HDLcd(AmbaDmaDevice):
     vnc = Param.VncInput(Parent.any, "Vnc server for remote frame buffer "
                                      "display")
     amba_id = 0x00141000
-    workaround_swap_rb = Param.Bool(True, "Workaround incorrect color "
+    workaround_swap_rb = Param.Bool(False, "Workaround incorrect color "
                                     "selector order in some kernels")
     workaround_dma_line_count = Param.Bool(True, "Workaround incorrect "
                                            "DMA line count (off by 1)")
@@ -541,7 +541,8 @@ class VExpress_EMM(RealView):
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
     hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
-                   pio_addr=0x2b000000, int_num=117)
+                   pio_addr=0x2b000000, int_num=117,
+                   workaround_swap_rb=True)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
     kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
     vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
