@@ -1,18 +1,16 @@
-Redirecting stdout to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor/simout
-Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 23:29:19
-gem5 started Sep 15 2015 01:06:44
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor
+gem5 compiled Dec  3 2015 15:48:05
+gem5 started Dec  3 2015 17:52:07
+gem5 executing on e104799-lin, pid 4748
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-minor
 
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /scratch/nilay/GEM5/system/binaries/vmlinux.aarch32.ll_20131205.0-gem5
+info: kernel located at: /work/gem5/dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80008000
-info: Loading DTB file: /scratch/nilay/GEM5/system/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
+info: Loading DTB file: /work/gem5/dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
@@ -29,4 +27,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2852654988500 because m5_exit instruction encountered
+Exiting @ tick 2858554679500 because m5_exit instruction encountered

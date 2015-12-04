@@ -43,4 +43,3 @@ warn: Ignoring write to miscreg pmintenclr
 warn: Ignoring write to miscreg pmovsr
 warn: Ignoring write to miscreg pmcr
 warn: 	instruction 'mcr dcisw' unimplemented
-warn: CP14 unimplemented crn[3], opc1[2], crm[8], opc2[2]

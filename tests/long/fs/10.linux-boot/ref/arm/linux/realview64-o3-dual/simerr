@@ -12,8 +12,3 @@ warn: allocating bonus target for snoop
 warn: Tried to read RealView I/O at offset 0x8 that doesn't exist
 warn: Tried to read RealView I/O at offset 0x48 that doesn't exist
 warn: allocating bonus target for snoop
-warn: allocating bonus target for snoop
-warn: allocating bonus target for snoop
-warn: allocating bonus target for snoop
-warn: allocating bonus target for snoop
-warn: allocating bonus target for snoop

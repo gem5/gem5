@@ -4,11 +4,11 @@ sim_seconds                                 51.111153                       # Nu
 sim_ticks                                51111152682000                       # Number of ticks simulated
 final_tick                               51111152682000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1108699                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1302904                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            57554949131                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 721016                       # Number of bytes of host memory used
-host_seconds                                   888.04                       # Real time elapsed on the host
+host_inst_rate                                 987530                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1160510                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            51264798094                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 676380                       # Number of bytes of host memory used
+host_seconds                                   997.00                       # Real time elapsed on the host
 sim_insts                                   984570519                       # Number of instructions simulated
 sim_ops                                    1157031967                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1044,6 +1044,12 @@ system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Re
 system.membus.snoop_fanout::min_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::total             3920446                       # Request fanout histogram
+system.realview.dcc.osc_cpu.clock               16667                       # Clock period in ticks
+system.realview.dcc.osc_ddr.clock               25000                       # Clock period in ticks
+system.realview.dcc.osc_hsbm.clock              25000                       # Clock period in ticks
+system.realview.dcc.osc_pxl.clock               42105                       # Clock period in ticks
+system.realview.dcc.osc_smb.clock               20000                       # Clock period in ticks
+system.realview.dcc.osc_sys.clock               16667                       # Clock period in ticks
 system.realview.ethernet.txBytes                  966                       # Bytes Transmitted
 system.realview.ethernet.txPackets                  3                       # Number of Packets Transmitted
 system.realview.ethernet.txIpChecksums              0                       # Number of tx IP Checksums done by device
@@ -1086,16 +1092,10 @@ system.realview.ethernet.totalRxOrn                 0                       # to
 system.realview.ethernet.coalescedTotal             0                       # average number of interrupts coalesced into each post
 system.realview.ethernet.postedInterrupts           18                       # number of posts to CPU
 system.realview.ethernet.droppedPackets             0                       # number of packets dropped
-system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
-system.realview.realview_io.osc_clcd.clock        42105                       # Clock period in ticks
-system.realview.realview_io.osc_cpu.clock        16667                       # Clock period in ticks
-system.realview.realview_io.osc_ddr.clock        25000                       # Clock period in ticks
-system.realview.realview_io.osc_hsbm.clock        25000                       # Clock period in ticks
-system.realview.realview_io.osc_mcc.clock        20000                       # Clock period in ticks
-system.realview.realview_io.osc_peripheral.clock        41667                       # Clock period in ticks
-system.realview.realview_io.osc_smb.clock        20000                       # Clock period in ticks
-system.realview.realview_io.osc_sys.clock        16667                       # Clock period in ticks
-system.realview.realview_io.osc_system_bus.clock        41667                       # Clock period in ticks
+system.realview.mcc.osc_clcd.clock              42105                       # Clock period in ticks
+system.realview.mcc.osc_mcc.clock               20000                       # Clock period in ticks
+system.realview.mcc.osc_peripheral.clock        41667                       # Clock period in ticks
+system.realview.mcc.osc_system_bus.clock        41667                       # Clock period in ticks
 system.toL2Bus.snoop_filter.tot_requests     52477792                       # Total number of requests made to the snoop filter.
 system.toL2Bus.snoop_filter.hit_single_requests     26568978                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
 system.toL2Bus.snoop_filter.hit_multi_requests         1747                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.

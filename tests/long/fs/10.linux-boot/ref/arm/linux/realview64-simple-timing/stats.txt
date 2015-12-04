@@ -4,11 +4,11 @@ sim_seconds                                 51.811412                       # Nu
 sim_ticks                                51811412441500                       # Number of ticks simulated
 final_tick                               51811412441500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 619887                       # Simulator instruction rate (inst/s)
-host_op_rate                                   728480                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            38746850862                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 721116                       # Number of bytes of host memory used
-host_seconds                                  1337.18                       # Real time elapsed on the host
+host_inst_rate                                 643802                       # Simulator instruction rate (inst/s)
+host_op_rate                                   756584                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            40241687351                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 677920                       # Number of bytes of host memory used
+host_seconds                                  1287.51                       # Real time elapsed on the host
 sim_insts                                   828899207                       # Number of instructions simulated
 sim_ops                                     974107036                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1548,6 +1548,12 @@ system.membus.respLayer2.occupancy         6042674003                       # La
 system.membus.respLayer2.utilization              0.0                       # Layer utilization (%)
 system.membus.respLayer3.occupancy          227496341                       # Layer occupancy (ticks)
 system.membus.respLayer3.utilization              0.0                       # Layer utilization (%)
+system.realview.dcc.osc_cpu.clock               16667                       # Clock period in ticks
+system.realview.dcc.osc_ddr.clock               25000                       # Clock period in ticks
+system.realview.dcc.osc_hsbm.clock              25000                       # Clock period in ticks
+system.realview.dcc.osc_pxl.clock               42105                       # Clock period in ticks
+system.realview.dcc.osc_smb.clock               20000                       # Clock period in ticks
+system.realview.dcc.osc_sys.clock               16667                       # Clock period in ticks
 system.realview.ethernet.txBytes                  966                       # Bytes Transmitted
 system.realview.ethernet.txPackets                  3                       # Number of Packets Transmitted
 system.realview.ethernet.txIpChecksums              0                       # Number of tx IP Checksums done by device
@@ -1590,15 +1596,9 @@ system.realview.ethernet.totalRxOrn                 0                       # to
 system.realview.ethernet.coalescedTotal             0                       # average number of interrupts coalesced into each post
 system.realview.ethernet.postedInterrupts           13                       # number of posts to CPU
 system.realview.ethernet.droppedPackets             0                       # number of packets dropped
-system.realview.realview_io.osc_pxl.clock        42105                       # Clock period in ticks
-system.realview.realview_io.osc_clcd.clock        42105                       # Clock period in ticks
-system.realview.realview_io.osc_cpu.clock        16667                       # Clock period in ticks
-system.realview.realview_io.osc_ddr.clock        25000                       # Clock period in ticks
-system.realview.realview_io.osc_hsbm.clock        25000                       # Clock period in ticks
-system.realview.realview_io.osc_mcc.clock        20000                       # Clock period in ticks
-system.realview.realview_io.osc_peripheral.clock        41667                       # Clock period in ticks
-system.realview.realview_io.osc_smb.clock        20000                       # Clock period in ticks
-system.realview.realview_io.osc_sys.clock        16667                       # Clock period in ticks
-system.realview.realview_io.osc_system_bus.clock        41667                       # Clock period in ticks
+system.realview.mcc.osc_clcd.clock              42105                       # Clock period in ticks
+system.realview.mcc.osc_mcc.clock               20000                       # Clock period in ticks
+system.realview.mcc.osc_peripheral.clock        41667                       # Clock period in ticks
+system.realview.mcc.osc_system_bus.clock        41667                       # Clock period in ticks
 
 ---------- End Simulation Statistics   ----------
