@@ -26,7 +26,6 @@
 #
 # Authors: Nathan Binkert
 
-CC= gcc
 CCFLAGS= -g -O0
 
 default: m5term
