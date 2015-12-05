@@ -88,31 +88,6 @@ Tsunami::clearPciInt(int line)
     cchip->clearDRIR(line);
 }
 
-Addr
-Tsunami::pciToDma(Addr pciAddr) const
-{
-    return pchip->translatePciToDma(pciAddr);
-}
-
-
-Addr
-Tsunami::calcPciConfigAddr(int bus, int dev, int func)
-{
-   return pchip->calcConfigAddr(bus, dev, func);
-}
-
-Addr
-Tsunami::calcPciIOAddr(Addr addr)
-{
-   return pchip->calcIOAddr(addr);
-}
-
-Addr
-Tsunami::calcPciMemAddr(Addr addr)
-{
-   return pchip->calcMemAddr(addr);
-}
-
 void
 Tsunami::serialize(CheckpointOut &cp) const
 {

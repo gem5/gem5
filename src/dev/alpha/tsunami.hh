@@ -86,46 +86,15 @@ class Tsunami : public Platform
     typedef TsunamiParams Params;
     Tsunami(const Params *p);
 
-    /**
-     * Cause the cpu to post a serial interrupt to the CPU.
-     */
-    void postConsoleInt() override;
-
-    /**
-     * Clear a posted CPU interrupt (id=55)
-     */
-    void clearConsoleInt() override;
-
-    /**
-     * Cause the chipset to post a cpi interrupt to the CPU.
-     */
-    void postPciInt(int line) override;
-
-    /**
-     * Clear a posted PCI->CPU interrupt
-     */
-    void clearPciInt(int line) override;
-
-
-    Addr pciToDma(Addr pciAddr) const override;
-
-    /**
-     * Calculate the configuration address given a bus/dev/func.
-     */
-    Addr calcPciConfigAddr(int bus, int dev, int func) override;
-
-    /**
-     * Calculate the address for an IO location on the PCI bus.
-     */
-    Addr calcPciIOAddr(Addr addr) override;
-
-    /**
-     * Calculate the address for a memory location on the PCI bus.
-     */
-    Addr calcPciMemAddr(Addr addr) override;
-
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+  public: // Public Platform interfaces
+    void postConsoleInt() override;
+    void clearConsoleInt() override;
+
+    void postPciInt(int line) override;
+    void clearPciInt(int line) override;
 };
 
 #endif // __DEV_TSUNAMI_HH__

@@ -56,25 +56,3 @@ Platform::clearPciInt(int line)
 {
    panic("No PCI interrupt support in platform.");
 }
-
-Addr
-Platform::pciToDma(Addr pciAddr) const
-{
-   panic("No PCI dma support in platform.");
-   M5_DUMMY_RETURN
-}
-
-void
-Platform::registerPciDevice(uint8_t bus, uint8_t dev, uint8_t func, uint8_t intr)
-{
-    uint32_t bdf = bus << 16 | dev << 8 | func << 0;
-    if (pciDevices.find(bdf) != pciDevices.end())
-        fatal("Two PCI devices have same bus:device:function\n");
-
-    if (intLines.test(intr))
-        fatal("Two PCI devices have same interrupt line: %d\n", intr);
-
-    pciDevices.insert(bdf);
-
-    intLines.set(intr);
-}

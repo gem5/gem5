@@ -43,11 +43,11 @@
 #include "params/Platform.hh"
 #include "sim/sim_object.hh"
 
-class PciConfigAll;
 class IntrControl;
 class Terminal;
 class Uart;
 class System;
+
 
 class Platform : public SimObject
 {
@@ -59,21 +59,27 @@ class Platform : public SimObject
     typedef PlatformParams Params;
     Platform(const Params *p);
     virtual ~Platform();
+
+    /**
+     * Cause the cpu to post a serial interrupt to the CPU.
+     */
     virtual void postConsoleInt() = 0;
+
+    /**
+     * Clear a posted CPU interrupt
+     */
     virtual void clearConsoleInt() = 0;
+
+
+    /**
+     * Cause the chipset to post a cpi interrupt to the CPU.
+     */
     virtual void postPciInt(int line);
+
+    /**
+     * Clear a posted PCI->CPU interrupt
+     */
     virtual void clearPciInt(int line);
-    virtual Addr pciToDma(Addr pciAddr) const;
-    virtual Addr calcPciConfigAddr(int bus, int dev, int func) = 0;
-    virtual Addr calcPciIOAddr(Addr addr) = 0;
-    virtual Addr calcPciMemAddr(Addr addr) = 0;
-    virtual void registerPciDevice(uint8_t bus, uint8_t dev, uint8_t func,
-            uint8_t intr);
-
-  private:
-    std::bitset<256> intLines;
-    std::set<uint32_t> pciDevices;
-
 };
 
 #endif // __DEV_PLATFORM_HH__

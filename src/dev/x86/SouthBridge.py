@@ -106,7 +106,6 @@ class SouthBridge(SimObject):
         self.cmos.pio = bus.master
         self.dma1.pio = bus.master
         self.ide.pio = bus.master
-        self.ide.config = bus.master
         if dma_ports.count(self.ide.dma) == 0:
                 self.ide.dma = bus.slave
         self.keyboard.pio = bus.master

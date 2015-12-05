@@ -61,43 +61,12 @@ class Pc : public Platform
 
     Pc(const Params *p);
 
-    /**
-     * Cause the cpu to post a serial interrupt to the CPU.
-     */
-    virtual void postConsoleInt();
+  public:
+    void postConsoleInt() override;
+    void clearConsoleInt() override;
 
-    /**
-     * Clear a posted CPU interrupt
-     */
-    virtual void clearConsoleInt();
-
-    /**
-     * Cause the chipset to post a pci interrupt to the CPU.
-     */
-    virtual void postPciInt(int line);
-
-    /**
-     * Clear a posted PCI->CPU interrupt
-     */
-    virtual void clearPciInt(int line);
-
-
-    virtual Addr pciToDma(Addr pciAddr) const;
-
-    /**
-     * Calculate the configuration address given a bus/dev/func.
-     */
-    virtual Addr calcPciConfigAddr(int bus, int dev, int func);
-
-    /**
-     * Calculate the address for an IO location on the PCI bus.
-     */
-    virtual Addr calcPciIOAddr(Addr addr);
-
-    /**
-     * Calculate the address for a memory location on the PCI bus.
-     */
-    virtual Addr calcPciMemAddr(Addr addr);
+    void postPciInt(int line) override;
+    void clearPciInt(int line) override;
 };
 
 #endif // __DEV_PC_HH__

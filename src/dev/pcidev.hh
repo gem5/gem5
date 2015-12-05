@@ -54,7 +54,7 @@
 
 #include "dev/dma_device.hh"
 #include "dev/pcireg.h"
-#include "dev/platform.hh"
+#include "dev/pci/host.hh"
 #include "params/PciDevice.hh"
 #include "sim/byteswap.hh"
 
@@ -64,46 +64,17 @@
 #define BAR_IO_SPACE(x) ((x) & BAR_IO_SPACE_BIT)
 #define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
 
-
-
 /**
  * PCI device, base implementation is only config space.
  */
 class PciDevice : public DmaDevice
 {
-    class PciConfigPort : public SimpleTimingPort
-    {
-      protected:
-        PciDevice *device;
-
-        Tick recvAtomic(PacketPtr pkt) override;
-
-        AddrRangeList getAddrRanges() const override;
-
-        Platform *platform;
-
-        int busId;
-        int deviceId;
-        int functionId;
-
-        Addr configAddr;
-
-      public:
-        PciConfigPort(PciDevice *dev, int busid, int devid, int funcid,
-                      Platform *p);
-    };
-
-  public:
-    typedef PciDeviceParams Params;
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
   protected:
+    const PciBusAddr _busAddr;
+
     /** The current config space.  */
     PCIConfig config;
+
     /** The capability list structures and base addresses
      * @{
      */
@@ -190,14 +161,7 @@ class PciDevice : public DmaDevice
         return true;
     }
 
-  private:
-    Platform *platform;
-
-  protected:
-    Tick pioDelay;
-    Tick configDelay;
-    PciConfigPort configPort;
-
+  public: // Host configuration interface
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
@@ -215,21 +179,21 @@ class PciDevice : public DmaDevice
      */
     virtual Tick readConfig(PacketPtr pkt);
 
+  protected:
+    PciHost::DeviceInterface hostInterface;
+
+    Tick pioDelay;
+    Tick configDelay;
+
   public:
-    Addr pciToDma(Addr pciAddr) const
-    { return platform->pciToDma(pciAddr); }
+    Addr pciToDma(Addr pci_addr) const {
+        return hostInterface.dmaAddr(pci_addr);
+    }
 
-    void
-    intrPost()
-    { platform->postPciInt(letoh(config.interruptLine)); }
+    void intrPost() { hostInterface.postInt(); }
+    void intrClear() { hostInterface.clearInt(); }
 
-    void
-    intrClear()
-    { platform->clearPciInt(letoh(config.interruptLine)); }
-
-    uint8_t
-    interruptLine()
-    { return letoh(config.interruptLine); }
+    uint8_t interruptLine() const { return letoh(config.interruptLine); }
 
     /**
      * Determine the address ranges that this device responds to.
@@ -241,11 +205,9 @@ class PciDevice : public DmaDevice
     /**
      * Constructor for PCI Dev. This function copies data from the
      * config file object PCIConfigData and registers the device with
-     * a PciConfigAll object.
+     * a PciHost object.
      */
-    PciDevice(const Params *params);
-
-    void init() override;
+    PciDevice(const PciDeviceParams *params);
 
     /**
      * Serialize this object to the given output stream.
@@ -260,15 +222,6 @@ class PciDevice : public DmaDevice
      */
     void unserialize(CheckpointIn &cp) override;
 
-
-    BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID) override
-    {
-        if (if_name == "config") {
-            return configPort;
-        }
-        return DmaDevice::getSlavePort(if_name, idx);
-    }
-
+    const PciBusAddr &busAddr() const { return _busAddr; }
 };
 #endif // __DEV_PCIDEV_HH__

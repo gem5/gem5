@@ -30,24 +30,29 @@ from m5.params import *
 from m5.proxy import *
 
 from Device import IsaFake
-from Pci import PciConfigAll
 from Platform import Platform
 from SouthBridge import SouthBridge
 from Terminal import Terminal
 from Uart import Uart8250
+from PciHost import GenericPciHost
 
 def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port;
+
+class PcPciHost(GenericPciHost):
+    conf_base = 0xC000000000000000
+    conf_size = "16MB"
+
+    pci_pio_base = 0x8000000000000000
 
 class Pc(Platform):
     type = 'Pc'
     cxx_header = "dev/x86/pc.hh"
     system = Param.System(Parent.any, "system")
 
-    pciconfig = PciConfigAll()
-
     south_bridge = SouthBridge()
+    pci_host = PcPciHost()
 
     # "Non-existant" ports used for timing purposes by the linux kernel
     i_dont_exist1 = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)
@@ -80,4 +85,4 @@ class Pc(Platform):
         self.fake_com_3.pio = bus.master
         self.fake_com_4.pio = bus.master
         self.fake_floppy.pio = bus.master
-        self.pciconfig.pio = bus.default
+        self.pci_host.pio = bus.default

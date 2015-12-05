@@ -41,29 +41,20 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice, DmaDevice, PioDevice
-
-class PciConfigAll(BasicPioDevice):
-    type = 'PciConfigAll'
-    cxx_header = "dev/pciconfigall.hh"
-    platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    bus = Param.UInt8(0x00, "PCI bus to act as config space for")
-    size = Param.MemorySize32('16MB', "Size of config space")
-
-    pio_latency = '30ns'
-    pio_addr = 0 # will be overridden by platform-based calculation
-
+from Device import DmaDevice
+from PciHost import PciHost
 
 class PciDevice(DmaDevice):
     type = 'PciDevice'
     cxx_class = 'PciDevice'
     cxx_header = "dev/pcidev.hh"
     abstract = True
-    platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    config = SlavePort("PCI configuration space port")
+
+    host = Param.PciHost(Parent.any, "PCI host")
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
+
     pio_latency = Param.Latency('30ns', "Programmed IO latency")
     config_latency = Param.Latency('20ns', "Config read or write latency")
 

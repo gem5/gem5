@@ -63,43 +63,9 @@
 #include "sim/core.hh"
 
 
-PciDevice::PciConfigPort::PciConfigPort(PciDevice *dev, int busid, int devid,
-        int funcid, Platform *p)
-    : SimpleTimingPort(dev->name() + "-pciconf", dev), device(dev),
-      platform(p), busId(busid), deviceId(devid), functionId(funcid)
-{
-    configAddr = platform->calcPciConfigAddr(busId, deviceId, functionId);
-}
-
-
-Tick
-PciDevice::PciConfigPort::recvAtomic(PacketPtr pkt)
-{
-    assert(pkt->getAddr() >= configAddr &&
-           pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
-
-    // technically the packet only reaches us after the header delay,
-    // and typically we also need to deserialise any payload
-    Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
-    pkt->headerDelay = pkt->payloadDelay = 0;
-
-    const Tick delay(pkt->isRead() ? device->readConfig(pkt) :
-                     device->writeConfig(pkt));
-    return delay + receive_delay;
-}
-
-AddrRangeList
-PciDevice::PciConfigPort::getAddrRanges() const
-{
-    AddrRangeList ranges;
-    if (configAddr != ULL(-1))
-        ranges.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
-    return ranges;
-}
-
-
-PciDevice::PciDevice(const Params *p)
+PciDevice::PciDevice(const PciDeviceParams *p)
     : DmaDevice(p),
+      _busAddr(p->pci_bus, p->pci_dev, p->pci_func),
       PMCAP_BASE(p->PMCAPBaseOffset),
       PMCAP_ID_OFFSET(p->PMCAPBaseOffset+PMCAP_ID),
       PMCAP_PC_OFFSET(p->PMCAPBaseOffset+PMCAP_PC),
@@ -111,12 +77,15 @@ PciDevice::PciDevice(const Params *p)
       MSIXCAP_MTAB_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MTAB),
       MSIXCAP_MPBA_OFFSET(p->MSIXCAPBaseOffset+MSIXCAP_MPBA),
       PXCAP_BASE(p->PXCAPBaseOffset),
-      platform(p->platform),
+
+      hostInterface(p->host->registerDevice(this, _busAddr,
+                                            (PciIntPin)p->InterruptPin)),
       pioDelay(p->pio_latency),
-      configDelay(p->config_latency),
-      configPort(this, params()->pci_bus, params()->pci_dev,
-                 params()->pci_func, params()->platform)
+      configDelay(p->config_latency)
 {
+    fatal_if(p->InterruptPin >= 5,
+             "Invalid PCI interrupt '%i' specified.", p->InterruptPin);
+
     config.vendor = htole(p->VendorID);
     config.device = htole(p->DeviceID);
     config.command = htole(p->Command);
@@ -245,18 +214,6 @@ PciDevice::PciDevice(const Params *p)
             }
         }
     }
-
-    platform->registerPciDevice(p->pci_bus, p->pci_dev, p->pci_func,
-            letoh(config.interruptLine));
-}
-
-void
-PciDevice::init()
-{
-    if (!configPort.isConnected())
-        panic("PCI config port on %s not connected to anything!\n", name());
-   configPort.sendRangeChange();
-   DmaDevice::init();
 }
 
 Tick
@@ -291,21 +248,21 @@ PciDevice::readConfig(PacketPtr pkt)
         pkt->set<uint8_t>(config.data[offset]);
         DPRINTF(PCIDEV,
             "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            params()->pci_dev, params()->pci_func, offset,
+            _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
       case sizeof(uint16_t):
         pkt->set<uint16_t>(*(uint16_t*)&config.data[offset]);
         DPRINTF(PCIDEV,
             "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            params()->pci_dev, params()->pci_func, offset,
+            _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
         pkt->set<uint32_t>(*(uint32_t*)&config.data[offset]);
         DPRINTF(PCIDEV,
             "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            params()->pci_dev, params()->pci_func, offset,
+            _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint32_t>());
         break;
       default:
@@ -373,7 +330,7 @@ PciDevice::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PCIDEV,
             "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            params()->pci_dev, params()->pci_func, offset,
+            _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
       case sizeof(uint16_t):
@@ -392,7 +349,7 @@ PciDevice::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PCIDEV,
             "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            params()->pci_dev, params()->pci_func, offset,
+            _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
@@ -424,8 +381,8 @@ PciDevice::writeConfig(PacketPtr pkt)
                         he_new_bar &= ~bar_mask;
                         if (he_new_bar) {
                             BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
-                                platform->calcPciIOAddr(he_new_bar) :
-                                platform->calcPciMemAddr(he_new_bar);
+                                hostInterface.pioAddr(he_new_bar) :
+                                hostInterface.memAddr(he_new_bar);
                             pioPort.sendRangeChange();
                         }
                     }
@@ -454,7 +411,7 @@ PciDevice::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PCIDEV,
             "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            params()->pci_dev, params()->pci_func, offset,
+            _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint32_t>());
         break;
       default:

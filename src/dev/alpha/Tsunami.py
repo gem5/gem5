@@ -31,7 +31,7 @@ from m5.proxy import *
 from BadDevice import BadDevice
 from AlphaBackdoor import AlphaBackdoor
 from Device import BasicPioDevice, IsaFake, BadAddr
-from Pci import PciConfigAll
+from PciHost import GenericPciHost
 from Platform import Platform
 from Uart import Uart8250
 
@@ -50,9 +50,19 @@ class TsunamiIO(BasicPioDevice):
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
     frequency = Param.Frequency('1024Hz', "frequency of interrupts")
 
-class TsunamiPChip(BasicPioDevice):
+class TsunamiPChip(GenericPciHost):
     type = 'TsunamiPChip'
     cxx_header = "dev/alpha/tsunami_pchip.hh"
+
+    conf_base = 0x801fe000000
+    conf_size = "16MB"
+
+    pci_pio_base = 0x801fc000000
+    pci_mem_base = 0x80000000000
+
+    pio_addr = Param.Addr("Device Address")
+    pio_latency = Param.Latency('100ns', "Programmed IO latency")
+
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
 
 class Tsunami(Platform):
@@ -62,7 +72,6 @@ class Tsunami(Platform):
 
     cchip = TsunamiCChip(pio_addr=0x801a0000000)
     pchip = TsunamiPChip(pio_addr=0x80180000000)
-    pciconfig = PciConfigAll()
     fake_sm_chip = IsaFake(pio_addr=0x801fc000370)
 
     fake_uart1 = IsaFake(pio_addr=0x801fc0002f8)
@@ -99,8 +108,6 @@ class Tsunami(Platform):
     def attachIO(self, bus):
         self.cchip.pio = bus.master
         self.pchip.pio = bus.master
-        self.pciconfig.pio = bus.default
-        bus.use_default_range = True
         self.fake_sm_chip.pio = bus.master
         self.fake_uart1.pio = bus.master
         self.fake_uart2.pio = bus.master

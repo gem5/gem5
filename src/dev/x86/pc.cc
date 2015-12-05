@@ -141,33 +141,6 @@ Pc::clearPciInt(int line)
     warn_once("Tried to clear PCI interrupt %d\n", line);
 }
 
-Addr
-Pc::pciToDma(Addr pciAddr) const
-{
-    return pciAddr;
-}
-
-Addr
-Pc::calcPciConfigAddr(int bus, int dev, int func)
-{
-    assert(func < 8);
-    assert(dev < 32);
-    assert(bus == 0);
-    return (PhysAddrPrefixPciConfig | (func << 8) | (dev << 11));
-}
-
-Addr
-Pc::calcPciIOAddr(Addr addr)
-{
-    return PhysAddrPrefixIO + addr;
-}
-
-Addr
-Pc::calcPciMemAddr(Addr addr)
-{
-    return addr;
-}
-
 Pc *
 PcParams::create()
 {

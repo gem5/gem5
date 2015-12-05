@@ -94,10 +94,8 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.tsunami.attachIO(self.iobus)
 
     self.tsunami.ide.pio = self.iobus.master
-    self.tsunami.ide.config = self.iobus.master
 
     self.tsunami.ethernet.pio = self.iobus.master
-    self.tsunami.ethernet.config = self.iobus.master
 
     if ruby:
         # Store the dma devices for later connection to dma ruby ports.
@@ -396,10 +394,8 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.malta = BaseMalta()
     self.malta.attachIO(self.iobus)
     self.malta.ide.pio = self.iobus.master
-    self.malta.ide.config = self.iobus.master
     self.malta.ide.dma = self.iobus.slave
     self.malta.ethernet.pio = self.iobus.master
-    self.malta.ethernet.config = self.iobus.master
     self.malta.ethernet.dma = self.iobus.slave
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))

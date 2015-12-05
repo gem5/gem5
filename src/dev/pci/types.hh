@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014 ARM Limited
+ * Copyright (c) 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,60 +34,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Andreas Sandberg
  */
 
-/** @file
- * Implementation of RealView platform.
- */
+#ifndef __DEV_PCI_TYPES_HH__
+#define __DEV_PCI_TYPES_HH__
 
-#include <deque>
-#include <string>
-#include <vector>
-
-#include "config/the_isa.hh"
-#include "cpu/intr_control.hh"
-#include "dev/arm/base_gic.hh"
-#include "dev/arm/realview.hh"
-#include "dev/terminal.hh"
-#include "sim/system.hh"
-
-using namespace std;
-using namespace TheISA;
-
-
-RealView::RealView(const Params *p)
-    : Platform(p), system(p->system), gic(nullptr)
-{}
-
-void
-RealView::postConsoleInt()
+struct PciBusAddr
 {
-    warn_once("Don't know what interrupt to post for console.\n");
-    //panic("Need implementation\n");
-}
+  public:
+    PciBusAddr() = delete;
 
-void
-RealView::clearConsoleInt()
-{
-    warn_once("Don't know what interrupt to clear for console.\n");
-    //panic("Need implementation\n");
-}
+    constexpr PciBusAddr(uint8_t _bus, uint8_t _dev, uint8_t _func)
+        : bus(_bus), dev(_dev), func(_func) {}
 
-void
-RealView::postPciInt(int line)
-{
-    gic->sendInt(line);
-}
+    constexpr bool operator<(const PciBusAddr &rhs) const {
+        return sortValue() < rhs.sortValue();
+    }
 
-void
-RealView::clearPciInt(int line)
-{
-    gic->clearInt(line);
-}
+    uint8_t bus;
+    uint8_t dev;
+    uint8_t func;
 
-RealView *
-RealViewParams::create()
+  protected:
+    constexpr uint32_t sortValue() const {
+        return (bus << 16) | (dev << 8) | func;
+    }
+};
+
+enum class PciIntPin : uint8_t
 {
-    return new RealView(this);
-}
+    NO_INT=0,
+    INTA,
+    INTB,
+    INTC,
+    INTD
+};
+
+#endif // __DEV_PCI_TYPES_HH__
