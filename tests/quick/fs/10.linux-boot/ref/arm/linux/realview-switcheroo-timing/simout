@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec  3 2015 15:48:05
-gem5 started Dec  3 2015 15:55:08
-gem5 executing on e104799-lin, pid 1845
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing
+gem5 compiled Dec  4 2015 11:13:17
+gem5 started Dec  4 2015 11:29:52
+gem5 executing on e104799-lin, pid 30613
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing -re /work/gem5/outgoing/gem5_2/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-switcheroo-timing
 
 Global frequency set at 1000000000000 ticks per second

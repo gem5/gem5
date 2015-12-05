@@ -42,6 +42,6 @@ warn: Ignoring write to miscreg pmovsr
 warn: Ignoring write to miscreg pmovsr
 warn: Ignoring write to miscreg pmcr
 warn: Ignoring write to miscreg pmcr
-warn: 409464655500: Instruction results do not match! (Values may not actually be integers) Inst: 0x80000001, checker: 0x80000000
+warn: 409464076500: Instruction results do not match! (Values may not actually be integers) Inst: 0x80000001, checker: 0x80000000
 warn: 	instruction 'mcr dcisw' unimplemented
 warn: 	instruction 'mcr bpiall' unimplemented

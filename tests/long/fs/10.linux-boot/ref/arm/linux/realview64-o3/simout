@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec  3 2015 15:48:05
-gem5 started Dec  3 2015 18:31:16
-gem5 executing on e104799-lin, pid 7932
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-o3 -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-o3
+gem5 compiled Dec  4 2015 11:13:17
+gem5 started Dec  4 2015 11:54:11
+gem5 executing on e104799-lin, pid 641
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-o3 -re /work/gem5/outgoing/gem5_2/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-o3
 
 Selected 64-bit ARM architecture, updating default disk image...
 Global frequency set at 1000000000000 ticks per second
@@ -13,4 +13,4 @@ info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80080000
 info: Loading DTB file: /work/gem5/dist/binaries/vexpress.aarch64.20140821.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 51331535316000 because m5_exit instruction encountered
+Exiting @ tick 51291805611000 because m5_exit instruction encountered

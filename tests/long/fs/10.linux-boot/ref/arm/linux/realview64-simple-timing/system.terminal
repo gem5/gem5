@@ -110,26 +110,26 @@
 [    3.145140] pci 0000:00:00.0: assigning IRQ 33
 [    3.145154] pci 0000:00:01.0: fixup irq: got 34
 [    3.145164] pci 0000:00:01.0: assigning IRQ 34
-[    3.145179] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
-[    3.145194] pci 0000:00:00.0: BAR 6: assigned [mem 0x40020000-0x400207ff pref]
+[    3.145178] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
+[    3.145193] pci 0000:00:00.0: BAR 6: assigned [mem 0x40020000-0x400207ff pref]
 [    3.145208] pci 0000:00:01.0: BAR 6: assigned [mem 0x40020800-0x40020fff pref]
-[    3.145223] pci 0000:00:01.0: BAR 4: assigned [io  0x1000-0x100f]
+[    3.145222] pci 0000:00:01.0: BAR 4: assigned [io  0x1000-0x100f]
 [    3.145236] pci 0000:00:01.0: BAR 0: assigned [io  0x1010-0x1017]
 [    3.145249] pci 0000:00:01.0: BAR 2: assigned [io  0x1018-0x101f]
-[    3.145263] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
+[    3.145262] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
 [    3.145276] pci 0000:00:01.0: BAR 3: assigned [io  0x1024-0x1027]
 [    3.146194] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-[    3.146723] ata_piix 0000:00:01.0: version 2.13
+[    3.146724] ata_piix 0000:00:01.0: version 2.13
 [    3.146736] ata_piix 0000:00:01.0: enabling device (0000 -> 0001)
 [    3.146781] ata_piix 0000:00:01.0: enabling bus mastering
-[    3.147382] scsi0 : ata_piix
-[    3.147567] scsi1 : ata_piix
-[    3.147621] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
-[    3.147634] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
-[    3.147838] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
-[    3.147851] e1000: Copyright (c) 1999-2006 Intel Corporation.
-[    3.147874] e1000 0000:00:00.0: enabling device (0000 -> 0002)
-[    3.147887] e1000 0000:00:00.0: enabling bus mastering
+[    3.147384] scsi0 : ata_piix
+[    3.147568] scsi1 : ata_piix
+[    3.147622] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
+[    3.147635] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
+[    3.147840] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
+[    3.147853] e1000: Copyright (c) 1999-2006 Intel Corporation.
+[    3.147876] e1000 0000:00:00.0: enabling device (0000 -> 0002)
+[    3.147889] e1000 0000:00:00.0: enabling bus mastering
 [    3.301640] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
 [    3.301651] ata1.00: 2096640 sectors, multi 0: LBA 
 [    3.301686] ata1.00: configured for UDMA/33
@@ -160,7 +160,7 @@
  Starting udev
 [    3.470418] udevd[607]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    3.586550] random: dd urandom read with 21 bits of entropy available
+[    3.586551] random: dd urandom read with 21 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -169,7 +169,7 @@ Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
 Configuring network interfaces... udhcpc (v1.21.1) started
-[    3.791839] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[    3.791840] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
 Sending discover...
 Sending discover...
 Sending discover...

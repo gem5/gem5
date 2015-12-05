@@ -4,11 +4,11 @@ sim_seconds                                  1.869358                       # Nu
 sim_ticks                                1869358498000                       # Number of ticks simulated
 final_tick                               1869358498000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1547194                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1547193                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            44495947902                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 371328                       # Number of bytes of host memory used
-host_seconds                                    42.01                       # Real time elapsed on the host
+host_inst_rate                                1636822                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1636821                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            47073565091                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 332968                       # Number of bytes of host memory used
+host_seconds                                    39.71                       # Real time elapsed on the host
 sim_insts                                    65000470                       # Number of instructions simulated
 sim_ops                                      65000470                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -661,33 +661,27 @@ system.iobus.trans_dist::ReadResp                7628                       # Tr
 system.iobus.trans_dist::WriteReq               56140                       # Transaction distribution
 system.iobus.trans_dist::WriteResp              56140                       # Transaction distribution
 system.iobus.pkt_count_system.bridge.master::system.tsunami.cchip.pio        14686                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.tsunami.pchip.pio          480                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.tsunami.pchip.pio         1014                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.fake_sm_chip.pio           10                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.fake_uart4.pio           10                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.io.pio         1076                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.uart.pio        18036                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.backdoor.pio         2468                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.ide.pio         6672                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.tsunami.ide-pciconf          294                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.tsunami.ethernet.pio          102                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.tsunami.ethernet-pciconf          180                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.tsunami.pciconfig.pio           60                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::total        44074                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.tsunami.ide.dma::system.iocache.cpu_side        83462                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.tsunami.ide.dma::total        83462                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count::total                  127536                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.cchip.pio        58744                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.tsunami.pchip.pio         1920                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.tsunami.pchip.pio         2749                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.fake_sm_chip.pio            5                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.fake_uart4.pio            5                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.io.pio         1392                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.uart.pio         9018                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.backdoor.pio         9852                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.ide.pio         4193                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.tsunami.ide-pciconf          410                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.tsunami.ethernet.pio          204                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.tsunami.ethernet-pciconf          299                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.tsunami.pciconfig.pio          120                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::total        86162                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.tsunami.ide.dma::system.iocache.cpu_side      2661656                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.tsunami.ide.dma::total      2661656                       # Cumulative packet size per connected master and slave (bytes)

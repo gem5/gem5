@@ -104,10 +104,10 @@
 [    2.139655] pci 0000:00:01.0: reg 0x20: [io  0x0000-0x000f]
 [    2.139667] pci 0000:00:01.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
 [    2.139709] pci_bus 0000:00: fixups for bus
-[    2.139718] pci_bus 0000:00: bus scan returning with max=00
+[    2.139717] pci_bus 0000:00: bus scan returning with max=00
 [    2.139730] pci 0000:00:00.0: calling quirk_e100_interrupt+0x0/0x1cc
-[    2.139753] pci 0000:00:00.0: fixup irq: got 33
-[    2.139762] pci 0000:00:00.0: assigning IRQ 33
+[    2.139752] pci 0000:00:00.0: fixup irq: got 33
+[    2.139761] pci 0000:00:00.0: assigning IRQ 33
 [    2.139773] pci 0000:00:01.0: fixup irq: got 34
 [    2.139782] pci 0000:00:01.0: assigning IRQ 34
 [    2.139794] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
@@ -116,51 +116,51 @@
 [    2.139835] pci 0000:00:01.0: BAR 4: assigned [io  0x1000-0x100f]
 [    2.139847] pci 0000:00:01.0: BAR 0: assigned [io  0x1010-0x1017]
 [    2.139859] pci 0000:00:01.0: BAR 2: assigned [io  0x1018-0x101f]
-[    2.139871] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
-[    2.139883] pci 0000:00:01.0: BAR 3: assigned [io  0x1024-0x1027]
+[    2.139870] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
+[    2.139882] pci 0000:00:01.0: BAR 3: assigned [io  0x1024-0x1027]
 [    2.140477] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-[    2.140811] ata_piix 0000:00:01.0: version 2.13
-[    2.140822] ata_piix 0000:00:01.0: enabling device (0000 -> 0001)
-[    2.140865] ata_piix 0000:00:01.0: enabling bus mastering
-[    2.141220] scsi0 : ata_piix
-[    2.141324] scsi1 : ata_piix
-[    2.141362] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
-[    2.141375] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
-[    2.141526] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
-[    2.141538] e1000: Copyright (c) 1999-2006 Intel Corporation.
-[    2.141554] e1000 0000:00:00.0: enabling device (0000 -> 0002)
-[    2.141566] e1000 0000:00:00.0: enabling bus mastering
+[    2.140812] ata_piix 0000:00:01.0: version 2.13
+[    2.140823] ata_piix 0000:00:01.0: enabling device (0000 -> 0001)
+[    2.140866] ata_piix 0000:00:01.0: enabling bus mastering
+[    2.141222] scsi0 : ata_piix
+[    2.141325] scsi1 : ata_piix
+[    2.141364] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
+[    2.141376] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
+[    2.141528] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
+[    2.141540] e1000: Copyright (c) 1999-2006 Intel Corporation.
+[    2.141556] e1000 0000:00:00.0: enabling device (0000 -> 0002)
+[    2.141568] e1000 0000:00:00.0: enabling bus mastering
 [    2.301209] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
-[    2.301219] ata1.00: 2096640 sectors, multi 0: LBA 
+[    2.301220] ata1.00: 2096640 sectors, multi 0: LBA 
 [    2.301250] ata1.00: configured for UDMA/33
 [    2.301329] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
 [    2.301473] sd 0:0:0:0: Attached scsi generic sg0 type 0
-[    2.301485] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
-[    2.301561] sd 0:0:0:0: [sda] Write Protect is off
-[    2.301570] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[    2.301591] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-[    2.301765]  sda: sda1
-[    2.301899] sd 0:0:0:0: [sda] Attached SCSI disk
+[    2.301486] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
+[    2.301562] sd 0:0:0:0: [sda] Write Protect is off
+[    2.301571] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    2.301592] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[    2.301766]  sda: sda1
+[    2.301900] sd 0:0:0:0: [sda] Attached SCSI disk
 [    2.421494] e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01
 [    2.421508] e1000 0000:00:00.0 eth0: Intel(R) PRO/1000 Network Connection
-[    2.421532] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
+[    2.421533] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
 [    2.421543] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
-[    2.421566] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
-[    2.421578] igb: Copyright (c) 2007-2014 Intel Corporation.
-[    2.421668] usbcore: registered new interface driver usb-storage
-[    2.421737] mousedev: PS/2 mouse device common for all mice
-[    2.421933] usbcore: registered new interface driver usbhid
+[    2.421567] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
+[    2.421579] igb: Copyright (c) 2007-2014 Intel Corporation.
+[    2.421669] usbcore: registered new interface driver usb-storage
+[    2.421738] mousedev: PS/2 mouse device common for all mice
+[    2.421934] usbcore: registered new interface driver usbhid
 [    2.421944] usbhid: USB HID core driver
 [    2.421984] TCP: cubic registered
 [    2.421992] NET: Registered protocol family 17
- [    2.422476] VFS: Mounted root (ext2 filesystem) on device 8:1.
-[    2.422517] devtmpfs: mounted
-[    2.422651] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
+ [    2.422478] VFS: Mounted root (ext2 filesystem) on device 8:1.
+[    2.422519] devtmpfs: mounted
+[    2.422652] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
   INIT:  version 2.88 booting 
  Starting udev
-[    2.463113] udevd[609]: starting version 182
+[    2.463118] udevd[609]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    2.544458] random: dd urandom read with 18 bits of entropy available
+[    2.544444] random: dd urandom read with 18 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -169,7 +169,7 @@ Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
 Configuring network interfaces... udhcpc (v1.21.1) started
-[    2.681395] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[    2.681396] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
 Sending discover...
 Sending discover...
 Sending discover...
@@ -181,4 +181,3 @@ rpcbind: cannot get uid of '': Success
 done.
 creating NFS state directory: done
 starting statd: done
-Starting auto-serial-console: done

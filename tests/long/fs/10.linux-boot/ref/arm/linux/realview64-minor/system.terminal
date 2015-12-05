@@ -104,10 +104,10 @@
 [    3.139989] pci 0000:00:01.0: reg 0x20: [io  0x0000-0x000f]
 [    3.140001] pci 0000:00:01.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
 [    3.140044] pci_bus 0000:00: fixups for bus
-[    3.140053] pci_bus 0000:00: bus scan returning with max=00
+[    3.140052] pci_bus 0000:00: bus scan returning with max=00
 [    3.140066] pci 0000:00:00.0: calling quirk_e100_interrupt+0x0/0x1cc
-[    3.140090] pci 0000:00:00.0: fixup irq: got 33
-[    3.140099] pci 0000:00:00.0: assigning IRQ 33
+[    3.140089] pci 0000:00:00.0: fixup irq: got 33
+[    3.140098] pci 0000:00:00.0: assigning IRQ 33
 [    3.140110] pci 0000:00:01.0: fixup irq: got 34
 [    3.140119] pci 0000:00:01.0: assigning IRQ 34
 [    3.140132] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
@@ -144,15 +144,15 @@
 [    3.421575] e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01
 [    3.421589] e1000 0000:00:00.0 eth0: Intel(R) PRO/1000 Network Connection
 [    3.421613] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
-[    3.421624] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
+[    3.421623] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
 [    3.421648] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
 [    3.421660] igb: Copyright (c) 2007-2014 Intel Corporation.
 [    3.421747] usbcore: registered new interface driver usb-storage
 [    3.421815] mousedev: PS/2 mouse device common for all mice
-[    3.422010] usbcore: registered new interface driver usbhid
+[    3.422009] usbcore: registered new interface driver usbhid
 [    3.422020] usbhid: USB HID core driver
 [    3.422060] TCP: cubic registered
-[    3.422069] NET: Registered protocol family 17
+[    3.422068] NET: Registered protocol family 17
  [    3.422528] VFS: Mounted root (ext2 filesystem) on device 8:1.
 [    3.422570] devtmpfs: mounted
 [    3.422641] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
@@ -160,7 +160,7 @@
  Starting udev
 [    3.464661] udevd[607]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    3.594841] random: dd urandom read with 20 bits of entropy available
+[    3.594831] random: dd urandom read with 20 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -169,7 +169,7 @@ Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
 Configuring network interfaces... udhcpc (v1.21.1) started
-[    3.761487] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[    3.761486] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
 Sending discover...
 Sending discover...
 Sending discover...

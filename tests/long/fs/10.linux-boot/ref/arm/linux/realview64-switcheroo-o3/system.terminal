@@ -106,15 +106,15 @@
 [    3.135048] pci_bus 0000:00: fixups for bus
 [    3.135056] pci_bus 0000:00: bus scan returning with max=00
 [    3.135067] pci 0000:00:00.0: calling quirk_e100_interrupt+0x0/0x1cc
-[    3.135084] pci 0000:00:00.0: fixup irq: got 33
-[    3.135092] pci 0000:00:00.0: assigning IRQ 33
+[    3.135083] pci 0000:00:00.0: fixup irq: got 33
+[    3.135091] pci 0000:00:00.0: assigning IRQ 33
 [    3.135101] pci 0000:00:01.0: fixup irq: got 34
-[    3.135109] pci 0000:00:01.0: assigning IRQ 34
+[    3.135108] pci 0000:00:01.0: assigning IRQ 34
 [    3.135119] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
 [    3.135131] pci 0000:00:00.0: BAR 6: assigned [mem 0x40020000-0x400207ff pref]
-[    3.135144] pci 0000:00:01.0: BAR 6: assigned [mem 0x40020800-0x40020fff pref]
+[    3.135143] pci 0000:00:01.0: BAR 6: assigned [mem 0x40020800-0x40020fff pref]
 [    3.135156] pci 0000:00:01.0: BAR 4: assigned [io  0x1000-0x100f]
-[    3.135167] pci 0000:00:01.0: BAR 0: assigned [io  0x1010-0x1017]
+[    3.135166] pci 0000:00:01.0: BAR 0: assigned [io  0x1010-0x1017]
 [    3.135177] pci 0000:00:01.0: BAR 2: assigned [io  0x1018-0x101f]
 [    3.135188] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
 [    3.135199] pci 0000:00:01.0: BAR 3: assigned [io  0x1024-0x1027]
@@ -123,7 +123,7 @@
 [    3.135708] ata_piix 0000:00:01.0: enabling device (0000 -> 0001)
 [    3.135730] ata_piix 0000:00:01.0: enabling bus mastering
 [    3.135914] scsi0 : ata_piix
-[    3.135984] scsi1 : ata_piix
+[    3.135983] scsi1 : ata_piix
 [    3.136005] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
 [    3.136017] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
 [    3.136090] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
@@ -133,9 +133,9 @@
 [    3.290704] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
 [    3.290713] ata1.00: 2096640 sectors, multi 0: LBA 
 [    3.290737] ata1.00: configured for UDMA/33
-[    3.290779] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
-[    3.290857] sd 0:0:0:0: Attached scsi generic sg0 type 0
-[    3.290877] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
+[    3.290778] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
+[    3.290856] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    3.290876] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
 [    3.290908] sd 0:0:0:0: [sda] Write Protect is off
 [    3.290916] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
 [    3.290933] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
@@ -143,24 +143,24 @@
 [    3.291104] sd 0:0:0:0: [sda] Attached SCSI disk
 [    3.410957] e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01
 [    3.410969] e1000 0000:00:00.0 eth0: Intel(R) PRO/1000 Network Connection
-[    3.410986] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
-[    3.410996] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
-[    3.411012] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
+[    3.410987] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
+[    3.410997] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
+[    3.411013] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
 [    3.411024] igb: Copyright (c) 2007-2014 Intel Corporation.
 [    3.411070] usbcore: registered new interface driver usb-storage
-[    3.411110] mousedev: PS/2 mouse device common for all mice
+[    3.411111] mousedev: PS/2 mouse device common for all mice
 [    3.411211] usbcore: registered new interface driver usbhid
 [    3.411220] usbhid: USB HID core driver
 [    3.411245] TCP: cubic registered
-[    3.411252] NET: Registered protocol family 17
+[    3.411253] NET: Registered protocol family 17
  [    3.411504] VFS: Mounted root (ext2 filesystem) on device 8:1.
 [    3.411533] devtmpfs: mounted
 [    3.411579] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
   INIT:  version 2.88 booting 
  Starting udev
-[    3.448025] udevd[607]: starting version 182
+[    3.448034] udevd[607]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    3.532647] random: dd urandom read with 19 bits of entropy available
+[    3.532645] random: dd urandom read with 19 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -169,7 +169,7 @@ Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
 Configuring network interfaces... udhcpc (v1.21.1) started
-[    3.650912] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[    3.650911] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
 Sending discover...
 Sending discover...
 Sending discover...

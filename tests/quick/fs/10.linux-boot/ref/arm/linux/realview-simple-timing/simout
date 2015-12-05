@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec  3 2015 15:48:05
-gem5 started Dec  3 2015 15:54:29
-gem5 executing on e104799-lin, pid 1785
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /work/gem5/outgoing/gem5/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
+gem5 compiled Dec  4 2015 11:13:17
+gem5 started Dec  4 2015 12:27:38
+gem5 executing on e104799-lin, pid 4347
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /work/gem5/outgoing/gem5_2/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /work/gem5/dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
@@ -27,4 +27,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2909603958500 because m5_exit instruction encountered
+Exiting @ tick 2909596171500 because m5_exit instruction encountered

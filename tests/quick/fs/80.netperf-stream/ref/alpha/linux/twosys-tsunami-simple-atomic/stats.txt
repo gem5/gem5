@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409271000                       # Number of ticks simulated
 final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               20752053                       # Simulator instruction rate (inst/s)
-host_op_rate                                 20752044                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             7940152278                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 485568                       # Number of bytes of host memory used
-host_seconds                                    25.24                       # Real time elapsed on the host
+host_inst_rate                               12150896                       # Simulator instruction rate (inst/s)
+host_op_rate                                 12150892                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4649177813                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 500080                       # Number of bytes of host memory used
+host_seconds                                    43.11                       # Real time elapsed on the host
 sim_insts                                   523780905                       # Number of instructions simulated
 sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -78,61 +78,6 @@ drivesys.cpu.itb.data_accesses                      0                       # DT
 drivesys.cpu.numCycles                      801651324                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
-drivesys.cpu.committedInsts                  19050784                       # Number of instructions committed
-drivesys.cpu.committedOps                    19050784                       # Number of ops (including micro ops) committed
-drivesys.cpu.num_int_alu_accesses            17740632                       # Number of integer alu accesses
-drivesys.cpu.num_fp_alu_accesses                 1412                       # Number of float alu accesses
-drivesys.cpu.num_func_calls                   1265024                       # number of times a function call or return occured
-drivesys.cpu.num_conditional_control_insts      1264985                       # number of instructions that are conditional controls
-drivesys.cpu.num_int_insts                   17740632                       # number of integer instructions
-drivesys.cpu.num_fp_insts                        1412                       # number of float instructions
-drivesys.cpu.num_int_register_reads          23072330                       # number of times the integer registers were read
-drivesys.cpu.num_int_register_writes         13981107                       # number of times the integer registers were written
-drivesys.cpu.num_fp_register_reads                760                       # number of times the floating registers were read
-drivesys.cpu.num_fp_register_writes               766                       # number of times the floating registers were written
-drivesys.cpu.num_mem_refs                     5830788                       # number of memory refs
-drivesys.cpu.num_load_insts                   3746196                       # Number of load instructions
-drivesys.cpu.num_store_insts                  2084592                       # Number of store instructions
-drivesys.cpu.num_idle_cycles             782619252.927065                       # Number of idle cycles
-drivesys.cpu.num_busy_cycles             19032071.072935                       # Number of busy cycles
-drivesys.cpu.not_idle_fraction               0.023741                       # Percentage of non-idle cycles
-drivesys.cpu.idle_fraction                   0.976259                       # Percentage of idle cycles
-drivesys.cpu.Branches                         2793313                       # Number of branches fetched
-drivesys.cpu.op_class::No_OpClass              623554      3.27%      3.27% # Class of executed instruction
-drivesys.cpu.op_class::IntAlu                11538627     60.57%     63.84% # Class of executed instruction
-drivesys.cpu.op_class::IntMult                  20663      0.11%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::IntDiv                       0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatAdd                   141      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatMult                    0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatDiv                    23      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::FloatSqrt                    0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdAdd                      0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdAddAcc                   0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdAlu                      0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdCmp                      0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdCvt                      0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdMisc                     0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdMult                     0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdMultAcc                  0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdShift                    0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdShiftAcc                 0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdSqrt                     0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatAdd                 0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatAlu                 0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatCmp                 0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatCvt                 0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatDiv                 0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatMisc                0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatMult                0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatMultAcc             0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::SimdFloatSqrt                0      0.00%     63.95% # Class of executed instruction
-drivesys.cpu.op_class::MemRead                4026028     21.13%     85.08% # Class of executed instruction
-drivesys.cpu.op_class::MemWrite               2085021     10.94%     96.02% # Class of executed instruction
-drivesys.cpu.op_class::IprAccess               757336      3.98%    100.00% # Class of executed instruction
-drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
-drivesys.cpu.op_class::total                 19051393                       # Class of executed instruction
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.quiesce                  19876                       # number of quiesce instructions executed
 drivesys.cpu.kern.inst.hwrei                   143591                       # number of hwrei instructions executed
@@ -192,6 +137,61 @@ drivesys.cpu.kern.mode_ticks::kernel         78134250      2.63%      2.63% # nu
 drivesys.cpu.kern.mode_ticks::user          319668250     10.78%     13.41% # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks::idle         2567942000     86.59%    100.00% # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                     72                       # number of times the context was actually changed
+drivesys.cpu.committedInsts                  19050784                       # Number of instructions committed
+drivesys.cpu.committedOps                    19050784                       # Number of ops (including micro ops) committed
+drivesys.cpu.num_int_alu_accesses            17740632                       # Number of integer alu accesses
+drivesys.cpu.num_fp_alu_accesses                 1412                       # Number of float alu accesses
+drivesys.cpu.num_func_calls                   1265024                       # number of times a function call or return occured
+drivesys.cpu.num_conditional_control_insts      1264985                       # number of instructions that are conditional controls
+drivesys.cpu.num_int_insts                   17740632                       # number of integer instructions
+drivesys.cpu.num_fp_insts                        1412                       # number of float instructions
+drivesys.cpu.num_int_register_reads          23072330                       # number of times the integer registers were read
+drivesys.cpu.num_int_register_writes         13981107                       # number of times the integer registers were written
+drivesys.cpu.num_fp_register_reads                760                       # number of times the floating registers were read
+drivesys.cpu.num_fp_register_writes               766                       # number of times the floating registers were written
+drivesys.cpu.num_mem_refs                     5830788                       # number of memory refs
+drivesys.cpu.num_load_insts                   3746196                       # Number of load instructions
+drivesys.cpu.num_store_insts                  2084592                       # Number of store instructions
+drivesys.cpu.num_idle_cycles             782619252.927065                       # Number of idle cycles
+drivesys.cpu.num_busy_cycles             19032071.072935                       # Number of busy cycles
+drivesys.cpu.not_idle_fraction               0.023741                       # Percentage of non-idle cycles
+drivesys.cpu.idle_fraction                   0.976259                       # Percentage of idle cycles
+drivesys.cpu.Branches                         2793313                       # Number of branches fetched
+drivesys.cpu.op_class::No_OpClass              623554      3.27%      3.27% # Class of executed instruction
+drivesys.cpu.op_class::IntAlu                11538627     60.57%     63.84% # Class of executed instruction
+drivesys.cpu.op_class::IntMult                  20663      0.11%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::IntDiv                       0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatAdd                   141      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatCmp                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatCvt                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatMult                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatDiv                    23      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::FloatSqrt                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdAdd                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdAddAcc                   0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdAlu                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdCmp                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdCvt                      0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdMisc                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdMult                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdMultAcc                  0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdShift                    0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdShiftAcc                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdSqrt                     0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatAdd                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatAlu                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatCmp                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatCvt                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatDiv                 0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMisc                0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMult                0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatMultAcc             0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::SimdFloatSqrt                0      0.00%     63.95% # Class of executed instruction
+drivesys.cpu.op_class::MemRead                4026028     21.13%     85.08% # Class of executed instruction
+drivesys.cpu.op_class::MemWrite               2085021     10.94%     96.02% # Class of executed instruction
+drivesys.cpu.op_class::IprAccess               757336      3.98%    100.00% # Class of executed instruction
+drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
+drivesys.cpu.op_class::total                 19051393                       # Class of executed instruction
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -371,61 +371,6 @@ testsys.cpu.itb.data_accesses                       0                       # DT
 testsys.cpu.numCycles                       400825859                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.committedInsts                   20257044                       # Number of instructions committed
-testsys.cpu.committedOps                     20257044                       # Number of ops (including micro ops) committed
-testsys.cpu.num_int_alu_accesses             18836392                       # Number of integer alu accesses
-testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
-testsys.cpu.num_func_calls                    1221158                       # number of times a function call or return occured
-testsys.cpu.num_conditional_control_insts      1442105                       # number of instructions that are conditional controls
-testsys.cpu.num_int_insts                    18836392                       # number of integer instructions
-testsys.cpu.num_fp_insts                        17380                       # number of float instructions
-testsys.cpu.num_int_register_reads           24786330                       # number of times the integer registers were read
-testsys.cpu.num_int_register_writes          14693469                       # number of times the integer registers were written
-testsys.cpu.num_fp_register_reads               11166                       # number of times the floating registers were read
-testsys.cpu.num_fp_register_writes              10823                       # number of times the floating registers were written
-testsys.cpu.num_mem_refs                      6262732                       # number of memory refs
-testsys.cpu.num_load_insts                    3943883                       # Number of load instructions
-testsys.cpu.num_store_insts                   2318849                       # Number of store instructions
-testsys.cpu.num_idle_cycles              380582482.461103                       # Number of idle cycles
-testsys.cpu.num_busy_cycles              20243376.538897                       # Number of busy cycles
-testsys.cpu.not_idle_fraction                0.050504                       # Percentage of non-idle cycles
-testsys.cpu.idle_fraction                    0.949496                       # Percentage of idle cycles
-testsys.cpu.Branches                          2929782                       # Number of branches fetched
-testsys.cpu.op_class::No_OpClass               712785      3.52%      3.52% # Class of executed instruction
-testsys.cpu.op_class::IntAlu                 12147004     59.95%     63.47% # Class of executed instruction
-testsys.cpu.op_class::IntMult                   21654      0.11%     63.58% # Class of executed instruction
-testsys.cpu.op_class::IntDiv                        0      0.00%     63.58% # Class of executed instruction
-testsys.cpu.op_class::FloatAdd                   4655      0.02%     63.60% # Class of executed instruction
-testsys.cpu.op_class::FloatCmp                      1      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::FloatCvt                      0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::FloatMult                     0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::FloatDiv                    922      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::FloatSqrt                     0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdAdd                       0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdAddAcc                    0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdAlu                       0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdCmp                       0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdCvt                       0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdMisc                      0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdMult                      0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdMultAcc                   0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdShift                     0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdShiftAcc                  0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdSqrt                      0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatAdd                  0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatAlu                  0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatCmp                  0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatCvt                  0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatDiv                  0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatMisc                 0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatMult                 0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.60% # Class of executed instruction
-testsys.cpu.op_class::MemRead                 4230485     20.88%     84.48% # Class of executed instruction
-testsys.cpu.op_class::MemWrite                2319388     11.45%     95.93% # Class of executed instruction
-testsys.cpu.op_class::IprAccess                824126      4.07%    100.00% # Class of executed instruction
-testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
-testsys.cpu.op_class::total                  20261020                       # Class of executed instruction
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.quiesce                   19580                       # number of quiesce instructions executed
 testsys.cpu.kern.inst.hwrei                    153669                       # number of hwrei instructions executed
@@ -495,6 +440,61 @@ testsys.cpu.kern.mode_ticks::kernel         994253000     59.96%     59.96% # nu
 testsys.cpu.kern.mode_ticks::user           533088000     32.15%     92.11% # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks::idle           130749000      7.89%    100.00% # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                     438                       # number of times the context was actually changed
+testsys.cpu.committedInsts                   20257044                       # Number of instructions committed
+testsys.cpu.committedOps                     20257044                       # Number of ops (including micro ops) committed
+testsys.cpu.num_int_alu_accesses             18836392                       # Number of integer alu accesses
+testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
+testsys.cpu.num_func_calls                    1221158                       # number of times a function call or return occured
+testsys.cpu.num_conditional_control_insts      1442105                       # number of instructions that are conditional controls
+testsys.cpu.num_int_insts                    18836392                       # number of integer instructions
+testsys.cpu.num_fp_insts                        17380                       # number of float instructions
+testsys.cpu.num_int_register_reads           24786330                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes          14693469                       # number of times the integer registers were written
+testsys.cpu.num_fp_register_reads               11166                       # number of times the floating registers were read
+testsys.cpu.num_fp_register_writes              10823                       # number of times the floating registers were written
+testsys.cpu.num_mem_refs                      6262732                       # number of memory refs
+testsys.cpu.num_load_insts                    3943883                       # Number of load instructions
+testsys.cpu.num_store_insts                   2318849                       # Number of store instructions
+testsys.cpu.num_idle_cycles              380582482.461103                       # Number of idle cycles
+testsys.cpu.num_busy_cycles              20243376.538897                       # Number of busy cycles
+testsys.cpu.not_idle_fraction                0.050504                       # Percentage of non-idle cycles
+testsys.cpu.idle_fraction                    0.949496                       # Percentage of idle cycles
+testsys.cpu.Branches                          2929782                       # Number of branches fetched
+testsys.cpu.op_class::No_OpClass               712785      3.52%      3.52% # Class of executed instruction
+testsys.cpu.op_class::IntAlu                 12147004     59.95%     63.47% # Class of executed instruction
+testsys.cpu.op_class::IntMult                   21654      0.11%     63.58% # Class of executed instruction
+testsys.cpu.op_class::IntDiv                        0      0.00%     63.58% # Class of executed instruction
+testsys.cpu.op_class::FloatAdd                   4655      0.02%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatCmp                      1      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatCvt                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatMult                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatDiv                    922      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::FloatSqrt                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdAdd                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdAddAcc                    0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdAlu                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdCmp                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdCvt                       0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdMisc                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdMult                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdMultAcc                   0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdShift                     0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdShiftAcc                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdSqrt                      0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatAdd                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatAlu                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatCmp                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatCvt                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatDiv                  0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMisc                 0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMult                 0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatMultAcc              0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::SimdFloatSqrt                 0      0.00%     63.60% # Class of executed instruction
+testsys.cpu.op_class::MemRead                 4230485     20.88%     84.48% # Class of executed instruction
+testsys.cpu.op_class::MemWrite                2319388     11.45%     95.93% # Class of executed instruction
+testsys.cpu.op_class::IprAccess                824126      4.07%    100.00% # Class of executed instruction
+testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
+testsys.cpu.op_class::total                  20261020                       # Class of executed instruction
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -619,11 +619,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            10415397218                       # Simulator instruction rate (inst/s)
-host_op_rate                              10413013630                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8095289719                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 485568                       # Number of bytes of host memory used
-host_seconds                                     0.05                       # Real time elapsed on the host
+host_inst_rate                             5761027657                       # Simulator instruction rate (inst/s)
+host_op_rate                               5760057644                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4478236963                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 500080                       # Number of bytes of host memory used
+host_seconds                                     0.09                       # Real time elapsed on the host
 sim_insts                                   523853183                       # Number of instructions simulated
 sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -690,6 +690,47 @@ drivesys.cpu.itb.data_accesses                      0                       # DT
 drivesys.cpu.numCycles                        1626281                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
+drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
+drivesys.cpu.kern.inst.quiesce                     41                       # number of quiesce instructions executed
+drivesys.cpu.kern.inst.hwrei                      295                       # number of hwrei instructions executed
+drivesys.cpu.kern.ipl_count::0                    123     41.84%     41.84% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count::21                    40     13.61%     55.44% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count::22                     1      0.34%     55.78% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count::31                   130     44.22%    100.00% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count::total                294                       # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_good::0                     123     42.86%     42.86% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good::21                     40     13.94%     56.79% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good::22                      1      0.35%     57.14% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good::31                    123     42.86%    100.00% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good::total                 287                       # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_ticks::0              400289000     98.46%     98.46% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::21               1620000      0.40%     98.86% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::22                 21500      0.01%     98.86% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::31               4629500      1.14%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks::total          406560000                       # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_used::0                       1                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used::21                      1                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used::22                      1                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used::31               0.946154                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used::total            0.976190                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.callpal::swpipl                 212     83.46%     83.46% # number of callpals executed
+drivesys.cpu.kern.callpal::rdps                     1      0.39%     83.86% # number of callpals executed
+drivesys.cpu.kern.callpal::rti                     41     16.14%    100.00% # number of callpals executed
+drivesys.cpu.kern.callpal::total                  254                       # number of callpals executed
+drivesys.cpu.kern.mode_switch::kernel               0                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch::user                 0                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch::idle                41                       # number of protection mode switches
+drivesys.cpu.kern.mode_good::kernel                 0                      
+drivesys.cpu.kern.mode_good::user                   0                      
+drivesys.cpu.kern.mode_good::idle                   0                      
+drivesys.cpu.kern.mode_switch_good::kernel          nan                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::user          nan                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::idle            0                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good::total            0                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_ticks::kernel                0                       # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks::user                  0                       # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks::idle                  0                       # number of ticks spent at the given mode
+drivesys.cpu.kern.swap_context                      0                       # number of times the context was actually changed
 drivesys.cpu.committedInsts                     36152                       # Number of instructions committed
 drivesys.cpu.committedOps                       36152                       # Number of ops (including micro ops) committed
 drivesys.cpu.num_int_alu_accesses               33516                       # Number of integer alu accesses
@@ -745,47 +786,6 @@ drivesys.cpu.op_class::MemWrite                  3936     10.89%     95.73% # Cl
 drivesys.cpu.op_class::IprAccess                 1545      4.27%    100.00% # Class of executed instruction
 drivesys.cpu.op_class::InstPrefetch                 0      0.00%    100.00% # Class of executed instruction
 drivesys.cpu.op_class::total                    36152                       # Class of executed instruction
-drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
-drivesys.cpu.kern.inst.quiesce                     41                       # number of quiesce instructions executed
-drivesys.cpu.kern.inst.hwrei                      295                       # number of hwrei instructions executed
-drivesys.cpu.kern.ipl_count::0                    123     41.84%     41.84% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::21                    40     13.61%     55.44% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::22                     1      0.34%     55.78% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::31                   130     44.22%    100.00% # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_count::total                294                       # number of times we switched to this ipl
-drivesys.cpu.kern.ipl_good::0                     123     42.86%     42.86% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::21                     40     13.94%     56.79% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::22                      1      0.35%     57.14% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::31                    123     42.86%    100.00% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_good::total                 287                       # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_ticks::0              400289000     98.46%     98.46% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::21               1620000      0.40%     98.86% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::22                 21500      0.01%     98.86% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::31               4629500      1.14%    100.00% # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks::total          406560000                       # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_used::0                       1                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.ipl_used::21                      1                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.ipl_used::22                      1                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.ipl_used::31               0.946154                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.ipl_used::total            0.976190                       # fraction of swpipl calls that actually changed the ipl
-drivesys.cpu.kern.callpal::swpipl                 212     83.46%     83.46% # number of callpals executed
-drivesys.cpu.kern.callpal::rdps                     1      0.39%     83.86% # number of callpals executed
-drivesys.cpu.kern.callpal::rti                     41     16.14%    100.00% # number of callpals executed
-drivesys.cpu.kern.callpal::total                  254                       # number of callpals executed
-drivesys.cpu.kern.mode_switch::kernel               0                       # number of protection mode switches
-drivesys.cpu.kern.mode_switch::user                 0                       # number of protection mode switches
-drivesys.cpu.kern.mode_switch::idle                41                       # number of protection mode switches
-drivesys.cpu.kern.mode_good::kernel                 0                      
-drivesys.cpu.kern.mode_good::user                   0                      
-drivesys.cpu.kern.mode_good::idle                   0                      
-drivesys.cpu.kern.mode_switch_good::kernel          nan                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::user          nan                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::idle            0                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_switch_good::total            0                       # fraction of useful protection mode switches
-drivesys.cpu.kern.mode_ticks::kernel                0                       # number of ticks spent at the given mode
-drivesys.cpu.kern.mode_ticks::user                  0                       # number of ticks spent at the given mode
-drivesys.cpu.kern.mode_ticks::idle                  0                       # number of ticks spent at the given mode
-drivesys.cpu.kern.swap_context                      0                       # number of times the context was actually changed
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -944,6 +944,47 @@ testsys.cpu.itb.data_accesses                       0                       # DT
 testsys.cpu.numCycles                          821056                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
+testsys.cpu.kern.inst.quiesce                      40                       # number of quiesce instructions executed
+testsys.cpu.kern.inst.hwrei                       295                       # number of hwrei instructions executed
+testsys.cpu.kern.ipl_count::0                     123     41.84%     41.84% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::21                     40     13.61%     55.44% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::22                      1      0.34%     55.78% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::31                    130     44.22%    100.00% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count::total                 294                       # number of times we switched to this ipl
+testsys.cpu.kern.ipl_good::0                      123     42.86%     42.86% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::21                      40     13.94%     56.79% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::22                       1      0.35%     57.14% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::31                     123     42.86%    100.00% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good::total                  287                       # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_ticks::0               397967000     96.95%     96.95% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::21                3240000      0.79%     97.73% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::22                  43000      0.01%     97.74% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::31                9258000      2.26%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks::total           410508000                       # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_used::0                        1                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::31                0.946154                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used::total             0.976190                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.callpal::swpipl                  212     83.46%     83.46% # number of callpals executed
+testsys.cpu.kern.callpal::rdps                      1      0.39%     83.86% # number of callpals executed
+testsys.cpu.kern.callpal::rti                      41     16.14%    100.00% # number of callpals executed
+testsys.cpu.kern.callpal::total                   254                       # number of callpals executed
+testsys.cpu.kern.mode_switch::kernel                0                       # number of protection mode switches
+testsys.cpu.kern.mode_switch::user                  0                       # number of protection mode switches
+testsys.cpu.kern.mode_switch::idle                 41                       # number of protection mode switches
+testsys.cpu.kern.mode_good::kernel                  0                      
+testsys.cpu.kern.mode_good::user                    0                      
+testsys.cpu.kern.mode_good::idle                    0                      
+testsys.cpu.kern.mode_switch_good::kernel          nan                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::user           nan                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::idle             0                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good::total            0                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_ticks::kernel                 0                       # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::user                   0                       # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks::idle                   0                       # number of ticks spent at the given mode
+testsys.cpu.kern.swap_context                       0                       # number of times the context was actually changed
 testsys.cpu.committedInsts                      36126                       # Number of instructions committed
 testsys.cpu.committedOps                        36126                       # Number of ops (including micro ops) committed
 testsys.cpu.num_int_alu_accesses                33492                       # Number of integer alu accesses
@@ -999,47 +1040,6 @@ testsys.cpu.op_class::MemWrite                   3938     10.90%     95.72% # Cl
 testsys.cpu.op_class::IprAccess                  1545      4.28%    100.00% # Class of executed instruction
 testsys.cpu.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 testsys.cpu.op_class::total                     36126                       # Class of executed instruction
-testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
-testsys.cpu.kern.inst.quiesce                      40                       # number of quiesce instructions executed
-testsys.cpu.kern.inst.hwrei                       295                       # number of hwrei instructions executed
-testsys.cpu.kern.ipl_count::0                     123     41.84%     41.84% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::21                     40     13.61%     55.44% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::22                      1      0.34%     55.78% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::31                    130     44.22%    100.00% # number of times we switched to this ipl
-testsys.cpu.kern.ipl_count::total                 294                       # number of times we switched to this ipl
-testsys.cpu.kern.ipl_good::0                      123     42.86%     42.86% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::21                      40     13.94%     56.79% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::22                       1      0.35%     57.14% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::31                     123     42.86%    100.00% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_good::total                  287                       # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_ticks::0               397967000     96.95%     96.95% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::21                3240000      0.79%     97.73% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::22                  43000      0.01%     97.74% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::31                9258000      2.26%    100.00% # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks::total           410508000                       # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_used::0                        1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::31                0.946154                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.ipl_used::total             0.976190                       # fraction of swpipl calls that actually changed the ipl
-testsys.cpu.kern.callpal::swpipl                  212     83.46%     83.46% # number of callpals executed
-testsys.cpu.kern.callpal::rdps                      1      0.39%     83.86% # number of callpals executed
-testsys.cpu.kern.callpal::rti                      41     16.14%    100.00% # number of callpals executed
-testsys.cpu.kern.callpal::total                   254                       # number of callpals executed
-testsys.cpu.kern.mode_switch::kernel                0                       # number of protection mode switches
-testsys.cpu.kern.mode_switch::user                  0                       # number of protection mode switches
-testsys.cpu.kern.mode_switch::idle                 41                       # number of protection mode switches
-testsys.cpu.kern.mode_good::kernel                  0                      
-testsys.cpu.kern.mode_good::user                    0                      
-testsys.cpu.kern.mode_good::idle                    0                      
-testsys.cpu.kern.mode_switch_good::kernel          nan                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::user           nan                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::idle             0                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good::total            0                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_ticks::kernel                 0                       # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::user                   0                       # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks::idle                   0                       # number of ticks spent at the given mode
-testsys.cpu.kern.swap_context                       0                       # number of times the context was actually changed
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).

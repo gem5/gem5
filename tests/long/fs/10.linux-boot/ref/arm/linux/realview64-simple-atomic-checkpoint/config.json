@@ -19,10 +19,6 @@
                 "role": "SLAVE"
             }, 
             "name": "iobus", 
-            "default": {
-                "peer": "system.realview.pciconfig.pio", 
-                "role": "MASTER"
-            }, 
             "forward_latency": 1, 
             "clk_domain": "system.clk_domain", 
             "width": 16, 
@@ -31,6 +27,7 @@
                 "peer": [
                     "system.realview.uart.pio", 
                     "system.realview.realview_io.pio", 
+                    "system.realview.pci_host.pio", 
                     "system.realview.timer0.pio", 
                     "system.realview.timer1.pio", 
                     "system.realview.clcd.pio", 
@@ -38,7 +35,6 @@
                     "system.realview.kmi0.pio", 
                     "system.realview.kmi1.pio", 
                     "system.realview.cf_ctrl.pio", 
-                    "system.realview.cf_ctrl.config", 
                     "system.realview.rtc.pio", 
                     "system.realview.vram.port", 
                     "system.realview.l2x0_fake.pio", 
@@ -53,9 +49,7 @@
                     "system.realview.mmc_fake.pio", 
                     "system.realview.energy_ctrl.pio", 
                     "system.realview.ide.pio", 
-                    "system.realview.ide.config", 
                     "system.realview.ethernet.pio", 
-                    "system.realview.ethernet.config", 
                     "system.iocache.cpu_side"
                 ], 
                 "role": "MASTER"
@@ -64,11 +58,11 @@
             "cxx_class": "NoncoherentXBar", 
             "path": "system.iobus", 
             "type": "NoncoherentXBar", 
-            "use_default_range": true, 
+            "use_default_range": false, 
             "frontend_latency": 2
         }, 
         "symbolfile": "", 
-        "readfile": "/work/gem5/outgoing/gem5/tests/halt.sh", 
+        "readfile": "/work/gem5/outgoing/gem5_2/tests/halt.sh", 
         "have_large_asid_64": false, 
         "phys_addr_range_64": 40, 
         "have_lpae": false, 
@@ -115,7 +109,7 @@
                 "workaround_dma_line_count": true, 
                 "amba_id": 1314816, 
                 "pio": {
-                    "peer": "system.iobus.master[5]", 
+                    "peer": "system.iobus.master[6]", 
                     "role": "SLAVE"
                 }, 
                 "pio_latency": 10000, 
@@ -174,7 +168,23 @@
                 "pio_addr": 471269376, 
                 "type": "PL031"
             }, 
-            "pci_cfg_gen_offsets": true, 
+            "watchdog_fake": {
+                "name": "watchdog_fake", 
+                "pio": {
+                    "peer": "system.iobus.master[17]", 
+                    "role": "SLAVE"
+                }, 
+                "amba_id": 0, 
+                "ignore_access": false, 
+                "pio_latency": 100000, 
+                "clk_domain": "system.clk_domain", 
+                "system": "system", 
+                "eventq_index": 0, 
+                "cxx_class": "AmbaFake", 
+                "path": "system.realview.watchdog_fake", 
+                "pio_addr": 470745088, 
+                "type": "AmbaFake"
+            }, 
             "vgic": {
                 "system": "system", 
                 "name": "vgic", 
@@ -348,7 +358,7 @@
             "timer1": {
                 "name": "timer1", 
                 "pio": {
-                    "peer": "system.iobus.master[3]", 
+                    "peer": "system.iobus.master[4]", 
                     "role": "SLAVE"
                 }, 
                 "amba_id": 1316868, 
@@ -369,7 +379,7 @@
             "timer0": {
                 "name": "timer0", 
                 "pio": {
-                    "peer": "system.iobus.master[2]", 
+                    "peer": "system.iobus.master[3]", 
                     "role": "SLAVE"
                 }, 
                 "amba_id": 1316868, 
@@ -422,6 +432,26 @@
                 "pio_addr": 470286336
             }, 
             "type": "RealView", 
+            "pci_host": {
+                "conf_size": 268435456, 
+                "name": "pci_host", 
+                "conf_device_bits": 12, 
+                "pio": {
+                    "peer": "system.iobus.master[2]", 
+                    "role": "SLAVE"
+                }, 
+                "conf_base": 805306368, 
+                "clk_domain": "system.clk_domain", 
+                "system": "system", 
+                "pci_dma_base": 0, 
+                "platform": "system.realview", 
+                "eventq_index": 0, 
+                "cxx_class": "GenericPciHost", 
+                "path": "system.realview.pci_host", 
+                "pci_pio_base": 788529152, 
+                "type": "GenericPciHost", 
+                "pci_mem_base": 0
+            }, 
             "lan_fake": {
                 "system": "system", 
                 "ret_data8": 255, 
@@ -617,25 +647,6 @@
                     "type": "RealViewOsc"
                 }
             }, 
-            "pciconfig": {
-                "name": "pciconfig", 
-                "pio": {
-                    "peer": "system.iobus.default", 
-                    "role": "SLAVE"
-                }, 
-                "bus": 0, 
-                "pio_latency": 30000, 
-                "clk_domain": "system.clk_domain", 
-                "system": "system", 
-                "platform": "system.realview", 
-                "eventq_index": 0, 
-                "cxx_class": "PciConfigAll", 
-                "path": "system.realview.pciconfig", 
-                "pio_addr": 0, 
-                "type": "PciConfigAll", 
-                "size": 268435456
-            }, 
-            "pci_cfg_base": 805306368, 
             "path": "system.realview", 
             "vram": {
                 "range": "402653184:436207615", 
@@ -656,7 +667,6 @@
                 }, 
                 "in_addr_map": true
             }, 
-            "pci_io_base": 788529152, 
             "nvmem": {
                 "range": "0:67108863", 
                 "latency": 30000, 
@@ -685,7 +695,7 @@
                 "vnc": "system.vncserver", 
                 "name": "clcd", 
                 "pio": {
-                    "peer": "system.iobus.master[4]", 
+                    "peer": "system.iobus.master[5]", 
                     "role": "SLAVE"
                 }, 
                 "amba_id": 1315089, 
@@ -723,30 +733,13 @@
                 "pio_addr": 470351872, 
                 "type": "Pl011"
             }, 
-            "watchdog_fake": {
-                "name": "watchdog_fake", 
-                "pio": {
-                    "peer": "system.iobus.master[17]", 
-                    "role": "SLAVE"
-                }, 
-                "amba_id": 0, 
-                "ignore_access": false, 
-                "pio_latency": 100000, 
-                "clk_domain": "system.clk_domain", 
-                "system": "system", 
-                "eventq_index": 0, 
-                "cxx_class": "AmbaFake", 
-                "path": "system.realview.watchdog_fake", 
-                "pio_addr": 470745088, 
-                "type": "AmbaFake"
-            }, 
             "intrctrl": "system.intrctrl", 
             "kmi1": {
                 "vnc": "system.vncserver", 
                 "name": "kmi1", 
                 "int_delay": 1000000, 
                 "pio": {
-                    "peer": "system.iobus.master[7]", 
+                    "peer": "system.iobus.master[8]", 
                     "role": "SLAVE"
                 }, 
                 "amba_id": 1314896, 
@@ -767,7 +760,7 @@
                 "name": "kmi0", 
                 "int_delay": 1000000, 
                 "pio": {
-                    "peer": "system.iobus.master[6]", 
+                    "peer": "system.iobus.master[7]", 
                     "role": "SLAVE"
                 }, 
                 "amba_id": 1314896, 
@@ -794,7 +787,6 @@
                 "Revision": 0, 
                 "LegacyIOBase": 0, 
                 "pio_latency": 30000, 
-                "platform": "system.realview", 
                 "PXCAPLinkCap": 0, 
                 "CapabilityPtr": 0, 
                 "MSIXCAPBaseOffset": 0, 
@@ -828,6 +820,7 @@
                 "PXCAPDevCap2": 0, 
                 "PXCAPDevCtrl": 0, 
                 "MSICAPMaskBits": 0, 
+                "host": "system.realview.pci_host", 
                 "Command": 1, 
                 "SubClassCode": 1, 
                 "pci_func": 0, 
@@ -862,7 +855,7 @@
                 "config_latency": 20000, 
                 "BAR1Size": 4096, 
                 "pio": {
-                    "peer": "system.iobus.master[8]", 
+                    "peer": "system.iobus.master[9]", 
                     "role": "SLAVE"
                 }, 
                 "pci_dev": 0, 
@@ -871,10 +864,6 @@
                 "clk_domain": "system.clk_domain", 
                 "SubsystemVendorID": 0, 
                 "PMCAPBaseOffset": 0, 
-                "config": {
-                    "peer": "system.iobus.master[9]", 
-                    "role": "SLAVE"
-                }, 
                 "MSICAPPendingBits": 0, 
                 "MSIXTableOffset": 0, 
                 "MSICAPMsgUpperAddr": 0, 
@@ -914,7 +903,6 @@
                 "hardware_address": "00:90:00:00:00:01", 
                 "LegacyIOBase": 0, 
                 "pio_latency": 30000, 
-                "platform": "system.realview", 
                 "PXCAPLinkCap": 0, 
                 "CapabilityPtr": 0, 
                 "MSIXCAPBaseOffset": 0, 
@@ -949,6 +937,7 @@
                 "PXCAPDevCap2": 0, 
                 "PXCAPDevCtrl": 0, 
                 "MSICAPMaskBits": 0, 
+                "host": "system.realview.pci_host", 
                 "Command": 0, 
                 "SubClassCode": 0, 
                 "pci_func": 0, 
@@ -986,7 +975,7 @@
                 "config_latency": 20000, 
                 "BAR1Size": 0, 
                 "pio": {
-                    "peer": "system.iobus.master[25]", 
+                    "peer": "system.iobus.master[24]", 
                     "role": "SLAVE"
                 }, 
                 "pci_dev": 0, 
@@ -997,10 +986,6 @@
                 "clk_domain": "system.clk_domain", 
                 "SubsystemVendorID": 32902, 
                 "PMCAPBaseOffset": 0, 
-                "config": {
-                    "peer": "system.iobus.master[26]", 
-                    "role": "SLAVE"
-                }, 
                 "MSICAPPendingBits": 0, 
                 "MSIXTableOffset": 0, 
                 "MSICAPMsgUpperAddr": 0, 
@@ -1025,7 +1010,6 @@
                 "Revision": 0, 
                 "LegacyIOBase": 0, 
                 "pio_latency": 30000, 
-                "platform": "system.realview", 
                 "PXCAPLinkCap": 0, 
                 "CapabilityPtr": 0, 
                 "MSIXCAPBaseOffset": 0, 
@@ -1061,6 +1045,7 @@
                 "PXCAPDevCap2": 0, 
                 "PXCAPDevCtrl": 0, 
                 "MSICAPMaskBits": 0, 
+                "host": "system.realview.pci_host", 
                 "Command": 0, 
                 "SubClassCode": 1, 
                 "pci_func": 0, 
@@ -1104,10 +1089,6 @@
                 "clk_domain": "system.clk_domain", 
                 "SubsystemVendorID": 0, 
                 "PMCAPBaseOffset": 0, 
-                "config": {
-                    "peer": "system.iobus.master[24]", 
-                    "role": "SLAVE"
-                }, 
                 "MSICAPPendingBits": 0, 
                 "MSIXTableOffset": 0, 
                 "MSICAPMsgUpperAddr": 0, 
@@ -1187,7 +1168,7 @@
         "eventq_index": 0, 
         "iocache": {
             "cpu_side": {
-                "peer": "system.iobus.master[27]", 
+                "peer": "system.iobus.master[25]", 
                 "role": "SLAVE"
             }, 
             "clusivity": "mostly_incl", 

@@ -4,11 +4,11 @@ sim_seconds                                  5.112152                       # Nu
 sim_ticks                                5112152301500                       # Number of ticks simulated
 final_tick                               5112152301500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 934572                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1913274                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            23880410274                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 654088                       # Number of bytes of host memory used
-host_seconds                                   214.07                       # Real time elapsed on the host
+host_inst_rate                                 973581                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1993134                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            24877176621                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 614804                       # Number of bytes of host memory used
+host_seconds                                   205.50                       # Real time elapsed on the host
 sim_insts                                   200066731                       # Number of instructions simulated
 sim_ops                                     409580371                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -514,7 +514,6 @@ system.iobus.trans_dist::MessageResp             1696                       # Tr
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.cmos.pio           44                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.dma1.pio            6                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.ide.pio        11180                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.ide-pciconf          180                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.keyboard.pio         1364                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.pic1.pio           86                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.south_bridge.pic2.pio           54                       # Packet count per connected master and slave (bytes)
@@ -528,7 +527,7 @@ system.iobus.pkt_count_system.bridge.master::system.pc.fake_com_2.pio           
 system.iobus.pkt_count_system.bridge.master::system.pc.fake_com_3.pio           12                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.fake_com_4.pio           12                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.pc.fake_floppy.pio           10                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.pc.pciconfig.pio         2128                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.pc.pci_host.pio         2308                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::total     20044316                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.pc.south_bridge.ide.dma::system.iocache.cpu_side        95246                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.pc.south_bridge.ide.dma::total        95246                       # Packet count per connected master and slave (bytes)
@@ -538,7 +537,6 @@ system.iobus.pkt_count::total                20142954                       # Pa
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.cmos.pio           22                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.dma1.pio            3                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.ide.pio         6738                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.ide-pciconf          221                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.keyboard.pio          682                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.pic1.pio           43                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.south_bridge.pic2.pio           27                       # Cumulative packet size per connected master and slave (bytes)
@@ -552,7 +550,7 @@ system.iobus.pkt_size_system.bridge.master::system.pc.fake_com_2.pio            
 system.iobus.pkt_size_system.bridge.master::system.pc.fake_com_3.pio            6                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.fake_com_4.pio            6                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.pc.fake_floppy.pio            5                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.pc.pciconfig.pio         4256                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.pc.pci_host.pio         4477                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::total     10028276                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.pc.south_bridge.ide.dma::system.iocache.cpu_side      3027768                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.pc.south_bridge.ide.dma::total      3027768                       # Cumulative packet size per connected master and slave (bytes)

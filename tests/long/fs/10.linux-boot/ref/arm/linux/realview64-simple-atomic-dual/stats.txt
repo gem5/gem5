@@ -4,11 +4,11 @@ sim_seconds                                 47.216814                       # Nu
 sim_ticks                                47216814145000                       # Number of ticks simulated
 final_tick                               47216814145000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 564335                       # Simulator instruction rate (inst/s)
-host_op_rate                                   663890                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            27316522801                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 691236                       # Number of bytes of host memory used
-host_seconds                                  1728.51                       # Real time elapsed on the host
+host_inst_rate                                 919960                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1082251                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            44530469299                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 691012                       # Number of bytes of host memory used
+host_seconds                                  1060.33                       # Real time elapsed on the host
 sim_insts                                   975457230                       # Number of instructions simulated
 sim_ops                                    1147538415                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1178,6 +1178,7 @@ system.iobus.trans_dist::WriteReq              136634                       # Tr
 system.iobus.trans_dist::WriteResp             136634                       # Transaction distribution
 system.iobus.pkt_count_system.bridge.master::system.realview.uart.pio        47636                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.realview_io.pio           14                       # Packet count per connected master and slave (bytes)
+system.iobus.pkt_count_system.bridge.master::system.realview.pci_host.pio          434                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.timer0.pio           16                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.timer1.pio           16                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.rtc.pio           16                       # Packet count per connected master and slave (bytes)
@@ -1187,10 +1188,7 @@ system.iobus.pkt_count_system.bridge.master::system.realview.uart3_fake.pio     
 system.iobus.pkt_count_system.bridge.master::system.realview.sp810_fake.pio           24                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.watchdog_fake.pio           16                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.ide.pio        29600                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.realview.ide-pciconf          210                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::system.realview.ethernet.pio        44750                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.realview.ethernet-pciconf          164                       # Packet count per connected master and slave (bytes)
-system.iobus.pkt_count_system.bridge.master::system.realview.pciconfig.pio           60                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.bridge.master::total       122570                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.realview.ide.dma::system.iocache.cpu_side       231208                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_count_system.realview.ide.dma::total       231208                       # Packet count per connected master and slave (bytes)
@@ -1199,6 +1197,7 @@ system.iobus.pkt_count_system.realview.ethernet.dma::total           80         
 system.iobus.pkt_count::total                  353858                       # Packet count per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.uart.pio        47656                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.realview_io.pio           28                       # Cumulative packet size per connected master and slave (bytes)
+system.iobus.pkt_size_system.bridge.master::system.realview.pci_host.pio          634                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.timer0.pio           32                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.timer1.pio           32                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.rtc.pio           32                       # Cumulative packet size per connected master and slave (bytes)
@@ -1208,10 +1207,7 @@ system.iobus.pkt_size_system.bridge.master::system.realview.uart3_fake.pio      
 system.iobus.pkt_size_system.bridge.master::system.realview.sp810_fake.pio           48                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.watchdog_fake.pio           32                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.ide.pio        17587                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.realview.ide-pciconf          263                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.realview.ethernet.pio        89500                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.realview.ethernet-pciconf          251                       # Cumulative packet size per connected master and slave (bytes)
-system.iobus.pkt_size_system.bridge.master::system.realview.pciconfig.pio          120                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::total       155677                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.realview.ide.dma::system.iocache.cpu_side      7338848                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.realview.ide.dma::total      7338848                       # Cumulative packet size per connected master and slave (bytes)

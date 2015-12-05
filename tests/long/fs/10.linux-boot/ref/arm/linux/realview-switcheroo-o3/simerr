@@ -43,11 +43,17 @@ warn: CP14 unimplemented crn[0], opc1[4], crm[12], opc2[2]
 warn: CP14 unimplemented crn[3], opc1[0], crm[0], opc2[0]
 warn: CP14 unimplemented crn[6], opc1[5], crm[0], opc2[3]
 warn: CP14 unimplemented crn[6], opc1[5], crm[4], opc2[3]
+warn: CP14 unimplemented crn[15], opc1[0], crm[8], opc2[0]
 warn: CP14 unimplemented crn[2], opc1[2], crm[0], opc2[2]
 warn: CP14 unimplemented crn[12], opc1[0], crm[12], opc2[0]
 warn: CP14 unimplemented crn[12], opc1[0], crm[12], opc2[1]
 warn: CP14 unimplemented crn[12], opc1[0], crm[0], opc2[3]
 warn: 	instruction 'mcr bpiall' unimplemented
+warn: CP14 unimplemented crn[2], opc1[2], crm[4], opc2[1]
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR
 warn: User mode does not have SPSR

@@ -1,12 +1,10 @@
-Redirecting stdout to build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-switcheroo-full/simout
-Redirecting stderr to build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-switcheroo-full/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 20:54:01
-gem5 started Sep 14 2015 20:54:31
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-switcheroo-full -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-switcheroo-full
+gem5 compiled Dec  4 2015 10:28:58
+gem5 started Dec  4 2015 10:29:24
+gem5 executing on e104799-lin, pid 21387
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-switcheroo-full -re /work/gem5/outgoing/gem5_2/tests/run.py build/ALPHA/tests/opt/long/fs/10.linux-boot/alpha/linux/tsunami-switcheroo-full
 
 Global frequency set at 1000000000000 ticks per second
       0: system.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
