@@ -154,6 +154,8 @@ class DefaultCommit
     /** Probe Points. */
     ProbePointArg<DynInstPtr> *ppCommit;
     ProbePointArg<DynInstPtr> *ppCommitStall;
+    /** To probe when an instruction is squashed */
+    ProbePointArg<DynInstPtr> *ppSquash;
 
   public:
     /** Construct a DefaultCommit with the given parameters. */

@@ -126,6 +126,10 @@ class DefaultIEW
     /** Probe points. */
     ProbePointArg<DynInstPtr> *ppMispredict;
     ProbePointArg<DynInstPtr> *ppDispatch;
+    /** To probe when instruction execution begins. */
+    ProbePointArg<DynInstPtr> *ppExecute;
+    /** To probe when instruction execution is complete. */
+    ProbePointArg<DynInstPtr> *ppToCommit;
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */

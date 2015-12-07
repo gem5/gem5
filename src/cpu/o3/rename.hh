@@ -45,10 +45,12 @@
 #define __CPU_O3_RENAME_HH__
 
 #include <list>
+#include <utility>
 
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/timebuf.hh"
+#include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
 
@@ -119,6 +121,16 @@ class DefaultRename
     /** Per-thread status. */
     ThreadStatus renameStatus[Impl::MaxThreads];
 
+    /** Probe points. */
+    typedef typename std::pair<InstSeqNum, short int> SeqNumRegPair;
+    /** To probe when register renaming for an instruction is complete */
+    ProbePointArg<DynInstPtr> *ppRename;
+    /**
+     * To probe when an instruction is squashed and the register mapping
+     * for it needs to be undone
+     */
+    ProbePointArg<SeqNumRegPair> *ppSquashInRename;
+
   public:
     /** DefaultRename constructor. */
     DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params);
@@ -128,6 +140,9 @@ class DefaultRename
 
     /** Registers statistics. */
     void regStats();
+
+    /** Registers probes. */
+    void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);

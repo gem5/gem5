@@ -416,6 +416,7 @@ FullO3CPU<Impl>::regProbePoints()
     ppDataAccessComplete = new ProbePointArg<std::pair<DynInstPtr, PacketPtr> >(getProbeManager(), "DataAccessComplete");
 
     fetch.regProbePoints();
+    rename.regProbePoints();
     iew.regProbePoints();
     commit.regProbePoints();
 }

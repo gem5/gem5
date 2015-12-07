@@ -171,6 +171,9 @@ void
 DefaultFetch<Impl>::regProbePoints()
 {
     ppFetch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Fetch");
+    ppFetchRequestSent = new ProbePointArg<RequestPtr>(cpu->getProbeManager(),
+                                                       "FetchRequest");
+
 }
 
 template <class Impl>
@@ -695,6 +698,9 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
                     "response.\n", tid);
             lastIcacheStall[tid] = curTick();
             fetchStatus[tid] = IcacheWaitResponse;
+            // Notify Fetch Request probe when a packet containing a fetch
+            // request is successfully sent
+            ppFetchRequestSent->notify(mem_req);
         }
     } else {
         // Don't send an instruction to decode if we can't handle it.
@@ -1422,6 +1428,9 @@ DefaultFetch<Impl>::recvReqRetry()
 
         if (cpu->getInstPort().sendTimingReq(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;
+            // Notify Fetch Request probe when a retryPkt is successfully sent.
+            // Note that notify must be called before retryPkt is set to NULL.
+            ppFetchRequestSent->notify(retryPkt->req);
             retryPkt = NULL;
             retryTid = InvalidThreadID;
             cacheBlocked = false;

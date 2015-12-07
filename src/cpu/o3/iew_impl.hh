@@ -125,6 +125,18 @@ DefaultIEW<Impl>::regProbePoints()
 {
     ppDispatch = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Dispatch");
     ppMispredict = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Mispredict");
+    /**
+     * Probe point with dynamic instruction as the argument used to probe when
+     * an instruction starts to execute.
+     */
+    ppExecute = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(),
+                                              "Execute");
+    /**
+     * Probe point with dynamic instruction as the argument used to probe when
+     * an instruction execution completes and it is marked ready to commit.
+     */
+    ppToCommit = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(),
+                                               "ToCommit");
 }
 
 template <class Impl>
@@ -1190,6 +1202,10 @@ DefaultIEW<Impl>::executeInsts()
         DPRINTF(IEW, "Execute: Processing PC %s, [tid:%i] [sn:%i].\n",
                 inst->pcState(), inst->threadNumber,inst->seqNum);
 
+        // Notify potential listeners that this instruction has started
+        // executing
+        ppExecute->notify(inst);
+
         // Check if the instruction is squashed; if so then skip it
         if (inst->isSquashed()) {
             DPRINTF(IEW, "Execute: Instruction was squashed. PC: %s, [tid:%i]"
@@ -1402,6 +1418,9 @@ DefaultIEW<Impl>::writebackInsts()
                 inst->seqNum, inst->pcState());
 
         iewInstsToCommit[tid]++;
+        // Notify potential listeners that execution is complete for this
+        // instruction.
+        ppToCommit->notify(inst);
 
         // Some instructions will be sent to commit without having
         // executed because they need commit to handle them.

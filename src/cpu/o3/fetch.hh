@@ -197,6 +197,8 @@ class DefaultFetch
 
     /** Probe points. */
     ProbePointArg<DynInstPtr> *ppFetch;
+    /** To probe when a fetch request is successfully sent. */
+    ProbePointArg<RequestPtr> *ppFetchRequestSent;
 
   public:
     /** DefaultFetch constructor. */

@@ -173,6 +173,7 @@ DefaultCommit<Impl>::regProbePoints()
 {
     ppCommit = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Commit");
     ppCommitStall = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "CommitStall");
+    ppSquash = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Squash");
 }
 
 template <class Impl>
@@ -1010,6 +1011,8 @@ DefaultCommit<Impl>::commitInsts()
             rob->retireHead(commit_thread);
 
             ++commitSquashedInsts;
+            // Notify potential listeners that this instruction is squashed
+            ppSquash->notify(head_inst);
 
             // Record that the number of ROB entries has changed.
             changedROBNumEntries[tid] = true;

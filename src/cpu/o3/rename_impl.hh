@@ -186,6 +186,15 @@ DefaultRename<Impl>::regStats()
 
 template <class Impl>
 void
+DefaultRename<Impl>::regProbePoints()
+{
+    ppRename = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Rename");
+    ppSquashInRename = new ProbePointArg<SeqNumRegPair>(cpu->getProbeManager(),
+                                                        "SquashInRename");
+}
+
+template <class Impl>
+void
 DefaultRename<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
@@ -697,7 +706,9 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
                 storesInProgress[tid]++;
         }
         ++renamed_insts;
-
+        // Notify potential listeners that source and destination registers for
+        // this instruction have been renamed.
+        ppRename->notify(inst);
 
         // Put instruction in rename queue.
         toIEW->insts[toIEWIndex] = inst;
@@ -928,6 +939,12 @@ DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
             // Put the renamed physical register back on the free list.
             freeList->addReg(hb_it->newPhysReg);
         }
+
+        // Notify potential listeners that the register mapping needs to be
+        // removed because the instruction it was mapped to got squashed. Note
+        // that this is done before hb_it is incremented.
+        ppSquashInRename->notify(std::make_pair(hb_it->instSeqNum,
+                                                hb_it->newPhysReg));
 
         historyBuffer[tid].erase(hb_it++);
 
