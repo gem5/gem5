@@ -69,7 +69,7 @@ message InstDepRecord {
   }
   required uint64 seq_num = 1;
   required RecordType type = 2 [default = INVALID];
-  optional uint64 addr = 3;
+  optional uint64 p_addr = 3;
   optional uint32 size = 4;
   optional uint32 flags = 5;
   repeated uint64 rob_dep = 6;
@@ -77,4 +77,6 @@ message InstDepRecord {
   repeated uint64 reg_dep = 8;
   optional uint32 weight = 9;
   optional uint64 pc = 10;
+  optional uint64 v_addr = 11;
+  optional uint32 asid = 12;
 }

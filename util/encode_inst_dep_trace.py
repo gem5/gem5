@@ -72,12 +72,12 @@
 #
 # The ASCII trace format uses one line per instruction with the format
 # instruction sequence number, (optional) pc, (optional) weight, type,
-# (optional) flags, (optional) addr, (optional) size, comp delay,
+# (optional) flags, (optional) physical addr, (optional) size, comp delay,
 # (repeated) order dependencies comma-separated, and (repeated) register
 # dependencies comma-separated.
 #
 # examples:
-# seq_num,[pc],[weight,]type,[address,size,flags,]comp_delay:[rob_dep]:
+# seq_num,[pc],[weight,]type,[p_addr,size,flags,]comp_delay:[rob_dep]:
 # [reg_dep]
 # 1,35652,1,COMP,8500::
 # 2,35656,1,COMP,0:,1:
@@ -167,11 +167,11 @@ def main():
             print "Seq. num", dep_record.seq_num, "is of INVALID type"
             exit(-1)
 
-        # If the instruction is a load or store record the addr, size flags
-        # in addition to recording the computation delay
+        # If the instruction is a load or store record the physical addr,
+        # size flags in addition to recording the computation delay
         if dep_record.type in [DepRecord.LOAD, DepRecord.STORE]:
-            addr, size, flags, comp_delay = inst_info_list[4:8]
-            dep_record.addr = long(addr)
+            p_addr, size, flags, comp_delay = inst_info_list[4:8]
+            dep_record.p_addr = long(p_addr)
             dep_record.size = int(size)
             dep_record.flags = int(flags)
             dep_record.comp_delay = long(comp_delay)

@@ -300,7 +300,7 @@ class Request
     Addr _pc;
 
     /** Sequence number of the instruction that creates the request */
-    const InstSeqNum _reqInstSeqNum;
+    InstSeqNum _reqInstSeqNum;
 
   public:
 
@@ -673,6 +673,13 @@ class Request
     {
         assert(privateFlags.isSet(VALID_INST_SEQ_NUM));
         return _reqInstSeqNum;
+    }
+
+    void
+    setReqInstSeqNum(const InstSeqNum seq_num)
+    {
+        privateFlags.set(VALID_INST_SEQ_NUM);
+        _reqInstSeqNum = seq_num;
     }
 
     /** Accessor functions for flags.  Note that these are for testing

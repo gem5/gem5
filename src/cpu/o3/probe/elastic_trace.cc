@@ -57,7 +57,8 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams* params)
        dataTraceStream(nullptr),
        instTraceStream(nullptr),
        startTraceInst(params->startTraceInst),
-       allProbesReg(false)
+       allProbesReg(false),
+       traceVirtAddr(params->traceVirtAddr)
 {
     cpu = dynamic_cast<FullO3CPU<O3CPUImpl>*>(params->manager);
     fatal_if(!cpu, "Manager of %s is not of type O3CPU and thus does not "\
@@ -391,7 +392,9 @@ ElasticTrace::addDepTraceRecord(const DynInstPtr &head_inst,
 
     // Assign fields for creating a request in case of a load/store
     new_record->reqFlags = head_inst->memReqFlags;
-    new_record->addr = head_inst->physEffAddrLow;
+    new_record->virtAddr = head_inst->effAddr;
+    new_record->asid = head_inst->asid;
+    new_record->physAddr = head_inst->physEffAddrLow;
     // Currently the tracing does not support split requests.
     new_record->size = head_inst->effSize;
     new_record->pc = head_inst->instAddr();
@@ -787,9 +790,9 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
                      "is as follows:\n", temp_ptr->instNum);
             if (temp_ptr->isLoad() || temp_ptr->isStore()) {
                 DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
-                DPRINTFR(ElasticTrace, "\thas a request with addr %i, size %i,"
-                         " flags %i\n", temp_ptr->addr, temp_ptr->size,
-                         temp_ptr->reqFlags);
+                DPRINTFR(ElasticTrace, "\thas a request with phys addr %i, "
+                         "size %i, flags %i\n", temp_ptr->physAddr,
+                         temp_ptr->size, temp_ptr->reqFlags);
             } else {
                  DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
             }
@@ -813,7 +816,13 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
             dep_pkt.set_pc(temp_ptr->pc);
             if (temp_ptr->isLoad() || temp_ptr->isStore()) {
                 dep_pkt.set_flags(temp_ptr->reqFlags);
-                dep_pkt.set_addr(temp_ptr->addr);
+                dep_pkt.set_p_addr(temp_ptr->physAddr);
+                // If tracing of virtual addresses is enabled, set the optional
+                // field for it
+                if (traceVirtAddr) {
+                    dep_pkt.set_v_addr(temp_ptr->virtAddr);
+                    dep_pkt.set_asid(temp_ptr->asid);
+                }
                 dep_pkt.set_size(temp_ptr->size);
             }
             dep_pkt.set_comp_delay(temp_ptr->compDelay);

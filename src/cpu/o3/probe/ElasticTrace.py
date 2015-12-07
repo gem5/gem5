@@ -59,4 +59,6 @@ class ElasticTrace(ProbeListenerObject):
                                     "after which to start tracing. Default " \
                                     "zero means start tracing from first " \
                                     "committed instruction.")
-
+    # Whether to trace virtual addresses for memory accesses
+    traceVirtAddr = Param.Bool(False, "Set to true if virtual addresses are " \
+                                "to be traced.")

@@ -72,12 +72,12 @@
 #
 # The ASCII trace format uses one line per instruction with the format
 # instruction sequence number, (optional) pc, (optional) weight, type
-# (optional) flags, (optional) addr, (optional) size, comp delay,
+# (optional) flags, (optional) phys addr, (optional) size, comp delay,
 # (repeated) order dependencies comma-separated, and (repeated) register
 # dependencies comma-separated.
 #
 # examples:
-# seq_num,[pc],[weight,]type,[address,size,flags,]comp_delay:[rob_dep]:
+# seq_num,[pc],[weight,]type,[p_addr,size,flags,]comp_delay:[rob_dep]:
 # [reg_dep]
 # 1,35652,1,COMP,8500::
 # 2,35656,1,COMP,0:,1:
@@ -178,9 +178,10 @@ def main():
             exit(-1)
 
 
-        # Write to file if it has the optional fields addr, size, flags
-        if packet.HasField('addr'):
-            ascii_out.write(',%s' % (packet.addr))
+        # Write to file if it has the optional fields physical addr, size,
+        # flags
+        if packet.HasField('p_addr'):
+            ascii_out.write(',%s' % (packet.p_addr))
         if packet.HasField('size'):
             ascii_out.write(',%s' % (packet.size))
         if packet.HasField('flags'):

@@ -597,8 +597,9 @@ PacketPtr
 TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
 {
 
-    DPRINTF(TraceCPUData, "Executing memory request %lli (addr %d, pc %#x, "
-            "size %d, flags %d).\n", node_ptr->seqNum, node_ptr->addr,
+    DPRINTF(TraceCPUData, "Executing memory request %lli (phys addr %d, "
+            "virt addr %d, pc %#x, size %d, flags %d).\n",
+            node_ptr->seqNum, node_ptr->physAddr, node_ptr->virtAddr,
             node_ptr->pc, node_ptr->size, node_ptr->flags);
 
     // If the request is strictly ordered, do not send it. Just return nullptr
@@ -617,17 +618,26 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // happens. If required the code could be revised to mimick splitting such
     // a request into two.
     unsigned blk_size = owner.cacheLineSize();
-    Addr blk_offset = (node_ptr->addr & (Addr)(blk_size - 1));
+    Addr blk_offset = (node_ptr->physAddr & (Addr)(blk_size - 1));
     if (!(blk_offset + node_ptr->size <= blk_size)) {
         node_ptr->size = blk_size - blk_offset;
         ++numSplitReqs;
     }
 
     // Create a request and the packet containing request
-    Request* req = new Request(node_ptr->addr, node_ptr->size, node_ptr->flags,
-                               masterID, node_ptr->seqNum,
+    Request* req = new Request(node_ptr->physAddr, node_ptr->size,
+                               node_ptr->flags, masterID, node_ptr->seqNum,
                                ContextID(0), ThreadID(0));
     req->setPC(node_ptr->pc);
+    // If virtual address is valid, set the asid and virtual address fields
+    // of the request.
+    if (node_ptr->virtAddr != 0) {
+        req->setVirt(node_ptr->asid, node_ptr->virtAddr, node_ptr->size,
+                        node_ptr->flags, masterID, node_ptr->pc);
+        req->setPaddr(node_ptr->physAddr);
+        req->setReqInstSeqNum(node_ptr->seqNum);
+    }
+
     PacketPtr pkt;
     uint8_t* pkt_data = new uint8_t[req->getSize()];
     if (node_ptr->isLoad()) {
@@ -1277,10 +1287,20 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
         }
 
         // Optional fields
-        if (pkt_msg.has_addr())
-            element->addr = pkt_msg.addr();
+        if (pkt_msg.has_p_addr())
+            element->physAddr = pkt_msg.p_addr();
         else
-            element->addr = 0;
+            element->physAddr = 0;
+
+        if (pkt_msg.has_v_addr())
+            element->virtAddr = pkt_msg.v_addr();
+        else
+            element->virtAddr = 0;
+
+        if (pkt_msg.has_asid())
+            element->asid = pkt_msg.asid();
+        else
+            element->asid = 0;
 
         if (pkt_msg.has_size())
             element->size = pkt_msg.size();
@@ -1383,7 +1403,7 @@ TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
     DPRINTFR(TraceCPUData, "%lli", seqNum);
     DPRINTFR(TraceCPUData, ",%s", typeToStr());
     if (isLoad() || isStore()) {
-        DPRINTFR(TraceCPUData, ",%i", addr);
+        DPRINTFR(TraceCPUData, ",%i", physAddr);
         DPRINTFR(TraceCPUData, ",%i", size);
         DPRINTFR(TraceCPUData, ",%i", flags);
     }
