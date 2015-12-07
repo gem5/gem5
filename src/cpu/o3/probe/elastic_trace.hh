@@ -92,6 +92,10 @@ class ElasticTrace : public ProbeListenerObject
     typedef typename O3CPUImpl::DynInstPtr DynInstPtr;
     typedef typename std::pair<InstSeqNum, PhysRegIndex> SeqNumRegPair;
 
+    /** Trace record types corresponding to instruction node types */
+    typedef ProtoMessage::InstDepRecord::RecordType RecordType;
+    typedef ProtoMessage::InstDepRecord Record;
+
     /** Constructor */
     ElasticTrace(const ElasticTraceParams *params);
 
@@ -260,14 +264,16 @@ class ElasticTrace : public ProbeListenerObject
          */
         /* Instruction sequence number. */
         InstSeqNum instNum;
+        /** The type of trace record for the instruction node */
+        RecordType type;
         /* Tick when instruction was in execute stage. */
         Tick executeTick;
         /* Tick when instruction was marked ready and sent to commit stage. */
         Tick toCommitTick;
         /* Tick when instruction was committed. */
         Tick commitTick;
-        /* If instruction was a load, a store, committed. */
-        bool load, store, commit;
+        /* If instruction was committed, as against squashed. */
+        bool commit;
         /* List of order dependencies. */
         std::list<InstSeqNum> robDepList;
         /* List of physical register RAW dependencies. */
@@ -287,6 +293,18 @@ class ElasticTrace : public ProbeListenerObject
         Addr addr;
         /* Request size in case of a load/store instruction */
         unsigned size;
+        /** Default Constructor */
+        TraceInfo()
+          : type(Record::INVALID)
+        { }
+        /** Is the record a load */
+        bool isLoad() const { return (type == Record::LOAD); }
+        /** Is the record a store */
+        bool isStore() const { return (type == Record::STORE); }
+        /** Is the record a fetch triggering an Icache request */
+        bool isComp() const { return (type == Record::COMP); }
+        /** Return string specifying the type of the node */
+        const std::string& typeToStr() const;
         /** @} */
 
         /**

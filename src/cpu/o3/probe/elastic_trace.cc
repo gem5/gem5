@@ -384,9 +384,10 @@ ElasticTrace::addDepTraceRecord(const DynInstPtr &head_inst,
 
     // Assign fields from the instruction
     new_record->instNum = head_inst->seqNum;
-    new_record->load = head_inst->isLoad();
-    new_record->store = head_inst->isStore();
     new_record->commit = commit;
+    new_record->type = head_inst->isLoad() ? Record::LOAD :
+                        (head_inst->isStore() ? Record::STORE :
+                        Record::COMP);
 
     // Assign fields for creating a request in case of a load/store
     new_record->reqFlags = head_inst->memReqFlags;
@@ -503,7 +504,7 @@ void
 ElasticTrace::updateCommitOrderDep(TraceInfo* new_record,
                                     bool find_load_not_store)
 {
-    assert(new_record->store);
+    assert(new_record->isStore());
     // Iterate in reverse direction to search for the last committed
     // load/store that completed earlier than the new record
     depTraceRevItr from_itr(depTrace.end());
@@ -552,11 +553,11 @@ ElasticTrace::updateIssueOrderDep(TraceInfo* new_record)
     uint32_t num_go_back = 0;
     Tick execute_tick = 0;
 
-    if (new_record->load) {
+    if (new_record->isLoad()) {
         // The execution time of a load is when a request is sent
         execute_tick = new_record->executeTick;
         ++numIssueOrderDepLoads;
-    } else if (new_record->store) {
+    } else if (new_record->isStore()) {
         // The execution time of a store is when it is sent, i.e. committed
         execute_tick = curTick();
         ++numIssueOrderDepStores;
@@ -589,10 +590,8 @@ ElasticTrace::updateIssueOrderDep(TraceInfo* new_record)
 void
 ElasticTrace::assignRobDep(TraceInfo* past_record, TraceInfo* new_record) {
     DPRINTF(ElasticTrace, "%s %lli has ROB dependency on %lli\n",
-            new_record->load ? "Load" : (new_record->store ? "Store" :
-            "Non load/store"),
-            new_record->instNum, past_record->instNum);
-
+            new_record->typeToStr(), new_record->instNum,
+            past_record->instNum);
     // Add dependency on past record
     new_record->robDepList.push_back(past_record->instNum);
     // Update new_record's compute delay with respect to the past record
@@ -608,14 +607,14 @@ bool
 ElasticTrace::hasStoreCommitted(TraceInfo* past_record,
                                     Tick execute_tick) const
 {
-    return (past_record->store && past_record->commitTick <= execute_tick);
+    return (past_record->isStore() && past_record->commitTick <= execute_tick);
 }
 
 bool
 ElasticTrace::hasLoadCompleted(TraceInfo* past_record,
                                     Tick execute_tick) const
 {
-    return(past_record->load && past_record->commit &&
+    return(past_record->isLoad() && past_record->commit &&
                 past_record->toCommitTick <= execute_tick);
 }
 
@@ -624,7 +623,7 @@ ElasticTrace::hasLoadBeenSent(TraceInfo* past_record,
                                 Tick execute_tick) const
 {
     // Check if previous inst is a load sent earlier than this
-    return (past_record->load && past_record->commit &&
+    return (past_record->isLoad() && past_record->commit &&
         past_record->executeTick <= execute_tick);
 }
 
@@ -632,8 +631,7 @@ bool
 ElasticTrace::hasCompCompleted(TraceInfo* past_record,
                                     Tick execute_tick) const
 {
-    return(!past_record->store && !past_record->load &&
-            past_record->toCommitTick <= execute_tick);
+    return(past_record->isComp() && past_record->toCommitTick <= execute_tick);
 }
 
 void
@@ -674,15 +672,15 @@ ElasticTrace::compDelayRob(TraceInfo* past_record, TraceInfo* new_record)
     // computation delay
     execution_tick = new_record->getExecuteTick();
 
-    if (past_record->load) {
-        if (new_record->store) {
+    if (past_record->isLoad()) {
+        if (new_record->isStore()) {
             completion_tick = past_record->toCommitTick;
         } else {
             completion_tick = past_record->executeTick;
         }
-    } else if (past_record->store) {
+    } else if (past_record->isStore()) {
         completion_tick = past_record->commitTick;
-    } else {
+    } else if (past_record->isComp()){
         completion_tick = past_record->toCommitTick;
     }
     assert(execution_tick >= completion_tick);
@@ -722,7 +720,7 @@ ElasticTrace::compDelayPhysRegDep(TraceInfo* past_record,
     // completion tick of that instruction is when it wrote to the register,
     // that is toCommitTick. In case, of a store updating a destination
     // register, this is approximated to commitTick instead
-    if (past_record->store) {
+    if (past_record->isStore()) {
         completion_tick = past_record->commitTick;
     } else {
         completion_tick = past_record->toCommitTick;
@@ -745,11 +743,11 @@ ElasticTrace::compDelayPhysRegDep(TraceInfo* past_record,
 Tick
 ElasticTrace::TraceInfo::getExecuteTick() const
 {
-    if (load) {
+    if (isLoad()) {
         // Execution tick for a load instruction is when the request was sent,
         // that is executeTick.
         return executeTick;
-    } else if (store) {
+    } else if (isStore()) {
         // Execution tick for a store instruction is when the request was sent,
         // that is commitTick.
         return commitTick;
@@ -779,27 +777,26 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
     depTraceItr dep_trace_itr_start = dep_trace_itr;
     while (num_to_write > 0) {
         TraceInfo* temp_ptr = *dep_trace_itr;
-        // If no node dependends on a non load/store node then there is
-        // no reason to track it in the dependency graph. We filter out such
+        assert(temp_ptr->type != Record::INVALID);
+        // If no node dependends on a comp node then there is no reason to
+        // track the comp node in the dependency graph. We filter out such
         // nodes but count them and add a weight field to the subsequent node
         // that we do include in the trace.
-        if (temp_ptr->numDepts != 0 || temp_ptr->load || temp_ptr->store) {
-
+        if (!temp_ptr->isComp() || temp_ptr->numDepts != 0) {
             DPRINTFR(ElasticTrace, "Instruction with seq. num %lli "
                      "is as follows:\n", temp_ptr->instNum);
-            if (temp_ptr->load || temp_ptr->store) {
-                DPRINTFR(ElasticTrace, "\tis a %s\n",
-                         (temp_ptr->load ? "Load" : "Store"));
+            if (temp_ptr->isLoad() || temp_ptr->isStore()) {
+                DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
                 DPRINTFR(ElasticTrace, "\thas a request with addr %i, size %i,"
                          " flags %i\n", temp_ptr->addr, temp_ptr->size,
                          temp_ptr->reqFlags);
             } else {
-                 DPRINTFR(ElasticTrace, "\tis not a load or store\n");
+                 DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
             }
             if (firstWin && temp_ptr->compDelay == -1) {
-                if (temp_ptr->load) {
+                if (temp_ptr->isLoad()) {
                     temp_ptr->compDelay = temp_ptr->executeTick;
-                } else if (temp_ptr->store) {
+                } else if (temp_ptr->isStore()) {
                     temp_ptr->compDelay = temp_ptr->commitTick;
                 } else {
                     temp_ptr->compDelay = temp_ptr->toCommitTick;
@@ -812,10 +809,9 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
             // Create a protobuf message for the dependency record
             ProtoMessage::InstDepRecord dep_pkt;
             dep_pkt.set_seq_num(temp_ptr->instNum);
-            dep_pkt.set_load(temp_ptr->load);
-            dep_pkt.set_store(temp_ptr->store);
+            dep_pkt.set_type(temp_ptr->type);
             dep_pkt.set_pc(temp_ptr->pc);
-            if (temp_ptr->load || temp_ptr->store) {
+            if (temp_ptr->isLoad() || temp_ptr->isStore()) {
                 dep_pkt.set_flags(temp_ptr->reqFlags);
                 dep_pkt.set_addr(temp_ptr->addr);
                 dep_pkt.set_size(temp_ptr->size);
@@ -914,6 +910,12 @@ ElasticTrace::regStats() {
         .name(name() + ".maxPhysRegDepMapSize")
         .desc("Maximum size of register dependency map")
         ;
+}
+
+const std::string&
+ElasticTrace::TraceInfo::typeToStr() const
+{
+    return Record::RecordType_Name(type);
 }
 
 const std::string

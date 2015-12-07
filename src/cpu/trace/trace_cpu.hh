@@ -561,6 +561,9 @@ class TraceCPU : public BaseCPU
         /** Node ROB number type. */
         typedef uint64_t NodeRobNum;
 
+        typedef ProtoMessage::InstDepRecord::RecordType RecordType;
+        typedef ProtoMessage::InstDepRecord Record;
+
         /**
          * The struct GraphNode stores an instruction in the trace file. The
          * format of the trace file favours constructing a dependency graph of
@@ -589,11 +592,8 @@ class TraceCPU : public BaseCPU
             /** ROB occupancy number */
             NodeRobNum robNum;
 
-            /** If instruction is a load */
-            bool isLoad;
-
-            /** If instruction is a store */
-            bool isStore;
+           /** Type of the node corresponding to the instruction modelled by it */
+            RecordType type;
 
             /** The address for the request if any */
             Addr addr;
@@ -632,6 +632,15 @@ class TraceCPU : public BaseCPU
              */
             std::vector<GraphNode *> dependents;
 
+            /** Is the node a load */
+            bool isLoad() const { return (type == Record::LOAD); }
+
+            /** Is the node a store */
+            bool isStore() const { return (type == Record::STORE); }
+
+            /** Is the node a compute (non load/store) node */
+            bool isComp() const { return (type == Record::COMP); }
+
             /** Initialize register dependency array to all zeroes */
             void clearRegDep();
 
@@ -656,6 +665,9 @@ class TraceCPU : public BaseCPU
              * TraceCPUData.
              */
             void writeElementAsTrace() const;
+
+            /** Return string specifying the type of the node */
+            std::string typeToStr() const;
         };
 
         /** Struct to store a ready-to-execute node and its execution tick. */

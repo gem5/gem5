@@ -71,20 +71,23 @@
 # graph to ASCII format.
 #
 # The ASCII trace format uses one line per instruction with the format
-# instruction sequence number, (optional) pc, (optional) weight, load, store,
+# instruction sequence number, (optional) pc, (optional) weight, type
 # (optional) flags, (optional) addr, (optional) size, comp delay,
 # (repeated) order dependencies comma-separated, and (repeated) register
 # dependencies comma-separated.
 #
 # examples:
-# seq_num,[pc],[weight,]load,store,[address,size,flags,]comp_delay:[rob_dep]:
+# seq_num,[pc],[weight,]type,[address,size,flags,]comp_delay:[rob_dep]:
 # [reg_dep]
-# 1,1,False,False,8500::
-# 2,1,False,False,1000:,1:
-# 3,1,True,False,831248,4,74,500:,2:
-# 4,1,False,False,0:,2:
-# 5,1,False,False,500::,4
-# 6,1,False,True,831248,4,74,1000:,3:,4,5
+# 1,35652,1,COMP,8500::
+# 2,35656,1,COMP,0:,1:
+# 3,35660,1,LOAD,1748752,4,74,500:,2:
+# 4,35660,1,COMP,0:,3:
+# 5,35664,1,COMP,3000::,4
+# 6,35666,1,STORE,1748752,4,74,1000:,3:,4,5
+# 7,35666,1,COMP,3000::,4
+# 8,35670,1,STORE,1748748,4,74,0:,6,3:,7
+# 9,35670,1,COMP,500::,7
 
 import protolib
 import sys
@@ -138,6 +141,13 @@ def main():
 
     print "Parsing packets"
 
+    print "Creating enum value,name lookup from proto"
+    enumNames = {}
+    desc = inst_dep_record_pb2.InstDepRecord.DESCRIPTOR
+    for namestr, valdesc in desc.enum_values_by_name.items():
+        print '\t', valdesc.number, namestr
+        enumNames[valdesc.number] = namestr
+
     num_packets = 0
     num_regdeps = 0
     num_robdeps = 0
@@ -159,8 +169,14 @@ def main():
             ascii_out.write(',%s' % (packet.weight))
         else:
             ascii_out.write(',1')
-        # Write to file if it is a load and if it is a store
-        ascii_out.write(',%s,%s' % (packet.load, packet.store))
+        # Write to file the type of the record
+        try:
+            ascii_out.write(',%s' % enumNames[packet.type])
+        except KeyError:
+            print "Seq. num", packet.seq_num, "has unsupported type", \
+                packet.type
+            exit(-1)
+
 
         # Write to file if it has the optional fields addr, size, flags
         if packet.HasField('addr'):

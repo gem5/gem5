@@ -453,7 +453,7 @@ TraceCPU::ElasticDataGen::execute()
                 ++numRetrySucceeded;
                 retryPkt = nullptr;
             }
-        } else if (node_ptr->isLoad || node_ptr->isStore) {
+        } else if (node_ptr->isLoad() || node_ptr->isStore()) {
             // If there is no retryPkt, attempt to send a memory request in
             // case of a load or store node. If the send fails, executeMemReq()
             // returns a packet pointer, which we save in retryPkt. In case of
@@ -474,7 +474,7 @@ TraceCPU::ElasticDataGen::execute()
         // dependencies complete. But as per dependency modelling we need
         // to mark ROB dependencies of load and non load/store nodes which
         // are based on successful sending of the load as complete.
-        if (node_ptr->isLoad && !node_ptr->isStrictlyOrdered()) {
+        if (node_ptr->isLoad() && !node_ptr->isStrictlyOrdered()) {
             // If execute succeeded mark its dependents as complete
             DPRINTF(TraceCPUData, "Node seq. num %lli sent. Waking up "
                     "dependents..\n", node_ptr->seqNum);
@@ -483,7 +483,7 @@ TraceCPU::ElasticDataGen::execute()
             while (child_itr != (node_ptr->dependents).end()) {
                 // ROB dependency of a store on a load must not be removed
                 // after load is sent but after response is received
-                if (!(*child_itr)->isStore &&
+                if (!(*child_itr)->isStore() &&
                     (*child_itr)->removeRobDep(node_ptr->seqNum)) {
 
                     // Check if the child node has become dependency free
@@ -530,7 +530,7 @@ TraceCPU::ElasticDataGen::execute()
         // marked complete. Thus it is safe to delete it. For
         // stores and non load/store nodes all dependencies were
         // marked complete so it is safe to delete it.
-        if (!node_ptr->isLoad || node_ptr->isStrictlyOrdered()) {
+        if (!node_ptr->isLoad() || node_ptr->isStrictlyOrdered()) {
             // Release all resources occupied by the completed node
             hwResource.release(node_ptr);
             // clear the dynamically allocated set of dependents
@@ -604,7 +604,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // If the request is strictly ordered, do not send it. Just return nullptr
     // as if it was succesfully sent.
     if (node_ptr->isStrictlyOrdered()) {
-        node_ptr->isLoad ? ++numSOLoads : ++numSOStores;
+        node_ptr->isLoad() ? ++numSOLoads : ++numSOStores;
         DPRINTF(TraceCPUData, "Skipping strictly ordered request %lli.\n",
                 node_ptr->seqNum);
         return nullptr;
@@ -630,7 +630,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     req->setPC(node_ptr->pc);
     PacketPtr pkt;
     uint8_t* pkt_data = new uint8_t[req->getSize()];
-    if (node_ptr->isLoad) {
+    if (node_ptr->isLoad()) {
         pkt = Packet::createRead(req);
     } else {
         pkt = Packet::createWrite(req);
@@ -664,8 +664,7 @@ TraceCPU::ElasticDataGen::checkAndIssue(const GraphNode* node_ptr, bool first)
     // If this is the first attempt, print a debug message to indicate this.
     if (first) {
         DPRINTFR(TraceCPUData, "\t\tseq. num %lli(%s) with rob num %lli is now"
-            " dependency free.\n", node_ptr->seqNum,
-            node_ptr->isLoad ? "L" : (node_ptr->isStore ? "S" : "C"),
+            " dependency free.\n", node_ptr->seqNum, node_ptr->typeToStr(),
             node_ptr->robNum);
     }
 
@@ -831,8 +830,7 @@ TraceCPU::ElasticDataGen::printReadyList() {
         auto graph_itr = depGraph.find(itr->seqNum);
         GraphNode* node_ptr M5_VAR_USED = graph_itr->second;
         DPRINTFR(TraceCPUData, "\t%lld(%s), %lld\n", itr->seqNum,
-            node_ptr->isLoad ? "L" : (node_ptr->isStore ? "S" : "C"),
-            itr->execTick);
+            node_ptr->typeToStr(), itr->execTick);
         itr++;
     }
 }
@@ -857,9 +855,9 @@ TraceCPU::ElasticDataGen::HardwareResource::occupy(const GraphNode* new_node)
     oldestInFlightRobNum = inFlightNodes.begin()->second;
 
     // Occupy Load/Store Buffer entry for the issued node if applicable
-    if (new_node->isLoad) {
+    if (new_node->isLoad()) {
         ++numInFlightLoads;
-    } else if (new_node->isStore) {
+    } else if (new_node->isStore()) {
         ++numInFlightStores;
     } // else if it is a non load/store node, no buffer entry is occupied
 
@@ -894,7 +892,7 @@ TraceCPU::ElasticDataGen::HardwareResource::release(const GraphNode* done_node)
     // freed. But it occupies an entry in the Store Buffer until its response
     // is received. A load is considered complete when a response is received,
     // thus both ROB and Load Buffer entries can be released.
-    if (done_node->isLoad) {
+    if (done_node->isLoad()) {
         assert(numInFlightLoads != 0);
         --numInFlightLoads;
     }
@@ -902,7 +900,7 @@ TraceCPU::ElasticDataGen::HardwareResource::release(const GraphNode* done_node)
     // entry on response. For writes which are strictly ordered, for e.g.
     // writes to device registers, we do that within release() which is called
     // when node is executed and taken off from readyList.
-    if (done_node->isStore && done_node->isStrictlyOrdered()) {
+    if (done_node->isStore() && done_node->isStrictlyOrdered()) {
         releaseStoreBuffer();
     }
 }
@@ -949,10 +947,10 @@ TraceCPU::ElasticDataGen::HardwareResource::isAvailable(
     if (num_in_flight_nodes >= sizeROB) {
         return false;
     }
-    if (new_node->isLoad && numInFlightLoads >= sizeLoadBuffer) {
+    if (new_node->isLoad() && numInFlightLoads >= sizeLoadBuffer) {
         return false;
     }
-    if (new_node->isStore && numInFlightStores >= sizeStoreBuffer) {
+    if (new_node->isStore() && numInFlightStores >= sizeStoreBuffer) {
         return false;
     }
     return true;
@@ -1250,8 +1248,7 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
     if (trace.read(pkt_msg)) {
         // Required fields
         element->seqNum = pkt_msg.seq_num();
-        element->isLoad = pkt_msg.load();
-        element->isStore = pkt_msg.store();
+        element->type = pkt_msg.type();
         element->compDelay = pkt_msg.comp_delay();
 
         // Repeated field robDepList
@@ -1384,9 +1381,8 @@ void
 TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
 {
     DPRINTFR(TraceCPUData, "%lli", seqNum);
-    DPRINTFR(TraceCPUData, ",%s", (isLoad ? "True" : "False"));
-    DPRINTFR(TraceCPUData, ",%s", (isStore ? "True" : "False"));
-    if (isLoad || isStore) {
+    DPRINTFR(TraceCPUData, ",%s", typeToStr());
+    if (isLoad() || isStore()) {
         DPRINTFR(TraceCPUData, ",%i", addr);
         DPRINTFR(TraceCPUData, ",%i", size);
         DPRINTFR(TraceCPUData, ",%i", flags);
@@ -1412,6 +1408,12 @@ TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
     }
 
     DPRINTFR(TraceCPUData, "\n");
+}
+
+std::string
+TraceCPU::ElasticDataGen::GraphNode::typeToStr() const
+{
+    return Record::RecordType_Name(type);
 }
 
 TraceCPU::FixedRetryGen::InputStream::InputStream(const std::string& filename)

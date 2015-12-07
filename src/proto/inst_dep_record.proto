@@ -50,26 +50,31 @@ message InstDepRecordHeader {
 }
 
 // Packet to encapsulate an instruction in the o3cpu data dependency trace.
-// The required fields include the instruction sequence number, whether it
-// is a load, and whether it is a store. The request related fields are
-// optional, namely address, size and flags. These exist only if the
-// instruction is a load or store. The dependency related information includes
-// a repeated field for order dependencies, a repeated field for register
-// dependencies and the computational delay with respect to the dependency
-// that completed last. A weight field is used to account for committed
-// instructions that were filtered out before writing the trace and is used
-// to estimate ROB occupancy during replay. An optional field is provided for
-// the instruction PC.
+// The required fields include the instruction sequence number and the type
+// of the record associated with the instruction e.g. load. The request related
+// fields are optional, namely address, size and flags. The dependency related
+// information includes a repeated field for order dependencies and register
+// dependencies for loads, stores and comp records. There is a field for the
+// computational delay with respect to the dependency that completed last. A
+// weight field is used to account for committed instruction that were
+// filtered out before writing the trace and is used to estimate ROB
+// occupancy during replay. An optional field is provided for the instruction
+// PC.
 message InstDepRecord {
+  enum RecordType {
+    INVALID = 0;
+    LOAD = 1;
+    STORE = 2;
+    COMP = 3;
+  }
   required uint64 seq_num = 1;
-  required bool load = 2;
-  required bool store = 3;
-  optional uint64 addr = 4;
-  optional uint32 size = 5;
-  optional uint32 flags = 6;
-  repeated uint64 rob_dep = 7;
-  required uint64 comp_delay = 8;
-  repeated uint64 reg_dep = 9;
-  optional uint32 weight = 10;
-  optional uint64 pc = 11;
+  required RecordType type = 2 [default = INVALID];
+  optional uint64 addr = 3;
+  optional uint32 size = 4;
+  optional uint32 flags = 5;
+  repeated uint64 rob_dep = 6;
+  required uint64 comp_delay = 7;
+  repeated uint64 reg_dep = 8;
+  optional uint32 weight = 9;
+  optional uint64 pc = 10;
 }

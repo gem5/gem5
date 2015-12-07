@@ -71,20 +71,23 @@
 # graph to protobuf format.
 #
 # The ASCII trace format uses one line per instruction with the format
-# instruction sequence number, (optional) pc, (optional) weight, load, store,
+# instruction sequence number, (optional) pc, (optional) weight, type,
 # (optional) flags, (optional) addr, (optional) size, comp delay,
 # (repeated) order dependencies comma-separated, and (repeated) register
 # dependencies comma-separated.
 #
 # examples:
-# seq_num,[pc],[weight,]load,store,[address,size,flags,]comp_delay:[rob_dep]:
+# seq_num,[pc],[weight,]type,[address,size,flags,]comp_delay:[rob_dep]:
 # [reg_dep]
-# 1,1,False,False,8500::
-# 2,1,False,False,1000:,1:
-# 3,1,True,False,831248,4,74,500:,2:
-# 4,1,False,False,0:,2:
-# 5,1,False,False,500::,4
-# 6,1,False,True,831248,4,74,1000:,3:,4,5
+# 1,35652,1,COMP,8500::
+# 2,35656,1,COMP,0:,1:
+# 3,35660,1,LOAD,1748752,4,74,500:,2:
+# 4,35660,1,COMP,0:,3:
+# 5,35664,1,COMP,3000::,4
+# 6,35666,1,STORE,1748752,4,74,1000:,3:,4,5
+# 7,35666,1,COMP,3000::,4
+# 8,35670,1,STORE,1748748,4,74,0:,6,3:,7
+# 9,35670,1,COMP,500::,7
 
 import protolib
 import sys
@@ -105,6 +108,8 @@ except:
     else:
         print "Failed to import proto definitions"
         exit(-1)
+
+DepRecord = inst_dep_record_pb2.InstDepRecord
 
 def main():
     if len(sys.argv) != 3:
@@ -133,34 +138,46 @@ def main():
     header.window_size = 120
     protolib.encodeMessage(proto_out, header)
 
+    print "Creating enum name,value lookup from proto"
+    enumValues = {}
+    for namestr, valdesc in DepRecord.DESCRIPTOR.enum_values_by_name.items():
+        print '\t', namestr, valdesc.number
+        enumValues[namestr] = valdesc.number
+
     num_records = 0
     # For each line in the ASCII trace, create a packet message and
     # write it to the encoded output
     for line in ascii_in:
         inst_info_str, rob_dep_str, reg_dep_str = (line.strip()).split(':')
         inst_info_list = inst_info_str.split(',')
-        dep_record = inst_dep_record_pb2.InstDepRecord()
+        dep_record = DepRecord()
 
         dep_record.seq_num = long(inst_info_list[0])
         dep_record.pc = long(inst_info_list[1])
         dep_record.weight = long(inst_info_list[2])
-        dep_record.load = True if inst_info_list[3] == 'True' else  False
-        dep_record.store = True if inst_info_list[4] == 'True' else  False
+        # If the type is not one of the enum values, it should be a key error
+        try:
+            dep_record.type = enumValues[inst_info_list[3]]
+        except KeyError:
+            print "Seq. num", dep_record.seq_num, "has unsupported type", \
+                inst_info_list[3]
+            exit(-1)
+
+        if dep_record.type == DepRecord.INVALID:
+            print "Seq. num", dep_record.seq_num, "is of INVALID type"
+            exit(-1)
 
         # If the instruction is a load or store record the addr, size flags
         # in addition to recording the computation delay
-        if dep_record.load or dep_record.store:
-            addr, size, flags, comp_delay = inst_info_list[5:9]
+        if dep_record.type in [DepRecord.LOAD, DepRecord.STORE]:
+            addr, size, flags, comp_delay = inst_info_list[4:8]
             dep_record.addr = long(addr)
             dep_record.size = int(size)
             dep_record.flags = int(flags)
             dep_record.comp_delay = long(comp_delay)
-        elif not dep_record.load and not dep_record.store:
+        else:
             comp_delay = inst_info_list[4]
             dep_record.comp_delay = long(comp_delay)
-        else:
-            print "Fatal:", seq_num, "is both load and store"
-            exit(1)
 
         # Parse the register and order dependencies both of which are
         # repeated fields. An empty list is valid.
