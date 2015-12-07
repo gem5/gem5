@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2013 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -33,36 +33,43 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Authors: Andreas Hansson
+// Authors: Radhika Jagtap
 
 // Put all the generated messages in a namespace
 package ProtoMessage;
 
-// Packet header with the identifier describing what object captured
-// the trace, the version of this file format, and the tick frequency
-// for all the packet time stamps.
-message PacketHeader {
+// Packet header for the o3cpu data dependency trace. The header fields are the
+// identifier describing what object captured the trace, the version of this
+// file format, the tick frequency of the object and the window size used to
+// limit the register dependencies during capture.
+message InstDepRecordHeader {
   required string obj_id = 1;
   optional uint32 ver = 2 [default = 0];
   required uint64 tick_freq = 3;
+  required uint32 window_size = 4;
 }
 
-// Each packet in the trace contains a tick (which can be translated
-// to absolute time using the frequency in the header), the command,
-// the address, and the size in bytes. The optional flags are used to
-// capture the request flags that convey information about
-// cacheability, if the packet is an instruction fetch or prefetch or
-// not, etc. An optional id field is added for generic use to identify
-// the packet or the "owner" of the packet. An example of the latter
-// is the sequential id of an instruction, or the master id etc.
-// An optional field for PC of the instruction for which this request is made
-// is provided.
-message Packet {
-  required uint64 tick = 1;
-  required uint32 cmd = 2;
-  required uint64 addr = 3;
-  required uint32 size = 4;
-  optional uint32 flags = 5;
-  optional uint64 pkt_id = 6;
-  optional uint64 pc = 7;
+// Packet to encapsulate an instruction in the o3cpu data dependency trace.
+// The required fields include the instruction sequence number, whether it
+// is a load, and whether it is a store. The request related fields are
+// optional, namely address, size and flags. These exist only if the
+// instruction is a load or store. The dependency related information includes
+// a repeated field for order dependencies, a repeated field for register
+// dependencies and the computational delay with respect to the dependency
+// that completed last. A weight field is used to account for committed
+// instructions that were filtered out before writing the trace and is used
+// to estimate ROB occupancy during replay. An optional field is provided for
+// the instruction PC.
+message InstDepRecord {
+  required uint64 seq_num = 1;
+  required bool load = 2;
+  required bool store = 3;
+  optional uint64 addr = 4;
+  optional uint32 size = 5;
+  optional uint32 flags = 6;
+  repeated uint64 rob_dep = 7;
+  required uint64 comp_delay = 8;
+  repeated uint64 reg_dep = 9;
+  optional uint32 weight = 10;
+  optional uint64 pc = 11;
 }

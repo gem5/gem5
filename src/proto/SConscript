@@ -41,6 +41,7 @@ Import('*')
 
 # Only build if we have protobuf support
 if env['HAVE_PROTOBUF']:
+    ProtoBuf('inst_dep_record.proto')
     ProtoBuf('packet.proto')
     ProtoBuf('inst.proto')
     Source('protoio.cc')

@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2013 ARM Limited
+# Copyright (c) 2013 - 2015 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,16 +33,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Matt Horsnell
+# Authors: Radhika Jagtap
+#          Andreas Hansson
+#          Thomas Grass
 
-Import('*')
+from Probe import *
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('SimpleTrace.py')
-    Source('simple_trace.cc')
-    DebugFlag('SimpleTrace')
+class ElasticTrace(ProbeListenerObject):
+    type = 'ElasticTrace'
+    cxx_header = 'cpu/o3/probe/elastic_trace.hh'
 
-    if env['HAVE_PROTOBUF']:
-        SimObject('ElasticTrace.py')
-        Source('elastic_trace.cc')
-        DebugFlag('ElasticTrace')
+    # Trace files for the following params are created in the output directory.
+    # User is forced to provide these when an instance of this class is created.
+    instFetchTraceFile = Param.String(desc="Protobuf trace file name for " \
+                                        "instruction fetch tracing")
+    dataDepTraceFile = Param.String(desc="Protobuf trace file name for " \
+                                    "data dependency tracing")
+    # The dependency window size param must be equal to or greater than the
+    # number of entries in the O3CPU ROB, a typical value is 3 times ROB size
+    depWindowSize = Param.Unsigned(desc="Instruction window size used for " \
+                                    "recording and processing data " \
+                                    "dependencies")
+    # The committed instruction count from which to start tracing
+    startTraceInst = Param.UInt64(0, "The number of committed instructions " \
+                                    "after which to start tracing. Default " \
+                                    "zero means start tracing from first " \
+                                    "committed instruction.")
+
