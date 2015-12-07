@@ -711,7 +711,7 @@
                 "MSIXCAPNextCapability": 0, 
                 "PXCAPLinkCtrl": 0, 
                 "Revision": 0, 
-                "hardware_address": "<m5.params.EthernetAddr object at 0x7f9702029b10>", 
+                "hardware_address": "<m5.params.EthernetAddr object at 0x7ff8b815c750>", 
                 "LegacyIOBase": 0, 
                 "pio_latency": 30000, 
                 "platform": "system.tsunami", 
