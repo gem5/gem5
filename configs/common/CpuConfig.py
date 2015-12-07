@@ -53,6 +53,7 @@ _cpu_aliases_all = [
     ("minor", "MinorCPU"),
     ("detailed", "DerivO3CPU"),
     ("kvm", ("ArmKvmCPU", "ArmV8KvmCPU", "X86KvmCPU")),
+    ("trace", "TraceCPU"),
     ]
 
 # Filtered list of aliases. Only aliases for existing CPUs exist in
@@ -107,6 +108,30 @@ def print_cpu_list():
 def cpu_names():
     """Return a list of valid CPU names."""
     return _cpu_classes.keys() + _cpu_aliases.keys()
+
+def config_etrace(cpu_cls, cpu_list, options):
+    if issubclass(cpu_cls, m5.objects.DerivO3CPU):
+        # Assign the same file name to all cpus for now. This must be
+        # revisited when creating elastic traces for multi processor systems.
+        for cpu in cpu_list:
+            # Attach the elastic trace probe listener. Set the protobuf trace
+            # file names. Set the dependency window size equal to the cpu it
+            # is attached to.
+            cpu.traceListener = m5.objects.ElasticTrace(
+                                instFetchTraceFile = options.inst_trace_file,
+                                dataDepTraceFile = options.data_trace_file,
+                                depWindowSize = 3 * cpu.numROBEntries)
+            # Make the number of entries in the ROB, LQ and SQ very
+            # large so that there are no stalls due to resource
+            # limitation as such stalls will get captured in the trace
+            # as compute delay. For replay, ROB, LQ and SQ sizes are
+            # modelled in the Trace CPU.
+            cpu.numROBEntries = 512;
+            cpu.LQEntries = 128;
+            cpu.SQEntries = 128;
+    else:
+        fatal("%s does not support data dependency tracing. Use a CPU model of"
+              " type or inherited from DerivO3CPU.", cpu_cls)
 
 # The ARM detailed CPU is special in the sense that it doesn't exist
 # in the normal object hierarchy, so we have to add it manually.

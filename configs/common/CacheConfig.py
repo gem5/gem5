@@ -69,6 +69,13 @@ def config_cache(options, system):
     # Set the cache line size of the system
     system.cache_line_size = options.cacheline_size
 
+    # If elastic trace generation is enabled, make sure the memory system is
+    # minimal so that compute delays do not include memory access latencies.
+    # Configure the compulsory L1 caches for the O3CPU, do not configure
+    # any more caches.
+    if options.l2cache and options.elastic_trace_en:
+        fatal("When elastic trace is enabled, do not configure L2 caches.")
+
     if options.l2cache:
         # Provide a clock for the L2 and the L1-to-L2 bus here as they
         # are not connected using addTwoLevelCacheHierarchy. Use the

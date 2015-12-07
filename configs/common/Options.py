@@ -87,6 +87,19 @@ def addCommonOptions(parser):
                       Only used if multiple programs are specified. If true,
                       then the number of threads per cpu is same as the
                       number of programs.""")
+    parser.add_option("--elastic-trace-en", action="store_true",
+                      help="""Enable capture of data dependency and instruction
+                      fetch traces using elastic trace probe.""")
+    # Trace file paths input to trace probe in a capture simulation and input
+    # to Trace CPU in a replay simulation
+    parser.add_option("--inst-trace-file", action="store", type="string",
+                      help="""Instruction fetch trace file input to
+                      Elastic Trace probe in a capture simulation and
+                      Trace CPU in a replay simulation""", default="")
+    parser.add_option("--data-trace-file", action="store", type="string",
+                      help="""Data dependency trace file input to
+                      Elastic Trace probe in a capture simulation and
+                      Trace CPU in a replay simulation""", default="")
 
     # Memory Options
     parser.add_option("--list-mem-types",

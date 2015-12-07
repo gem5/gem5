@@ -459,16 +459,22 @@ def run(options, root, testsys, cpu_class):
         for i in xrange(np):
             if options.fast_forward:
                 testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
-            switch_cpus[i].system =  testsys
+            switch_cpus[i].system = testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
-            switch_cpus[i].progress_interval = testsys.cpu[i].progress_interval
+            switch_cpus[i].progress_interval = \
+                testsys.cpu[i].progress_interval
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts
             # Add checker cpu if selected
             if options.checker:
                 switch_cpus[i].addCheckerCpu()
+
+        # If elastic tracing is enabled attach the elastic trace probe
+        # to the switch CPUs
+        if options.elastic_trace_en:
+            CpuConfig.config_etrace(cpu_class, switch_cpus, options)
 
         testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]

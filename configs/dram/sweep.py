@@ -101,6 +101,7 @@ system.mmap_using_noreserve = True
 options.mem_channels = 1
 options.external_memory_system = 0
 options.tlm_memory = 0
+options.elastic_trace_en = 0
 MemConfig.config_mem(options, system)
 
 # the following assumes that we are using the native DRAM

@@ -58,6 +58,7 @@ import Options
 import Ruby
 import Simulation
 import CacheConfig
+import CpuConfig
 import MemConfig
 from Caches import *
 from cpu2000 import *
@@ -195,6 +196,11 @@ system.cpu_voltage_domain = VoltageDomain()
 system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
                                        voltage_domain =
                                        system.cpu_voltage_domain)
+
+# If elastic tracing is enabled, then configure the cpu and attach the elastic
+# trace probe
+if options.elastic_trace_en:
+    CpuConfig.config_etrace(CPUClass, system.cpu, options)
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.
