@@ -62,6 +62,7 @@ input_sets = ['simlarge']
 
 def add_tasks(bench, input_set):
     add_task(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
+
     add_task(bench, input_set, '512kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
     add_task(bench, input_set, '1MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
     add_task(bench, input_set, '2MB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU')
