@@ -58,6 +58,7 @@
 #include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "cpu/inst_seq.hh"
 #include "sim/core.hh"
 
 /**
@@ -204,6 +205,8 @@ class Request
         VALID_PADDR          = 0x00000002,
         /** Whether or not the vaddr & asid are valid. */
         VALID_VADDR          = 0x00000004,
+        /** Whether or not the instruction sequence number is valid. */
+        VALID_INST_SEQ_NUM   = 0x00000008,
         /** Whether or not the pc is valid. */
         VALID_PC             = 0x00000010,
         /** Whether or not the context ID is valid. */
@@ -211,7 +214,6 @@ class Request
         VALID_THREAD_ID      = 0x00000040,
         /** Whether or not the sc result is valid. */
         VALID_EXTRA_DATA     = 0x00000080,
-
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
@@ -297,6 +299,9 @@ class Request
     /** program counter of initiating access; for tracing/debugging */
     Addr _pc;
 
+    /** Sequence number of the instruction that creates the request */
+    const InstSeqNum _reqInstSeqNum;
+
   public:
 
     /**
@@ -308,8 +313,20 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
     {}
+
+    Request(Addr paddr, unsigned size, Flags flags, MasterID mid,
+            InstSeqNum seq_num, ContextID cid, ThreadID tid)
+        : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
+          _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
+          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          _reqInstSeqNum(seq_num), translateDelta(0), accessDelta(0), depth(0)
+    {
+        setPhys(paddr, size, flags, mid, curTick());
+        setThreadContext(cid, tid);
+        privateFlags.set(VALID_INST_SEQ_NUM);
+    }
 
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
@@ -320,7 +337,7 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, curTick());
     }
@@ -329,7 +346,7 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
     }
@@ -339,7 +356,7 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
         privateFlags.set(VALID_PC);
@@ -351,7 +368,7 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
         setThreadContext(cid, tid);
@@ -640,6 +657,23 @@ class Request
      */
     void setAccessLatency() { accessDelta = curTick() - _time - translateDelta; }
     Tick getAccessLatency() const { return accessDelta; }
+
+    /**
+     * Accessor for the sequence number of instruction that creates the
+     * request.
+     */
+    bool
+    hasInstSeqNum() const
+    {
+        return privateFlags.isSet(VALID_INST_SEQ_NUM);
+    }
+
+    InstSeqNum
+    getReqInstSeqNum() const
+    {
+        assert(privateFlags.isSet(VALID_INST_SEQ_NUM));
+        return _reqInstSeqNum;
+    }
 
     /** Accessor functions for flags.  Note that these are for testing
         only; setting flags should be done via setFlags(). */
