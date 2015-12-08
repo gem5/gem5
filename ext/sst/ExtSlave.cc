@@ -92,7 +92,7 @@ ExtSlave::recvFunctional(PacketPtr pkt)
             initPackets = new std::list<MemEvent*>;
         }
         ::MemCmd::Command pktCmd = (::MemCmd::Command)pkt->cmd.toInt();
-        assert(pktCmd == ::MemCmd::WriteReq || pktCmd == ::MemCmd::Writeback);
+        assert(pktCmd == ::MemCmd::WriteReq);
         Addr a = pkt->getAddr();
         MemEvent* ev = new MemEvent(comp, a, a, GetX);
         ev->setPayload(pkt->getSize(), pkt->getPtr<uint8_t>());
@@ -126,7 +126,7 @@ ExtSlave::recvTimingReq(PacketPtr pkt)
     else if ((::MemCmd::Command)pkt->cmd.toInt() == ::MemCmd::StoreCondReq)
         ev->setStoreConditional();
 
-    if (pkt->req->isLockedRMW())      ev->setFlag(MemEvent::F_LOCKED);
+    if (pkt->req->isLockedRMW())   ev->setFlag(MemEvent::F_LOCKED);
     if (pkt->req->isUncacheable()) ev->setFlag(MemEvent::F_NONCACHEABLE);
     if (pkt->req->hasContextId())  ev->setGroupId(pkt->req->contextId());
 // Prefetches not working with SST; it maybe be dropping them, treating them
