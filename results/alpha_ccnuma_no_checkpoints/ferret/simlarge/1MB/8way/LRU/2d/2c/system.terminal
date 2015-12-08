@@ -381,3 +381,17 @@ PARSEC Benchmark Suite Version 2.1
 (248,245)
 (248,246)
 (248,247)
+(249,248)
+(249,249)
+(250,250)
+(252,251)
+(253,252)
+(254,253)
+(256,254)
+(256,255)
+(256,256)
+[HOOKS] Leaving ROI
+QUERY TIME: 5.656 seconds
+[HOOKS] Total time spent in ROI: 5.656s
+[HOOKS] Terminating
+Done :D
