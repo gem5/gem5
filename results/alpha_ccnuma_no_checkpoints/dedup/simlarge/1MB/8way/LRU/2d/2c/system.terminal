@@ -134,3 +134,7 @@ loading script...
 PARSEC Benchmark Suite Version 2.1
 [HOOKS] PARSEC Hooks Version 1.2
 [HOOKS] Entering ROI
+[HOOKS] Leaving ROI
+[HOOKS] Total time spent in ROI: 11.036s
+[HOOKS] Terminating
+Done :D

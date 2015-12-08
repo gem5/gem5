@@ -3,22 +3,64 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 memsize 20000000 pages 10000 
 First free page after ROM 0xFFFFFC0000018000
 HWRPB 0xFFFFFC0000018000 l1pt 0xFFFFFC0000040000 l2pt 0xFFFFFC0000042000 l3pt_rpb 0xFFFFFC0000044000 l3pt_kernel 0xFFFFFC0000048000 l2reserv 0xFFFFFC0000046000
-kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000899860, kentry = 0xFFFFFC0000310000, numCPUs = 0x2
+kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000899860, kentry = 0xFFFFFC0000310000, numCPUs = 0x10
 CPU Clock at 2000 MHz IntrClockFrequency=1024 
-Booting with 2 processor(s) 
+Booting with 16 processor(s) 
 KSP: 0x20043FE8 PTBR 0x20
 KSP: 0x20043FE8 PTBR 0x20
-Console Callback at 0x0, fixup at 0x0, crb offset: 0x790
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+KSP: 0x20043FE8 PTBR 0x20
+Console Callback at 0x0, fixup at 0x0, crb offset: 0x2A90
 Memory cluster 0 [0 - 392]
 Memory cluster 1 [392 - 65144]
 Initalizing mdt_bitmap addr 0xFFFFFC0000038000 mem_pages 10000 
-ConsoleDispatch at virt 100008D8 phys 188D8 val FFFFFC00000100A8
+ConsoleDispatch at virt 10002BD8 phys 1ABD8 val FFFFFC00000100A8
 Bootstraping CPU 1 with sp=0xFFFFFC0000076000
-unix_boot_mem ends at FFFFFC0000078000 
+Bootstraping CPU 2 with sp=0xFFFFFC0000078000
+Bootstraping CPU 3 with sp=0xFFFFFC000007A000
+Bootstraping CPU 4 with sp=0xFFFFFC000007C000
+Bootstraping CPU 5 with sp=0xFFFFFC000007E000
+Bootstraping CPU 6 with sp=0xFFFFFC0000080000
+Entering slaveloop for cpu 1 my_rpb=FFFFFC0000018400
+Bootstraping CPU 7 with sp=0xFFFFFC0000082000
+Entering slaveloop for cpu 2 my_rpb=FFFFFC0000018680
+Bootstraping CPU 8 with sp=0xFFFFFC0000084000
+Entering slaveloop for cpu 3 my_rpb=FFFFFC0000018900
+Entering slaveloop for cpu 4 my_rpb=FFFFFC0000018B80
+Bootstraping CPU 9 with sp=0xFFFFFC0000086000
+Entering slaveloop for cpu 5 my_rpb=FFFFFC0000018E00
+Bootstraping CPU 10 with sp=0xFFFFFC0000088000
+Bootstraping CPU 11 with sp=0xFFFFFC000008A000
+Bootstraping CPU 12 with sp=0xFFFFFC000008C000
+Bootstraping CPU 13 with sp=0xFFFFFC000008E000
+Bootstraping CPU 14 with sp=0xFFFFFC0000090000
+Bootstraping CPU 15 with sp=0xFFFFFC0000092000
+unix_boot_mem ends at FFFFFC0000094000 
 k_argc = 0 
 jumping to kernel at 0xFFFFFC0000310000, (PCBB 0xFFFFFC0000018180 pfn 1101)
 CallbackFixup 0 18000, t7=FFFFFC0000814000
-Entering slaveloop for cpu 1 my_rpb=FFFFFC0000018400
+Entering slaveloop for cpu 6 my_rpb=FFFFFC0000019080
+Entering slaveloop for cpu 7 my_rpb=FFFFFC0000019300
+Entering slaveloop for cpu 8 my_rpb=FFFFFC0000019580
+Entering slaveloop for cpu 9 my_rpb=FFFFFC0000019800
+Entering slaveloop for cpu 10 my_rpb=FFFFFC0000019A80
+Entering slaveloop for cpu 11 my_rpb=FFFFFC0000019D00
+Entering slaveloop for cpu 12 my_rpb=FFFFFC0000019F80
+Entering slaveloop for cpu 13 my_rpb=FFFFFC000001A200
+Entering slaveloop for cpu 14 my_rpb=FFFFFC000001A480
+Entering slaveloop for cpu 15 my_rpb=FFFFFC000001A700
 Linux version 2.6.27.6-dirty (joel@capillary) (gcc version 4.3.4 (crosstool-NG-1.5.2) ) #1 SMP Sat Mar 6 19:10:44 CST 2010
 Booting GENERIC on Tsunami variation DP264 using machine vector DP264 from SRM
 Major Options: SMP LEGACY_START VERBOSE_MCHECK 
@@ -27,7 +69,7 @@ memcluster 0, usage 1, start        0, end      392
 memcluster 1, usage 0, start      392, end    65536
 freeing pages 1103:65536
 reserving pages 1103:1104
-SMP: 2 CPUs probed -- cpu_present_map = 3
+SMP: 16 CPUs probed -- cpu_present_map = ffff
 Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 65088
 Kernel command line: root=/dev/hda1 console=ttyS0
 PID hash table entries: 2048 (order: 11, 16384 bytes)
@@ -36,13 +78,41 @@ Console: colour dummy device 80x25
 console [ttyS0] enabled
 Dentry cache hash table entries: 65536 (order: 6, 524288 bytes)
 Inode-cache hash table entries: 32768 (order: 5, 262144 bytes)
-Memory: 509800k/524288k available (3757k kernel code, 10656k reserved, 261k data, 208k init)
+Memory: 509528k/524288k available (3757k kernel code, 10992k reserved, 261k data, 208k init)
 Mount-cache hash table entries: 512
 SMP starting up secondaries.
 Slave CPU 1 console command START
 SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018400 my_rpb_phys 18400
-Brought up 2 CPUs
-SMP: Total of 2 processors activated (8000.15 BogoMIPS).
+Slave CPU 2 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018680 my_rpb_phys 18680
+Slave CPU 3 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018900 my_rpb_phys 18900
+Slave CPU 4 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018B80 my_rpb_phys 18B80
+Slave CPU 5 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000018E00 my_rpb_phys 18E00
+Slave CPU 6 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019080 my_rpb_phys 19080
+Slave CPU 7 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019300 my_rpb_phys 19300
+Slave CPU 8 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019580 my_rpb_phys 19580
+Slave CPU 9 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019800 my_rpb_phys 19800
+Slave CPU 10 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019A80 my_rpb_phys 19A80
+Slave CPU 11 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019D00 my_rpb_phys 19D00
+Slave CPU 12 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC0000019F80 my_rpb_phys 19F80
+Slave CPU 13 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC000001A200 my_rpb_phys 1A200
+Slave CPU 14 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC000001A480 my_rpb_phys 1A480
+Slave CPU 15 console command START
+SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb FFFFFC000001A700 my_rpb_phys 1A700
+Brought up 16 CPUs
+SMP: Total of 16 processors activated (63965.49 BogoMIPS).
 net_namespace: 552 bytes
 NET: Registered protocol family 16
 EISA bus registered
@@ -59,7 +129,7 @@ TCP reno registered
 NET: Registered protocol family 1
 srm_env: version 0.0.6 loaded successfully
 Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-msgmni has been set to 997
+msgmni has been set to 996
 io scheduler noop registered
 io scheduler anticipatory registered
 io scheduler deadline registered
@@ -123,12 +193,4 @@ mounting filesystems...
 loading script...
 PARSEC Benchmark Suite Version 2.1
 [HOOKS] PARSEC Hooks Version 1.2
-Creating directory using system("mkdir -p Storytelling/output")...Successful!
-Simulation                                        Reading simulation model : ./Face_Data/Eftychis_840k/Front_370k/face_simulation_2.tet
-Total particles = 80598
-Total tetrahedra = 372126
-muscles = 32
-attachments = 3
 [HOOKS] Entering ROI
-
-  Frame 1                                         
