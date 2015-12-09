@@ -242,9 +242,6 @@ int
 Process::allocFD(int sim_fd, const string& filename, int flags, int mode,
                  bool pipe)
 {
-    if (sim_fd == -1)
-        return -1;
-
     for (int free_fd = 0; free_fd < fd_array->size(); free_fd++) {
         FDEntry *fde = getFDEntry(free_fd);
         if (fde->isFree()) {
