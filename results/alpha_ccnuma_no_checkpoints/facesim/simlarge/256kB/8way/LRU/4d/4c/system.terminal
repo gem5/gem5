@@ -199,3 +199,49 @@ Total particles = 80598
 Total tetrahedra = 372126
 muscles = 32
 attachments = 3
+[HOOKS] Entering ROI
+
+  Frame 1                                         
+  END Frame 1                                       1.0952 s[HOOKS] Leaving ROI
+
+SIMULATION                                          0.0000
+  FRAME                                             1.0952
+    ADB                                             1.0942
+      UPBS                                          0.2403
+        UPBS (FEM) - Initialize                     0.0596 s
+        UPBS (FEM) - Element Loop                   0.1807 s
+        UPBS (CPF)                                  0.0000 s
+      ADO                                           0.8539
+        ADO - Update collision bodies               0.0000 s
+        AOTSQ                                       0.8539
+          AOTSQ - Initialize                        0.0000 s
+          AOTSQ - NR loop                           0.8539
+            AOTSQ - NR loop - Initialize            0.0000 s
+            UCPF                                    0.1583 s
+            NRS                                     0.5178
+              NRS - Initialize                      0.0000 s
+              NRS - Boundary conditions 1           0.0010 s
+              UPBS                                  0.1641
+                UPBS (FEM) - Initialize             0.0000 s
+                UPBS (FEM) - Element Loop           0.1641 s
+                UPBS (CPF)                          0.0000 s
+              AFD (FEM)                             0.0020 s
+              AVIF                                  0.0127
+                AVIF (FEM)                          0.0127 s
+                AVIF (CPF)                          0.0000 s
+              NRS - Boundary conditions 2           0.0000 s
+              NRS - Compute residual                0.0000
+              NRS - Copy initial guess              0.0010 s
+              CGI                                   0.3371
+            UPBS                                    0.1651
+              UPBS (FEM) - Initialize               0.0000 s
+              UPBS (FEM) - Element Loop             0.1651 s
+              UPBS (CPF)                            0.0000 s
+            AVIF                                    0.0127
+              AVIF (FEM)                            0.0127 s
+              AVIF (CPF)                            0.0000 s
+            AOTSQ - NR loop - Boundary conditions   0.0000 s
+            AOTSQ - NR loop - Compute residual      0.0000 s
+[HOOKS] Total time spent in ROI: 1.095s
+[HOOKS] Terminating
+Done :D

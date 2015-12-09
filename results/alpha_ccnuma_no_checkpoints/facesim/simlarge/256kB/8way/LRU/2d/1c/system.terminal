@@ -132,3 +132,46 @@ attachments = 3
 [HOOKS] Entering ROI
 
   Frame 1                                         
+  END Frame 1                                       6.3212 s[HOOKS] Leaving ROI
+
+SIMULATION                                          0.0000
+  FRAME                                             6.3212
+    ADB                                             6.3202
+      UPBS                                          1.1089
+        UPBS (FEM) - Initialize                     0.0567 s
+        UPBS (FEM) - Element Loop                   1.0522 s
+        UPBS (CPF)                                  0.0000 s
+      ADO                                           5.2113
+        ADO - Update collision bodies               0.0000 s
+        AOTSQ                                       5.2113
+          AOTSQ - Initialize                        0.0010 s
+          AOTSQ - NR loop                           5.2103
+            AOTSQ - NR loop - Initialize            0.0000 s
+            UCPF                                    0.1583 s
+            NRS                                     3.8123
+              NRS - Initialize                      0.0000 s
+              NRS - Boundary conditions 1           0.0000 s
+              UPBS                                  1.1499
+                UPBS (FEM) - Initialize             0.0000 s
+                UPBS (FEM) - Element Loop           1.1490 s
+                UPBS (CPF)                          0.0000 s
+              AFD (FEM)                             0.0107 s
+              AVIF                                  0.0870
+                AVIF (FEM)                          0.0870 s
+                AVIF (CPF)                          0.0000 s
+              NRS - Boundary conditions 2           0.0000 s
+              NRS - Compute residual                0.0010
+              NRS - Copy initial guess              0.0000 s
+              CGI                                   2.5636
+            UPBS                                    1.1509
+              UPBS (FEM) - Initialize               0.0000 s
+              UPBS (FEM) - Element Loop             1.1509 s
+              UPBS (CPF)                            0.0000 s
+            AVIF                                    0.0889
+              AVIF (FEM)                            0.0889 s
+              AVIF (CPF)                            0.0000 s
+            AOTSQ - NR loop - Boundary conditions   0.0000 s
+            AOTSQ - NR loop - Compute residual      0.0000 s
+[HOOKS] Total time spent in ROI: 6.321s
+[HOOKS] Terminating
+Done :D
