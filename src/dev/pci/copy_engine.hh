@@ -45,14 +45,14 @@
  * A DMA asyncronous copy engine
  */
 
-#ifndef __DEV_COPY_ENGINE_HH__
-#define __DEV_COPY_ENGINE_HH__
+#ifndef __DEV_PCI_COPY_ENGINE_HH__
+#define __DEV_PCI_COPY_ENGINE_HH__
 
 #include <vector>
 
 #include "base/cp_annotate.hh"
 #include "base/statistics.hh"
-#include "dev/copy_engine_defs.hh"
+#include "dev/pci/copy_engine_defs.hh"
 #include "dev/pci/device.hh"
 #include "params/CopyEngine.hh"
 #include "sim/drain.hh"
@@ -208,5 +208,5 @@ class CopyEngine : public PciDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
-#endif //__DEV_COPY_ENGINE_HH__
+#endif //__DEV_PCI_COPY_ENGINE_HH__
 

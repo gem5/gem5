@@ -55,3 +55,6 @@ SimObject('PciHost.py')
 Source('host.cc')
 DebugFlag('PciHost')
 
+SimObject('CopyEngine.py')
+Source('copy_engine.cc')
+DebugFlag('DMACopyEngine')

@@ -44,13 +44,14 @@
  * Device model for Intel's I/O AT DMA copy engine.
  */
 
+#include "dev/pci/copy_engine.hh"
+
 #include <algorithm>
 
 #include "base/cp_annotate.hh"
 #include "base/trace.hh"
 #include "debug/DMACopyEngine.hh"
 #include "debug/Drain.hh"
-#include "dev/copy_engine.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/CopyEngine.hh"
