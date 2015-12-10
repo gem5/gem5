@@ -46,15 +46,15 @@
  * Interface for devices using PCI configuration
  */
 
-#ifndef __DEV_PCIDEV_HH__
-#define __DEV_PCIDEV_HH__
+#ifndef __DEV_PCI_DEVICE_HH__
+#define __DEV_PCI_DEVICE_HH__
 
 #include <cstring>
 #include <vector>
 
 #include "dev/dma_device.hh"
-#include "dev/pcireg.h"
 #include "dev/pci/host.hh"
+#include "dev/pci/pcireg.h"
 #include "params/PciDevice.hh"
 #include "sim/byteswap.hh"
 
@@ -224,4 +224,4 @@ class PciDevice : public DmaDevice
 
     const PciBusAddr &busAddr() const { return _busAddr; }
 };
-#endif // __DEV_PCIDEV_HH__
+#endif // __DEV_PCI_DEVICE_HH__

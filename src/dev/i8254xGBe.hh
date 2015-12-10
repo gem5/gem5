@@ -46,7 +46,7 @@
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/i8254xGBe_defs.hh"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 #include "dev/pktfifo.hh"
 #include "params/IGbE.hh"
 #include "sim/eventq.hh"

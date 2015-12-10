@@ -12,6 +12,9 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
+# Copyright (c) 2006 The Regents of The University of Michigan
+# All rights reserved.
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -35,14 +38,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Andreas Sandberg
+# Authors: Steve Reinhardt
+#          Gabe Black
+#          Andreas Sandberg
 
 Import('*')
 
 if env['TARGET_ISA'] == 'null':
     Return()
 
+SimObject('PciDevice.py')
+Source('device.cc')
+DebugFlag('PciDevice')
+
 SimObject('PciHost.py')
 Source('host.cc')
-
 DebugFlag('PciHost')
+

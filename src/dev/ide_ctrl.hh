@@ -39,8 +39,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/io_device.hh"
-#include "dev/pcidev.hh"
-#include "dev/pcireg.h"
+#include "dev/pci/device.hh"
 #include "params/IdeController.hh"
 
 class IdeDisk;

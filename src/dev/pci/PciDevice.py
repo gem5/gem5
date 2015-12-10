@@ -47,7 +47,7 @@ from PciHost import PciHost
 class PciDevice(DmaDevice):
     type = 'PciDevice'
     cxx_class = 'PciDevice'
-    cxx_header = "dev/pcidev.hh"
+    cxx_header = "dev/pci/device.hh"
     abstract = True
 
     host = Param.PciHost(Parent.any, "PCI host")

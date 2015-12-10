@@ -37,7 +37,7 @@
 #define __DEV_ETHERDEVICE_HH__
 
 #include "base/statistics.hh"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 #include "params/EtherDevice.hh"
 #include "params/EtherDevBase.hh"
 #include "sim/sim_object.hh"

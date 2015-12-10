@@ -37,7 +37,7 @@
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/io_device.hh"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 #include "dev/pktfifo.hh"
 #include "dev/sinicreg.hh"
 #include "params/Sinic.hh"

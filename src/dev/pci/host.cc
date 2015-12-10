@@ -42,7 +42,7 @@
 #include <utility>
 
 #include "debug/PciHost.hh"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 #include "dev/platform.hh"
 #include "params/GenericPciHost.hh"
 #include "params/PciHost.hh"

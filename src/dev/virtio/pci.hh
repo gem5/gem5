@@ -42,7 +42,7 @@
 
 #include "base/statistics.hh"
 #include "dev/virtio/base.hh"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 
 struct PciVirtIOParams;
 

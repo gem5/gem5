@@ -29,7 +29,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Pci import PciDevice
+from PciDevice import PciDevice
 
 class CopyEngine(PciDevice):
     type = 'CopyEngine'

@@ -46,6 +46,8 @@
  * A single PCI device configuration space entry.
  */
 
+#include "dev/pci/device.hh"
+
 #include <list>
 #include <string>
 #include <vector>
@@ -55,8 +57,7 @@
 #include "base/misc.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "debug/PCIDEV.hh"
-#include "dev/pcidev.hh"
+#include "debug/PciDevice.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/byteswap.hh"
@@ -246,21 +247,21 @@ PciDevice::readConfig(PacketPtr pkt)
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
         pkt->set<uint8_t>(config.data[offset]);
-        DPRINTF(PCIDEV,
+        DPRINTF(PciDevice,
             "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
       case sizeof(uint16_t):
         pkt->set<uint16_t>(*(uint16_t*)&config.data[offset]);
-        DPRINTF(PCIDEV,
+        DPRINTF(PciDevice,
             "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
         pkt->set<uint32_t>(*(uint32_t*)&config.data[offset]);
-        DPRINTF(PCIDEV,
+        DPRINTF(PciDevice,
             "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint32_t>());
@@ -328,7 +329,7 @@ PciDevice::writeConfig(PacketPtr pkt)
           default:
             panic("writing to a read only register");
         }
-        DPRINTF(PCIDEV,
+        DPRINTF(PciDevice,
             "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint8_t>());
@@ -347,7 +348,7 @@ PciDevice::writeConfig(PacketPtr pkt)
           default:
             panic("writing to a read only register");
         }
-        DPRINTF(PCIDEV,
+        DPRINTF(PciDevice,
             "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint16_t>());
@@ -407,9 +408,9 @@ PciDevice::writeConfig(PacketPtr pkt)
             break;
 
           default:
-            DPRINTF(PCIDEV, "Writing to a read only register");
+            DPRINTF(PciDevice, "Writing to a read only register");
         }
-        DPRINTF(PCIDEV,
+        DPRINTF(PciDevice,
             "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
             _busAddr.dev, _busAddr.func, offset,
             (uint32_t)pkt->get<uint32_t>());

@@ -41,7 +41,7 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 from Device import PioDevice
-from Pci import PciDevice
+from PciDevice import PciDevice
 
 
 class VirtIODeviceBase(SimObject):

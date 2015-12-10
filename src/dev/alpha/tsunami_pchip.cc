@@ -44,7 +44,7 @@
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunamireg.h"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"

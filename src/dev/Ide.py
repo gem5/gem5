@@ -28,7 +28,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from Pci import PciDevice
+from PciDevice import PciDevice
 
 class IdeID(Enum): vals = ['master', 'slave']
 

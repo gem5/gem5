@@ -53,7 +53,7 @@
 #include "base/cp_annotate.hh"
 #include "base/statistics.hh"
 #include "dev/copy_engine_defs.hh"
-#include "dev/pcidev.hh"
+#include "dev/pci/device.hh"
 #include "params/CopyEngine.hh"
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
