@@ -41,7 +41,7 @@
 #define __DEV_VIRTIO_BLOCK_HH__
 
 #include "dev/virtio/base.hh"
-#include "dev/disk_image.hh"
+#include "dev/storage/disk_image.hh"
 #include "dev/terminal.hh"
 
 struct VirtIOBlockParams;

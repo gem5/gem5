@@ -44,15 +44,15 @@
  * Device model for an IDE disk
  */
 
-#ifndef __IDE_DISK_HH__
-#define __IDE_DISK_HH__
+#ifndef __DEV_STORAGE_IDE_DISK_HH__
+#define __DEV_STORAGE_IDE_DISK_HH__
 
 #include "base/statistics.hh"
-#include "dev/disk_image.hh"
-#include "dev/ide_atareg.h"
-#include "dev/ide_ctrl.hh"
-#include "dev/ide_wdcreg.h"
 #include "dev/io_device.hh"
+#include "dev/storage/disk_image.hh"
+#include "dev/storage/ide_atareg.h"
+#include "dev/storage/ide_ctrl.hh"
+#include "dev/storage/ide_wdcreg.h"
 #include "params/IdeDisk.hh"
 #include "sim/eventq.hh"
 
@@ -370,4 +370,4 @@ class IdeDisk : public SimObject
 };
 
 
-#endif // __IDE_DISK_HH__
+#endif // __DEV_STORAGE_IDE_DISK_HH__

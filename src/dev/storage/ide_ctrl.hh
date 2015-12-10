@@ -34,8 +34,8 @@
  * modeled after controller in the Intel PIIX4 chip
  */
 
-#ifndef __IDE_CTRL_HH__
-#define __IDE_CTRL_HH__
+#ifndef __DEV_STORAGE_IDE_CTRL_HH__
+#define __DEV_STORAGE_IDE_CTRL_HH__
 
 #include "base/bitunion.hh"
 #include "dev/io_device.hh"
@@ -156,4 +156,4 @@ class IdeController : public PciDevice
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
-#endif // __IDE_CTRL_HH_
+#endif // __DEV_STORAGE_IDE_CTRL_HH_

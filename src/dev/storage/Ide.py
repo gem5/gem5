@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,38 +24,47 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Nathan Binkert
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from PciDevice import PciDevice
 
-SimObject('Device.py')
-Source('io_device.cc')
-Source('isa_fake.cc')
-DebugFlag('IsaFake')
+class IdeID(Enum): vals = ['master', 'slave']
 
-if env['TARGET_ISA'] == 'null':
-    Return()
+class IdeDisk(SimObject):
+    type = 'IdeDisk'
+    cxx_header = "dev/storage/ide_disk.hh"
+    delay = Param.Latency('1us', "Fixed disk delay in microseconds")
+    driveID = Param.IdeID('master', "Drive ID")
+    image = Param.DiskImage("Disk image")
 
-SimObject('BadDevice.py')
-SimObject('Platform.py')
-SimObject('Terminal.py')
-SimObject('Uart.py')
+class IdeController(PciDevice):
+    type = 'IdeController'
+    cxx_header = "dev/storage/ide_ctrl.hh"
+    disks = VectorParam.IdeDisk("IDE disks attached to this controller")
 
-Source('baddev.cc')
-Source('dma_device.cc')
-Source('intel_8254_timer.cc')
-Source('mc146818.cc')
-Source('pixelpump.cc')
-Source('platform.cc')
-Source('ps2.cc')
-Source('terminal.cc')
-Source('uart.cc')
-Source('uart8250.cc')
+    VendorID = 0x8086
+    DeviceID = 0x7111
+    Command = 0x0
+    Status = 0x280
+    Revision = 0x0
+    ClassCode = 0x01
+    SubClassCode = 0x01
+    ProgIF = 0x85
+    BAR0 = 0x00000001
+    BAR1 = 0x00000001
+    BAR2 = 0x00000001
+    BAR3 = 0x00000001
+    BAR4 = 0x00000001
+    BAR5 = 0x00000001
+    InterruptLine = 0x1f
+    InterruptPin = 0x01
+    BAR0Size = '8B'
+    BAR1Size = '4B'
+    BAR2Size = '8B'
+    BAR3Size = '4B'
+    BAR4Size = '16B'
 
-DebugFlag('DMA')
-DebugFlag('Intel8254Timer')
-DebugFlag('MC146818')
-DebugFlag('Terminal')
-DebugFlag('TerminalVerbose')
-DebugFlag('Uart')
+    io_shift = Param.UInt32(0x0, "IO port shift");
+    ctrl_offset = Param.UInt32(0x0, "IDE disk control offset")

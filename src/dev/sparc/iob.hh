@@ -36,7 +36,6 @@
 #ifndef __DEV_SPARC_IOB_HH__
 #define __DEV_SPARC_IOB_HH__
 
-#include "dev/disk_image.hh"
 #include "dev/io_device.hh"
 #include "params/Iob.hh"
 

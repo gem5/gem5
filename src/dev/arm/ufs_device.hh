@@ -152,7 +152,7 @@
 #include "debug/UFSHostDevice.hh"
 #include "dev/arm/abstract_nvm.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/disk_image.hh"
+#include "dev/storage/disk_image.hh"
 #include "dev/dma_device.hh"
 #include "dev/io_device.hh"
 #include "mem/packet.hh"

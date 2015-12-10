@@ -42,12 +42,13 @@
  *          Miguel Serrano
  */
 
+#include "dev/storage/ide_ctrl.hh"
+
 #include <string>
 
 #include "cpu/intr_control.hh"
 #include "debug/IdeCtrl.hh"
-#include "dev/ide_ctrl.hh"
-#include "dev/ide_disk.hh"
+#include "dev/storage/ide_disk.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/IdeController.hh"

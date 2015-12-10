@@ -35,10 +35,13 @@
 
 #if defined(__linux__)
 #include <endian.h>
+
 #elif defined(__sun)
 #include <sys/isa_defs.h>
+
 #else
 #include <machine/endian.h>
+
 #endif
 
 #ifdef LITTLE_ENDIAN

@@ -32,9 +32,11 @@
  * Simple disk interface for the system console
  */
 
+#include "dev/storage/simple_disk.hh"
+
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/uio.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include <cstring>
@@ -44,8 +46,7 @@
 #include "base/trace.hh"
 #include "debug/SimpleDisk.hh"
 #include "debug/SimpleDiskData.hh"
-#include "dev/disk_image.hh"
-#include "dev/simple_disk.hh"
+#include "dev/storage/disk_image.hh"
 #include "mem/port_proxy.hh"
 #include "sim/system.hh"
 

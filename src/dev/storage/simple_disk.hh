@@ -32,8 +32,8 @@
  * Simple disk interface for the system console
  */
 
-#ifndef __DEV_SIMPLE_DISK_HH__
-#define __DEV_SIMPLE_DISK_HH__
+#ifndef __DEV_STORAGE_SIMPLE_DISK_HH__
+#define __DEV_STORAGE_SIMPLE_DISK_HH__
 
 #include "params/SimpleDisk.hh"
 #include "sim/sim_object.hh"
@@ -62,4 +62,4 @@ class SimpleDisk : public SimObject
     void write(Addr addr, baddr_t block, int count);
 };
 
-#endif // __DEV_SIMPLE_DISK_HH__
+#endif // __DEV_STORAGE_SIMPLE_DISK_HH__

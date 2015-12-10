@@ -32,8 +32,8 @@
  * Disk Image Interfaces
  */
 
-#ifndef __DISK_IMAGE_HH__
-#define __DISK_IMAGE_HH__
+#ifndef __DEV_STORAGE_DISK_IMAGE_HH__
+#define __DEV_STORAGE_DISK_IMAGE_HH__
 
 #include <fstream>
 #include <unordered_map>
@@ -154,4 +154,4 @@ void SafeWrite(std::ofstream &stream, const T &data);
 template<class T>
 void SafeWriteSwap(std::ofstream &stream, const T &data);
 
-#endif // __DISK_IMAGE_HH__
+#endif // __DEV_STORAGE_DISK_IMAGE_HH__

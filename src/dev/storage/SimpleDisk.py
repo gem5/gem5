@@ -28,21 +28,10 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-class DiskImage(SimObject):
-    type = 'DiskImage'
-    abstract = True
-    cxx_header = "dev/disk_image.hh"
-    image_file = Param.String("disk image file")
-    read_only = Param.Bool(False, "read only image")
+from m5.proxy import *
 
-class RawDiskImage(DiskImage):
-    type = 'RawDiskImage'
-    cxx_header = "dev/disk_image.hh"
-
-class CowDiskImage(DiskImage):
-    type = 'CowDiskImage'
-    cxx_header = "dev/disk_image.hh"
-    child = Param.DiskImage(RawDiskImage(read_only=True),
-                            "child image")
-    table_size = Param.Int(65536, "initial table size")
-    image_file = ""
+class SimpleDisk(SimObject):
+    type = 'SimpleDisk'
+    cxx_header = "dev/storage/simple_disk.hh"
+    disk = Param.DiskImage("Disk Image")
+    system = Param.System(Parent.any, "System Pointer")

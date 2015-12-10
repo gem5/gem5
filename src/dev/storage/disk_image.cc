@@ -32,6 +32,8 @@
  * Disk Image Definitions
  */
 
+#include "dev/storage/disk_image.hh"
+
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -46,7 +48,6 @@
 #include "base/trace.hh"
 #include "debug/DiskImageRead.hh"
 #include "debug/DiskImageWrite.hh"
-#include "dev/disk_image.hh"
 #include "sim/byteswap.hh"
 #include "sim/sim_exit.hh"
 

@@ -45,6 +45,8 @@
  * Device model implementation for an IDE disk
  */
 
+#include "dev/storage/ide_disk.hh"
+
 #include <cerrno>
 #include <cstring>
 #include <deque>
@@ -56,9 +58,8 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/IdeDisk.hh"
-#include "dev/disk_image.hh"
-#include "dev/ide_ctrl.hh"
-#include "dev/ide_disk.hh"
+#include "dev/storage/disk_image.hh"
+#include "dev/storage/ide_ctrl.hh"
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
