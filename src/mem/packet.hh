@@ -111,10 +111,8 @@ class MemCmd
         SwapResp,
         MessageReq,
         MessageResp,
-        ReleaseReq,
-        ReleaseResp,
-        AcquireReq,
-        AcquireResp,
+        MemFenceReq,
+        MemFenceResp,
         // Error responses
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards
