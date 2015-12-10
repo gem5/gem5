@@ -41,11 +41,11 @@ from Device import BasicPioDevice
 
 class I2CDevice(SimObject):
     type = 'I2CDevice'
-    cxx_header = "dev/i2cdev.hh"
+    cxx_header = "dev/i2c/device.hh"
     abstract = True
     i2c_addr = Param.UInt8("Address of device on i2c bus")
 
 class I2CBus(BasicPioDevice):
     type = 'I2CBus'
-    cxx_header = "dev/i2cbus.hh"
+    cxx_header = "dev/i2c/bus.hh"
     devices = VectorParam.I2CDevice([], "Devices")

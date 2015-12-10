@@ -42,14 +42,15 @@
  * Implementiation of an i2c bus
  */
 
-#ifndef __DEV_I2CBUS__
-#define __DEV_I2CBUS__
+#ifndef __DEV_I2C_BUS_HH__
+#define __DEV_I2C_BUS_HH__
 
 #include <map>
 
-#include "dev/i2cdev.hh"
 #include "dev/io_device.hh"
 #include "params/I2CBus.hh"
+
+class I2CDevice;
 
 class I2CBus : public BasicPioDevice
 {
@@ -150,4 +151,4 @@ class I2CBus : public BasicPioDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
-#endif //__DEV_I2CBUS
+#endif // __DEV_I2C_BUS_HH__

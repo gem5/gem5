@@ -37,9 +37,10 @@
  * Authors: Peter Enns
  */
 
-#include "dev/i2cbus.hh"
+#include "dev/i2c/bus.hh"
 
 #include "debug/Checkpoint.hh"
+#include "dev/i2c/device.hh"
 #include "mem/packet_access.hh"
 
 // clang complains about std::set being overloaded with Packet::set if

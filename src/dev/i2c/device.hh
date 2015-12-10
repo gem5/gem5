@@ -42,8 +42,8 @@
  * All i2c devices should derive from this class.
  */
 
-#ifndef __DEV_I2CDEV__
-#define __DEV_I2CDEV__
+#ifndef __DEV_I2C_DEVICE_HH__
+#define __DEV_I2C_DEVICE_HH__
 
 #include "base/types.hh"
 #include "params/I2CDevice.hh"
@@ -93,4 +93,4 @@ class I2CDevice : public SimObject
 
 };
 
-#endif // __DEV_I2CDEV__
+#endif // __DEV_I2C_DEVICE__
