@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,41 +28,44 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+#include "dev/net/etherpkt.hh"
 
-#include "base/types.hh"
-#include "dev/net/etherint.hh"
+#include <iostream>
+
+#include "base/inet.hh"
+#include "base/misc.hh"
 #include "sim/serialize.hh"
-#include "sim/sim_object.hh"
 
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
+using namespace std;
 
-/** Resolve a SimObject name using the Python configuration */
-class PythonSimObjectResolver : public SimObjectResolver
+void
+EthPacketData::serialize(const string &base, CheckpointOut &cp) const
 {
-    SimObject *resolveSimObject(const std::string &name);
-};
-
-EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
-
-/**
- * Connect the described MemObject ports.  Called from Python via SWIG.
- */
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-    SimObject *o2, const std::string &name2, int i2);
-
-
-inline void
-serializeAll(const std::string &cpt_dir)
-{
-    Serializable::serializeAll(cpt_dir);
+    paramOut(cp, base + ".length", length);
+    arrayParamOut(cp, base + ".data", data, length);
 }
 
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir);
-
-inline void
-unserializeGlobals(CheckpointIn &cp)
+void
+EthPacketData::unserialize(const string &base, CheckpointIn &cp)
 {
-    Serializable::unserializeGlobals(cp);
+    paramIn(cp, base + ".length", length);
+    if (length)
+        arrayParamIn(cp, base + ".data", data, length);
 }
+
+void
+EthPacketData::packAddress(uint8_t *src_addr,
+                           uint8_t *dst_addr,
+                           unsigned &nbytes)
+{
+    Net::EthHdr *hdr = (Net::EthHdr *)data;
+    assert(hdr->src().size() == hdr->dst().size());
+    if (nbytes < hdr->src().size())
+        panic("EthPacketData::packAddress() Buffer overflow");
+
+    memcpy(dst_addr, hdr->dst().bytes(), hdr->dst().size());
+    memcpy(src_addr, hdr->src().bytes(), hdr->src().size());
+
+    nbytes = hdr->src().size();
+}
+

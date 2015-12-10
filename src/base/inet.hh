@@ -53,7 +53,7 @@
 #include <vector>
 
 #include "base/types.hh"
-#include "dev/etherpkt.hh"
+#include "dev/net/etherpkt.hh"
 #include "dnet/os.h"
 #include "dnet/eth.h"
 #include "dnet/ip.h"

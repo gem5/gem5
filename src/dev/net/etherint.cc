@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,41 +28,17 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
-
-#include "base/types.hh"
 #include "dev/net/etherint.hh"
-#include "sim/serialize.hh"
+
+#include "base/misc.hh"
 #include "sim/sim_object.hh"
 
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
-
-/** Resolve a SimObject name using the Python configuration */
-class PythonSimObjectResolver : public SimObjectResolver
+void
+EtherInt::setPeer(EtherInt *p)
 {
-    SimObject *resolveSimObject(const std::string &name);
-};
+    if (peer && peer != p)
+        panic("You cannot change the peer once it is set.\n"
+              "Current peer=%s Desired peer=%s", peer->name(), p->name());
 
-EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
-
-/**
- * Connect the described MemObject ports.  Called from Python via SWIG.
- */
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-    SimObject *o2, const std::string &name2, int i2);
-
-
-inline void
-serializeAll(const std::string &cpt_dir)
-{
-    Serializable::serializeAll(cpt_dir);
-}
-
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir);
-
-inline void
-unserializeGlobals(CheckpointIn &cp)
-{
-    Serializable::unserializeGlobals(cp);
+    peer = p;
 }

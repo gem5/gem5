@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,41 +28,63 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+/* @file
+ * Device module for modelling an ethernet hub
+ */
 
-#include "base/types.hh"
-#include "dev/net/etherint.hh"
-#include "sim/serialize.hh"
+#ifndef __DEV_NET_ETHERBUS_HH__
+#define __DEV_NET_ETHERBUS_HH__
+
+#include "dev/net/etherobject.hh"
+#include "dev/net/etherpkt.hh"
+#include "params/EtherBus.hh"
+#include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
-
-/** Resolve a SimObject name using the Python configuration */
-class PythonSimObjectResolver : public SimObjectResolver
+class EtherDump;
+class EtherInt;
+class EtherBus : public EtherObject
 {
-    SimObject *resolveSimObject(const std::string &name);
+  protected:
+    typedef std::list<EtherInt *> devlist_t;
+    devlist_t devlist;
+    double ticksPerByte;
+    bool loopback;
+
+  protected:
+    class DoneEvent : public Event
+    {
+      protected:
+        EtherBus *bus;
+
+      public:
+        DoneEvent(EtherBus *b) : bus(b) {}
+        virtual void process() { bus->txDone(); }
+        virtual const char *description() const
+            { return "ethernet bus completion"; }
+    };
+
+    DoneEvent event;
+    EthPacketPtr packet;
+    EtherInt *sender;
+    EtherDump *dump;
+
+  public:
+    typedef EtherBusParams Params;
+    EtherBus(const Params *p);
+    virtual ~EtherBus() {}
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    void txDone();
+    void reg(EtherInt *dev);
+    bool busy() const { return (bool)packet; }
+    bool send(EtherInt *sender, EthPacketPtr &packet);
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 };
 
-EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
-
-/**
- * Connect the described MemObject ports.  Called from Python via SWIG.
- */
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-    SimObject *o2, const std::string &name2, int i2);
-
-
-inline void
-serializeAll(const std::string &cpt_dir)
-{
-    Serializable::serializeAll(cpt_dir);
-}
-
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir);
-
-inline void
-unserializeGlobals(CheckpointIn &cp)
-{
-    Serializable::unserializeGlobals(cp);
-}
+#endif // __DEV_NET_ETHERBUS_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,44 +25,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Ali Saidi
  */
-
-#include <Python.h>
-
-#include "base/types.hh"
-#include "dev/net/etherint.hh"
-#include "sim/serialize.hh"
-#include "sim/sim_object.hh"
-
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
-
-/** Resolve a SimObject name using the Python configuration */
-class PythonSimObjectResolver : public SimObjectResolver
-{
-    SimObject *resolveSimObject(const std::string &name);
-};
-
-EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
 
 /**
- * Connect the described MemObject ports.  Called from Python via SWIG.
+ * @file
+ * Base Ethernet Object declaration.
  */
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-    SimObject *o2, const std::string &name2, int i2);
 
+#ifndef __DEV_NET_ETHEROBJECT_HH__
+#define __DEV_NET_ETHEROBJECT_HH__
 
-inline void
-serializeAll(const std::string &cpt_dir)
+#include "params/EtherObject.hh"
+#include "sim/sim_object.hh"
+
+class EtherInt;
+
+/**
+ * The base EtherObject class, allows for an accesor function to a
+ * simobj that returns the Port.
+ */
+class EtherObject : public SimObject
 {
-    Serializable::serializeAll(cpt_dir);
-}
+  public:
+    typedef EtherObjectParams Params;
+    EtherObject(const Params *params)
+        : SimObject(params) {}
 
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir);
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
-inline void
-unserializeGlobals(CheckpointIn &cp)
-{
-    Serializable::unserializeGlobals(cp);
-}
+  public:
+    /** Additional function to return the Port of a memory object. */
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx = -1) = 0;
+
+};
+
+#endif // __DEV_NET_ETHEROBJECT_HH__

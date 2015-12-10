@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,41 +28,35 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+/* @file
+ * Simple object for creating a simple pcap style packet trace
+ */
 
-#include "base/types.hh"
-#include "dev/net/etherint.hh"
-#include "sim/serialize.hh"
+#ifndef __DEV_NET_ETHERDUMP_HH__
+#define __DEV_NET_ETHERDUMP_HH__
+
+#include <fstream>
+
+#include "dev/net/etherpkt.hh"
+#include "params/EtherDump.hh"
 #include "sim/sim_object.hh"
 
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
-
-/** Resolve a SimObject name using the Python configuration */
-class PythonSimObjectResolver : public SimObjectResolver
+/*
+ * Simple object for creating a simple pcap style packet trace
+ */
+class EtherDump : public SimObject
 {
-    SimObject *resolveSimObject(const std::string &name);
+  private:
+    std::ostream *stream;
+    const unsigned maxlen;
+    void dumpPacket(EthPacketPtr &packet);
+    void init();
+
+  public:
+    typedef EtherDumpParams Params;
+    EtherDump(const Params *p);
+
+    inline void dump(EthPacketPtr &pkt) { dumpPacket(pkt); }
 };
 
-EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
-
-/**
- * Connect the described MemObject ports.  Called from Python via SWIG.
- */
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-    SimObject *o2, const std::string &name2, int i2);
-
-
-inline void
-serializeAll(const std::string &cpt_dir)
-{
-    Serializable::serializeAll(cpt_dir);
-}
-
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir);
-
-inline void
-unserializeGlobals(CheckpointIn &cp)
-{
-    Serializable::unserializeGlobals(cp);
-}
+#endif // __DEV_NET_ETHERDUMP_HH__

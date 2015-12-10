@@ -36,8 +36,8 @@
 #include "base/output.hh"
 #include "config/the_isa.hh"
 #if THE_ISA != NULL_ISA
-#include "dev/etherdevice.hh"
-#include "dev/etherobject.hh"
+#include "dev/net/etherdevice.hh"
+#include "dev/net/etherobject.hh"
 #endif
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/mem_object.hh"

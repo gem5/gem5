@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,41 +28,49 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+/* @file
+ * Class representing the actual interface between two ethernet
+ * components.
+ */
 
-#include "base/types.hh"
-#include "dev/net/etherint.hh"
-#include "sim/serialize.hh"
-#include "sim/sim_object.hh"
+#ifndef __DEV_NET_ETHERINT_HH__
+#define __DEV_NET_ETHERINT_HH__
 
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
+#include <string>
 
-/** Resolve a SimObject name using the Python configuration */
-class PythonSimObjectResolver : public SimObjectResolver
+#include "dev/net/etherpkt.hh"
+
+/*
+ * Class representing the actual interface between two ethernet
+ * components.  These components are intended to attach to another
+ * ethernet interface on one side and whatever device on the other.
+ */
+class EtherInt
 {
-    SimObject *resolveSimObject(const std::string &name);
+  protected:
+    mutable std::string portName;
+    EtherInt *peer;
+
+  public:
+    EtherInt(const std::string &name)
+        : portName(name), peer(NULL) {}
+    virtual ~EtherInt() {}
+
+    /** Return port name (for DPRINTF). */
+    const std::string &name() const { return portName; }
+
+    void setPeer(EtherInt *p);
+    EtherInt* getPeer() { return peer; }
+
+    void recvDone() { peer->sendDone(); }
+    virtual void sendDone() = 0;
+
+    bool sendPacket(EthPacketPtr packet)
+    { return peer ? peer->recvPacket(packet) : true; }
+    virtual bool recvPacket(EthPacketPtr packet) = 0;
+
+    bool askBusy() {return peer->isBusy(); }
+    virtual bool isBusy() { return false; }
 };
 
-EtherInt * lookupEthPort(SimObject *so, const std::string &name, int i);
-
-/**
- * Connect the described MemObject ports.  Called from Python via SWIG.
- */
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-    SimObject *o2, const std::string &name2, int i2);
-
-
-inline void
-serializeAll(const std::string &cpt_dir)
-{
-    Serializable::serializeAll(cpt_dir);
-}
-
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir);
-
-inline void
-unserializeGlobals(CheckpointIn &cp)
-{
-    Serializable::unserializeGlobals(cp);
-}
+#endif // __DEV_NET_ETHERINT_HH__
