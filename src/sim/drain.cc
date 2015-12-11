@@ -43,6 +43,7 @@
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "sim/sim_exit.hh"
+#include "sim/sim_object.hh"
 
 DrainManager DrainManager::_instance;
 
@@ -67,8 +68,15 @@ DrainManager::tryDrain()
 
     DPRINTF(Drain, "Trying to drain %u objects.\n", drainableCount());
     _state = DrainState::Draining;
-    for (auto *obj : _allDrainable)
-        _count += obj->dmDrain() == DrainState::Drained ? 0 : 1;
+    for (auto *obj : _allDrainable) {
+        DrainState status = obj->dmDrain();
+        if (DTRACE(Drain) && status != DrainState::Drained) {
+            SimObject *temp = dynamic_cast<SimObject*>(obj);
+            if (temp)
+                DPRINTF(Drain, "Failed to drain %s\n", temp->name());
+        }
+        _count += status == DrainState::Drained ? 0 : 1;
+    }
 
     if (_count == 0) {
         DPRINTF(Drain, "Drain done.\n");
