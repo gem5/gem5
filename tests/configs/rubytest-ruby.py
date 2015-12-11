@@ -97,6 +97,8 @@ system.ruby.clk_domain = SrcClockDomain(clock = '1GHz',
 
 assert(options.num_cpus == len(system.ruby._cpu_ports))
 
+tester.num_cpus = len(system.ruby._cpu_ports)
+
 #
 # The tester is most effective when randomization is turned on and
 # artifical delay is randomly inserted on messages
@@ -107,10 +109,15 @@ for ruby_port in system.ruby._cpu_ports:
     #
     # Tie the ruby tester ports to the ruby cpu read and write ports
     #
-    if ruby_port.support_data_reqs:
-         tester.cpuDataPort = ruby_port.slave
-    if ruby_port.support_inst_reqs:
-         tester.cpuInstPort = ruby_port.slave
+    if ruby_port.support_data_reqs and ruby_port.support_inst_reqs:
+        tester.cpuInstDataPort = ruby_port.slave
+    elif ruby_port.support_data_reqs:
+        tester.cpuDataPort = ruby_port.slave
+    elif ruby_port.support_inst_reqs:
+        tester.cpuInstPort = ruby_port.slave
+
+    # Do not automatically retry stalled Ruby requests
+    ruby_port.no_retry_on_stall = True
 
     #
     # Tell the sequencer this is the ruby tester so that it
