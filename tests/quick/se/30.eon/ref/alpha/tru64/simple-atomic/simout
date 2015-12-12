@@ -1,12 +1,10 @@
-Redirecting stdout to build/ALPHA/tests/opt/quick/se/30.eon/alpha/tru64/simple-atomic/simout
-Redirecting stderr to build/ALPHA/tests/opt/quick/se/30.eon/alpha/tru64/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 15 2015 14:28:00
-gem5 started Nov 15 2015 14:28:24
-gem5 executing on ribera.cs.wisc.edu, pid 29045
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eon/alpha/tru64/simple-atomic -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/30.eon/alpha/tru64/simple-atomic
+gem5 compiled Dec 11 2015 19:54:02
+gem5 started Dec 11 2015 19:54:28
+gem5 executing on zizzer, pid 26163
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eon/alpha/tru64/simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/30.eon/alpha/tru64/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

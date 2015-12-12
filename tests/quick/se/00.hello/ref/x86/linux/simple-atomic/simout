@@ -1,12 +1,10 @@
-Redirecting stdout to build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic/simout
-Redirecting stderr to build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 15 2015 15:16:56
-gem5 started Nov 15 2015 15:17:25
-gem5 executing on ribera.cs.wisc.edu, pid 9884
-command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic -re /scratch/nilay/GEM5/gem5/tests/run.py build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic
+gem5 compiled Dec 11 2015 20:42:59
+gem5 started Dec 11 2015 20:43:46
+gem5 executing on zizzer, pid 10133
+command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

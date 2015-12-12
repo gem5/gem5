@@ -1,12 +1,10 @@
-Redirecting stdout to build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level/simout
-Redirecting stderr to build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 15 2015 14:56:12
-gem5 started Nov 15 2015 14:56:33
-gem5 executing on ribera.cs.wisc.edu, pid 4272
-command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level -re /scratch/nilay/GEM5/gem5/tests/run.py build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level
+gem5 compiled Dec 11 2015 20:20:45
+gem5 started Dec 11 2015 20:21:18
+gem5 executing on zizzer, pid 52934
+command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level -re /z/atgutier/gem5/gem5/tests/run.py build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!

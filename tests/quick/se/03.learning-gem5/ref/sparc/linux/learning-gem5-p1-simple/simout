@@ -1,12 +1,10 @@
-Redirecting stdout to build/SPARC/tests/opt/quick/se/03.learning-gem5/sparc/linux/learning-gem5-p1-simple/simout
-Redirecting stderr to build/SPARC/tests/opt/quick/se/03.learning-gem5/sparc/linux/learning-gem5-p1-simple/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 15 2015 15:07:43
-gem5 started Nov 15 2015 15:08:36
-gem5 executing on ribera.cs.wisc.edu, pid 7807
-command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/03.learning-gem5/sparc/linux/learning-gem5-p1-simple -re /scratch/nilay/GEM5/gem5/tests/run.py build/SPARC/tests/opt/quick/se/03.learning-gem5/sparc/linux/learning-gem5-p1-simple
+gem5 compiled Dec 11 2015 20:33:09
+gem5 started Dec 11 2015 20:33:38
+gem5 executing on zizzer, pid 888
+command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/03.learning-gem5/sparc/linux/learning-gem5-p1-simple -re /z/atgutier/gem5/gem5/tests/run.py build/SPARC/tests/opt/quick/se/03.learning-gem5/sparc/linux/learning-gem5-p1-simple
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!

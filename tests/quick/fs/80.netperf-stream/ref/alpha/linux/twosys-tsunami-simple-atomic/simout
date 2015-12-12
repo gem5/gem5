@@ -1,15 +1,15 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec  4 2015 10:28:58
-gem5 started Dec  4 2015 10:42:31
-gem5 executing on e104799-lin, pid 22915
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/fs/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re /work/gem5/outgoing/gem5_2/tests/run.py build/ALPHA/tests/opt/quick/fs/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
+gem5 compiled Dec 11 2015 19:54:02
+gem5 started Dec 11 2015 19:54:29
+gem5 executing on zizzer, pid 26179
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/fs/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/ALPHA/tests/opt/quick/fs/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /work/gem5/dist/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
       0: drivesys.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
-info: kernel located at: /work/gem5/dist/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
       0: testsys.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 4321620817500 because checkpoint

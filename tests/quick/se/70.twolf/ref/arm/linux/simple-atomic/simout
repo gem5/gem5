@@ -1,13 +1,13 @@
-Redirecting stdout to build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic/simout
-Redirecting stderr to build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 15 2015 15:24:37
-gem5 started Nov 15 2015 15:25:24
-gem5 executing on ribera.cs.wisc.edu, pid 11057
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic
+gem5 compiled Dec 11 2015 20:46:46
+gem5 started Dec 11 2015 20:47:10
+gem5 executing on zizzer, pid 11547
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic
 
+Couldn't unlink  build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic/smred.sav
+Couldn't unlink  build/ARM/tests/opt/quick/se/70.twolf/arm/linux/simple-atomic/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 

@@ -6,7 +6,7 @@
         "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "highest_el_is_64": false, 
-        "kernel": "/work/gem5/dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5", 
+        "kernel": "/dist/m5/system/binaries/vmlinux.aarch32.ll_20131205.0-gem5", 
         "iobus": {
             "slave": {
                 "peer": [
@@ -62,7 +62,7 @@
             "frontend_latency": 2
         }, 
         "symbolfile": "", 
-        "readfile": "/work/gem5/outgoing/gem5_2/tests/halt.sh", 
+        "readfile": "/z/atgutier/gem5/gem5/tests/halt.sh", 
         "have_large_asid_64": false, 
         "phys_addr_range_64": 40, 
         "have_lpae": false, 
@@ -81,7 +81,7 @@
         "multi_proc": true, 
         "early_kernel_symbols": false, 
         "panic_on_oops": true, 
-        "dtb_filename": "/work/gem5/dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb", 
+        "dtb_filename": "/dist/m5/system/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb", 
         "panic_on_panic": true, 
         "enable_context_switch_stats_dump": false, 
         "work_begin_ckpt_count": 0, 
@@ -1720,7 +1720,7 @@
                     "eventq_index": 0, 
                     "cxx_class": "RawDiskImage", 
                     "path": "system.cf0.image.child", 
-                    "image_file": "/work/gem5/dist/disks/linux-aarch32-ael.img", 
+                    "image_file": "/dist/m5/system/disks/linux-aarch32-ael.img", 
                     "type": "RawDiskImage"
                 }, 
                 "path": "system.cf0.image", 
@@ -1761,7 +1761,7 @@
         ], 
         "work_begin_cpu_id_exit": -1, 
         "boot_loader": [
-            "/work/gem5/dist/binaries/boot_emm.arm"
+            "/dist/m5/system/binaries/boot_emm.arm"
         ], 
         "num_work_ids": 16
     }, 

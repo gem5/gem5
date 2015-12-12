@@ -1,12 +1,10 @@
-Redirecting stdout to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing/simout
-Redirecting stderr to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 15 2015 14:56:12
-gem5 started Nov 15 2015 14:56:35
-gem5 executing on ribera.cs.wisc.edu, pid 4274
-command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing
+gem5 compiled Dec 11 2015 20:20:45
+gem5 started Dec 11 2015 20:21:19
+gem5 executing on zizzer, pid 52937
+command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing -re /z/atgutier/gem5/gem5/tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
