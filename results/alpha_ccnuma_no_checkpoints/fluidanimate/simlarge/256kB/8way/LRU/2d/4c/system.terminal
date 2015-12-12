@@ -157,3 +157,8 @@ Loading file "/parsec/install/inputs/fluidanimate/in_300K.fluid"...
 Number of cells: 135424
 Number of particles: 305809 (0 skipped)
 [HOOKS] Entering ROI
+[HOOKS] Leaving ROI
+Saving file "/parsec/install/inputs/fluidanimate/out.fluid"...
+[HOOKS] Total time spent in ROI: 1.183s
+[HOOKS] Terminating
+Done :D
