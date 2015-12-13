@@ -144,23 +144,25 @@ if options.bench:
         sys.exit(1)
 
     for app in apps:
-        try:
-            if app == '437.leslie3d':
-                workload = leslie3d
-            elif buildEnv['TARGET_ISA'] == 'alpha':
-                exec("workload = %s('alpha', 'tru64', '%s')" % (
-                        app, options.spec_input))
-            elif buildEnv['TARGET_ISA'] == 'arm':
-                exec("workload = %s('arm_%s', 'linux', '%s')" % (
-                        app, options.arm_iset, options.spec_input))
-            else:
-                exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
-                        app, options.spec_input))
-            multiprocesses.append(workload.makeLiveProcess())
-        except:
-            print >>sys.stderr, "Unable to find workload for %s: %s" % (
-                    buildEnv['TARGET_ISA'], app)
-            sys.exit(1)
+        if app == '437.leslie3d':
+            process = leslie3d
+            multiprocesses.append(process)
+        else:
+            try:
+                if buildEnv['TARGET_ISA'] == 'alpha':
+                    exec("workload = %s('alpha', 'tru64', '%s')" % (
+                            app, options.spec_input))
+                elif buildEnv['TARGET_ISA'] == 'arm':
+                    exec("workload = %s('arm_%s', 'linux', '%s')" % (
+                            app, options.arm_iset, options.spec_input))
+                else:
+                    exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
+                            app, options.spec_input))
+                multiprocesses.append(workload.makeLiveProcess())
+            except:
+                print >>sys.stderr, "Unable to find workload for %s: %s" % (
+                        buildEnv['TARGET_ISA'], app)
+                sys.exit(1)
 elif options.cmd:
     multiprocesses, numThreads = get_processes(options)
 else:
