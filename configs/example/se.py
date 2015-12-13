@@ -144,7 +144,10 @@ if options.bench:
         sys.exit(1)
 
     for app in apps:
-        if app == '437.leslie3d':
+        if app == '400.perlbench':
+            process = perlbench
+            multiprocesses.append(process)
+        elif app == '437.leslie3d':
             process = leslie3d
             multiprocesses.append(process)
         else:
