@@ -3,7 +3,7 @@ from m5.objects import *
 
 m5.util.addToPath('../common')
 
-binary_dir = '/home/itecgo/Tools/GEM5/cpu2006'
+binary_dir = '/home/itecgo/Tools/GEM5/cpu2006/'
 data_dir = binary_dir
 
 # 437.leslie3d
