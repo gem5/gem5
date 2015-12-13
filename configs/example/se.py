@@ -61,6 +61,7 @@ import CacheConfig
 import MemConfig
 from Caches import *
 from cpu2000 import *
+from cpu2006 import *
 
 # Check if KVM support has been enabled, we might need to do VM
 # configuration if that's the case.
@@ -144,7 +145,9 @@ if options.bench:
 
     for app in apps:
         try:
-            if buildEnv['TARGET_ISA'] == 'alpha':
+            if app == '437.leslie3d':
+                workload = leslie3d
+            elif buildEnv['TARGET_ISA'] == 'alpha':
                 exec("workload = %s('alpha', 'tru64', '%s')" % (
                         app, options.spec_input))
             elif buildEnv['TARGET_ISA'] == 'arm':
