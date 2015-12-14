@@ -66,7 +66,7 @@ def generate_csv_multicore_experiments(benches, input_set):
         experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'LRU', 4))
         experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'IbRDP', 4))
         experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'RRIP', 4))
-        experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'DBRSP', 4))
+        # experiments_l2tags.append(multicore(bench, input_set, '256kB', 8, 'DBRSP', 4))
 
     generate_csv(MulticoreExperiment, '../../results/multicore_l2tags_' + input_set + '.csv', experiments_l2tags,
                  lambda bench: multicore(bench, input_set, '256kB', 8, 'LRU', 4))
@@ -106,7 +106,7 @@ def generate_csv_ccnuma_experiments(benches, input_set):
         experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
         experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'IbRDP', 2, 2, '1kB', 8, 'LRU'))
         experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'RRIP', 2, 2, '1kB', 8, 'LRU'))
-        experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
+        # experiments_l2tags.append(ccnuma(bench, input_set, '256kB', 8, 'DBRSP', 2, 2, '1kB', 8, 'LRU'))
 
     generate_csv(CCNUMAExperiment, '../../results/ccnuma_l2tags_' + input_set + '.csv', experiments_l2tags,
                  lambda bench: ccnuma(bench, input_set, '256kB', 8, 'LRU', 2, 2, '1kB', 8, 'LRU'))
@@ -159,6 +159,7 @@ def generate_plot(csv_file_name, plot_file_name, x, y, hue, y_title):
     fig = ax.get_figure()
     fig.tight_layout()
     fig.savefig(plot_file_name)
+    fig.savefig(plot_file_name + '.jpg')
 
     plt.clf()
     plt.close('all')
