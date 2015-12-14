@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -616,13 +616,18 @@ void
 workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 {
     DPRINTF(PseudoInst, "PseudoInst::workbegin(%i, %i)\n", workid, threadid);
-    tc->getCpuPtr()->workItemBegin();
     System *sys = tc->getSystemPtr();
     const System::Params *params = sys->params();
-    sys->workItemBegin(threadid, workid);
 
-    DPRINTF(WorkItems, "Work Begin workid: %d, threadid %d\n", workid, 
+    if (params->exit_on_work_items) {
+        exitSimLoop("workbegin", static_cast<int>(workid));
+        return;
+    }
+
+    DPRINTF(WorkItems, "Work Begin workid: %d, threadid %d\n", workid,
             threadid);
+    tc->getCpuPtr()->workItemBegin();
+    sys->workItemBegin(threadid, workid);
 
     //
     // If specified, determine if this is the specific work item the user
@@ -674,12 +679,17 @@ void
 workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 {
     DPRINTF(PseudoInst, "PseudoInst::workend(%i, %i)\n", workid, threadid);
-    tc->getCpuPtr()->workItemEnd();
     System *sys = tc->getSystemPtr();
     const System::Params *params = sys->params();
-    sys->workItemEnd(threadid, workid);
+
+    if (params->exit_on_work_items) {
+        exitSimLoop("workend", static_cast<int>(workid));
+        return;
+    }
 
     DPRINTF(WorkItems, "Work End workid: %d, threadid %d\n", workid, threadid);
+    tc->getCpuPtr()->workItemEnd();
+    sys->workItemEnd(threadid, workid);
 
     //
     // If specified, determine if this is the specific work item the user
