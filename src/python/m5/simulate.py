@@ -51,7 +51,7 @@ import stats
 import SimObject
 import ticks
 import objects
-from m5.util.dot_writer import do_dot
+from m5.util.dot_writer import do_dot, do_dvfs_dot
 from m5.internal.stats import updateEvents as updateStatEvents
 
 from util import fatal
@@ -125,6 +125,11 @@ def instantiate(ckpt_dir=None):
 
     # Do a fifth pass to connect probe listeners
     for obj in root.descendants(): obj.regProbeListeners()
+
+    # We want to generate the DVFS diagram for the system. This can only be
+    # done once all of the CPP objects have been created and initialised so
+    # that we are able to figure out which object belongs to which domain.
+    do_dvfs_dot(root, options.outdir, options.dot_dvfs_config)
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
