@@ -63,6 +63,9 @@ PySource('m5.util', 'm5/util/pybind.py')
 
 PySource('m5.internal', 'm5/internal/__init__.py')
 PySource('m5.internal', 'm5/internal/params.py')
+PySource('m5.ext', 'm5/ext/__init__.py')
+PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/pyfdt.py')
+PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/__init__.py')
 
 Source('pybind11/core.cc', add_tags='python')
 Source('pybind11/debug.cc', add_tags='python')
