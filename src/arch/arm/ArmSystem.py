@@ -34,9 +34,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Ali Saidi
+#          Glenn Bergmans
 
 from m5.params import *
 from m5.SimObject import *
+from m5.util.fdthelper import *
 
 from System import System
 
@@ -78,6 +80,27 @@ class ArmSystem(System):
     m5ops_base = Param.Addr(0,
         "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
         "to disable.")
+
+    def generateDeviceTree(self, state):
+        # Generate a device tree root node for the system by creating the root
+        # node and adding the generated subnodes of all children.
+        # When a child needs to add multiple nodes, this is done by also
+        # creating a node called '/' which will then be merged with the
+        # root instead of appended.
+
+        root = FdtNode('/')
+        root.append(state.addrCellsProperty())
+        root.append(state.sizeCellsProperty())
+
+        for node in self.recurseDeviceTree(state):
+            # Merge root nodes instead of adding them (for children
+            # that need to add multiple root level nodes)
+            if node.get_name() == root.get_name():
+                root.merge(node)
+            else:
+                root.append(node)
+
+        return root
 
 class GenericArmSystem(ArmSystem):
     type = 'GenericArmSystem'

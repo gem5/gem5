@@ -60,6 +60,7 @@ PySource('m5.util', 'm5/util/smartdict.py')
 PySource('m5.util', 'm5/util/sorteddict.py')
 PySource('m5.util', 'm5/util/terminal.py')
 PySource('m5.util', 'm5/util/pybind.py')
+PySource('m5.util', 'm5/util/fdthelper.py')
 
 PySource('m5.internal', 'm5/internal/__init__.py')
 PySource('m5.internal', 'm5/internal/params.py')

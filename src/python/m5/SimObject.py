@@ -51,6 +51,9 @@ import inspect
 import m5
 from m5.util import *
 from m5.util.pybind import *
+# Use the pyfdt and not the helper class, because the fdthelper
+# relies on the SimObject definition
+from m5.ext.pyfdt import pyfdt
 
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
@@ -1494,6 +1497,19 @@ class SimObject(object):
         # order is the same on all hosts
         for (attr, portRef) in sorted(self._port_refs.iteritems()):
             portRef.ccConnect()
+
+    # Default function for generating the device structure.
+    # Can be overloaded by the inheriting class
+    def generateDeviceTree(self, state):
+        return # return without yielding anything
+        yield  # make this function a (null) generator
+
+    def recurseDeviceTree(self, state):
+        for child in [getattr(self, c) for c in self._children]:
+            for item in child: # For looping over SimObjectVectors
+                if isinstance(item, SimObject):
+                    for dt in item.generateDeviceTree(state):
+                        yield dt
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
