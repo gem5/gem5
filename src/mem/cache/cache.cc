@@ -2005,15 +2005,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     }
 
     if (!respond && is_timing && is_deferred) {
-        // if it's a deferred timing snoop then we've made a copy of
-        // both the request and the packet, and so if we're not using
-        // those copies to respond and delete them here
-        DPRINTF(Cache, "Deleting pkt %p and request %p for cmd %s addr: %p\n",
-                pkt, pkt->req, pkt->cmdString(), pkt->getAddr());
-
-        // the packets needs a response (just not from us), so we also
-        // need to delete the request and not rely on the packet
-        // destructor
+        // if it's a deferred timing snoop to which we are not
+        // responding, then we've made a copy of both the request and
+        // the packet, delete them here
         assert(pkt->needsResponse());
         delete pkt->req;
         delete pkt;

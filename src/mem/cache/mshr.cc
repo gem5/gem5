@@ -364,36 +364,37 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     if (isPendingDirty() || pkt->isInvalidate()) {
         // We need to save and replay the packet in two cases:
         // 1. We're awaiting an exclusive copy, so ownership is pending,
-        //    and we need to respond after we receive data.
+        //    and we need to deal with the snoop after we receive data.
         // 2. It's an invalidation (e.g., UpgradeReq), and we need
         //    to forward the snoop up the hierarchy after the current
         //    transaction completes.
-        
-        // Actual target device (typ. a memory) will delete the
-        // packet on reception, so we need to save a copy here.
 
-        // Clear flags and also allocate new data as the original
-        // packet data storage may have been deleted by the time we
-        // get to send this packet.
-        PacketPtr cp_pkt = nullptr;
+        // Start by determining if we will eventually respond or not,
+        // matching the conditions checked in Cache::handleSnoop
+        bool will_respond = isPendingDirty() && pkt->needsResponse() &&
+            pkt->cmd != MemCmd::InvalidateReq;
+
+        // The packet we are snooping may be deleted by the time we
+        // actually process the target, and we consequently need to
+        // save a copy here. Clear flags and also allocate new data as
+        // the original packet data storage may have been deleted by
+        // the time we get to process this packet. In the cases where
+        // we are not responding after handling the snoop we also need
+        // to create a copy of the request to be on the safe side. In
+        // the latter case the cache is responsible for deleting both
+        // the packet and the request as part of handling the deferred
+        // snoop.
+        PacketPtr cp_pkt = will_respond ? new Packet(pkt, true, true) :
+            new Packet(new Request(*pkt->req), pkt->cmd);
 
         if (isPendingDirty()) {
-            // Case 1: The new packet will need to get the response from the
+            // The new packet will need to get the response from the
             // MSHR already queued up here
-            cp_pkt = new Packet(pkt, true, true);
             pkt->assertMemInhibit();
             // in the case of an uncacheable request there is no need
             // to set the exclusive flag, but since the recipient does
             // not care there is no harm in doing so
             pkt->setSupplyExclusive();
-        } else {
-            // Case 2: We only need to buffer the packet for information
-            // purposes; the original request can proceed without waiting
-            // => Create a copy of the request, as that may get deallocated as
-            // well
-            cp_pkt = new Packet(new Request(*pkt->req), pkt->cmd);
-            DPRINTF(Cache, "Copying packet %p -> %p and request %p -> %p\n",
-                    pkt, cp_pkt, pkt->req, cp_pkt->req);
         }
         targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
                     downstreamPending && targets.needsExclusive);
