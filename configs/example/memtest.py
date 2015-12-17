@@ -85,11 +85,11 @@ parser.add_option("-t", "--testers", type="string", default="1:1:0:2",
                   help="Colon-separated tester hierarchy specification, "
                   "see script comments for details "
                   "[default: %default]")
-parser.add_option("-f", "--functional", type="int", default=0,
+parser.add_option("-f", "--functional", type="int", default=10,
                   metavar="PCT",
                   help="Target percentage of functional accesses "
                   "[default: %default]")
-parser.add_option("-u", "--uncacheable", type="int", default=0,
+parser.add_option("-u", "--uncacheable", type="int", default=10,
                   metavar="PCT",
                   help="Target percentage of uncacheable accesses "
                   "[default: %default]")
