@@ -1,3 +1,15 @@
+# Copyright (c) 2012-2016 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -25,9 +37,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Glenn Bergmans
 
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 from MemObject import MemObject
 
 class PioDevice(MemObject):
@@ -36,6 +50,25 @@ class PioDevice(MemObject):
     abstract = True
     pio = SlavePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")
+
+    def generateBasicPioDeviceNode(self, state, name, pio_addr,
+                                   size, interrupts = None):
+        node = FdtNode("%s@%x" % (name, long(pio_addr)))
+        node.append(FdtPropertyWords("reg",
+            state.addrCells(pio_addr) +
+            state.sizeCells(size) ))
+
+        if interrupts:
+            if any([i < 32 for i in interrupts]):
+                raise(("Interrupt number smaller than 32 "+
+                       " in PioDevice %s") % name)
+
+            # subtracting 32 because Linux assumes that SPIs start at 0, while
+            # gem5 uses the internal GIC numbering (SPIs start at 32)
+            node.append(FdtPropertyWords("interrupts", sum(
+                [[0, i  - 32, 4] for i in interrupts], []) ))
+
+        return node
 
 class BasicPioDevice(PioDevice):
     type = 'BasicPioDevice'

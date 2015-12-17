@@ -39,9 +39,12 @@
 # Authors: Ali Saidi
 #          Gabe Black
 #          William Wang
+#          Glenn Bergmans
 
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 from ClockDomain import ClockDomain
 from VoltageDomain import VoltageDomain
 from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
@@ -58,6 +61,7 @@ from ClockedObject import ClockedObject
 from ClockDomain import SrcClockDomain
 from SubSystem import SubSystem
 from Graphics import ImageFormat
+from ClockedObject import ClockedObject
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
@@ -121,6 +125,18 @@ class RealViewCtrl(BasicPioDevice):
     proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
+    def generateDeviceTree(self, state):
+        node = FdtNode("sysreg@%x" % long(self.pio_addr))
+        node.appendCompatible("arm,vexpress-sysreg")
+        node.append(FdtPropertyWords("reg",
+            state.addrCells(self.pio_addr) +
+            state.sizeCells(0x1000) ))
+        node.append(FdtProperty("gpio-controller"))
+        node.append(FdtPropertyWords("#gpio-cells", [2]))
+        node.appendPhandle(self)
+
+        yield node
+
 class RealViewOsc(ClockDomain):
     type = 'RealViewOsc'
     cxx_header = "dev/arm/rv_ctrl.hh"
@@ -142,6 +158,20 @@ class RealViewOsc(ClockDomain):
     device = Param.UInt8("Device ID")
 
     freq = Param.Clock("Default frequency")
+
+    def generateDeviceTree(self, state):
+        phandle = state.phandle(self)
+        node = FdtNode("osc@" + format(long(phandle), 'x'))
+        node.appendCompatible("arm,vexpress-osc")
+        node.append(FdtPropertyWords("arm,vexpress-sysreg,func",
+                                     [0x1, int(self.device)]))
+        node.append(FdtPropertyWords("#clock-cells", [0]))
+        freq = int(1.0/self.freq.value) # Values are stored as a clock period
+        node.append(FdtPropertyWords("freq-range", [freq, freq]))
+        node.append(FdtPropertyStrings("clock-output-names",
+                                       ["oscclk" + str(phandle)]))
+        node.appendPhandle(self)
+        yield node
 
 class RealViewTemperatureSensor(SimObject):
     type = 'RealViewTemperatureSensor'
@@ -181,6 +211,20 @@ Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
     # See Table 4.19 in ARM DUI 0447J (Motherboard Express uATX TRM).
     temp_crtl = Temperature(device=0)
 
+    def generateDeviceTree(self, state):
+        node = FdtNode("mcc")
+        node.appendCompatible("arm,vexpress,config-bus")
+        node.append(FdtPropertyWords("arm,vexpress,site", [0]))
+
+        for obj in self._children.values():
+            if issubclass(type(obj), SimObject):
+                node.append(obj.generateDeviceTree(state))
+
+        io_phandle = state.phandle(self.osc_mcc.parent.unproxy(self))
+        node.append(FdtPropertyWords("arm,vexpress,config-bridge", io_phandle))
+
+        yield node
+
 class CoreTile2A15DCC(SubSystem):
     """ARM CoreTile Express A15x2 Daughterboard Configuration Controller
 
@@ -200,6 +244,19 @@ ARM DUI 0604E for details.
     osc_sys = Osc(device=7, freq="60MHz")
     osc_ddr = Osc(device=8, freq="40MHz")
 
+    def generateDeviceTree(self, state):
+        node = FdtNode("dcc")
+        node.appendCompatible("arm,vexpress,config-bus")
+
+        for obj in self._children.values():
+            if isinstance(obj, SimObject):
+                node.append(obj.generateDeviceTree(state))
+
+        io_phandle = state.phandle(self.osc_cpu.parent.unproxy(self))
+        node.append(FdtPropertyWords("arm,vexpress,config-bridge", io_phandle))
+
+        yield node
+
 class VGic(PioDevice):
     type = 'VGic'
     cxx_header = "dev/arm/vgic.hh"
@@ -210,6 +267,34 @@ class VGic(PioDevice):
     pio_delay = Param.Latency('10ns', "Delay for PIO r/w")
    # The number of list registers is not currently configurable at runtime.
     ppint = Param.UInt32("HV maintenance interrupt number")
+
+    def generateDeviceTree(self, state):
+        gic = self.gic.unproxy(self)
+
+        node = FdtNode("interrupt-controller")
+        node.appendCompatible(["gem5,gic", "arm,cortex-a15-gic",
+                               "arm,cortex-a9-gic"])
+        node.append(FdtPropertyWords("#interrupt-cells", [3]))
+        node.append(FdtPropertyWords("#address-cells", [0]))
+        node.append(FdtProperty("interrupt-controller"))
+
+        regs = (
+            state.addrCells(gic.dist_addr) +
+            state.sizeCells(0x1000) +
+            state.addrCells(gic.cpu_addr) +
+            state.sizeCells(0x1000) +
+            state.addrCells(self.hv_addr) +
+            state.sizeCells(0x2000) +
+            state.addrCells(self.vcpu_addr) +
+            state.sizeCells(0x2000) )
+
+        node.append(FdtPropertyWords("reg", regs))
+        node.append(FdtPropertyWords("interrupts",
+                                     [1, int(self.ppint)-16, 0xf04]))
+
+        node.appendPhandle(gic)
+
+        yield node
 
 class AmbaFake(AmbaPioDevice):
     type = 'AmbaFake'
@@ -224,6 +309,20 @@ class Pl011(Uart):
     int_num = Param.UInt32("Interrupt number that connects to GIC")
     end_on_eot = Param.Bool(False, "End the simulation when a EOT is received on the UART")
     int_delay = Param.Latency("100ns", "Time between action and interrupt generation by UART")
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, 'uart', self.pio_addr,
+                                               0x1000, [int(self.int_num)])
+        node.appendCompatible(["arm,pl011", "arm,primecell"])
+
+        # Hardcoded reference to the realview platform clocks, because the
+        # clk_domain can only store one clock (i.e. it is not a VectorParam)
+        realview = self._parent.unproxy(self)
+        node.append(FdtPropertyWords("clocks",
+            [state.phandle(realview.mcc.osc_peripheral),
+            state.phandle(realview.dcc.osc_smb)]))
+        node.append(FdtPropertyStrings("clock-names", ["uartclk", "apb_pclk"]))
+        yield node
 
 class Sp804(AmbaPioDevice):
     type = 'Sp804'
@@ -258,6 +357,20 @@ class GenericTimer(ClockedObject):
     int_phys = Param.UInt32("Physical timer interrupt number")
     int_virt = Param.UInt32("Virtual timer interrupt number")
 
+    def generateDeviceTree(self, state):
+        node = FdtNode("timer")
+
+        node.appendCompatible(["arm,cortex-a15-timer",
+                               "arm,armv7-timer",
+                               "arm,armv8-timer"])
+        node.append(FdtPropertyWords("interrupts",
+            [1, int(self.int_phys) - 16, 0xf08,
+            1, int(self.int_virt) - 16, 0xf08]))
+        clock = state.phandle(self.clk_domain.unproxy(self))
+        node.append(FdtPropertyWords("clocks", clock))
+
+        yield node
+
 class GenericTimerMem(PioDevice):
     type = 'GenericTimerMem'
     cxx_header = "dev/arm/generic_timer.hh"
@@ -274,6 +387,16 @@ class PL031(AmbaIntDevice):
     time = Param.Time('01/01/2009', "System time to use ('Now' for actual time)")
     amba_id = 0x00341031
 
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, 'rtc', self.pio_addr,
+                                               0x1000, [int(self.int_num)])
+
+        node.appendCompatible(["arm,pl031", "arm,primecell"])
+        clock = state.phandle(self.clk_domain.unproxy(self))
+        node.append(FdtPropertyWords("clocks", clock))
+
+        yield node
+
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
     cxx_header = "dev/arm/kmi.hh"
@@ -281,6 +404,16 @@ class Pl050(AmbaIntDevice):
     is_mouse = Param.Bool(False, "Is this interface a mouse, if not a keyboard")
     int_delay = '1us'
     amba_id = 0x00141050
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, 'kmi', self.pio_addr,
+                                               0x1000, [int(self.int_num)])
+
+        node.appendCompatible(["arm,pl050", "arm,primecell"])
+        clock = state.phandle(self.clk_domain.unproxy(self))
+        node.append(FdtPropertyWords("clocks", clock))
+
+        yield node
 
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
@@ -311,6 +444,23 @@ class HDLcd(AmbaDmaDevice):
     pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
     virt_refresh_rate = Param.Frequency("20Hz", "Frame refresh rate "
                                         "in KVM mode")
+
+    def generateDeviceTree(self, state):
+        # Interrupt number is hardcoded; it is not a property of this class
+        node = self.generateBasicPioDeviceNode(state, 'hdlcd',
+                                               self.pio_addr, 0x1000, [63])
+
+        node.appendCompatible(["arm,hdlcd"])
+        node.append(FdtPropertyWords("clocks", state.phandle(self.pxl_clk)))
+        node.append(FdtPropertyStrings("clock-names", ["pxlclk"]))
+
+        # This driver is disabled by default since the required DT nodes
+        # haven't been standardized yet. To use it,  override this status to
+        # "ok" and add the display configuration nodes required by the driver.
+        # See the driver for more information.
+        node.append(FdtPropertyStrings("status", ["disabled"]))
+
+        yield node
 
 class RealView(Platform):
     type = 'RealView'
@@ -372,6 +522,22 @@ class RealView(Platform):
         cur_sys.atags_addr = 0x100
         cur_sys.load_offset = 0
 
+    def generateDeviceTree(self, state):
+        node = FdtNode("/") # Things in this module need to end up in the root
+        node.append(FdtPropertyWords("interrupt-parent",
+                                     state.phandle(self.gic)))
+
+        for device in [getattr(self, c) for c in self._children]:
+            if issubclass(type(device), SimObject):
+                subnode = device.generateDeviceTree(state)
+                node.append(subnode)
+
+        yield node
+
+    def annotateCpuDeviceNode(self, cpu, state):
+        cpu.append(FdtPropertyStrings("enable-method", "spin-table"))
+        cpu.append(FdtPropertyWords("cpu-release-addr", \
+                                    state.addrCells(0x8000fff8)))
 
 # Reference for memory map and interrupt number
 # RealView Platform Baseboard Explore for Cortex-A9 User Guide(ARM DUI 0440A)
@@ -897,6 +1063,9 @@ Interrupts:
         ]
 
     ### Off-chip devices ###
+    clock24MHz = SrcClockDomain(clock="24MHz",
+        voltage_domain=VoltageDomain(voltage="3.3V"))
+
     uart0 = Pl011(pio_addr=0x1c090000, int_num=37)
 
     kmi0 = Pl050(pio_addr=0x1c060000, int_num=44)
@@ -917,10 +1086,12 @@ Interrupts:
         return [
             self.realview_io,
             self.uart0,
-            self.kmi0, self.kmi1,
+            self.kmi0,
+            self.kmi1,
             self.rtc,
             self.pci_host,
             self.energy_ctrl,
+            self.clock24MHz,
         ]
 
     def attachPciDevice(self, device, *args, **kwargs):
@@ -940,3 +1111,17 @@ Interrupts:
         #  loader, but this is the only place we can configure the
         #  system.
         cur_sys.m5ops_base = 0x10010000
+
+    def generateDeviceTree(self, state):
+        # Generate using standard RealView function
+        dt = list(super(VExpress_GEM5_V1, self).generateDeviceTree(state))
+        if len(dt) > 1:
+            raise Exception("System returned too many DT nodes")
+        node = dt[0]
+
+        node.appendCompatible(["arm,vexpress"])
+        node.append(FdtPropertyStrings("model", ["V2P-CA15"]))
+        node.append(FdtPropertyWords("arm,hbi", [0x0]))
+        node.append(FdtPropertyWords("arm,vexpress,site", [0xf]))
+
+        yield node
