@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2015 LabWare
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
  * Copyright (c) 2009 The University of Edinburgh
@@ -30,6 +31,7 @@
  * Authors: Nathan Binkert
  *          Stephen Hines
  *          Timothy M. Jones
+ *          Boris Shingarov
  */
 
 #ifndef __ARCH_POWER_REMOTE_GDB_HH__
@@ -42,32 +44,38 @@
 namespace PowerISA
 {
 
-const int GDB_REG_BYTES =
-        NumIntArchRegs * 4 +
-        NumFloatArchRegs * 8 +
-        4 + /* PC  */
-        4 + /* MSR */
-        4 + /* CR  */
-        4 + /* LR  */
-        4 + /* CTR */
-        4;  /* XER */
-const int GdbFirstGPRIndex = 0;
-const int GdbFirstFPRIndex = 16;
-const int GdbPCIndex  = 96;
-const int GdbMSRIndex = 97;
-const int GdbCRIndex  = 98;
-const int GdbLRIndex  = 99;
-const int GdbCTRIndex = 100;
-const int GdbXERIndex = 101;
 
 class RemoteGDB : public BaseRemoteGDB
 {
-  public:
-    RemoteGDB(System *_system, ThreadContext *tc);
   protected:
     bool acc(Addr addr, size_t len);
-    void getregs();
-    void setregs();
+
+    class PowerGdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+            uint32_t gpr[NumIntArchRegs];
+            uint64_t fpr[NumFloatArchRegs];
+            uint32_t pc;
+            uint32_t msr;
+            uint32_t cr;
+            uint32_t lr;
+            uint32_t ctr;
+            uint32_t xer;
+        } r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".PowerGdbRegCache"; }
+    };
+
+
+  public:
+    RemoteGDB(System *_system, ThreadContext *tc);
+    BaseGdbRegCache *gdbRegs();
 };
 
 } // namespace PowerISA

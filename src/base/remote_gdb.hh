@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -27,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Boris Shingarov
  */
 
 #ifndef __REMOTE_GDB_HH__
@@ -99,8 +101,8 @@ class BaseRemoteGDB
     //Address formats, break types, and gdb commands may change
     //between architectures, so they're defined as virtual
     //functions.
-    virtual void mem2hex(void *, const void *, int);
-    virtual const char * hex2mem(void *, const char *, int);
+    virtual void mem2hex(char *, const char *, int);
+    virtual const char * hex2mem(char *, const char *, int);
     virtual const char * break_type(char c);
     virtual const char * gdb_command(char cmd);
 
@@ -150,31 +152,55 @@ class BaseRemoteGDB
     ThreadContext *context;
 
   protected:
-    class GdbRegCache
+    /**
+     * Concrete subclasses of this abstract class represent how the
+     * register values are transmitted on the wire.  Usually each
+     * architecture should define one subclass, but there can be more
+     * if there is more than one possible wire format.  For example,
+     * ARM defines both AArch32GdbRegCache and AArch64GdbRegCache.
+     */
+    class BaseGdbRegCache
     {
       public:
-        GdbRegCache(size_t newSize) :
-            regs64(new uint64_t[divCeil(newSize, sizeof(uint64_t))]),
-            size(newSize)
+
+        /**
+         * Return the pointer to the raw bytes buffer containing the
+         * register values.  Each byte of this buffer is literally
+         * encoded as two hex digits in the g or G RSP packet.
+         */
+        virtual char *data() const = 0;
+
+        /**
+         * Return the size of the raw buffer, in bytes
+         * (i.e., half of the number of digits in the g/G packet).
+         */
+        virtual size_t size() const = 0;
+
+        /**
+         * Fill the raw buffer from the registers in the ThreadContext.
+         */
+        virtual void getRegs(ThreadContext*) = 0;
+
+        /**
+         * Set the ThreadContext's registers from the values
+         * in the raw buffer.
+         */
+        virtual void setRegs(ThreadContext*) const = 0;
+
+        /**
+         * Return the name to use in places like DPRINTF.
+         * Having each concrete superclass redefine this member
+         * is useful in situations where the class of the regCache
+         * can change on the fly.
+         */
+        virtual const std::string name() const = 0;
+
+        BaseGdbRegCache(BaseRemoteGDB *g) : gdb(g)
         {}
-        ~GdbRegCache()
-        {
-            delete [] regs64;
-        }
 
-        union {
-            uint64_t *regs64;
-            uint32_t *regs32;
-            uint16_t *regs16;
-            uint8_t *regs8;
-            void *regs;
-        };
-        // Size of cache in bytes.
-        size_t size;
-        size_t bytes() { return size; }
+      protected:
+        BaseRemoteGDB *gdb;
     };
-
-    GdbRegCache gdbregs;
 
   protected:
     uint8_t getbyte();
@@ -192,8 +218,9 @@ class BaseRemoteGDB
     template <class T> void write(Addr addr, T data);
 
   public:
-    BaseRemoteGDB(System *system, ThreadContext *context, size_t cacheSize);
+    BaseRemoteGDB(System *system, ThreadContext *context);
     virtual ~BaseRemoteGDB();
+    virtual BaseGdbRegCache *gdbRegs() = 0;
 
     void replaceThreadContext(ThreadContext *tc) { context = tc; }
 
@@ -222,9 +249,6 @@ class BaseRemoteGDB
     };
 
     SingleStepEvent singleStepEvent;
-
-    virtual void getregs() = 0;
-    virtual void setregs() = 0;
 
     void clearSingleStep();
     void setSingleStep();

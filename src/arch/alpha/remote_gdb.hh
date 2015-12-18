@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2015 LabWare
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Boris Shingarov
  */
 
 #ifndef __ARCH_ALPHA_REMOTE_GDB_HH__
@@ -33,7 +35,6 @@
 
 #include <map>
 
-#include "arch/alpha/kgdb.h"
 #include "arch/alpha/types.hh"
 #include "base/pollevent.hh"
 #include "base/remote_gdb.hh"
@@ -48,17 +49,33 @@ namespace AlphaISA {
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
-    void getregs();
-    void setregs();
-
     // Machine memory
     bool acc(Addr addr, size_t len);
     bool write(Addr addr, size_t size, const char *data);
 
     bool insertHardBreak(Addr addr, size_t len);
 
+    class AlphaGdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+            uint64_t gpr[32];
+            uint64_t fpr[32];
+            uint64_t pc;
+            uint64_t vfp;
+        } r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".AlphaGdbRegCache"; }
+    };
+
   public:
     RemoteGDB(System *system, ThreadContext *context);
+    BaseGdbRegCache *gdbRegs();
 };
 
 } // namespace AlphaISA

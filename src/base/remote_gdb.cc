@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -27,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Boris Shingarov
  */
 
 /*
@@ -270,12 +272,11 @@ BaseRemoteGDB::SingleStepEvent::process()
     gdb->trap(SIGTRAP);
 }
 
-BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c,
-        size_t cacheSize) : inputEvent(NULL), trapEvent(this), listener(NULL),
+BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c) :
+        inputEvent(NULL), trapEvent(this), listener(NULL),
         number(-1), fd(-1), active(false), attached(false), system(_system),
-        context(c), gdbregs(cacheSize), singleStepEvent(this)
+        context(c), singleStepEvent(this)
 {
-    memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
@@ -700,7 +701,9 @@ BaseRemoteGDB::trap(int type)
     if (!attached)
         return false;
 
-    bufferSize = gdbregs.bytes() * 2 + 256;
+    unique_ptr<BaseRemoteGDB::BaseGdbRegCache> regCache(gdbRegs());
+
+    bufferSize = regCache->size() * 2 + 256;
     buffer = (char*)malloc(bufferSize);
 
     DPRINTF(GDBMisc, "trap: PC=%s\n", context->pcState());
@@ -721,12 +724,12 @@ BaseRemoteGDB::trap(int type)
         active = true;
     } else {
         // Tell remote host that an exception has occurred.
-        snprintf((char *)buffer, bufferSize, "S%02x", type);
+        snprintf(buffer, bufferSize, "S%02x", type);
         send(buffer);
     }
 
     // Stick frame regs into our reg cache.
-    getregs();
+    regCache->getRegs(context);
 
     for (;;) {
         datalen = recv(data, sizeof(data));
@@ -740,47 +743,28 @@ BaseRemoteGDB::trap(int type)
             // if this command came from a running gdb, answer it --
             // the other guy has no way of knowing if we're in or out
             // of this loop when he issues a "remote-signal".
-            snprintf((char *)buffer, bufferSize,
+            snprintf(buffer, bufferSize,
                     "S%02x", type);
             send(buffer);
             continue;
 
           case GDBRegR:
-            if (2 * gdbregs.bytes() > bufferSize)
+            if (2 * regCache->size() > bufferSize)
                 panic("buffer too small");
 
-            mem2hex(buffer, gdbregs.regs, gdbregs.bytes());
+            mem2hex(buffer, regCache->data(), regCache->size());
             send(buffer);
             continue;
 
           case GDBRegW:
-            p = hex2mem(gdbregs.regs, p, gdbregs.bytes());
+            p = hex2mem(regCache->data(), p, regCache->size());
             if (p == NULL || *p != '\0')
                 send("E01");
             else {
-                setregs();
+                regCache->setRegs(context);
                 send("OK");
             }
             continue;
-
-#if 0
-          case GDBSetReg:
-            val = hex2i(&p);
-            if (*p++ != '=') {
-                send("E01");
-                continue;
-            }
-            if (val < 0 && val >= KGDB_NUMREGS) {
-                send("E01");
-                continue;
-            }
-
-            gdbregs.regs[val] = hex2i(&p);
-            setregs();
-            send("OK");
-
-            continue;
-#endif
 
           case GDBMemR:
             val = hex2i(&p);
@@ -802,7 +786,7 @@ BaseRemoteGDB::trap(int type)
                 continue;
             }
 
-            if (read(val, (size_t)len, (char *)buffer)) {
+            if (read(val, (size_t)len, buffer)) {
                // variable length array would be nice, but C++ doesn't
                // officially support those...
                char *temp = new char[2*len+1];
@@ -838,7 +822,7 @@ BaseRemoteGDB::trap(int type)
                 send("E0A");
                 continue;
             }
-            if (write(val, (size_t)len, (char *)buffer))
+            if (write(val, (size_t)len, buffer))
               send("OK");
             else
               send("E0B");
@@ -1025,10 +1009,10 @@ BaseRemoteGDB::i2digit(int n)
 
 // Convert a byte array into an hex string.
 void
-BaseRemoteGDB::mem2hex(void *vdst, const void *vsrc, int len)
+BaseRemoteGDB::mem2hex(char *vdst, const char *vsrc, int len)
 {
-    char *dst = (char *)vdst;
-    const char *src = (const char *)vsrc;
+    char *dst = vdst;
+    const char *src = vsrc;
 
     while (len--) {
         *dst++ = i2digit(*src >> 4);
@@ -1042,9 +1026,9 @@ BaseRemoteGDB::mem2hex(void *vdst, const void *vsrc, int len)
 // hex digit. If the string ends in the middle of a byte, NULL is
 // returned.
 const char *
-BaseRemoteGDB::hex2mem(void *vdst, const char *src, int maxlen)
+BaseRemoteGDB::hex2mem(char *vdst, const char *src, int maxlen)
 {
-    char *dst = (char *)vdst;
+    char *dst = vdst;
     int msb, lsb;
 
     while (*src && maxlen--) {

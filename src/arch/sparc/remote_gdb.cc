@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -27,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Boris Shingarov
  */
 
 /*
@@ -131,6 +133,7 @@
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/GDBAcc.hh"
 #include "debug/GDBRead.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
@@ -144,7 +147,7 @@ using namespace std;
 using namespace SparcISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, NumGDBRegs * sizeof(uint64_t))
+    : BaseRemoteGDB(_system, c)
 {}
 
 ///////////////////////////////////////////////////////////
@@ -172,72 +175,82 @@ RemoteGDB::acc(Addr va, size_t len)
     }
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::getregs
-//
-//      Translate the kernel debugger register format into
-//      the GDB register format.
 void
-RemoteGDB::getregs()
+RemoteGDB::SPARCGdbRegCache::getRegs(ThreadContext *context)
 {
-    memset(gdbregs.regs, 0, gdbregs.size);
-
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
+    for (int i = 0; i < 32; i++) r.gpr[i] = htobe((uint32_t)context->readIntReg(i));
     PCState pc = context->pcState();
+    r.pc = htobe((uint32_t)pc.pc());
+    r.npc = htobe((uint32_t)pc.npc());
+    r.y = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
     PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
+    r.psr = htobe((uint32_t)pstate);
+    r.fsr = htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
+    r.csr = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
+}
 
-    if (pstate.am) {
-        gdbregs.regs32[Reg32Pc] = htobe((uint32_t)pc.pc());
-        gdbregs.regs32[Reg32Npc] = htobe((uint32_t)pc.npc());
-        for (int x = RegG0; x <= RegI0 + 7; x++)
-            gdbregs.regs32[x] = htobe((uint32_t)context->readIntReg(x - RegG0));
+void
+RemoteGDB::SPARC64GdbRegCache::getRegs(ThreadContext *context)
+{
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
+    for (int i = 0; i < 32; i++) r.gpr[i] = htobe(context->readIntReg(i));
+    for (int i = 0; i < 32; i++) r.fpr[i] = 0;
+    PCState pc = context->pcState();
+    r.pc = htobe(pc.pc());
+    r.npc = htobe(pc.npc());
+    r.fsr = htobe(context->readMiscReg(MISCREG_FSR));
+    r.fprs = htobe(context->readMiscReg(MISCREG_FPRS));
+    r.y = htobe(context->readIntReg(NumIntArchRegs + 1));
+    PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
+    r.state = htobe(
+        context->readMiscReg(MISCREG_CWP) |
+        pstate << 8 |
+        context->readMiscReg(MISCREG_ASI) << 24 |
+        context->readIntReg(NumIntArchRegs + 2) << 32);
+}
 
-        gdbregs.regs32[Reg32Y] =
-            htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
-        gdbregs.regs32[Reg32Psr] = htobe((uint32_t)pstate);
-        gdbregs.regs32[Reg32Fsr] =
-            htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
-        gdbregs.regs32[Reg32Csr] =
-            htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
-    } else {
-        gdbregs.regs64[RegPc] = htobe(pc.pc());
-        gdbregs.regs64[RegNpc] = htobe(pc.npc());
-        for (int x = RegG0; x <= RegI0 + 7; x++)
-            gdbregs.regs64[x] = htobe(context->readIntReg(x - RegG0));
-
-        gdbregs.regs64[RegFsr] = htobe(context->readMiscReg(MISCREG_FSR));
-        gdbregs.regs64[RegFprs] = htobe(context->readMiscReg(MISCREG_FPRS));
-        gdbregs.regs64[RegY] = htobe(context->readIntReg(NumIntArchRegs + 1));
-        gdbregs.regs64[RegState] = htobe(
-            context->readMiscReg(MISCREG_CWP) |
-            pstate << 8 |
-            context->readMiscReg(MISCREG_ASI) << 24 |
-            context->readIntReg(NumIntArchRegs + 2) << 32);
-    }
-
-    DPRINTF(GDBRead, "PC=%#x\n", gdbregs.regs64[RegPc]);
-
+void
+RemoteGDB::SPARCGdbRegCache::setRegs(ThreadContext *context) const
+{
+    for (int i = 0; i < 32; i++) context->setIntReg(i, r.gpr[i]);
+    PCState pc;
+    pc.pc(r.pc);
+    pc.npc(r.npc);
+    pc.nnpc(pc.npc() + sizeof(MachInst));
+    pc.upc(0);
+    pc.nupc(1);
+    context->pcState(pc);
     // Floating point registers are left at 0 in netbsd
     // All registers other than the pc, npc and int regs
     // are ignored as well.
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::setregs
-//
-//      Translate the GDB register format into the kernel
-//      debugger register format.
-//
 void
-RemoteGDB::setregs()
+RemoteGDB::SPARC64GdbRegCache::setRegs(ThreadContext *context) const
 {
+    for (int i = 0; i < 32; i++) context->setIntReg(i, r.gpr[i]);
     PCState pc;
-    pc.pc(gdbregs.regs64[RegPc]);
-    pc.npc(gdbregs.regs64[RegNpc]);
+    pc.pc(r.pc);
+    pc.npc(r.npc);
     pc.nnpc(pc.npc() + sizeof(MachInst));
     pc.upc(0);
     pc.nupc(1);
     context->pcState(pc);
-    for (int x = RegG0; x <= RegI0 + 7; x++)
-        context->setIntReg(x - RegG0, gdbregs.regs64[x]);
-    // Only the integer registers, pc and npc are set in netbsd
+    // Floating point registers are left at 0 in netbsd
+    // All registers other than the pc, npc and int regs
+    // are ignored as well.
+}
+
+
+RemoteGDB::BaseGdbRegCache*
+RemoteGDB::gdbRegs()
+{
+    PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
+    if (pstate.am)
+    {DPRINTF(GDBRead, "Creating 32-bit GDB\n");
+        return new SPARCGdbRegCache(this);}
+    else
+    {DPRINTF(GDBRead, "Creating 64-bit GDB\n");
+        return new SPARC64GdbRegCache(this);}
 }

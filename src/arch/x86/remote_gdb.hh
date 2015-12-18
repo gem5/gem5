@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2007 The Hewlett-Packard Development Company
  * All rights reserved.
@@ -36,6 +37,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Boris Shingarov
  */
 
 #ifndef __ARCH_X86_REMOTEGDB_HH__
@@ -53,79 +55,86 @@ namespace X86ISA
 {
 class RemoteGDB : public BaseRemoteGDB
 {
-  public:
-    enum
-    {
-        GDB32_EAX,
-        GDB32_ECX,
-        GDB32_EDX,
-        GDB32_EBX,
-        GDB32_ESP,
-        GDB32_EBP,
-        GDB32_ESI,
-        GDB32_EDI,
-        GDB32_EIP,
-        GDB32_EFLAGS,
-        GDB32_CS,
-        GDB32_SS,
-        GDB32_DS,
-        GDB32_ES,
-        GDB32_FS,
-        GDB32_GS,
-
-        GDB32_NUMREGS
-    };
-
-    enum
-    {
-        GDB64_RAX,
-        GDB64_RBX,
-        GDB64_RCX,
-        GDB64_RDX,
-        GDB64_RSI,
-        GDB64_RDI,
-        GDB64_RBP,
-        GDB64_RSP,
-        GDB64_R8,
-        GDB64_R9,
-        GDB64_R10,
-        GDB64_R11,
-        GDB64_R12,
-        GDB64_R13,
-        GDB64_R14,
-        GDB64_R15,
-        GDB64_RIP,
-        // These indices index into the reg cache treated as an array of 32
-        // bit integers. The next index is one beyond the previous, and then
-        // scaled up from an index into an array of 64 bit integers.
-        GDB64_RFLAGS_32 = (GDB64_RIP + 1) * 2,
-        GDB64_CS_32,
-        GDB64_SS_32,
-        GDB64_DS_32,
-        GDB64_ES_32,
-        GDB64_FS_32,
-        GDB64_GS_32,
-
-        // Scale the end index count back down (rounded up) to be for an
-        // array of 64 bit integers.
-        GDB64_NUMREGS = (GDB64_GS_32 + 1) / 2 + 1
-    };
-
-    RemoteGDB(System *system, ThreadContext *context);
-
-    bool acc(Addr addr, size_t len);
-
   protected:
-    void getregs();
-    void setregs();
-
+    bool acc(Addr addr, size_t len);
     bool checkBpLen(size_t len) { return len == 1; }
+    class X86GdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+          uint32_t eax;
+          uint32_t ecx;
+          uint32_t edx;
+          uint32_t ebx;
+          uint32_t esp;
+          uint32_t ebp;
+          uint32_t esi;
+          uint32_t edi;
+          uint32_t eip;
+          uint32_t eflags;
+          uint32_t cs;
+          uint32_t ss;
+          uint32_t ds;
+          uint32_t es;
+          uint32_t fs;
+          uint32_t gs;
+        } r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".X86GdbRegCache"; }
+    };
+
+    class AMD64GdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+          uint64_t rax;
+          uint64_t rbx;
+          uint64_t rcx;
+          uint64_t rdx;
+          uint64_t rsi;
+          uint64_t rdi;
+          uint64_t rbp;
+          uint64_t rsp;
+          uint64_t r8;
+          uint64_t r9;
+          uint64_t r10;
+          uint64_t r11;
+          uint64_t r12;
+          uint64_t r13;
+          uint64_t r14;
+          uint64_t r15;
+          uint64_t rip;
+          uint32_t eflags;
+          uint32_t cs;
+          uint32_t ss;
+          uint32_t ds;
+          uint32_t es;
+          uint32_t fs;
+          uint32_t gs;
+          /*
+           * We do not model st[], FPU status regs, xmm[] etc.
+           * While it's not ok to have G-packets larger than what gdb
+           * knows about, it is ok to have smaller ones.
+           */
+        } r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".AMD64GdbRegCache"; }
+    };
+
+  public:
+    RemoteGDB(System *system, ThreadContext *context);
+    BaseGdbRegCache *gdbRegs();
 };
-
-const int GDB_REG_BYTES M5_VAR_USED =
-    std::max(RemoteGDB::GDB32_NUMREGS * sizeof(uint32_t),
-             RemoteGDB::GDB64_NUMREGS * sizeof(uint64_t));
-
-}
+} // namespace X86ISA
 
 #endif // __ARCH_X86_REMOTEGDB_HH__

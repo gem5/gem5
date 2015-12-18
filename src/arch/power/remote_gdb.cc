@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2010 ARM Limited
  * All rights reserved
@@ -149,7 +150,7 @@ using namespace std;
 using namespace PowerISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, GDB_REG_BYTES)
+    : BaseRemoteGDB(_system, tc)
 {
 }
 
@@ -171,67 +172,50 @@ RemoteGDB::acc(Addr va, size_t len)
         return context->getProcessPtr()->pTable->lookup(va, entry);
 }
 
-/*
- * Translate the kernel debugger register format into the GDB register
- * format.
- *
- * The PowerPC ISA is quite flexible in what register sets may be present
- * depending on the features implemented by the particular CPU;
- * GDB addresses this by describing the format of how register contents
- * are transferred on the wire, in XML files such as 'power-core.xml'.
- * Ideally, we should be reading these files instead of hardcoding this
- * information, but for now the following implementation is enough to
- * serve as the RSP backend for the out-of-the-box, default GDB.
- */
 void
-RemoteGDB::getregs()
+RemoteGDB::PowerGdbRegCache::getRegs(ThreadContext *context)
 {
-    DPRINTF(GDBAcc, "getregs in remotegdb \n");
-    memset(gdbregs.regs, 0, gdbregs.bytes());
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
 
     // Default order on 32-bit PowerPC:
     // R0-R31 (32-bit each), F0-F31 (64-bit IEEE754 double),
     // PC, MSR, CR, LR, CTR, XER (32-bit each)
 
-    // INTREG: R0~R31
     for (int i = 0; i < NumIntArchRegs; i++)
-        gdbregs.regs32[GdbFirstGPRIndex + i] = htobe((uint32_t)context->readIntReg(i));
+        r.gpr[i] = htobe((uint32_t)context->readIntReg(i));
 
-    // FLOATREG: F0~F31
     for (int i = 0; i < NumFloatArchRegs; i++)
-        gdbregs.regs32[GdbFirstFPRIndex + i] = context->readFloatRegBits(i);
+        r.fpr[i] = context->readFloatRegBits(i);
 
-    // PC, MSR, CR, LR, CTR, XER
-    gdbregs.regs32[GdbPCIndex] = htobe((uint32_t)context->pcState().pc());
-    gdbregs.regs32[GdbMSRIndex] = 0; // Is MSR modeled?
-    gdbregs.regs32[GdbCRIndex] = htobe((uint32_t)context->readIntReg(INTREG_CR));
-    gdbregs.regs32[GdbLRIndex] = htobe((uint32_t)context->readIntReg(INTREG_LR));
-    gdbregs.regs32[GdbCTRIndex] = htobe((uint32_t)context->readIntReg(INTREG_CTR));
-    gdbregs.regs32[GdbXERIndex] = htobe((uint32_t)context->readIntReg(INTREG_XER));
+    r.pc = htobe((uint32_t)context->pcState().pc());
+    r.msr = 0; // Is MSR modeled?
+    r.cr = htobe((uint32_t)context->readIntReg(INTREG_CR));
+    r.lr = htobe((uint32_t)context->readIntReg(INTREG_LR));
+    r.ctr = htobe((uint32_t)context->readIntReg(INTREG_CTR));
+    r.xer = htobe((uint32_t)context->readIntReg(INTREG_XER));
 }
 
-/*
- * Translate the GDB register format into the kernel debugger register
- * format.
- */
 void
-RemoteGDB::setregs()
+RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
 {
-    DPRINTF(GDBAcc, "setregs in remotegdb \n");
+    DPRINTF(GDBAcc, "setRegs in remotegdb \n");
 
-    // INTREG: R0~R31
     for (int i = 0; i < NumIntArchRegs; i++)
-        context->setIntReg(i, betoh(gdbregs.regs32[GdbFirstGPRIndex + i]));
+        context->setIntReg(i, betoh(r.gpr[i]));
 
-    // FLOATREG: F0~F31
     for (int i = 0; i < NumFloatArchRegs; i++)
-        context->setFloatRegBits(i, gdbregs.regs64[GdbFirstFPRIndex + i]);
+        context->setFloatRegBits(i, r.fpr[i]);
 
-    // PC, MSR, CR, LR, CTR, XER
-    context->pcState(betoh(gdbregs.regs32[GdbPCIndex]));
+    context->pcState(betoh(r.pc));
     // Is MSR modeled?
-    context->setIntReg(INTREG_CR, betoh(gdbregs.regs32[GdbCRIndex]));
-    context->setIntReg(INTREG_LR, betoh(gdbregs.regs32[GdbLRIndex]));
-    context->setIntReg(INTREG_CTR, betoh(gdbregs.regs32[GdbCTRIndex]));
-    context->setIntReg(INTREG_XER, betoh(gdbregs.regs32[GdbXERIndex]));
+    context->setIntReg(INTREG_CR, betoh(r.cr));
+    context->setIntReg(INTREG_LR, betoh(r.lr));
+    context->setIntReg(INTREG_CTR, betoh(r.ctr));
+    context->setIntReg(INTREG_XER, betoh(r.xer));
 }
+
+RemoteGDB::BaseGdbRegCache*
+RemoteGDB::gdbRegs() {
+    return new PowerGdbRegCache(this);
+}
+

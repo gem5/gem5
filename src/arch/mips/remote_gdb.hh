@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
@@ -27,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Boris Shingarov
  */
 
 #ifndef __ARCH_MIPS_REMOTE_GDB_HH__
@@ -42,27 +44,41 @@ class ThreadContext;
 namespace MipsISA
 {
 
-    // The number of special regs depends on gdb.
-    const int GdbIntArchRegs = NumIntArchRegs;
-    const int GdbIntSpecialRegs = 6;
-    const int GdbFloatArchRegs = NumFloatArchRegs;
-    const int GdbFloatSpecialRegs = 2;
+class RemoteGDB : public BaseRemoteGDB
+{
+  protected:
+    bool acc(Addr addr, size_t len);
 
-    const int GdbIntRegs = GdbIntArchRegs + GdbIntSpecialRegs;
-    const int GdbFloatRegs = GdbFloatArchRegs + GdbFloatSpecialRegs;
-    const int GdbNumRegs = GdbIntRegs + GdbFloatRegs;
-
-    class RemoteGDB : public BaseRemoteGDB
+    class MipsGdbRegCache : public BaseGdbRegCache
     {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+            uint32_t gpr[32];
+            uint32_t sr;
+            uint32_t lo;
+            uint32_t hi;
+            uint32_t badvaddr;
+            uint32_t cause;
+            uint32_t pc;
+            uint32_t fpr[32];
+            uint32_t fsr;
+            uint32_t fir;
+        } r;
       public:
-        RemoteGDB(System *_system, ThreadContext *tc);
-
-      protected:
-        bool acc(Addr addr, size_t len);
-
-        void getregs();
-        void setregs();
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".MipsGdbRegCache"; }
     };
-}
+
+
+  public:
+    RemoteGDB(System *_system, ThreadContext *tc);
+    BaseGdbRegCache *gdbRegs();
+};
+
+} // namespace MipsISA
 
 #endif /* __ARCH_MIPS_REMOTE_GDB_H__ */

@@ -124,7 +124,6 @@
 
 
 #include "arch/alpha/decoder.hh"
-#include "arch/alpha/kgdb.h"
 #include "arch/alpha/regredir.hh"
 #include "arch/alpha/remote_gdb.hh"
 #include "arch/alpha/utility.hh"
@@ -146,9 +145,8 @@ using namespace std;
 using namespace AlphaISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, KGDB_NUMREGS * sizeof(uint64_t))
+    : BaseRemoteGDB(_system, tc)
 {
-    memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
 /*
@@ -203,47 +201,41 @@ RemoteGDB::acc(Addr va, size_t len)
     return true;
 }
 
-/*
- * Translate the kernel debugger register format into the GDB register
- * format.
- */
 void
-RemoteGDB::getregs()
+RemoteGDB::AlphaGdbRegCache::getRegs(ThreadContext *context)
 {
-    memset(gdbregs.regs, 0, gdbregs.bytes());
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
 
-    gdbregs.regs64[KGDB_REG_PC] = context->pcState().pc();
+    r.pc = context->pcState().pc();
 
-    // @todo: Currently this is very Alpha specific.
-    if (PcPAL(gdbregs.regs64[KGDB_REG_PC])) {
-        for (int i = 0; i < NumIntArchRegs; ++i)
-            gdbregs.regs64[i] = context->readIntReg(reg_redir[i]);
+    if (PcPAL(r.pc)) {
+        for (int i = 0; i < 32; ++i)
+            r.gpr[i] = context->readIntReg(reg_redir[i]);
     } else {
-        for (int i = 0; i < NumIntArchRegs; ++i)
-            gdbregs.regs64[i] = context->readIntReg(i);
+        for (int i = 0; i < 32; ++i)
+            r.gpr[i] = context->readIntReg(i);
     }
 
+    for (int i = 0; i < 32; ++i)
 #ifdef KGDB_FP_REGS
-    for (int i = 0; i < NumFloatArchRegs; ++i)
-        gdbregs.regs64[i + KGDB_REG_F0] = context->readFloatRegBits(i);
+       r.fpr[i] = context->readFloatRegBits(i);
+#else
+       r.fpr[i] = 0;
 #endif
 }
 
-/*
- * Translate the GDB register format into the kernel debugger register
- * format.
- */
 void
-RemoteGDB::setregs()
+RemoteGDB::AlphaGdbRegCache::setRegs(ThreadContext *context) const
 {
-    // @todo: Currently this is very Alpha specific.
-    if (PcPAL(gdbregs.regs64[KGDB_REG_PC])) {
-        for (int i = 0; i < NumIntArchRegs; ++i) {
-            context->setIntReg(reg_redir[i], gdbregs.regs64[i]);
+    DPRINTF(GDBAcc, "setRegs in remotegdb \n");
+
+    if (PcPAL(r.pc)) {
+        for (int i = 0; i < 32; ++i) {
+            context->setIntReg(reg_redir[i], r.gpr[i]);
         }
     } else {
-        for (int i = 0; i < NumIntArchRegs; ++i) {
-            context->setIntReg(i, gdbregs.regs64[i]);
+        for (int i = 0; i < 32; ++i) {
+            context->setIntReg(i, r.gpr[i]);
         }
     }
 
@@ -252,7 +244,7 @@ RemoteGDB::setregs()
         context->setFloatRegBits(i, gdbregs.regs64[i + KGDB_REG_F0]);
     }
 #endif
-    context->pcState(gdbregs.regs64[KGDB_REG_PC]);
+    context->pcState(r.pc);
 }
 
 // Write bytes to kernel address space for debugger.
@@ -277,3 +269,9 @@ RemoteGDB::insertHardBreak(Addr addr, size_t len)
               "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
     return BaseRemoteGDB::insertHardBreak(addr, len);
 }
+
+RemoteGDB::BaseGdbRegCache*
+RemoteGDB::gdbRegs() {
+            return new AlphaGdbRegCache(this);
+}
+

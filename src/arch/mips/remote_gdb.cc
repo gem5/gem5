@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2010 ARM Limited
  * All rights reserved
@@ -41,6 +42,7 @@
  * Authors: Nathan Binkert
  *          William Wang
  *          Deyuan Guo
+ *          Boris Shingarov
  */
 
 /*
@@ -149,7 +151,7 @@ using namespace std;
 using namespace MipsISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, GdbNumRegs * sizeof(uint32_t))
+    : BaseRemoteGDB(_system, tc)
 {
 }
 
@@ -168,70 +170,41 @@ RemoteGDB::acc(Addr va, size_t len)
         return context->getProcessPtr()->pTable->lookup(va, entry);
 }
 
-/*
- * Translate the kernel debugger register format into the GDB register
- * format.
- */
 void
-RemoteGDB::getregs()
+RemoteGDB::MipsGdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb \n");
-    memset(gdbregs.regs, 0, gdbregs.bytes());
 
-    // MIPS registers are 32 bits wide, gdb registers are 64 bits wide
-    // two MIPS registers are packed into one gdb register (little endian)
-
-    // INTREG: R0~R31
-    for (int i = 0; i < GdbIntArchRegs; i++)
-        gdbregs.regs32[i] = context->readIntReg(i);
-    // SR, LO, HI, BADVADDR, CAUSE, PC
-    gdbregs.regs32[GdbIntArchRegs + 0] =
-        context->readMiscRegNoEffect(MISCREG_STATUS);
-    gdbregs.regs32[GdbIntArchRegs + 1] = context->readIntReg(INTREG_LO);
-    gdbregs.regs32[GdbIntArchRegs + 2] = context->readIntReg(INTREG_HI);
-    gdbregs.regs32[GdbIntArchRegs + 3] =
-        context->readMiscRegNoEffect(MISCREG_BADVADDR);
-    gdbregs.regs32[GdbIntArchRegs + 4] =
-        context->readMiscRegNoEffect(MISCREG_CAUSE);
-    gdbregs.regs32[GdbIntArchRegs + 5] = context->pcState().pc();
-    // FLOATREG: F0~F31
-    for (int i = 0; i < GdbFloatArchRegs; i++)
-        gdbregs.regs32[GdbIntRegs + i] = context->readFloatRegBits(i);
-    // FCR, FIR
-    gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 0] =
-        context->readFloatRegBits(FLOATREG_FCCR);
-    gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 1] =
-        context->readFloatRegBits(FLOATREG_FIR);
+    for (int i = 0; i < 32; i++) r.gpr[i] = context->readIntReg(i);
+    r.sr = context->readMiscRegNoEffect(MISCREG_STATUS);
+    r.lo = context->readIntReg(INTREG_LO);
+    r.hi = context->readIntReg(INTREG_HI);
+    r.badvaddr = context->readMiscRegNoEffect(MISCREG_BADVADDR);
+    r.cause = context->readMiscRegNoEffect(MISCREG_CAUSE);
+    r.pc = context->pcState().pc();
+    for (int i = 0; i < 32; i++) r.fpr[i] = context->readFloatRegBits(i);
+    r.fsr = context->readFloatRegBits(FLOATREG_FCCR);
+    r.fir = context->readFloatRegBits(FLOATREG_FIR);
 }
 
-/*
- * Translate the GDB register format into the kernel debugger register
- * format.
- */
 void
-RemoteGDB::setregs()
+RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
 
-    // INTREG: R0~R31
-    for (int i = 1; i < GdbIntArchRegs; i++)
-        context->setIntReg(i, gdbregs.regs32[i]);
-    // SR, LO, HI, BADVADDR, CAUSE, PC
-    context->setMiscRegNoEffect(MISCREG_STATUS,
-        gdbregs.regs32[GdbIntArchRegs + 0]);
-    context->setIntReg(INTREG_LO, gdbregs.regs32[GdbIntArchRegs + 1]);
-    context->setIntReg(INTREG_HI, gdbregs.regs32[GdbIntArchRegs + 2]);
-    context->setMiscRegNoEffect(MISCREG_BADVADDR,
-        gdbregs.regs32[GdbIntArchRegs + 3]);
-    context->setMiscRegNoEffect(MISCREG_CAUSE,
-        gdbregs.regs32[GdbIntArchRegs + 4]);
-    context->pcState(gdbregs.regs32[GdbIntArchRegs + 5]);
-    // FLOATREG: F0~F31
-    for (int i = 0; i < GdbFloatArchRegs; i++)
-        context->setFloatRegBits(i, gdbregs.regs32[GdbIntRegs + i]);
-    // FCR, FIR
-    context->setFloatRegBits(FLOATREG_FCCR,
-        gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 0]);
-    context->setFloatRegBits(FLOATREG_FIR,
-        gdbregs.regs32[GdbIntRegs + GdbFloatArchRegs + 1]);
+    for (int i = 1; i < 32; i++) context->setIntReg(i, r.gpr[i]);
+    context->setMiscRegNoEffect(MISCREG_STATUS, r.sr);
+    context->setIntReg(INTREG_LO, r.lo);
+    context->setIntReg(INTREG_HI, r.hi);
+    context->setMiscRegNoEffect(MISCREG_BADVADDR, r.badvaddr);
+    context->setMiscRegNoEffect(MISCREG_CAUSE, r.cause);
+    context->pcState(r.pc);
+    for (int i = 0; i < 32; i++) context->setFloatRegBits(i, r.fpr[i]);
+    context->setFloatRegBits(FLOATREG_FCCR, r.fsr);
+    context->setFloatRegBits(FLOATREG_FIR, r.fir);
+}
+
+RemoteGDB::BaseGdbRegCache*
+RemoteGDB::gdbRegs() {
+    return new MipsGdbRegCache(this);
 }

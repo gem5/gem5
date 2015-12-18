@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
  * Copyright (c) 2013 ARM Limited
  * All rights reserved
@@ -41,6 +42,7 @@
  *
  * Authors: Nathan Binkert
  *          Stephen Hines
+ *          Boris Shingarov
  */
 
 #ifndef __ARCH_ARM_REMOTE_GDB_HH__
@@ -48,6 +50,7 @@
 
 #include <algorithm>
 
+#include "arch/arm/utility.hh"
 #include "base/remote_gdb.hh"
 
 class System;
@@ -56,41 +59,51 @@ class ThreadContext;
 namespace ArmISA
 {
 
-// AArch32 registers with vfpv3/neon
-enum {
-    GDB32_R0 = 0,
-    GDB32_CPSR = 16,
-    GDB32_F0 = 17,
-    GDB32_FPSCR = 81,
-    GDB32_NUMREGS = 82
-};
-
-// AArch64 registers
-enum {
-    GDB64_X0 = 0,
-    GDB64_SPX = 31,
-    GDB64_PC = 32,
-    GDB64_CPSR = 33,
-    GDB64_V0 = 34,
-    GDB64_V0_32 = 2 * GDB64_V0,
-    GDB64_NUMREGS = 98
-};
-
-const int GDB_REG_BYTES M5_VAR_USED =
-    std::max(GDB64_NUMREGS * sizeof(uint64_t),
-             GDB32_NUMREGS * sizeof(uint32_t));
-
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
     bool acc(Addr addr, size_t len);
-    bool write(Addr addr, size_t size, const char *data);
 
-    void getregs();
-    void setregs();
+    class AArch32GdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+          uint32_t gpr[16];
+          uint32_t fpr[8*3];
+          uint32_t fpscr;
+          uint32_t cpsr;
+        } r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".AArch32GdbRegCache"; }
+    };
+
+    class AArch64GdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+          uint64_t x[31];
+          uint64_t spx;
+          uint64_t pc;
+          uint64_t cpsr;
+          uint32_t v[32*4];
+        } r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+        const std::string name() const { return gdb->name() + ".AArch64GdbRegCache"; }
+    };
 
   public:
     RemoteGDB(System *_system, ThreadContext *tc);
+    BaseGdbRegCache *gdbRegs();
 };
 } // namespace ArmISA
 

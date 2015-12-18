@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015 LabWare
  * Copyright 2014 Google Inc.
  * Copyright (c) 2010, 2013 ARM Limited
  * All rights reserved
@@ -40,6 +41,7 @@
  *
  * Authors: Nathan Binkert
  *          William Wang
+ *          Boris Shingarov
  */
 
 /*
@@ -162,7 +164,7 @@ using namespace std;
 using namespace ArmISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc, GDB_REG_BYTES)
+    : BaseRemoteGDB(_system, tc)
 {
 }
 
@@ -192,133 +194,109 @@ RemoteGDB::acc(Addr va, size_t len)
     }
 }
 
-/*
- * Translate the kernel debugger register format into the GDB register
- * format.
- */
 void
-RemoteGDB::getregs()
+RemoteGDB::AArch64GdbRegCache::getRegs(ThreadContext *context)
 {
-    DPRINTF(GDBAcc, "getregs in remotegdb \n");
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
 
-    memset(gdbregs.regs, 0, gdbregs.bytes());
+    for (int i = 0; i < 31; ++i)
+        r.x[i] = context->readIntReg(INTREG_X0 + i);
+    r.spx = context->readIntReg(INTREG_SPX);
+    r.pc = context->pcState().pc();
+    r.cpsr = context->readMiscRegNoEffect(MISCREG_CPSR);
 
-    if (inAArch64(context)) {  // AArch64
-        // x0-x30
-        for (int i = 0; i < 31; ++i)
-            gdbregs.regs64[GDB64_X0 + i] = context->readIntReg(INTREG_X0 + i);
-        gdbregs.regs64[GDB64_SPX] = context->readIntReg(INTREG_SPX);
-        // pc
-        gdbregs.regs64[GDB64_PC] = context->pcState().pc();
-        // cpsr
-        gdbregs.regs64[GDB64_CPSR] =
-            context->readMiscRegNoEffect(MISCREG_CPSR);
-        // v0-v31
-        for (int i = 0; i < 128; i += 4) {
-            int gdboff = GDB64_V0_32 + i;
-            gdbregs.regs32[gdboff + 0] = context->readFloatRegBits(i + 2);
-            gdbregs.regs32[gdboff + 1] = context->readFloatRegBits(i + 3);
-            gdbregs.regs32[gdboff + 2] = context->readFloatRegBits(i + 0);
-            gdbregs.regs32[gdboff + 3] = context->readFloatRegBits(i + 1);
-        }
-    } else {  // AArch32
-        // R0-R15 supervisor mode
-        gdbregs.regs32[GDB32_R0 + 0] = context->readIntReg(INTREG_R0);
-        gdbregs.regs32[GDB32_R0 + 1] = context->readIntReg(INTREG_R1);
-        gdbregs.regs32[GDB32_R0 + 2] = context->readIntReg(INTREG_R2);
-        gdbregs.regs32[GDB32_R0 + 3] = context->readIntReg(INTREG_R3);
-        gdbregs.regs32[GDB32_R0 + 4] = context->readIntReg(INTREG_R4);
-        gdbregs.regs32[GDB32_R0 + 5] = context->readIntReg(INTREG_R5);
-        gdbregs.regs32[GDB32_R0 + 6] = context->readIntReg(INTREG_R6);
-        gdbregs.regs32[GDB32_R0 + 7] = context->readIntReg(INTREG_R7);
-        gdbregs.regs32[GDB32_R0 + 8] = context->readIntReg(INTREG_R8);
-        gdbregs.regs32[GDB32_R0 + 9] = context->readIntReg(INTREG_R9);
-        gdbregs.regs32[GDB32_R0 + 10] = context->readIntReg(INTREG_R10);
-        gdbregs.regs32[GDB32_R0 + 11] = context->readIntReg(INTREG_R11);
-        gdbregs.regs32[GDB32_R0 + 12] = context->readIntReg(INTREG_R12);
-        gdbregs.regs32[GDB32_R0 + 13] = context->readIntReg(INTREG_SP);
-        gdbregs.regs32[GDB32_R0 + 14] = context->readIntReg(INTREG_LR);
-        gdbregs.regs32[GDB32_R0 + 15] = context->pcState().pc();
-
-        // CPSR
-        gdbregs.regs32[GDB32_CPSR] = context->readMiscRegNoEffect(MISCREG_CPSR);
-
-        // vfpv3/neon floating point registers (32 double or 64 float)
-        for (int i = 0; i < NumFloatV7ArchRegs; ++i)
-            gdbregs.regs32[GDB32_F0 + i] = context->readFloatRegBits(i);
-
-        // FPSCR
-        gdbregs.regs32[GDB32_FPSCR] =
-            context->readMiscRegNoEffect(MISCREG_FPSCR);
+    for (int i = 0; i < 32*4; i += 4) {
+        r.v[i + 0] = context->readFloatRegBits(i + 2);
+        r.v[i + 1] = context->readFloatRegBits(i + 3);
+        r.v[i + 2] = context->readFloatRegBits(i + 0);
+        r.v[i + 3] = context->readFloatRegBits(i + 1);
     }
 }
 
-/*
- * Translate the GDB register format into the kernel debugger register
- * format.
- */
 void
-RemoteGDB::setregs()
+RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
 {
+    DPRINTF(GDBAcc, "setRegs in remotegdb \n");
 
-    DPRINTF(GDBAcc, "setregs in remotegdb \n");
-    if (inAArch64(context)) {  // AArch64
-        // x0-x30
-        for (int i = 0; i < 31; ++i)
-            context->setIntReg(INTREG_X0 + i, gdbregs.regs64[GDB64_X0 + i]);
-        // pc
-        context->pcState(gdbregs.regs64[GDB64_PC]);
-        // cpsr
-        context->setMiscRegNoEffect(MISCREG_CPSR, gdbregs.regs64[GDB64_CPSR]);
-        // Update the stack pointer. This should be done after
-        // updating CPSR/PSTATE since that might affect how SPX gets
-        // mapped.
-        context->setIntReg(INTREG_SPX, gdbregs.regs64[GDB64_SPX]);
-        // v0-v31
-        for (int i = 0; i < 128; i += 4) {
-            int gdboff = GDB64_V0_32 + i;
-            context->setFloatRegBits(i + 2, gdbregs.regs32[gdboff + 0]);
-            context->setFloatRegBits(i + 3, gdbregs.regs32[gdboff + 1]);
-            context->setFloatRegBits(i + 0, gdbregs.regs32[gdboff + 2]);
-            context->setFloatRegBits(i + 1, gdbregs.regs32[gdboff + 3]);
-        }
-    } else {  // AArch32
-        // R0-R15 supervisor mode
-        // arm registers are 32 bits wide, gdb registers are 64 bits wide
-        // two arm registers are packed into one gdb register (little endian)
-        context->setIntReg(INTREG_R0, gdbregs.regs32[GDB32_R0 + 0]);
-        context->setIntReg(INTREG_R1, gdbregs.regs32[GDB32_R0 + 1]);
-        context->setIntReg(INTREG_R2, gdbregs.regs32[GDB32_R0 + 2]);
-        context->setIntReg(INTREG_R3, gdbregs.regs32[GDB32_R0 + 3]);
-        context->setIntReg(INTREG_R4, gdbregs.regs32[GDB32_R0 + 4]);
-        context->setIntReg(INTREG_R5, gdbregs.regs32[GDB32_R0 + 5]);
-        context->setIntReg(INTREG_R6, gdbregs.regs32[GDB32_R0 + 6]);
-        context->setIntReg(INTREG_R7, gdbregs.regs32[GDB32_R0 + 7]);
-        context->setIntReg(INTREG_R8, gdbregs.regs32[GDB32_R0 + 8]);
-        context->setIntReg(INTREG_R9, gdbregs.regs32[GDB32_R0 + 9]);
-        context->setIntReg(INTREG_R10, gdbregs.regs32[GDB32_R0 + 10]);
-        context->setIntReg(INTREG_R11, gdbregs.regs32[GDB32_R0 + 11]);
-        context->setIntReg(INTREG_R12, gdbregs.regs32[GDB32_R0 + 12]);
-        context->setIntReg(INTREG_SP, gdbregs.regs32[GDB32_R0 + 13]);
-        context->setIntReg(INTREG_LR, gdbregs.regs32[GDB32_R0 + 14]);
-        context->pcState(gdbregs.regs32[GDB32_R0 + 7]);
+    for (int i = 0; i < 31; ++i)
+        context->setIntReg(INTREG_X0 + i, r.x[i]);
+    context->pcState(r.pc);
+    context->setMiscRegNoEffect(MISCREG_CPSR, r.cpsr);
+    // Update the stack pointer. This should be done after
+    // updating CPSR/PSTATE since that might affect how SPX gets
+    // mapped.
+    context->setIntReg(INTREG_SPX, r.spx);
 
-        //CPSR
-        context->setMiscRegNoEffect(MISCREG_CPSR, gdbregs.regs32[GDB32_CPSR]);
-
-        //vfpv3/neon floating point registers (32 double or 64 float)
-        for (int i = 0; i < NumFloatV7ArchRegs; ++i)
-            context->setFloatRegBits(i, gdbregs.regs32[GDB32_F0 + i]);
-
-        //FPSCR
-        context->setMiscReg(MISCREG_FPSCR, gdbregs.regs32[GDB32_FPSCR]);
+    for (int i = 0; i < 32*4; i += 4) {
+        context->setFloatRegBits(i + 2, r.v[i + 0]);
+        context->setFloatRegBits(i + 3, r.v[i + 1]);
+        context->setFloatRegBits(i + 0, r.v[i + 2]);
+        context->setFloatRegBits(i + 1, r.v[i + 3]);
     }
 }
 
-// Write bytes to kernel address space for debugger.
-bool
-RemoteGDB::write(Addr vaddr, size_t size, const char *data)
+void
+RemoteGDB::AArch32GdbRegCache::getRegs(ThreadContext *context)
 {
-    return BaseRemoteGDB::write(vaddr, size, data);
+    DPRINTF(GDBAcc, "getRegs in remotegdb \n");
+
+    r.gpr[0] = context->readIntReg(INTREG_R0);
+    r.gpr[1] = context->readIntReg(INTREG_R1);
+    r.gpr[2] = context->readIntReg(INTREG_R2);
+    r.gpr[3] = context->readIntReg(INTREG_R3);
+    r.gpr[4] = context->readIntReg(INTREG_R4);
+    r.gpr[5] = context->readIntReg(INTREG_R5);
+    r.gpr[6] = context->readIntReg(INTREG_R6);
+    r.gpr[7] = context->readIntReg(INTREG_R7);
+    r.gpr[8] = context->readIntReg(INTREG_R8);
+    r.gpr[9] = context->readIntReg(INTREG_R9);
+    r.gpr[10] = context->readIntReg(INTREG_R10);
+    r.gpr[11] = context->readIntReg(INTREG_R11);
+    r.gpr[12] = context->readIntReg(INTREG_R12);
+    r.gpr[13] = context->readIntReg(INTREG_SP);
+    r.gpr[14] = context->readIntReg(INTREG_LR);
+    r.gpr[15] = context->pcState().pc();
+
+    // One day somebody will implement transfer of FPRs correctly.
+    for (int i=0; i<8*3; i++) r.fpr[i] = 0;
+
+    r.fpscr = context->readMiscRegNoEffect(MISCREG_FPSCR);
+    r.cpsr = context->readMiscRegNoEffect(MISCREG_CPSR);
 }
 
+void
+RemoteGDB::AArch32GdbRegCache::setRegs(ThreadContext *context) const
+{
+    DPRINTF(GDBAcc, "setRegs in remotegdb \n");
+
+    context->setIntReg(INTREG_R0, r.gpr[0]);
+    context->setIntReg(INTREG_R1, r.gpr[1]);
+    context->setIntReg(INTREG_R2, r.gpr[2]);
+    context->setIntReg(INTREG_R3, r.gpr[3]);
+    context->setIntReg(INTREG_R4, r.gpr[4]);
+    context->setIntReg(INTREG_R5, r.gpr[5]);
+    context->setIntReg(INTREG_R6, r.gpr[6]);
+    context->setIntReg(INTREG_R7, r.gpr[7]);
+    context->setIntReg(INTREG_R8, r.gpr[8]);
+    context->setIntReg(INTREG_R9, r.gpr[9]);
+    context->setIntReg(INTREG_R10, r.gpr[10]);
+    context->setIntReg(INTREG_R11, r.gpr[11]);
+    context->setIntReg(INTREG_R12, r.gpr[12]);
+    context->setIntReg(INTREG_SP, r.gpr[13]);
+    context->setIntReg(INTREG_LR, r.gpr[14]);
+    context->pcState(r.gpr[15]);
+
+    // One day somebody will implement transfer of FPRs correctly.
+
+    context->setMiscReg(MISCREG_FPSCR, r.fpscr);
+    context->setMiscRegNoEffect(MISCREG_CPSR, r.cpsr);
+}
+
+RemoteGDB::BaseGdbRegCache*
+RemoteGDB::gdbRegs()
+{
+    if (inAArch64(context))
+        return new AArch64GdbRegCache(this);
+    else
+        return new AArch32GdbRegCache(this);
+}
