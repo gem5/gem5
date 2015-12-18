@@ -134,35 +134,3 @@ loading script...
 PARSEC Benchmark Suite Version 2.1
 [HOOKS] PARSEC Hooks Version 1.2
 [HOOKS] Entering ROI
-transaction number is 990002
-freqmine(783): unaligned trap at 0000000120009d8c: 000002000007b12c 2d 12
-freqmine(783): unaligned trap at 0000000120009e24: 000002000007b134 2d 10
-freqmine(783): unaligned trap at 0000000120009f34: 000002000007b144 2d 11
-freqmine(784): unaligned trap at 0000000120006504: 000002000007af34 2d 0
-[HOOKS] Leaving ROI
-1548
-13483
-46649
-131381
-415489
-1239344
-2985564
-5696308
-8709873
-10789491
-10902648
-9011183
-6094236
-3374161
-1530954
-564958
-165173
-36535
-5727
-578
-33
-1
-the data preparation cost 1.787910 seconds, the FPgrowth cost 32.394389 seconds
-[HOOKS] Total time spent in ROI: 34.178s
-[HOOKS] Terminating
-Done :D
