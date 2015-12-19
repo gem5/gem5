@@ -36,6 +36,8 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 
+#include "mem/ruby/network/garnet/fixed-pipeline/routing/aco/AntNetAgent.hh"
+
 class InputUnit_d;
 class Router_d;
 
@@ -43,15 +45,31 @@ class RoutingUnit_d
 {
   public:
     RoutingUnit_d(Router_d *router);
+    void init();
     void addRoute(const NetDest& routing_table_entry);
     int routeCompute(flit_d *t_flit);
     void addWeight(int link_weight);
+    void addNeighbor(int neighbor);
     void RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc);
+
+    // Get the neighbors of the current router.
+    std::vector<int>& get_neighbor_table()
+    {
+      return m_neighbor_table;
+    }
+
+    // Get the router.
+    Router_d *getRouter()
+    {
+      return m_router;
+    }
 
   private:
     Router_d *m_router;
     std::vector<NetDest> m_routing_table;
     std::vector<int> m_weight_table;
+    std::vector<int> m_neighbor_table;
+    AntNetAgent *m_ant_net_agent;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTING_UNIT_D_HH__

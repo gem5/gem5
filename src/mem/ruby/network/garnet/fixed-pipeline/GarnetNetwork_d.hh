@@ -83,6 +83,11 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     //! indicates the number of messages that were written.
     uint32_t functionalWrite(Packet *pkt);
 
+    std::vector<NetworkInterface_d *>& get_nis()
+    {
+        return m_nis;
+    }
+
   private:
     GarnetNetwork_d(const GarnetNetwork_d& obj);
     GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);

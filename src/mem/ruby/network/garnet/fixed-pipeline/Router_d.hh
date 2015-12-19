@@ -62,7 +62,7 @@ class Router_d : public BasicRouter
     void init();
     void addInPort(NetworkLink_d *link, CreditLink_d *credit_link);
     void addOutPort(NetworkLink_d *link, const NetDest& routing_table_entry,
-                    int link_weight, CreditLink_d *credit_link);
+                    int link_weight, SwitchID neighbor, CreditLink_d *credit_link);
 
     int get_num_vcs()       { return m_num_vcs; }
     int get_num_vnets()     { return m_virtual_networks; }

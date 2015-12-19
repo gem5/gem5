@@ -77,6 +77,8 @@ Router_d::init()
     m_vc_alloc->init();
     m_sw_alloc->init();
     m_switch->init();
+
+    m_routing_unit->init();
 }
 
 void
@@ -95,7 +97,7 @@ Router_d::addInPort(NetworkLink_d *in_link, CreditLink_d *credit_link)
 
 void
 Router_d::addOutPort(NetworkLink_d *out_link,
-    const NetDest& routing_table_entry, int link_weight,
+    const NetDest& routing_table_entry, int link_weight, SwitchID neighbor,
     CreditLink_d *credit_link)
 {
     int port_num = m_output_unit.size();
@@ -110,6 +112,7 @@ Router_d::addOutPort(NetworkLink_d *out_link,
 
     m_routing_unit->addRoute(routing_table_entry);
     m_routing_unit->addWeight(link_weight);
+    m_routing_unit->addNeighbor(neighbor);
 }
 
 void

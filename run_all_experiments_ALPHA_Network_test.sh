@@ -1,2 +1,2 @@
 #! /bin/sh
-build/ALPHA_Network_test/gem5.opt configs/example/ruby_network_test.py --num-cpus=16 --num-dirs=16 --topology=BaseMesh --mesh-rows=4 --sim-cycles=1000 --injectionrate=0.01 --synthetic=0 --fixed-pkts --maxpackets=1 --garnet-network=fixed
+build/ALPHA_Network_test/gem5.opt --debug-flags=RubyQueue configs/example/ruby_network_test.py --num-cpus=16 --num-dirs=16 --topology=Mesh --mesh-rows=4 --sim-cycles=1000 --injectionrate=0.01 --synthetic=0 --fixed-pkts --maxpackets=1 --garnet-network=fixed

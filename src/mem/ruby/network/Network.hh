@@ -54,6 +54,7 @@
 
 class NetDest;
 class MessageBuffer;
+class Topology;
 
 class Network : public ClockedObject
 {
@@ -102,6 +103,11 @@ class Network : public ClockedObject
     { fatal("Functional read not implemented.\n"); }
     virtual uint32_t functionalWrite(Packet *pkt)
     { fatal("Functional write not implemented.\n"); }
+
+    Topology* get_topology_ptr()
+    {
+        return m_topology_ptr;
+    }
 
   protected:
     // Private copy constructor and assignment operator

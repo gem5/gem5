@@ -28,17 +28,32 @@
  * Authors: Niket Agarwal
  */
 
+#include <iostream>
+#include <vector>
+
 #include "base/cast.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/RoutingUnit_d.hh"
-#include "mem/ruby/slicc_interface/Message.hh"
+
+using namespace std;
 
 RoutingUnit_d::RoutingUnit_d(Router_d *router)
 {
     m_router = router;
     m_routing_table.clear();
     m_weight_table.clear();
+
+    m_ant_net_agent = new AntNetAgent(this, m_router->get_id());
+}
+
+void
+RoutingUnit_d::init()
+{
+    m_ant_net_agent->init();
 }
 
 void
@@ -54,6 +69,17 @@ RoutingUnit_d::addWeight(int link_weight)
 }
 
 void
+RoutingUnit_d::addNeighbor(int neighbor)
+{
+    if(neighbor == -1)
+    {
+        neighbor = m_router->get_id();
+    }
+
+    m_neighbor_table.push_back(neighbor);
+}
+
+void
 RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
 {
     int outport = routeCompute(t_flit);
@@ -62,7 +88,6 @@ RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
     m_router->vcarb_req();
 }
 
-//TODO: add different routing policies here
 int
 RoutingUnit_d::routeCompute(flit_d *t_flit)
 {

@@ -68,6 +68,11 @@ class NetworkInterface_d : public ClockedObject, public Consumer
 
     uint32_t functionalWrite(Packet *);
 
+    std::vector<MessageBuffer *>& get_inNode_ptr()
+    {
+      return inNode_ptr;
+    }
+
   private:
     GarnetNetwork_d *m_net_ptr;
     const NodeID M5_CLASS_VAR_USED m_id;

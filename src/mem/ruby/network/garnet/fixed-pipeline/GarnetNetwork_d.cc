@@ -167,7 +167,7 @@ GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
     m_creditlinks.push_back(credit_link);
 
     m_routers[src]->addOutPort(net_link, routing_table_entry,
-                                         link->m_weight, credit_link);
+                                         link->m_weight, -1, credit_link);
     m_nis[dest]->addInPort(net_link, credit_link);
 }
 
@@ -189,7 +189,7 @@ GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     m_routers[dest]->addInPort(net_link, credit_link);
     m_routers[src]->addOutPort(net_link, routing_table_entry,
-                                         link->m_weight, credit_link);
+                                         link->m_weight, dest, credit_link);
 }
 
 void

@@ -114,6 +114,8 @@ NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
             it->setConsumer(this);
         }
     }
+
+    cout << "NI#" << m_id << ".inode_ptr.size=" << inNode_ptr.size() << endl;
 }
 
 bool
@@ -274,6 +276,8 @@ NetworkInterface_d::wakeup()
         }
         delete t_flit;
     }
+
+    //TODO: call antNetAgent::wakeup()
 }
 
 /** This function looks at the NI buffers

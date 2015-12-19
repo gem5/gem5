@@ -88,6 +88,12 @@ class OutputUnit_d : public Consumer
 
     uint32_t functionalWrite(Packet *pkt);
 
+    inline NetworkLink_d
+    *getOutLink()
+    {
+      return m_out_link;
+    }
+
   private:
     int m_id;
     int m_num_vcs;
