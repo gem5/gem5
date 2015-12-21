@@ -1,3 +1,9 @@
+Top-priority TODOs
+-------------------------------------------------
+1. Get familiar with GARNET design details.
+2. Fix bugs in AntNet implementation.
+3. Merge the CPU2006 scripts with gem5.
+
 Urgent TODOs
 -------------------------------------------------
 1. Investigate on how to send a packet in GEM5/Ruby/GARNET.
