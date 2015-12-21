@@ -133,8 +133,9 @@ mounting filesystems...
 loading script...
 PARSEC Benchmark Suite Version 2.1
 [HOOKS] PARSEC Hooks Version 1.2
+yuv4mpeg: 640x360@25/1fps, 0:0
 [HOOKS] Entering ROI
-[HOOKS] Leaving ROI
-[HOOKS] Total time spent in ROI: 6.109s
-[HOOKS] Terminating
-Done :D
+x264(783): unaligned trap at 00000001200d74c4: 00000200004601c1 2c 28
+x264(783): unaligned trap at 00000001200d5efc: 00000200004601c5 2c 2
+x264(783): unaligned trap at 00000001200d0e54: 00000200004601c9 2c 6
+x264(783): unaligned trap at 00000001200d794c: 00000200004601cd 2c 2

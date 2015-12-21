@@ -134,7 +134,8 @@ loading script...
 PARSEC Benchmark Suite Version 2.1
 [HOOKS] PARSEC Hooks Version 1.2
 [HOOKS] Entering ROI
-[HOOKS] Leaving ROI
-[HOOKS] Total time spent in ROI: 6.109s
-[HOOKS] Terminating
-Done :D
+transaction number is 990002
+freqmine(783): unaligned trap at 0000000120009d8c: 000002000007b12c 2d 12
+freqmine(783): unaligned trap at 0000000120009e24: 000002000007b134 2d 10
+freqmine(783): unaligned trap at 0000000120009f34: 000002000007b144 2d 11
+freqmine(784): unaligned trap at 0000000120006504: 000002000007af34 2d 0
