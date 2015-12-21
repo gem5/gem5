@@ -64,6 +64,11 @@ class RoutingUnit_d
       return m_router;
     }
 
+    AntNetAgent *getAntNetAgent()
+    {
+      return m_ant_net_agent;
+    }
+
   private:
     Router_d *m_router;
     std::vector<NetDest> m_routing_table;

@@ -70,6 +70,8 @@ AntNetAgent::createAndSendForwardAntMessage()
 void
 AntNetAgent::wakeup()
 {
+    cout << "AntNetAgent::wakeup: " << endl;
+
     GarnetNetwork_d *network = m_routing_unit->getRouter()->get_net_ptr();
     NetworkInterface_d *ni = network->get_nis()[m_router];
 
@@ -97,7 +99,7 @@ void
 AntNetAgent::receiveAntMessage(AntMsg* message, int parent)
 {
     //TODO: perform actions on in_msg_ptr
-    cout << "AntNetAgent::wakeup: " << *message << endl;
+    cout << "AntNetAgent::receiveAntMessage: " << *message << endl;
 
     if(message->isForward())
     {
@@ -193,20 +195,21 @@ AntNetAgent::memorize(AntMsg* message)
 void
 AntNetAgent::sendMessage(AntMsg* message, int neighbor)
 {
-//    GarnetNetwork_d *network = m_routing_unit->getRouter()->get_net_ptr();
-//    NetworkInterface_d *ni = network->get_nis()[m_router];
-//
-//    Tick current_time = m_routing_unit->getRouter()->clockEdge();
-//
-//    int vnet = 1; //TODO: to be set to 4, indicating a dedicated vnet for ant net message transmission
-//
-//TODO
-//    ni->get_inNode_ptr()[vnet]->enqueue(message, current_time, m_routing_unit->getRouter()->cyclesToTicks(Cycles(1)));
+    GarnetNetwork_d *network = m_routing_unit->getRouter()->get_net_ptr();
+    NetworkInterface_d *ni = network->get_nis()[m_router];
+
+    Tick current_time = m_routing_unit->getRouter()->clockEdge();
+
+    int vnet = 1; //TODO: to be set to 4, indicating a dedicated vnet for ant net message transmission
+
+    shared_ptr<AntMsg> message_shared_ptr(message);
+
+    ni->get_inNode_ptr()[vnet]->enqueue(message_shared_ptr, current_time, m_routing_unit->getRouter()->cyclesToTicks(Cycles(1)));
 
     cout << "#" << m_router << ".sendMessage(source=#" << message->getSourceRouter() << ", destination=#" << message->getDestinationRouter() << ", neighbor=#" << neighbor << ")" << endl;
 }
 
-//TODO: to be called by GEM5
+//TODO: to be called by gem5
 int
 AntNetAgent::calculateNeighbor(int destination, int parent)
 {
