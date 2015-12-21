@@ -16,7 +16,7 @@ Normal TODOs
 -------------------------------------------------
 1. Support running of Linux kernel 3.19.
 2. Specify number of instructions/cycles to be simulated in detailed/FS simulation phase.
-3. add custom statistics in gem5 (e.g., formula)
+3. add custom statistics in gem5 (e.g., formula).
 4. Add experiments on NUMA cache sizes, replacement policies.
 5. Use formula in place of hardcoded memory sizes in ccnuma_fs.py.
 6. Incorporate energy efficient caching.
