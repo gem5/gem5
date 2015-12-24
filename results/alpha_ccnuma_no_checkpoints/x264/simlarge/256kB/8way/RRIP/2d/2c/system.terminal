@@ -139,3 +139,9 @@ x264(783): unaligned trap at 00000001200d74c4: 00000200004601c1 2c 28
 x264(783): unaligned trap at 00000001200d5efc: 00000200004601c5 2c 2
 x264(783): unaligned trap at 00000001200d0e54: 00000200004601c9 2c 6
 x264(783): unaligned trap at 00000001200d794c: 00000200004601cd 2c 2
+[HOOKS] Leaving ROI
+
+encoded 128 frames, 4.45 fps, 4957.41 kb/s
+[HOOKS] Total time spent in ROI: 28.784s
+[HOOKS] Terminating
+Done :D
