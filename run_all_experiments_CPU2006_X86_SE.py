@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #
-# A Python script to run all checkpoint-based experiments for CPU2006 benchmarks.
+# A Python script to run all instruction count based experiments for CPU2006 benchmarks.
 #
 # Copyright (C) Min Cai 2015
 #
