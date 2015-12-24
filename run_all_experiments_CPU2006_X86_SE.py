@@ -9,8 +9,8 @@
 import os
 
 
-def run(bench, l2_size, l2_assoc, l2_tags, num_threads):
-    dir = 'results/x86_SE/' + bench + '/' + l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + str(num_threads) + 'c/'
+def run(bench, input_set, l2_size, l2_assoc, l2_tags, num_threads):
+    dir = 'results/x86_SE/' + bench + '/' +  input_set + '/' + l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + str(num_threads) + 'c/'
 
     os.system('rm -fr ' + dir)
     os.system('mkdir -p ' + dir)
@@ -24,6 +24,6 @@ def run(bench, l2_size, l2_assoc, l2_tags, num_threads):
     os.system(cmd)
 
 def run_experiments(bench):
-    run(bench, '8MB', 16, 'LRU', 1)
+    run(bench, 'ref', '8MB', 16, 'LRU', 1)
 
 run_experiments('429.mcf')

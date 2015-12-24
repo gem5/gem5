@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 11.6434 W
     Subthreshold Leakage Power = 15.1353 W
     Gate Leakage Power = 1.28571 W
-    Runtime Dynamic Power = 4.41838 W
-    Runtime Dynamic Energy = 0.788385 J
-    Total Runtime Energy = 3.71843 J
+    Runtime Dynamic Power = 4.41833 W
+    Runtime Dynamic Energy = 0.788376 J
+    Total Runtime Energy = 3.71842 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -5207,18 +5207,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.0163412 W
-        Runtime Dynamic Energy = 0.00291581 J
-        Total Runtime Energy = 0.108488 J
+        Runtime Dynamic Power = 0.0162917 W
+        Runtime Dynamic Energy = 0.00290698 J
+        Total Runtime Energy = 0.108479 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0161236 W
-            Runtime Dynamic Energy = 0.00287699 J
-            Total Runtime Energy = 0.107309 J
+            Runtime Dynamic Power = 0.0160988 W
+            Runtime Dynamic Energy = 0.00287256 J
+            Total Runtime Energy = 0.107304 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -5243,7 +5243,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 6.92915e-05 W
-            Runtime Dynamic Energy = 1.23639e-05 J
-            Total Runtime Energy = 0.000377987 J
+            Runtime Dynamic Power = 4.46106e-05 W
+            Runtime Dynamic Energy = 7.96001e-06 J
+            Total Runtime Energy = 0.000373583 J
 

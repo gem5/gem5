@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 12.1458 W
     Gate Leakage Power = 0.522893 W
-    Runtime Dynamic Power = 2.18055 W
-    Runtime Dynamic Energy = 14.7204 J
-    Total Runtime Energy = 100.244 J
+    Runtime Dynamic Power = 2.18049 W
+    Runtime Dynamic Energy = 14.7199 J
+    Total Runtime Energy = 100.243 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 8.50577 W
         Gate Leakage Power = 0.20561 W
-        Runtime Dynamic Power = 0.082343 W
-        Runtime Dynamic Energy = 0.555877 J
-        Total Runtime Energy = 59.3642 J
+        Runtime Dynamic Power = 0.082278 W
+        Runtime Dynamic Energy = 0.555438 J
+        Total Runtime Energy = 59.3638 J
 
           Data and Tag Arrays:
             Area = 26.3209 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 8.49968 W
             Gate Leakage Power = 0.205304 W
-            Runtime Dynamic Power = 0.0818164 W
-            Runtime Dynamic Energy = 0.552322 J
-            Total Runtime Energy = 59.3175 J
+            Runtime Dynamic Power = 0.0817622 W
+            Runtime Dynamic Energy = 0.551956 J
+            Total Runtime Energy = 59.3171 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000167709 W
-            Runtime Dynamic Energy = 0.00113216 J
-            Total Runtime Energy = 0.0149649 J
+            Runtime Dynamic Power = 0.000156868 W
+            Runtime Dynamic Energy = 0.00105898 J
+            Total Runtime Energy = 0.0148918 J
 

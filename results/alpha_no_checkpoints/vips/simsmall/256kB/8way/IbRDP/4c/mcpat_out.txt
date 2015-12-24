@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 4.21513 W
     Gate Leakage Power = 0.333859 W
-    Runtime Dynamic Power = 1.52532 W
-    Runtime Dynamic Energy = 2.39184 J
-    Total Runtime Energy = 9.52506 J
+    Runtime Dynamic Power = 1.52529 W
+    Runtime Dynamic Energy = 2.39179 J
+    Total Runtime Energy = 9.525 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.00802123 W
-        Runtime Dynamic Energy = 0.012578 J
-        Total Runtime Energy = 0.940356 J
+        Runtime Dynamic Power = 0.00798895 W
+        Runtime Dynamic Energy = 0.0125274 J
+        Total Runtime Energy = 0.940306 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.00771662 W
-            Runtime Dynamic Energy = 0.0121004 J
-            Total Runtime Energy = 0.929855 J
+            Runtime Dynamic Power = 0.00771552 W
+            Runtime Dynamic Energy = 0.0120986 J
+            Total Runtime Energy = 0.929853 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 9.70063e-05 W
-            Runtime Dynamic Energy = 0.000152115 J
-            Total Runtime Energy = 0.00336524 J
+            Runtime Dynamic Power = 6.58265e-05 W
+            Runtime Dynamic Energy = 0.000103222 J
+            Total Runtime Energy = 0.00331635 J
 

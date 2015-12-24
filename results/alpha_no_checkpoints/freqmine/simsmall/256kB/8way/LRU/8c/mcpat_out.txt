@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 5.83897 W
     Subthreshold Leakage Power = 7.85517 W
     Gate Leakage Power = 0.651142 W
-    Runtime Dynamic Power = 2.33117 W
-    Runtime Dynamic Energy = 4.41648 J
-    Total Runtime Energy = 20.532 J
+    Runtime Dynamic Power = 2.33115 W
+    Runtime Dynamic Energy = 4.41644 J
+    Total Runtime Energy = 20.5319 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -2615,18 +2615,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.00417918 W
-        Runtime Dynamic Energy = 0.0079176 J
-        Total Runtime Energy = 1.12884 J
+        Runtime Dynamic Power = 0.00415799 W
+        Runtime Dynamic Energy = 0.00787746 J
+        Total Runtime Energy = 1.1288 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.00405458 W
-            Runtime Dynamic Energy = 0.00768154 J
-            Total Runtime Energy = 1.11649 J
+            Runtime Dynamic Power = 0.00404525 W
+            Runtime Dynamic Energy = 0.00766385 J
+            Total Runtime Energy = 1.11648 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -2651,7 +2651,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 3.96793e-05 W
-            Runtime Dynamic Energy = 7.51738e-05 J
-            Total Runtime Energy = 0.00395721 J
+            Runtime Dynamic Power = 2.7829e-05 W
+            Runtime Dynamic Energy = 5.27229e-05 J
+            Total Runtime Energy = 0.00393476 J
 

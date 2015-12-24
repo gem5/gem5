@@ -2471,10 +2471,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="34483561"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="10021997"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="32977395"/>
+      <stat name="write_accesses" value="1506166"/>
+      <stat name="read_misses" value="9170096"/>
+      <stat name="write_misses" value="851901"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>

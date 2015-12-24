@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 11.6434 W
     Subthreshold Leakage Power = 15.1353 W
     Gate Leakage Power = 1.28571 W
-    Runtime Dynamic Power = 4.1647 W
-    Runtime Dynamic Energy = 2.31271 J
-    Total Runtime Energy = 11.4315 J
+    Runtime Dynamic Power = 4.16461 W
+    Runtime Dynamic Energy = 2.31266 J
+    Total Runtime Energy = 11.4314 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -5207,18 +5207,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.0187104 W
-        Runtime Dynamic Energy = 0.0103901 J
-        Total Runtime Energy = 0.338947 J
+        Runtime Dynamic Power = 0.0186155 W
+        Runtime Dynamic Energy = 0.0103374 J
+        Total Runtime Energy = 0.338894 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0180531 W
-            Runtime Dynamic Energy = 0.0100251 J
-            Total Runtime Energy = 0.335032 J
+            Runtime Dynamic Power = 0.018024 W
+            Runtime Dynamic Energy = 0.0100089 J
+            Total Runtime Energy = 0.335016 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -5243,7 +5243,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000209323 W
-            Runtime Dynamic Energy = 0.00011624 J
-            Total Runtime Energy = 0.00125411 J
+            Runtime Dynamic Power = 0.000143489 W
+            Runtime Dynamic Energy = 7.9681e-05 J
+            Total Runtime Energy = 0.00121756 J
 

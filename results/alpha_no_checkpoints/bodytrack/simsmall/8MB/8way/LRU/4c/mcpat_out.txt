@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93691 W
     Subthreshold Leakage Power = 20.2101 W
     Gate Leakage Power = 0.69048 W
-    Runtime Dynamic Power = 1.47017 W
-    Runtime Dynamic Energy = 0.543631 J
-    Total Runtime Energy = 8.2721 J
+    Runtime Dynamic Power = 1.47012 W
+    Runtime Dynamic Energy = 0.543611 J
+    Total Runtime Energy = 8.27208 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0347065 W
         Subthreshold Leakage Power = 16.57 W
         Gate Leakage Power = 0.373197 W
-        Runtime Dynamic Power = 0.0317334 W
-        Runtime Dynamic Energy = 0.0117342 J
-        Total Runtime Energy = 6.27689 J
+        Runtime Dynamic Power = 0.0316787 W
+        Runtime Dynamic Energy = 0.0117139 J
+        Total Runtime Energy = 6.27687 J
 
           Data and Tag Arrays:
             Area = 43.8895 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 16.5639 W
             Gate Leakage Power = 0.37289 W
-            Runtime Dynamic Power = 0.0317298 W
-            Runtime Dynamic Energy = 0.0117328 J
-            Total Runtime Energy = 6.27452 J
+            Runtime Dynamic Power = 0.0316761 W
+            Runtime Dynamic Energy = 0.011713 J
+            Total Runtime Energy = 6.2745 J
 
           Miss Buffer:
             Area = 0.322882 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 1.13122e-06 W
-            Runtime Dynamic Energy = 4.18294e-07 J
-            Total Runtime Energy = 0.000758111 J
+            Runtime Dynamic Power = 1.45948e-07 W
+            Runtime Dynamic Energy = 5.39678e-08 J
+            Total Runtime Energy = 0.000757747 J
 

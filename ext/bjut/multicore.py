@@ -37,6 +37,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
             'l2_runtime_dynamic_energy',
             'l2_total_runtime_energy',
 
+            'l2_mpki',
             'l2_miss_rate',
             'l2_replacements'
         ]
@@ -67,6 +68,7 @@ class MulticoreExperiment(McPATEnabledExperiment):
             self.l2_runtime_dynamic_energy(),
             self.l2_total_runtime_energy(),
 
+            self.l2_mpki(),
             self.l2_miss_rate(),
             self.l2_replacements()
         ]

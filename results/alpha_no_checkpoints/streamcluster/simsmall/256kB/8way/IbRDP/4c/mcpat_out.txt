@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 4.21513 W
     Gate Leakage Power = 0.333859 W
-    Runtime Dynamic Power = 1.53695 W
-    Runtime Dynamic Energy = 1.22485 J
-    Total Runtime Energy = 4.85011 J
+    Runtime Dynamic Power = 1.53694 W
+    Runtime Dynamic Energy = 1.22484 J
+    Total Runtime Energy = 4.8501 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.0181836 W
-        Runtime Dynamic Energy = 0.0144912 J
-        Total Runtime Energy = 0.486008 J
+        Runtime Dynamic Power = 0.01817 W
+        Runtime Dynamic Energy = 0.0144803 J
+        Total Runtime Energy = 0.485998 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0175018 W
-            Runtime Dynamic Energy = 0.0139478 J
-            Total Runtime Energy = 0.480371 J
+            Runtime Dynamic Power = 0.0174916 W
+            Runtime Dynamic Energy = 0.0139397 J
+            Total Runtime Energy = 0.480363 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000217143 W
-            Runtime Dynamic Energy = 0.00017305 J
-            Total Runtime Energy = 0.00180603 J
+            Runtime Dynamic Power = 0.000213622 W
+            Runtime Dynamic Energy = 0.000170244 J
+            Total Runtime Energy = 0.00180323 J
 

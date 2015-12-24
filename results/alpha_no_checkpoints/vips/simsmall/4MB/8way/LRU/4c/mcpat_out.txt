@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 12.1458 W
     Gate Leakage Power = 0.522893 W
-    Runtime Dynamic Power = 1.5396 W
-    Runtime Dynamic Energy = 2.41423 J
-    Total Runtime Energy = 22.2799 J
+    Runtime Dynamic Power = 1.53953 W
+    Runtime Dynamic Energy = 2.41411 J
+    Total Runtime Energy = 22.2797 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 8.50577 W
         Gate Leakage Power = 0.20561 W
-        Runtime Dynamic Power = 0.0222996 W
-        Runtime Dynamic Energy = 0.0349677 J
-        Total Runtime Energy = 13.6952 J
+        Runtime Dynamic Power = 0.0222255 W
+        Runtime Dynamic Energy = 0.0348515 J
+        Total Runtime Energy = 13.6951 J
 
           Data and Tag Arrays:
             Area = 26.3209 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 8.49968 W
             Gate Leakage Power = 0.205304 W
-            Runtime Dynamic Power = 0.022234 W
-            Runtime Dynamic Energy = 0.0348648 J
-            Total Runtime Energy = 13.685 J
+            Runtime Dynamic Power = 0.0221722 W
+            Runtime Dynamic Energy = 0.0347679 J
+            Total Runtime Energy = 13.6849 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 2.09038e-05 W
-            Runtime Dynamic Energy = 3.2779e-05 J
-            Total Runtime Energy = 0.00324591 J
+            Runtime Dynamic Power = 8.56067e-06 W
+            Runtime Dynamic Energy = 1.34239e-05 J
+            Total Runtime Energy = 0.00322655 J
 

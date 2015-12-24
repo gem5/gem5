@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 4.21513 W
     Gate Leakage Power = 0.333859 W
-    Runtime Dynamic Power = 2.11832 W
-    Runtime Dynamic Energy = 14.3002 J
-    Total Runtime Energy = 45.0093 J
+    Runtime Dynamic Power = 2.11828 W
+    Runtime Dynamic Energy = 14.3 J
+    Total Runtime Energy = 45.009 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.0201086 W
-        Runtime Dynamic Energy = 0.135748 J
-        Total Runtime Energy = 4.12991 J
+        Runtime Dynamic Power = 0.020071 W
+        Runtime Dynamic Energy = 0.135494 J
+        Total Runtime Energy = 4.12965 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0193943 W
-            Runtime Dynamic Energy = 0.130926 J
-            Total Runtime Energy = 4.08193 J
+            Runtime Dynamic Power = 0.0193738 W
+            Runtime Dynamic Energy = 0.130788 J
+            Total Runtime Energy = 4.0818 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000227461 W
-            Runtime Dynamic Energy = 0.00153553 J
-            Total Runtime Energy = 0.0153683 J
+            Runtime Dynamic Power = 0.000210409 W
+            Runtime Dynamic Energy = 0.00142042 J
+            Total Runtime Energy = 0.0152532 J
 

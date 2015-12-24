@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.97133 W
     Subthreshold Leakage Power = 4.79021 W
     Gate Leakage Power = 0.350435 W
-    Runtime Dynamic Power = 1.80865 W
-    Runtime Dynamic Energy = 0.946128 J
-    Total Runtime Energy = 3.63527 J
+    Runtime Dynamic Power = 1.80864 W
+    Runtime Dynamic Energy = 0.946124 J
+    Total Runtime Energy = 3.63526 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,17 +1319,17 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.00131632 W
-        Runtime Dynamic Energy = 0.000688584 J
-        Total Runtime Energy = 0.310194 J
+        Runtime Dynamic Power = 0.00131245 W
+        Runtime Dynamic Energy = 0.000686558 J
+        Total Runtime Energy = 0.310192 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.00127186 W
-            Runtime Dynamic Energy = 0.000665327 J
+            Runtime Dynamic Power = 0.00127126 W
+            Runtime Dynamic Energy = 0.000665013 J
             Total Runtime Energy = 0.306827 J
 
           Miss Buffer:
@@ -1355,26 +1355,26 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 1.41583e-05 W
-            Runtime Dynamic Energy = 7.4064e-06 J
-            Total Runtime Energy = 0.0010793 J
+            Runtime Dynamic Power = 1.08855e-05 W
+            Runtime Dynamic Energy = 5.69433e-06 J
+            Total Runtime Energy = 0.00107759 J
 
       L2 Cache:
         Area = 2.37413 mm^2
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.00130769 W
-        Runtime Dynamic Energy = 0.000684067 J
-        Total Runtime Energy = 0.31019 J
+        Runtime Dynamic Power = 0.00130379 W
+        Runtime Dynamic Energy = 0.000682029 J
+        Total Runtime Energy = 0.310188 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.00126286 W
-            Runtime Dynamic Energy = 0.000660618 J
+            Runtime Dynamic Power = 0.00126223 W
+            Runtime Dynamic Energy = 0.000660289 J
             Total Runtime Energy = 0.306822 J
 
           Miss Buffer:
@@ -1400,7 +1400,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 1.42751e-05 W
-            Runtime Dynamic Energy = 7.46746e-06 J
-            Total Runtime Energy = 0.00107936 J
+            Runtime Dynamic Power = 1.10071e-05 W
+            Runtime Dynamic Energy = 5.75795e-06 J
+            Total Runtime Energy = 0.00107765 J
 

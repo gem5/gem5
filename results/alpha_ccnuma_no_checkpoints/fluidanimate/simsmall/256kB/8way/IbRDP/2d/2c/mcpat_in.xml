@@ -1283,10 +1283,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="1348520"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="745811"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="1165290"/>
+      <stat name="write_accesses" value="183230"/>
+      <stat name="read_misses" value="578153"/>
+      <stat name="write_misses" value="167658"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>
@@ -1348,10 +1348,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="1321140"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="755877"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="1137399"/>
+      <stat name="write_accesses" value="183741"/>
+      <stat name="read_misses" value="588525"/>
+      <stat name="write_misses" value="167352"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>

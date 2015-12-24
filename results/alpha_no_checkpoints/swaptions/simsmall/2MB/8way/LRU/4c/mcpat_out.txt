@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 7.86746 W
     Gate Leakage Power = 0.421592 W
-    Runtime Dynamic Power = 1.75416 W
-    Runtime Dynamic Energy = 0.609933 J
-    Total Runtime Energy = 3.49208 J
+    Runtime Dynamic Power = 1.75396 W
+    Runtime Dynamic Energy = 0.609861 J
+    Total Runtime Energy = 3.49201 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 4.22742 W
         Gate Leakage Power = 0.104309 W
-        Runtime Dynamic Power = 0.012043 W
-        Runtime Dynamic Energy = 0.00418743 J
-        Total Runtime Energy = 1.51035 J
+        Runtime Dynamic Power = 0.0118381 W
+        Runtime Dynamic Energy = 0.00411619 J
+        Total Runtime Energy = 1.51028 J
 
           Data and Tag Arrays:
             Area = 11.2907 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 4.22133 W
             Gate Leakage Power = 0.104003 W
-            Runtime Dynamic Power = 0.0120424 W
-            Runtime Dynamic Energy = 0.00418721 J
-            Total Runtime Energy = 1.50813 J
+            Runtime Dynamic Power = 0.0118377 W
+            Runtime Dynamic Energy = 0.00411602 J
+            Total Runtime Energy = 1.50806 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 2.04619e-07 W
-            Runtime Dynamic Energy = 7.11473e-08 J
-            Total Runtime Energy = 0.000712546 J
+            Runtime Dynamic Power = 3.89723e-08 W
+            Runtime Dynamic Energy = 1.35509e-08 J
+            Total Runtime Energy = 0.000712488 J
 

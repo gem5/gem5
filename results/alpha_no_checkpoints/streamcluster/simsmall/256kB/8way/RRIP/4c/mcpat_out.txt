@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 4.21513 W
     Gate Leakage Power = 0.333859 W
-    Runtime Dynamic Power = 1.53556 W
-    Runtime Dynamic Energy = 1.22375 J
-    Total Runtime Energy = 4.849 J
+    Runtime Dynamic Power = 1.53555 W
+    Runtime Dynamic Energy = 1.22373 J
+    Total Runtime Energy = 4.84899 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.016793 W
-        Runtime Dynamic Energy = 0.0133829 J
-        Total Runtime Energy = 0.4849 J
+        Runtime Dynamic Power = 0.0167788 W
+        Runtime Dynamic Energy = 0.0133717 J
+        Total Runtime Energy = 0.484889 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0162083 W
-            Runtime Dynamic Energy = 0.012917 J
-            Total Runtime Energy = 0.47934 J
+            Runtime Dynamic Power = 0.0161971 W
+            Runtime Dynamic Energy = 0.0129081 J
+            Total Runtime Energy = 0.479331 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000186193 W
-            Runtime Dynamic Energy = 0.000148384 J
-            Total Runtime Energy = 0.00178137 J
+            Runtime Dynamic Power = 0.000183209 W
+            Runtime Dynamic Energy = 0.000146006 J
+            Total Runtime Energy = 0.00177899 J
 

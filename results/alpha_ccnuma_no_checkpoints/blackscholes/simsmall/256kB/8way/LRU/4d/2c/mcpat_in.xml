@@ -2471,10 +2471,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="403014"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="1647"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="384595"/>
+      <stat name="write_accesses" value="18419"/>
+      <stat name="read_misses" value="1206"/>
+      <stat name="write_misses" value="441"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>
@@ -2536,10 +2536,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="372306"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="6431"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="354014"/>
+      <stat name="write_accesses" value="18292"/>
+      <stat name="read_misses" value="3574"/>
+      <stat name="write_misses" value="2857"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>
@@ -2601,10 +2601,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="393683"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="1662"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="378171"/>
+      <stat name="write_accesses" value="15512"/>
+      <stat name="read_misses" value="1210"/>
+      <stat name="write_misses" value="452"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>
@@ -2666,10 +2666,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="358550"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="1612"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="344525"/>
+      <stat name="write_accesses" value="14025"/>
+      <stat name="read_misses" value="1219"/>
+      <stat name="write_misses" value="393"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>

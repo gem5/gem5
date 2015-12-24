@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 4.83867 W
     Gate Leakage Power = 0.354841 W
-    Runtime Dynamic Power = 2.12924 W
-    Runtime Dynamic Energy = 14.3739 J
-    Total Runtime Energy = 49.434 J
+    Runtime Dynamic Power = 2.1292 W
+    Runtime Dynamic Energy = 14.3737 J
+    Total Runtime Energy = 49.4338 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 1.19863 W
         Gate Leakage Power = 0.0375574 W
-        Runtime Dynamic Power = 0.0310256 W
-        Runtime Dynamic Energy = 0.209446 J
-        Total Runtime Energy = 8.55463 J
+        Runtime Dynamic Power = 0.0309877 W
+        Runtime Dynamic Energy = 0.20919 J
+        Total Runtime Energy = 8.55437 J
 
           Data and Tag Arrays:
             Area = 3.34811 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 1.19254 W
             Gate Leakage Power = 0.037251 W
-            Runtime Dynamic Power = 0.0303383 W
-            Runtime Dynamic Energy = 0.204806 J
-            Total Runtime Energy = 8.50683 J
+            Runtime Dynamic Power = 0.0303171 W
+            Runtime Dynamic Energy = 0.204663 J
+            Total Runtime Energy = 8.50669 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000218869 W
-            Runtime Dynamic Energy = 0.00147753 J
-            Total Runtime Energy = 0.0153103 J
+            Runtime Dynamic Power = 0.00020219 W
+            Runtime Dynamic Energy = 0.00136494 J
+            Total Runtime Energy = 0.0151977 J
 

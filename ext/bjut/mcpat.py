@@ -16,13 +16,18 @@ from pyparsing import Word, Literal, Optional, Suppress, ParseException, nums, r
 
 
 class McPATEnabledExperiment(Experiment):
-    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, gen_mcpat_xml_file=False):
-        Experiment.__init__(self, dir, bench, l2_size, l2_assoc, l2_tags)
+    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, section_num_to_use=2, gen_mcpat_xml_file=False, mcpat_enabled=True):
+        Experiment.__init__(self, dir, bench, l2_size, l2_assoc, l2_tags, section_num_to_use)
 
-        if gen_mcpat_xml_file:
-            self.gen_mcpat_xml_file()
+        self.mcpat_enabled = mcpat_enabled
 
-        self.mcpat_stats = self.read_mcpat_stats()
+        if self.mcpat_enabled:
+            if gen_mcpat_xml_file:
+                self.gen_mcpat_xml_file()
+
+            self.mcpat_stats = self.read_mcpat_stats()
+        else:
+            self.mcpat_stats = None
 
     def gen_core(self, tag, i):
         def gen_predictor():

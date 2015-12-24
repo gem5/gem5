@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 7.86746 W
     Gate Leakage Power = 0.421592 W
-    Runtime Dynamic Power = 2.15876 W
-    Runtime Dynamic Energy = 14.5733 J
-    Total Runtime Energy = 70.5306 J
+    Runtime Dynamic Power = 2.15871 W
+    Runtime Dynamic Energy = 14.5729 J
+    Total Runtime Energy = 70.5302 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 4.22742 W
         Gate Leakage Power = 0.104309 W
-        Runtime Dynamic Power = 0.0605547 W
-        Runtime Dynamic Energy = 0.40879 J
-        Total Runtime Energy = 29.6512 J
+        Runtime Dynamic Power = 0.0605004 W
+        Runtime Dynamic Energy = 0.408423 J
+        Total Runtime Energy = 29.6508 J
 
           Data and Tag Arrays:
             Area = 11.2907 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 4.22133 W
             Gate Leakage Power = 0.104003 W
-            Runtime Dynamic Power = 0.059923 W
-            Runtime Dynamic Energy = 0.404525 J
-            Total Runtime Energy = 29.6038 J
+            Runtime Dynamic Power = 0.0598844 W
+            Runtime Dynamic Energy = 0.404264 J
+            Total Runtime Energy = 29.6035 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000201193 W
-            Runtime Dynamic Energy = 0.0013582 J
-            Total Runtime Energy = 0.015191 J
+            Runtime Dynamic Power = 0.000185428 W
+            Runtime Dynamic Energy = 0.00125178 J
+            Total Runtime Energy = 0.0150846 J
 

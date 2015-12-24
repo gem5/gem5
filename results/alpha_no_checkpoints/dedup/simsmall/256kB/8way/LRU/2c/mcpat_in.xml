@@ -689,10 +689,10 @@
       <param name="wb_buff_se_rd_ports" value="0"/>
       <param name="wb_buff_search_ports" value="1"/>
       <param name="pure_ram" value="0"/>
-      <stat name="read_accesses" value="18036430"/>
-      <stat name="write_accesses" value="0"/>
-      <stat name="read_misses" value="3710833"/>
-      <stat name="write_misses" value="0"/>
+      <stat name="read_accesses" value="13916175"/>
+      <stat name="write_accesses" value="4120255"/>
+      <stat name="read_misses" value="2207464"/>
+      <stat name="write_misses" value="1503369"/>
       <stat name="conflicts" value="1"/>
       <stat name="duty_cycle" value="1"/>
     </component>

@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 1.48566 W
     Subthreshold Leakage Power = 2.39511 W
     Gate Leakage Power = 0.175218 W
-    Runtime Dynamic Power = 1.10059 W
-    Runtime Dynamic Energy = 13.9084 J
-    Total Runtime Energy = 46.3901 J
+    Runtime Dynamic Power = 1.10057 W
+    Runtime Dynamic Energy = 13.9082 J
+    Total Runtime Energy = 46.3899 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -671,18 +671,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.0105193 W
-        Runtime Dynamic Energy = 0.132935 J
-        Total Runtime Energy = 7.6099 J
+        Runtime Dynamic Power = 0.0105036 W
+        Runtime Dynamic Energy = 0.132736 J
+        Total Runtime Energy = 7.6097 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0101438 W
-            Runtime Dynamic Energy = 0.12819 J
-            Total Runtime Energy = 7.52437 J
+            Runtime Dynamic Power = 0.0101371 W
+            Runtime Dynamic Energy = 0.128104 J
+            Total Runtime Energy = 7.52429 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -707,7 +707,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.000119584 W
-            Runtime Dynamic Energy = 0.00151121 J
-            Total Runtime Energy = 0.0274058 J
+            Runtime Dynamic Power = 0.000110591 W
+            Runtime Dynamic Energy = 0.00139756 J
+            Total Runtime Energy = 0.0272922 J
 

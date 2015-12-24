@@ -13,13 +13,13 @@ from pyparsing import Word, Optional, ParseException, printables, nums, restOfLi
 
 
 class Experiment:
-    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None):
+    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, section_num_to_use=2):
+        self.dir = dir
         self.bench = bench
         self.l2_size = l2_size
         self.l2_assoc = l2_assoc
         self.l2_tags = l2_tags
-
-        self.dir = dir
+        self.section_num_to_use = section_num_to_use
 
         self.configs = self.read_configs()
         self.stats = self.read_stats()
@@ -35,7 +35,6 @@ class Experiment:
 
     def read_stats(self):
         stat_rule = Word(printables) + Word('nan.%' + nums) + Optional(restOfLine)
-        section_num_to_use = 2
 
         stats = collections.OrderedDict()
 
@@ -45,7 +44,7 @@ class Experiment:
                 for stat_line in stats_file:
                     if 'End Simulation Statistics' in stat_line:
                         i += 1
-                    elif i == section_num_to_use:
+                    elif i == self.section_num_to_use:
                         try:
                             stat = stat_rule.parseString(stat_line)
                             key = stat[0]
@@ -81,7 +80,8 @@ class Experiment:
         return False if self.configs is None else self.configs.execute('len($.system.numa_caches_upward)') > 0
 
     def cpu_id(self, i, l1=False):
-        return '' if self.configs is None else self.configs.execute('$.system.' + ('switch_cpus' if not l1 else 'cpu') + '[' + str(i) + '].name')
+        return '' if self.configs is None else self.configs.execute(
+            '$.system.' + ('switch_cpus' if not l1 else 'cpu') + '[' + str(i) + '].name')
 
     def l2_id(self, i=None):
         return '' if self.configs is None else ('l2' if i is None else self.configs.execute('$.system.l2cache[' + str(i) + '].name'))
@@ -98,37 +98,58 @@ class Experiment:
         key = 'system.' + self.cpu_id(0) + '.numCycles'
         return -1 if self.stats is None or key not in self.stats else int(self.stats[key])
 
+    def l2_mpki(self):
+        if self.stats is None:
+            return -1
+
+        num_l2_misses = 0
+        num_committed_instructions = 0
+
+        if self.numa():
+            for i in range(self.num_l2caches()):
+                key = 'system.' + self.l2_id(i) + '.overall_misses::total'
+                num_l2_misses += (0 if self.stats is None or key not in self.stats else int(self.stats[key]))
+        else:
+                key = 'system.' + self.l2_id() + '.overall_misses::total'
+                num_l2_misses += (0 if self.stats is None or key not in self.stats else int(self.stats[key]))
+
+        for i in range(self.num_cpus()):
+                key = 'system.' + self.cpu_id(i) + '.committedInsts'
+                num_committed_instructions += (0 if self.stats is None or key not in self.stats else int(self.stats[key]))
+
+        return num_l2_misses * 1000 / float(num_committed_instructions)
+
     def l2_miss_rate(self):
         if self.stats is None:
             return -1
 
-        miss_rates = []
+        l2_miss_rates = []
 
         if self.numa():
             for i in range(self.num_l2caches()):
                 key = 'system.' + self.l2_id(i) + '.overall_miss_rate::total'
-                miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
+                l2_miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
         else:
             key = 'system.' + self.l2_id() + '.overall_miss_rate::total'
-            miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
+            l2_miss_rates.append(-1 if self.stats is None or key not in self.stats else float(self.stats[key]))
 
-        return sum(miss_rates) / float(len(miss_rates))
+        return sum(l2_miss_rates) / float(len(l2_miss_rates))
 
     def l2_replacements(self):
         if self.stats is None:
             return -1
 
-        replacements = []
+        l2_replacements = []
 
         if self.numa():
             for i in range(self.num_l2caches()):
                 key = 'system.' + self.l2_id(i) + '.tags.replacements'
-                replacements.append(-1 if self.stats is None or key not in self.stats else int(self.stats[key]))
+                l2_replacements.append(-1 if self.stats is None or key not in self.stats else int(self.stats[key]))
         else:
             key = 'system.' + self.l2_id() + '.tags.replacements'
-            replacements.append(-1 if self.stats is None or key not in self.stats else int(self.stats[key]))
+            l2_replacements.append(-1 if self.stats is None or key not in self.stats else int(self.stats[key]))
 
-        return sum(replacements)
+        return sum(l2_replacements)
 
     @classmethod
     def dump_head_row(cls):

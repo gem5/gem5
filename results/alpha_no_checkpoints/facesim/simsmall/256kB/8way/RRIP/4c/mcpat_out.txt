@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 4.21513 W
     Gate Leakage Power = 0.333859 W
-    Runtime Dynamic Power = 2.11832 W
-    Runtime Dynamic Energy = 14.3002 J
-    Total Runtime Energy = 45.0093 J
+    Runtime Dynamic Power = 2.11828 W
+    Runtime Dynamic Energy = 14.3 J
+    Total Runtime Energy = 45.009 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 0.575086 W
         Gate Leakage Power = 0.016576 W
-        Runtime Dynamic Power = 0.0201054 W
-        Runtime Dynamic Energy = 0.135726 J
-        Total Runtime Energy = 4.12989 J
+        Runtime Dynamic Power = 0.0200681 W
+        Runtime Dynamic Energy = 0.135475 J
+        Total Runtime Energy = 4.12964 J
 
           Data and Tag Arrays:
             Area = 1.56684 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 0.569 W
             Gate Leakage Power = 0.0162696 W
-            Runtime Dynamic Power = 0.0193914 W
-            Runtime Dynamic Energy = 0.130906 J
-            Total Runtime Energy = 4.08191 J
+            Runtime Dynamic Power = 0.0193715 W
+            Runtime Dynamic Energy = 0.130772 J
+            Total Runtime Energy = 4.08178 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 0.00022739 W
-            Runtime Dynamic Energy = 0.00153506 J
-            Total Runtime Energy = 0.0153678 J
+            Runtime Dynamic Power = 0.000210023 W
+            Runtime Dynamic Energy = 0.00141782 J
+            Total Runtime Energy = 0.0152506 J
 

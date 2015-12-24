@@ -14,9 +14,9 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
     Peak Dynamic Power = 2.93677 W
     Subthreshold Leakage Power = 12.1458 W
     Gate Leakage Power = 0.522893 W
-    Runtime Dynamic Power = 1.45932 W
-    Runtime Dynamic Energy = 1.35109 J
-    Total Runtime Energy = 13.0802 J
+    Runtime Dynamic Power = 1.45907 W
+    Runtime Dynamic Energy = 1.35085 J
+    Total Runtime Energy = 13.08 J
 
       Core 0:
         Area = 5.11302 mm^2
@@ -1319,18 +1319,18 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
         Peak Dynamic Power = 0.0345629 W
         Subthreshold Leakage Power = 8.50577 W
         Gate Leakage Power = 0.20561 W
-        Runtime Dynamic Power = 0.0226069 W
-        Runtime Dynamic Energy = 0.0209303 J
-        Total Runtime Energy = 8.08623 J
+        Runtime Dynamic Power = 0.0223547 W
+        Runtime Dynamic Energy = 0.0206967 J
+        Total Runtime Energy = 8.086 J
 
           Data and Tag Arrays:
             Area = 26.3209 mm^2
             Peak Dynamic Power = 0 W
             Subthreshold Leakage Power = 8.49968 W
             Gate Leakage Power = 0.205304 W
-            Runtime Dynamic Power = 0.0225873 W
-            Runtime Dynamic Energy = 0.0209121 J
-            Total Runtime Energy = 8.08029 J
+            Runtime Dynamic Power = 0.0223385 W
+            Runtime Dynamic Energy = 0.0206818 J
+            Total Runtime Energy = 8.08006 J
 
           Miss Buffer:
             Area = 0.315209 mm^2
@@ -1355,7 +1355,7 @@ McPAT (version 0.8 of Aug, 2010) results  (current print level is 5)
             Peak Dynamic Power = 0.0110423 W
             Subthreshold Leakage Power = 0.00195087 W
             Gate Leakage Power = 9.82028e-05 W
-            Runtime Dynamic Power = 6.2491e-06 W
-            Runtime Dynamic Energy = 5.78563e-06 J
-            Total Runtime Energy = 0.00190289 J
+            Runtime Dynamic Power = 2.79217e-06 W
+            Runtime Dynamic Energy = 2.58509e-06 J
+            Total Runtime Energy = 0.00189969 J
 
