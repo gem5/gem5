@@ -835,7 +835,7 @@
                 }
             }
         ], 
-        "mem_mode": "atomic", 
+        "mem_mode": "timing", 
         "name": "system", 
         "init_param": 0, 
         "system_port": {
@@ -845,8 +845,10 @@
         "load_addr_mask": 1099511627775, 
         "cpu": [
             {
-                "do_statistics_insts": true, 
-                "numThreads": 1, 
+                "SQEntries": 32, 
+                "smtLSQThreshold": 100, 
+                "fetchTrapLatency": 1, 
+                "iewToRenameDelay": 1, 
                 "itb": {
                     "name": "itb", 
                     "eventq_index": 0, 
@@ -870,135 +872,510 @@
                     "type": "X86TLB", 
                     "size": 64
                 }, 
-                "simulate_data_stalls": false, 
-                "dtb_walker_cache": {
-                    "cpu_side": {
-                        "peer": "system.cpu.dtb.walker.port", 
-                        "role": "SLAVE"
-                    }, 
-                    "clusivity": "mostly_incl", 
-                    "prefetcher": null, 
-                    "clk_domain": "system.cpu_clk_domain", 
-                    "write_buffers": 8, 
-                    "response_latency": 2, 
-                    "cxx_class": "Cache", 
-                    "size": 1024, 
-                    "tags": {
-                        "name": "tags", 
-                        "eventq_index": 0, 
-                        "hit_latency": 2, 
-                        "clk_domain": "system.cpu_clk_domain", 
-                        "sequential_access": false, 
-                        "assoc": 2, 
-                        "cxx_class": "LRU", 
-                        "path": "system.cpu.dtb_walker_cache.tags", 
-                        "block_size": 64, 
-                        "type": "LRU", 
-                        "size": 1024
-                    }, 
-                    "system": "system", 
-                    "max_miss_count": 0, 
-                    "eventq_index": 0, 
-                    "mem_side": {
-                        "peer": "system.tol2bus.slave[3]", 
-                        "role": "MASTER"
-                    }, 
-                    "type": "Cache", 
-                    "forward_snoops": false, 
-                    "writeback_clean": false, 
-                    "hit_latency": 2, 
-                    "tgts_per_mshr": 12, 
-                    "demand_mshr_reserve": 1, 
-                    "addr_ranges": [
-                        "0:18446744073709551615"
-                    ], 
-                    "is_read_only": false, 
-                    "numa": false, 
-                    "prefetch_on_access": false, 
-                    "path": "system.cpu.dtb_walker_cache", 
-                    "name": "dtb_walker_cache", 
-                    "mshrs": 10, 
-                    "sequential_access": false, 
-                    "assoc": 2
-                }, 
-                "function_trace": false, 
-                "do_checkpoint_insts": true, 
-                "cxx_class": "AtomicSimpleCPU", 
+                "fetchWidth": 8, 
                 "max_loads_all_threads": 0, 
-                "system": "system", 
-                "apic_clk_domain": {
-                    "name": "apic_clk_domain", 
-                    "clk_domain": "system.cpu_clk_domain", 
-                    "eventq_index": 0, 
-                    "cxx_class": "DerivedClockDomain", 
-                    "path": "system.cpu.apic_clk_domain", 
-                    "type": "DerivedClockDomain", 
-                    "clk_divider": 16
-                }, 
-                "itb_walker_cache": {
-                    "cpu_side": {
-                        "peer": "system.cpu.itb.walker.port", 
-                        "role": "SLAVE"
-                    }, 
-                    "clusivity": "mostly_incl", 
-                    "prefetcher": null, 
-                    "clk_domain": "system.cpu_clk_domain", 
-                    "write_buffers": 8, 
-                    "response_latency": 2, 
-                    "cxx_class": "Cache", 
-                    "size": 1024, 
-                    "tags": {
-                        "name": "tags", 
-                        "eventq_index": 0, 
-                        "hit_latency": 2, 
-                        "clk_domain": "system.cpu_clk_domain", 
-                        "sequential_access": false, 
-                        "assoc": 2, 
-                        "cxx_class": "LRU", 
-                        "path": "system.cpu.itb_walker_cache.tags", 
-                        "block_size": 64, 
-                        "type": "LRU", 
-                        "size": 1024
-                    }, 
-                    "system": "system", 
-                    "max_miss_count": 0, 
-                    "eventq_index": 0, 
-                    "mem_side": {
-                        "peer": "system.tol2bus.slave[2]", 
-                        "role": "MASTER"
-                    }, 
-                    "type": "Cache", 
-                    "forward_snoops": false, 
-                    "writeback_clean": false, 
-                    "hit_latency": 2, 
-                    "tgts_per_mshr": 12, 
-                    "demand_mshr_reserve": 1, 
-                    "addr_ranges": [
-                        "0:18446744073709551615"
-                    ], 
-                    "is_read_only": false, 
-                    "numa": false, 
-                    "prefetch_on_access": false, 
-                    "path": "system.cpu.itb_walker_cache", 
-                    "name": "itb_walker_cache", 
-                    "mshrs": 10, 
-                    "sequential_access": false, 
-                    "assoc": 2
-                }, 
-                "clk_domain": "system.cpu_clk_domain", 
-                "function_trace_start": 0, 
                 "cpu_id": 0, 
-                "width": 1, 
-                "checker": null, 
-                "eventq_index": 0, 
+                "fetchToDecodeDelay": 1, 
+                "renameToDecodeDelay": 1, 
                 "do_quiesce": true, 
-                "type": "AtomicSimpleCPU", 
-                "fastmem": false, 
-                "profile": 0, 
-                "icache_port": {
-                    "peer": "system.cpu.icache.cpu_side", 
-                    "role": "MASTER"
+                "renameToROBDelay": 1, 
+                "max_insts_all_threads": 0, 
+                "decodeWidth": 8, 
+                "commitToFetchDelay": 1, 
+                "needsTSO": true, 
+                "smtIQThreshold": 100, 
+                "workload": [
+                    {
+                        "uid": 100, 
+                        "pid": 100, 
+                        "kvmInSE": false, 
+                        "cxx_class": "LiveProcess", 
+                        "executable": "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/mcf_base.amd64-m64-gcc42-nn", 
+                        "drivers": [], 
+                        "system": "system", 
+                        "gid": 100, 
+                        "eventq_index": 0, 
+                        "env": [], 
+                        "input": "cin", 
+                        "ppid": 99, 
+                        "type": "LiveProcess", 
+                        "cwd": "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/", 
+                        "simpoint": 0, 
+                        "euid": 100, 
+                        "path": "system.cpu.workload", 
+                        "max_stack_size": 67108864, 
+                        "name": "workload", 
+                        "cmd": [
+                            "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/mcf_base.amd64-m64-gcc42-nn", 
+                            "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/inp.in"
+                        ], 
+                        "errout": "cerr", 
+                        "useArchPT": false, 
+                        "egid": 100, 
+                        "output": "inp.out"
+                    }
+                ], 
+                "name": "cpu", 
+                "SSITSize": 1024, 
+                "activity": 0, 
+                "max_loads_any_thread": 0, 
+                "tracer": {
+                    "eventq_index": 0, 
+                    "path": "system.cpu.tracer", 
+                    "type": "ExeTracer", 
+                    "name": "tracer", 
+                    "cxx_class": "Trace::ExeTracer"
                 }, 
+                "decodeToFetchDelay": 1, 
+                "renameWidth": 8, 
+                "numThreads": 1, 
+                "squashWidth": 8, 
+                "function_trace": false, 
+                "backComSize": 5, 
+                "decodeToRenameDelay": 1, 
+                "store_set_clear_period": 250000, 
+                "numPhysIntRegs": 256, 
+                "fuPool": {
+                    "name": "fuPool", 
+                    "FUList": [
+                        {
+                            "count": 6, 
+                            "opList": [
+                                {
+                                    "opClass": "IntAlu", 
+                                    "opLat": 1, 
+                                    "name": "opList", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList0.opList", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList0", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList0", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 2, 
+                            "opList": [
+                                {
+                                    "opClass": "IntMult", 
+                                    "opLat": 3, 
+                                    "name": "opList0", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList1.opList0", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "IntDiv", 
+                                    "opLat": 1, 
+                                    "name": "opList1", 
+                                    "pipelined": false, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList1.opList1", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList1", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList1", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 4, 
+                            "opList": [
+                                {
+                                    "opClass": "FloatAdd", 
+                                    "opLat": 2, 
+                                    "name": "opList0", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList2.opList0", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "FloatCmp", 
+                                    "opLat": 2, 
+                                    "name": "opList1", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList2.opList1", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "FloatCvt", 
+                                    "opLat": 2, 
+                                    "name": "opList2", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList2.opList2", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList2", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList2", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 2, 
+                            "opList": [
+                                {
+                                    "opClass": "FloatMult", 
+                                    "opLat": 4, 
+                                    "name": "opList0", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList3.opList0", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "FloatDiv", 
+                                    "opLat": 12, 
+                                    "name": "opList1", 
+                                    "pipelined": false, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList3.opList1", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "FloatSqrt", 
+                                    "opLat": 24, 
+                                    "name": "opList2", 
+                                    "pipelined": false, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList3.opList2", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList3", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList3", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 0, 
+                            "opList": [
+                                {
+                                    "opClass": "MemRead", 
+                                    "opLat": 1, 
+                                    "name": "opList", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList4.opList", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList4", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList4", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 4, 
+                            "opList": [
+                                {
+                                    "opClass": "SimdAdd", 
+                                    "opLat": 1, 
+                                    "name": "opList00", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList00", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdAddAcc", 
+                                    "opLat": 1, 
+                                    "name": "opList01", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList01", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdAlu", 
+                                    "opLat": 1, 
+                                    "name": "opList02", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList02", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdCmp", 
+                                    "opLat": 1, 
+                                    "name": "opList03", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList03", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdCvt", 
+                                    "opLat": 1, 
+                                    "name": "opList04", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList04", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdMisc", 
+                                    "opLat": 1, 
+                                    "name": "opList05", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList05", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdMult", 
+                                    "opLat": 1, 
+                                    "name": "opList06", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList06", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdMultAcc", 
+                                    "opLat": 1, 
+                                    "name": "opList07", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList07", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdShift", 
+                                    "opLat": 1, 
+                                    "name": "opList08", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList08", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdShiftAcc", 
+                                    "opLat": 1, 
+                                    "name": "opList09", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList09", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdSqrt", 
+                                    "opLat": 1, 
+                                    "name": "opList10", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList10", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatAdd", 
+                                    "opLat": 1, 
+                                    "name": "opList11", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList11", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatAlu", 
+                                    "opLat": 1, 
+                                    "name": "opList12", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList12", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatCmp", 
+                                    "opLat": 1, 
+                                    "name": "opList13", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList13", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatCvt", 
+                                    "opLat": 1, 
+                                    "name": "opList14", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList14", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatDiv", 
+                                    "opLat": 1, 
+                                    "name": "opList15", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList15", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatMisc", 
+                                    "opLat": 1, 
+                                    "name": "opList16", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList16", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatMult", 
+                                    "opLat": 1, 
+                                    "name": "opList17", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList17", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatMultAcc", 
+                                    "opLat": 1, 
+                                    "name": "opList18", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList18", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "SimdFloatSqrt", 
+                                    "opLat": 1, 
+                                    "name": "opList19", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList5.opList19", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList5", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList5", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 0, 
+                            "opList": [
+                                {
+                                    "opClass": "MemWrite", 
+                                    "opLat": 1, 
+                                    "name": "opList", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList6.opList", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList6", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList6", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 4, 
+                            "opList": [
+                                {
+                                    "opClass": "MemRead", 
+                                    "opLat": 1, 
+                                    "name": "opList0", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList7.opList0", 
+                                    "type": "OpDesc"
+                                }, 
+                                {
+                                    "opClass": "MemWrite", 
+                                    "opLat": 1, 
+                                    "name": "opList1", 
+                                    "pipelined": true, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList7.opList1", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList7", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList7", 
+                            "type": "FUDesc"
+                        }, 
+                        {
+                            "count": 1, 
+                            "opList": [
+                                {
+                                    "opClass": "IprAccess", 
+                                    "opLat": 3, 
+                                    "name": "opList", 
+                                    "pipelined": false, 
+                                    "eventq_index": 0, 
+                                    "cxx_class": "OpDesc", 
+                                    "path": "system.cpu.fuPool.FUList8.opList", 
+                                    "type": "OpDesc"
+                                }
+                            ], 
+                            "name": "FUList8", 
+                            "eventq_index": 0, 
+                            "cxx_class": "FUDesc", 
+                            "path": "system.cpu.fuPool.FUList8", 
+                            "type": "FUDesc"
+                        }
+                    ], 
+                    "eventq_index": 0, 
+                    "cxx_class": "FUPool", 
+                    "path": "system.cpu.fuPool", 
+                    "type": "FUPool"
+                }, 
+                "socket_id": 0, 
+                "renameToFetchDelay": 1, 
                 "icache": {
                     "cpu_side": {
                         "peer": "system.cpu.icache_port", 
@@ -1049,103 +1426,98 @@
                     "sequential_access": false, 
                     "assoc": 4
                 }, 
-                "interrupts": [
-                    {
-                        "int_master": {
-                            "peer": "system.membus.slave[2]", 
-                            "role": "MASTER"
-                        }, 
-                        "name": "interrupts", 
-                        "pio": {
-                            "peer": "system.membus.master[0]", 
-                            "role": "SLAVE"
-                        }, 
-                        "int_slave": {
-                            "peer": "system.membus.master[1]", 
-                            "role": "SLAVE"
-                        }, 
-                        "pio_latency": 100000, 
-                        "clk_domain": "system.cpu.apic_clk_domain", 
-                        "system": "system", 
-                        "int_latency": 1000, 
-                        "eventq_index": 0, 
-                        "numa": false, 
-                        "cxx_class": "X86ISA::Interrupts", 
-                        "path": "system.cpu.interrupts", 
-                        "pio_addr": 2305843009213693952, 
-                        "type": "X86LocalApic"
-                    }
-                ], 
-                "dcache_port": {
-                    "peer": "system.cpu.dcache.cpu_side", 
-                    "role": "MASTER"
-                }, 
-                "socket_id": 0, 
-                "max_insts_all_threads": 0, 
-                "numa": false, 
                 "path": "system.cpu", 
-                "max_loads_any_thread": 0, 
+                "numRobs": 1, 
                 "switched_out": false, 
-                "workload": [
-                    {
-                        "uid": 100, 
-                        "pid": 100, 
-                        "kvmInSE": false, 
-                        "cxx_class": "LiveProcess", 
-                        "executable": "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/mcf_base.amd64-m64-gcc42-nn", 
-                        "drivers": [], 
-                        "system": "system", 
-                        "gid": 100, 
-                        "eventq_index": 0, 
-                        "env": [], 
-                        "input": "cin", 
-                        "ppid": 99, 
-                        "type": "LiveProcess", 
-                        "cwd": "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/", 
-                        "simpoint": 0, 
-                        "euid": 100, 
-                        "path": "system.cpu.workload", 
-                        "max_stack_size": 67108864, 
-                        "name": "workload", 
-                        "cmd": [
-                            "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/mcf_base.amd64-m64-gcc42-nn", 
-                            "/home/itecgo/Tools/CPU2006/429.mcf/run/run_base_ref_amd64-m64-gcc42-nn.0000/inp.in"
-                        ], 
-                        "errout": "cerr", 
-                        "useArchPT": false, 
-                        "egid": 100, 
-                        "output": "inp.out"
-                    }
-                ], 
-                "name": "cpu", 
-                "dtb": {
-                    "name": "dtb", 
-                    "eventq_index": 0, 
-                    "cxx_class": "X86ISA::TLB", 
-                    "walker": {
-                        "name": "walker", 
-                        "clk_domain": "system.cpu_clk_domain", 
-                        "system": "system", 
-                        "eventq_index": 0, 
-                        "numa": false, 
-                        "cxx_class": "X86ISA::Walker", 
-                        "path": "system.cpu.dtb.walker", 
-                        "type": "X86PagetableWalker", 
-                        "port": {
-                            "peer": "system.cpu.dtb_walker_cache.cpu_side", 
-                            "role": "MASTER"
-                        }, 
-                        "num_squash_per_cycle": 4
-                    }, 
-                    "path": "system.cpu.dtb", 
-                    "type": "X86TLB", 
-                    "size": 64
-                }, 
+                "smtLSQPolicy": "Partitioned", 
+                "fetchBufferSize": 64, 
                 "simpoint_start_insts": [], 
                 "max_insts_any_thread": 1, 
-                "simulate_inst_stalls": false, 
-                "progress_interval": 0, 
-                "branchPred": null, 
+                "smtROBThreshold": 100, 
+                "numIQEntries": 64, 
+                "branchPred": {
+                    "choiceCtrBits": 2, 
+                    "name": "branchPred", 
+                    "globalCtrBits": 2, 
+                    "numThreads": 1, 
+                    "localHistoryTableSize": 2048, 
+                    "choicePredictorSize": 8192, 
+                    "instShiftAmt": 2, 
+                    "localCtrBits": 2, 
+                    "eventq_index": 0, 
+                    "BTBTagSize": 16, 
+                    "BTBEntries": 4096, 
+                    "cxx_class": "TournamentBP", 
+                    "path": "system.cpu.branchPred", 
+                    "localPredictorSize": 2048, 
+                    "type": "TournamentBP", 
+                    "RASSize": 16, 
+                    "globalPredictorSize": 8192
+                }, 
+                "LFSTSize": 1024, 
+                "isa": [
+                    {
+                        "eventq_index": 0, 
+                        "path": "system.cpu.isa", 
+                        "type": "X86ISA", 
+                        "name": "isa", 
+                        "cxx_class": "X86ISA::ISA"
+                    }
+                ], 
+                "smtROBPolicy": "Partitioned", 
+                "iewToFetchDelay": 1, 
+                "do_statistics_insts": true, 
+                "dispatchWidth": 8, 
+                "dtb_walker_cache": {
+                    "cpu_side": {
+                        "peer": "system.cpu.dtb.walker.port", 
+                        "role": "SLAVE"
+                    }, 
+                    "clusivity": "mostly_incl", 
+                    "prefetcher": null, 
+                    "clk_domain": "system.cpu_clk_domain", 
+                    "write_buffers": 8, 
+                    "response_latency": 2, 
+                    "cxx_class": "Cache", 
+                    "size": 1024, 
+                    "tags": {
+                        "name": "tags", 
+                        "eventq_index": 0, 
+                        "hit_latency": 2, 
+                        "clk_domain": "system.cpu_clk_domain", 
+                        "sequential_access": false, 
+                        "assoc": 2, 
+                        "cxx_class": "LRU", 
+                        "path": "system.cpu.dtb_walker_cache.tags", 
+                        "block_size": 64, 
+                        "type": "LRU", 
+                        "size": 1024
+                    }, 
+                    "system": "system", 
+                    "max_miss_count": 0, 
+                    "eventq_index": 0, 
+                    "mem_side": {
+                        "peer": "system.tol2bus.slave[3]", 
+                        "role": "MASTER"
+                    }, 
+                    "type": "Cache", 
+                    "forward_snoops": false, 
+                    "writeback_clean": false, 
+                    "hit_latency": 2, 
+                    "tgts_per_mshr": 12, 
+                    "demand_mshr_reserve": 1, 
+                    "addr_ranges": [
+                        "0:18446744073709551615"
+                    ], 
+                    "is_read_only": false, 
+                    "numa": false, 
+                    "prefetch_on_access": false, 
+                    "path": "system.cpu.dtb_walker_cache", 
+                    "name": "dtb_walker_cache", 
+                    "mshrs": 10, 
+                    "sequential_access": false, 
+                    "assoc": 2
+                }, 
                 "dcache": {
                     "cpu_side": {
                         "peer": "system.cpu.dcache_port", 
@@ -1196,22 +1568,158 @@
                     "sequential_access": false, 
                     "assoc": 2
                 }, 
-                "isa": [
-                    {
+                "commitToDecodeDelay": 1, 
+                "smtIQPolicy": "Partitioned", 
+                "issueWidth": 8, 
+                "LSQCheckLoads": true, 
+                "commitToRenameDelay": 1, 
+                "itb_walker_cache": {
+                    "cpu_side": {
+                        "peer": "system.cpu.itb.walker.port", 
+                        "role": "SLAVE"
+                    }, 
+                    "clusivity": "mostly_incl", 
+                    "prefetcher": null, 
+                    "clk_domain": "system.cpu_clk_domain", 
+                    "write_buffers": 8, 
+                    "response_latency": 2, 
+                    "cxx_class": "Cache", 
+                    "size": 1024, 
+                    "tags": {
+                        "name": "tags", 
                         "eventq_index": 0, 
-                        "path": "system.cpu.isa", 
-                        "type": "X86ISA", 
-                        "name": "isa", 
-                        "cxx_class": "X86ISA::ISA"
+                        "hit_latency": 2, 
+                        "clk_domain": "system.cpu_clk_domain", 
+                        "sequential_access": false, 
+                        "assoc": 2, 
+                        "cxx_class": "LRU", 
+                        "path": "system.cpu.itb_walker_cache.tags", 
+                        "block_size": 64, 
+                        "type": "LRU", 
+                        "size": 1024
+                    }, 
+                    "system": "system", 
+                    "max_miss_count": 0, 
+                    "eventq_index": 0, 
+                    "mem_side": {
+                        "peer": "system.tol2bus.slave[2]", 
+                        "role": "MASTER"
+                    }, 
+                    "type": "Cache", 
+                    "forward_snoops": false, 
+                    "writeback_clean": false, 
+                    "hit_latency": 2, 
+                    "tgts_per_mshr": 12, 
+                    "demand_mshr_reserve": 1, 
+                    "addr_ranges": [
+                        "0:18446744073709551615"
+                    ], 
+                    "is_read_only": false, 
+                    "numa": false, 
+                    "prefetch_on_access": false, 
+                    "path": "system.cpu.itb_walker_cache", 
+                    "name": "itb_walker_cache", 
+                    "mshrs": 10, 
+                    "sequential_access": false, 
+                    "assoc": 2
+                }, 
+                "cachePorts": 200, 
+                "system": "system", 
+                "checker": null, 
+                "numPhysFloatRegs": 256, 
+                "eventq_index": 0, 
+                "type": "DerivO3CPU", 
+                "wbWidth": 8, 
+                "interrupts": [
+                    {
+                        "int_master": {
+                            "peer": "system.membus.slave[2]", 
+                            "role": "MASTER"
+                        }, 
+                        "name": "interrupts", 
+                        "pio": {
+                            "peer": "system.membus.master[0]", 
+                            "role": "SLAVE"
+                        }, 
+                        "int_slave": {
+                            "peer": "system.membus.master[1]", 
+                            "role": "SLAVE"
+                        }, 
+                        "pio_latency": 100000, 
+                        "clk_domain": "system.cpu.apic_clk_domain", 
+                        "system": "system", 
+                        "int_latency": 1000, 
+                        "eventq_index": 0, 
+                        "numa": false, 
+                        "cxx_class": "X86ISA::Interrupts", 
+                        "path": "system.cpu.interrupts", 
+                        "pio_addr": 2305843009213693952, 
+                        "type": "X86LocalApic"
                     }
                 ], 
-                "tracer": {
+                "smtCommitPolicy": "RoundRobin", 
+                "issueToExecuteDelay": 1, 
+                "dtb": {
+                    "name": "dtb", 
                     "eventq_index": 0, 
-                    "path": "system.cpu.tracer", 
-                    "type": "ExeTracer", 
-                    "name": "tracer", 
-                    "cxx_class": "Trace::ExeTracer"
-                }
+                    "cxx_class": "X86ISA::TLB", 
+                    "walker": {
+                        "name": "walker", 
+                        "clk_domain": "system.cpu_clk_domain", 
+                        "system": "system", 
+                        "eventq_index": 0, 
+                        "numa": false, 
+                        "cxx_class": "X86ISA::Walker", 
+                        "path": "system.cpu.dtb.walker", 
+                        "type": "X86PagetableWalker", 
+                        "port": {
+                            "peer": "system.cpu.dtb_walker_cache.cpu_side", 
+                            "role": "MASTER"
+                        }, 
+                        "num_squash_per_cycle": 4
+                    }, 
+                    "path": "system.cpu.dtb", 
+                    "type": "X86TLB", 
+                    "size": 64
+                }, 
+                "numROBEntries": 192, 
+                "fetchQueueSize": 32, 
+                "iewToCommitDelay": 1, 
+                "smtNumFetchingThreads": 1, 
+                "forwardComSize": 5, 
+                "do_checkpoint_insts": true, 
+                "cxx_class": "DerivO3CPU", 
+                "commitToIEWDelay": 1, 
+                "commitWidth": 8, 
+                "clk_domain": "system.cpu_clk_domain", 
+                "function_trace_start": 0, 
+                "smtFetchPolicy": "SingleThread", 
+                "profile": 0, 
+                "icache_port": {
+                    "peer": "system.cpu.icache.cpu_side", 
+                    "role": "MASTER"
+                }, 
+                "dcache_port": {
+                    "peer": "system.cpu.dcache.cpu_side", 
+                    "role": "MASTER"
+                }, 
+                "LSQDepCheckShift": 4, 
+                "trapLatency": 13, 
+                "numa": false, 
+                "iewToDecodeDelay": 1, 
+                "numPhysCCRegs": 1280, 
+                "renameToIEWDelay": 2, 
+                "apic_clk_domain": {
+                    "name": "apic_clk_domain", 
+                    "clk_domain": "system.cpu_clk_domain", 
+                    "eventq_index": 0, 
+                    "cxx_class": "DerivedClockDomain", 
+                    "path": "system.cpu.apic_clk_domain", 
+                    "type": "DerivedClockDomain", 
+                    "clk_divider": 16
+                }, 
+                "progress_interval": 0, 
+                "LQEntries": 32
             }
         ], 
         "multi_thread": false, 

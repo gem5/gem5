@@ -18,7 +18,7 @@
 </g>
 </g>
 <g id="clust2" class="cluster"><title>cluster_system</title>
-<g id="a_clust2"><a xlink:title="boot_osflags&#61;a&#10;cache_line_size&#61;64&#10;clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;init_param&#61;0&#10;kernel&#61;&#10;kernel_addr_check&#61;true&#10;load_addr_mask&#61;1099511627775&#10;load_offset&#61;0&#10;mem_mode&#61;atomic&#10;mem_ranges&#61;0:2147483647&#10;memories&#61;system.mem_ctrls&#10;mmap_using_noreserve&#61;false&#10;multi_thread&#61;false&#10;num_work_ids&#61;16&#10;numa&#61;false&#10;readfile&#61;&#10;symbolfile&#61;&#10;work_begin_ckpt_count&#61;0&#10;work_begin_cpu_id_exit&#61;&#45;1&#10;work_begin_exit_count&#61;0&#10;work_cpus_ckpt_count&#61;0&#10;work_end_ckpt_count&#61;0&#10;work_end_exit_count&#61;0&#10;work_item_id&#61;&#45;1">
+<g id="a_clust2"><a xlink:title="boot_osflags&#61;a&#10;cache_line_size&#61;64&#10;clk_domain&#61;system.clk_domain&#10;eventq_index&#61;0&#10;init_param&#61;0&#10;kernel&#61;&#10;kernel_addr_check&#61;true&#10;load_addr_mask&#61;1099511627775&#10;load_offset&#61;0&#10;mem_mode&#61;timing&#10;mem_ranges&#61;0:2147483647&#10;memories&#61;system.mem_ctrls&#10;mmap_using_noreserve&#61;false&#10;multi_thread&#61;false&#10;num_work_ids&#61;16&#10;numa&#61;false&#10;readfile&#61;&#10;symbolfile&#61;&#10;work_begin_ckpt_count&#61;0&#10;work_begin_cpu_id_exit&#61;&#45;1&#10;work_begin_exit_count&#61;0&#10;work_cpus_ckpt_count&#61;0&#10;work_end_ckpt_count&#61;0&#10;work_end_exit_count&#61;0&#10;work_item_id&#61;&#45;1">
 <path fill="#e4e7eb" stroke="#000000" d="M28,-16C28,-16 1031,-16 1031,-16 1037,-16 1043,-22 1043,-28 1043,-28 1043,-818 1043,-818 1043,-824 1037,-830 1031,-830 1031,-830 28,-830 28,-830 22,-830 16,-824 16,-818 16,-818 16,-28 16,-28 16,-22 22,-16 28,-16"/>
 <text text-anchor="middle" x="529.5" y="-814.8" font-family="Arial" font-size="14.00" fill="#000000">system </text>
 <text text-anchor="middle" x="529.5" y="-799.8" font-family="Arial" font-size="14.00" fill="#000000">: System</text>
@@ -58,79 +58,79 @@
 </g>
 </g>
 <g id="clust73" class="cluster"><title>cluster_system_cpu</title>
-<g id="a_clust73"><a xlink:title="branchPred&#61;Null&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;cpu_id&#61;0&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu.dtb&#10;eventq_index&#61;0&#10;fastmem&#61;false&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;interrupts&#61;system.cpu.interrupts&#10;isa&#61;system.cpu.isa&#10;itb&#61;system.cpu.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;1&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;simpoint_start_insts&#61;&#10;simulate_data_stalls&#61;false&#10;simulate_inst_stalls&#61;false&#10;socket_id&#61;0&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu.tracer&#10;width&#61;1&#10;workload&#61;system.cpu.workload">
+<g id="a_clust73"><a xlink:title="LFSTSize&#61;1024&#10;LQEntries&#61;32&#10;LSQCheckLoads&#61;true&#10;LSQDepCheckShift&#61;4&#10;SQEntries&#61;32&#10;SSITSize&#61;1024&#10;activity&#61;0&#10;backComSize&#61;5&#10;branchPred&#61;system.cpu.branchPred&#10;cachePorts&#61;200&#10;checker&#61;Null&#10;clk_domain&#61;system.cpu_clk_domain&#10;commitToDecodeDelay&#61;1&#10;commitToFetchDelay&#61;1&#10;commitToIEWDelay&#61;1&#10;commitToRenameDelay&#61;1&#10;commitWidth&#61;8&#10;cpu_id&#61;0&#10;decodeToFetchDelay&#61;1&#10;decodeToRenameDelay&#61;1&#10;decodeWidth&#61;8&#10;dispatchWidth&#61;8&#10;do_checkpoint_insts&#61;true&#10;do_quiesce&#61;true&#10;do_statistics_insts&#61;true&#10;dtb&#61;system.cpu.dtb&#10;eventq_index&#61;0&#10;fetchBufferSize&#61;64&#10;fetchQueueSize&#61;32&#10;fetchToDecodeDelay&#61;1&#10;fetchTrapLatency&#61;1&#10;fetchWidth&#61;8&#10;forwardComSize&#61;5&#10;fuPool&#61;system.cpu.fuPool&#10;function_trace&#61;false&#10;function_trace_start&#61;0&#10;iewToCommitDelay&#61;1&#10;iewToDecodeDelay&#61;1&#10;iewToFetchDelay&#61;1&#10;iewToRenameDelay&#61;1&#10;interrupts&#61;system.cpu.interrupts&#10;isa&#61;system.cpu.isa&#10;issueToExecuteDelay&#61;1&#10;issueWidth&#61;8&#10;itb&#61;system.cpu.itb&#10;max_insts_all_threads&#61;0&#10;max_insts_any_thread&#61;1&#10;max_loads_all_threads&#61;0&#10;max_loads_any_thread&#61;0&#10;needsTSO&#61;true&#10;numIQEntries&#61;64&#10;numPhysCCRegs&#61;1280&#10;numPhysFloatRegs&#61;256&#10;numPhysIntRegs&#61;256&#10;numROBEntries&#61;192&#10;numRobs&#61;1&#10;numThreads&#61;1&#10;numa&#61;false&#10;profile&#61;0&#10;progress_interval&#61;0&#10;renameToDecodeDelay&#61;1&#10;renameToFetchDelay&#61;1&#10;renameToIEWDelay&#61;2&#10;renameToROBDelay&#61;1&#10;renameWidth&#61;8&#10;simpoint_start_insts&#61;&#10;smtCommitPolicy&#61;RoundRobin&#10;smtFetchPolicy&#61;SingleThread&#10;smtIQPolicy&#61;Partitioned&#10;smtIQThreshold&#61;100&#10;smtLSQPolicy&#61;Partitioned&#10;smtLSQThreshold&#61;100&#10;smtNumFetchingThreads&#61;1&#10;smtROBPolicy&#61;Partitioned&#10;smtROBThreshold&#61;100&#10;socket_id&#61;0&#10;squashWidth&#61;8&#10;store_set_clear_period&#61;250000&#10;switched_out&#61;false&#10;system&#61;system&#10;tracer&#61;system.cpu.tracer&#10;trapLatency&#61;13&#10;wbWidth&#61;8&#10;workload&#61;system.cpu.workload">
 <path fill="#bbc6d9" stroke="#000000" d="M181,-278C181,-278 1013,-278 1013,-278 1019,-278 1025,-284 1025,-290 1025,-290 1025,-588 1025,-588 1025,-594 1019,-600 1013,-600 1013,-600 181,-600 181,-600 175,-600 169,-594 169,-588 169,-588 169,-290 169,-290 169,-284 175,-278 181,-278"/>
 <text text-anchor="middle" x="597" y="-584.8" font-family="Arial" font-size="14.00" fill="#000000">cpu </text>
-<text text-anchor="middle" x="597" y="-569.8" font-family="Arial" font-size="14.00" fill="#000000">: AtomicSimpleCPU</text>
+<text text-anchor="middle" x="597" y="-569.8" font-family="Arial" font-size="14.00" fill="#000000">: DerivO3CPU</text>
 </a>
 </g>
 </g>
-<g id="clust74" class="cluster"><title>cluster_system_cpu_icache</title>
-<g id="a_clust74"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;4&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true">
-<path fill="#bab6ae" stroke="#000000" d="M392,-286C392,-286 560,-286 560,-286 566,-286 572,-292 572,-298 572,-298 572,-365 572,-365 572,-371 566,-377 560,-377 560,-377 392,-377 392,-377 386,-377 380,-371 380,-365 380,-365 380,-298 380,-298 380,-292 386,-286 392,-286"/>
-<text text-anchor="middle" x="476" y="-361.8" font-family="Arial" font-size="14.00" fill="#000000">icache </text>
-<text text-anchor="middle" x="476" y="-346.8" font-family="Arial" font-size="14.00" fill="#000000">: L1_ICache</text>
-</a>
-</g>
-</g>
-<g id="clust77" class="cluster"><title>cluster_system_cpu_dtb</title>
-<g id="a_clust77"><a xlink:title="eventq_index&#61;0&#10;size&#61;64&#10;walker&#61;system.cpu.dtb.walker">
+<g id="clust120" class="cluster"><title>cluster_system_cpu_dtb</title>
+<g id="a_clust120"><a xlink:title="eventq_index&#61;0&#10;size&#61;64&#10;walker&#61;system.cpu.dtb.walker">
 <path fill="#bab6ae" stroke="#000000" d="M855,-409C855,-409 1005,-409 1005,-409 1011,-409 1017,-415 1017,-421 1017,-421 1017,-542 1017,-542 1017,-548 1011,-554 1005,-554 1005,-554 855,-554 855,-554 849,-554 843,-548 843,-542 843,-542 843,-421 843,-421 843,-415 849,-409 855,-409"/>
 <text text-anchor="middle" x="930" y="-538.8" font-family="Arial" font-size="14.00" fill="#000000">dtb </text>
 <text text-anchor="middle" x="930" y="-523.8" font-family="Arial" font-size="14.00" fill="#000000">: X86TLB</text>
 </a>
 </g>
 </g>
-<g id="clust78" class="cluster"><title>cluster_system_cpu_dtb_walker</title>
-<g id="a_clust78"><a xlink:title="clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;num_squash_per_cycle&#61;4&#10;numa&#61;false&#10;system&#61;system">
+<g id="clust121" class="cluster"><title>cluster_system_cpu_dtb_walker</title>
+<g id="a_clust121"><a xlink:title="clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;num_squash_per_cycle&#61;4&#10;numa&#61;false&#10;system&#61;system">
 <path fill="#9f9c95" stroke="#000000" d="M863,-417C863,-417 997,-417 997,-417 1003,-417 1009,-423 1009,-429 1009,-429 1009,-496 1009,-496 1009,-502 1003,-508 997,-508 997,-508 863,-508 863,-508 857,-508 851,-502 851,-496 851,-496 851,-429 851,-429 851,-423 857,-417 863,-417"/>
 <text text-anchor="middle" x="930" y="-492.8" font-family="Arial" font-size="14.00" fill="#000000">walker </text>
 <text text-anchor="middle" x="930" y="-477.8" font-family="Arial" font-size="14.00" fill="#000000">: X86PagetableWalker</text>
 </a>
 </g>
 </g>
-<g id="clust79" class="cluster"><title>cluster_system_cpu_interrupts</title>
-<g id="a_clust79"><a xlink:title="clk_domain&#61;system.cpu.apic_clk_domain&#10;eventq_index&#61;0&#10;int_latency&#61;1000&#10;numa&#61;false&#10;pio_addr&#61;2305843009213693952&#10;pio_latency&#61;100000&#10;system&#61;system">
+<g id="clust122" class="cluster"><title>cluster_system_cpu_interrupts</title>
+<g id="a_clust122"><a xlink:title="clk_domain&#61;system.cpu.apic_clk_domain&#10;eventq_index&#61;0&#10;int_latency&#61;1000&#10;numa&#61;false&#10;pio_addr&#61;2305843009213693952&#10;pio_latency&#61;100000&#10;system&#61;system">
 <path fill="#c7a793" stroke="#000000" d="M585,-417C585,-417 823,-417 823,-417 829,-417 835,-423 835,-429 835,-429 835,-496 835,-496 835,-502 829,-508 823,-508 823,-508 585,-508 585,-508 579,-508 573,-502 573,-496 573,-496 573,-429 573,-429 573,-423 579,-417 585,-417"/>
 <text text-anchor="middle" x="704" y="-492.8" font-family="Arial" font-size="14.00" fill="#000000">interrupts </text>
 <text text-anchor="middle" x="704" y="-477.8" font-family="Arial" font-size="14.00" fill="#000000">: X86LocalApic</text>
 </a>
 </g>
 </g>
-<g id="clust80" class="cluster"><title>cluster_system_cpu_itb_walker_cache</title>
-<g id="a_clust80"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;false&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;10&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;1024&#10;system&#61;system&#10;tags&#61;system.cpu.itb_walker_cache.tags&#10;tgts_per_mshr&#61;12&#10;write_buffers&#61;8&#10;writeback_clean&#61;false">
+<g id="clust123" class="cluster"><title>cluster_system_cpu_itb_walker_cache</title>
+<g id="a_clust123"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;false&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;10&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;1024&#10;system&#61;system&#10;tags&#61;system.cpu.itb_walker_cache.tags&#10;tgts_per_mshr&#61;12&#10;write_buffers&#61;8&#10;writeback_clean&#61;false">
 <path fill="#bab6ae" stroke="#000000" d="M592,-286C592,-286 760,-286 760,-286 766,-286 772,-292 772,-298 772,-298 772,-365 772,-365 772,-371 766,-377 760,-377 760,-377 592,-377 592,-377 586,-377 580,-371 580,-365 580,-365 580,-298 580,-298 580,-292 586,-286 592,-286"/>
 <text text-anchor="middle" x="676" y="-361.8" font-family="Arial" font-size="14.00" fill="#000000">itb_walker_cache </text>
 <text text-anchor="middle" x="676" y="-346.8" font-family="Arial" font-size="14.00" fill="#000000">: PageTableWalkerCache</text>
 </a>
 </g>
 </g>
-<g id="clust82" class="cluster"><title>cluster_system_cpu_itb</title>
-<g id="a_clust82"><a xlink:title="eventq_index&#61;0&#10;size&#61;64&#10;walker&#61;system.cpu.itb.walker">
+<g id="clust125" class="cluster"><title>cluster_system_cpu_itb</title>
+<g id="a_clust125"><a xlink:title="eventq_index&#61;0&#10;size&#61;64&#10;walker&#61;system.cpu.itb.walker">
 <path fill="#bab6ae" stroke="#000000" d="M403,-409C403,-409 553,-409 553,-409 559,-409 565,-415 565,-421 565,-421 565,-542 565,-542 565,-548 559,-554 553,-554 553,-554 403,-554 403,-554 397,-554 391,-548 391,-542 391,-542 391,-421 391,-421 391,-415 397,-409 403,-409"/>
 <text text-anchor="middle" x="478" y="-538.8" font-family="Arial" font-size="14.00" fill="#000000">itb </text>
 <text text-anchor="middle" x="478" y="-523.8" font-family="Arial" font-size="14.00" fill="#000000">: X86TLB</text>
 </a>
 </g>
 </g>
-<g id="clust83" class="cluster"><title>cluster_system_cpu_itb_walker</title>
-<g id="a_clust83"><a xlink:title="clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;num_squash_per_cycle&#61;4&#10;numa&#61;false&#10;system&#61;system">
+<g id="clust126" class="cluster"><title>cluster_system_cpu_itb_walker</title>
+<g id="a_clust126"><a xlink:title="clk_domain&#61;system.cpu_clk_domain&#10;eventq_index&#61;0&#10;num_squash_per_cycle&#61;4&#10;numa&#61;false&#10;system&#61;system">
 <path fill="#9f9c95" stroke="#000000" d="M411,-417C411,-417 545,-417 545,-417 551,-417 557,-423 557,-429 557,-429 557,-496 557,-496 557,-502 551,-508 545,-508 545,-508 411,-508 411,-508 405,-508 399,-502 399,-496 399,-496 399,-429 399,-429 399,-423 405,-417 411,-417"/>
 <text text-anchor="middle" x="478" y="-492.8" font-family="Arial" font-size="14.00" fill="#000000">walker </text>
 <text text-anchor="middle" x="478" y="-477.8" font-family="Arial" font-size="14.00" fill="#000000">: X86PagetableWalker</text>
 </a>
 </g>
 </g>
-<g id="clust84" class="cluster"><title>cluster_system_cpu_dtb_walker_cache</title>
-<g id="a_clust84"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;false&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;10&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;1024&#10;system&#61;system&#10;tags&#61;system.cpu.dtb_walker_cache.tags&#10;tgts_per_mshr&#61;12&#10;write_buffers&#61;8&#10;writeback_clean&#61;false">
+<g id="clust127" class="cluster"><title>cluster_system_cpu_dtb_walker_cache</title>
+<g id="a_clust127"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;false&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;10&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;1024&#10;system&#61;system&#10;tags&#61;system.cpu.dtb_walker_cache.tags&#10;tgts_per_mshr&#61;12&#10;write_buffers&#61;8&#10;writeback_clean&#61;false">
 <path fill="#bab6ae" stroke="#000000" d="M814,-286C814,-286 982,-286 982,-286 988,-286 994,-292 994,-298 994,-298 994,-365 994,-365 994,-371 988,-377 982,-377 982,-377 814,-377 814,-377 808,-377 802,-371 802,-365 802,-365 802,-298 802,-298 802,-292 808,-286 814,-286"/>
 <text text-anchor="middle" x="898" y="-361.8" font-family="Arial" font-size="14.00" fill="#000000">dtb_walker_cache </text>
 <text text-anchor="middle" x="898" y="-346.8" font-family="Arial" font-size="14.00" fill="#000000">: PageTableWalkerCache</text>
 </a>
 </g>
 </g>
-<g id="clust87" class="cluster"><title>cluster_system_cpu_dcache</title>
-<g id="a_clust87"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false">
+<g id="clust129" class="cluster"><title>cluster_system_cpu_icache</title>
+<g id="a_clust129"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;4&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;true&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu.icache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;true">
+<path fill="#bab6ae" stroke="#000000" d="M392,-286C392,-286 560,-286 560,-286 566,-286 572,-292 572,-298 572,-298 572,-365 572,-365 572,-371 566,-377 560,-377 560,-377 392,-377 392,-377 386,-377 380,-371 380,-365 380,-365 380,-298 380,-298 380,-292 386,-286 392,-286"/>
+<text text-anchor="middle" x="476" y="-361.8" font-family="Arial" font-size="14.00" fill="#000000">icache </text>
+<text text-anchor="middle" x="476" y="-346.8" font-family="Arial" font-size="14.00" fill="#000000">: L1_ICache</text>
+</a>
+</g>
+</g>
+<g id="clust131" class="cluster"><title>cluster_system_cpu_dcache</title>
+<g id="a_clust131"><a xlink:title="addr_ranges&#61;0:18446744073709551615&#10;assoc&#61;2&#10;clk_domain&#61;system.cpu_clk_domain&#10;clusivity&#61;mostly_incl&#10;demand_mshr_reserve&#61;1&#10;eventq_index&#61;0&#10;forward_snoops&#61;true&#10;hit_latency&#61;2&#10;is_read_only&#61;false&#10;max_miss_count&#61;0&#10;mshrs&#61;4&#10;numa&#61;false&#10;prefetch_on_access&#61;false&#10;prefetcher&#61;Null&#10;response_latency&#61;2&#10;sequential_access&#61;false&#10;size&#61;32768&#10;system&#61;system&#10;tags&#61;system.cpu.dcache.tags&#10;tgts_per_mshr&#61;20&#10;write_buffers&#61;8&#10;writeback_clean&#61;false">
 <path fill="#bab6ae" stroke="#000000" d="M192,-286C192,-286 360,-286 360,-286 366,-286 372,-292 372,-298 372,-298 372,-365 372,-365 372,-371 366,-377 360,-377 360,-377 192,-377 192,-377 186,-377 180,-371 180,-365 180,-365 180,-298 180,-298 180,-292 186,-286 192,-286"/>
 <text text-anchor="middle" x="276" y="-361.8" font-family="Arial" font-size="14.00" fill="#000000">dcache </text>
 <text text-anchor="middle" x="276" y="-346.8" font-family="Arial" font-size="14.00" fill="#000000">: L1_DCache</text>
@@ -168,7 +168,7 @@
 <polygon fill="black" stroke="black" points="127.511,-471.756 124.439,-461.617 120.517,-471.459 127.511,-471.756"/>
 </g>
 <!-- system_cpu_interrupts_int_slave -->
-<g id="node14" class="node"><title>system_cpu_interrupts_int_slave</title>
+<g id="node12" class="node"><title>system_cpu_interrupts_int_slave</title>
 <path fill="#9f8575" stroke="#000000" d="M665,-425.5C665,-425.5 713,-425.5 713,-425.5 719,-425.5 725,-431.5 725,-437.5 725,-437.5 725,-449.5 725,-449.5 725,-455.5 719,-461.5 713,-461.5 713,-461.5 665,-461.5 665,-461.5 659,-461.5 653,-455.5 653,-449.5 653,-449.5 653,-437.5 653,-437.5 653,-431.5 659,-425.5 665,-425.5"/>
 <text text-anchor="middle" x="689" y="-439.8" font-family="Arial" font-size="14.00" fill="#000000">int_slave</text>
 </g>
@@ -178,7 +178,7 @@
 <polygon fill="black" stroke="black" points="692.5,-471.703 689,-461.703 685.5,-471.703 692.5,-471.703"/>
 </g>
 <!-- system_cpu_interrupts_pio -->
-<g id="node16" class="node"><title>system_cpu_interrupts_pio</title>
+<g id="node14" class="node"><title>system_cpu_interrupts_pio</title>
 <path fill="#9f8575" stroke="#000000" d="M593,-425.5C593,-425.5 623,-425.5 623,-425.5 629,-425.5 635,-431.5 635,-437.5 635,-437.5 635,-449.5 635,-449.5 635,-455.5 629,-461.5 623,-461.5 623,-461.5 593,-461.5 593,-461.5 587,-461.5 581,-455.5 581,-449.5 581,-449.5 581,-437.5 581,-437.5 581,-431.5 587,-425.5 593,-425.5"/>
 <text text-anchor="middle" x="608" y="-439.8" font-family="Arial" font-size="14.00" fill="#000000">pio</text>
 </g>
@@ -223,7 +223,7 @@
 <text text-anchor="middle" x="337" y="-439.8" font-family="Arial" font-size="14.00" fill="#000000">icache_port</text>
 </g>
 <!-- system_cpu_icache_cpu_side -->
-<g id="node12" class="node"><title>system_cpu_icache_cpu_side</title>
+<g id="node21" class="node"><title>system_cpu_icache_cpu_side</title>
 <path fill="#94918b" stroke="#000000" d="M399.5,-294.5C399.5,-294.5 450.5,-294.5 450.5,-294.5 456.5,-294.5 462.5,-300.5 462.5,-306.5 462.5,-306.5 462.5,-318.5 462.5,-318.5 462.5,-324.5 456.5,-330.5 450.5,-330.5 450.5,-330.5 399.5,-330.5 399.5,-330.5 393.5,-330.5 387.5,-324.5 387.5,-318.5 387.5,-318.5 387.5,-306.5 387.5,-306.5 387.5,-300.5 393.5,-294.5 399.5,-294.5"/>
 <text text-anchor="middle" x="425" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">cpu_side</text>
 </g>
@@ -247,75 +247,75 @@
 <path fill="none" stroke="black" d="M225,-425.37C225,-403.781 225,-366.412 225,-340.852"/>
 <polygon fill="black" stroke="black" points="228.5,-340.701 225,-330.701 221.5,-340.701 228.5,-340.701"/>
 </g>
-<!-- system_cpu_icache_mem_side -->
-<g id="node11" class="node"><title>system_cpu_icache_mem_side</title>
-<path fill="#94918b" stroke="#000000" d="M492,-294.5C492,-294.5 552,-294.5 552,-294.5 558,-294.5 564,-300.5 564,-306.5 564,-306.5 564,-318.5 564,-318.5 564,-324.5 558,-330.5 552,-330.5 552,-330.5 492,-330.5 492,-330.5 486,-330.5 480,-324.5 480,-318.5 480,-318.5 480,-306.5 480,-306.5 480,-300.5 486,-294.5 492,-294.5"/>
-<text text-anchor="middle" x="522" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">mem_side</text>
-</g>
-<!-- system_cpu_icache_mem_side&#45;&gt;system_tol2bus_slave -->
-<g id="edge9" class="edge"><title>system_cpu_icache_mem_side&#45;&gt;system_tol2bus_slave</title>
-<path fill="none" stroke="black" d="M548.558,-294.37C584.122,-271.432 647.303,-230.68 686.799,-205.205"/>
-<polygon fill="black" stroke="black" points="688.825,-208.063 695.332,-199.701 685.031,-202.18 688.825,-208.063"/>
-</g>
 <!-- system_cpu_dtb_walker_port -->
-<g id="node13" class="node"><title>system_cpu_dtb_walker_port</title>
+<g id="node11" class="node"><title>system_cpu_dtb_walker_port</title>
 <path fill="#7f7c77" stroke="#000000" d="M871,-425.5C871,-425.5 901,-425.5 901,-425.5 907,-425.5 913,-431.5 913,-437.5 913,-437.5 913,-449.5 913,-449.5 913,-455.5 907,-461.5 901,-461.5 901,-461.5 871,-461.5 871,-461.5 865,-461.5 859,-455.5 859,-449.5 859,-449.5 859,-437.5 859,-437.5 859,-431.5 865,-425.5 871,-425.5"/>
 <text text-anchor="middle" x="886" y="-439.8" font-family="Arial" font-size="14.00" fill="#000000">port</text>
 </g>
 <!-- system_cpu_dtb_walker_cache_cpu_side -->
-<g id="node21" class="node"><title>system_cpu_dtb_walker_cache_cpu_side</title>
+<g id="node19" class="node"><title>system_cpu_dtb_walker_cache_cpu_side</title>
 <path fill="#94918b" stroke="#000000" d="M821.5,-294.5C821.5,-294.5 872.5,-294.5 872.5,-294.5 878.5,-294.5 884.5,-300.5 884.5,-306.5 884.5,-306.5 884.5,-318.5 884.5,-318.5 884.5,-324.5 878.5,-330.5 872.5,-330.5 872.5,-330.5 821.5,-330.5 821.5,-330.5 815.5,-330.5 809.5,-324.5 809.5,-318.5 809.5,-318.5 809.5,-306.5 809.5,-306.5 809.5,-300.5 815.5,-294.5 821.5,-294.5"/>
 <text text-anchor="middle" x="847" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">cpu_side</text>
 </g>
 <!-- system_cpu_dtb_walker_port&#45;&gt;system_cpu_dtb_walker_cache_cpu_side -->
-<g id="edge10" class="edge"><title>system_cpu_dtb_walker_port&#45;&gt;system_cpu_dtb_walker_cache_cpu_side</title>
+<g id="edge9" class="edge"><title>system_cpu_dtb_walker_port&#45;&gt;system_cpu_dtb_walker_cache_cpu_side</title>
 <path fill="none" stroke="black" d="M880.821,-425.37C874.265,-403.685 862.896,-366.078 855.166,-340.51"/>
 <polygon fill="black" stroke="black" points="858.445,-339.26 852.2,-330.701 851.744,-341.286 858.445,-339.26"/>
 </g>
 <!-- system_cpu_interrupts_int_master -->
-<g id="node15" class="node"><title>system_cpu_interrupts_int_master</title>
+<g id="node13" class="node"><title>system_cpu_interrupts_int_master</title>
 <path fill="#9f8575" stroke="#000000" d="M755.5,-425.5C755.5,-425.5 814.5,-425.5 814.5,-425.5 820.5,-425.5 826.5,-431.5 826.5,-437.5 826.5,-437.5 826.5,-449.5 826.5,-449.5 826.5,-455.5 820.5,-461.5 814.5,-461.5 814.5,-461.5 755.5,-461.5 755.5,-461.5 749.5,-461.5 743.5,-455.5 743.5,-449.5 743.5,-449.5 743.5,-437.5 743.5,-437.5 743.5,-431.5 749.5,-425.5 755.5,-425.5"/>
 <text text-anchor="middle" x="785" y="-439.8" font-family="Arial" font-size="14.00" fill="#000000">int_master</text>
 </g>
 <!-- system_cpu_interrupts_int_master&#45;&gt;system_membus_slave -->
-<g id="edge11" class="edge"><title>system_cpu_interrupts_int_master&#45;&gt;system_membus_slave</title>
+<g id="edge10" class="edge"><title>system_cpu_interrupts_int_master&#45;&gt;system_membus_slave</title>
 <path fill="none" stroke="black" d="M783.089,-461.703C779.427,-494.659 771.398,-566.921 767.01,-606.413"/>
 <polygon fill="black" stroke="black" points="763.526,-606.069 765.901,-616.394 770.484,-606.842 763.526,-606.069"/>
 </g>
 <!-- system_cpu_itb_walker_cache_mem_side -->
-<g id="node17" class="node"><title>system_cpu_itb_walker_cache_mem_side</title>
+<g id="node15" class="node"><title>system_cpu_itb_walker_cache_mem_side</title>
 <path fill="#94918b" stroke="#000000" d="M692,-294.5C692,-294.5 752,-294.5 752,-294.5 758,-294.5 764,-300.5 764,-306.5 764,-306.5 764,-318.5 764,-318.5 764,-324.5 758,-330.5 752,-330.5 752,-330.5 692,-330.5 692,-330.5 686,-330.5 680,-324.5 680,-318.5 680,-318.5 680,-306.5 680,-306.5 680,-300.5 686,-294.5 692,-294.5"/>
 <text text-anchor="middle" x="722" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">mem_side</text>
 </g>
 <!-- system_cpu_itb_walker_cache_mem_side&#45;&gt;system_tol2bus_slave -->
-<g id="edge12" class="edge"><title>system_cpu_itb_walker_cache_mem_side&#45;&gt;system_tol2bus_slave</title>
+<g id="edge11" class="edge"><title>system_cpu_itb_walker_cache_mem_side&#45;&gt;system_tol2bus_slave</title>
 <path fill="none" stroke="black" d="M722,-294.37C722,-272.781 722,-235.412 722,-209.852"/>
 <polygon fill="black" stroke="black" points="725.5,-209.701 722,-199.701 718.5,-209.701 725.5,-209.701"/>
 </g>
 <!-- system_cpu_itb_walker_cache_cpu_side -->
-<g id="node18" class="node"><title>system_cpu_itb_walker_cache_cpu_side</title>
+<g id="node16" class="node"><title>system_cpu_itb_walker_cache_cpu_side</title>
 <path fill="#94918b" stroke="#000000" d="M599.5,-294.5C599.5,-294.5 650.5,-294.5 650.5,-294.5 656.5,-294.5 662.5,-300.5 662.5,-306.5 662.5,-306.5 662.5,-318.5 662.5,-318.5 662.5,-324.5 656.5,-330.5 650.5,-330.5 650.5,-330.5 599.5,-330.5 599.5,-330.5 593.5,-330.5 587.5,-324.5 587.5,-318.5 587.5,-318.5 587.5,-306.5 587.5,-306.5 587.5,-300.5 593.5,-294.5 599.5,-294.5"/>
 <text text-anchor="middle" x="625" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">cpu_side</text>
 </g>
 <!-- system_cpu_itb_walker_port -->
-<g id="node19" class="node"><title>system_cpu_itb_walker_port</title>
+<g id="node17" class="node"><title>system_cpu_itb_walker_port</title>
 <path fill="#7f7c77" stroke="#000000" d="M507,-425.5C507,-425.5 537,-425.5 537,-425.5 543,-425.5 549,-431.5 549,-437.5 549,-437.5 549,-449.5 549,-449.5 549,-455.5 543,-461.5 537,-461.5 537,-461.5 507,-461.5 507,-461.5 501,-461.5 495,-455.5 495,-449.5 495,-449.5 495,-437.5 495,-437.5 495,-431.5 501,-425.5 507,-425.5"/>
 <text text-anchor="middle" x="522" y="-439.8" font-family="Arial" font-size="14.00" fill="#000000">port</text>
 </g>
 <!-- system_cpu_itb_walker_port&#45;&gt;system_cpu_itb_walker_cache_cpu_side -->
-<g id="edge13" class="edge"><title>system_cpu_itb_walker_port&#45;&gt;system_cpu_itb_walker_cache_cpu_side</title>
+<g id="edge12" class="edge"><title>system_cpu_itb_walker_port&#45;&gt;system_cpu_itb_walker_cache_cpu_side</title>
 <path fill="none" stroke="black" d="M536.365,-425.385C547.334,-412.241 562.766,-393.591 576,-377 585.992,-364.474 596.902,-350.379 605.885,-338.656"/>
 <polygon fill="black" stroke="black" points="608.754,-340.666 612.045,-330.596 603.192,-336.416 608.754,-340.666"/>
 </g>
 <!-- system_cpu_dtb_walker_cache_mem_side -->
-<g id="node20" class="node"><title>system_cpu_dtb_walker_cache_mem_side</title>
+<g id="node18" class="node"><title>system_cpu_dtb_walker_cache_mem_side</title>
 <path fill="#94918b" stroke="#000000" d="M914,-294.5C914,-294.5 974,-294.5 974,-294.5 980,-294.5 986,-300.5 986,-306.5 986,-306.5 986,-318.5 986,-318.5 986,-324.5 980,-330.5 974,-330.5 974,-330.5 914,-330.5 914,-330.5 908,-330.5 902,-324.5 902,-318.5 902,-318.5 902,-306.5 902,-306.5 902,-300.5 908,-294.5 914,-294.5"/>
 <text text-anchor="middle" x="944" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">mem_side</text>
 </g>
 <!-- system_cpu_dtb_walker_cache_mem_side&#45;&gt;system_tol2bus_slave -->
-<g id="edge14" class="edge"><title>system_cpu_dtb_walker_cache_mem_side&#45;&gt;system_tol2bus_slave</title>
+<g id="edge13" class="edge"><title>system_cpu_dtb_walker_cache_mem_side&#45;&gt;system_tol2bus_slave</title>
 <path fill="none" stroke="black" d="M921.61,-294.36C913.035,-288.464 902.923,-282.277 893,-278 836.374,-253.593 807.315,-283.017 758,-246 745.724,-236.785 737.005,-222.075 731.226,-209.132"/>
 <polygon fill="black" stroke="black" points="734.394,-207.631 727.369,-199.7 727.914,-210.28 734.394,-207.631"/>
+</g>
+<!-- system_cpu_icache_mem_side -->
+<g id="node20" class="node"><title>system_cpu_icache_mem_side</title>
+<path fill="#94918b" stroke="#000000" d="M492,-294.5C492,-294.5 552,-294.5 552,-294.5 558,-294.5 564,-300.5 564,-306.5 564,-306.5 564,-318.5 564,-318.5 564,-324.5 558,-330.5 552,-330.5 552,-330.5 492,-330.5 492,-330.5 486,-330.5 480,-324.5 480,-318.5 480,-318.5 480,-306.5 480,-306.5 480,-300.5 486,-294.5 492,-294.5"/>
+<text text-anchor="middle" x="522" y="-308.8" font-family="Arial" font-size="14.00" fill="#000000">mem_side</text>
+</g>
+<!-- system_cpu_icache_mem_side&#45;&gt;system_tol2bus_slave -->
+<g id="edge14" class="edge"><title>system_cpu_icache_mem_side&#45;&gt;system_tol2bus_slave</title>
+<path fill="none" stroke="black" d="M548.558,-294.37C584.122,-271.432 647.303,-230.68 686.799,-205.205"/>
+<polygon fill="black" stroke="black" points="688.825,-208.063 695.332,-199.701 685.031,-202.18 688.825,-208.063"/>
 </g>
 <!-- system_cpu_dcache_mem_side -->
 <g id="node22" class="node"><title>system_cpu_dcache_mem_side</title>
