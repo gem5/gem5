@@ -16,7 +16,7 @@ def run(bench, input_set, l2_size, l2_assoc, l2_tags, num_threads):
     os.system('mkdir -p ' + dir)
 
     cmd = 'build/X86_MESI_Two_Level/gem5.opt -d ' + dir + ' configs/example/se.py --num-cpus=' + str(num_threads)\
-         + '--cpu-type=detailed  --caches --l2cache --num-l2caches=1' \
+         + ' --cpu-type=detailed  --caches --l2cache --num-l2caches=1' \
          + ' --l1i_size=32kB  --l1d_size=32kB --l1i_assoc=4 --l2_size=' + l2_size + ' --l2_assoc=' + str(l2_assoc) + ' --l2_tags=' + l2_tags \
          + ' --standard-switch=100000000 --warmup-insts=100000000 -I 200000000 --mem-size=2048MB' \
          + ' --bench=' + bench
