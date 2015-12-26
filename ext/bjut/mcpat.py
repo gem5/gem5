@@ -16,8 +16,8 @@ from pyparsing import Word, Literal, Optional, Suppress, ParseException, nums, r
 
 
 class McPATEnabledExperiment(Experiment):
-    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, section_num_to_use=2, gen_mcpat_xml_file=False, mcpat_enabled=True):
-        Experiment.__init__(self, dir, bench, l2_size, l2_assoc, l2_tags, section_num_to_use)
+    def __init__(self, type, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, section_num_to_use=2, gen_mcpat_xml_file=False, mcpat_enabled=True):
+        Experiment.__init__(self, type, dir, bench, l2_size, l2_assoc, l2_tags, section_num_to_use)
 
         self.mcpat_enabled = mcpat_enabled
 

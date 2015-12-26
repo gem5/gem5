@@ -10,10 +10,17 @@ import collections
 import json
 from objectpath import *
 from pyparsing import Word, Optional, ParseException, printables, nums, restOfLine
+from flufl.enum import Enum
+
+
+class ExperimentType(Enum):
+    FOUR_PHASE_FS_SIMULATION = 1
+    THREE_PHASE_SE_SIMULATION = 2
 
 
 class Experiment:
-    def __init__(self, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, section_num_to_use=2):
+    def __init__(self, type, dir, bench=None, l2_size=None, l2_assoc=None, l2_tags=None, section_num_to_use=2):
+        self.type = type
         self.dir = dir
         self.bench = bench
         self.l2_size = l2_size
@@ -80,8 +87,20 @@ class Experiment:
         return False if self.configs is None else self.configs.execute('len($.system.numa_caches_upward)') > 0
 
     def cpu_id(self, i, l1=False):
-        return '' if self.configs is None else self.configs.execute(
-            '$.system.' + ('switch_cpus' if not l1 else 'cpu') + '[' + str(i) + '].name')
+        if self.type == ExperimentType.THREE_PHASE_SE_SIMULATION:
+            if not l1:
+                id = 'switch_cpus_1'
+            else:
+                id = 'cpu'
+        elif self.type == ExperimentType.FOUR_PHASE_FS_SIMULATION:
+            if not l1:
+                id = 'switch_cpus'
+            else:
+                id = 'cpu'
+        else:
+            raise NotImplementedError
+
+        return '' if self.configs is None else self.configs.execute('$.system.' + id + '[' + str(i) + '].name')
 
     def l2_id(self, i=None):
         return '' if self.configs is None else ('l2' if i is None else self.configs.execute('$.system.l2cache[' + str(i) + '].name'))

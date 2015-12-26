@@ -19,7 +19,7 @@ def cpu2006_multicore(bench, input_set, l2_size, l2_assoc, l2_tags, num_threads)
                l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
                str(num_threads) + 'c/'
 
-    experiment = MulticoreExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags, 0, gen_mcpat_xml_file, False)
+    experiment = MulticoreExperiment(ExperimentType.THREE_PHASE_SE_SIMULATION, work_dir, bench, l2_size, l2_assoc, l2_tags, 0, gen_mcpat_xml_file, False)
     experiment.num_threads = num_threads
     return experiment
 
@@ -29,7 +29,7 @@ def parsec_multicore(bench, input_set, l2_size, l2_assoc, l2_tags, num_threads):
                l2_size + '/' + str(l2_assoc) + 'way/' + l2_tags + '/' + \
                str(num_threads) + 'c/'
 
-    experiment = MulticoreExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags, 2, gen_mcpat_xml_file, True)
+    experiment = MulticoreExperiment(ExperimentType.FOUR_PHASE_FS_SIMULATION, work_dir, bench, l2_size, l2_assoc, l2_tags, 2, gen_mcpat_xml_file, True)
     experiment.num_threads = num_threads
     return experiment
 
@@ -42,7 +42,7 @@ def parsec_ccnuma(bench, input_set, l2_size, l2_assoc, l2_tags,
                str(num_domains) + 'd/' + str(num_cpus_per_domain) + 'c/'
     # + numa_cache_size + '/' + str(numa_cache_assoc) + 'way/' + numa_cache_tags + '/'
 
-    experiment = CCNUMAExperiment(work_dir, bench, l2_size, l2_assoc, l2_tags, 2, gen_mcpat_xml_file, True)
+    experiment = CCNUMAExperiment(ExperimentType.FOUR_PHASE_FS_SIMULATION, work_dir, bench, l2_size, l2_assoc, l2_tags, 2, gen_mcpat_xml_file, True)
 
     experiment.num_domains = num_domains
     experiment.num_cpus_per_domain = num_cpus_per_domain
@@ -259,5 +259,5 @@ def generate_parsec_experiments_results():
 
 
 if __name__ == '__main__':
-    # generate_cpu2006_experiments_results()
-    generate_parsec_experiments_results()
+    generate_cpu2006_experiments_results()
+    # generate_parsec_experiments_results()
