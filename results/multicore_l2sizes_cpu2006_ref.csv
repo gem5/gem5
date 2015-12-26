@@ -1,2 +1,2 @@
 "bench","l2_size","l2_assoc","l2_tags","num_threads","sim_ticks","num_cycles","speedup","system_subthreshold_leakage_power","system_gate_leakage_power","system_runtime_dynamic_power","system_runtime_dynamic_energy","system_total_runtime_energy","l2_subthreshold_leakage_power","l2_gate_leakage_power","l2_runtime_dynamic_power","l2_runtime_dynamic_energy","l2_total_runtime_energy","l2_mpki","l2_miss_rate","l2_replacements"
-"429.mcf","8MB","16","LRU","1","247098721500","373405495","1.0","-1","-1","-1","-1","-1","-1","-1","-1","-1","-1","2.9707899702921003","0.701555","166012"
+"429.mcf","8MB","16","LRU","1","247098722000","120791946","1.0","-1","-1","-1","-1","-1","-1","-1","-1","-1","-1","1.4853949777190754","0.701555","166012"
