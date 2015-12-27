@@ -14,8 +14,7 @@ from flufl.enum import Enum
 
 
 class ExperimentType(Enum):
-    FOUR_PHASE_FS_SIMULATION = 1
-    THREE_PHASE_SE_SIMULATION = 2
+    FOUR_PHASE_FS_SIMULATION, THREE_PHASE_SE_SIMULATION = range(2)
 
 
 class Experiment:
