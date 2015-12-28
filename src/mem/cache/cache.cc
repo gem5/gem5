@@ -2352,22 +2352,13 @@ Cache::getTimingPacket()
             DPRINTF(Cache, "Block present, prefetch squashed by cache.  "
                     "Deallocating mshr target %#x.\n",
                     mshr->blkAddr);
-
             // Deallocate the mshr target
-            if (!tgt_pkt->isWriteback()) {
-                if (mshr->queue->forceDeallocateTarget(mshr)) {
-                    // Clear block if this deallocation resulted freed an
-                    // mshr when all had previously been utilized
-                    clearBlocked((BlockedCause)(mshr->queue->index));
-                }
-                return NULL;
-            } else {
-                // If this is a Writeback, and the snoops indicate that the blk
-                // is cached above, set the BLOCK_CACHED flag in the Writeback
-                // packet, so that it does not reset the bits corresponding to
-                // this block in the snoop filter below.
-                tgt_pkt->setBlockCached();
+            if (mshr->queue->forceDeallocateTarget(mshr)) {
+                // Clear block if this deallocation resulted freed an
+                // mshr when all had previously been utilized
+                clearBlocked((BlockedCause)(mshr->queue->index));
             }
+            return NULL;
         }
     }
 
