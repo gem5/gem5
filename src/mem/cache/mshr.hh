@@ -184,9 +184,6 @@ class MSHR : public Packet::SenderState, public Printable
         assert(inService); return postDowngrade;
     }
 
-    /** Thread number of the miss. */
-    ThreadID threadNum;
-
   private:
 
     /** Data buffer (if needed).  Currently used only for pending

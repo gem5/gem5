@@ -170,7 +170,7 @@ class MSHRQueue : public Drainable
 
     /**
      * Remove a MSHR from the queue. Returns an iterator into the
-     * allocatedList for faster squash implementation.
+     * allocatedList.
      * @param mshr The MSHR to remove.
      * @return An iterator to the next entry in the allocatedList.
      */
@@ -198,13 +198,6 @@ class MSHRQueue : public Drainable
      * @param mshr The MSHR to resend.
      */
     void markPending(MSHR *mshr);
-
-    /**
-     * Squash outstanding requests with the given thread number. If a request
-     * is in service, just squashes the targets.
-     * @param threadNum The thread to squash.
-     */
-    void squash(int threadNum);
 
     /**
      * Deallocate top target, possibly freeing the MSHR

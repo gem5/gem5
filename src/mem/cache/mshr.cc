@@ -67,7 +67,7 @@ MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
                queue(NULL), order(0), blkAddr(0),
                blkSize(0), isSecure(false), inService(false),
                isForward(false), allocOnFill(false),
-               threadNum(InvalidThreadID), data(NULL)
+               data(NULL)
 {
 }
 
@@ -216,7 +216,6 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     _isUncacheable = target->req->isUncacheable();
     inService = false;
     downstreamPending = false;
-    threadNum = 0;
     assert(targets.isReset());
     // Don't know of a case where we would allocate a new MSHR for a
     // snoop (mem-side request), so set source according to request here

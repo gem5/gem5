@@ -807,9 +807,6 @@ Cache::recvTimingReq(PacketPtr pkt)
 
                     assert(pkt->req->masterId() < system->maxMasters());
                     mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
-                    if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
-                        mshr->threadNum = -1;
-                    }
                     // We use forward_time here because it is the same
                     // considering new targets. We have multiple
                     // requests for the same address here. It
