@@ -2330,6 +2330,10 @@ Cache::getTimingPacket()
         // dirty one.
         Packet snoop_pkt(tgt_pkt, true, false);
         snoop_pkt.setExpressSnoop();
+        // We are sending this packet upwards, but if it hits we will
+        // get a snoop response that we end up treating just like a
+        // normal response, hence it needs the MSHR as its sender
+        // state
         snoop_pkt.senderState = mshr;
         cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
 
@@ -2399,7 +2403,9 @@ Cache::getTimingPacket()
     }
 
     assert(pkt != NULL);
-    pkt->senderState = mshr;
+    // play it safe and append (rather than set) the sender state, as
+    // forwarded packets may already have existing state
+    pkt->pushSenderState(mshr);
     return pkt;
 }
 
