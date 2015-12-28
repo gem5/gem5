@@ -1,9 +1,19 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 19:54:02
-gem5 started Dec 11 2015 19:54:27
-gem5 executing on zizzer, pid 26145
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp -re /z/atgutier/gem5/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp
+gem5 compiled Dec 28 2015 15:28:59
+gem5 started Dec 28 2015 15:29:48
+gem5 executing on zizzer, pid 17084
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp -re /z/stever/hg/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/30.eio-mp/alpha/eio/simple-timing-mp
 
-Skipping test: Test requires the 'EioProcess' SimObject.
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+main dictionary has 1245 entries
+main dictionary has 1245 entries
+main dictionary has 1245 entries
+main dictionary has 1245 entries
+49508 bytes wasted
+49508 bytes wasted
+49508 bytes wasted
+49508 bytes wasted
+>>>>Exiting @ tick 733914500 because a thread reached the max instruction count

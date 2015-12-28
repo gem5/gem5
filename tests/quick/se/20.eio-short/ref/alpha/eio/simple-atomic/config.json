@@ -59,6 +59,7 @@
         }, 
         "mem_ranges": [], 
         "eventq_index": 0, 
+        "work_begin_cpu_id_exit": -1, 
         "dvfs_handler": {
             "enable": false, 
             "name": "dvfs_handler", 
@@ -229,7 +230,7 @@
             }
         ], 
         "multi_thread": false, 
-        "work_begin_cpu_id_exit": -1, 
+        "exit_on_work_items": false, 
         "work_item_id": -1, 
         "num_work_ids": 16
     }, 

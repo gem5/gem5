@@ -58,6 +58,7 @@
         }, 
         "mem_ranges": [], 
         "eventq_index": 0, 
+        "work_begin_cpu_id_exit": -1, 
         "dvfs_handler": {
             "enable": false, 
             "name": "dvfs_handler", 
@@ -198,6 +199,7 @@
                         "peer": "system.cpu.icache_port", 
                         "role": "SLAVE"
                     }, 
+                    "clusivity": "mostly_incl", 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -224,11 +226,12 @@
                         "peer": "system.cpu.toL2Bus.slave[0]", 
                         "role": "MASTER"
                     }, 
-                    "mshrs": 4, 
+                    "type": "Cache", 
                     "forward_snoops": true, 
+                    "writeback_clean": true, 
                     "hit_latency": 2, 
-                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
+                    "demand_mshr_reserve": 1, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -236,7 +239,7 @@
                     "prefetch_on_access": false, 
                     "path": "system.cpu.icache", 
                     "name": "icache", 
-                    "type": "Cache", 
+                    "mshrs": 4, 
                     "sequential_access": false, 
                     "assoc": 2
                 }, 
@@ -260,6 +263,7 @@
                         "peer": "system.cpu.toL2Bus.master[0]", 
                         "role": "SLAVE"
                     }, 
+                    "clusivity": "mostly_incl", 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -286,11 +290,12 @@
                         "peer": "system.membus.slave[1]", 
                         "role": "MASTER"
                     }, 
-                    "mshrs": 20, 
+                    "type": "Cache", 
                     "forward_snoops": true, 
+                    "writeback_clean": false, 
                     "hit_latency": 20, 
-                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 12, 
+                    "demand_mshr_reserve": 1, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -298,7 +303,7 @@
                     "prefetch_on_access": false, 
                     "path": "system.cpu.l2cache", 
                     "name": "l2cache", 
-                    "type": "Cache", 
+                    "mshrs": 20, 
                     "sequential_access": false, 
                     "assoc": 8
                 }, 
@@ -341,6 +346,7 @@
                         "peer": "system.cpu.dcache_port", 
                         "role": "SLAVE"
                     }, 
+                    "clusivity": "mostly_incl", 
                     "prefetcher": null, 
                     "clk_domain": "system.cpu_clk_domain", 
                     "write_buffers": 8, 
@@ -367,11 +373,12 @@
                         "peer": "system.cpu.toL2Bus.slave[1]", 
                         "role": "MASTER"
                     }, 
-                    "mshrs": 4, 
+                    "type": "Cache", 
                     "forward_snoops": true, 
+                    "writeback_clean": false, 
                     "hit_latency": 2, 
-                    "demand_mshr_reserve": 1, 
                     "tgts_per_mshr": 20, 
+                    "demand_mshr_reserve": 1, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -379,7 +386,7 @@
                     "prefetch_on_access": false, 
                     "path": "system.cpu.dcache", 
                     "name": "dcache", 
-                    "type": "Cache", 
+                    "mshrs": 4, 
                     "sequential_access": false, 
                     "assoc": 2
                 }, 
@@ -403,7 +410,7 @@
             }
         ], 
         "multi_thread": false, 
-        "work_begin_cpu_id_exit": -1, 
+        "exit_on_work_items": false, 
         "work_item_id": -1, 
         "num_work_ids": 16
     }, 
