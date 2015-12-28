@@ -467,14 +467,6 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     return false;
 }
 
-
-class ForwardResponseRecord : public Packet::SenderState
-{
-  public:
-
-    ForwardResponseRecord() {}
-};
-
 void
 Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
 {
@@ -556,27 +548,27 @@ Cache::recvTimingSnoopResp(PacketPtr pkt)
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     assert(pkt->isResponse());
-
-    // must be cache-to-cache response from upper to lower level
-    ForwardResponseRecord *rec =
-        dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
     assert(!system->bypassCaches());
 
-    if (rec == NULL) {
-        // @todo What guarantee do we have that this HardPFResp is
-        // actually for this cache, and not a cache closer to the
-        // memory?
+    // determine if the response is from a snoop request we created
+    // (in which case it should be in the outstandingSnoop), or if we
+    // merely forwarded someone else's snoop request
+    const bool forwardAsSnoop = outstandingSnoop.find(pkt->req) ==
+        outstandingSnoop.end();
+
+    if (!forwardAsSnoop) {
+        // the packet came from this cache, so sink it here and do not
+        // forward it
         assert(pkt->cmd == MemCmd::HardPFResp);
-        // Check if it's a prefetch response and handle it. We shouldn't
-        // get any other kinds of responses without FRRs.
-        DPRINTF(Cache, "Got prefetch response from above for addr %#llx (%s)\n",
-                pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
+
+        outstandingSnoop.erase(pkt->req);
+
+        DPRINTF(Cache, "Got prefetch response from above for addr "
+                "%#llx (%s)\n", pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
         recvTimingResp(pkt);
         return;
     }
 
-    pkt->popSenderState();
-    delete rec;
     // forwardLatency is set here because there is a response from an
     // upper level cache.
     // To pay the delay that occurs if the packet comes from the bus,
@@ -1897,7 +1889,6 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             // there is a snoop hit in upper levels
             Packet snoopPkt(pkt, true, true);
             snoopPkt.setExpressSnoop();
-            snoopPkt.pushSenderState(new ForwardResponseRecord());
             // the snoop packet does not need to wait any additional
             // time
             snoopPkt.headerDelay = snoopPkt.payloadDelay = 0;
@@ -1912,10 +1903,6 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
                 // cache-to-cache response from some upper cache
                 assert(!alreadyResponded);
                 pkt->assertMemInhibit();
-            } else {
-                // no cache (or anyone else for that matter) will
-                // respond, so delete the ForwardResponseRecord here
-                delete snoopPkt.popSenderState();
             }
             if (snoopPkt.sharedAsserted()) {
                 pkt->assertShared();
@@ -2350,6 +2337,8 @@ Cache::getTimingPacket()
         // may result in the MSHR being prematurely deallocated.
 
         if (snoop_pkt.memInhibitAsserted()) {
+            auto M5_VAR_USED r = outstandingSnoop.insert(snoop_pkt.req);
+            assert(r.second);
             // If we are getting a non-shared response it is dirty
             bool pending_dirty_resp = !snoop_pkt.sharedAsserted();
             markInService(mshr, pending_dirty_resp);

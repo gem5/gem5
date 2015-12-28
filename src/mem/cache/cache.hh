@@ -247,6 +247,13 @@ class Cache : public BaseCache
         writebackTempBlockAtomicEvent;
 
     /**
+     * Store the outstanding requests that we are expecting snoop
+     * responses from so we can determine which snoop responses we
+     * generated and which ones were merely forwarded.
+     */
+    std::unordered_set<RequestPtr> outstandingSnoop;
+
+    /**
      * Does all the processing necessary to perform the provided request.
      * @param pkt The memory request to perform.
      * @param blk The cache block to be updated.
