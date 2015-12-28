@@ -323,6 +323,15 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
     DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+
+    // when we snoop packets the needsExclusive and isInvalidate flags
+    // should always be the same, however, this assumes that we never
+    // snoop writes as they are currently not marked as invalidations
+    panic_if(pkt->needsExclusive() != pkt->isInvalidate(),
+             "%s got snoop %s to addr %#llx where needsExclusive, "
+             "does not match isInvalidate", name(), pkt->cmdString(),
+             pkt->getAddr());
+
     if (!inService || (pkt->isExpressSnoop() && downstreamPending)) {
         // Request has not been issued yet, or it's been issued
         // locally but is buffered unissued at some downstream cache
