@@ -58,6 +58,7 @@
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
 #include "debug/CacheTags.hh"
+#include "debug/CacheVerbose.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
@@ -179,8 +180,8 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
         // supply data to any snoops that have appended themselves to
         // this cache before knowing the store will fail.
         blk->status |= BlkDirty;
-        DPRINTF(Cache, "%s for %s addr %#llx size %d (write)\n", __func__,
-                pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+        DPRINTF(CacheVerbose, "%s for %s addr %#llx size %d (write)\n",
+                __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
             blk->trackLoadLocked(pkt);
@@ -280,7 +281,7 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
         // for invalidations we could be looking at the temp block
         // (for upgrades we always allocate)
         invalidateBlock(blk);
-        DPRINTF(Cache, "%s for %s addr %#llx size %d (invalidation)\n",
+        DPRINTF(CacheVerbose, "%s for %s addr %#llx size %d (invalidation)\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     }
 }
@@ -316,7 +317,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   "Should never see a write in a read-only cache %s\n",
                   name());
 
-    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
+    DPRINTF(CacheVerbose, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     if (pkt->req->isUncacheable()) {
@@ -1222,7 +1223,7 @@ Cache::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         || writeBuffer.checkFunctional(pkt, blk_addr)
         || memSidePort->checkFunctional(pkt);
 
-    DPRINTF(Cache, "functional %s %#llx (%s) %s%s%s\n",
+    DPRINTF(CacheVerbose, "functional %s %#llx (%s) %s%s%s\n",
             pkt->cmdString(), pkt->getAddr(), is_secure ? "s" : "ns",
             (blk && blk->isValid()) ? "valid " : "",
             have_data ? "data " : "", done ? "done " : "");
@@ -1533,7 +1534,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         blk->invalidate();
     }
 
-    DPRINTF(Cache, "Leaving %s with %s for addr %#llx\n", __func__,
+    DPRINTF(CacheVerbose, "Leaving %s with %s for addr %#llx\n", __func__,
             pkt->cmdString(), pkt->getAddr());
     delete pkt;
 }
@@ -1881,7 +1882,8 @@ Cache::doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
-    DPRINTF(Cache, "%s created response: %s addr %#llx size %d tick: %lu\n",
+    DPRINTF(CacheVerbose,
+            "%s created response: %s addr %#llx size %d tick: %lu\n",
             __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(),
             forward_time);
     memSidePort->schedTimingSnoopResp(pkt, forward_time, true);
@@ -1891,7 +1893,7 @@ uint32_t
 Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
                    bool is_deferred, bool pending_inval)
 {
-    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
+    DPRINTF(CacheVerbose, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
     // deferred snoops can only happen in timing mode
     assert(!(is_deferred && !is_timing));
@@ -1963,13 +1965,13 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     }
 
     if (!blk || !blk->isValid()) {
-        DPRINTF(Cache, "%s snoop miss for %s addr %#llx size %d\n",
+        DPRINTF(CacheVerbose, "%s snoop miss for %s addr %#llx size %d\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
         return snoop_delay;
     } else {
-       DPRINTF(Cache, "%s snoop hit for %s for addr %#llx size %d, "
-               "old state is %s\n", __func__, pkt->cmdString(),
-               pkt->getAddr(), pkt->getSize(), blk->print());
+        DPRINTF(Cache, "%s snoop hit for %s addr %#llx size %d, "
+                "old state is %s\n", __func__, pkt->cmdString(),
+                pkt->getAddr(), pkt->getSize(), blk->print());
     }
 
     chatty_assert(!(isReadOnly && blk->isDirty()),
@@ -2073,7 +2075,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
 void
 Cache::recvTimingSnoopReq(PacketPtr pkt)
 {
-    DPRINTF(Cache, "%s for %s addr %#llx size %d\n", __func__,
+    DPRINTF(CacheVerbose, "%s for %s addr %#llx size %d\n", __func__,
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     // Snoops shouldn't happen when bypassing caches
