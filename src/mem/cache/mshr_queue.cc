@@ -200,9 +200,9 @@ MSHRQueue::moveToFront(MSHR *mshr)
 }
 
 void
-MSHRQueue::markInService(MSHR *mshr, bool pending_dirty_resp)
+MSHRQueue::markInService(MSHR *mshr, bool pending_modified_resp)
 {
-    if (mshr->markInService(pending_dirty_resp)) {
+    if (mshr->markInService(pending_modified_resp)) {
         deallocate(mshr);
     } else {
         readyList.erase(mshr->readyIter);

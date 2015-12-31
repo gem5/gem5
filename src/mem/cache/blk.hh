@@ -281,7 +281,7 @@ class CacheBlk
 
     /**
      * Pretty-print a tag, and interpret state bits to readable form
-     * including mapping to a MOESI stat.
+     * including mapping to a MOESI state.
      *
      * @return string with basic state information
      */
@@ -299,6 +299,17 @@ class CacheBlk
          *  E       1           0       1
          *  S       0           0       1
          *  I       0           0       0
+         *
+         * Note that only one cache ever has a block in Modified or
+         * Owned state, i.e., only one cache owns the block, or
+         * equivalently has the BlkDirty bit set. However, multiple
+         * caches on the same path to memory can have a block in the
+         * Exclusive state (despite the name). Exclusive means this
+         * cache has the only copy at this level of the hierarchy,
+         * i.e., there may be copies in caches above this cache (in
+         * various states), but there are no peers that have copies on
+         * this branch of the hierarchy, and no caches at or above
+         * this level on any other branch have copies either.
          **/
         unsigned state = isWritable() << 2 | isDirty() << 1 | isValid();
         char s = '?';

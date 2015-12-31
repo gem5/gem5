@@ -73,7 +73,7 @@ Tick
 SimpleMemory::recvAtomic(PacketPtr pkt)
 {
     access(pkt);
-    return pkt->memInhibitAsserted() ? 0 : getLatency();
+    return pkt->cacheResponding() ? 0 : getLatency();
 }
 
 void
@@ -97,8 +97,8 @@ SimpleMemory::recvFunctional(PacketPtr pkt)
 bool
 SimpleMemory::recvTimingReq(PacketPtr pkt)
 {
-    // sink inhibited packets without further action
-    if (pkt->memInhibitAsserted()) {
+    // if a cache is responding, sink the packet without further action
+    if (pkt->cacheResponding()) {
         pendingDelete.reset(pkt);
         return true;
     }

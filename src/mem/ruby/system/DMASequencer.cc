@@ -89,8 +89,9 @@ DMASequencer::MemSlavePort::recvTimingReq(PacketPtr pkt)
             pkt->getAddr(), id);
     DMASequencer *seq = static_cast<DMASequencer *>(&owner);
 
-    if (pkt->memInhibitAsserted())
-        panic("DMASequencer should never see an inhibited request\n");
+    if (pkt->cacheResponding())
+        panic("DMASequencer should never see a request with the "
+              "cacheResponding flag set\n");
 
     assert(isPhysMemAddress(pkt->getAddr()));
     assert(getOffset(pkt->getAddr()) + pkt->getSize() <=

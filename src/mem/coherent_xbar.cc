@@ -145,10 +145,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // remember if the packet is an express snoop
     bool is_express_snoop = pkt->isExpressSnoop();
-    bool is_inhibited = pkt->memInhibitAsserted();
+    bool cache_responding = pkt->cacheResponding();
     // for normal requests, going downstream, the express snoop flag
-    // and the inhibited flag should always be the same
-    assert(is_express_snoop == is_inhibited);
+    // and the cache responding flag should always be the same
+    assert(is_express_snoop == cache_responding);
 
     // determine the destination based on the address
     PortID master_port_id = findPort(pkt->getAddr());
@@ -236,10 +236,12 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         return true;
     }
 
-    // remember if the packet will generate a snoop response
-    const bool expect_snoop_resp = !is_inhibited && pkt->memInhibitAsserted();
+    // remember if the packet will generate a snoop response by
+    // checking if a cache set the cacheResponding flag during the
+    // snooping above
+    const bool expect_snoop_resp = !cache_responding && pkt->cacheResponding();
     const bool expect_response = pkt->needsResponse() &&
-        !pkt->memInhibitAsserted();
+        !pkt->cacheResponding();
 
     // since it is a normal request, attempt to send the packet
     bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
@@ -251,10 +253,8 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // check if we were successful in sending the packet onwards
     if (!success)  {
-        // express snoops and inhibited packets should never be forced
-        // to retry
+        // express snoops should never be forced to retry
         assert(!is_express_snoop);
-        assert(!pkt->memInhibitAsserted());
 
         // restore the header delay
         pkt->headerDelay = old_header_delay;
@@ -386,8 +386,9 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     // @todo Assess the choice of latency further
     calcPacketTiming(pkt, forwardLatency * clockPeriod());
 
-    // remeber if the packet is inhibited so we can see if it changes
-    const bool is_inhibited = pkt->memInhibitAsserted();
+    // remember if a cache has already committed to responding so we
+    // can see if it changes during the snooping
+    const bool cache_responding = pkt->cacheResponding();
 
     assert(pkt->snoopDelay == 0);
 
@@ -414,7 +415,7 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
     pkt->snoopDelay = 0;
 
     // if we can expect a response, remember how to route it
-    if (!is_inhibited && pkt->memInhibitAsserted()) {
+    if (!cache_responding && pkt->cacheResponding()) {
         assert(routeTo.find(pkt->req) == routeTo.end());
         routeTo[pkt->req] = master_port_id;
     }
@@ -760,7 +761,7 @@ CoherentXBar::forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id,
 
         // response from snoop agent
         assert(pkt->cmd != orig_cmd);
-        assert(pkt->memInhibitAsserted());
+        assert(pkt->cacheResponding());
         // should only happen once
         assert(snoop_response_cmd == MemCmd::InvalidCmd);
         // save response state

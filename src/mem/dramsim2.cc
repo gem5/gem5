@@ -155,7 +155,7 @@ DRAMSim2::recvAtomic(PacketPtr pkt)
     access(pkt);
 
     // 50 ns is just an arbitrary value at this point
-    return pkt->memInhibitAsserted() ? 0 : 50000;
+    return pkt->cacheResponding() ? 0 : 50000;
 }
 
 void
@@ -175,8 +175,8 @@ DRAMSim2::recvFunctional(PacketPtr pkt)
 bool
 DRAMSim2::recvTimingReq(PacketPtr pkt)
 {
-    // sink inhibited packets without further action
-    if (pkt->memInhibitAsserted()) {
+    // if a cache is responding, sink the packet without further action
+    if (pkt->cacheResponding()) {
         pendingDelete.reset(pkt);
         return true;
     }

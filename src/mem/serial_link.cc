@@ -185,7 +185,7 @@ SerialLink::SerialLinkSlavePort::recvTimingReq(PacketPtr pkt)
     } else if ( !retryReq ) {
         // look at the response queue if we expect to see a response
         bool expects_response = pkt->needsResponse() &&
-            !pkt->memInhibitAsserted();
+            !pkt->cacheResponding();
         if (expects_response) {
             if (respQueueFull()) {
                 DPRINTF(SerialLink, "Response queue full\n");

@@ -63,9 +63,11 @@ bool
 SimpleTimingPort::recvTimingReq(PacketPtr pkt)
 {
     // the SimpleTimingPort should not be used anywhere where there is
-    // a need to deal with inhibited packets
-    if (pkt->memInhibitAsserted())
-        panic("SimpleTimingPort should never see an inhibited request\n");
+    // a need to deal with snoop responses and their flow control
+    // requirements
+    if (pkt->cacheResponding())
+        panic("SimpleTimingPort should never see packets with the "
+              "cacheResponding flag set\n");
 
     bool needsResponse = pkt->needsResponse();
     Tick latency = recvAtomic(pkt);

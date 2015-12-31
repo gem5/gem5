@@ -92,9 +92,9 @@ bool
 FullO3CPU<Impl>::IcachePort::recvTimingResp(PacketPtr pkt)
 {
     DPRINTF(O3CPU, "Fetch unit received timing\n");
-    // We shouldn't ever get a cacheable block in ownership state
+    // We shouldn't ever get a cacheable block in Modified state
     assert(pkt->req->isUncacheable() ||
-           !(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+           !(pkt->cacheResponding() && !pkt->hasSharers()));
     fetch->processCacheCompletion(pkt);
 
     return true;

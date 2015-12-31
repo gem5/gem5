@@ -277,7 +277,7 @@ DRAMCtrl::recvAtomic(PacketPtr pkt)
     access(pkt);
 
     Tick latency = 0;
-    if (!pkt->memInhibitAsserted() && pkt->hasData()) {
+    if (!pkt->cacheResponding() && pkt->hasData()) {
         // this value is not supposed to be accurate, just enough to
         // keep things going, mimic a closed page
         latency = tRP + tRCD + tCL;
@@ -590,8 +590,8 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
     DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
-    // sink inhibited packets without further action
-    if (pkt->memInhibitAsserted()) {
+    // if a cache is responding, sink the packet without further action
+    if (pkt->cacheResponding()) {
         pendingDelete.reset(pkt);
         return true;
     }

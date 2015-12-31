@@ -156,7 +156,7 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
     bool is_write = pkt->isWrite();
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
-    bool expects_response = pkt->needsResponse() && !pkt->memInhibitAsserted();
+    bool expects_response = pkt->needsResponse() && !pkt->cacheResponding();
     std::unique_ptr<uint8_t> pkt_data;
     MemCheckerMonitorSenderState* state = NULL;
 
@@ -170,15 +170,14 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
 
     // If a cache miss is served by a cache, a monitor near the memory
     // would see a request which needs a response, but this response
-    // would be inhibited and not come back from the memory. Therefore
+    // would not come back from the memory. Therefore
     // we additionally have to check the inhibit flag.
     if (expects_response && (is_read || is_write)) {
         state = new MemCheckerMonitorSenderState(0);
         pkt->pushSenderState(state);
     }
 
-    // Attempt to send the packet (always succeeds for inhibited
-    // packets)
+    // Attempt to send the packet
     bool successful = masterPort.sendTimingReq(pkt);
 
     // If not successful, restore the sender state
@@ -227,7 +226,8 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
         }
     } else if (successful) {
         DPRINTF(MemCheckerMonitor,
-                "Forwarded inhibited request: addr = %#llx\n", addr);
+                "Forwarded request marked for cache response: addr = %#llx\n",
+                addr);
     }
 
     return successful;

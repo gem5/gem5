@@ -116,16 +116,15 @@ AddrMapper::recvTimingReq(PacketPtr pkt)
 {
     Addr orig_addr = pkt->getAddr();
     bool needsResponse = pkt->needsResponse();
-    bool memInhibitAsserted = pkt->memInhibitAsserted();
+    bool cacheResponding = pkt->cacheResponding();
 
-    if (needsResponse && !memInhibitAsserted) {
+    if (needsResponse && !cacheResponding) {
         pkt->pushSenderState(new AddrMapperSenderState(orig_addr));
     }
 
     pkt->setAddr(remapAddr(orig_addr));
 
-    // Attempt to send the packet (always succeeds for inhibited
-    // packets)
+    // Attempt to send the packet
     bool successful = masterPort.sendTimingReq(pkt);
 
     // If not successful, restore the address and sender state

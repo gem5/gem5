@@ -80,8 +80,31 @@ class MSHR : public Packet::SenderState, public Printable
     /** Flag set by downstream caches */
     bool downstreamPending;
 
-    /** Will we have a dirty copy after this request? */
-    bool pendingDirty;
+    /**
+     * Here we use one flag to track both if:
+     *
+     * 1. We are going to become owner or not, i.e., we will get the
+     * block in an ownership state (Owned or Modified) with BlkDirty
+     * set. This determines whether or not we are going to become the
+     * responder and ordering point for future requests that we snoop.
+     *
+     * 2. We know that we are going to get a writable block, i.e. we
+     * will get the block in writable state (Exclusive or Modified
+     * state) with BlkWritable set. That determines whether additional
+     * targets with needsWritable set will be able to be satisfied, or
+     * if not should be put on the deferred list to possibly wait for
+     * another request that does give us writable access.
+     *
+     * Condition 2 is actually just a shortcut that saves us from
+     * possibly building a deferred target list and calling
+     * promoteWritable() every time we get a writable block. Condition
+     * 1, tracking ownership, is what is important. However, we never
+     * receive ownership without marking the block dirty, and
+     * consequently use pendingModified to track both ownership and
+     * writability rather than having separate pendingDirty and
+     * pendingWritable flags.
+     */
+    bool pendingModified;
 
     /** Did we snoop an invalidate while waiting for data? */
     bool postInvalidate;
@@ -118,12 +141,12 @@ class MSHR : public Packet::SenderState, public Printable
     class TargetList : public std::list<Target> {
 
       public:
-        bool needsExclusive;
+        bool needsWritable;
         bool hasUpgrade;
 
         TargetList();
-        void resetFlags() { needsExclusive = hasUpgrade = false; }
-        bool isReset() const { return !needsExclusive && !hasUpgrade; }
+        void resetFlags() { needsWritable = hasUpgrade = false; }
+        bool isReset() const { return !needsWritable && !hasUpgrade; }
         void add(PacketPtr pkt, Tick readyTime, Counter order,
                  Target::Source source, bool markPending);
         void replaceUpgrades();
@@ -169,11 +192,11 @@ class MSHR : public Packet::SenderState, public Printable
      *  flags are accessed improperly.
      */
 
-    /** True if we need to get an exclusive copy of the block. */
-    bool needsExclusive() const { return targets.needsExclusive; }
+    /** True if we need to get a writable copy of the block. */
+    bool needsWritable() const { return targets.needsWritable; }
 
-    bool isPendingDirty() const {
-        assert(inService); return pendingDirty;
+    bool isPendingModified() const {
+        assert(inService); return pendingModified;
     }
 
     bool hasPostInvalidate() const {
@@ -223,7 +246,7 @@ class MSHR : public Packet::SenderState, public Printable
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
                   Tick when_ready, Counter _order, bool alloc_on_fill);
 
-    bool markInService(bool pending_dirty_resp);
+    bool markInService(bool pending_modified_resp);
 
     void clearDownstreamPending();
 
@@ -284,7 +307,7 @@ class MSHR : public Packet::SenderState, public Printable
 
     bool promoteDeferredTargets();
 
-    void promoteExclusive();
+    void promoteWritable();
 
     bool checkFunctional(PacketPtr pkt);
 

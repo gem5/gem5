@@ -144,18 +144,17 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     const bool is_read = pkt->isRead();
     const bool is_write = pkt->isWrite();
     const bool expects_response(
-        pkt->needsResponse() && !pkt->memInhibitAsserted());
+        pkt->needsResponse() && !pkt->cacheResponding());
 
     // If a cache miss is served by a cache, a monitor near the memory
     // would see a request which needs a response, but this response
-    // would be inhibited and not come back from the memory. Therefore
-    // we additionally have to check the inhibit flag.
+    // would not come back from the memory. Therefore we additionally
+    // have to check the cacheResponding flag
     if (expects_response && !stats.disableLatencyHists) {
         pkt->pushSenderState(new CommMonitorSenderState(curTick()));
     }
 
-    // Attempt to send the packet (always succeeds for inhibited
-    // packets)
+    // Attempt to send the packet
     bool successful = masterPort.sendTimingReq(pkt);
 
     // If not successful, restore the sender state

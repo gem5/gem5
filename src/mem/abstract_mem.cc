@@ -323,8 +323,8 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
 void
 AbstractMemory::access(PacketPtr pkt)
 {
-    if (pkt->memInhibitAsserted()) {
-        DPRINTF(MemoryAccess, "mem inhibited on 0x%x: not responding\n",
+    if (pkt->cacheResponding()) {
+        DPRINTF(MemoryAccess, "Cache responding to %#llx: not responding\n",
                 pkt->getAddr());
         return;
     }

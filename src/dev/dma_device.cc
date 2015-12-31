@@ -105,9 +105,9 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
 bool
 DmaPort::recvTimingResp(PacketPtr pkt)
 {
-    // We shouldn't ever get a cacheable block in ownership state
+    // We shouldn't ever get a cacheable block in Modified state
     assert(pkt->req->isUncacheable() ||
-           !(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+           !(pkt->cacheResponding() && !pkt->hasSharers()));
 
     handleResp(pkt);
 

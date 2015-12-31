@@ -139,7 +139,7 @@ class MemCmd
         IsWrite,        //!< Data flows from requester to responder
         IsUpgrade,
         IsInvalidate,
-        NeedsExclusive, //!< Requires exclusive copy to complete in-cache
+        NeedsWritable,  //!< Requires writable copy to complete in-cache
         IsRequest,      //!< Issued by requester
         IsResponse,     //!< Issue by responder
         NeedsResponse,  //!< Requester needs response from target
@@ -189,7 +189,7 @@ class MemCmd
     bool isUpgrade() const         { return testCmdAttrib(IsUpgrade); }
     bool isRequest() const         { return testCmdAttrib(IsRequest); }
     bool isResponse() const        { return testCmdAttrib(IsResponse); }
-    bool needsExclusive() const    { return testCmdAttrib(NeedsExclusive); }
+    bool needsWritable() const     { return testCmdAttrib(NeedsWritable); }
     bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
     bool isEviction() const        { return testCmdAttrib(IsEviction); }
@@ -252,15 +252,22 @@ class Packet : public Printable
         // Flags to transfer across when copying a packet
         COPY_FLAGS             = 0x0000000F,
 
-        SHARED                 = 0x00000001,
+        // Does this packet have sharers (which means it should not be
+        // considered writable) or not. See setHasSharers below.
+        HAS_SHARERS            = 0x00000001,
+
         // Special control flags
         /// Special timing-mode atomic snoop for multi-level coherence.
         EXPRESS_SNOOP          = 0x00000002,
-        /// Does supplier have exclusive copy?
-        /// Useful for multi-level coherence.
-        SUPPLY_EXCLUSIVE       = 0x00000004,
-        // Snoop response flags
-        MEM_INHIBIT            = 0x00000008,
+
+        /// Allow a responding cache to inform the cache hierarchy
+        /// that it had a writable copy before responding. See
+        /// setResponderHadWritable below.
+        RESPONDER_HAD_WRITABLE = 0x00000004,
+
+        // Snoop co-ordination flag to indicate that a cache is
+        // responding to a snoop. See setCacheResponding below.
+        CACHE_RESPONDING       = 0x00000008,
 
         /// Are the 'addr' and 'size' fields valid?
         VALID_ADDR             = 0x00000100,
@@ -495,7 +502,7 @@ class Packet : public Printable
     bool isUpgrade()  const          { return cmd.isUpgrade(); }
     bool isRequest() const           { return cmd.isRequest(); }
     bool isResponse() const          { return cmd.isResponse(); }
-    bool needsExclusive() const      { return cmd.needsExclusive(); }
+    bool needsWritable() const       { return cmd.needsWritable(); }
     bool needsResponse() const       { return cmd.needsResponse(); }
     bool isInvalidate() const        { return cmd.isInvalidate(); }
     bool isEviction() const          { return cmd.isEviction(); }
@@ -506,22 +513,94 @@ class Packet : public Printable
     bool isPrint() const             { return cmd.isPrint(); }
     bool isFlush() const             { return cmd.isFlush(); }
 
-    // Snoop flags
-    void assertMemInhibit()
+    //@{
+    /// Snoop flags
+    /**
+     * Set the cacheResponding flag. This is used by the caches to
+     * signal another cache that they are responding to a request. A
+     * cache will only respond to snoops if it has the line in either
+     * Modified or Owned state. Note that on snoop hits we always pass
+     * the line as Modified and never Owned. In the case of an Owned
+     * line we proceed to invalidate all other copies.
+     *
+     * On a cache fill (see Cache::handleFill), we check hasSharers
+     * first, ignoring the cacheResponding flag if hasSharers is set.
+     * A line is consequently allocated as:
+     *
+     * hasSharers cacheResponding state
+     * true       false           Shared
+     * true       true            Shared
+     * false      false           Exclusive
+     * false      true            Modified
+     */
+    void setCacheResponding()
     {
         assert(isRequest());
-        assert(!flags.isSet(MEM_INHIBIT));
-        flags.set(MEM_INHIBIT);
+        assert(!flags.isSet(CACHE_RESPONDING));
+        flags.set(CACHE_RESPONDING);
     }
-    bool memInhibitAsserted() const { return flags.isSet(MEM_INHIBIT); }
-    void assertShared()             { flags.set(SHARED); }
-    bool sharedAsserted() const     { return flags.isSet(SHARED); }
+    bool cacheResponding() const { return flags.isSet(CACHE_RESPONDING); }
+    /**
+     * On fills, the hasSharers flag is used by the caches in
+     * combination with the cacheResponding flag, as clarified
+     * above. If the hasSharers flag is not set, the packet is passing
+     * writable. Thus, a response from a memory passes the line as
+     * writable by default.
+     *
+     * The hasSharers flag is also used by upstream caches to inform a
+     * downstream cache that they have the block (by calling
+     * setHasSharers on snoop request packets that hit in upstream
+     * cachs tags or MSHRs). If the snoop packet has sharers, a
+     * downstream cache is prevented from passing a dirty line upwards
+     * if it was not explicitly asked for a writable copy. See
+     * Cache::satisfyCpuSideRequest.
+     *
+     * The hasSharers flag is also used on writebacks, in
+     * combination with the WritbackClean or WritebackDirty commands,
+     * to allocate the block downstream either as:
+     *
+     * command        hasSharers state
+     * WritebackDirty false      Modified
+     * WritebackDirty true       Owned
+     * WritebackClean false      Exclusive
+     * WritebackClean true       Shared
+     */
+    void setHasSharers()    { flags.set(HAS_SHARERS); }
+    bool hasSharers() const { return flags.isSet(HAS_SHARERS); }
+    //@}
 
-    // Special control flags
-    void setExpressSnoop()          { flags.set(EXPRESS_SNOOP); }
-    bool isExpressSnoop() const     { return flags.isSet(EXPRESS_SNOOP); }
-    void setSupplyExclusive()       { flags.set(SUPPLY_EXCLUSIVE); }
-    bool isSupplyExclusive() const  { return flags.isSet(SUPPLY_EXCLUSIVE); }
+    /**
+     * The express snoop flag is used for two purposes. Firstly, it is
+     * used to bypass flow control for normal (non-snoop) requests
+     * going downstream in the memory system. In cases where a cache
+     * is responding to a snoop from another cache (it had a dirty
+     * line), but the line is not writable (and there are possibly
+     * other copies), the express snoop flag is set by the downstream
+     * cache to invalidate all other copies in zero time. Secondly,
+     * the express snoop flag is also set to be able to distinguish
+     * snoop packets that came from a downstream cache, rather than
+     * snoop packets from neighbouring caches.
+     */
+    void setExpressSnoop()      { flags.set(EXPRESS_SNOOP); }
+    bool isExpressSnoop() const { return flags.isSet(EXPRESS_SNOOP); }
+
+    /**
+     * On responding to a snoop request (which only happens for
+     * Modified or Owned lines), make sure that we can transform an
+     * Owned response to a Modified one. If this flag is not set, the
+     * responding cache had the line in the Owned state, and there are
+     * possibly other Shared copies in the memory system. A downstream
+     * cache helps in orchestrating the invalidation of these copies
+     * by sending out the appropriate express snoops.
+     */
+    void setResponderHadWritable()
+    {
+        assert(cacheResponding());
+        flags.set(RESPONDER_HAD_WRITABLE);
+    }
+    bool responderHadWritable() const
+    { return flags.isSet(RESPONDER_HAD_WRITABLE); }
+
     void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
     bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }
     void setBlockCached()          { flags.set(BLOCK_CACHED); }

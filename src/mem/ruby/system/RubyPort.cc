@@ -231,8 +231,9 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
             pkt->getAddr(), id);
     RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
 
-    if (pkt->memInhibitAsserted())
-        panic("RubyPort should never see an inhibited request\n");
+    if (pkt->cacheResponding())
+        panic("RubyPort should never see request with the "
+              "cacheResponding flag set\n");
 
     // Check for pio requests and directly send them to the dedicated
     // pio port.

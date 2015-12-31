@@ -108,7 +108,7 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
                              lookupLatency);
 
     if (cpkt->needsResponse()) {
-        if (!cpkt->memInhibitAsserted()) {
+        if (!cpkt->cacheResponding()) {
             // Max one request per address per port
             panic_if(sf_item.requested & req_port, "double request :( " \
                      "SF value %x.%x\n", sf_item.requested, sf_item.holder);
@@ -208,7 +208,7 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
     // snoops so this was never an aissue. Now that Writebacks generate snoops
     // we need to special case for Writebacks.
     assert(cpkt->isWriteback() || cpkt->req->isUncacheable() ||
-           (cpkt->isInvalidate() == cpkt->needsExclusive()));
+           (cpkt->isInvalidate() == cpkt->needsWritable()));
     if (cpkt->isInvalidate() && !sf_item.requested) {
         // Early clear of the holder, if no other request is currently going on
         // @todo: This should possibly be updated even though we do not filter
@@ -233,7 +233,7 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
             cpkt->cmdString());
 
     assert(cpkt->isResponse());
-    assert(cpkt->memInhibitAsserted());
+    assert(cpkt->cacheResponding());
 
     // Ultimately we should check if the packet came from an
     // allocating source, not just if the port is snooping
@@ -258,10 +258,10 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
              "the original request\n",  sf_item.requested, sf_item.holder);
 
     // Update the residency of the cache line.
-    if (cpkt->needsExclusive() || !cpkt->sharedAsserted()) {
-        DPRINTF(SnoopFilter, "%s:  dropping %x because needs: %i shared: %i "\
+    if (cpkt->needsWritable() || !cpkt->hasSharers()) {
+        DPRINTF(SnoopFilter, "%s: dropping %x because needs: %i writable: %i "\
                 "SF val: %x.%x\n", __func__,  rsp_mask,
-                cpkt->needsExclusive(), cpkt->sharedAsserted(),
+                cpkt->needsWritable(), !cpkt->hasSharers(),
                 sf_item.requested, sf_item.holder);
 
         sf_item.holder &= ~rsp_mask;
@@ -287,7 +287,7 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
             cpkt->cmdString());
 
     assert(cpkt->isResponse());
-    assert(cpkt->memInhibitAsserted());
+    assert(cpkt->cacheResponding());
 
     Addr line_addr = cpkt->getBlockAddr(linesize);
     auto sf_it = cachedLocations.find(line_addr);
@@ -305,7 +305,7 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
     // Remote (to this snoop filter) snoops update the filter
     // already when they arrive from below, because we may not see
     // any response.
-    if (cpkt->needsExclusive()) {
+    if (cpkt->needsWritable()) {
         // If the request to this snoop response hit an in-flight
         // transaction,
         // the holder was not reset -> no assertion & do that here, now!
@@ -345,7 +345,7 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
 
     // Update the residency of the cache line. Here we assume that the
     // line has been zapped in all caches that are not the responder.
-     if (cpkt->needsExclusive() || !cpkt->sharedAsserted())
+     if (cpkt->needsWritable() || !cpkt->hasSharers())
         sf_item.holder = 0;
     sf_item.holder |=  slave_mask;
     sf_item.requested &= ~slave_mask;

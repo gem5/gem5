@@ -188,10 +188,10 @@ class MSHRQueue : public Drainable
      * readyList or deallocates the MSHR if it does not expect a response.
      *
      * @param mshr The MSHR to mark in service.
-     * @param pending_dirty_resp Whether we expect a dirty response
-     *                           from another cache
+     * @param pending_modified_resp Whether we expect a modified response
+     *                              from another cache
      */
-    void markInService(MSHR *mshr, bool pending_dirty_resp);
+    void markInService(MSHR *mshr, bool pending_modified_resp);
 
     /**
      * Mark an in service entry as pending, used to resend a request.

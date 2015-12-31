@@ -80,10 +80,10 @@ MemCmd::commandInfo[] =
     { SET4(IsRead, IsResponse, HasData, IsInvalidate),
             InvalidCmd, "ReadRespWithInvalidate" },
     /* WriteReq */
-    { SET5(IsWrite, NeedsExclusive, IsRequest, NeedsResponse, HasData),
+    { SET5(IsWrite, NeedsWritable, IsRequest, NeedsResponse, HasData),
             WriteResp, "WriteReq" },
     /* WriteResp */
-    { SET3(IsWrite, NeedsExclusive, IsResponse), InvalidCmd, "WriteResp" },
+    { SET3(IsWrite, NeedsWritable, IsResponse), InvalidCmd, "WriteResp" },
     /* WritebackDirty */
     { SET4(IsWrite, IsRequest, IsEviction, HasData),
             InvalidCmd, "WritebackDirty" },
@@ -107,34 +107,34 @@ MemCmd::commandInfo[] =
     { SET4(IsRead, IsResponse, IsHWPrefetch, HasData),
             InvalidCmd, "HardPFResp" },
     /* WriteLineReq */
-    { SET5(IsWrite, NeedsExclusive, IsRequest, NeedsResponse, HasData),
+    { SET5(IsWrite, NeedsWritable, IsRequest, NeedsResponse, HasData),
             WriteResp, "WriteLineReq" },
     /* UpgradeReq */
-    { SET5(IsInvalidate, NeedsExclusive, IsUpgrade, IsRequest, NeedsResponse),
+    { SET5(IsInvalidate, NeedsWritable, IsUpgrade, IsRequest, NeedsResponse),
             UpgradeResp, "UpgradeReq" },
     /* SCUpgradeReq: response could be UpgradeResp or UpgradeFailResp */
-    { SET6(IsInvalidate, NeedsExclusive, IsUpgrade, IsLlsc,
+    { SET6(IsInvalidate, NeedsWritable, IsUpgrade, IsLlsc,
            IsRequest, NeedsResponse),
             UpgradeResp, "SCUpgradeReq" },
     /* UpgradeResp */
-    { SET3(NeedsExclusive, IsUpgrade, IsResponse),
+    { SET3(NeedsWritable, IsUpgrade, IsResponse),
             InvalidCmd, "UpgradeResp" },
     /* SCUpgradeFailReq: generates UpgradeFailResp but still gets the data */
-    { SET6(IsRead, NeedsExclusive, IsInvalidate,
+    { SET6(IsRead, NeedsWritable, IsInvalidate,
            IsLlsc, IsRequest, NeedsResponse),
             UpgradeFailResp, "SCUpgradeFailReq" },
     /* UpgradeFailResp - Behaves like a ReadExReq, but notifies an SC
      * that it has failed, acquires line as Dirty*/
-    { SET4(IsRead, NeedsExclusive, IsResponse, HasData),
+    { SET4(IsRead, NeedsWritable, IsResponse, HasData),
             InvalidCmd, "UpgradeFailResp" },
     /* ReadExReq - Read issues by a cache, always cache-line aligned,
      * and the response is guaranteed to be writeable (exclusive or
      * even modified) */
-    { SET5(IsRead, NeedsExclusive, IsInvalidate, IsRequest, NeedsResponse),
+    { SET5(IsRead, NeedsWritable, IsInvalidate, IsRequest, NeedsResponse),
             ReadExResp, "ReadExReq" },
     /* ReadExResp - Response matching a read exclusive, as we check
      * the need for exclusive also on responses */
-    { SET4(IsRead, NeedsExclusive, IsResponse, HasData),
+    { SET4(IsRead, NeedsWritable, IsResponse, HasData),
             InvalidCmd, "ReadExResp" },
     /* ReadCleanReq - Read issued by a cache, always cache-line
      * aligned, and the response is guaranteed to not contain dirty data
@@ -149,21 +149,21 @@ MemCmd::commandInfo[] =
     { SET4(IsRead, IsLlsc, IsRequest, NeedsResponse),
             ReadResp, "LoadLockedReq" },
     /* StoreCondReq */
-    { SET6(IsWrite, NeedsExclusive, IsLlsc,
+    { SET6(IsWrite, NeedsWritable, IsLlsc,
            IsRequest, NeedsResponse, HasData),
             StoreCondResp, "StoreCondReq" },
     /* StoreCondFailReq: generates failing StoreCondResp */
-    { SET6(IsWrite, NeedsExclusive, IsLlsc,
+    { SET6(IsWrite, NeedsWritable, IsLlsc,
            IsRequest, NeedsResponse, HasData),
             StoreCondResp, "StoreCondFailReq" },
     /* StoreCondResp */
-    { SET4(IsWrite, NeedsExclusive, IsLlsc, IsResponse),
+    { SET4(IsWrite, NeedsWritable, IsLlsc, IsResponse),
             InvalidCmd, "StoreCondResp" },
     /* SwapReq -- for Swap ldstub type operations */
-    { SET6(IsRead, IsWrite, NeedsExclusive, IsRequest, HasData, NeedsResponse),
+    { SET6(IsRead, IsWrite, NeedsWritable, IsRequest, HasData, NeedsResponse),
         SwapResp, "SwapReq" },
     /* SwapResp -- for Swap ldstub type operations */
-    { SET5(IsRead, IsWrite, NeedsExclusive, IsResponse, HasData),
+    { SET5(IsRead, IsWrite, NeedsWritable, IsResponse, HasData),
             InvalidCmd, "SwapResp" },
     /* IntReq -- for interrupts */
     { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
@@ -185,12 +185,12 @@ MemCmd::commandInfo[] =
     /* PrintReq */
     { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" },
     /* Flush Request */
-    { SET3(IsRequest, IsFlush, NeedsExclusive), InvalidCmd, "FlushReq" },
+    { SET3(IsRequest, IsFlush, NeedsWritable), InvalidCmd, "FlushReq" },
     /* Invalidation Request */
-    { SET4(IsInvalidate, IsRequest, NeedsExclusive, NeedsResponse),
+    { SET4(IsInvalidate, IsRequest, NeedsWritable, NeedsResponse),
       InvalidateResp, "InvalidateReq" },
     /* Invalidation Response */
-    { SET3(IsInvalidate, IsResponse, NeedsExclusive),
+    { SET3(IsInvalidate, IsResponse, NeedsWritable),
       InvalidCmd, "InvalidateResp" }
 };
 

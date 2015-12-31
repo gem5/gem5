@@ -154,9 +154,9 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
     DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 
-    // sink inhibited packets without further action, also discard any
-    // packet that is not a read or a write
-    if (pkt->memInhibitAsserted() ||
+    // if a cache is responding, sink the packet without further
+    // action, also discard any packet that is not a read or a write
+    if (pkt->cacheResponding() ||
         !(pkt->isWrite() || pkt->isRead())) {
         assert(!pkt->needsResponse());
         pendingDelete.reset(pkt);

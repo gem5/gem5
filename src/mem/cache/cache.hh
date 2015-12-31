@@ -472,13 +472,14 @@ class Cache : public BaseCache
     PacketPtr getTimingPacket();
 
     /**
-     * Marks a request as in service (sent on the bus). This can have
-     * side effect since storage for no response commands is
-     * deallocated once they are successfully sent. Also remember if
-     * we are expecting a dirty response from another cache,
-     * effectively making this MSHR the ordering point.
+     * Marks a request as in service (sent downstream in the memory
+     * system). This can have side effect since storage for no
+     * response commands is deallocated once they are successfully
+     * sent. Also remember if we are expecting a Modified (dirty and
+     * writable) response from another cache, effectively making this
+     * MSHR the ordering point.
      */
-    void markInService(MSHR *mshr, bool pending_dirty_resp);
+    void markInService(MSHR *mshr, bool pending_modified_resp);
 
     /**
      * Return whether there are any outstanding misses.
