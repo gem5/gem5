@@ -502,7 +502,15 @@ class Packet : public Printable
     bool isUpgrade()  const          { return cmd.isUpgrade(); }
     bool isRequest() const           { return cmd.isRequest(); }
     bool isResponse() const          { return cmd.isResponse(); }
-    bool needsWritable() const       { return cmd.needsWritable(); }
+    bool needsWritable() const
+    {
+        // we should never check if a response needsWritable, the
+        // request has this flag, and for a response we should rather
+        // look at the hasSharers flag (if not set, the response is to
+        // be considered writable)
+        assert(isRequest());
+        return cmd.needsWritable();
+    }
     bool needsResponse() const       { return cmd.needsResponse(); }
     bool isInvalidate() const        { return cmd.isInvalidate(); }
     bool isEviction() const          { return cmd.isEviction(); }
