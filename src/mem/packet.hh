@@ -508,6 +508,11 @@ class Packet : public Printable
     bool isEviction() const          { return cmd.isEviction(); }
     bool isWriteback() const         { return cmd.isWriteback(); }
     bool hasData() const             { return cmd.hasData(); }
+    bool hasRespData() const
+    {
+        MemCmd resp_cmd = cmd.responseCommand();
+        return resp_cmd.hasData();
+    }
     bool isLLSC() const              { return cmd.isLLSC(); }
     bool isError() const             { return cmd.isError(); }
     bool isPrint() const             { return cmd.isPrint(); }
@@ -1058,9 +1063,13 @@ class Packet : public Printable
     void
     allocate()
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
-        flags.set(DYNAMIC_DATA);
-        data = new uint8_t[getSize()];
+        // if either this command or the response command has a data
+        // payload, actually allocate space
+        if (hasData() || hasRespData()) {
+            assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
+            flags.set(DYNAMIC_DATA);
+            data = new uint8_t[getSize()];
+        }
     }
 
     /** @} */

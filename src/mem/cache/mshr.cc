@@ -115,6 +115,9 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
 static void
 replaceUpgrade(PacketPtr pkt)
 {
+    // remember if the current packet has data allocated
+    bool has_data = pkt->hasData() || pkt->hasRespData();
+
     if (pkt->cmd == MemCmd::UpgradeReq) {
         pkt->cmd = MemCmd::ReadExReq;
         DPRINTF(Cache, "Replacing UpgradeReq with ReadExReq\n");
@@ -124,6 +127,19 @@ replaceUpgrade(PacketPtr pkt)
     } else if (pkt->cmd == MemCmd::StoreCondReq) {
         pkt->cmd = MemCmd::StoreCondFailReq;
         DPRINTF(Cache, "Replacing StoreCondReq with StoreCondFailReq\n");
+    }
+
+    if (!has_data) {
+        // there is no sensible way of setting the data field if the
+        // new command actually would carry data
+        assert(!pkt->hasData());
+
+        if (pkt->hasRespData()) {
+            // we went from a packet that had no data (neither request,
+            // nor response), to one that does, and therefore we need to
+            // actually allocate space for the data payload
+            pkt->allocate();
+        }
     }
 }
 

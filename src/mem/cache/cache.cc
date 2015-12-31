@@ -185,7 +185,11 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
         if (pkt->isLLSC()) {
             blk->trackLoadLocked(pkt);
         }
+
+        // all read responses have a data payload
+        assert(pkt->hasRespData());
         pkt->setDataFromBlock(blk->data, blkSize);
+
         // determine if this read is from a (coherent) cache, or not
         // by looking at the command type; we could potentially add a
         // packet attribute such as 'FromCache' to make this check a
@@ -796,10 +800,7 @@ Cache::recvTimingReq(PacketPtr pkt)
             }
 
             pkt->makeTimingResponse();
-            // for debugging, set all the bits in the response data
-            // (also keeps valgrind from complaining when debugging settings
-            //  print out instruction results)
-            std::memset(pkt->getPtr<uint8_t>(), 0xFF, pkt->getSize());
+
             // request_time is used here, taking into account lat and the delay
             // charged if the packet comes from the xbar.
             cpuSidePort->schedTimingResp(pkt, request_time, true);
@@ -2041,7 +2042,10 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             doTimingSupplyResponse(pkt, blk->data, is_deferred, pending_inval);
         } else {
             pkt->makeAtomicResponse();
-            pkt->setDataFromBlock(blk->data, blkSize);
+            // packets such as upgrades do not actually have any data
+            // payload
+            if (pkt->hasData())
+                pkt->setDataFromBlock(blk->data, blkSize);
         }
     }
 
