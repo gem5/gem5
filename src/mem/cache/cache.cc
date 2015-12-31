@@ -1904,6 +1904,13 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     bool invalidate = pkt->isInvalidate();
     bool M5_VAR_USED needs_writable = pkt->needsWritable();
 
+    // at the moment we could get an uncacheable write which does not
+    // have the invalidate flag, and we need a suitable way of dealing
+    // with this case
+    panic_if(invalidate && pkt->req->isUncacheable(),
+             "%s got an invalidating uncacheable snoop request %s to %#llx",
+             name(), pkt->cmdString(), pkt->getAddr());
+
     uint32_t snoop_delay = 0;
 
     if (forwardSnoops) {
@@ -1988,15 +1995,18 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         return snoop_delay;
     }
 
-    if (!pkt->req->isUncacheable() && pkt->isRead() && !invalidate) {
-        // reading without requiring the line in a writable state,
-        // note that we retain the block as Owned if it is Modified
-        // (dirty data), with the response taken care of below, and
-        // otherwhise simply downgrade from Exclusive to Shared (or
-        // remain in Shared)
+    if (pkt->isRead() && !invalidate) {
+        // reading without requiring the line in a writable state
         assert(!needs_writable);
         pkt->setHasSharers();
-        blk->status &= ~BlkWritable;
+
+        // if the requesting packet is uncacheable, retain the line in
+        // the current state, otherwhise unset the writable flag,
+        // which means we go from Modified to Owned (and will respond
+        // below), remain in Owned (and will respond below), from
+        // Exclusive to Shared, or remain in Shared
+        if (!pkt->req->isUncacheable())
+            blk->status &= ~BlkWritable;
     }
 
     if (respond) {
@@ -2019,6 +2029,13 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             // through express snoops, and if needsWritable is not set
             // we already called setHasSharers above
         }
+
+        // if we are returning a writable and dirty (Modified) line,
+        // we should be invalidating the line
+        panic_if(!invalidate && !pkt->hasSharers(),
+                 "%s is passing a Modified line through %s to %#llx, "
+                 "but keeping the block",
+                 name(), pkt->cmdString(), pkt->getAddr());
 
         if (is_timing) {
             doTimingSupplyResponse(pkt, blk->data, is_deferred, pending_inval);
