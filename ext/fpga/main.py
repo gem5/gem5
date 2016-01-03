@@ -12,6 +12,7 @@ from random import randrange
 
 ACTIVE_LOW, INACTIVE_HIGH = 0, 1
 
+
 def inc(count, enable, clock, reset, n):
     @always_seq(clock.posedge, reset=reset)
     def inc_logic():
@@ -27,9 +28,9 @@ def test_inc():
 
     inc_1 = inc(count, enable, clock, reset, n=4)
 
-    HALF_PERIOD = delay(10)
+    half_period = delay(10)
 
-    @always(HALF_PERIOD)
+    @always(half_period)
     def clock_gen():
         clock.next = not clock
 
