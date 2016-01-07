@@ -38,93 +38,69 @@
  */
 
 /* @file
- * Header packet class for multi gem5 runs.
+ * Header packet class for dist-gem5 runs.
  *
- * For a high level description about multi gem5 see comments in
- * header file multi_iface.hh.
+ * For a high level description about dist-gem5 see comments in
+ * header file dist_iface.hh.
  *
- * The MultiHeaderPkt class defines the format of message headers
- * sent among gem5 processes during a multi gem5 simulation. A header packet
+ * The DistHeaderPkt class defines the format of message headers
+ * sent among gem5 processes during a dist gem5 simulation. A header packet
  * can either carry the description of data packet (i.e. a simulated Ethernet
  * packet) or a synchronisation related control command. In case of
  * data packet description, the corresponding data packet always follows
  * the header packet back-to-back.
  */
-#ifndef __DEV_NET_MULTI_PACKET_HH__
-#define __DEV_NET_MULTI_PACKET_HH__
+#ifndef __DEV_DIST_PACKET_HH__
+#define __DEV_DIST_PACKET_HH__
 
 #include <cstring>
 
 #include "base/types.hh"
 
-class MultiHeaderPkt
+class DistHeaderPkt
 {
   private:
-    MultiHeaderPkt() {}
-    ~MultiHeaderPkt() {}
+    DistHeaderPkt() {}
+    ~DistHeaderPkt() {}
 
   public:
+    enum class ReqType { immediate, collective, pending, none };
     /**
-     * Simply type to help with calculating space requirements for
-     * the corresponding header field.
-     */
-    typedef uint8_t AddressType[6];
-
-    /**
-     *  The msg type defines what informarion a multi header packet carries.
+     *  The msg type defines what information a dist header packet carries.
      */
     enum class MsgType
     {
         dataDescriptor,
-        cmdPeriodicSyncReq,
-        cmdPeriodicSyncAck,
-        cmdCkptSyncReq,
-        cmdCkptSyncAck,
-        cmdAtomicSyncReq,
-        cmdAtomicSyncAck,
+        cmdSyncReq,
+        cmdSyncAck,
         unknown
     };
 
     struct Header
     {
         /**
-         * The msg type field is valid for all header packets. In case of
-         * a synchronisation control command this is the only valid field.
+         * The msg type field is valid for all header packets.
+         *
+         * @note senderRank is used with data packets while collFlags are used
+         * by sync ack messages to trigger collective ckpt or exit events.
          */
         MsgType msgType;
         Tick sendTick;
-        Tick sendDelay;
-        /**
-         * Actual length of the simulated Ethernet packet.
-         */
-        unsigned dataPacketLength;
-        /**
-         * Source MAC address.
-         */
-        AddressType srcAddress;
-        /**
-         * Destination MAC address.
-         */
-        AddressType dstAddress;
+        union {
+            Tick sendDelay;
+            Tick syncRepeat;
+        };
+        union {
+            /**
+             * Actual length of the simulated Ethernet packet.
+             */
+            unsigned dataPacketLength;
+            struct {
+                ReqType needCkpt;
+                ReqType needExit;
+            };
+        };
     };
-
-    static unsigned maxAddressLength();
-
-    /**
-     * Static functions for manipulating and comparing MAC addresses.
-     */
-    static void clearAddress(AddressType &addr);
-    static bool isAddressEqual(const AddressType &addr1,
-                               const AddressType &addr2);
-    static bool isAddressLess(const AddressType &addr1,
-                              const AddressType &addr2);
-
-    static void copyAddress(AddressType &dest,
-                            const AddressType &src);
-
-    static bool isUnicastAddress(const AddressType &addr);
-    static bool isMulticastAddress(const AddressType &addr);
-    static bool isBroadcastAddress(const AddressType &addr);
 };
 
-#endif // __DEV_NET_MULTI_PACKET_HH__
+#endif

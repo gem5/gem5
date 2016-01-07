@@ -71,18 +71,6 @@ class EthPacketData
     ~EthPacketData() { if (data) delete [] data; }
 
   public:
-    /**
-     * This function pulls out the MAC source and destination addresses from
-     * the packet data and stores them in the caller specified buffers.
-     *
-     * @param src_addr The buffer to store the source MAC address.
-     * @param dst_addr The buffer to store the destination MAC address.
-     * @param length This is an inout parameter. The caller stores in this
-     * the size of the address buffers. On return, this will contain the
-     * actual address size stored in the buffers. (We assume that source
-     * address size is equal to that of the destination address.)
-     */
-    void packAddress(uint8_t *src_addr, uint8_t *dst_addr, unsigned &length);
 
     void serialize(const std::string &base, CheckpointOut &cp) const;
     void unserialize(const std::string &base, CheckpointIn &cp);

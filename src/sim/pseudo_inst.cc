@@ -63,8 +63,10 @@
 #include "debug/PseudoInst.hh"
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
+#include "dev/net/dist_iface.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
+#include "sim/initparam_keys.hh"
 #include "sim/process.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
@@ -357,8 +359,10 @@ void
 m5exit(ThreadContext *tc, Tick delay)
 {
     DPRINTF(PseudoInst, "PseudoInst::m5exit(%i)\n", delay);
-    Tick when = curTick() + delay * SimClock::Int::ns;
-    exitSimLoop("m5_exit instruction encountered", 0, when, 0, true);
+    if (DistIface::readyToExit(delay)) {
+        Tick when = curTick() + delay * SimClock::Int::ns;
+        exitSimLoop("m5_exit instruction encountered", 0, when, 0, true);
+    }
 }
 
 void
@@ -471,10 +475,14 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
     // Compare the key parameter with the known values to select the return
     // value
     uint64_t val;
-    if (strlen(key_str) == 0) {
+    if (strcmp(key_str, InitParamKey::DEFAULT) == 0) {
         val = tc->getCpuPtr()->system->init_param;
+    } else if (strcmp(key_str, InitParamKey::DIST_RANK) == 0) {
+        val = DistIface::rankParam();
+    } else if (strcmp(key_str, InitParamKey::DIST_SIZE) == 0) {
+        val = DistIface::sizeParam();
     } else {
-        panic("Unknown key for initparam pseudo instruction");
+        panic("Unknown key for initparam pseudo instruction:\"%s\"", key_str);
     }
     return val;
 }
@@ -529,10 +537,11 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     if (!tc->getCpuPtr()->params()->do_checkpoint_insts)
         return;
 
-    Tick when = curTick() + delay * SimClock::Int::ns;
-    Tick repeat = period * SimClock::Int::ns;
-
-    exitSimLoop("checkpoint", 0, when, repeat);
+    if (DistIface::readyToCkpt(delay, period)) {
+        Tick when = curTick() + delay * SimClock::Int::ns;
+        Tick repeat = period * SimClock::Int::ns;
+        exitSimLoop("checkpoint", 0, when, repeat);
+    }
 }
 
 uint64_t

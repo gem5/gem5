@@ -70,14 +70,14 @@ DebugFlag('EthernetIntr')
 DebugFlag('EthernetPIO')
 DebugFlag('EthernetSM')
 
-# Multi gem5
-Source('multi_packet.cc')
-Source('multi_iface.cc')
-Source('multi_etherlink.cc')
+# Dist gem5
+Source('dist_iface.cc')
+Source('dist_etherlink.cc')
 Source('tcp_iface.cc')
 
-DebugFlag('MultiEthernet')
-DebugFlag('MultiEthernetPkt')
+DebugFlag('DistEthernet')
+DebugFlag('DistEthernetPkt')
+DebugFlag('DistEthernetCmd')
 
 # Ethernet controllers
 Source('i8254xGBe.cc')

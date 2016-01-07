@@ -219,7 +219,7 @@ class GlobalSyncEvent : public BaseGlobalEventTemplate<GlobalSyncEvent>
     };
 
     GlobalSyncEvent(Priority p, Flags f)
-        : Base(p, f)
+        : Base(p, f), repeat(0)
     { }
 
     GlobalSyncEvent(Tick when, Tick _repeat, Priority p, Flags f)

@@ -53,19 +53,3 @@ EthPacketData::unserialize(const string &base, CheckpointIn &cp)
         arrayParamIn(cp, base + ".data", data, length);
 }
 
-void
-EthPacketData::packAddress(uint8_t *src_addr,
-                           uint8_t *dst_addr,
-                           unsigned &nbytes)
-{
-    Net::EthHdr *hdr = (Net::EthHdr *)data;
-    assert(hdr->src().size() == hdr->dst().size());
-    if (nbytes < hdr->src().size())
-        panic("EthPacketData::packAddress() Buffer overflow");
-
-    memcpy(dst_addr, hdr->dst().bytes(), hdr->dst().size());
-    memcpy(src_addr, hdr->src().bytes(), hdr->src().size());
-
-    nbytes = hdr->src().size();
-}
-

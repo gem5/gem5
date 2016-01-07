@@ -38,10 +38,10 @@
  */
 
 /* @file
- * Device module for a full duplex ethernet link for multi gem5 simulations.
+ * Device module for a full duplex ethernet link for dist gem5 simulations.
  */
 
-#include "dev/net/multi_etherlink.hh"
+#include "dev/net/dist_etherlink.hh"
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -54,15 +54,15 @@
 
 #include "base/random.hh"
 #include "base/trace.hh"
+#include "debug/DistEthernet.hh"
+#include "debug/DistEthernetPkt.hh"
 #include "debug/EthernetData.hh"
-#include "debug/MultiEthernet.hh"
-#include "debug/MultiEthernetPkt.hh"
+#include "dev/net/dist_iface.hh"
 #include "dev/net/etherdump.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherlink.hh"
 #include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
-#include "dev/net/multi_iface.hh"
 #include "dev/net/tcp_iface.hh"
 #include "params/EtherLink.hh"
 #include "sim/core.hh"
@@ -71,33 +71,45 @@
 
 using namespace std;
 
-MultiEtherLink::MultiEtherLink(const Params *p)
-    : EtherObject(p)
+DistEtherLink::DistEtherLink(const Params *p)
+    : EtherObject(p), linkDelay(p->delay)
 {
-    DPRINTF(MultiEthernet,"MultiEtherLink::MultiEtherLink() "
-            "link delay:%llu\n", p->delay);
+    DPRINTF(DistEthernet,"DistEtherLink::DistEtherLink() "
+            "link delay:%llu ticksPerByte:%f\n", p->delay, p->speed);
 
     txLink = new TxLink(name() + ".link0", this, p->speed, p->delay_var,
                         p->dump);
     rxLink = new RxLink(name() + ".link1", this, p->delay, p->dump);
 
-    // create the multi (TCP) interface to talk to the peer gem5 processes.
-    multiIface = new TCPIface(p->server_name, p->server_port, p->multi_rank,
-                              p->sync_start, p->sync_repeat, this);
+    Tick sync_repeat;
+    if (p->sync_repeat != 0) {
+        if (p->sync_repeat != p->delay)
+            warn("DistEtherLink(): sync_repeat is %lu and linkdelay is %lu",
+                 p->sync_repeat, p->delay);
+        sync_repeat = p->sync_repeat;
+    } else {
+        sync_repeat = p->delay;
+    }
 
-    localIface = new LocalIface(name() + ".int0", txLink, rxLink, multiIface);
+    // create the dist (TCP) interface to talk to the peer gem5 processes.
+    distIface = new TCPIface(p->server_name, p->server_port,
+                             p->dist_rank, p->dist_size,
+                             p->sync_start, sync_repeat, this, p->is_switch,
+                             p->num_nodes);
+
+    localIface = new LocalIface(name() + ".int0", txLink, rxLink, distIface);
 }
 
-MultiEtherLink::~MultiEtherLink()
+DistEtherLink::~DistEtherLink()
 {
     delete txLink;
     delete rxLink;
     delete localIface;
-    delete multiIface;
+    delete distIface;
 }
 
 EtherInt*
-MultiEtherLink::getEthPort(const std::string &if_name, int idx)
+DistEtherLink::getEthPort(const std::string &if_name, int idx)
 {
     if (if_name != "int0") {
         return nullptr;
@@ -107,66 +119,55 @@ MultiEtherLink::getEthPort(const std::string &if_name, int idx)
     return localIface;
 }
 
-void MultiEtherLink::memWriteback()
+void
+DistEtherLink::serialize(CheckpointOut &cp) const
 {
-    DPRINTF(MultiEthernet,"MultiEtherLink::memWriteback() called\n");
-    multiIface->drainDone();
+    distIface->serializeSection(cp, "distIface");
+    txLink->serializeSection(cp, "txLink");
+    rxLink->serializeSection(cp, "rxLink");
 }
 
 void
-MultiEtherLink::serialize(CheckpointOut &cp) const
+DistEtherLink::unserialize(CheckpointIn &cp)
 {
-    multiIface->serialize("multiIface", cp);
-    txLink->serialize("txLink", cp);
-    rxLink->serialize("rxLink", cp);
+    distIface->unserializeSection(cp, "distIface");
+    txLink->unserializeSection(cp, "txLink");
+    rxLink->unserializeSection(cp, "rxLink");
 }
 
 void
-MultiEtherLink::unserialize(CheckpointIn &cp)
+DistEtherLink::init()
 {
-    multiIface->unserialize("multiIface", cp);
-    txLink->unserialize("txLink", cp);
-    rxLink->unserialize("rxLink", cp);
+    DPRINTF(DistEthernet,"DistEtherLink::init() called\n");
+    distIface->init(rxLink->doneEvent(), linkDelay);
 }
 
 void
-MultiEtherLink::init()
+DistEtherLink::startup()
 {
-    DPRINTF(MultiEthernet,"MultiEtherLink::init() called\n");
-    multiIface->initRandom();
+    DPRINTF(DistEthernet,"DistEtherLink::startup() called\n");
+    distIface->startup();
 }
 
 void
-MultiEtherLink::startup()
+DistEtherLink::RxLink::setDistInt(DistIface *m)
 {
-    DPRINTF(MultiEthernet,"MultiEtherLink::startup() called\n");
-    multiIface->startPeriodicSync();
+    assert(!distIface);
+    distIface = m;
 }
 
 void
-MultiEtherLink::RxLink::setMultiInt(MultiIface *m)
-{
-    assert(!multiIface);
-    multiIface = m;
-    // Spawn a new receiver thread that will process messages
-    // coming in from peer gem5 processes.
-    // The receive thread will also schedule a (receive) doneEvent
-    // for each incoming data packet.
-    multiIface->spawnRecvThread(&doneEvent, linkDelay);
-}
-
-void
-MultiEtherLink::RxLink::rxDone()
+DistEtherLink::RxLink::rxDone()
 {
     assert(!busy());
 
     // retrieve the packet that triggered the receive done event
-    packet = multiIface->packetIn();
+    packet = distIface->packetIn();
 
     if (dump)
         dump->dump(packet);
 
-    DPRINTF(MultiEthernetPkt, "MultiEtherLink::MultiLink::rxDone() "
+    DPRINTF(DistEthernetPkt, "DistEtherLink::DistLink::rxDone() "
             "packet received: len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
 
@@ -176,7 +177,7 @@ MultiEtherLink::RxLink::rxDone()
 }
 
 void
-MultiEtherLink::TxLink::txDone()
+DistEtherLink::TxLink::txDone()
 {
     if (dump)
         dump->dump(packet);
@@ -188,10 +189,10 @@ MultiEtherLink::TxLink::txDone()
 }
 
 bool
-MultiEtherLink::TxLink::transmit(EthPacketPtr pkt)
+DistEtherLink::TxLink::transmit(EthPacketPtr pkt)
 {
     if (busy()) {
-        DPRINTF(MultiEthernet, "packet not sent, link busy\n");
+        DPRINTF(DistEthernet, "packet not sent, link busy\n");
         return false;
     }
 
@@ -201,8 +202,8 @@ MultiEtherLink::TxLink::transmit(EthPacketPtr pkt)
         delay += random_mt.random<Tick>(0, delayVar);
 
     // send the packet to the peers
-    assert(multiIface);
-    multiIface->packetOut(pkt, delay);
+    assert(distIface);
+    distIface->packetOut(pkt, delay);
 
     // schedule the send done event
     parent->schedule(doneEvent, curTick() + delay);
@@ -211,56 +212,56 @@ MultiEtherLink::TxLink::transmit(EthPacketPtr pkt)
 }
 
 void
-MultiEtherLink::Link::serialize(const string &base, CheckpointOut &cp) const
+DistEtherLink::Link::serialize(CheckpointOut &cp) const
 {
     bool packet_exists = (packet != nullptr);
-    paramOut(cp, base + ".packet_exists", packet_exists);
+    SERIALIZE_SCALAR(packet_exists);
     if (packet_exists)
-        packet->serialize(base + ".packet", cp);
+        packet->serialize("packet", cp);
 
     bool event_scheduled = event->scheduled();
-    paramOut(cp, base + ".event_scheduled", event_scheduled);
+    SERIALIZE_SCALAR(event_scheduled);
     if (event_scheduled) {
         Tick event_time = event->when();
-        paramOut(cp, base + ".event_time", event_time);
+        SERIALIZE_SCALAR(event_time);
     }
 }
 
 void
-MultiEtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
+DistEtherLink::Link::unserialize(CheckpointIn &cp)
 {
     bool packet_exists;
-    paramIn(cp, base + ".packet_exists", packet_exists);
+    UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
         packet = make_shared<EthPacketData>(16384);
-        packet->unserialize(base + ".packet", cp);
+        packet->unserialize("packet", cp);
     }
 
     bool event_scheduled;
-    paramIn(cp, base + ".event_scheduled", event_scheduled);
+    UNSERIALIZE_SCALAR(event_scheduled);
     if (event_scheduled) {
         Tick event_time;
-        paramIn(cp, base + ".event_time", event_time);
+        UNSERIALIZE_SCALAR(event_time);
         parent->schedule(*event, event_time);
     }
 }
 
-MultiEtherLink::LocalIface::LocalIface(const std::string &name,
+DistEtherLink::LocalIface::LocalIface(const std::string &name,
                                        TxLink *tx,
                                        RxLink *rx,
-                                       MultiIface *m) :
+                                       DistIface *m) :
     EtherInt(name), txLink(tx)
 {
     tx->setLocalInt(this);
     rx->setLocalInt(this);
-    tx->setMultiInt(m);
-    rx->setMultiInt(m);
+    tx->setDistInt(m);
+    rx->setDistInt(m);
 }
 
-MultiEtherLink *
-MultiEtherLinkParams::create()
+DistEtherLink *
+DistEtherLinkParams::create()
 {
-    return new MultiEtherLink(this);
+    return new DistEtherLink(this);
 }
 
 

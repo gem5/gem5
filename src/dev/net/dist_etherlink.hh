@@ -38,30 +38,30 @@
  */
 
 /* @file
- * Device module for a full duplex ethernet link for multi gem5 simulations.
+ * Device module for a full duplex ethernet link for dist gem5 simulations.
  *
- * See comments in dev/multi_iface.hh for a generic description of multi
+ * See comments in dev/net/dist_iface.hh for a generic description of dist
  * gem5 simulations.
  *
  * This class is meant to be a drop in replacement for the EtherLink class for
- * multi gem5 runs.
+ * dist gem5 runs.
  *
  */
-#ifndef __DEV_NET_MULTIETHERLINK_HH__
-#define __DEV_NET_MULTIETHERLINK_HH__
+#ifndef __DEV_DIST_ETHERLINK_HH__
+#define __DEV_DIST_ETHERLINK_HH__
 
 #include <iostream>
 
 #include "dev/net/etherlink.hh"
-#include "params/MultiEtherLink.hh"
+#include "params/DistEtherLink.hh"
 
-class MultiIface;
+class DistIface;
 class EthPacketData;
 
 /**
  * Model for a fixed bandwidth full duplex ethernet link.
  */
-class MultiEtherLink : public EtherObject
+class DistEtherLink : public EtherObject
 {
   protected:
     class LocalIface;
@@ -72,22 +72,22 @@ class MultiEtherLink : public EtherObject
      * The link will encapsulate and transfer Ethernet packets to/from
      * the message server.
      */
-    class Link
+    class Link : public Serializable
     {
       protected:
         std::string objName;
-        MultiEtherLink *parent;
+        DistEtherLink *parent;
         LocalIface *localIface;
         EtherDump *dump;
-        MultiIface *multiIface;
+        DistIface *distIface;
         Event *event;
         EthPacketPtr packet;
 
       public:
-        Link(const std::string &name, MultiEtherLink *p,
+        Link(const std::string &name, DistEtherLink *p,
              EtherDump *d, Event *e) :
             objName(name), parent(p), localIface(nullptr), dump(d),
-            multiIface(nullptr), event(e) {}
+            distIface(nullptr), event(e) {}
 
         ~Link() {}
 
@@ -95,8 +95,8 @@ class MultiEtherLink : public EtherObject
         bool busy() const { return (bool)packet; }
         void setLocalInt(LocalIface *i) { assert(!localIface); localIface=i; }
 
-        void serialize(const std::string &base, CheckpointOut &cp) const;
-        void unserialize(const std::string &base, CheckpointIn &cp);
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
     };
 
     /**
@@ -123,17 +123,17 @@ class MultiEtherLink : public EtherObject
         DoneEvent doneEvent;
 
       public:
-        TxLink(const std::string &name, MultiEtherLink *p,
+        TxLink(const std::string &name, DistEtherLink *p,
                double invBW, Tick delay_var, EtherDump *d) :
             Link(name, p, d, &doneEvent), ticksPerByte(invBW),
             delayVar(delay_var), doneEvent(this) {}
         ~TxLink() {}
 
         /**
-         * Register the multi interface to be used to talk to the
+         * Register the dist interface to be used to talk to the
          * peer gem5 processes.
          */
-        void setMultiInt(MultiIface *m) { assert(!multiIface); multiIface=m; }
+        void setDistInt(DistIface *m) { assert(!distIface); distIface=m; }
 
         /**
          * Initiate sending of a packet via this link.
@@ -158,23 +158,27 @@ class MultiEtherLink : public EtherObject
         /**
          * Receive done callback method. Called from doneEvent.
          */
-        void rxDone() ;
+        void rxDone();
         typedef EventWrapper<RxLink, &RxLink::rxDone> DoneEvent;
         friend void DoneEvent::process();
-        DoneEvent doneEvent;
+        DoneEvent _doneEvent;
 
       public:
 
-        RxLink(const std::string &name, MultiEtherLink *p,
+        RxLink(const std::string &name, DistEtherLink *p,
                Tick delay, EtherDump *d) :
-            Link(name, p, d, &doneEvent),
-            linkDelay(delay), doneEvent(this) {}
+            Link(name, p, d, &_doneEvent),
+            linkDelay(delay), _doneEvent(this) {}
         ~RxLink() {}
 
         /**
-         * Register our multi interface to talk to the peer gem5 processes.
+         * Register our dist interface to talk to the peer gem5 processes.
          */
-        void setMultiInt(MultiIface *m);
+        void setDistInt(DistIface *m);
+        /**
+         * Done events will be scheduled by DistIface (so we need the accessor)
+         */
+        const DoneEvent *doneEvent() const { return &_doneEvent; }
     };
 
     /**
@@ -187,7 +191,7 @@ class MultiEtherLink : public EtherObject
 
       public:
         LocalIface(const std::string &name, TxLink *tx, RxLink *rx,
-                   MultiIface *m);
+                   DistIface *m);
 
         bool recvPacket(EthPacketPtr pkt) { return txLink->transmit(pkt); }
         void sendDone() { peer->sendDone(); }
@@ -199,7 +203,7 @@ class MultiEtherLink : public EtherObject
     /**
      * Interface to talk to the peer gem5 processes.
      */
-    MultiIface *multiIface;
+    DistIface *distIface;
     /**
      * Send link
      */
@@ -210,10 +214,12 @@ class MultiEtherLink : public EtherObject
     RxLink *rxLink;
     LocalIface *localIface;
 
+    Tick linkDelay;
+
   public:
-    typedef MultiEtherLinkParams Params;
-    MultiEtherLink(const Params *p);
-    ~MultiEtherLink();
+    typedef DistEtherLinkParams Params;
+    DistEtherLink(const Params *p);
+    ~DistEtherLink();
 
     const Params *
     params() const
@@ -224,12 +230,11 @@ class MultiEtherLink : public EtherObject
     virtual EtherInt *getEthPort(const std::string &if_name,
                                  int idx) override;
 
-    void memWriteback() override;
-    void init() override;
-    void startup() override;
+    virtual void init() override;
+    virtual void startup() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
 
-#endif // __DEV_NET_MULTIETHERLINK_HH__
+#endif // __DEV_DIST_ETHERLINK_HH__

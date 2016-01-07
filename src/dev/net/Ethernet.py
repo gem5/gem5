@@ -58,19 +58,22 @@ class EtherLink(EtherObject):
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
 
-class MultiEtherLink(EtherObject):
-    type = 'MultiEtherLink'
-    cxx_header = "dev/net/multi_etherlink.hh"
+class DistEtherLink(EtherObject):
+    type = 'DistEtherLink'
+    cxx_header = "dev/net/dist_etherlink.hh"
     int0 = SlavePort("interface 0")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
-    multi_rank  =  Param.UInt32('0', "Rank of the this gem5 process (multi run)")
-    sync_start  = Param.Latency('5200000000000t', "first multi sync barrier")
-    sync_repeat = Param.Latency('10us', "multi sync barrier repeat")
+    dist_rank = Param.UInt32('0', "Rank of this gem5 process (dist run)")
+    dist_size = Param.UInt32('1', "Number of gem5 processes (dist run)")
+    sync_start = Param.Latency('5200000000000t', "first dist sync barrier")
+    sync_repeat = Param.Latency('10us', "dist sync barrier repeat")
     server_name = Param.String('localhost', "Message server name")
     server_port = Param.UInt32('2200', "Message server port")
+    is_switch = Param.Bool(False, "true if this a link in etherswitch")
+    num_nodes = Param.UInt32('2', "Number of simulate nodes")
 
 class EtherBus(EtherObject):
     type = 'EtherBus'

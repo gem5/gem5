@@ -35,17 +35,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabor Dozsa
+ *          Mohammad Alian
  */
 
 /* @file
- * TCP stream socket based interface class for multi gem5 runs.
+ * TCP stream socket based interface class for dist-gem5 runs.
  *
- * For a high level description about multi gem5 see comments in
- * header file multi_iface.hh.
+ * For a high level description about dist-gem5 see comments in
+ * header file dist_iface.hh.
  *
- * The TCP subclass of MultiIface uses a separate server process
- * (see tcp_server.[hh,cc] under directory gem5/util/multi). Each gem5
- * process connects to the server via a stream socket. The server process
+ * Each gem5 process connects to the server (another gem5 process which
+ * simulates a switch box) via a stream socket. The server process
  * transfers messages and co-ordinates the synchronisation among the gem5
  * peers.
  */
@@ -55,11 +55,11 @@
 
 #include <string>
 
-#include "dev/net/multi_iface.hh"
+#include "dev/net/dist_iface.hh"
 
 class EventManager;
 
-class TCPIface : public MultiIface
+class TCPIface : public DistIface
 {
   private:
     /**
@@ -67,8 +67,28 @@ class TCPIface : public MultiIface
      */
     int sock;
 
+    std::string serverName;
+    int serverPort;
+
+    bool isSwitch;
+
+    bool listening;
+    static bool anyListening;
+    static int fdStatic;
+
     /**
-     * Registry for all sockets to the server opened by this gem5 process.
+     * Compute node info and storage for the very first connection from each
+     * node (used by the switch)
+     */
+    struct NodeInfo
+    {
+        unsigned rank;
+        unsigned distIfaceId;
+        unsigned distIfaceNum;
+    };
+    static std::vector<std::pair<NodeInfo, int> > nodes;
+    /**
+     * Storage for all opened sockets
      */
     static std::vector<int> sockRegistry;
 
@@ -82,7 +102,7 @@ class TCPIface : public MultiIface
      * @param length Size of the message in bytes.
      */
     void
-    sendTCP(int sock, void *buf, unsigned length);
+    sendTCP(int sock, const void *buf, unsigned length);
 
     /**
      * Receive the next incoming message through a TCP stream socket.
@@ -92,24 +112,26 @@ class TCPIface : public MultiIface
      * @param length Exact size of the expected message in bytes.
      */
     bool recvTCP(int sock, void *buf, unsigned length);
-
+    bool listen(int port);
+    void accept();
+    void connect();
+    int getfdStatic() const { return fdStatic; }
+    bool islistening() const { return listening; }
+    bool anyislistening() const { return anyListening; }
+    void establishConnection();
 
   protected:
 
-    virtual void
-    sendRaw(void *buf, unsigned length,
-            const MultiHeaderPkt::AddressType dest_addr=nullptr) override
-    {
-        sendTCP(sock, buf, length);
-    }
+    void sendPacket(const Header &header,
+                    const EthPacketPtr &packet) override;
 
-    virtual bool recvRaw(void *buf, unsigned length) override
-    {
-        return recvTCP(sock, buf, length);
-    }
+    void sendCmd(const Header &header) override;
 
-    virtual void syncRaw(MultiHeaderPkt::MsgType sync_req,
-                         Tick sync_tick) override;
+    bool recvHeader(Header &header) override;
+
+    void recvPacket(const Header &header, EthPacketPtr &packet) override;
+
+    void initTransport() override;
 
   public:
     /**
@@ -118,14 +140,15 @@ class TCPIface : public MultiIface
      * server process.
      * @param server_port The port number the server listening for new
      * connections.
-     * @param sync_start The tick for the first multi synchronisation.
-     * @param sync_repeat The frequency of multi synchronisation.
+     * @param sync_start The tick for the first dist synchronisation.
+     * @param sync_repeat The frequency of dist synchronisation.
      * @param em The EventManager object associated with the simulated
      * Ethernet link.
      */
     TCPIface(std::string server_name, unsigned server_port,
-             unsigned multi_rank, Tick sync_start, Tick sync_repeat,
-             EventManager *em);
+             unsigned dist_rank, unsigned dist_size,
+             Tick sync_start, Tick sync_repeat, EventManager *em,
+             bool is_switch, int num_nodes);
 
     ~TCPIface() override;
 };

@@ -38,63 +38,33 @@
  */
 
 /* @file
- * MultiHeaderPkt class to encapsulate multi-gem5 header packets
- *
+ * Magic key definitions for the InitParam pseudo inst
  */
+#ifndef ___SIM_INITPARAM_KEYS_HH__
+#define ___SIM_INITPARAM_KEYS_HH__
 
-#include "dev/net/multi_packet.hh"
-
-#include <cstdint>
-#include <cstring>
-
-#include "base/inet.hh"
-
-unsigned
-MultiHeaderPkt::maxAddressLength()
+namespace PseudoInst {
+/**
+ * Unique keys to retrieve various params by the initParam pseudo inst.
+ *
+ * @note Each key must be shorter than 16 characters (because we use
+ * two 64-bit registers two pass in the key to the initparam function)
+ */
+struct InitParamKey
 {
-    return sizeof(AddressType);
-}
+    /**
+     *  The default key (empty string)
+     */
+    static constexpr const char *DEFAULT = "";
+    /**
+     *  Unique key for "rank" param (distributed gem5 runs)
+     */
+    static constexpr const char *DIST_RANK = "dist-rank";
+    /**
+     *  Unique key for "size" param (distributed gem5 runs)
+     */
+    static constexpr const char *DIST_SIZE = "dist-size";
+};
+} // namespace PseudoInst
 
-void
-MultiHeaderPkt::clearAddress(AddressType &addr)
-{
-    std::memset(addr, 0, sizeof(addr));
-}
-
-bool
-MultiHeaderPkt::isAddressEqual(const AddressType &addr1,
-                               const AddressType &addr2)
-{
-    return (std::memcmp(addr1, addr2, sizeof(addr1)) == 0);
-}
-
-bool
-MultiHeaderPkt::isAddressLess(const AddressType &addr1,
-                              const AddressType &addr2)
-{
-    return (std::memcmp(addr1, addr2, sizeof(addr1)) < 0);
-}
-
-void
-MultiHeaderPkt::copyAddress(AddressType &dest, const AddressType &src)
-{
-    std::memcpy(dest, src, sizeof(dest));
-}
-
-bool
-MultiHeaderPkt::isBroadcastAddress(const AddressType &addr)
-{
-    return ((Net::EthAddr *)&addr)->broadcast();
-}
-
-bool
-MultiHeaderPkt::isMulticastAddress(const AddressType &addr)
-{
-    return ((Net::EthAddr *)&addr)->multicast();
-}
-
-bool
-MultiHeaderPkt::isUnicastAddress(const AddressType &addr)
-{
-    return ((Net::EthAddr *)&addr)->unicast();
-}
+#endif
