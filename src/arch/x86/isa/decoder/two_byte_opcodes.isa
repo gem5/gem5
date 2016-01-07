@@ -173,7 +173,7 @@
                         PseudoInst::m5fail(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
                     0x30: m5initparam({{
-                        Rax = PseudoInst::initParam(xc->tcBase());
+                        Rax = PseudoInst::initParam(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
                     0x31: m5loadsymbol({{
                         PseudoInst::loadsymbol(xc->tcBase());

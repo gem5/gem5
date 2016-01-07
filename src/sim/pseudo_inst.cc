@@ -141,7 +141,7 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         break;
 
       case 0x30: // initparam_func
-        return initParam(tc);
+        return initParam(tc, args[0], args[1]);
 
       case 0x31: // loadsymbol_func
         loadsymbol(tc);
@@ -440,15 +440,43 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 }
 
 uint64_t
-initParam(ThreadContext *tc)
+initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 {
-    DPRINTF(PseudoInst, "PseudoInst::initParam()\n");
+    DPRINTF(PseudoInst, "PseudoInst::initParam() key:%s%s\n", (char *)&key_str1,
+            (char *)&key_str2);
     if (!FullSystem) {
         panicFsOnlyPseudoInst("initParam");
         return 0;
     }
 
-    return tc->getCpuPtr()->system->init_param;
+    // The key parameter string is passed in via two 64-bit registers. We copy
+    // out the characters from the 64-bit integer variables here and concatenate
+    // them in the key_str character buffer
+    const int len = 2 * sizeof(uint64_t) + 1;
+    char key_str[len];
+    memset(key_str, '\0', len);
+    if (key_str1 == 0) {
+        assert(key_str2 == 0);
+    } else {
+        strncpy(key_str, (char *)&key_str1, sizeof(uint64_t));
+    }
+
+    if (strlen(key_str) == sizeof(uint64_t)) {
+        strncpy(key_str + sizeof(uint64_t), (char *)&key_str2,
+                sizeof(uint64_t));
+    } else {
+        assert(key_str2 == 0);
+    }
+
+    // Compare the key parameter with the known values to select the return
+    // value
+    uint64_t val;
+    if (strlen(key_str) == 0) {
+        val = tc->getCpuPtr()->system->init_param;
+    } else {
+        panic("Unknown key for initparam pseudo instruction");
+    }
+    return val;
 }
 
 

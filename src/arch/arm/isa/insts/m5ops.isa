@@ -276,13 +276,14 @@ let {{
     exec_output += PredOpExecute.subst(loadsymbolIop)
 
     initparamCode = '''
-    uint64_t ip_val  = PseudoInst::initParam(xc->tcBase());
+    uint64_t ip_val = PseudoInst::initParam(xc->tcBase(), join32to64(R1, R0),
+                                            join32to64(R3, R2));
     R0 = bits(ip_val, 31, 0);
     R1 = bits(ip_val, 63, 32);
     '''
 
     initparamCode64 = '''
-    X0 = PseudoInst::initParam(xc->tcBase());
+    X0 = PseudoInst::initParam(xc->tcBase(), X0, X1);
     '''
 
     initparamIop = InstObjParams("initparam", "Initparam", "PredOp",
