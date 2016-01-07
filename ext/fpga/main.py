@@ -6,15 +6,79 @@
 # Copyright (C) Min Cai 2015
 #
 
-from myhdl import Signal, delay, now, Simulation, always, always_comb, always_seq, instance, intbv, bin, ResetSignal, StopSimulation
+from myhdl import *
 from random import randrange
 
 
 ACTIVE_LOW, INACTIVE_HIGH = 0, 1
 
+FRAME_SIZE = 8
+t_state = enum('SEARCH', 'CONFIRM', 'SYNC')
 
-def inc(count, enable, clock, reset, n):
-    @always_seq(clock.posedge, reset=reset)
+
+def framer_ctrl(sof, state, sync_flag, clk, reset):
+    index = Signal(0)
+
+    @always_seq(clk.posedge, reset=reset)
+    def fsm():
+        index.next = (index + 1) % FRAME_SIZE
+        sof.next = 0
+
+        if state == t_state.SEARCH:
+            index.next = 1
+            if sync_flag:
+                state.next = t_state.CONFIRM
+        elif state == t_state.CONFIRM:
+            if index == 0:
+                if sync_flag:
+                    state.next = t_state.SYNC
+                else:
+                    state.next = t_state.SEARCH
+        elif state == t_state.SYNC:
+            if index == 0:
+                if not sync_flag:
+                    state.next = t_state.SEARCH
+            sof.next = (index == FRAME_SIZE - 1)
+        else:
+            raise ValueError('Undefined state')
+
+    return fsm
+
+
+def test_framer_ctrl():
+    sof = Signal(bool(0))
+    sync_flag = Signal(bool(0))
+    clk = Signal(bool(0))
+    reset = ResetSignal(1, active=ACTIVE_LOW, async=True)
+    state = Signal(t_state.SEARCH)
+
+    framer_ctrl1 = framer_ctrl(sof, state, sync_flag, clk, reset)
+
+    @always(delay(10))
+    def clk_gen():
+        clk.next = not clk
+
+    @instance
+    def stimulus():
+        for i in range(3):
+            yield clk.posedge
+        for n in (12, 8, 8, 4):
+            sync_flag.next = 1
+            yield clk.posedge
+            sync_flag.next = 0
+            for i in range(n-1):
+                yield clk.posedge
+        raise StopSimulation
+
+    @always_seq(clk.posedge, reset=reset)
+    def monitor():
+        print sync_flag, sof, state
+
+    return framer_ctrl1, clk_gen, stimulus, monitor
+
+
+def inc(count, enable, clk, reset, n):
+    @always_seq(clk.posedge, reset=reset)
     def inc_logic():
         if enable:
             count.next = (count + 1) % n
@@ -23,25 +87,28 @@ def inc(count, enable, clock, reset, n):
 
 
 def test_inc():
-    count, enable, clock = [Signal(intbv(0)) for i in range(3)]
+    count = Signal(intbv(0))
+    enable = Signal(bool(0))
+    clk = Signal(bool(0))
+
     reset = ResetSignal(0, active=ACTIVE_LOW, async=True)
 
-    inc_1 = inc(count, enable, clock, reset, n=4)
+    inc_1 = inc(count, enable, clk, reset, n=4)
 
-    half_period = delay(10)
+    HALF_PERIOD = delay(10)
 
-    @always(half_period)
+    @always(HALF_PERIOD)
     def clock_gen():
-        clock.next = not clock
+        clk.next = not clk
 
     @instance
     def stimulus():
         reset.next = ACTIVE_LOW
-        yield clock.negedge
+        yield clk.negedge
         reset.next = INACTIVE_HIGH
         for i in range(12):
             enable.next = min(1, randrange(3))
-            yield clock.negedge
+            yield clk.negedge
         raise StopSimulation
 
     @instance
@@ -49,7 +116,7 @@ def test_inc():
         print 'enable count'
         yield reset.posedge
         while True:
-            yield clock.posedge
+            yield clk.posedge
             yield delay(1)
             print '%s %s' % (enable, count)
 
@@ -136,16 +203,14 @@ def greetings():
     return clk_driver1, clk_driver2, hello1, hello2
 
 
-sim = Simulation(test_inc())
-sim.run()
+Simulation(traceSignals(test_framer_ctrl)).run()
+
+Simulation(traceSignals(test_inc)).run()
 
 z, a, b, sel = [Signal(intbv(0)) for i in range(4)]
-sim = Simulation(mux(z, a, b, sel), test_mux())
-sim.run()
+Simulation(mux(z, a, b, sel), test_mux()).run()
 
-sim = Simulation(test_bin2gray(width=3))
-sim.run()
+Simulation(test_bin2gray(width=3)).run()
 
 inst = greetings()
-sim = Simulation(inst)
-sim.run(50)
+Simulation(inst).run(50)
