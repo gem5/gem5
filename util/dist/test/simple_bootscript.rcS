@@ -40,33 +40,28 @@
 # Authors: Gabor Dozsa
 #
 #
-# This is an example boot script to use for muti gem5 runs. The important
-# task here is to extract the rank and size information from the kernel
-# boot args and use those to configure MAC/IP addresses and hostname.
-# Then we can kick off our (parallel) workload ...
+# This is an example boot script to use for dist-gem5 runs. The important
+# task here is to extract the rank and size information through the m5
+# initparam utility and use those to configure MAC/IP addresses and hostname.
 #
-# You are expected to costumize this scipt for your needs (e.g. change
+# You are expected to customize this scipt for your needs (e.g. change
 # the command at the end of the scipt to run your tests/workloads.
 
 source /root/.bashrc
 echo "bootscript.rcS is running"
 
-m='GEM5\_RANK=([0-9]+) GEM5\_SIZE=([0-9]+)'
-if [[ $(cat /proc/cmdline) =~ $m ]]
-then
-    MY_RANK=${BASH_REMATCH[1]}
-    MY_SIZE=${BASH_REMATCH[2]}
-else
-    echo "(E) GEM5_RANK/GEM5_SIZE was not defined in bootargs, exiting ..."
-    /sbin/m5 abort
-fi
+# Retrieve dist-gem5 rank and size parameters using the 'm5' utility
+MY_RANK=$(/sbin/m5 initparam dist-rank)
+[ $? = 0 ] || { echo "m5 initparam failed"; exit -1; }
+MY_SIZE=$(/sbin/m5 initparam dist-size)
+[ $? = 0 ] || { echo "m5 initparam failed"; exit -1; }
 
 /bin/hostname node${MY_RANK}
 
 # Keep MAC address assignment simple for now ...
-(($MY_RANK>97)) && { echo "(E) Rank must be less than 98"; /sbin/m5 abort; }
-((MY_ADDR=MY_RANK+2))
-if (($MY_ADDR<10))
+(($MY_RANK > 97)) && { echo "(E) Rank must be less than 98"; /sbin/m5 abort; }
+((MY_ADDR = MY_RANK + 2))
+if (($MY_ADDR < 10))
 then
     MY_ADDR_PADDED=0${MY_ADDR}
 else
@@ -78,45 +73,35 @@ fi
 
 /sbin/ifconfig -a
 
-# Prepare host lists for mpirun
-MY_MPI_HOSTS="192.168.0.2"
-for ((i=1; i<MY_SIZE; i++))
-do
-    MY_MPI_HOSTS+=",192.168.0.$((i+2))"
-done
+echo "Hello from $MY_RANK of $MY_SIZE"
 
-# Check that Ethernet links work, then take a checkpoint
-if  [ "$MY_RANK" == "0" ]
+# Now that our network interface is configured we can use the usual commands to
+# contact the other systems, e.g. let's try to ping a "neighbour" system
+if ((MY_RANK < MY_SIZE - 1))
 then
-    OLDIFS=$IFS
-    IFS=","
-    for i in $MY_MPI_HOSTS
-    do
-        ping -c 1  $i || { echo "ping $i failed, exiting ..."; exit -1; }
-        ssh $i hostname || { echo "ssh $i failed, exiting ..."; exit -1; }
-    done
-    IFS=$OLDIFS
-    /sbin/m5 checkpoint
+    ping -c 1 192.168.0.$((MY_ADDR + 1))
+else
+    ping -c 1 192.168.0.2
 fi
 
-# --------------------------------------------
-#  ------ Start your tests below ... ---------
-# --------------------------------------------
 
 if [ "$MY_RANK" == "0" ]
 then
-    echo "MPI test"
-    #mpirun -H 192.168.0.3,192.168.0.2 hostname
-    cd /benchmarks
-    mpirun -H $MY_MPI_HOSTS lulesh/lulesh2.0-mpi -s 5
+    # Trigger an immediate checkpoint at the next sync (by passing a non-zero
+    # delay param to m5 ckpt)
+    /sbin/m5 checkpoint 1
+    echo "A real multi node workload might start here ..."
+    # Trigger an immediate exit at the next sync (by passing a non-zero delay
+    # param to m5 exit)
+    /sbin/m5 exit 1
 else
     # This is to avoid other (rank!=0) gem5 processes exiting
     # before the test (started by rank 0) completes. When rank 0 completes the
-    # test it will exit and that will trigger a notification to all the peer 
-    # gem5 peocesses to stop the simulation.
+    # test it will exit and that will trigger a notification to all the peer
+    # gem5 processes to stop the simulation.
     echo "sleep forever..."
     while /bin/true
     do
-        sleep 5
+	sleep 5
     done
 fi

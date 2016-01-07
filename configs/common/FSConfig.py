@@ -654,3 +654,39 @@ def makeDualRoot(full_system, testSystem, driveSystem, dumpfile):
         self.etherlink.dump = Parent.etherdump
 
     return self
+
+
+def makeDistRoot(testSystem,
+                 rank,
+                 size,
+                 server_name,
+                 server_port,
+                 sync_repeat,
+                 sync_start,
+                 linkspeed,
+                 linkdelay,
+                 dumpfile):
+    self = Root(full_system = True)
+    self.testsys = testSystem
+
+    self.etherlink = DistEtherLink(speed = linkspeed,
+                                   delay = linkdelay,
+                                   dist_rank = rank,
+                                   dist_size = size,
+                                   server_name = server_name,
+                                   server_port = server_port,
+                                   sync_start = sync_start,
+                                   sync_repeat = sync_repeat)
+
+    if hasattr(testSystem, 'realview'):
+        self.etherlink.int0 = Parent.testsys.realview.ethernet.interface
+    elif hasattr(testSystem, 'tsunami'):
+        self.etherlink.int0 = Parent.testsys.tsunami.ethernet.interface
+    else:
+        fatal("Don't know how to connect DistEtherLink to this system")
+
+    if dumpfile:
+        self.etherdump = EtherDump(file=dumpfile)
+        self.etherlink.dump = Parent.etherdump
+
+    return self

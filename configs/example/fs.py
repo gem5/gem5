@@ -340,6 +340,18 @@ test_sys = build_test_system(np)
 if len(bm) == 2:
     drive_sys = build_drive_system(np)
     root = makeDualRoot(True, test_sys, drive_sys, options.etherdump)
+elif len(bm) == 1 and options.dist:
+    # This system is part of a dist-gem5 simulation
+    root = makeDistRoot(test_sys,
+                        options.dist_rank,
+                        options.dist_size,
+                        options.dist_server_name,
+                        options.dist_server_port,
+                        options.dist_sync_repeat,
+                        options.dist_sync_start,
+                        options.ethernet_linkspeed,
+                        options.ethernet_linkdelay,
+                        options.etherdump);
 elif len(bm) == 1:
     root = Root(full_system=True, system=test_sys)
 else:
