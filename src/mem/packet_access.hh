@@ -66,7 +66,7 @@ Packet::setRaw(T v)
 {
     assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
     assert(sizeof(T) <= size);
-    *(T*)data = TheISA::htog(v);
+    *(T*)data = v;
 }
 
 
