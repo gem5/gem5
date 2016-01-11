@@ -40,7 +40,7 @@
 #include <cstdlib>
 #include <fstream>
 
-#include <gzstream.hh>
+#include <zfstream.h>
 
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -82,7 +82,7 @@ OutputDirectory::openFile(const string &filename,
     bool gz = !no_gz;
     gz = gz && filename.find(".gz", filename.length()-3) < filename.length();
     if (gz) {
-        ogzstream *file = new ogzstream(filename.c_str(), mode);
+        gzofstream *file = new gzofstream(filename.c_str(), mode);
         if (!file->is_open())
             fatal("Cannot open file %s", filename);
         assert(files.find(filename) == files.end());
@@ -111,7 +111,7 @@ OutputDirectory::close(ostream *openStream) {
             delete i->second;
             break;
         } else {
-            ogzstream *gfs = dynamic_cast<ogzstream*>(i->second);
+            gzofstream *gfs = dynamic_cast<gzofstream*>(i->second);
             if (gfs) {
                 gfs->close();
                 delete i->second;

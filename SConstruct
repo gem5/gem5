@@ -1200,9 +1200,9 @@ main.Append(BUILDERS = { 'ConfigFile' : config_builder })
 main.SConscript('ext/libelf/SConscript',
                 variant_dir = joinpath(build_root, 'libelf'))
 
-# gzstream build is shared across all configs in the build root.
-main.SConscript('ext/gzstream/SConscript',
-                variant_dir = joinpath(build_root, 'gzstream'))
+# iostream3 build is shared across all configs in the build root.
+main.SConscript('ext/iostream3/SConscript',
+                variant_dir = joinpath(build_root, 'iostream3'))
 
 # libfdt build is shared across all configs in the build root.
 main.SConscript('ext/libfdt/SConscript',
