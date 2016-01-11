@@ -66,7 +66,7 @@ class GlobalSimLoopExitEvent : public GlobalEvent
                            Tick repeat = 0);
 
     const std::string getCause() const { return cause; }
-    const int getCode() const { return code; }
+    int getCode() const { return code; }
 
     void process();     // process event
 
@@ -86,7 +86,7 @@ class LocalSimLoopExitEvent : public Event
     LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
     const std::string getCause() const { return cause; }
-    const int getCode() const { return code; }
+    int getCode() const { return code; }
 
     void process() override;     // process event
 
@@ -111,7 +111,7 @@ class CountedDrainEvent : public Event
 
     void setCount(int _count) { count = _count; }
 
-    const int getCount() const { return count; }
+    int getCount() const { return count; }
 };
 
 //

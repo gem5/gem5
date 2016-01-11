@@ -42,6 +42,7 @@ Import('main')
 main.Prepend(CPPPATH=Dir('./include'))
 
 nomali = main.Clone()
+nomali.Append(CCFLAGS=['-Wno-ignored-qualifiers'])
 
 nomali_sources = [
     "lib/gpu.cc",

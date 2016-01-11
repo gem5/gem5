@@ -793,13 +793,13 @@ class BaseDynInst : public ExecContext, public RefCounted
     void pcState(const TheISA::PCState &val) { pc = val; }
 
     /** Read the PC of this instruction. */
-    const Addr instAddr() const { return pc.instAddr(); }
+    Addr instAddr() const { return pc.instAddr(); }
 
     /** Read the PC of the next instruction. */
-    const Addr nextInstAddr() const { return pc.nextInstAddr(); }
+    Addr nextInstAddr() const { return pc.nextInstAddr(); }
 
     /**Read the micro PC of this instruction. */
-    const Addr microPC() const { return pc.microPC(); }
+    Addr microPC() const { return pc.microPC(); }
 
     bool readPredicate()
     {

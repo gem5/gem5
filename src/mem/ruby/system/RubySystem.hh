@@ -79,7 +79,7 @@ class RubySystem : public ClockedObject
 
     SimpleMemory *getPhysMem() { return m_phys_mem; }
     Cycles getStartCycle() { return m_start_cycle; }
-    const bool getAccessBackingStore() { return m_access_backing_store; }
+    bool getAccessBackingStore() { return m_access_backing_store; }
 
     // Public Methods
     Profiler*

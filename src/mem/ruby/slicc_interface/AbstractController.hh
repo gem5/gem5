@@ -65,8 +65,8 @@ class AbstractController : public MemObject, public Consumer
     void init();
     const Params *params() const { return (const Params *)_params; }
 
-    const NodeID getVersion() const { return m_machineID.getNum(); }
-    const MachineType getType() const { return m_machineID.getType(); }
+    NodeID getVersion() const { return m_machineID.getNum(); }
+    MachineType getType() const { return m_machineID.getType(); }
 
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
 

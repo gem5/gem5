@@ -106,8 +106,8 @@ class PacketFifo
     unsigned
     reserve(unsigned len = 0)
     {
+        assert(avail() >= len);
         _reserved += len;
-        assert(avail() >= 0);
         return _reserved;
     }
 

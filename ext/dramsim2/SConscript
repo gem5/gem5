@@ -77,7 +77,8 @@ dramenv.Append(CCFLAGS=['-Wno-unused-value'])
 
 # If we are using clang, there are more flags to disable
 if main['CLANG']:
-    dramenv.Append(CCFLAGS=['-Wno-unused-private-field'])
+    dramenv.Append(CCFLAGS=['-Wno-unused-private-field',
+                            '-Wno-tautological-undefined-compare'])
 
 # Tell DRAMSim2 to not store any data as this is already covered by
 # the wrapper

@@ -249,7 +249,7 @@ Terminal::read(uint8_t *buf, size_t len)
     if (data_fd < 0)
         panic("Terminal not properly attached.\n");
 
-    size_t ret;
+    ssize_t ret;
     do {
       ret = ::read(data_fd, buf, len);
     } while (ret == -1 && errno == EINTR);

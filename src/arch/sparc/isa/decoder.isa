@@ -669,13 +669,13 @@ decode OP default Unknown::unknown()
                     }});
                     0x43: FpUnimpl::fmovq_fcc1();
                     0x45: fmovrslez({{
-                        if (Rs1 <= 0)
+                        if ((int64_t)Rs1 <= 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x46: fmovrdlez({{
-                        if (Rs1 <= 0)
+                        if ((int64_t)Rs1 <= 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
@@ -740,13 +740,13 @@ decode OP default Unknown::unknown()
                     }});
                     0x57: FpUnimpl::fcmpeq();
                     0x65: fmovrslz({{
-                        if (Rs1 < 0)
+                        if ((int64_t)Rs1 < 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x66: fmovrdlz({{
-                        if (Rs1 < 0)
+                        if ((int64_t)Rs1 < 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
@@ -792,26 +792,26 @@ decode OP default Unknown::unknown()
                     }});
                     0xC3: FpUnimpl::fmovq_fcc3();
                     0xC5: fmovrsgz({{
-                        if (Rs1 > 0)
+                        if ((int64_t)Rs1 > 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0xC6: fmovrdgz({{
-                        if (Rs1 > 0)
+                        if ((int64_t)Rs1 > 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0xC7: FpUnimpl::fmovrqgz();
                     0xE5: fmovrsgez({{
-                        if (Rs1 >= 0)
+                        if ((int64_t)Rs1 >= 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0xE6: fmovrdgez({{
-                        if (Rs1 >= 0)
+                        if ((int64_t)Rs1 >= 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;

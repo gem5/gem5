@@ -40,7 +40,7 @@
 
 namespace AlphaISA {
 
-typedef const Addr FaultVect;
+typedef Addr FaultVect;
 
 class AlphaFault : public FaultBase
 {

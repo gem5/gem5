@@ -215,7 +215,7 @@ class MemCmd
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
 
-    const Command
+    Command
     responseCommand() const
     {
         return commandInfo[cmd].response;

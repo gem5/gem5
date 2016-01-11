@@ -93,6 +93,7 @@ enum ChipCommandRegister {
 
 /* configuration register */
 enum ConfigurationRegisters {
+     CFGR_ZERO =        0x00000000,
      CFGR_LNKSTS =      0x80000000,
      CFGR_SPDSTS =      0x60000000,
      CFGR_SPDSTS1 =     0x40000000,
@@ -395,7 +396,7 @@ static inline int
 SPDSTS_POLARITY(int lnksts)
 {
     return (CFGR_SPDSTS1 | CFGR_SPDSTS0 | CFGR_DUPSTS |
-            (lnksts ? CFGR_LNKSTS : 0));
+            (lnksts ? CFGR_LNKSTS : CFGR_ZERO));
 }
 
 #endif /* __DEV_NS_GIGE_REG_H__ */

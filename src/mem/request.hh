@@ -234,7 +234,6 @@ class Request
     void
     setPhys(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
     {
-        assert(size >= 0);
         _paddr = paddr;
         _size = size;
         _time = time;

@@ -110,7 +110,7 @@ class Pl011 : public Uart, public AmbaDevice
     void clearInterrupts(uint16_t ints) { setInterrupts(rawInt & ~ints, imsc); }
 
     /** Masked interrupt status register */
-    const inline uint16_t maskInt() const { return rawInt & imsc; }
+    inline uint16_t maskInt() const { return rawInt & imsc; }
 
     /** Wrapper to create an event out of the thing */
     EventWrapper<Pl011, &Pl011::generateInterrupt> intEvent;

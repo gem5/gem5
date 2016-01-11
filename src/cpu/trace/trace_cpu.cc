@@ -1337,8 +1337,8 @@ TraceCPU::ElasticDataGen::GraphNode::removeRegDep(NodeSeqNum reg_dep)
         if (own_reg_dep == reg_dep) {
             // If register dependency is found, make it zero and return true
             own_reg_dep = 0;
+            assert(numRegDep > 0);
             --numRegDep;
-            assert(numRegDep >= 0);
             DPRINTFR(TraceCPUData, "\tFor %lli: Marking register dependency %lli "
                     "done.\n", seqNum, reg_dep);
             return true;
@@ -1356,8 +1356,8 @@ TraceCPU::ElasticDataGen::GraphNode::removeRobDep(NodeSeqNum rob_dep)
         if (own_rob_dep == rob_dep) {
             // If the rob dependency is found, make it zero and return true
             own_rob_dep = 0;
+            assert(numRobDep > 0);
             --numRobDep;
-            assert(numRobDep >= 0);
             DPRINTFR(TraceCPUData, "\tFor %lli: Marking ROB dependency %lli "
                 "done.\n", seqNum, rob_dep);
             return true;

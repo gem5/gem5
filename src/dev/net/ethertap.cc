@@ -241,8 +241,8 @@ EtherTap::process(int revent)
         packet->length = data_len;
         memcpy(packet->data, data, data_len);
 
+        assert(buffer_offset >= data_len + sizeof(uint32_t));
         buffer_offset -= data_len + sizeof(uint32_t);
-        assert(buffer_offset >= 0);
         if (buffer_offset > 0) {
             memmove(buffer, data + data_len, buffer_offset);
             data_len = ntohl(*(uint32_t *)buffer);

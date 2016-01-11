@@ -93,10 +93,10 @@ ElfFile('libelf_msize.c')
 
 m4env = main.Clone()
 if m4env['GCC']:
-    m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
-    if compareVersions(m4env['GCC_VERSION'], '4.6') >= 0:
-        m4env.Append(CCFLAGS=['-Wno-unused-but-set-variable',
-                              '-Wno-implicit-function-declaration'])
+    m4env.Append(CCFLAGS=['-Wno-pointer-sign',
+                          '-Wno-unused-but-set-variable',
+                          '-Wno-implicit-function-declaration',
+                          '-Wno-override-init'])
 if m4env['CLANG']:
     m4env.Append(CCFLAGS=['-Wno-initializer-overrides', '-Wno-pointer-sign'])
     # clang defaults to c99 (while gcc defaults to gnu89) and there is a

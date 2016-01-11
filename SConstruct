@@ -554,14 +554,12 @@ if main['GCC'] or main['CLANG']:
     # As gcc and clang share many flags, do the common parts here
     main.Append(CCFLAGS=['-pipe'])
     main.Append(CCFLAGS=['-fno-strict-aliasing'])
-    # Enable -Wall and then disable the few warnings that we
-    # consistently violate
-    main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
+    # Enable -Wall and -Wextra and then disable the few warnings that
+    # we consistently violate
+    main.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
+                         '-Wno-sign-compare', '-Wno-unused-parameter'])
     # We always compile using C++11
     main.Append(CXXFLAGS=['-std=c++11'])
-    # Add selected sanity checks from -Wextra
-    main.Append(CXXFLAGS=['-Wmissing-field-initializers',
-                          '-Woverloaded-virtual'])
 else:
     print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
     print "Don't know what compiler options to use for your compiler."
@@ -656,14 +654,11 @@ elif main['CLANG']:
         print 'Error: Unable to determine clang version.'
         Exit(1)
 
-    # clang has a few additional warnings that we disable,
-    # tautological comparisons are allowed due to unsigned integers
-    # being compared to constants that happen to be 0, and extraneous
+    # clang has a few additional warnings that we disable, extraneous
     # parantheses are allowed due to Ruby's printing of the AST,
     # finally self assignments are allowed as the generated CPU code
     # is relying on this
-    main.Append(CCFLAGS=['-Wno-tautological-compare',
-                         '-Wno-parentheses',
+    main.Append(CCFLAGS=['-Wno-parentheses',
                          '-Wno-self-assign',
                          # Some versions of libstdc++ (4.8?) seem to
                          # use struct hash and class hash

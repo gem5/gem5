@@ -93,6 +93,7 @@ class PageTableBase : public Serializable
      * bit 3 - read-write | read-only
      */
     enum MappingFlags : uint32_t {
+        Zero        = 0,
         Clobber     = 1,
         NotPresent  = 2,
         Uncacheable = 4,

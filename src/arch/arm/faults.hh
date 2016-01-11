@@ -58,7 +58,7 @@
 
 namespace ArmISA
 {
-typedef const Addr FaultOffset;
+typedef Addr FaultOffset;
 
 class ArmFault : public FaultBase
 {

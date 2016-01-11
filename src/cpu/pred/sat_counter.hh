@@ -105,7 +105,7 @@ class SatCounter
     /**
      * Read the counter's value.
      */
-    const uint8_t read() const
+    uint8_t read() const
     { return counter; }
 
   private:

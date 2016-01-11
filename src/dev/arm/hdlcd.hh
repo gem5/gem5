@@ -316,7 +316,7 @@ class HDLcd: public AmbaDmaDevice
     }
 
     /** Masked interrupt status register */
-    const uint32_t intStatus() const { return int_rawstat & int_mask; }
+    uint32_t intStatus() const { return int_rawstat & int_mask; }
 
   protected: // Pixel output
     class PixelPump : public BasePixelPump

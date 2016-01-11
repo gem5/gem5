@@ -209,7 +209,7 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
     // We deliberately extend both the Cluster ID and CPU ID fields to allow
     // for simulation of larger systems
     assert((0 <= tc->cpuId()) && (tc->cpuId() < 256));
-    assert((0 <= tc->socketId()) && (tc->socketId() < 65536));
+    assert(tc->socketId() < 65536);
     if (arm_sys->multiThread) {
        return 0x80000000 | // multiprocessor extensions available
               tc->contextId();

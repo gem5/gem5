@@ -83,12 +83,12 @@ class Message
         Tick delta = curTime - m_LastEnqueueTime;
         m_DelayedTicks += delta;
     }
-    const Tick getDelayedTicks() const {return m_DelayedTicks;}
+    Tick getDelayedTicks() const {return m_DelayedTicks;}
 
     void setLastEnqueueTime(const Tick& time) { m_LastEnqueueTime = time; }
-    const Tick getLastEnqueueTime() const {return m_LastEnqueueTime;}
+    Tick getLastEnqueueTime() const {return m_LastEnqueueTime;}
 
-    const Tick& getTime() const { return m_time; }
+    Tick getTime() const { return m_time; }
     void setMsgCounter(uint64_t c) { m_msg_counter = c; }
     uint64_t getMsgCounter() const { return m_msg_counter; }
 
