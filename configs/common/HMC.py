@@ -84,11 +84,10 @@ import m5
 from m5.objects import *
 
 # A single Hybrid Memory Cube (HMC)
-class HMCSystem(SimObject):
-
+class HMCSystem(SubSystem):
     #*****************************CROSSBAR PARAMETERS*************************
     # Flit size of the main interconnect [1]
-    xbar_width = Param.Unsigned( 32, "Data width of the main XBar (Bytes)")
+    xbar_width = Param.Unsigned(32, "Data width of the main XBar (Bytes)")
 
     # Clock frequency of the main interconnect [1]
     # This crossbar, is placed on the logic-based of the HMC and it has its
@@ -114,12 +113,12 @@ class HMCSystem(SimObject):
 
     # Number of packets (not flits) to store at the request side of the serial
     #  link. This number should be adjusted to achive required bandwidth
-    link_buffer_size_req = Param.Unsigned( 16, "Number of packets to buffer "
+    link_buffer_size_req = Param.Unsigned(16, "Number of packets to buffer "
         "at the request side of the serial link")
 
     # Number of packets (not flits) to store at the response side of the serial
     #  link. This number should be adjusted to achive required bandwidth
-    link_buffer_size_rsp = Param.Unsigned( 16, "Number of packets to buffer "
+    link_buffer_size_rsp = Param.Unsigned(16, "Number of packets to buffer "
         "at the response side of the serial link")
 
     # Latency of the serial link composed by SER/DES latency (1.6ns [4]) plus
@@ -136,20 +135,20 @@ class HMCSystem(SimObject):
         "links")
 
     # Number of parallel lanes in each serial link [1]
-    num_lanes_per_link =  Param.Unsigned( 16, "Number of lanes per each link")
+    num_lanes_per_link =  Param.Unsigned(16, "Number of lanes per each link")
 
     # Number of serial links [1]
-    num_serial_links =  Param.Unsigned( 4, "Number of serial links")
+    num_serial_links =  Param.Unsigned(4, "Number of serial links")
 
     #*****************************HMC CONTROLLER PARAMETERS*******************
     # Number of packets (not flits) to store at the HMC controller. This
     # number should be high enough to be able to hide the high latency of HMC
-    ctrl_buffer_size_req = Param.Unsigned( 256, "Number of packets to buffer "
+    ctrl_buffer_size_req = Param.Unsigned(256, "Number of packets to buffer "
         "at the HMC controller (request side)")
 
     # Number of packets (not flits) to store at the response side of the HMC
     #  controller.
-    ctrl_buffer_size_rsp = Param.Unsigned( 256, "Number of packets to buffer "
+    ctrl_buffer_size_rsp = Param.Unsigned(256, "Number of packets to buffer "
         "at the HMC controller (response side)")
 
     # Latency of the HMC controller to process the packets
@@ -167,17 +166,17 @@ class HMCSystem(SimObject):
         "HMC Controller")
 
     # The link performance monitors
-    enable_link_monitor = Param.Bool(True, "The link monitors" )
+    enable_link_monitor = Param.Bool(True, "The link monitors")
 
 # Create an HMC device and attach it to the current system
 def config_hmc(options, system):
 
-    system.hmc=HMCSystem()
+    system.hmc = HMCSystem()
 
     system.buffer = Bridge(ranges=system.mem_ranges,
-        req_size=system.hmc.ctrl_buffer_size_req,
-        resp_size=system.hmc.ctrl_buffer_size_rsp,
-        delay=system.hmc.ctrl_static_latency)
+                           req_size=system.hmc.ctrl_buffer_size_req,
+                           resp_size=system.hmc.ctrl_buffer_size_rsp,
+                           delay=system.hmc.ctrl_static_latency)
     try:
         system.hmc.enable_global_monitor = options.enable_global_monitor
     except:
