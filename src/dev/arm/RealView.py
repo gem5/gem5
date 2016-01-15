@@ -271,6 +271,26 @@ class RealView(Platform):
     system = Param.System(Parent.any, "system")
     _mem_regions = [(Addr(0), Addr('256MB'))]
 
+    def _on_chip_devices(self):
+        return []
+
+    def _off_chip_devices(self):
+        return []
+
+    _off_chip_ranges = []
+
+    def _attach_io(self, devices, bus):
+        for d in devices:
+            if hasattr(d, "pio"):
+                d.pio = bus.master
+            if hasattr(d, "dma"):
+                d.dma = bus.slave
+
+    def _attach_clk(self, devices, clkdomain):
+        for d in devices:
+            if hasattr(d, "clk_domain"):
+                d.clk_domain = clkdomain
+
     def attachPciDevices(self):
         pass
 
@@ -278,10 +298,19 @@ class RealView(Platform):
         pass
 
     def onChipIOClkDomain(self, clkdomain):
-        pass
+        self._attach_clk(self._on_chip_devices(), clkdomain)
 
     def offChipIOClkDomain(self, clkdomain):
-        pass
+        self._attach_clk(self._off_chip_devices(), clkdomain)
+
+    def attachOnChipIO(self, bus, bridge=None):
+        self._attach_io(self._on_chip_devices(), bus)
+        if bridge:
+            bridge.ranges = self._off_chip_ranges
+
+    def attachIO(self, bus):
+        self._attach_io(self._off_chip_devices(), bus)
+
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange('2GB', size = '64MB'),
@@ -716,3 +745,170 @@ class VExpress_EMM64(VExpress_EMM):
         cur_sys.load_offset = 0x80000000
 
 
+class VExpress_GEM5_V1(RealView):
+    """
+The VExpress gem5 memory map is loosely based on a modified
+Versatile Express RS1 memory map.
+
+The gem5 platform has been designed to implement a subset of the
+original Versatile Express RS1 memory map. Off-chip peripherals should,
+when possible, adhere to the Versatile Express memory map. Non-PCI
+off-chip devices that are gem5-specific should live in the CS5 memory
+space to avoid conflicts with existing devices that we might want to
+model in the future. Such devices should normally have interrupts in
+the gem5-specific SPI range.
+
+On-chip peripherals are loosely modeled after the ARM CoreTile Express
+A15x2 A7x3 memory and interrupt map. In particular, the GIC and
+Generic Timer have the same interrupt lines and base addresses. Other
+on-chip devices are gem5 specific.
+
+Unlike the original Versatile Express RS2 extended platform, gem5 implements a
+large contigious DRAM space, without aliases or holes, starting at the
+2GiB boundary. This means that PCI memory is limited to 1GiB.
+
+Memory map:
+   0x00000000-0x03ffffff: Boot memory (CS0)
+   0x04000000-0x07ffffff: Reserved
+   0x08000000-0x0bffffff: Reserved (CS0 alias)
+   0x0c000000-0x0fffffff: Reserved (Off-chip, CS4)
+   0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
+       0x10000000-0x1000ffff: gem5 energy controller
+
+   0x14000000-0x17ffffff: Reserved (Off-chip, PSRAM, CS1)
+   0x18000000-0x1bffffff: Reserved (Off-chip, Peripherals, CS2)
+   0x1c000000-0x1fffffff: Peripheral block 1 (Off-chip, CS3):
+       0x1c010000-0x1c01ffff: realview_io (VE system control regs.)
+       0x1c060000-0x1c06ffff: KMI0 (keyboard)
+       0x1c070000-0x1c07ffff: KMI1 (mouse)
+       0x1c090000-0x1c09ffff: UART0
+       0x1c0a0000-0x1c0affff: UART1 (reserved)
+       0x1c0b0000-0x1c0bffff: UART2 (reserved)
+       0x1c0c0000-0x1c0cffff: UART3 (reserved)
+       0x1c170000-0x1c17ffff: RTC
+
+   0x20000000-0x3fffffff: On-chip peripherals:
+       0x2b000000-0x2b00ffff: HDLCD
+
+       0x2c001000-0x2c001fff: GIC (distributor)
+       0x2c002000-0x2c0020ff: GIC (CPU interface)
+       0x2c004000-0x2c005fff: vGIC (HV)
+       0x2c006000-0x2c007fff: vGIC (VCPU)
+       0x2c1c0000-0x2c1cffff: GICv2m MSI frame 0
+
+       0x2d000000-0x2d00ffff: GPU (reserved)
+
+       0x2f000000-0x2fffffff: PCI IO space
+       0x30000000-0x3fffffff: PCI config space
+
+   0x40000000-0x7fffffff: Ext. AXI: Used as PCI memory
+
+   0x80000000-X: DRAM
+
+Interrupts:
+      0- 15: Software generated interrupts (SGIs)
+     16- 31: On-chip private peripherals (PPIs)
+        25   : vgic
+        26   : generic_timer (hyp)
+        27   : generic_timer (virt)
+        28   : Reserved (Legacy FIQ)
+        29   : generic_timer (phys, sec)
+        30   : generic_timer (phys, non-sec)
+        31   : Reserved (Legacy IRQ)
+    32- 95: Mother board peripherals (SPIs)
+        32   : Reserved (SP805)
+        33   : Reserved (IOFPGA SW int)
+        34-35: Reserved (SP804)
+        36   : RTC
+        37-40: uart0-uart3
+        41-42: Reserved (PL180)
+        43   : Reserved (AACI)
+        44-45: kmi0-kmi1
+        46   : Reserved (CLCD)
+        47   : Reserved (Ethernet)
+        48   : Reserved (USB)
+    95-255: On-chip interrupt sources (we use these for
+            gem5-specific devices, SPIs)
+         95    : HDLCD
+         96- 98: GPU (reserved)
+        100-103: PCI
+   256-319: MSI frame 0 (gem5-specific, SPIs)
+   320-511: Unused
+
+    """
+
+    # Everything above 2GiB is memory
+    _mem_regions = [(Addr('2GB'), Addr('510GB'))]
+
+    _off_chip_ranges = [
+        # CS1-CS5
+        AddrRange(0x0c000000, 0x1fffffff),
+        # External AXI interface (PCI)
+        AddrRange(0x2f000000, 0x7fffffff),
+    ]
+
+    # Platform control device (off-chip)
+    realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
+                               idreg=0x02250000, pio_addr=0x1c010000)
+    mcc = VExpressMCC()
+    dcc = CoreTile2A15DCC()
+
+    ### On-chip devices ###
+    gic = Pl390(dist_addr=0x2c001000, cpu_addr=0x2c002000, it_lines=512)
+    vgic = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
+    gicv2m = Gicv2m()
+    gicv2m.frames = [
+        Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2c1c0000),
+    ]
+
+    generic_timer = GenericTimer(int_phys=29, int_virt=27)
+
+    hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
+                   pio_addr=0x2b000000, int_num=95)
+
+    def _on_chip_devices(self):
+        return [
+            self.gic, self.vgic, self.gicv2m,
+            self.hdlcd,
+            self.generic_timer,
+        ]
+
+    ### Off-chip devices ###
+    uart0 = Pl011(pio_addr=0x1c090000, int_num=37)
+
+    kmi0 = Pl050(pio_addr=0x1c060000, int_num=44)
+    kmi1 = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
+
+    rtc = PL031(pio_addr=0x1c170000, int_num=36)
+
+    ### gem5-specific off-chip devices ###
+    pci_host = GenericArmPciHost(
+        conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
+        pci_pio_base=0x2f000000,
+        int_policy="ARM_PCI_INT_DEV", int_base=100, int_count=4)
+
+    energy_ctrl = EnergyCtrl(pio_addr=0x10000000)
+
+
+    def _off_chip_devices(self):
+        return [
+            self.realview_io,
+            self.uart0,
+            self.kmi0, self.kmi1,
+            self.rtc,
+            self.pci_host,
+            self.energy_ctrl,
+        ]
+
+    def attachPciDevice(self, device, bus):
+        device.host = self.pci_host
+        device.pio = bus.master
+        device.dma = bus.slave
+
+    def setupBootLoader(self, mem_bus, cur_sys, loc):
+        self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'))
+        self.nvmem.port = mem_bus.master
+        cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
+        cur_sys.atags_addr = 0x8000000
+        cur_sys.load_addr_mask = 0xfffffff
+        cur_sys.load_offset = 0x80000000

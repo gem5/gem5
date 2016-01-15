@@ -48,6 +48,7 @@ _platform_classes = {}
 _platform_aliases_all = [
     ("RealView_EB", "RealViewEB"),
     ("RealView_PBX", "RealViewPBX"),
+    ("VExpress_GEM5", "VExpress_GEM5_V1"),
     ]
 
 # Filtered list of aliases. Only aliases for existing platforms exist

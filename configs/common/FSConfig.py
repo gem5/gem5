@@ -220,6 +220,8 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         "VExpress_EMM64": "vmlinux.aarch64.20140821",
     }
 
+    pci_devices = []
+
     if bare_metal:
         self = ArmSystem()
     else:
@@ -257,16 +259,22 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             print "Selected 64-bit ARM architecture, updating default disk image..."
             mdesc.diskname = 'linaro-minimal-aarch64.img'
 
-    self.cf0 = CowIdeDisk(driveID='master')
-    self.cf0.childImage(mdesc.disk())
 
     # Attach any PCI devices this platform supports
     self.realview.attachPciDevices()
-    # default to an IDE controller rather than a CF one
-    try:
+
+    self.cf0 = CowIdeDisk(driveID='master')
+    self.cf0.childImage(mdesc.disk())
+    # Old platforms have a built-in IDE or CF controller. Default to
+    # the IDE controller if both exist. New platforms expect the
+    # storage controller to be added from the config script.
+    if hasattr(self.realview, "ide"):
         self.realview.ide.disks = [self.cf0]
-    except:
+    elif hasattr(self.realview, "cf_ctrl"):
         self.realview.cf_ctrl.disks = [self.cf0]
+    else:
+        self.pci_ide = IdeController(disks=[self.cf0])
+        pci_devices.append(self.pci_ide)
 
     self.mem_ranges = []
     size_remain = long(Addr(mdesc.mem()))
@@ -360,7 +368,13 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.realview.attachOnChipIO(self.iobus)
     else:
         self.realview.attachOnChipIO(self.membus, self.bridge)
+
+    # Attach off-chip devices
     self.realview.attachIO(self.iobus)
+    for dev_id, dev in enumerate(pci_devices):
+        dev.pci_bus, dev.pci_dev, dev.pci_func = (0, dev_id + 1, 0)
+        self.realview.attachPciDevice(dev, self.iobus)
+
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
