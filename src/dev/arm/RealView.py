@@ -86,6 +86,20 @@ class A9SCU(BasicPioDevice):
     type = 'A9SCU'
     cxx_header = "dev/arm/a9scu.hh"
 
+class ArmPciIntRouting(Enum): vals = [
+    'ARM_PCI_INT_STATIC',
+    'ARM_PCI_INT_DEV',
+    'ARM_PCI_INT_PIN',
+    ]
+
+class GenericArmPciHost(GenericPciHost):
+    type = 'GenericArmPciHost'
+    cxx_header = "dev/arm/pci_host.hh"
+
+    int_policy = Param.ArmPciIntRouting("PCI interrupt routing policy")
+    int_base = Param.Unsigned("PCI interrupt base")
+    int_count = Param.Unsigned("Maximum number of interrupts used by this host")
+
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
     cxx_header = "dev/arm/rv_ctrl.hh"

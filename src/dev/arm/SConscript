@@ -62,6 +62,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('kmi.cc')
     Source('timer_sp804.cc')
     Source('gpu_nomali.cc')
+    Source('pci_host.cc')
     Source('rv_ctrl.cc')
     Source('realview.cc')
     Source('rtc_pl031.cc')
