@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -173,9 +174,36 @@ class ExecContext {
      */
     virtual Addr getEA() const = 0;
 
+    /**
+     * Perform an atomic memory read operation.  Must be overridden
+     * for exec contexts that support atomic memory mode.  Not pure
+     * virtual since exec contexts that only support timing memory
+     * mode need not override (though in that case this function
+     * should never be called).
+     */
     virtual Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-                          unsigned int flags) = 0;
+                          unsigned int flags)
+    {
+        panic("ExecContext::readMem() should be overridden\n");
+    }
 
+    /**
+     * Initiate a timing memory read operation.  Must be overridden
+     * for exec contexts that support timing memory mode.  Not pure
+     * virtual since exec contexts that only support atomic memory
+     * mode need not override (though in that case this function
+     * should never be called).
+     */
+    virtual Fault initiateMemRead(Addr addr, unsigned int size,
+                                  unsigned int flags)
+    {
+        panic("ExecContext::initiateMemRead() should be overridden\n");
+    }
+
+    /**
+     * For atomic-mode contexts, perform an atomic memory write operation.
+     * For timing-mode contexts, initiate a timing memory write operation.
+     */
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
                            unsigned int flags, uint64_t *res) = 0;
 

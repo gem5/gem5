@@ -415,6 +415,12 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
     }
 }
 
+Fault
+AtomicSimpleCPU::initiateMemRead(Addr addr, unsigned size, unsigned flags)
+{
+    panic("initiateMemRead() is for timing accesses, and should "
+          "never be called on AtomicSimpleCPU.\n");
+}
 
 Fault
 AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,

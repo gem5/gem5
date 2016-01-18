@@ -103,10 +103,9 @@ class ExecContext : public ::ExecContext
     }
 
     Fault
-    readMem(Addr addr, uint8_t *data, unsigned int size,
-        unsigned int flags)
+    initiateMemRead(Addr addr, unsigned int size, unsigned int flags)
     {
-        execute.getLSQ().pushRequest(inst, true /* load */, data,
+        execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
             size, addr, flags, NULL);
         return NoFault;
     }

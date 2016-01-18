@@ -127,7 +127,7 @@ def template MicroLoadInitiateAcc {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = readMemTiming(xc, traceData, EA, Mem, dataSize, memFlags);
+        fault = initiateMemRead(xc, traceData, EA, dataSize, memFlags);
 
         return fault;
     }

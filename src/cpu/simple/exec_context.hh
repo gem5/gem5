@@ -291,6 +291,12 @@ class SimpleExecContext : public ExecContext {
         return cpu->readMem(addr, data, size, flags);
     }
 
+    Fault initiateMemRead(Addr addr, unsigned int size,
+                          unsigned int flags) override
+    {
+        return cpu->initiateMemRead(addr, size, flags);
+    }
+
     Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
                    unsigned int flags, uint64_t *res) override
     {

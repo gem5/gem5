@@ -407,6 +407,13 @@ Fault
 TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
                          unsigned size, unsigned flags)
 {
+    panic("readMem() is for atomic accesses, and should "
+          "never be called on TimingSimpleCPU.\n");
+}
+
+Fault
+TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size, unsigned flags)
+{
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
 

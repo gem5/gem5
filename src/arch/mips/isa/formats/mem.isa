@@ -253,7 +253,7 @@ def template LoadInitiateAcc {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = readMemTiming(xc, traceData, EA, Mem, memAccessFlags);
+            fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
         }
 
         return fault;

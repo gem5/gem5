@@ -171,7 +171,7 @@ def template LoadInitiateAcc {{
             %(fault_check)s;
             if (fault == NoFault) {
                 %(EA_trunc)s
-                fault = readMemTiming(xc, traceData, EA, Mem, %(asi_val)s);
+                fault = initiateMemRead(xc, traceData, EA, Mem, %(asi_val)s);
             }
             return fault;
         }

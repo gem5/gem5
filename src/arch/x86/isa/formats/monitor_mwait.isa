@@ -67,10 +67,9 @@ def template MwaitInitiateAcc {{
     Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
             Trace::InstRecord * traceData) const
     {
-        uint64_t m = 0;          //mem
         unsigned s = 0x8;        //size
         unsigned f = 0;          //flags
-        readMemTiming(xc, traceData, xc->getAddrMonitor()->vAddr, m, s, f);
+        initiateMemRead(xc, traceData, xc->getAddrMonitor()->vAddr, s, f);
         return NoFault;
     }
 }};

@@ -48,13 +48,15 @@
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
 
-/// Read from memory in timing mode.
+/// Initiate a read from memory in timing mode.  Note that the 'mem'
+/// parameter is unused; only the type of that parameter is used
+/// to determine the size of the access.
 template <class XC, class MemT>
 Fault
-readMemTiming(XC *xc, Trace::InstRecord *traceData, Addr addr,
-        MemT &mem, unsigned flags)
+initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
+                MemT &mem, unsigned flags)
 {
-    return xc->readMem(addr, (uint8_t *)&mem, sizeof(MemT), flags);
+    return xc->initiateMemRead(addr, sizeof(MemT), flags);
 }
 
 /// Extract the data returned from a timing mode read.

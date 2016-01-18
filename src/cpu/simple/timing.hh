@@ -286,6 +286,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
                   unsigned flags) override;
 
+    Fault initiateMemRead(Addr addr, unsigned size, unsigned flags) override;
+
     Fault writeMem(uint8_t *data, unsigned size,
                    Addr addr, unsigned flags, uint64_t *res) override;
 

@@ -438,7 +438,8 @@ def template LoadInitiateAcc {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = readMemTiming(xc, traceData, EA, Mem, memAccessFlags);
+                fault = initiateMemRead(xc, traceData, EA, Mem,
+                                        memAccessFlags);
             }
         } else {
             xc->setPredicate(false);
@@ -461,13 +462,10 @@ def template NeonLoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemUnion memUnion;
-        uint8_t *dataPtr = memUnion.bytes;
-
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readMem(EA, dataPtr, %(size)d, memAccessFlags);
+                fault = xc->initiateMemRead(EA, %(size)d, memAccessFlags);
             }
         } else {
             xc->setPredicate(false);

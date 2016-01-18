@@ -38,12 +38,13 @@
 namespace X86ISA
 {
 
+/// Initiate a read from memory in timing mode.
 template <class XC>
 Fault
-readMemTiming(XC *xc, Trace::InstRecord *traceData, Addr addr,
-        uint64_t &mem, unsigned dataSize, unsigned flags)
+initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
+                unsigned dataSize, unsigned flags)
 {
-    return xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
+    return xc->initiateMemRead(addr, dataSize, flags);
 }
 
 static inline uint64_t

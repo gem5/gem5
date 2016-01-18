@@ -313,11 +313,8 @@ def template NeonLoadInitiateAcc64 {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemUnion memUnion;
-        uint8_t *dataPtr = memUnion.bytes;
-
         if (fault == NoFault) {
-            fault = xc->readMem(EA, dataPtr, accSize, memAccessFlags);
+            fault = xc->initiateMemRead(EA, accSize, memAccessFlags);
         }
 
         return fault;

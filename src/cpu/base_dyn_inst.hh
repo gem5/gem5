@@ -313,7 +313,7 @@ class BaseDynInst : public ExecContext, public RefCounted
         cpu->demapPage(vaddr, asn);
     }
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault initiateMemRead(Addr addr, unsigned size, unsigned flags);
 
     Fault writeMem(uint8_t *data, unsigned size,
                    Addr addr, unsigned flags, uint64_t *res);
@@ -873,8 +873,7 @@ class BaseDynInst : public ExecContext, public RefCounted
 
 template<class Impl>
 Fault
-BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
-                           unsigned size, unsigned flags)
+BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size, unsigned flags)
 {
     instFlags[ReqMade] = true;
     Request *req = NULL;
@@ -915,13 +914,6 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
             // Commit will have to clean up whatever happened.  Set this
             // instruction as executed.
             this->setExecuted();
-        }
-
-        if (fault != NoFault) {
-            // Return a fixed value to keep simulation deterministic even
-            // along misspeculated paths.
-            if (data)
-                bzero(data, size);
         }
     }
 
