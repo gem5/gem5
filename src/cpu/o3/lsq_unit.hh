@@ -511,7 +511,7 @@ class LSQUnit {
   public:
     /** Executes the load at the given index. */
     Fault read(Request *req, Request *sreqLow, Request *sreqHigh,
-               uint8_t *data, int load_idx);
+               int load_idx);
 
     /** Executes the store at the given index. */
     Fault write(Request *req, Request *sreqLow, Request *sreqHigh,
@@ -550,7 +550,7 @@ class LSQUnit {
 template <class Impl>
 Fault
 LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
-                    uint8_t *data, int load_idx)
+                    int load_idx)
 {
     DynInstPtr load_inst = loadQueue[load_idx];
 
@@ -675,12 +675,6 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         if ((store_has_lower_limit && store_has_upper_limit)) {
             // Get shift amount for offset into the store's data.
             int shift_amt = req->getVaddr() - storeQueue[store_idx].inst->effAddr;
-
-            if (storeQueue[store_idx].isAllZeros)
-                memset(data, 0, req->getSize());
-            else
-                memcpy(data, storeQueue[store_idx].data + shift_amt,
-                   req->getSize());
 
             // Allocate memory if this is the first time a load is issued.
             if (!load_inst->memData) {

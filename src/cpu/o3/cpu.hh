@@ -678,10 +678,9 @@ class FullO3CPU : public BaseO3CPU
 
     /** CPU read function, forwards read to LSQ. */
     Fault read(RequestPtr &req, RequestPtr &sreqLow, RequestPtr &sreqHigh,
-               uint8_t *data, int load_idx)
+               int load_idx)
     {
-        return this->iew.ldstQueue.read(req, sreqLow, sreqHigh,
-                                        data, load_idx);
+        return this->iew.ldstQueue.read(req, sreqLow, sreqHigh, load_idx);
     }
 
     /** CPU write function, forwards write to LSQ. */

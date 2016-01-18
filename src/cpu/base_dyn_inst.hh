@@ -910,7 +910,7 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
                 }
                 reqToVerify = new Request(*req);
             }
-            fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
+            fault = cpu->read(req, sreqLow, sreqHigh, lqIdx);
         } else {
             // Commit will have to clean up whatever happened.  Set this
             // instruction as executed.

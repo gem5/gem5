@@ -275,7 +275,7 @@ class LSQ {
      * index.
      */
     Fault read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
-               uint8_t *data, int load_idx);
+               int load_idx);
 
     /** Executes a store operation, using the store specified at the store
      * index.
@@ -332,11 +332,11 @@ class LSQ {
 template <class Impl>
 Fault
 LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
-                uint8_t *data, int load_idx)
+                int load_idx)
 {
     ThreadID tid = req->threadId();
 
-    return thread[tid].read(req, sreqLow, sreqHigh, data, load_idx);
+    return thread[tid].read(req, sreqLow, sreqHigh, load_idx);
 }
 
 template <class Impl>
