@@ -102,7 +102,7 @@ def parse_options():
     option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
         help="Sets the flags for debug output (-FLAG disables a flag)")
     option("--debug-start", metavar="TICK", type='int',
-        help="Start debug output at TICK (must be in ticks)")
+        help="Start debug output at TICK")
     option("--debug-file", metavar="FILE", default="cout",
         help="Sets the output file for debug [Default: %default]")
     option("--debug-ignore", metavar="EXPR", action='append', split=':',
