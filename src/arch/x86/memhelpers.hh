@@ -77,7 +77,7 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, uint64_t &mem,
         unsigned dataSize, unsigned flags)
 {
     memset(&mem, 0, sizeof(mem));
-    Fault fault = readMemTiming(xc, traceData, addr, mem, dataSize, flags);
+    Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
     if (fault == NoFault) {
         // If LE to LE, this is a nop, if LE to BE, the actual data ends up
         // in the right place because the LSBs where at the low addresses on
@@ -106,8 +106,12 @@ Fault
 writeMemAtomic(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
         unsigned dataSize, Addr addr, unsigned flags, uint64_t *res)
 {
-    Fault fault = writeMemTiming(xc, traceData, mem, dataSize, addr, flags,
-            res);
+    if (traceData) {
+        traceData->setData(mem);
+    }
+    uint64_t host_mem = TheISA::htog(mem);
+    Fault fault =
+          xc->writeMem((uint8_t *)&host_mem, dataSize, addr, flags, res);
     if (fault == NoFault && res != NULL) {
         *res = gtoh(*res);
     }
