@@ -271,11 +271,6 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
         break;
 
       case IPR_IPLR:
-#ifdef DEBUG
-        if (break_ipl != -1 && break_ipl == (int)(val & 0x1f))
-            Debug::breakpoint();
-#endif
-
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
         if (tc->getKernelStats())

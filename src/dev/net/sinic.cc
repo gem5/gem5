@@ -527,7 +527,6 @@ Base::cpuIntrPost(Tick when)
 
     intrTick = when;
     if (intrTick < curTick()) {
-        Debug::breakpoint();
         intrTick = curTick();
     }
 

@@ -94,14 +94,15 @@ def parse_options():
 
     # Debugging options
     group("Debugging Options")
-    option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
-        help="Tick to create a breakpoint")
+    option("--debug-break", metavar="TICK[,TICK]", action='append', split=',',
+        help="Create breakpoint(s) at TICK(s) " \
+             "(kills process if no debugger attached)")
     option("--debug-help", action='store_true',
         help="Print help on debug flags")
     option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
         help="Sets the flags for debug output (-FLAG disables a flag)")
-    option("--debug-start", metavar="TIME", type='int',
-        help="Start debug output at TIME (must be in ticks)")
+    option("--debug-start", metavar="TICK", type='int',
+        help="Start debug output at TICK (must be in ticks)")
     option("--debug-file", metavar="FILE", default="cout",
         help="Sets the output file for debug [Default: %default]")
     option("--debug-ignore", metavar="EXPR", action='append', split=':',

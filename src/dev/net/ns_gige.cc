@@ -951,7 +951,6 @@ NSGigE::cpuIntrPost(Tick when)
 
     intrTick = when;
     if (intrTick < curTick()) {
-        Debug::breakpoint();
         intrTick = curTick();
     }
 
@@ -1725,7 +1724,6 @@ NSGigE::txKick()
                             tcp->sum(cksum(tcp));
                             txTcpChecksums++;
                         } else {
-                            Debug::breakpoint();
                             warn_once("TCPPKT set, but not UDP!\n");
                         }
                     }
@@ -1735,7 +1733,6 @@ NSGigE::txKick()
                             ip->sum(cksum(ip));
                             txIpChecksums++;
                         } else {
-                            Debug::breakpoint();
                             warn_once("IPPKT set, but not UDP!\n");
                         }
                     }

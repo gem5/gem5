@@ -178,9 +178,6 @@ initSignals()
     // ignore them
     signal(SIGFPE, SIG_IGN);
 
-    // We use SIGTRAP sometimes for debugging
-    signal(SIGTRAP, SIG_IGN);
-
     // Dump intermediate stats
     installSignalHandler(SIGUSR1, dumpStatsHandler);
 
