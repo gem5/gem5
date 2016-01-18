@@ -91,8 +91,6 @@ const int SyscallPseudoReturnReg = INTREG_RDX;
 
 typedef uint64_t IntReg;
 typedef uint64_t CCReg;
-//XXX Should this be a 128 bit structure for XMM memory ops?
-typedef uint64_t LargestRead;
 typedef uint64_t MiscReg;
 
 //These floating point types are correct for mmx, but not

@@ -43,8 +43,6 @@ typedef uint64_t ExtMachInst;
 
 typedef GenericISA::DelaySlotUPCState<MachInst> PCState;
 
-typedef Twin64_t LargestRead;
-
 }
 
 #endif

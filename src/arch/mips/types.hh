@@ -42,8 +42,6 @@ typedef uint64_t ExtMachInst;
 
 typedef GenericISA::DelaySlotPCState<MachInst> PCState;
 
-typedef uint64_t LargestRead;
-
 //used in FP convert & round function
 enum ConvertType{
     SINGLE_TO_DOUBLE,

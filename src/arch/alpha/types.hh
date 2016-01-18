@@ -42,8 +42,6 @@ typedef uint64_t ExtMachInst;
 
 typedef GenericISA::SimplePCState<MachInst> PCState;
 
-typedef uint64_t LargestRead;
-
 enum annotes
 {
     ANNOTE_NONE = 0,

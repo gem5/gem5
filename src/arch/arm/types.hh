@@ -524,9 +524,6 @@ namespace ArmISA
         SXTX = 7
     };
 
-    typedef uint64_t LargestRead;
-    // Need to use 64 bits to make sure that read requests get handled properly
-
     typedef int RegContextParam;
     typedef int RegContextVal;
 
