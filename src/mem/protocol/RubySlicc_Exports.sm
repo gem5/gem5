@@ -39,12 +39,25 @@ external_type(Addr, primitive="yes");
 external_type(Cycles, primitive="yes", default="Cycles(0)");
 external_type(Tick, primitive="yes", default="0");
 
+structure(WriteMask, external="yes", desc="...") {
+  void clear();
+  bool cmpMask(WriteMask);
+  bool isEmpty();
+  bool isFull();
+  bool isOverlap(WriteMask);
+  void orMask(WriteMask);
+  void fillMask();
+}
+
 structure(DataBlock, external = "yes", desc="..."){
   void clear();
+  void copyPartial(DataBlock, int, int);
+  void copyPartial(DataBlock, WriteMask);
   void atomicPartial(DataBlock, WriteMask);
 }
 
 bool testAndRead(Addr addr, DataBlock datablk, Packet *pkt);
+bool testAndReadMask(Addr addr, DataBlock datablk, WriteMask mask, Packet *pkt);
 bool testAndWrite(Addr addr, DataBlock datablk, Packet *pkt);
 
 // AccessPermission

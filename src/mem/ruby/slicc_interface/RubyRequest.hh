@@ -40,6 +40,7 @@
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/common/WriteMask.hh"
 
 class RubyRequest : public Message
 {
@@ -54,6 +55,8 @@ class RubyRequest : public Message
     uint8_t* data;
     PacketPtr pkt;
     ContextID m_contextId;
+    WriteMask m_writeMask;
+    DataBlock m_WTData;
     int m_wfid;
     HSAScope m_scope;
     HSASegment m_segment;
@@ -99,6 +102,8 @@ class RubyRequest : public Message
           data(_data),
           pkt(_pkt),
           m_contextId(_core_id),
+          m_writeMask(_wm_size,_wm_mask),
+          m_WTData(_Data),
           m_wfid(_proc_id),
           m_scope(_scope),
           m_segment(_segment)
@@ -125,6 +130,8 @@ class RubyRequest : public Message
           data(_data),
           pkt(_pkt),
           m_contextId(_core_id),
+          m_writeMask(_wm_size,_wm_mask,_atomicOps),
+          m_WTData(_Data),
           m_wfid(_proc_id),
           m_scope(_scope),
           m_segment(_segment)

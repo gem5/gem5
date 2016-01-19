@@ -27,6 +27,8 @@
  */
 
 #include "mem/ruby/common/DataBlock.hh"
+
+#include "mem/ruby/common/WriteMask.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 DataBlock::DataBlock(const DataBlock &cp)
@@ -57,6 +59,25 @@ DataBlock::equal(const DataBlock& obj) const
 }
 
 void
+DataBlock::copyPartial(const DataBlock &dblk, const WriteMask &mask)
+{
+    for (int i = 0; i < RubySystem::getBlockSizeBytes(); i++) {
+        if (mask.getMask(i, 1)) {
+            m_data[i] = dblk.m_data[i];
+        }
+    }
+}
+
+void
+DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask)
+{
+    for (int i = 0; i < RubySystem::getBlockSizeBytes(); i++) {
+        m_data[i] = dblk.m_data[i];
+    }
+    mask.performAtomic(m_data);
+}
+
+void
 DataBlock::print(std::ostream& out) const
 {
     using namespace std;
@@ -74,6 +95,12 @@ const uint8_t*
 DataBlock::getData(int offset, int len) const
 {
     assert(offset + len <= RubySystem::getBlockSizeBytes());
+    return &m_data[offset];
+}
+
+uint8_t*
+DataBlock::getDataMod(int offset)
+{
     return &m_data[offset];
 }
 

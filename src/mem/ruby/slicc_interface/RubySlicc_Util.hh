@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +42,7 @@
 #include "mem/ruby/common/BoolVec.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/common/WriteMask.hh"
 
 inline Cycles zero_time() { return Cycles(0); }
 
@@ -88,6 +90,12 @@ inline int max_tokens()
  * range for the data block contains the address which the packet needs to
  * read, then the data from the data block is written to the packet. True is
  * returned if the data block was read, otherwise false is returned.
+ *
+ * This is used during a functional access "search the world" operation. The
+ * functional access looks in every place that might hold a valid data block
+ * and, if it finds one, checks to see if it is holding the address the access
+ * is searching for. During the access check, the WriteMask could be in any
+ * state, including empty.
  */
 inline bool
 testAndRead(Addr addr, DataBlock& blk, Packet *pkt)
@@ -104,6 +112,36 @@ testAndRead(Addr addr, DataBlock& blk, Packet *pkt)
             data[i] = blk.getByte(i + startByte);
         }
         return true;
+    }
+    return false;
+}
+
+/**
+ * This function accepts an address, a data block, a write mask and a packet.
+ * If the valid address range for the data block contains the address which
+ * the packet needs to read, then the data from the data block is written to
+ * the packet. True is returned if any part of the data block was read,
+ * otherwise false is returned.
+ */
+inline bool
+testAndReadMask(Addr addr, DataBlock& blk, WriteMask& mask, Packet *pkt)
+{
+    Addr pktLineAddr = makeLineAddress(pkt->getAddr());
+    Addr lineAddr = makeLineAddress(addr);
+
+    if (pktLineAddr == lineAddr) {
+        uint8_t *data = pkt->getPtr<uint8_t>();
+        unsigned int size_in_bytes = pkt->getSize();
+        unsigned startByte = pkt->getAddr() - lineAddr;
+        bool was_read = false;
+
+        for (unsigned i = 0; i < size_in_bytes; ++i) {
+            if (mask.test(i + startByte)) {
+                was_read = true;
+                data[i] = blk.getByte(i + startByte);
+            }
+        }
+        return was_read;
     }
     return false;
 }
