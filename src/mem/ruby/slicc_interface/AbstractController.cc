@@ -200,6 +200,12 @@ AbstractController::unblock(Addr addr)
     }
 }
 
+bool
+AbstractController::isBlocked(Addr addr)
+{
+    return (m_block_map.count(addr) > 0);
+}
+
 BaseMasterPort &
 AbstractController::getMasterPort(const std::string &if_name,
                                   PortID idx)

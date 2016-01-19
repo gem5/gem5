@@ -269,7 +269,7 @@ Profiler::collateStats()
                 it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
             AbstractController *ctr = (*it).second;
-            Sequencer *seq = ctr->getSequencer();
+            Sequencer *seq = ctr->getCPUSequencer();
             if (seq != NULL) {
                 m_outstandReqHist.add(seq->getOutstandReqHist());
             }
@@ -282,7 +282,7 @@ Profiler::collateStats()
                 it != m_ruby_system->m_abstract_controls[i].end(); ++it) {
 
             AbstractController *ctr = (*it).second;
-            Sequencer *seq = ctr->getSequencer();
+            Sequencer *seq = ctr->getCPUSequencer();
             if (seq != NULL) {
                 // add all the latencies
                 m_latencyHist.add(seq->getLatencyHist());

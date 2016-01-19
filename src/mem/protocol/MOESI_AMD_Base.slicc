@@ -1,0 +1,6 @@
+protocol "MOESI_AMD_Base";
+include "RubySlicc_interfaces.slicc";
+include "MOESI_AMD_Base-msg.sm";
+include "MOESI_AMD_Base-CorePair.sm";
+include "MOESI_AMD_Base-L3cache.sm";
+include "MOESI_AMD_Base-dir.sm";

@@ -73,6 +73,7 @@ class AbstractController : public MemObject, public Consumer
     // return instance name
     void blockOnQueue(Addr, MessageBuffer*);
     void unblock(Addr);
+    bool isBlocked(Addr);
 
     virtual MessageBuffer* getMandatoryQueue() const = 0;
     virtual MessageBuffer* getMemoryQueue() const = 0;
@@ -84,7 +85,7 @@ class AbstractController : public MemObject, public Consumer
     virtual void regStats();
 
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
-    virtual Sequencer* getSequencer() const = 0;
+    virtual Sequencer* getCPUSequencer() const = 0;
 
     //! These functions are used by ruby system to read/write the data blocks
     //! that exist with in the controller.

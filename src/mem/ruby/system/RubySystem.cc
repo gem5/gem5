@@ -107,7 +107,7 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
     Sequencer* sequencer_ptr = NULL;
 
     for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
-        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
+        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getCPUSequencer());
         if (sequencer_ptr == NULL) {
             sequencer_ptr = sequencer_map[cntrl];
         }

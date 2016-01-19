@@ -56,6 +56,12 @@ class AbstractCacheEntry : public AbstractEntry
     virtual DataBlock& getDataBlk()
     { panic("getDataBlk() not implemented!"); }
 
+    int validBlocks;
+    virtual int& getNumValidBlocks()
+    {
+        return validBlocks;
+    }
+
     // Functions for locking and unlocking the cache entry.  These are required
     // for supporting atomic memory accesses.
     void setLocked(int context);

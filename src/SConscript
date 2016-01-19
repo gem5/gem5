@@ -78,7 +78,7 @@ class SourceMeta(type):
     def __init__(cls, name, bases, dict):
         super(SourceMeta, cls).__init__(name, bases, dict)
         cls.all = []
-        
+
     def get(cls, **guards):
         '''Find all files that match the specified guards.  If a source
         file does not specify a flag, the default is False'''
@@ -367,9 +367,9 @@ def makeTheISA(source, target, env):
     target_isa = env['TARGET_ISA']
     def define(isa):
         return isa.upper() + '_ISA'
-    
+
     def namespace(isa):
-        return isa[0].upper() + isa[1:].lower() + 'ISA' 
+        return isa[0].upper() + isa[1:].lower() + 'ISA'
 
 
     code = code_formatter()
@@ -406,6 +406,51 @@ def makeTheISA(source, target, env):
 
 env.Command('config/the_isa.hh', map(Value, all_isa_list),
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
+
+def makeTheGPUISA(source, target, env):
+    isas = [ src.get_contents() for src in source ]
+    target_gpu_isa = env['TARGET_GPU_ISA']
+    def define(isa):
+        return isa.upper() + '_ISA'
+
+    def namespace(isa):
+        return isa[0].upper() + isa[1:].lower() + 'ISA'
+
+
+    code = code_formatter()
+    code('''\
+#ifndef __CONFIG_THE_GPU_ISA_HH__
+#define __CONFIG_THE_GPU_ISA_HH__
+
+''')
+
+    # create defines for the preprocessing and compile-time determination
+    for i,isa in enumerate(isas):
+        code('#define $0 $1', define(isa), i + 1)
+    code()
+
+    # create an enum for any run-time determination of the ISA, we
+    # reuse the same name as the namespaces
+    code('enum class GPUArch {')
+    for i,isa in enumerate(isas):
+        if i + 1 == len(isas):
+            code('  $0 = $1', namespace(isa), define(isa))
+        else:
+            code('  $0 = $1,', namespace(isa), define(isa))
+    code('};')
+
+    code('''
+
+#define THE_GPU_ISA ${{define(target_gpu_isa)}}
+#define TheGpuISA ${{namespace(target_gpu_isa)}}
+#define THE_GPU_ISA_STR "${{target_gpu_isa}}"
+
+#endif // __CONFIG_THE_GPU_ISA_HH__''')
+
+    code.write(str(target[0]))
+
+env.Command('config/the_gpu_isa.hh', map(Value, all_gpu_isa_list),
+            MakeAction(makeTheGPUISA, Transform("CFG ISA", 0)))
 
 ########################################################################
 #
@@ -784,7 +829,7 @@ extern "C" {
 EmbeddedSwig embed_swig_${module}(init_${module});
 ''')
     code.write(str(target[0]))
-    
+
 # Build all swig modules
 for swig in SwigSource.all:
     env.Command([swig.cc_source.tnode, swig.py_source.tnode], swig.tnode,
@@ -959,7 +1004,7 @@ const uint8_t data_${sym}[] = {
         x = array.array('B', data[i:i+step])
         code(''.join('%d,' % d for d in x))
     code.dedent()
-    
+
     code('''};
 
 EmbeddedPython embedded_${sym}(

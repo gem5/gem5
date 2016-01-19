@@ -35,6 +35,7 @@
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/structures/CacheMemory.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "mem/ruby/system/WeightedLRUPolicy.hh"
 
 using namespace std;
 
@@ -66,29 +67,27 @@ CacheMemory::CacheMemory(const Params *p)
     m_start_index_bit = p->start_index_bit;
     m_is_instruction_only_cache = p->is_icache;
     m_resource_stalls = p->resourceStalls;
+    m_block_size = p->block_size;  // may be 0 at this point. Updated in init()
 }
 
 void
 CacheMemory::init()
 {
-    m_cache_num_sets = (m_cache_size / m_cache_assoc) /
-        RubySystem::getBlockSizeBytes();
+    if (m_block_size == 0) {
+        m_block_size = RubySystem::getBlockSizeBytes();
+    }
+    m_cache_num_sets = (m_cache_size / m_cache_assoc) / m_block_size;
     assert(m_cache_num_sets > 1);
     m_cache_num_set_bits = floorLog2(m_cache_num_sets);
     assert(m_cache_num_set_bits > 0);
 
-    m_cache.resize(m_cache_num_sets);
-    for (int i = 0; i < m_cache_num_sets; i++) {
-        m_cache[i].resize(m_cache_assoc);
-        for (int j = 0; j < m_cache_assoc; j++) {
-            m_cache[i][j] = NULL;
-        }
-    }
+    m_cache.resize(m_cache_num_sets,
+                    std::vector<AbstractCacheEntry*>(m_cache_assoc, nullptr));
 }
 
 CacheMemory::~CacheMemory()
 {
-    if (m_replacementPolicy_ptr != NULL)
+    if (m_replacementPolicy_ptr)
         delete m_replacementPolicy_ptr;
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
@@ -356,6 +355,37 @@ CacheMemory::setMRU(const AbstractCacheEntry *e)
     uint32_t cacheSet = e->getSetIndex();
     uint32_t loc = e->getWayIndex();
     m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
+}
+
+void
+CacheMemory::setMRU(Addr address, int occupancy)
+{
+    int64_t cacheSet = addressToCacheSet(address);
+    int loc = findTagInSet(cacheSet, address);
+
+    if(loc != -1) {
+        if (m_replacementPolicy_ptr->useOccupancy()) {
+            (static_cast<WeightedLRUPolicy*>(m_replacementPolicy_ptr))->
+                touch(cacheSet, loc, curTick(), occupancy);
+        } else {
+            m_replacementPolicy_ptr->
+                touch(cacheSet, loc, curTick());
+        }
+    }
+}
+
+int
+CacheMemory::getReplacementWeight(int64_t set, int64_t loc)
+{
+    assert(set < m_cache_num_sets);
+    assert(loc < m_cache_assoc);
+    int ret = 0;
+    if(m_cache[set][loc] != NULL) {
+        ret = m_cache[set][loc]->getNumValidBlocks();
+        assert(ret >= 0);
+    }
+
+    return ret;
 }
 
 void

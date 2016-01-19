@@ -33,12 +33,22 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
+if env['BUILD_GPU']:
+    SimObject('GPUCoalescer.py')
 SimObject('RubySystem.py')
 SimObject('Sequencer.py')
+SimObject('WeightedLRUReplacementPolicy.py')
+if env['BUILD_GPU']:
+    SimObject('VIPERCoalescer.py')
 
 Source('CacheRecorder.cc')
 Source('DMASequencer.cc')
+if env['BUILD_GPU']:
+    Source('GPUCoalescer.cc')
 Source('RubyPort.cc')
 Source('RubyPortProxy.cc')
 Source('RubySystem.cc')
 Source('Sequencer.cc')
+if env['BUILD_GPU']:
+    Source('VIPERCoalescer.cc')
+Source('WeightedLRUPolicy.cc')

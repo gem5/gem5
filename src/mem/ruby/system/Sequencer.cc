@@ -63,6 +63,7 @@ Sequencer::Sequencer(const Params *p)
     m_max_outstanding_requests = p->max_outstanding_requests;
     m_deadlock_threshold = p->deadlock_threshold;
 
+    m_coreId = p->coreid; // for tracking the two CorePair sequencers
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
     assert(m_instCache_ptr != NULL);
@@ -593,6 +594,8 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     ContextID proc_id = pkt->req->hasContextId() ?
         pkt->req->contextId() : InvalidContextID;
 
+    ContextID core_id = coreId();
+
     // If valid, copy the pc to the ruby request
     Addr pc = 0;
     if (pkt->req->hasPC()) {
@@ -607,7 +610,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
                                       nullptr : pkt->getPtr<uint8_t>(),
                                       pkt->getSize(), pc, secondary_type,
                                       RubyAccessMode_Supervisor, pkt,
-                                      PrefetchBit_No, proc_id);
+                                      PrefetchBit_No, proc_id, core_id);
 
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\n",
             curTick(), m_version, "Seq", "Begin", "", "",

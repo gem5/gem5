@@ -1,0 +1,11 @@
+protocol "GPU_VIPER_Region";
+include "RubySlicc_interfaces.slicc";
+include "MOESI_AMD_Base-msg.sm";
+include "MOESI_AMD_Base-Region-CorePair.sm";
+include "MOESI_AMD_Base-L3cache.sm";
+include "MOESI_AMD_Base-Region-dir.sm";
+include "GPU_VIPER_Region-TCC.sm";
+include "GPU_VIPER-TCP.sm";
+include "GPU_VIPER-SQC.sm";
+include "MOESI_AMD_Base-RegionDir.sm";
+include "MOESI_AMD_Base-RegionBuffer.sm";

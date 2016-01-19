@@ -1,0 +1,9 @@
+protocol "GPU_VIPER";
+include "RubySlicc_interfaces.slicc";
+include "MOESI_AMD_Base-msg.sm";
+include "MOESI_AMD_Base-dir.sm";
+include "MOESI_AMD_Base-CorePair.sm";
+include "GPU_VIPER-TCP.sm";
+include "GPU_VIPER-SQC.sm";
+include "GPU_VIPER-TCC.sm";
+include "MOESI_AMD_Base-L3cache.sm";

@@ -68,6 +68,14 @@ isa_switch_hdrs = Split('''
 # Set up this directory to support switching headers
 make_switching_dir('arch', isa_switch_hdrs, env)
 
+if env['BUILD_GPU']:
+    gpu_isa_switch_hdrs = Split('''
+            gpu_decoder.hh
+            gpu_types.hh
+            ''')
+
+    make_gpu_switching_dir('arch', gpu_isa_switch_hdrs, env)
+
 #################################################################
 #
 # Include architecture-specific files.

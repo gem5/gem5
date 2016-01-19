@@ -31,8 +31,8 @@
 
 //
 // **PLEASE NOTE!**  When adding objects to this file you must also add a line
-// in the src/mem/ruby/SConscript file.  Otherwise the external object's .hh 
-// file will not be copied to the protocol directory and you will encounter a 
+// in the src/mem/ruby/SConscript file.  Otherwise the external object's .hh
+// file will not be copied to the protocol directory and you will encounter a
 // undefined declaration error.
 //
 
@@ -95,6 +95,8 @@ structure (NetDest, external = "yes", non_obj="yes") {
   bool intersectionIsEmpty(Set);
   bool intersectionIsEmpty(NetDest);
   MachineID smallestElement(MachineType);
+  NetDest OR(NetDest);
+  NetDest AND(NetDest);
 }
 
 structure (Sequencer, external = "yes") {
@@ -115,6 +117,44 @@ structure (Sequencer, external = "yes") {
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Addr);
   void invalidateSC(Addr);
+}
+
+structure (GPUCoalescer, external = "yes") {
+  void readCallback(Addr, DataBlock);
+  void readCallback(Addr, MachineType, DataBlock);
+  void readCallback(Addr, MachineType, DataBlock,
+                    Cycles, Cycles, Cycles);
+  void readCallback(Addr, MachineType, DataBlock,
+                    Cycles, Cycles, Cycles, bool);
+  void writeCallback(Addr, DataBlock);
+  void writeCallback(Addr, MachineType, DataBlock);
+  void writeCallback(Addr, MachineType, DataBlock,
+                     Cycles, Cycles, Cycles);
+  void writeCallback(Addr, MachineType, DataBlock,
+                     Cycles, Cycles, Cycles, bool);
+  void checkCoherence(Addr);
+  void evictionCallback(Addr);
+  void recordCPReadCallBack(MachineID, MachineID);
+  void recordCPWriteCallBack(MachineID, MachineID);
+}
+
+structure (VIPERCoalescer, external = "yes") {
+  void readCallback(Addr, DataBlock);
+  void readCallback(Addr, MachineType, DataBlock);
+  void readCallback(Addr, MachineType, DataBlock,
+                    Cycles, Cycles, Cycles);
+  void readCallback(Addr, MachineType, DataBlock,
+                    Cycles, Cycles, Cycles, bool);
+  void writeCallback(Addr, DataBlock);
+  void writeCallback(Addr, MachineType, DataBlock);
+  void writeCallback(Addr, MachineType, DataBlock,
+                     Cycles, Cycles, Cycles);
+  void writeCallback(Addr, MachineType, DataBlock,
+                     Cycles, Cycles, Cycles, bool);
+  void invCallback(Addr);
+  void wbCallback(Addr);
+  void checkCoherence(Addr);
+  void evictionCallback(Addr);
 }
 
 structure(RubyRequest, desc="...", interface="Message", external="yes") {
@@ -161,6 +201,7 @@ structure (CacheMemory, external = "yes") {
   Cycles getTagLatency();
   Cycles getDataLatency();
   void setMRU(Addr);
+  void setMRU(Addr, int);
   void setMRU(AbstractCacheEntry);
   void recordRequestType(CacheRequestType, Addr);
   bool checkResourceAvailable(CacheResourceType, Addr);

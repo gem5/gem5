@@ -37,7 +37,10 @@ MachineID mapAddressToRange(Addr addr, MachineType type,
 NetDest broadcast(MachineType type);
 MachineID map_Address_to_DMA(Addr addr);
 MachineID map_Address_to_Directory(Addr addr);
+MachineID map_Address_to_RegionDir(Addr addr);
 NodeID map_Address_to_DirectoryNode(Addr addr);
+MachineID map_Address_to_TCCdir(Addr addr);
+NodeID map_Address_to_TCCdirNode(Addr addr);
 NodeID machineIDToNodeID(MachineID machID);
 NodeID machineIDToVersion(MachineID machID);
 MachineType machineIDToMachineType(MachineID machID);

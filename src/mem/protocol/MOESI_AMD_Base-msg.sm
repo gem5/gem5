@@ -1,0 +1,362 @@
+/*
+ * Copyright (c) 2010-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * For use for simulation and test purposes only
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Lisa Hsu
+ */
+
+
+enumeration(CoherenceRequestType, desc="Coherence Request Types") {
+  // CPU Request Types ONLY
+  RdBlk,        desc="Read Blk";
+  RdBlkM,       desc="Read Blk Modified";
+  RdBlkS,       desc="Read Blk Shared";
+  CtoD,         desc="Change To Dirty";
+  VicClean,     desc="L2 clean eviction";
+  VicDirty,     desc="L2 dirty eviction";
+  Atomic,       desc="Upper level atomic";
+  AtomicWriteBack, desc="Upper level atomic";
+  WriteThrough, desc="Ordered WriteThrough w/Data";
+  WriteThroughFifo, desc="WriteThrough with no data";
+  WriteThroughDummy, desc="WriteThrough with no data for atomic operation";
+  WriteFlush,   desc="Release Flush";
+
+  WrCancel,     desc="want to cancel WB to Memory"; // should this be here?
+
+  WBApproval,   desc="WB Approval";
+
+  // Messages between Dir and R-Dir
+  ForceInv,     desc="Send invalide to the block";
+  ForceDowngrade, desc="Send downgrade to the block";
+  Unblock,      desc="Used to let the dir know a message has been sunk";
+
+  // Messages between R-Dir and R-Buffer
+  PrivateNotify, desc="Let region buffer know it has private access";
+  SharedNotify,  desc="Let region buffer know it has shared access";
+  WbNotify,      desc="Let region buffer know it saw its wb request";
+  Downgrade,     desc="Force the region buffer to downgrade to shared";
+  // Response to R-Dir (probably should be on a different network, but
+  // I need it to be ordered with respect to requests)
+  InvAck,       desc="Let the R-Dir know when the inv has occured";
+
+  PrivateRequest, desc="R-buf wants the region in private";
+  UpgradeRequest, desc="R-buf wants the region in private";
+  SharedRequest,  desc="R-buf wants the region in shared (could respond with private)";
+  CleanWbRequest, desc="R-buf wants to deallocate clean region";
+
+  NA,             desc="So we don't get segfaults";
+}
+
+enumeration(ProbeRequestType, desc="Probe Request Types") {
+  PrbDowngrade,    desc="Probe for Status";  // EtoS, MtoO, StoS
+  PrbInv,       desc="Probe to Invalidate";
+
+  // For regions
+  PrbRepl,      desc="Force the cache to do a replacement";
+  PrbRegDowngrade, desc="Probe for Status";  // EtoS, MtoO, StoS
+  PrbAtomic,    desc="Forwarded Atomic Operation";
+}
+
+
+enumeration(CoherenceResponseType, desc="Coherence Response Types") {
+  NBSysResp,       desc="Northbridge response to CPU Rd request";
+  NBSysWBAck,      desc="Northbridge response ok to WB";
+  TDSysResp,       desc="TCCdirectory response to CPU Rd request";
+  TDSysWBAck,      desc="TCCdirectory response ok to WB";
+  TDSysWBNack,     desc="TCCdirectory response ok to drop";
+  CPUPrbResp,      desc="CPU Probe Response";
+  CPUData,         desc="CPU Data";
+  StaleNotif,      desc="Notification of Stale WBAck, No data to writeback";
+  CPUCancelWB,     desc="want to cancel WB to Memory";
+  MemData,         desc="Data from Memory";
+
+  // for regions
+  PrivateAck,      desc="Ack that r-buf received private notify";
+  RegionWbAck,     desc="Writeback Ack that r-buf completed deallocation";
+  DirReadyAck,     desc="Directory (mem ctrl)<->region dir handshake";
+}
+
+enumeration(CoherenceState, default="CoherenceState_NA", desc="Coherence State") {
+  Modified,             desc="Modified";
+  Owned,                desc="Owned state";
+  Exclusive,            desc="Exclusive";
+  Shared,               desc="Shared";
+  NA,                   desc="NA";
+}
+
+structure(CPURequestMsg, desc="...", interface="Message") {
+  Addr addr,             desc="Physical address for this request";
+  Addr DemandAddress,       desc="Physical block address for this request";
+  CoherenceRequestType Type,   desc="Type of request";
+  DataBlock DataBlk,           desc="data for the cache line";  // only for WB
+  bool Dirty,                   desc="whether WB data is dirty";  // only for WB
+  MachineID Requestor,            desc="Node who initiated the request";
+  NetDest Destination,             desc="Multicast destination mask";
+  bool Shared,                  desc="For CPU_WrVicBlk, vic is O not M.  For CPU_ClVicBlk, vic is S";
+  MessageSizeType MessageSize, desc="size category of the message";
+  Cycles InitialRequestTime, desc="time the initial requests was sent from the L1Cache";
+  Cycles ForwardRequestTime, desc="time the dir forwarded the request";
+  Cycles ProbeRequestStartTime, desc="the time the dir started the probe request";
+  bool DemandRequest, default="false", desc="For profiling purposes";
+
+  NetDest Sharers,              desc="Caches that may have a valid copy of the data";
+  bool ForceShared,             desc="R-dir knows it is shared, pass on so it sends an S copy, not E";
+  bool Private, default="false", desc="Requestor already has private permissions, no need for dir check";
+  bool CtoDSinked, default="false", desc="This is true if the CtoD previously sent must have been sunk";
+
+  bool NoAckNeeded, default="false", desc="True if region buffer doesn't need to ack";
+  int Acks, default="0", desc="Acks that the dir (mem ctrl) should expect to receive";
+  CoherenceRequestType OriginalType, default="CoherenceRequestType_NA",  desc="Type of request from core fwded through region buffer";
+  WriteMask writeMask, desc="Write Through Data";
+  MachineID WTRequestor,            desc="Node who initiated the write through";
+  HSAScope scope,                      default="HSAScope_SYSTEM", desc="Request Scope";
+  int wfid,                         default="0", desc="wavefront id";
+  bool NoWriteConflict,             default="true", desc="write collided with CAB entry";
+  int ProgramCounter,               desc="PC that accesses to this block";
+
+  bool functionalRead(Packet *pkt) {
+    // Only PUTX messages contains the data block
+    if (Type == CoherenceRequestType:VicDirty) {
+        return testAndRead(addr, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return testAndWrite(addr, DataBlk, pkt);
+  }
+}
+
+structure(NBProbeRequestMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Physical address for this request";
+  ProbeRequestType Type,             desc="NB_PrbNxtState signal";
+  bool ReturnData,              desc="Indicates CPU should return data";
+  NetDest Destination,             desc="Node to whom the data is sent";
+  MessageSizeType MessageSize, desc="size category of the message";
+  bool DemandRequest, default="false", desc="demand request, requesting 3-hop transfer";
+  Addr DemandAddress,        desc="Demand block address for a region request";
+  MachineID Requestor,          desc="Requestor id for 3-hop requests";
+  bool NoAckNeeded, default="false", desc="For short circuting acks";
+  int ProgramCounter,           desc="PC that accesses to this block";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return false;
+  }
+
+}
+
+structure(TDProbeRequestMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Physical address for this request";
+  ProbeRequestType Type,  desc="TD_PrbNxtState signal";
+  bool ReturnData,        desc="Indicates CPU should return data";
+  bool localCtoD,         desc="Indicates CtoD is within the GPU hierarchy (aka TCC subtree)";
+  NetDest Destination,    desc="Node to whom the data is sent";
+  MessageSizeType MessageSize, desc="size category of the message";
+  int Phase,              desc="Synchronization Phase";
+  int wfid,               desc="wavefront id for Release";
+  MachineID Requestor,    desc="Node who initiated the request";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return false;
+  }
+}
+
+// Response Messages seemed to be easily munged into one type
+structure(ResponseMsg, desc="...", interface="Message") {
+  Addr addr,             desc="Physical address for this request";
+  CoherenceResponseType Type,  desc="NB Sys Resp or CPU Response to Probe";
+  MachineID Sender,               desc="Node who sent the data";
+  NetDest Destination,             desc="Node to whom the data is sent";
+  // Begin Used Only By CPU Response
+  DataBlock DataBlk,           desc="data for the cache line";
+  bool Hit,                    desc="probe hit valid line";
+  bool Shared,                 desc="True if S, or if NB Probe ReturnData==1 && O";
+  bool Dirty,                  desc="Is the data dirty (different than memory)?";
+  bool Ntsl,                   desc="indicates probed lin will be invalid after probe";
+  bool UntransferredOwner,     desc="pending confirmation of ownership change";
+  // End Used Only By CPU Response
+
+  // Begin NB Response Only
+  CoherenceState State, default=CoherenceState_NA,        desc="What returned data from NB should be in";
+  bool CtoD,                    desc="was the originator a CtoD?";
+  // End NB Response Only
+
+  // Normally if a block gets hit by a probe while waiting to be written back,
+  // you flip the NbReqShared signal (part of the CPURequest signal group).
+  // But since this is in packets and I don't want to send a separate packet,
+  // let's just send this signal back with the data instead
+  bool NbReqShared,             desc="modification of Shared field from initial request, e.g. hit by shared probe";
+
+  MessageSizeType MessageSize, desc="size category of the message";
+  Cycles InitialRequestTime, desc="time the initial requests was sent from the L1Cache";
+  Cycles ForwardRequestTime, desc="time the dir forwarded the request";
+  Cycles ProbeRequestStartTime, desc="the time the dir started the probe request";
+  bool DemandRequest, default="false", desc="For profiling purposes";
+
+  bool L3Hit, default="false", desc="Did memory or L3 supply the data?";
+  MachineID OriginalResponder, desc="Mach which wrote the data to the L3";
+  MachineID WTRequestor,             desc="Node who started the writethrough";
+
+  bool NotCached, default="false", desc="True when the Region buffer has already evicted the line";
+
+  bool NoAckNeeded, default="false", desc="For short circuting acks";
+  bool isValid, default="false", desc="Is acked block valid";
+  int wfid, default="0", desc="wavefront id";
+  int Phase,                   desc="Synchronization Phase";
+
+  int ProgramCounter,       desc="PC that issues this request";
+  bool mispred,              desc="tell TCP if the block should not be bypassed";
+
+
+  bool functionalRead(Packet *pkt) {
+    // Only PUTX messages contains the data block
+    if (Type == CoherenceResponseType:CPUData ||
+        Type == CoherenceResponseType:MemData) {
+        return testAndRead(addr, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return testAndWrite(addr, DataBlk, pkt);
+  }
+}
+
+structure(UnblockMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Physical address for this request";
+  NetDest Destination,          desc="Destination (always directory)";
+  MessageSizeType MessageSize, desc="size category of the message";
+  MachineID Sender,               desc="Node who sent the data";
+  bool currentOwner, default="false", desc="Is the sender the current owner";
+  bool DoneAck, default="false", desc="Is this a done ack?";
+  bool Dirty, default="false", desc="Was block dirty when evicted";
+  bool wasValid, default="false", desc="Was block valid when evicted";
+  bool valid, default="false", desc="Is block valid";
+  bool validToInvalid, default="false", desc="Was block valid when evicted";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return false;
+  }
+}
+
+enumeration(TriggerType, desc="Trigger Type") {
+  L2_to_L1,             desc="L2 to L1 fill";
+  AcksComplete,         desc="NB received all needed Acks";
+
+  // For regions
+  InvNext,              desc="Invalidate the next block";
+  PrivateAck,           desc="Loopback ack for machines with no Region Buffer";
+  AllOutstanding,       desc="All outstanding requests have finished";
+  L3Hit,                desc="L3 hit in dir";
+
+  // For region directory once the directory is blocked
+  InvRegion,            desc="Invalidate region";
+  DowngradeRegion,      desc="downgrade region";
+  //For writethrough
+  UnblockWriteThrough,  desc="unblock";
+  WriteData,            desc="Write to full cacheblock data";
+  WriteDone,            desc="Sequencer says that write is done";
+  AtomicDone,           desc="Atomic is done";
+}
+
+enumeration(CacheId, desc="Which Cache in the Core") {
+  L1I,          desc="L1 I-cache";
+  L1D0,         desc="L1 D-cache cluster 0";
+  L1D1,         desc="L1 D-cache cluster 1";
+  NA,           desc="Default";
+}
+
+structure(TriggerMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Address";
+  TriggerType Type,             desc="Type of trigger";
+  CacheId Dest,         default="CacheId_NA", desc="Cache to invalidate";
+  int ProgramCounter,           desc="PC that accesses to this block";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return false;
+  }
+
+}
+
+enumeration(FifoType, desc="Fifo Type") {
+  WriteDummy,          desc="Dummy Write for atomic operation";
+  WriteThrough,        desc="simple writethrough request";
+  WriteFlush,          desc="synchronization message";
+}
+
+structure(FifoMsg, desc="...", interface="Message") {
+  Addr addr,          desc="Address";
+  FifoType Type,            desc="WriteThrough/WriteFlush";
+  int wfid,                 default="0",desc="wavefront id";
+  MachineID Requestor,      desc="Flush Requestor";
+  MachineID oRequestor,      desc="original Flush Requestor";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return false;
+  }
+
+}

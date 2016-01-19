@@ -348,20 +348,26 @@ if env['TARGET_ISA'] == 'arm':
                 'realview64-switcheroo-timing',
                 'realview64-switcheroo-o3',
                 'realview64-switcheroo-full']
-if env['TARGET_ISA'] == 'x86':
+if env['TARGET_ISA'] == 'x86' and not env['BUILD_GPU']:
     configs += ['pc-simple-atomic',
                 'pc-simple-timing',
                 'pc-o3-timing',
                 'pc-switcheroo-full']
 
-configs += ['simple-atomic', 'simple-atomic-mp',
-            'simple-timing', 'simple-timing-mp',
-            'minor-timing', 'minor-timing-mp',
-            'o3-timing', 'o3-timing-mt', 'o3-timing-mp',
-            'rubytest', 'memtest', 'memtest-filter',
-            'tgen-simple-mem', 'tgen-dram-ctrl']
+if env['TARGET_ISA'] == 'x86' and env['BUILD_GPU'] and \
+   env['TARGET_GPU_ISA'] == 'hsail':
+    configs += ['gpu']
+    if env['PROTOCOL'] == 'GPU_RfO':
+        configs += ['gpu-randomtest']
+else:
+    configs += ['simple-atomic', 'simple-atomic-mp',
+                'simple-timing', 'simple-timing-mp',
+                'minor-timing', 'minor-timing-mp',
+                'o3-timing', 'o3-timing-mt', 'o3-timing-mp',
+                'rubytest', 'memtest', 'memtest-filter',
+                'tgen-simple-mem', 'tgen-dram-ctrl']
 
-configs += ['learning-gem5-p1-simple', 'learning-gem5-p1-two-level']
+    configs += ['learning-gem5-p1-simple', 'learning-gem5-p1-two-level']
 
 if env['PROTOCOL'] != 'None':
     if env['PROTOCOL'] == 'MI_example':

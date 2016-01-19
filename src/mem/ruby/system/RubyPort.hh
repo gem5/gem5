@@ -167,6 +167,8 @@ class RubyPort : public MemObject
     uint32_t getId() { return m_version; }
     DrainState drain() override;
 
+    bool isCPUSequencer() { return m_isCPUSequencer; }
+
   protected:
     void trySendRetries();
     void ruby_hit_callback(PacketPtr pkt);
@@ -218,6 +220,8 @@ class RubyPort : public MemObject
     // that should be called when the Sequencer becomes available after a stall.
     //
     std::vector<MemSlavePort *> retryList;
+
+    bool m_isCPUSequencer;
 };
 
 #endif // __MEM_RUBY_SYSTEM_RUBYPORT_HH__

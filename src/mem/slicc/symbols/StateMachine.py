@@ -35,13 +35,17 @@ import re
 
 python_class_map = {
                     "int": "Int",
+                    "NodeID": "Int",
                     "uint32_t" : "UInt32",
                     "std::string": "String",
                     "bool": "Bool",
                     "CacheMemory": "RubyCache",
                     "WireBuffer": "RubyWireBuffer",
                     "Sequencer": "RubySequencer",
+                    "GPUCoalescer" : "RubyGPUCoalescer",
+                    "VIPERCoalescer" : "VIPERCoalescer",
                     "DirectoryMemory": "RubyDirectoryMemory",
+                    "PerfectCacheMemory": "RubyPerfectCacheMemory",
                     "MemoryControl": "MemoryControl",
                     "MessageBuffer": "MessageBuffer",
                     "DMASequencer": "DMASequencer",
@@ -305,7 +309,7 @@ class $c_ident : public AbstractController
     void collateStats();
 
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
-    Sequencer* getSequencer() const;
+    Sequencer* getCPUSequencer() const;
 
     int functionalWriteBuffers(PacketPtr&);
 
@@ -527,8 +531,14 @@ $c_ident::$c_ident(const Params *p)
             else:
                 code('m_${{param.ident}} = p->${{param.ident}};')
 
-            if re.compile("sequencer").search(param.ident):
-                code('m_${{param.ident}}_ptr->setController(this);')
+            if re.compile("sequencer").search(param.ident) or \
+                   param.type_ast.type.c_ident == "GPUCoalescer" or \
+                   param.type_ast.type.c_ident == "VIPERCoalescer":
+                code('''
+if (m_${{param.ident}}_ptr != NULL) {
+    m_${{param.ident}}_ptr->setController(this);
+}
+''')
 
         code('''
 
@@ -670,6 +680,28 @@ $c_ident::init()
                 assert(param.pointer)
                 seq_ident = "m_%s_ptr" % param.ident
 
+        if seq_ident != "NULL":
+            code('''
+Sequencer*
+$c_ident::getCPUSequencer() const
+{
+    if (NULL != $seq_ident && $seq_ident->isCPUSequencer()) {
+        return $seq_ident;
+    } else {
+        return NULL;
+    }
+}
+''')
+        else:
+            code('''
+
+Sequencer*
+$c_ident::getCPUSequencer() const
+{
+    return NULL;
+}
+''')
+
         code('''
 
 void
@@ -794,12 +826,6 @@ MessageBuffer*
 $c_ident::getMemoryQueue() const
 {
     return $memq_ident;
-}
-
-Sequencer*
-$c_ident::getSequencer() const
-{
-    return $seq_ident;
 }
 
 void

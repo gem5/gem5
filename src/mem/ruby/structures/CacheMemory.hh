@@ -106,7 +106,8 @@ class CacheMemory : public SimObject
 
     // Set this address to most recently used
     void setMRU(Addr address);
-    // Set this entry to most recently used
+    void setMRU(Addr addr, int occupancy);
+    int getReplacementWeight(int64_t set, int64_t loc);
     void setMRU(const AbstractCacheEntry *e);
 
     // Functions for locking and unlocking cache lines corresponding to the
@@ -146,6 +147,7 @@ class CacheMemory : public SimObject
     Stats::Scalar numDataArrayStalls;
 
     int getCacheSize() const { return m_cache_size; }
+    int getCacheAssoc() const { return m_cache_assoc; }
     int getNumBlocks() const { return m_cache_num_sets * m_cache_assoc; }
     Addr getAddressAtIdx(int idx) const;
 
@@ -182,6 +184,7 @@ class CacheMemory : public SimObject
     int m_cache_assoc;
     int m_start_index_bit;
     bool m_resource_stalls;
+    int m_block_size;
 };
 
 std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);

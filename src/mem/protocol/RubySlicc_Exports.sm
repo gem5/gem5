@@ -62,7 +62,7 @@ bool testAndWrite(Addr addr, DataBlock datablk, Packet *pkt);
 
 // AccessPermission
 // The following five states define the access permission of all memory blocks.
-// These permissions have multiple uses.  They coordinate locking and 
+// These permissions have multiple uses.  They coordinate locking and
 // synchronization primitives, as well as enable functional accesses.
 // One should not need to add any additional permission values and it is very
 // risky to do so.
@@ -73,7 +73,7 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   Read_Write, desc="block is Read/Write";
 
   // Possibly Invalid data
-  // The maybe stale permission indicates that accordingly to the protocol, 
+  // The maybe stale permission indicates that accordingly to the protocol,
   // there is no guarantee the block contains valid data.  However, functional
   // writes should update the block because a dataless PUT request may
   // revalidate the block's data.
@@ -227,6 +227,13 @@ enumeration(MachineType, desc="...", default="MachineType_NULL") {
     Collector,   desc="Collector Mach";
     L1Cache_wCC, desc="L1 Cache Mach to track cache-to-cache transfer (used for miss latency profile)";
     L2Cache_wCC, desc="L2 Cache Mach to track cache-to-cache transfer (used for miss latency profile)";
+    CorePair,    desc="Cache Mach (2 cores, Private L1Ds, Shared L1I & L2)";
+    TCP,         desc="GPU L1 Data Cache (Texture Cache per Pipe)";
+    TCC,         desc="GPU L2 Shared Cache (Texture Cache per Channel)";
+    TCCdir,      desc="Directory at the GPU L2 Cache (TCC)";
+    SQC,         desc="GPU L1 Instr Cache (Sequencer Cache)";
+    RegionDir,   desc="Region-granular directory";
+    RegionBuffer,desc="Region buffer for CPU and GPU";
     NULL,        desc="null mach type";
 }
 

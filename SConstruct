@@ -1065,7 +1065,9 @@ main = conf.Finish()
 
 # Define the universe of supported ISAs
 all_isa_list = [ ]
+all_gpu_isa_list = [ ]
 Export('all_isa_list')
+Export('all_gpu_isa_list')
 
 class CpuModel(object):
     '''The CpuModel class encapsulates everything the ISA parser needs to
@@ -1121,9 +1123,11 @@ for bdir in [ base_dir ] + extras_dir_list:
             SConscript(joinpath(root, 'SConsopts'))
 
 all_isa_list.sort()
+all_gpu_isa_list.sort()
 
 sticky_vars.AddVariables(
     EnumVariable('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
+    EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'hsail', all_gpu_isa_list),
     ListVariable('CPU_MODELS', 'CPU models',
                  sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
                  sorted(CpuModel.dict.keys())),
@@ -1139,6 +1143,7 @@ sticky_vars.AddVariables(
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
     BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models', have_kvm),
+    BoolVariable('BUILD_GPU', 'Build the compute-GPU model', False),
     EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                   all_protocols),
     EnumVariable('BACKTRACE_IMPL', 'Post-mortem dump implementation',
@@ -1146,9 +1151,9 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'CP_ANNOTATE',
-                'USE_POSIX_CLOCK', 'USE_KVM', 'PROTOCOL', 'HAVE_PROTOBUF',
-                'HAVE_PERF_ATTR_EXCLUDE_HOST']
+export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'TARGET_GPU_ISA',
+                'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'USE_KVM', 'PROTOCOL',
+                'HAVE_PROTOBUF', 'HAVE_PERF_ATTR_EXCLUDE_HOST']
 
 ###################################################
 #
@@ -1226,6 +1231,7 @@ main.SConscript('ext/nomali/SConscript',
 ###################################################
 
 main['ALL_ISA_LIST'] = all_isa_list
+main['ALL_GPU_ISA_LIST'] = all_gpu_isa_list
 all_isa_deps = {}
 def make_switching_dir(dname, switch_headers, env):
     # Generate the header.  target[0] is the full path of the output
@@ -1257,6 +1263,35 @@ def make_switching_dir(dname, switch_headers, env):
     all_isa_deps[isa_target] = None
 
 Export('make_switching_dir')
+
+def make_gpu_switching_dir(dname, switch_headers, env):
+    # Generate the header.  target[0] is the full path of the output
+    # header to generate.  'source' is a dummy variable, since we get the
+    # list of ISAs from env['ALL_ISA_LIST'].
+    def gen_switch_hdr(target, source, env):
+        fname = str(target[0])
+
+        isa = env['TARGET_GPU_ISA'].lower()
+
+        try:
+            f = open(fname, 'w')
+            print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
+            f.close()
+        except IOError:
+            print "Failed to create %s" % fname
+            raise
+
+    # Build SCons Action object. 'varlist' specifies env vars that this
+    # action depends on; when env['ALL_ISA_LIST'] changes these actions
+    # should get re-executed.
+    switch_hdr_action = MakeAction(gen_switch_hdr,
+                          Transform("GENERATE"), varlist=['ALL_ISA_GPU_LIST'])
+
+    # Instantiate actions for each header
+    for hdr in switch_headers:
+        env.Command(hdr, [], switch_hdr_action)
+
+Export('make_gpu_switching_dir')
 
 # all-isas -> all-deps -> all-environs -> all_targets
 main.Alias('#all-isas', [])

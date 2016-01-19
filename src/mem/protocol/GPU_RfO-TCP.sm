@@ -1,0 +1,1009 @@
+/*
+ * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * For use for simulation and test purposes only
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Lisa Hsu
+ */
+
+machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
+ : GPUCoalescer* coalescer;
+   Sequencer* sequencer;
+   bool use_seq_not_coal;
+   CacheMemory * L1cache;
+   int TCC_select_num_bits;
+   Cycles issue_latency := 40;  // time to send data down to TCC
+   Cycles l2_hit_latency := 18;
+
+  MessageBuffer * requestFromTCP, network="To", virtual_network="1", vnet_type="request";
+  MessageBuffer * responseFromTCP, network="To", virtual_network="3", vnet_type="response";
+  MessageBuffer * unblockFromCore, network="To", virtual_network="5", vnet_type="unblock";
+
+  MessageBuffer * probeToTCP, network="From", virtual_network="1", vnet_type="request";
+  MessageBuffer * responseToTCP, network="From", virtual_network="3", vnet_type="response";
+
+  MessageBuffer * mandatoryQueue;
+{
+  state_declaration(State, desc="TCP Cache States", default="TCP_State_I") {
+    I, AccessPermission:Invalid, desc="Invalid";
+    S, AccessPermission:Read_Only, desc="Shared";
+    E, AccessPermission:Read_Write, desc="Exclusive";
+    O, AccessPermission:Read_Only, desc="Owner state in core, both clusters and other cores may be sharing line";
+    M, AccessPermission:Read_Write, desc="Modified";
+
+    I_M, AccessPermission:Busy, desc="Invalid, issued RdBlkM, have not seen response yet";
+    I_ES, AccessPermission:Busy, desc="Invalid, issued RdBlk, have not seen response yet";
+    S_M, AccessPermission:Read_Only, desc="Shared, issued CtoD, have not seen response yet";
+    O_M, AccessPermission:Read_Only, desc="Shared, issued CtoD, have not seen response yet";
+
+    ES_I, AccessPermission:Read_Only, desc="L1 replacement, waiting for clean WB ack";
+    MO_I, AccessPermission:Read_Only, desc="L1 replacement, waiting for dirty WB ack";
+
+    MO_PI, AccessPermission:Read_Only, desc="L1 downgrade, waiting for CtoD ack (or ProbeInvalidateData)";
+
+    I_C, AccessPermission:Invalid, desc="Invalid, waiting for WBAck from TCC for canceled WB";
+  }
+
+  enumeration(Event, desc="TCP Events") {
+    // Core initiated
+    Load,           desc="Load";
+    Store,          desc="Store";
+
+    // TCC initiated
+    TCC_AckS,        desc="TCC Ack to Core Request";
+    TCC_AckE,        desc="TCC Ack to Core Request";
+    TCC_AckM,        desc="TCC Ack to Core Request";
+    TCC_AckCtoD,     desc="TCC Ack to Core Request";
+    TCC_AckWB,       desc="TCC Ack for clean WB";
+    TCC_NackWB,       desc="TCC Nack for clean WB";
+
+    // Mem sys initiated
+    Repl,           desc="Replacing block from cache";
+
+    // Probe Events
+    PrbInvData,         desc="probe, return O or M data";
+    PrbInv,             desc="probe, no need for data";
+    LocalPrbInv,             desc="local probe, no need for data";
+    PrbShrData,         desc="probe downgrade, return O or M data";
+  }
+
+  enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+    DataArrayRead,    desc="Read the data array";
+    DataArrayWrite,   desc="Write the data array";
+    TagArrayRead,     desc="Read the data array";
+    TagArrayWrite,    desc="Write the data array";
+  }
+
+
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,           desc="cache state";
+    bool Dirty,                 desc="Is the data dirty (diff than memory)?";
+    DataBlock DataBlk,          desc="data for the block";
+    bool FromL2, default="false", desc="block just moved from L2";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,             desc="Transient state";
+    DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+    int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
+    bool Shared,             desc="Victim hit by shared probe";
+   }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  TBETable TBEs, template="<TCP_TBE>", constructor="m_number_of_TBEs";
+  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+  Cycles curCycle();
+
+  // Internal functions
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
+    Entry cache_entry := static_cast(Entry, "pointer", L1cache.lookup(address));
+    return cache_entry;
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    } else {
+      return getCacheEntry(addr).DataBlk;
+    }
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    if(is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
+    }
+    return State:I;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
+    }
+
+    if (is_valid(cache_entry)) {
+      cache_entry.CacheState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return TCP_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return TCP_State_to_permission(cache_entry.CacheState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  bool isValid(Addr addr) {
+      AccessPermission perm := getAccessPermission(addr);
+      if (perm == AccessPermission:NotPresent ||
+          perm == AccessPermission:Invalid ||
+          perm == AccessPermission:Busy) {
+          return false;
+      } else {
+          return true;
+      }
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(TCP_State_to_permission(state));
+    }
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      functionalMemoryRead(pkt);
+    }
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+            testAndWrite(addr, tbe.DataBlk, pkt);
+    }
+
+    num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
+    return num_functional_writes;
+  }
+
+  void recordRequestType(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+        L1cache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+        L1cache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+        L1cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+        L1cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    }
+  }
+
+  bool checkResourceAvailable(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+      return L1cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+      return L1cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+      return L1cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      return L1cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else {
+      error("Invalid RequestType type in checkResourceAvailable");
+      return true;
+    }
+  }
+
+  MachineType getCoherenceType(MachineID myMachID,
+                                      MachineID senderMachID) {
+    if(myMachID == senderMachID) {
+        return MachineType:TCP;
+    } else if(machineIDToMachineType(senderMachID) == MachineType:TCP) {
+        return MachineType:L1Cache_wCC;
+    } else if(machineIDToMachineType(senderMachID) == MachineType:TCC) {
+        return MachineType:TCC;
+    } else {
+        return MachineType:TCCdir;
+    }
+  }
+
+  // Out Ports
+
+  out_port(requestNetwork_out, CPURequestMsg, requestFromTCP);
+  out_port(responseNetwork_out, ResponseMsg, responseFromTCP);
+  out_port(unblockNetwork_out, UnblockMsg, unblockFromCore);
+
+  // In Ports
+
+  in_port(probeNetwork_in, TDProbeRequestMsg, probeToTCP) {
+    if (probeNetwork_in.isReady(clockEdge())) {
+     peek(probeNetwork_in, TDProbeRequestMsg, block_on="addr") {
+        DPRINTF(RubySlicc, "%s\n", in_msg);
+        DPRINTF(RubySlicc, "machineID: %s\n", machineID);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+
+        if (in_msg.Type == ProbeRequestType:PrbInv) {
+          if (in_msg.ReturnData) {
+            trigger(Event:PrbInvData, in_msg.addr, cache_entry, tbe);
+          } else {
+            if(in_msg.localCtoD) {
+              trigger(Event:LocalPrbInv, in_msg.addr, cache_entry, tbe);
+            } else {
+              trigger(Event:PrbInv, in_msg.addr, cache_entry, tbe);
+            }
+          }
+        } else if (in_msg.Type == ProbeRequestType:PrbDowngrade) {
+          assert(in_msg.ReturnData);
+          trigger(Event:PrbShrData, in_msg.addr, cache_entry, tbe);
+        }
+      }
+    }
+  }
+
+  in_port(responseToTCP_in, ResponseMsg, responseToTCP) {
+    if (responseToTCP_in.isReady(clockEdge())) {
+      peek(responseToTCP_in, ResponseMsg, block_on="addr") {
+
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+
+        if (in_msg.Type == CoherenceResponseType:TDSysResp) {
+          if (in_msg.State == CoherenceState:Modified) {
+            if (in_msg.CtoD) {
+              trigger(Event:TCC_AckCtoD, in_msg.addr, cache_entry, tbe);
+            } else {
+              trigger(Event:TCC_AckM, in_msg.addr, cache_entry, tbe);
+            }
+          } else if (in_msg.State == CoherenceState:Shared) {
+            trigger(Event:TCC_AckS, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.State == CoherenceState:Exclusive) {
+            trigger(Event:TCC_AckE, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceResponseType:TDSysWBAck) {
+          trigger(Event:TCC_AckWB, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:TDSysWBNack) {
+          trigger(Event:TCC_NackWB, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unexpected Response Message to Core");
+        }
+      }
+    }
+  }
+
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
+        Entry cache_entry := getCacheEntry(in_msg.LineAddress);
+        TBE tbe := TBEs.lookup(in_msg.LineAddress);
+        DPRINTF(RubySlicc, "%s\n", in_msg);
+        if (in_msg.Type == RubyRequestType:LD) {
+          if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.LineAddress)) {
+            trigger(Event:Load, in_msg.LineAddress, cache_entry, tbe);
+          } else {
+            Addr victim := L1cache.cacheProbe(in_msg.LineAddress);
+            trigger(Event:Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+          }
+        } else {
+          if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.LineAddress)) {
+            trigger(Event:Store, in_msg.LineAddress, cache_entry, tbe);
+          } else {
+            Addr victim := L1cache.cacheProbe(in_msg.LineAddress);
+            trigger(Event:Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+          }
+        }
+      }
+    }
+  }
+
+  // Actions
+
+  action(ic_invCache, "ic", desc="invalidate cache") {
+    if(is_valid(cache_entry)) {
+      L1cache.deallocate(address);
+    }
+    unset_cache_entry();
+  }
+
+  action(n_issueRdBlk, "n", desc="Issue RdBlk") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:RdBlk;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+    }
+  }
+
+  action(nM_issueRdBlkM, "nM", desc="Issue RdBlkM") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:RdBlkM;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+    }
+  }
+
+  action(vd_victim, "vd", desc="Victimize M/O Data") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Requestor := machineID;
+      assert(is_valid(cache_entry));
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.Type := CoherenceRequestType:VicDirty;
+      out_msg.InitialRequestTime := curCycle();
+      if (cache_entry.CacheState == State:O) {
+        out_msg.Shared := true;
+      } else {
+        out_msg.Shared := false;
+      }
+      out_msg.Dirty := cache_entry.Dirty;
+    }
+  }
+
+  action(vc_victim, "vc", desc="Victimize E/S Data") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.Type := CoherenceRequestType:VicClean;
+      out_msg.InitialRequestTime := curCycle();
+      if (cache_entry.CacheState == State:S) {
+        out_msg.Shared := true;
+      } else {
+        out_msg.Shared := false;
+      }
+    }
+  }
+
+  action(a_allocate, "a", desc="allocate block") {
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(L1cache.allocate(address, new Entry));
+    }
+  }
+
+  action(t_allocateTBE, "t", desc="allocate TBE Entry") {
+    check_allocate(TBEs);
+    assert(is_valid(cache_entry));
+    TBEs.allocate(address);
+    set_tbe(TBEs.lookup(address));
+    tbe.DataBlk := cache_entry.DataBlk;  // Data only used for WBs
+    tbe.Dirty := cache_entry.Dirty;
+    tbe.Shared := false;
+  }
+
+  action(d_deallocateTBE, "d", desc="Deallocate TBE") {
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(p_popMandatoryQueue, "pm", desc="Pop Mandatory Queue") {
+    mandatoryQueue_in.dequeue(clockEdge());
+  }
+
+  action(pr_popResponseQueue, "pr", desc="Pop Response Queue") {
+    responseToTCP_in.dequeue(clockEdge());
+  }
+
+  action(pp_popProbeQueue, "pp", desc="pop probe queue") {
+    probeNetwork_in.dequeue(clockEdge());
+  }
+
+  action(l_loadDone, "l", desc="local load done") {
+    assert(is_valid(cache_entry));
+    if (use_seq_not_coal) {
+        sequencer.readCallback(address, cache_entry.DataBlk,
+                               false, MachineType:TCP);
+    } else {
+        coalescer.readCallback(address, MachineType:TCP, cache_entry.DataBlk);
+    }
+  }
+
+  action(xl_loadDone, "xl", desc="remote load done") {
+    peek(responseToTCP_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      if (use_seq_not_coal) {
+        coalescer.recordCPReadCallBack(machineID, in_msg.Sender);
+        sequencer.readCallback(address,
+                               cache_entry.DataBlk,
+                               false,
+                               machineIDToMachineType(in_msg.Sender),
+                               in_msg.InitialRequestTime,
+                               in_msg.ForwardRequestTime,
+                               in_msg.ProbeRequestStartTime);
+      } else {
+        MachineType cc_mach_type := getCoherenceType(machineID,
+                                                            in_msg.Sender);
+        coalescer.readCallback(address,
+                               cc_mach_type,
+                               cache_entry.DataBlk,
+                               in_msg.InitialRequestTime,
+                               in_msg.ForwardRequestTime,
+                               in_msg.ProbeRequestStartTime);
+      }
+    }
+  }
+
+  action(s_storeDone, "s", desc="local store done") {
+    assert(is_valid(cache_entry));
+    if (use_seq_not_coal) {
+      coalescer.recordCPWriteCallBack(machineID, machineID);
+      sequencer.writeCallback(address, cache_entry.DataBlk,
+                              false, MachineType:TCP);
+    } else {
+      coalescer.writeCallback(address, MachineType:TCP, cache_entry.DataBlk);
+    }
+    cache_entry.Dirty := true;
+  }
+
+  action(xs_storeDone, "xs", desc="remote store done") {
+    peek(responseToTCP_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      if (use_seq_not_coal) {
+        coalescer.recordCPWriteCallBack(machineID, in_msg.Sender);
+        sequencer.writeCallback(address,
+                                cache_entry.DataBlk,
+                                false,
+                                machineIDToMachineType(in_msg.Sender),
+                                in_msg.InitialRequestTime,
+                                in_msg.ForwardRequestTime,
+                                in_msg.ProbeRequestStartTime);
+      } else {
+        MachineType cc_mach_type := getCoherenceType(machineID,
+                                                            in_msg.Sender);
+        coalescer.writeCallback(address,
+                                cc_mach_type,
+                                cache_entry.DataBlk,
+                                in_msg.InitialRequestTime,
+                                in_msg.ForwardRequestTime,
+                                in_msg.ProbeRequestStartTime);
+      }
+      cache_entry.Dirty := true;
+    }
+  }
+
+  action(w_writeCache, "w", desc="write data to cache") {
+    peek(responseToTCP_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := in_msg.Dirty;
+    }
+  }
+
+  action(ss_sendStaleNotification, "ss", desc="stale data; nothing to writeback") {
+    peek(responseToTCP_in, ResponseMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:StaleNotif;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
+                                TCC_select_low_bit, TCC_select_num_bits));
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
+  }
+
+  action(wb_data, "wb", desc="write back data") {
+    peek(responseToTCP_in, ResponseMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:CPUData;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
+                                TCC_select_low_bit, TCC_select_num_bits));
+        out_msg.DataBlk := tbe.DataBlk;
+        out_msg.Dirty := tbe.Dirty;
+        if (tbe.Shared) {
+          out_msg.NbReqShared := true;
+        } else {
+          out_msg.NbReqShared := false;
+        }
+        out_msg.State := CoherenceState:Shared; // faux info
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
+  }
+
+  action(piu_sendProbeResponseInvUntransferredOwnership, "piu", desc="send probe ack inv, no data, retain ownership") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
+      out_msg.Sender := machineID;
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.Dirty := false;
+      out_msg.Hit := false;
+      out_msg.Ntsl := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.UntransferredOwner :=true;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(pi_sendProbeResponseInv, "pi", desc="send probe ack inv, no data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.Dirty := false;
+      out_msg.Hit := false;
+      out_msg.Ntsl := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      out_msg.isValid := isValid(address);
+    }
+  }
+
+  action(pim_sendProbeResponseInvMs, "pim", desc="send probe ack inv, no data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and TCC respond in same way to probes
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.Dirty := false;
+      out_msg.Ntsl := true;
+      out_msg.Hit := false;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      out_msg.isValid := isValid(address);
+    }
+  }
+
+  action(prm_sendProbeResponseMiss, "prm", desc="send probe ack PrbShrData, no data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and TCC respond in same way to probes
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.Dirty := false;  // only true if sending back data i think
+      out_msg.Hit := false;
+      out_msg.Ntsl := false;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      out_msg.isValid := isValid(address);
+    }
+  }
+
+  action(pd_sendProbeResponseData, "pd", desc="send probe ack, with data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      assert(is_valid(cache_entry) || is_valid(tbe));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.DataBlk := getDataBlock(address);
+      if (is_valid(tbe)) {
+        out_msg.Dirty := tbe.Dirty;
+      } else {
+        out_msg.Dirty := cache_entry.Dirty;
+      }
+      out_msg.Hit := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+      out_msg.isValid := isValid(address);
+      APPEND_TRANSITION_COMMENT("Sending ack with dirty ");
+      APPEND_TRANSITION_COMMENT(out_msg.Dirty);
+    }
+  }
+
+  action(pdm_sendProbeResponseDataMs, "pdm", desc="send probe ack, with data") {
+    enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
+      assert(is_valid(cache_entry) || is_valid(tbe));
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.DataBlk := getDataBlock(address);
+      if (is_valid(tbe)) {
+        out_msg.Dirty := tbe.Dirty;
+      } else {
+        out_msg.Dirty := cache_entry.Dirty;
+      }
+      out_msg.Hit := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+      out_msg.isValid := isValid(address);
+      APPEND_TRANSITION_COMMENT("Sending ack with dirty ");
+      APPEND_TRANSITION_COMMENT(out_msg.Dirty);
+      DPRINTF(RubySlicc, "Data is %s\n", out_msg.DataBlk);
+    }
+  }
+
+  action(sf_setSharedFlip, "sf", desc="hit by shared probe, status may be different") {
+    assert(is_valid(tbe));
+    tbe.Shared := true;
+  }
+
+  action(mru_updateMRU, "mru", desc="Touch block for replacement policy") {
+    L1cache.setMRU(address);
+  }
+
+  action(uu_sendUnblock, "uu", desc="state changed, unblock") {
+    enqueue(unblockNetwork_out, UnblockMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCCdir,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+      out_msg.wasValid := isValid(address);
+      DPRINTF(RubySlicc, "%s\n", out_msg);
+    }
+  }
+
+  action(yy_recycleProbeQueue, "yy", desc="recycle probe queue") {
+    probeNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(zz_recycleMandatoryQueue, "\z", desc="recycle mandatory queue") {
+    mandatoryQueue_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  // Transitions
+
+  // transitions from base
+  transition(I, Load, I_ES) {TagArrayRead} {
+    a_allocate;
+    n_issueRdBlk;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, Store, I_M) {TagArrayRead, TagArrayWrite} {
+    a_allocate;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(S, Store, S_M) {TagArrayRead} {
+    mru_updateMRU;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(E, Store, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    mru_updateMRU;
+    s_storeDone;
+    p_popMandatoryQueue;
+  }
+
+  transition(O, Store, O_M) {TagArrayRead, DataArrayWrite} {
+    mru_updateMRU;
+    nM_issueRdBlkM;
+    p_popMandatoryQueue;
+  }
+
+  transition(M, Store) {TagArrayRead, DataArrayWrite} {
+    mru_updateMRU;
+    s_storeDone;
+    p_popMandatoryQueue;
+  }
+
+  // simple hit transitions
+  transition({S, E, O, M}, Load) {TagArrayRead, DataArrayRead} {
+    l_loadDone;
+    mru_updateMRU;
+    p_popMandatoryQueue;
+  }
+
+  // recycles from transients
+  transition({I_M, I_ES, ES_I, MO_I, S_M, O_M, MO_PI, I_C}, {Load, Store, Repl}) {} {
+    zz_recycleMandatoryQueue;
+  }
+
+  transition({S, E}, Repl, ES_I) {TagArrayRead} {
+    t_allocateTBE;
+    vc_victim;
+    ic_invCache;
+  }
+
+  transition({O, M}, Repl, MO_I) {TagArrayRead, DataArrayRead} {
+    t_allocateTBE;
+    vd_victim;
+    ic_invCache;
+  }
+
+  // TD event transitions
+  transition(I_M, {TCC_AckM, TCC_AckCtoD}, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    w_writeCache;
+    xs_storeDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_ES, TCC_AckS, S) {TagArrayWrite,  DataArrayWrite} {
+    w_writeCache;
+    xl_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition(I_ES, TCC_AckE, E) {TagArrayWrite,  DataArrayWrite} {
+    w_writeCache;
+    xl_loadDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition({S_M, O_M}, TCC_AckM, M) {TagArrayWrite, DataArrayWrite} {
+    xs_storeDone;
+    uu_sendUnblock;
+    pr_popResponseQueue;
+  }
+
+  transition({MO_I, ES_I}, TCC_NackWB, I){TagArrayWrite} {
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition({MO_I, ES_I}, TCC_AckWB, I) {TagArrayWrite, DataArrayRead} {
+    wb_data;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition(I_C, TCC_AckWB, I) {TagArrayWrite} {
+    ss_sendStaleNotification;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition(I_C, TCC_NackWB, I) {TagArrayWrite} {
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  // Probe transitions
+  transition({M, O}, PrbInvData, I) {TagArrayRead, TagArrayWrite} {
+    pd_sendProbeResponseData;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(I, PrbInvData) {TagArrayRead, TagArrayWrite} {
+    prm_sendProbeResponseMiss;
+    pp_popProbeQueue;
+  }
+
+  transition({E, S}, PrbInvData, I) {TagArrayRead, TagArrayWrite} {
+    pd_sendProbeResponseData;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(I_C, PrbInvData, I_C) {} {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  // Needed for TCC-based protocols. Must hold on to ownership till transfer complete
+  transition({M, O}, LocalPrbInv, MO_PI){TagArrayRead, TagArrayWrite} {
+    piu_sendProbeResponseInvUntransferredOwnership;
+    pp_popProbeQueue;
+  }
+
+  // If there is a race and we see a probe invalidate, handle normally.
+  transition(MO_PI, PrbInvData, I){TagArrayWrite} {
+    pd_sendProbeResponseData;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_PI, PrbInv, I){TagArrayWrite} {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  // normal exit when ownership is successfully transferred
+  transition(MO_PI, TCC_AckCtoD, I) {TagArrayWrite} {
+    ic_invCache;
+    pr_popResponseQueue;
+  }
+
+  transition({M, O, E, S, I}, PrbInv, I)  {TagArrayRead, TagArrayWrite} {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition({E, S, I}, LocalPrbInv, I){TagArrayRead, TagArrayWrite} {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+
+  transition({M, E, O}, PrbShrData, O) {TagArrayRead, TagArrayWrite, DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_PI, PrbShrData) {DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+
+  transition(S, PrbShrData, S) {TagArrayRead, DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition({I, I_C}, PrbShrData) {TagArrayRead} {
+    prm_sendProbeResponseMiss;
+    pp_popProbeQueue;
+  }
+
+  transition(I_C, PrbInv, I_C) {} {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition({I_M, I_ES}, {PrbInv, PrbInvData}){TagArrayRead} {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    a_allocate;  // but make sure there is room for incoming data when it arrives
+    pp_popProbeQueue;
+  }
+
+  transition({I_M, I_ES}, PrbShrData) {} {
+    prm_sendProbeResponseMiss;
+    pp_popProbeQueue;
+  }
+
+  transition(S_M, PrbInvData, I_M) {TagArrayRead} {
+    pim_sendProbeResponseInvMs;
+    ic_invCache;
+    a_allocate;
+    pp_popProbeQueue;
+  }
+
+  transition(O_M, PrbInvData, I_M) {TagArrayRead,DataArrayRead} {
+    pdm_sendProbeResponseDataMs;
+    ic_invCache;
+    a_allocate;
+    pp_popProbeQueue;
+  }
+
+  transition({S_M, O_M}, {PrbInv}, I_M) {TagArrayRead} {
+    pim_sendProbeResponseInvMs;
+    ic_invCache;
+    a_allocate;
+    pp_popProbeQueue;
+  }
+
+  transition(S_M, {LocalPrbInv}, I_M) {TagArrayRead} {
+    pim_sendProbeResponseInvMs;
+    ic_invCache;
+    a_allocate;
+    pp_popProbeQueue;
+  }
+
+  transition(O_M, LocalPrbInv, I_M) {TagArrayRead} {
+    piu_sendProbeResponseInvUntransferredOwnership;
+    ic_invCache;
+    a_allocate;
+    pp_popProbeQueue;
+  }
+
+  transition({S_M, O_M}, PrbShrData) {DataArrayRead} {
+    pd_sendProbeResponseData;
+    pp_popProbeQueue;
+  }
+
+  transition(ES_I, PrbInvData, I_C){
+    pd_sendProbeResponseData;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_I, PrbInvData, I_C) {DataArrayRead} {
+    pd_sendProbeResponseData;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_I, PrbInv, I_C) {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(ES_I, PrbInv, I_C) {
+    pi_sendProbeResponseInv;
+    ic_invCache;
+    pp_popProbeQueue;
+  }
+
+  transition(ES_I, PrbShrData, ES_I) {DataArrayRead} {
+    pd_sendProbeResponseData;
+    sf_setSharedFlip;
+    pp_popProbeQueue;
+  }
+
+  transition(MO_I, PrbShrData, MO_I) {DataArrayRead} {
+    pd_sendProbeResponseData;
+    sf_setSharedFlip;
+    pp_popProbeQueue;
+  }
+
+}

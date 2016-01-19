@@ -60,7 +60,8 @@ RubyPort::RubyPort(const Params *p)
       memSlavePort(csprintf("%s-mem-slave-port", name()), this,
                    p->ruby_system->getAccessBackingStore(), -1,
                    p->no_retry_on_stall),
-      gotAddrRanges(p->port_master_connection_count)
+      gotAddrRanges(p->port_master_connection_count),
+      m_isCPUSequencer(p->is_cpu_sequencer)
 {
     assert(m_version != -1);
 

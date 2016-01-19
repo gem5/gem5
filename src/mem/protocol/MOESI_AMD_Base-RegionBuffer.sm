@@ -1,0 +1,1368 @@
+/*
+ * Copyright (c) 2010-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * For use for simulation and test purposes only
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Jason Power
+ */
+
+machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
+: CacheMemory *cacheMemory; // stores only region addresses. Must set block size same as below
+  bool isOnCPU;
+  int blocksPerRegion := 64; // 4k regions
+  Cycles toDirLatency := 5;     // Latency to fwd requests to directory
+  Cycles toRegionDirLatency := 5; // Latency for requests and acks to directory
+  Cycles nextEvictLatency := 1;   // latency added between each block while evicting region
+  bool noTCCdir := "False";
+  int TCC_select_num_bits := 1;
+
+  // From the Cores
+  MessageBuffer * requestFromCore, network="From", virtual_network="0", vnet_type="request";
+  MessageBuffer * responseFromCore, network="From", virtual_network="2", vnet_type="response";
+
+  // Requests to the cores or directory
+  MessageBuffer * requestToNetwork, network="To", virtual_network="0", vnet_type="request";
+
+  // From Region-Dir
+  MessageBuffer * notifyFromRegionDir, network="From", virtual_network="7", vnet_type="request";
+  MessageBuffer * probeFromRegionDir, network="From", virtual_network="8", vnet_type="request";
+
+  // From the directory
+  MessageBuffer * unblockFromDir, network="From", virtual_network="4", vnet_type="unblock";
+
+  // To the region-Dir
+  MessageBuffer * responseToRegDir, network="To", virtual_network="2", vnet_type="response";
+
+  MessageBuffer * triggerQueue;
+{
+
+  // States
+  state_declaration(State, desc="Region states", default="RegionBuffer_State_NP") {
+    NP, AccessPermission:Invalid,       desc="Not present in region directory";
+    P,  AccessPermission:Invalid,       desc="Region is private to the cache";
+    S,  AccessPermission:Invalid,       desc="Region is possibly shared with others";
+
+    NP_PS, AccessPermission:Invalid,    desc="Intermediate state waiting for notify from r-dir";
+    S_P,  AccessPermission:Invalid,     desc="Intermediate state while upgrading region";
+
+    P_NP, AccessPermission:Invalid,     desc="Intermediate state while evicting all lines in region";
+    P_S,  AccessPermission:Invalid,     desc="Intermediate state while downgrading all lines in region";
+
+    S_NP_PS, AccessPermission:Invalid,  desc="Got an inv in S_P, waiting for all inv acks, then going to since the write is already out there NP_PS";
+    P_NP_NP,  AccessPermission:Invalid,    desc="Evicting region on repl, then got an inv. Need to re-evict";
+
+    P_NP_O, AccessPermission:Invalid,     desc="Waiting for all outstanding requests";
+    P_S_O,  AccessPermission:Invalid,     desc="Waiting for all outstanding requests";
+    S_O,  AccessPermission:Invalid,       desc="Waiting for all outstanding requests";
+    S_NP_PS_O, AccessPermission:Invalid,  desc="Waiting for all outstanding requests";
+
+    SS_P, AccessPermission:Invalid,  desc="Waiting for CPU write that we know is there";
+
+    P_NP_W, AccessPermission:Invalid,     desc="Waiting for writeback ack";
+
+    NP_W, AccessPermission:Invalid,     desc="Got a done ack before request, waiting for that victim";
+  }
+
+  enumeration(Event, desc="Region directory events") {
+    CPURead,        desc="Access from CPU core";
+    CPUWrite,       desc="Access from CPU core";
+    CPUWriteback,       desc="Writeback request from CPU core";
+
+    ReplRegion,     desc="Start a replace on a region";
+
+    PrivateNotify,  desc="Update entry to private state";
+    SharedNotify,   desc="Update entry to shared state";
+    WbNotify,       desc="Writeback notification received";
+    InvRegion,      desc="Start invalidating a region";
+    DowngradeRegion,desc="Start invalidating a region";
+
+    InvAck,         desc="Ack from core";
+
+    DoneAck,        desc="Ack from core that request has finished";
+    AllOutstanding, desc="All outstanding requests have now finished";
+
+    Evict,          desc="Loopback to evict each block";
+    LastAck_PrbResp, desc="Done eviciting all the blocks, got the last ack from core, now respond to region dir";
+    LastAck_CleanWb, desc="Done eviciting all the blocks, got the last ack from core, now start clean writeback (note the dir has already been updated)";
+
+    StallAccess,    desc="Wait for the done ack on the address before proceeding";
+    StallDoneAck,   desc="Wait for the access on the address before proceeding";
+
+    StaleRequest,   desc="Got a stale victim from the cache, fwd it without incrementing outstanding";
+  }
+
+  enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+    TagArrayRead,     desc="Read the data array";
+    TagArrayWrite,    desc="Write the data array";
+  }
+
+  structure(BoolVec, external="yes") {
+    bool at(int);
+    void resize(int);
+    void clear();
+    int size();
+  }
+
+  structure(Entry, desc="Region entry", interface="AbstractCacheEntry") {
+    Addr addr,        desc="Base address of this region";
+    State RegionState,      desc="Region state";
+    DataBlock DataBlk,      desc="Data for the block (always empty in region buffer)";
+    BoolVec ValidBlocks,    desc="A vector to keep track of valid blocks";
+    int NumValidBlocks,     desc="Number of trues in ValidBlocks to avoid iterating";
+    BoolVec UsedBlocks,     desc="A vector to keep track of blocks ever valid";
+    bool dirty,           desc="Dirty as best known by the region buffer";
+    // This is needed so we don't ack an invalidate until all requests are ordered
+    int NumOutstandingReqs,    desc="Total outstanding private/shared requests";
+    BoolVec OutstandingReqs,   desc="Blocks that have outstanding private/shared requests";
+    bool MustDowngrade,     desc="Set when we got a downgrade before the shd or pvt permissions";
+    Cycles ProbeRequestTime, default="Cycles(0)", desc="Time region dir started the probe";
+    Cycles InitialRequestTime, default="Cycles(0)", desc="Time message was sent to region dir";
+    bool MsgSentToDir,      desc="True if the current request required a message to the dir";
+    bool clearOnDone, default="false", desc="clear valid bit when request completes";
+    Addr clearOnDoneAddr, desc="clear valid bit when request completes";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,         desc="Transient state";
+    //int NumValidBlocks,     desc="Number of blocks valid so we don't have to count a BoolVec";
+    BoolVec ValidBlocks,    desc="A vector to keep track of valid blocks";
+    bool AllAcksReceived,   desc="Got all necessary acks from dir";
+    bool DoneEvicting,      desc="Done iterating through blocks checking for valids";
+    BoolVec AcksReceived,   desc="Received acks for theses blocks\n";
+    bool SendAck,           desc="If true, send an ack to the r-dir at end of inv";
+    ProbeRequestType MsgType, desc="Type of message to send while 'evicting' ";
+    int NumOutstandingReqs,    desc="Total outstanding private/shared requests";
+    BoolVec OutstandingReqs,   desc="Blocks that have outstanding private/shared requests";
+    MachineID Requestor,    desc="Requestor for three hop transactions";
+    bool DemandRequest, default="false", desc="Associated with a demand request";
+    Addr DemandAddress,  desc="Address for the demand request";
+    bool DoneAckReceived, default="false", desc="True if the done ack arrived before the message";
+    Addr DoneAckAddr,     desc="Address of the done ack received early";
+    int OutstandingThreshold, desc="Number of outstanding requests to trigger AllOutstanding on";
+
+    ProbeRequestType NewMsgType, desc="Type of message to send while 'evicting' ";
+    MachineID NewRequestor,    desc="Requestor for three hop transactions";
+    bool NewDemandRequest, default="false", desc="Associated with a demand request";
+    Addr NewDemandAddress,  desc="Address for the demand request";
+    bool dirty, desc="dirty";
+    bool AllOutstandingTriggered, default="false", desc="bit for only one all outstanding";
+    int OutstandingAcks, default="0", desc="number of acks to wait for";
+  }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  // Stores only region addresses
+  TBETable TBEs, template="<RegionBuffer_TBE>", constructor="m_number_of_TBEs";
+  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+  Cycles curCycle();
+
+  int blockBits,  default="RubySystem::getBlockSizeBits()";
+  int blockBytes, default="RubySystem::getBlockSizeBytes()";
+  int regionBits, default="log2(m_blocksPerRegion)";
+
+  // Functions
+
+  int getRegionOffset(Addr addr) {
+    if (blocksPerRegion > 1) {
+      Addr offset := bitSelect(addr, blockBits, regionBits+blockBits-1);
+      int ret := addressToInt(offset);
+      assert(ret < blocksPerRegion);
+      return ret;
+    } else {
+      return 0;
+    }
+  }
+
+  Addr getRegionBase(Addr addr) {
+    return maskLowOrderBits(addr, blockBits+regionBits);
+  }
+
+  Addr getNextBlock(Addr addr) {
+    Addr a := addr;
+    return makeNextStrideAddress(a, 1);
+  }
+
+  MachineID getPeer(MachineID mach, Addr address) {
+    if (isOnCPU) {
+      return createMachineID(MachineType:CorePair, intToID(0));
+    } else if (noTCCdir) {
+      return mapAddressToRange(address,MachineType:TCC,
+                                  TCC_select_low_bit, TCC_select_num_bits);
+    } else {
+      return createMachineID(MachineType:TCCdir, intToID(0));
+    }
+  }
+
+  bool isOutstanding(TBE tbe, Entry cache_entry, Addr addr) {
+      if (is_valid(tbe) && tbe.OutstandingReqs.size() > 0) {
+          DPRINTF(RubySlicc, " outstanding tbe reqs %s %s %d %d\n",
+                  tbe.OutstandingReqs, addr, getRegionOffset(addr),
+                  tbe.OutstandingReqs.at(getRegionOffset(addr)));
+          return tbe.OutstandingReqs.at(getRegionOffset(addr));
+      } else if (is_valid(cache_entry)) {
+          DPRINTF(RubySlicc, " outstanding cache reqs %s %s %d %d\n",
+                  cache_entry.OutstandingReqs, addr, getRegionOffset(addr),
+                  cache_entry.OutstandingReqs.at(getRegionOffset(addr)));
+          return cache_entry.OutstandingReqs.at(getRegionOffset(addr));
+      } else {
+          return false;
+      }
+  }
+
+  bool isOnGPU() {
+    if (isOnCPU) {
+      return false;
+    }
+    return true;
+  }
+
+  bool isRead(CoherenceRequestType type) {
+    return (type == CoherenceRequestType:RdBlk || type == CoherenceRequestType:RdBlkS ||
+            type == CoherenceRequestType:VicClean);
+  }
+
+  bool presentOrAvail(Addr addr) {
+    return cacheMemory.isTagPresent(getRegionBase(addr)) || cacheMemory.cacheAvail(getRegionBase(addr));
+  }
+
+  // Returns a region entry!
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
+    return static_cast(Entry, "pointer", cacheMemory.lookup(getRegionBase(addr)));
+  }
+
+  TBE getTBE(Addr addr), return_by_pointer="yes" {
+    return TBEs.lookup(getRegionBase(addr));
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    return getCacheEntry(getRegionBase(addr)).DataBlk;
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.RegionState;
+    }
+    return State:NP;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    if (is_valid(tbe)) {
+        tbe.TBEState := state;
+    }
+    if (is_valid(cache_entry)) {
+        cache_entry.RegionState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := getTBE(addr);
+    if(is_valid(tbe)) {
+      return RegionBuffer_State_to_permission(tbe.TBEState);
+    }
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return RegionBuffer_State_to_permission(cache_entry.RegionState);
+    }
+    return AccessPermission:NotPresent;
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    functionalMemoryRead(pkt);
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    if (functionalMemoryWrite(pkt)) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(RegionBuffer_State_to_permission(state));
+    }
+  }
+
+  void recordRequestType(RequestType stat, Addr addr) {
+    if (stat == RequestType:TagArrayRead) {
+        cacheMemory.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (stat == RequestType:TagArrayWrite) {
+        cacheMemory.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    }
+  }
+
+  bool checkResourceAvailable(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:TagArrayRead) {
+      return cacheMemory.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      return cacheMemory.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else {
+      error("Invalid RequestType type in checkResourceAvailable");
+      return true;
+    }
+  }
+
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+
+  // Overloaded outgoing request nework for both probes to cores and reqeusts
+  // to the directory.
+  // Fix Me: These forwarded requests need to be on a separate virtual channel
+  // to avoid deadlock!
+  out_port(requestNetwork_out, CPURequestMsg, requestToNetwork);
+  out_port(probeNetwork_out, NBProbeRequestMsg, requestToNetwork);
+
+  out_port(responseNetwork_out, ResponseMsg, responseToRegDir);
+
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=4) {
+    if (triggerQueue_in.isReady(clockEdge())) {
+      peek(triggerQueue_in, TriggerMsg) {
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := getTBE(in_msg.addr);
+        DPRINTF(RubySlicc, "trigger msg: %s (%s)\n", in_msg, getRegionBase(in_msg.addr));
+        assert(is_valid(tbe));
+        if (in_msg.Type == TriggerType:AcksComplete) {
+            if (tbe.SendAck) {
+                trigger(Event:LastAck_PrbResp, in_msg.addr, cache_entry, tbe);
+            } else {
+                trigger(Event:LastAck_CleanWb, in_msg.addr, cache_entry, tbe);
+            }
+        } else if (in_msg.Type == TriggerType:AllOutstanding) {
+          trigger(Event:AllOutstanding, in_msg.addr, cache_entry, tbe);
+        } else {
+          assert(in_msg.Type == TriggerType:InvNext);
+          trigger(Event:Evict, in_msg.addr, cache_entry, tbe);
+        }
+      }
+    }
+  }
+
+  in_port(unblockNetwork_in, UnblockMsg, unblockFromDir, rank=3) {
+    if (unblockNetwork_in.isReady(clockEdge())) {
+      peek(unblockNetwork_in, UnblockMsg) {
+        TBE tbe := getTBE(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        if (in_msg.DoneAck) {
+          if (isOutstanding(tbe, cache_entry, in_msg.addr)) {
+            trigger(Event:DoneAck, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:StallDoneAck, in_msg.addr, cache_entry, tbe);
+          }
+        } else {
+          assert(is_valid(tbe));
+          trigger(Event:InvAck, in_msg.addr, cache_entry, tbe);
+        }
+      }
+    }
+  }
+
+  in_port(probeNetwork_in, NBProbeRequestMsg, probeFromRegionDir, rank=2) {
+    if (probeNetwork_in.isReady(clockEdge())) {
+      peek(probeNetwork_in, NBProbeRequestMsg) {
+        TBE tbe := getTBE(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        assert(getRegionBase(in_msg.addr) == in_msg.addr);
+        if (in_msg.Type == ProbeRequestType:PrbInv) {
+          trigger(Event:InvRegion, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == ProbeRequestType:PrbDowngrade) {
+          trigger(Event:DowngradeRegion, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unknown probe message\n");
+        }
+      }
+    }
+  }
+
+  in_port(notifyNetwork_in, CPURequestMsg, notifyFromRegionDir, rank=1) {
+    if (notifyNetwork_in.isReady(clockEdge())) {
+      peek(notifyNetwork_in, CPURequestMsg) {
+        TBE tbe := getTBE(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        //Fix Me...add back in: assert(is_valid(cache_entry));
+        if (in_msg.Type == CoherenceRequestType:WbNotify) {
+          trigger(Event:WbNotify, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:SharedNotify) {
+          trigger(Event:SharedNotify, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:PrivateNotify) {
+          trigger(Event:PrivateNotify, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unknown notify message\n");
+        }
+      }
+    }
+  }
+
+  // In from cores
+  // NOTE: We get the cache / TBE entry based on the region address,
+  //       but pass the block address to the actions
+  in_port(requestNetwork_in, CPURequestMsg, requestFromCore, rank=0) {
+    if (requestNetwork_in.isReady(clockEdge())) {
+      peek(requestNetwork_in, CPURequestMsg) {
+        TBE tbe := getTBE(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        if (is_valid(tbe) && tbe.DoneAckReceived && tbe.DoneAckAddr == in_msg.addr) {
+            DPRINTF(RubySlicc, "Stale/Stall request %s\n", in_msg.Type);
+          if (in_msg.Type == CoherenceRequestType:VicDirty || in_msg.Type == CoherenceRequestType:VicClean )
+          {
+            trigger(Event:StaleRequest, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:StallAccess, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (isOutstanding(tbe, cache_entry, in_msg.addr)) {
+          DPRINTF(RubySlicc, "Stall outstanding request %s\n", in_msg.Type);
+          trigger(Event:StallAccess, in_msg.addr, cache_entry, tbe);
+        } else {
+        if (presentOrAvail(in_msg.addr)) {
+          if (in_msg.Type == CoherenceRequestType:RdBlkM ) {
+            trigger(Event:CPUWrite, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Type == CoherenceRequestType:WriteThrough ) {
+            trigger(Event:CPUWrite, in_msg.addr, cache_entry, tbe);
+          } else if (in_msg.Type == CoherenceRequestType:Atomic ) {
+            trigger(Event:CPUWrite, in_msg.addr, cache_entry, tbe);
+          } else {
+              if (in_msg.Type == CoherenceRequestType:VicDirty ||
+                  in_msg.Type == CoherenceRequestType:VicClean) {
+                  trigger(Event:CPUWriteback, in_msg.addr, cache_entry, tbe);
+              } else {
+                  trigger(Event:CPURead, in_msg.addr, cache_entry, tbe);
+              }
+          }
+        } else {
+          Addr victim := cacheMemory.cacheProbe(getRegionBase(in_msg.addr));
+          TBE victim_tbe := getTBE(victim);
+          Entry victim_entry := getCacheEntry(victim);
+          DPRINTF(RubySlicc, "Replacing region %s for %s(%s)\n", victim, in_msg.addr, getRegionBase(in_msg.addr));
+          trigger(Event:ReplRegion, victim, victim_entry, victim_tbe);
+        }
+        }
+      }
+    }
+  }
+
+  // Actions
+  action(f_fwdReqToDir, "f", desc="Forward CPU request to directory") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(requestNetwork_out, CPURequestMsg, toDirLatency) {
+        out_msg.addr := in_msg.addr;
+        out_msg.Type := in_msg.Type;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.WTRequestor := in_msg.WTRequestor;
+        out_msg.Destination.add(map_Address_to_Directory(in_msg.addr));
+        out_msg.Shared := in_msg.Shared;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.Private := true;
+        out_msg.InitialRequestTime := curCycle();
+        out_msg.ProbeRequestStartTime := curCycle();
+        if (getState(tbe, cache_entry, address) == State:S) {
+          out_msg.ForceShared := true;
+        }
+        DPRINTF(RubySlicc, "Fwd: %s\n", out_msg);
+        //assert(getState(tbe, cache_entry, address) == State:P || getState(tbe, cache_entry, address) == State:S);
+        if (getState(tbe, cache_entry, address) == State:NP_W) {
+          APPEND_TRANSITION_COMMENT(" fwding stale request: ");
+          APPEND_TRANSITION_COMMENT(out_msg.Type);
+        }
+      }
+    }
+  }
+
+  action(u_updateRegionEntry, "u", desc="Update the entry for profiling") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      if (is_valid(cache_entry)) {
+        if (in_msg.CtoDSinked == false) {
+          APPEND_TRANSITION_COMMENT(" incr outstanding ");
+          cache_entry.NumOutstandingReqs := 1 + cache_entry.NumOutstandingReqs;
+          assert(cache_entry.OutstandingReqs.at(getRegionOffset(address)) == false);
+          cache_entry.OutstandingReqs.at(getRegionOffset(address)) := true;
+          assert(cache_entry.NumOutstandingReqs == countBoolVec(cache_entry.OutstandingReqs));
+        } else {
+          APPEND_TRANSITION_COMMENT(" NOT incr outstanding ");
+          assert(in_msg.Type == CoherenceRequestType:RdBlkM || in_msg.Type == CoherenceRequestType:RdBlkS);
+        }
+        APPEND_TRANSITION_COMMENT(cache_entry.NumOutstandingReqs);
+        if (in_msg.Type == CoherenceRequestType:RdBlkM || in_msg.Type == CoherenceRequestType:Atomic ||
+            in_msg.Type == CoherenceRequestType:WriteThrough )
+        {
+          cache_entry.dirty := true;
+        }
+        if (in_msg.Type == CoherenceRequestType:VicDirty ||
+            in_msg.Type == CoherenceRequestType:VicClean) {
+            DPRINTF(RubySlicc, "Got %s for addr %s\n", in_msg.Type, address);
+            //assert(cache_entry.ValidBlocks.at(getRegionOffset(address)));
+            // can in fact be inv if core got an inv after a vicclean before it got here
+            if (cache_entry.ValidBlocks.at(getRegionOffset(address))) {
+                cache_entry.clearOnDone := true;
+                cache_entry.clearOnDoneAddr := address;
+                //cache_entry.ValidBlocks.at(getRegionOffset(address)) := false;
+                //cache_entry.NumValidBlocks := cache_entry.NumValidBlocks - 1;
+            }
+        } else {
+            if (cache_entry.ValidBlocks.at(getRegionOffset(address)) == false) {
+              cache_entry.NumValidBlocks := cache_entry.NumValidBlocks + 1;
+            }
+            DPRINTF(RubySlicc, "before valid addr %s bits %s\n",
+                    in_msg.Type, address, cache_entry.ValidBlocks);
+            cache_entry.ValidBlocks.at(getRegionOffset(address)) := true;
+            DPRINTF(RubySlicc, "after valid addr %s bits %s\n",
+                    in_msg.Type, address, cache_entry.ValidBlocks);
+            cache_entry.UsedBlocks.at(getRegionOffset(address)) := true;
+        }
+        assert(cache_entry.NumValidBlocks <= blocksPerRegion);
+        assert(cache_entry.NumValidBlocks >= 0);
+        APPEND_TRANSITION_COMMENT(" valid blocks ");
+        APPEND_TRANSITION_COMMENT(cache_entry.ValidBlocks);
+      } else {
+        error("This shouldn't happen anymore I think");
+        //tbe.ValidBlocks.at(getRegionOffest(address)) := true;
+        assert(getState(tbe, cache_entry, address) == State:P_NP);
+      }
+    }
+  }
+
+  action(uw_updatePossibleWriteback, "uw", desc="writeback request complete") {
+      peek(unblockNetwork_in, UnblockMsg) {
+          if (is_valid(cache_entry) && in_msg.validToInvalid &&
+              cache_entry.clearOnDone && cache_entry.clearOnDoneAddr == address) {
+              DPRINTF(RubySlicc, "I have no idea what is going on here\n");
+              cache_entry.ValidBlocks.at(getRegionOffset(address)) := false;
+              cache_entry.NumValidBlocks := cache_entry.NumValidBlocks - 1;
+              cache_entry.clearOnDone := false;
+          }
+      }
+  }
+
+
+  action(rp_requestPrivate, "rp", desc="Send private request r-dir") {
+      peek(requestNetwork_in, CPURequestMsg) {
+          // No need to send acks on replacements
+          assert(is_invalid(tbe));
+          enqueue(requestNetwork_out, CPURequestMsg, toRegionDirLatency) {
+              out_msg.addr := address; // use the actual address so the demand request can be fulfilled
+              out_msg.DemandAddress := address;
+              out_msg.Type := CoherenceRequestType:PrivateRequest;
+              out_msg.OriginalType := in_msg.Type;
+              out_msg.Requestor := machineID;
+              out_msg.WTRequestor := in_msg.WTRequestor;
+              out_msg.InitialRequestTime := curCycle();
+              // will this always be ok? probably not for multisocket
+              out_msg.Destination.add(map_Address_to_RegionDir(address));
+              out_msg.MessageSize := MessageSizeType:Request_Control;
+              DPRINTF(RubySlicc, "Private request %s\n", out_msg);
+          }
+          cache_entry.ProbeRequestTime := curCycle();
+          cache_entry.MsgSentToDir := true;
+          APPEND_TRANSITION_COMMENT(getRegionBase(address));
+      }
+  }
+
+  action(ru_requestUpgrade, "ru", desc="Send upgrade request r-dir") {
+      peek(requestNetwork_in, CPURequestMsg) {
+          // No need to send acks on replacements
+          assert(is_invalid(tbe));
+          enqueue(requestNetwork_out, CPURequestMsg, toRegionDirLatency) {
+              out_msg.addr := address; // use the actual address so the demand request can be fulfilled
+              out_msg.Type := CoherenceRequestType:UpgradeRequest;
+              out_msg.OriginalType := in_msg.Type;
+              out_msg.Requestor := machineID;
+              out_msg.WTRequestor := in_msg.WTRequestor;
+              out_msg.InitialRequestTime := curCycle();
+              // will this always be ok? probably not for multisocket
+              out_msg.Destination.add(map_Address_to_RegionDir(address));
+              out_msg.MessageSize := MessageSizeType:Request_Control;
+          }
+          cache_entry.ProbeRequestTime := curCycle();
+          cache_entry.MsgSentToDir := true;
+          APPEND_TRANSITION_COMMENT(getRegionBase(address));
+      }
+  }
+
+  action(rw_requestWriteback, "rq", desc="Send writeback request") {
+    // No need to send acks on replacements
+    enqueue(requestNetwork_out, CPURequestMsg, toRegionDirLatency) {
+        out_msg.addr := getRegionBase(address); // use the actual address so the demand request can be fulfilled
+        out_msg.Type := CoherenceRequestType:CleanWbRequest;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Dirty := tbe.dirty;
+          APPEND_TRANSITION_COMMENT(getRegionBase(address));
+    }
+  }
+
+  action(rs_requestShared, "rs", desc="Send shared request r-dir") {
+      peek(requestNetwork_in, CPURequestMsg) {
+          // No need to send acks on replacements
+          assert(is_invalid(tbe));
+          enqueue(requestNetwork_out, CPURequestMsg, toRegionDirLatency) {
+              out_msg.addr := address; // use the actual address so the demand request can be fulfilled
+              out_msg.Type := CoherenceRequestType:SharedRequest;
+              out_msg.OriginalType := in_msg.Type;
+              out_msg.Requestor := machineID;
+              out_msg.WTRequestor := in_msg.WTRequestor;
+              out_msg.InitialRequestTime := curCycle();
+              // will this always be ok? probably not for multisocket
+              out_msg.Destination.add(map_Address_to_RegionDir(address));
+              out_msg.MessageSize := MessageSizeType:Request_Control;
+          }
+          cache_entry.ProbeRequestTime := curCycle();
+          cache_entry.MsgSentToDir := true;
+          APPEND_TRANSITION_COMMENT(getRegionBase(address));
+      }
+  }
+
+  action(ai_ackRegionInv, "ai", desc="Send ack to r-dir on region inv if tbe says so") {
+    // No need to send acks on replacements
+    assert(is_valid(tbe));
+    enqueue(responseNetwork_out, ResponseMsg, toRegionDirLatency) {
+        out_msg.addr := getRegionBase(address);
+        out_msg.Type := CoherenceResponseType:CPUPrbResp;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(ad_ackDircetory, "ad", desc="send probe response to directory") {
+    if (noTCCdir && tbe.MsgType == ProbeRequestType:PrbDowngrade && isOnGPU()) { //VIPER tcc doesnt understand PrbShrData
+      assert(tbe.DemandRequest);                                    //So, let RegionBuffer take care of sending back ack
+      enqueue(responseNetwork_out, ResponseMsg, toDirLatency) {
+          out_msg.addr := tbe.DemandAddress;
+          out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
+          out_msg.Sender := getPeer(machineID,address);
+          out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+          out_msg.Dirty := false;  // only true if sending back data i think
+          out_msg.Hit := false;
+          out_msg.Ntsl := false;
+          out_msg.State := CoherenceState:NA;
+          out_msg.NoAckNeeded := true;
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
+  }
+
+  action(aie_ackRegionExclusiveInv, "aie", desc="Send ack to r-dir on region inv if tbe says so") {
+    // No need to send acks on replacements
+    assert(is_valid(tbe));
+    enqueue(responseNetwork_out, ResponseMsg, toRegionDirLatency) {
+        out_msg.addr := getRegionBase(address);
+        out_msg.Type := CoherenceResponseType:CPUPrbResp;
+        out_msg.Sender := machineID;
+        out_msg.NotCached := true;
+        out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.Dirty := tbe.dirty;
+    }
+  }
+
+  action(ain_ackRegionInvNow, "ain", desc="Send ack to r-dir on region inv") {
+    enqueue(responseNetwork_out, ResponseMsg, toRegionDirLatency) {
+      out_msg.addr := getRegionBase(address);
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(aine_ackRegionInvExlusiveNow, "aine", desc="Send ack to r-dir on region inv with exlusive permission") {
+    enqueue(responseNetwork_out, ResponseMsg, toRegionDirLatency) {
+      out_msg.addr := getRegionBase(address);
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;
+      out_msg.Sender := machineID;
+      out_msg.NotCached := true;
+      out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(ap_ackPrivateNotify, "ap", desc="Send ack to r-dir on private notify") {
+    enqueue(responseNetwork_out, ResponseMsg, toRegionDirLatency) {
+      out_msg.addr := getRegionBase(address);
+      out_msg.Type := CoherenceResponseType:PrivateAck;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(aw_ackWbNotify, "aw", desc="Send ack to r-dir on writeback notify") {
+    peek(notifyNetwork_in, CPURequestMsg) {
+      if (in_msg.NoAckNeeded == false) {
+        enqueue(responseNetwork_out, ResponseMsg, toRegionDirLatency) {
+          out_msg.addr := getRegionBase(address);
+          out_msg.Type := CoherenceResponseType:RegionWbAck;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+        }
+      }
+    }
+  }
+
+  action(e_evictCurrent, "e", desc="Evict this block in the region") {
+    // send force invalidate message to directory to invalidate this block
+    // must invalidate all blocks since region buffer could have privitized it
+      if (tbe.ValidBlocks.at(getRegionOffset(address)) &&
+          (tbe.DemandRequest == false || tbe.DemandAddress != address)) {
+          DPRINTF(RubySlicc, "trying to evict address %s (base: %s, offset: %d)\n", address, getRegionBase(address), getRegionOffset(address));
+          DPRINTF(RubySlicc, "tbe valid blocks %s\n", tbe.ValidBlocks);
+
+        enqueue(probeNetwork_out, NBProbeRequestMsg, 1) {
+            out_msg.addr := address;
+            out_msg.Type := tbe.MsgType;
+            out_msg.ReturnData := true;
+            if (address == tbe.DemandAddress) {
+                out_msg.DemandRequest := true;
+            }
+            out_msg.MessageSize := MessageSizeType:Control;
+            out_msg.Destination.add(getPeer(machineID,address));
+            DPRINTF(RubySlicc, "%s\n", out_msg);
+        }
+        APPEND_TRANSITION_COMMENT(" current ");
+        APPEND_TRANSITION_COMMENT(tbe.ValidBlocks.at(getRegionOffset(address)));
+        tbe.AllAcksReceived := false;
+      } else {
+          DPRINTF(RubySlicc, "Not evicting demand %s\n", address);
+      }
+  }
+
+  action(ed_evictDemand, "ed", desc="Evict the demand request if it's valid") {
+    if (noTCCdir && tbe.MsgType == ProbeRequestType:PrbDowngrade && isOnGPU()) {
+      tbe.OutstandingAcks := 0;
+      tbe.AllAcksReceived := true;
+      tbe.DoneEvicting := true;
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.Type := TriggerType:AcksComplete;
+          out_msg.addr := getRegionBase(address);
+      }
+    } else if (tbe.DemandRequest) {
+      enqueue(probeNetwork_out, NBProbeRequestMsg, 1) {
+        out_msg.addr := tbe.DemandAddress;
+        out_msg.Type := tbe.MsgType;
+        out_msg.ReturnData := true;
+        out_msg.DemandRequest := true;
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Destination.add(getPeer(machineID,address));
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+        tbe.AllAcksReceived := false;
+      }
+      if (tbe.ValidBlocks.at(getRegionOffset(tbe.DemandAddress)) == false) {
+          tbe.OutstandingAcks := tbe.OutstandingAcks + 1;
+      }
+      APPEND_TRANSITION_COMMENT("Evicting demand ");
+      APPEND_TRANSITION_COMMENT(tbe.DemandAddress);
+    }
+    APPEND_TRANSITION_COMMENT("waiting acks ");
+    APPEND_TRANSITION_COMMENT(tbe.OutstandingAcks);
+  }
+
+  action(adp_AckDemandProbe, "fp", desc="forward demand probe even if we know that the core is invalid") {
+    peek(probeNetwork_in, NBProbeRequestMsg) {
+        if (in_msg.DemandRequest) {
+            enqueue(responseNetwork_out, ResponseMsg, toDirLatency) {
+                out_msg.addr := in_msg.DemandAddress;
+                out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
+                out_msg.Sender := getPeer(machineID,address);
+                out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+                out_msg.Dirty := false;  // only true if sending back data i think
+                out_msg.Hit := false;
+                out_msg.Ntsl := false;
+                out_msg.State := CoherenceState:NA;
+                out_msg.NoAckNeeded := true;
+                out_msg.MessageSize := MessageSizeType:Response_Control;
+                DPRINTF(RubySlicc, "%s\n", out_msg);
+            }
+        }
+    }
+  }
+
+  action(en_enqueueNextEvict, "en", desc="Queue evict the next block in the region") {
+    // increment in_msg.addr by blockSize bytes and enqueue on triggerPort
+    // Only enqueue if the next address doesn't overrun the region bound
+    if (getRegionBase(getNextBlock(address)) == getRegionBase(address)) {
+        enqueue(triggerQueue_out, TriggerMsg, nextEvictLatency) {
+            out_msg.Type := TriggerType:InvNext;
+            out_msg.addr := getNextBlock(address);
+        }
+    } else {
+        tbe.DoneEvicting := true;
+        DPRINTF(RubySlicc, "Done evicing region %s\n", getRegionBase(address));
+        DPRINTF(RubySlicc, "Waiting for %s acks\n", tbe.OutstandingAcks);
+        if (tbe.AllAcksReceived == true) {
+            enqueue(triggerQueue_out, TriggerMsg, 1) {
+                out_msg.Type := TriggerType:AcksComplete;
+                out_msg.addr := getRegionBase(address);
+            }
+        }
+    }
+  }
+
+  action(ef_enqueueFirstEvict, "ef", desc="Queue the first block in the region to be evicted") {
+    if (tbe.DoneEvicting == false) {
+      enqueue(triggerQueue_out, TriggerMsg, nextEvictLatency) {
+          out_msg.Type := TriggerType:InvNext;
+          out_msg.addr := getRegionBase(address);
+      }
+    }
+  }
+
+  action(ra_receiveAck, "ra", desc="Mark TBE entry as received this ack") {
+      DPRINTF(RubySlicc, "received ack for %s reg: %s vec: %s pos: %d\n",
+              address, getRegionBase(address), tbe.ValidBlocks, getRegionOffset(address));
+      peek(unblockNetwork_in, UnblockMsg) {
+          //
+          // Note the tbe ValidBlock vec will be a conservative list of the
+          // valid blocks since the cache entry ValidBlock vec is set on the
+          // request
+          //
+          if (in_msg.wasValid) {
+              assert(tbe.ValidBlocks.at(getRegionOffset(address)));
+          }
+      }
+      tbe.OutstandingAcks := tbe.OutstandingAcks - 1;
+      tbe.AcksReceived.at(getRegionOffset(address)) := true;
+      assert(tbe.OutstandingAcks >= 0);
+      if (tbe.OutstandingAcks == 0) {
+          tbe.AllAcksReceived := true;
+          if (tbe.DoneEvicting) {
+              enqueue(triggerQueue_out, TriggerMsg, 1) {
+                  out_msg.Type := TriggerType:AcksComplete;
+                  out_msg.addr := getRegionBase(address);
+              }
+          }
+      }
+
+      APPEND_TRANSITION_COMMENT(getRegionBase(address));
+      APPEND_TRANSITION_COMMENT(" Acks left receive ");
+      APPEND_TRANSITION_COMMENT(tbe.OutstandingAcks);
+  }
+
+  action(do_decrementOutstanding, "do", desc="Decrement outstanding requests") {
+    APPEND_TRANSITION_COMMENT(" decr outstanding ");
+    if (is_valid(cache_entry)) {
+      cache_entry.NumOutstandingReqs := cache_entry.NumOutstandingReqs - 1;
+      assert(cache_entry.OutstandingReqs.at(getRegionOffset(address)));
+      cache_entry.OutstandingReqs.at(getRegionOffset(address)) := false;
+      assert(cache_entry.NumOutstandingReqs >= 0);
+      assert(cache_entry.NumOutstandingReqs == countBoolVec(cache_entry.OutstandingReqs));
+      APPEND_TRANSITION_COMMENT(cache_entry.NumOutstandingReqs);
+    }
+    if (is_valid(tbe)) {
+      tbe.NumOutstandingReqs := tbe.NumOutstandingReqs - 1;
+      assert(tbe.OutstandingReqs.at(getRegionOffset(address)));
+      tbe.OutstandingReqs.at(getRegionOffset(address)) := false;
+      assert(tbe.NumOutstandingReqs >= 0);
+      assert(tbe.NumOutstandingReqs == countBoolVec(tbe.OutstandingReqs));
+      APPEND_TRANSITION_COMMENT(tbe.NumOutstandingReqs);
+    }
+  }
+
+  action(co_checkOutstanding, "co", desc="check if there are no more outstanding requests") {
+    assert(is_valid(tbe));
+    if ((tbe.NumOutstandingReqs <= tbe.OutstandingThreshold) &&
+        (tbe.AllOutstandingTriggered == false)) {
+      APPEND_TRANSITION_COMMENT(" no more outstanding: ");
+      APPEND_TRANSITION_COMMENT(tbe.NumOutstandingReqs);
+      APPEND_TRANSITION_COMMENT(tbe.OutstandingThreshold);
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.Type := TriggerType:AllOutstanding;
+          if (tbe.DemandRequest) {
+              out_msg.addr := tbe.DemandAddress;
+          } else {
+              out_msg.addr := getRegionBase(address);
+          }
+          DPRINTF(RubySlicc, "co enqueuing %s\n", out_msg);
+          tbe.AllOutstandingTriggered := true;
+      }
+    } else {
+      APPEND_TRANSITION_COMMENT(" still more outstanding ");
+    }
+  }
+
+  action(ro_resetAllOutstanding, "ro", desc="Reset all outstanding") {
+      tbe.AllOutstandingTriggered := false;
+  }
+
+  action(so_setOutstandingCheckOne, "so", desc="Check outstanding is waiting for 1, not 0") {
+    // Need this for S_P because one request is outstanding between here and r-dir
+    tbe.OutstandingThreshold := 1;
+  }
+
+  action(a_allocateRegionEntry, "a", desc="Allocate a new entry") {
+    set_cache_entry(cacheMemory.allocate(getRegionBase(address), new Entry));
+    cache_entry.ValidBlocks.clear();
+    cache_entry.ValidBlocks.resize(blocksPerRegion);
+    cache_entry.UsedBlocks.clear();
+    cache_entry.UsedBlocks.resize(blocksPerRegion);
+    cache_entry.dirty := false;
+    cache_entry.NumOutstandingReqs := 0;
+    cache_entry.OutstandingReqs.clear();
+    cache_entry.OutstandingReqs.resize(blocksPerRegion);
+  }
+
+  action(d_deallocateRegionEntry, "d", desc="Deallocate region entry") {
+    cacheMemory.deallocate(getRegionBase(address));
+    unset_cache_entry();
+  }
+
+  action(t_allocateTBE, "t", desc="allocate TBE Entry") {
+    check_allocate(TBEs);
+    TBEs.allocate(getRegionBase(address));
+    set_tbe(getTBE(address));
+    tbe.OutstandingAcks := 0;
+    tbe.AllAcksReceived := true; // starts true since the region could be empty
+    tbe.DoneEvicting := false;
+    tbe.AcksReceived.clear();
+    tbe.AcksReceived.resize(blocksPerRegion);
+    tbe.SendAck := false;
+    tbe.OutstandingThreshold := 0;
+    if (is_valid(cache_entry)) {
+      tbe.NumOutstandingReqs := cache_entry.NumOutstandingReqs;
+      tbe.OutstandingReqs := cache_entry.OutstandingReqs;
+      assert(tbe.NumOutstandingReqs == countBoolVec(tbe.OutstandingReqs));
+      tbe.dirty := cache_entry.dirty;
+      tbe.ValidBlocks := cache_entry.ValidBlocks;
+      tbe.OutstandingAcks := countBoolVec(tbe.ValidBlocks);
+      APPEND_TRANSITION_COMMENT(" tbe valid blocks ");
+      APPEND_TRANSITION_COMMENT(tbe.ValidBlocks);
+      APPEND_TRANSITION_COMMENT(" cache valid blocks ");
+      APPEND_TRANSITION_COMMENT(cache_entry.ValidBlocks);
+    } else {
+      tbe.dirty := false;
+    }
+  }
+
+  action(m_markSendAck, "m", desc="Mark TBE that we need to ack at end") {
+    assert(is_valid(tbe));
+    tbe.SendAck := true;
+  }
+
+  action(db_markDirtyBit, "db", desc="Mark TBE dirty bit") {
+      peek(unblockNetwork_in, UnblockMsg) {
+          if (is_valid(tbe)) {
+              tbe.dirty := tbe.dirty || in_msg.Dirty;
+          }
+      }
+  }
+
+  action(dr_markDoneAckReceived, "dr", desc="Mark TBE that a done ack has been received") {
+    assert(is_valid(tbe));
+    tbe.DoneAckReceived := true;
+    tbe.DoneAckAddr := address;
+    APPEND_TRANSITION_COMMENT(" marking done ack on TBE ");
+  }
+
+  action(se_setTBE, "se", desc="Set msg type to evict") {
+    peek(probeNetwork_in, NBProbeRequestMsg) {
+        tbe.MsgType := in_msg.Type;
+        tbe.Requestor := in_msg.Requestor;
+        tbe.DemandAddress := in_msg.DemandAddress;
+        tbe.DemandRequest := in_msg.DemandRequest;
+    }
+  }
+
+  action(sne_setNewTBE, "sne", desc="Set msg type to evict") {
+    peek(probeNetwork_in, NBProbeRequestMsg) {
+        tbe.NewMsgType := in_msg.Type;
+        tbe.NewRequestor := in_msg.Requestor;
+        tbe.NewDemandAddress := in_msg.DemandAddress;
+        tbe.NewDemandRequest := in_msg.DemandRequest;
+    }
+  }
+
+  action(soe_setOldTBE, "soe", desc="Set msg type to evict") {
+    tbe.MsgType := tbe.NewMsgType;
+    tbe.Requestor := tbe.NewRequestor;
+    tbe.DemandAddress := tbe.NewDemandAddress;
+    tbe.DemandRequest := tbe.NewDemandRequest;
+    tbe.OutstandingAcks :=  countBoolVec(tbe.ValidBlocks);
+    tbe.AllAcksReceived := true; // starts true since the region could be empty
+    tbe.DoneEvicting := false;
+    tbe.AcksReceived.clear();
+    tbe.AcksReceived.resize(blocksPerRegion);
+    tbe.SendAck := false;
+  }
+
+  action(ser_setTBE, "ser", desc="Set msg type to evict repl") {
+    tbe.MsgType := ProbeRequestType:PrbInv;
+  }
+
+  action(md_setMustDowngrade, "md", desc="When permissions finally get here, must be shared") {
+    assert(is_valid(cache_entry));
+    cache_entry.MustDowngrade := true;
+  }
+
+  action(dt_deallocateTBE, "dt", desc="deallocate TBE Entry") {
+    TBEs.deallocate(getRegionBase(address));
+    unset_tbe();
+  }
+
+  action(p_popRequestQueue, "p", desc="Pop the request queue") {
+    requestNetwork_in.dequeue(clockEdge());
+  }
+
+  action(pl_popUnblockQueue, "pl", desc="Pop the unblock queue") {
+    unblockNetwork_in.dequeue(clockEdge());
+  }
+
+  action(pn_popNotifyQueue, "pn", desc="Pop the notify queue") {
+    notifyNetwork_in.dequeue(clockEdge());
+  }
+
+  action(pp_popProbeQueue, "pp", desc="Pop the probe queue") {
+    probeNetwork_in.dequeue(clockEdge());
+  }
+
+  action(pt_popTriggerQueue, "pt", desc="Pop the trigger queue") {
+    DPRINTF(RubySlicc, "Trigger Before Contents: %s\n", triggerQueue_in);
+    triggerQueue_in.dequeue(clockEdge());
+    DPRINTF(RubySlicc, "Trigger After Contents: %s\n", triggerQueue_in);
+  }
+
+  // Must always use wake all, since non-region address wait on region addresses
+  action(wa_wakeUpAllDependents, "wa", desc="Wake up any requests waiting for this region") {
+    wakeUpAllBuffers();
+  }
+
+  action(zz_stallAndWaitRequestQueue, "\z", desc="recycle request queue") {
+    Addr regAddr := getRegionBase(address);
+    DPRINTF(RubySlicc, "Stalling address %s\n", regAddr);
+    stall_and_wait(requestNetwork_in, regAddr);
+  }
+
+  action(yy_stallAndWaitProbeQueue, "\y", desc="stall probe queue") {
+    Addr regAddr := getRegionBase(address);
+    stall_and_wait(probeNetwork_in, regAddr);
+  }
+
+  action(yyy_recycleProbeQueue, "\yy", desc="recycle probe queue") {
+    probeNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(zzz_recycleRequestQueue, "\zz", desc="recycle request queue") {
+    requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(www_recycleUnblockNetwork, "\ww", desc="recycle unblock queue") {
+    unblockNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(z_stall, "z", desc="stall request queue") {
+    // fake state
+  }
+
+  action(mru_setMRU, "mru", desc="set MRU") {
+    cacheMemory.setMRU(address, cache_entry.NumValidBlocks);
+  }
+
+  // Transitions
+
+  transition({NP_PS, S_P, S_NP_PS, P_NP, P_S, P_NP_O, S_NP_PS_O, P_S_O, S_O, P_NP_W, P_NP_NP, NP_W}, {CPURead, CPUWriteback, CPUWrite}) {} {
+    zz_stallAndWaitRequestQueue;
+  }
+
+  transition(SS_P, {CPURead, CPUWriteback}) {
+    zz_stallAndWaitRequestQueue;
+  }
+
+  transition({NP, S, P, NP_PS, S_P, S_NP_PS, P_NP, P_S, P_NP_O, S_NP_PS_O, P_S_O, S_O, SS_P, NP_W, P_NP_NP}, StallAccess) {} {
+    zz_stallAndWaitRequestQueue;
+  }
+
+  transition({S, P, NP_PS, S_P, S_NP_PS, P_NP, P_S, P_NP_O, S_NP_PS_O, P_S_O, S_O, SS_P, P_NP_W, P_NP_NP, NP_W}, StallDoneAck) {
+    www_recycleUnblockNetwork;
+  }
+
+  transition(NP, StallDoneAck, NP_W) {
+    t_allocateTBE;
+    db_markDirtyBit;
+    dr_markDoneAckReceived;
+    pl_popUnblockQueue;
+  }
+
+  transition(NP_W, StaleRequest, NP) {
+    f_fwdReqToDir;
+    dt_deallocateTBE;
+    wa_wakeUpAllDependents;
+    p_popRequestQueue;
+  }
+
+  transition(P_NP_O, DowngradeRegion) {} {
+    z_stall; // should stall and wait
+  }
+
+  transition({NP_PS, S_NP_PS, S_P, P_S, P_NP_O, S_NP_PS_O, P_S_O, S_O, SS_P}, ReplRegion) {} {
+    zz_stallAndWaitRequestQueue; // can't let things get out of order!
+  }
+
+  transition({P_NP_O, S_O, SS_P}, InvRegion) {} {
+    yyy_recycleProbeQueue; // can't be z_stall because there could be a RdBlkM in the requestQueue which has the sinked flag which is blocking the inv
+  }
+
+  transition(P_NP, {InvRegion, DowngradeRegion}, P_NP_NP) {} {
+    sne_setNewTBE;
+    pp_popProbeQueue;
+  }
+
+  transition(S_P, DowngradeRegion) {} {
+    adp_AckDemandProbe;
+    ain_ackRegionInvNow;
+    pp_popProbeQueue;
+  }
+
+  transition(P_NP_W, InvRegion) {
+    adp_AckDemandProbe;
+    ain_ackRegionInvNow;
+    pp_popProbeQueue;
+  }
+
+  transition(P_NP_W, DowngradeRegion) {
+    adp_AckDemandProbe;
+    aine_ackRegionInvExlusiveNow;
+    pp_popProbeQueue;
+  }
+
+  transition({P, S}, {CPURead, CPUWriteback}) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    f_fwdReqToDir;
+    u_updateRegionEntry;
+    p_popRequestQueue;
+  }
+
+  transition(P, CPUWrite) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    f_fwdReqToDir;
+    u_updateRegionEntry;
+    p_popRequestQueue;
+  }
+
+  transition(S, CPUWrite, S_O) {TagArrayRead} {
+    mru_setMRU;
+    t_allocateTBE;
+    co_checkOutstanding;
+    zz_stallAndWaitRequestQueue;
+  }
+
+  transition(S_O, AllOutstanding, SS_P) {
+    wa_wakeUpAllDependents;
+    ro_resetAllOutstanding;
+    pt_popTriggerQueue;
+  }
+
+  transition(SS_P, CPUWrite, S_P) {
+    mru_setMRU;
+    dt_deallocateTBE;
+    ru_requestUpgrade;
+    u_updateRegionEntry;
+    p_popRequestQueue;
+  }
+
+  transition(NP, {CPURead, CPUWriteback}, NP_PS) {TagArrayRead, TagArrayWrite} {
+    a_allocateRegionEntry;
+    rs_requestShared;
+    u_updateRegionEntry;
+    p_popRequestQueue;//zz_stallAndWaitRequestQueue;
+  }
+
+  transition(NP, CPUWrite, NP_PS) {TagArrayRead, TagArrayWrite} {
+    a_allocateRegionEntry;
+    rp_requestPrivate;
+    u_updateRegionEntry;
+    p_popRequestQueue;//zz_stallAndWaitRequestQueue;
+  }
+
+  transition(NP_PS, PrivateNotify, P) {} {
+    ap_ackPrivateNotify;
+    wa_wakeUpAllDependents;
+    pn_popNotifyQueue;
+  }
+
+  transition(S_P, PrivateNotify, P) {} {
+    ap_ackPrivateNotify;
+    wa_wakeUpAllDependents;
+    pn_popNotifyQueue;
+  }
+
+  transition(NP_PS, SharedNotify, S) {} {
+    ap_ackPrivateNotify;
+    wa_wakeUpAllDependents;
+    pn_popNotifyQueue;
+  }
+
+  transition(P_NP_W, WbNotify, NP) {} {
+    aw_ackWbNotify;
+    wa_wakeUpAllDependents;
+    dt_deallocateTBE;
+    pn_popNotifyQueue;
+  }
+
+  transition({P, S}, ReplRegion, P_NP_O) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    ser_setTBE;
+    d_deallocateRegionEntry;
+    co_checkOutstanding;
+  }
+
+  transition({P, S}, InvRegion, P_NP_O) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    se_setTBE;
+    m_markSendAck;
+    d_deallocateRegionEntry;
+    co_checkOutstanding;
+    pp_popProbeQueue;
+  }
+
+  transition(P_NP_O, AllOutstanding, P_NP) {} {
+    ed_evictDemand;
+    ef_enqueueFirstEvict;
+    ro_resetAllOutstanding;
+    pt_popTriggerQueue;
+  }
+
+  transition(S_P, InvRegion, S_NP_PS_O) {TagArrayRead} {
+    t_allocateTBE;
+    se_setTBE;
+    m_markSendAck;
+    so_setOutstandingCheckOne;
+    co_checkOutstanding;
+    pp_popProbeQueue;
+  }
+
+  transition(S_NP_PS_O, AllOutstanding, S_NP_PS) {
+    ed_evictDemand;
+    ef_enqueueFirstEvict;
+    ro_resetAllOutstanding;
+    pt_popTriggerQueue;
+  }
+
+  transition(P, DowngradeRegion, P_S_O) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    se_setTBE;
+    m_markSendAck;
+    co_checkOutstanding;
+    pp_popProbeQueue;
+  }
+
+  transition(P_S_O, AllOutstanding, P_S) {} {
+    ed_evictDemand;
+    ef_enqueueFirstEvict;
+    ro_resetAllOutstanding;
+    pt_popTriggerQueue;
+  }
+
+  transition({P, S}, DoneAck) {TagArrayWrite} {
+    do_decrementOutstanding;
+    wa_wakeUpAllDependents;
+    db_markDirtyBit;
+    uw_updatePossibleWriteback;
+    pl_popUnblockQueue;
+  }
+
+  transition({S_P, NP_PS, S_NP_PS}, DoneAck) {TagArrayWrite} {
+      www_recycleUnblockNetwork;
+  }
+
+  transition({P_NP_O, S_NP_PS_O, P_S_O, S_O}, DoneAck) {} {
+    do_decrementOutstanding;
+    co_checkOutstanding;
+    db_markDirtyBit;
+    uw_updatePossibleWriteback;
+    pl_popUnblockQueue;
+  }
+
+  transition({P_NP, P_S, S_NP_PS, P_NP_NP}, Evict) {} {
+    e_evictCurrent;
+    en_enqueueNextEvict;
+    pt_popTriggerQueue;
+  }
+
+  transition({P_NP, P_S, S_NP_PS, P_NP_NP}, InvAck) {} {
+    ra_receiveAck;
+    db_markDirtyBit;
+    pl_popUnblockQueue;
+  }
+
+  transition(P_NP, LastAck_CleanWb, P_NP_W) {} {
+      rw_requestWriteback;
+      pt_popTriggerQueue;
+  }
+
+  transition(P_NP_NP, LastAck_CleanWb, P_NP) {} {
+    soe_setOldTBE;
+    m_markSendAck;
+    ed_evictDemand;
+    ef_enqueueFirstEvict;
+    pt_popTriggerQueue;
+  }
+
+  transition(P_NP, LastAck_PrbResp, NP) {} {
+    aie_ackRegionExclusiveInv;
+    dt_deallocateTBE;
+    wa_wakeUpAllDependents;
+    pt_popTriggerQueue;
+  }
+
+  transition(S_NP_PS, LastAck_PrbResp, NP_PS) {} {
+    aie_ackRegionExclusiveInv;
+    dt_deallocateTBE;
+    wa_wakeUpAllDependents;
+    pt_popTriggerQueue;
+  }
+
+  transition(P_S, LastAck_PrbResp, S) {} {
+    ai_ackRegionInv;
+    ad_ackDircetory;
+    dt_deallocateTBE;
+    wa_wakeUpAllDependents;
+    pt_popTriggerQueue;
+  }
+
+}
+

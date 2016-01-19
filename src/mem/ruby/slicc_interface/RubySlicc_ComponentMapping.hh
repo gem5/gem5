@@ -43,6 +43,12 @@ map_Address_to_DirectoryNode(Addr addr)
     return DirectoryMemory::mapAddressToDirectoryVersion(addr);
 }
 
+inline NodeID
+map_Address_to_TCCdirNode(Addr addr)
+{
+    return DirectoryMemory::mapAddressToDirectoryVersion(addr);
+}
+
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
 inline MachineID
@@ -50,6 +56,22 @@ map_Address_to_Directory(Addr addr)
 {
     MachineID mach =
         {MachineType_Directory, map_Address_to_DirectoryNode(addr)};
+    return mach;
+}
+
+inline MachineID
+map_Address_to_RegionDir(Addr addr)
+{
+    MachineID mach = {MachineType_RegionDir,
+                      map_Address_to_DirectoryNode(addr)};
+    return mach;
+}
+
+inline MachineID
+map_Address_to_TCCdir(Addr addr)
+{
+    MachineID mach =
+        {MachineType_TCCdir, map_Address_to_TCCdirNode(addr)};
     return mach;
 }
 
@@ -99,6 +121,13 @@ inline MachineID
 createMachineID(MachineType type, NodeID id)
 {
     MachineID mach = {type, id};
+    return mach;
+}
+
+inline MachineID
+MachineTypeAndNodeIDToMachineID(MachineType type, NodeID node)
+{
+    MachineID mach = {type, node};
     return mach;
 }
 

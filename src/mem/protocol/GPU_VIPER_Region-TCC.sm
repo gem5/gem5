@@ -1,0 +1,773 @@
+/*
+ * Copyright (c) 2013-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * For use for simulation and test purposes only
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Sooraj Puthoor, Blake Hechtman
+ */
+
+/*
+ * This file is inherited from GPU_VIPER-TCC.sm and retains its structure.
+ * There are very few modifications in this file from the original VIPER TCC
+ */
+
+machine(MachineType:TCC, "TCC Cache")
+ : CacheMemory * L2cache;
+   bool WB; /*is this cache Writeback?*/
+   int regionBufferNum;
+   Cycles l2_request_latency := 50;
+   Cycles l2_response_latency := 20;
+
+  // From the TCPs or SQCs
+  MessageBuffer * requestFromTCP, network="From", virtual_network="1", ordered="true", vnet_type="request";
+  // To the Cores. TCC deals only with TCPs/SQCs. CP cores do not communicate directly with TCC.
+  MessageBuffer * responseToCore, network="To", virtual_network="3", ordered="true", vnet_type="response";
+  // From the NB
+  MessageBuffer * probeFromNB, network="From", virtual_network="0", ordered="false", vnet_type="request";
+  MessageBuffer * responseFromNB, network="From", virtual_network="2", ordered="false", vnet_type="response";
+  // To the NB
+  MessageBuffer * requestToNB, network="To", virtual_network="0", ordered="false", vnet_type="request";
+  MessageBuffer * responseToNB, network="To", virtual_network="2", ordered="false", vnet_type="response";
+  MessageBuffer * unblockToNB, network="To", virtual_network="4", ordered="false", vnet_type="unblock";
+
+  MessageBuffer * triggerQueue, ordered="true", random="false";
+{
+  // EVENTS
+  enumeration(Event, desc="TCC Events") {
+    // Requests coming from the Cores
+    RdBlk,                  desc="RdBlk event";
+    WrVicBlk,               desc="L1 Write Through";
+    WrVicBlkBack,           desc="L1 Write Back(dirty cache)";
+    Atomic,                 desc="Atomic Op";
+    AtomicDone,             desc="AtomicOps Complete";
+    AtomicNotDone,          desc="AtomicOps not Complete";
+    Data,                   desc="data messgae";
+    // Coming from this TCC
+    L2_Repl,                desc="L2 Replacement";
+    // Probes
+    PrbInv,                 desc="Invalidating probe";
+    // Coming from Memory Controller
+    WBAck,                  desc="writethrough ack from memory";
+  }
+
+  // STATES
+  state_declaration(State, desc="TCC State", default="TCC_State_I") {
+    M, AccessPermission:Read_Write, desc="Modified(dirty cache only)";
+    W, AccessPermission:Read_Write, desc="Written(dirty cache only)";
+    V, AccessPermission:Read_Only,  desc="Valid";
+    I, AccessPermission:Invalid,    desc="Invalid";
+    IV, AccessPermission:Busy,      desc="Waiting for Data";
+    WI, AccessPermission:Busy,      desc="Waiting on Writethrough Ack";
+    A, AccessPermission:Busy,       desc="Invalid waiting on atomic Data";
+  }
+
+  enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+    DataArrayRead,    desc="Read the data array";
+    DataArrayWrite,   desc="Write the data array";
+    TagArrayRead,     desc="Read the data array";
+    TagArrayWrite,    desc="Write the data array";
+  }
+
+
+  // STRUCTURES
+
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,           desc="cache state";
+    bool Dirty,                 desc="Is the data dirty (diff from memory?)";
+    DataBlock DataBlk,          desc="Data for the block";
+    WriteMask writeMask,        desc="Dirty byte mask";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,     desc="Transient state";
+    DataBlock DataBlk,  desc="data for the block";
+    bool Dirty,         desc="Is the data dirty?";
+    bool Shared,        desc="Victim hit by shared probe";
+    MachineID From,     desc="Waiting for writeback from...";
+    NetDest Destination, desc="Data destination";
+    int numAtomics,     desc="number remaining atomics";
+  }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  TBETable TBEs, template="<TCC_TBE>", constructor="m_number_of_TBEs";
+
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+
+
+  // FUNCTION DEFINITIONS
+
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+
+  MachineID getPeer(MachineID mach) {
+    return createMachineID(MachineType:RegionBuffer, intToID(regionBufferNum));
+  }
+
+ Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
+    return static_cast(Entry, "pointer", L2cache.lookup(addr));
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    return getCacheEntry(addr).DataBlk;
+  }
+
+  bool presentOrAvail(Addr addr) {
+    return L2cache.isTagPresent(addr) || L2cache.cacheAvail(addr);
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
+    }
+    return State:I;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    if (is_valid(tbe)) {
+        tbe.TBEState := state;
+    }
+
+    if (is_valid(cache_entry)) {
+        cache_entry.CacheState := state;
+    }
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      functionalMemoryRead(pkt);
+    }
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+            testAndWrite(addr, tbe.DataBlk, pkt);
+    }
+
+    num_functional_writes := num_functional_writes +
+        functionalMemoryWrite(pkt);
+    return num_functional_writes;
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return TCC_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return TCC_State_to_permission(cache_entry.CacheState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(TCC_State_to_permission(state));
+    }
+  }
+
+  void recordRequestType(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+      L2cache.recordRequestType(CacheRequestType:DataArrayRead,addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+      L2cache.recordRequestType(CacheRequestType:DataArrayWrite,addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+      L2cache.recordRequestType(CacheRequestType:TagArrayRead,addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      L2cache.recordRequestType(CacheRequestType:TagArrayWrite,addr);
+    }
+  }
+
+  bool checkResourceAvailable(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+      return L2cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+      return L2cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+      return L2cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      return L2cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else {
+      error("Invalid RequestType type in checkResourceAvailable");
+      return true;
+    }
+  }
+
+
+  // ** OUT_PORTS **
+
+  // Three classes of ports
+  // Class 1: downward facing network links to NB
+  out_port(requestToNB_out, CPURequestMsg, requestToNB);
+  out_port(responseToNB_out, ResponseMsg, responseToNB);
+  out_port(unblockToNB_out, UnblockMsg, unblockToNB);
+
+  // Class 2: upward facing ports to GPU cores
+  out_port(responseToCore_out, ResponseMsg, responseToCore);
+
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+  //
+  // request queue going to NB
+  //
+
+
+// ** IN_PORTS **
+  in_port(triggerQueue_in, TiggerMsg, triggerQueue) {
+    if (triggerQueue_in.isReady(clockEdge())) {
+      peek(triggerQueue_in, TriggerMsg) {
+        TBE tbe := TBEs.lookup(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        if (tbe.numAtomics == 0) {
+            trigger(Event:AtomicDone, in_msg.addr, cache_entry, tbe);
+        } else {
+            trigger(Event:AtomicNotDone, in_msg.addr, cache_entry, tbe);
+        }
+      }
+    }
+  }
+
+
+
+  in_port(responseFromNB_in, ResponseMsg, responseFromNB) {
+    if (responseFromNB_in.isReady(clockEdge())) {
+      peek(responseFromNB_in, ResponseMsg, block_on="addr") {
+        TBE tbe := TBEs.lookup(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        if (in_msg.Type == CoherenceResponseType:NBSysResp) {
+          if(presentOrAvail(in_msg.addr)) {
+            trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+          } else {
+            Addr victim :=  L2cache.cacheProbe(in_msg.addr);
+            trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+          }
+        } else if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
+          trigger(Event:WBAck, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unexpected Response Message to Core");
+        }
+      }
+    }
+  }
+
+  // Finally handling incoming requests (from TCP) and probes (from NB).
+
+  in_port(probeNetwork_in, NBProbeRequestMsg, probeFromNB) {
+    if (probeNetwork_in.isReady(clockEdge())) {
+      peek(probeNetwork_in, NBProbeRequestMsg) {
+        DPRINTF(RubySlicc, "%s\n", in_msg);
+        DPRINTF(RubySlicc, "machineID: %s\n", machineID);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+        trigger(Event:PrbInv, in_msg.addr, cache_entry, tbe);
+      }
+    }
+  }
+
+
+  in_port(coreRequestNetwork_in, CPURequestMsg, requestFromTCP, rank=0) {
+    if (coreRequestNetwork_in.isReady(clockEdge())) {
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+        TBE tbe := TBEs.lookup(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        if (in_msg.Type == CoherenceRequestType:WriteThrough) {
+            if(WB) {
+                if(presentOrAvail(in_msg.addr)) {
+                    trigger(Event:WrVicBlkBack, in_msg.addr, cache_entry, tbe);
+                } else {
+                    Addr victim :=  L2cache.cacheProbe(in_msg.addr);
+                    trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+                }
+            } else {
+                trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
+            }
+        } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+          trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:RdBlk) {
+          trigger(Event:RdBlk, in_msg.addr, cache_entry, tbe);
+        } else {
+          DPRINTF(RubySlicc, "%s\n", in_msg);
+          error("Unexpected Response Message to Core");
+        }
+      }
+    }
+  }
+  // BEGIN ACTIONS
+
+  action(i_invL2, "i", desc="invalidate TCC cache block") {
+    if (is_valid(cache_entry)) {
+        L2cache.deallocate(address);
+    }
+    unset_cache_entry();
+  }
+
+  // Data available at TCC. Send the DATA to TCP
+  action(sd_sendData, "sd", desc="send Shared response") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:TDSysResp;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.Dirty := false;
+        out_msg.State := CoherenceState:Shared;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
+  }
+
+
+  // Data was not available at TCC. So, TCC forwarded the request to
+  // directory and directory responded back with data. Now, forward the
+  // DATA to TCP and send the unblock ack back to directory.
+  action(sdr_sendDataResponse, "sdr", desc="send Shared response") {
+    enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:TDSysResp;
+      out_msg.Sender := machineID;
+      out_msg.Destination := tbe.Destination;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+      out_msg.Dirty := false;
+      out_msg.State := CoherenceState:Shared;
+      DPRINTF(RubySlicc, "%s\n", out_msg);
+    }
+    enqueue(unblockToNB_out, UnblockMsg, 1) {
+      out_msg.addr := address;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+      DPRINTF(RubySlicc, "%s\n", out_msg);
+    }
+  }
+
+
+  action(rd_requestData, "r", desc="Miss in L2, pass on") {
+    if(tbe.Destination.count()==1){
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+        enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+          out_msg.addr := address;
+          out_msg.Type := in_msg.Type;
+          out_msg.Requestor := machineID;
+          out_msg.Destination.add(getPeer(machineID));
+          out_msg.Shared := false; // unneeded for this request
+          out_msg.MessageSize := in_msg.MessageSize;
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+        }
+      }
+    }
+  }
+
+  action(w_sendResponseWBAck, "w", desc="send WB Ack") {
+    peek(responseFromNB_in, ResponseMsg) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:TDSysWBAck;
+          out_msg.Destination.clear();
+          out_msg.Destination.add(in_msg.WTRequestor);
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        }
+    }
+  }
+
+  action(swb_sendWBAck, "swb", desc="send WB Ack") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:TDSysWBAck;
+        out_msg.Destination.clear();
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(ar_sendAtomicResponse, "ar", desc="send Atomic Ack") {
+    peek(responseFromNB_in, ResponseMsg) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:TDSysResp;
+          out_msg.Destination.add(in_msg.WTRequestor);
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := in_msg.MessageSize;
+          out_msg.DataBlk := in_msg.DataBlk;
+        }
+    }
+  }
+  action(sd2rb_sendDone2RegionBuffer, "sd2rb", desc="Request finished, send done ack") {
+    enqueue(unblockToNB_out, UnblockMsg, 1) {
+      out_msg.addr := address;
+      out_msg.Destination.add(getPeer(machineID));
+      out_msg.DoneAck := true;
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+      if (is_valid(tbe)) {
+          out_msg.Dirty := tbe.Dirty;
+      } else {
+          out_msg.Dirty := false;
+      }
+      DPRINTF(RubySlicc, "%s\n", out_msg);
+    }
+  }
+
+  action(a_allocateBlock, "a", desc="allocate TCC block") {
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(L2cache.allocate(address, new Entry));
+      cache_entry.writeMask.clear();
+    }
+  }
+
+  action(t_allocateTBE, "t", desc="allocate TBE Entry") {
+    if (is_invalid(tbe)) {
+      check_allocate(TBEs);
+      TBEs.allocate(address);
+      set_tbe(TBEs.lookup(address));
+      tbe.Destination.clear();
+      tbe.numAtomics := 0;
+    }
+    if (coreRequestNetwork_in.isReady(clockEdge())) {
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+        if(in_msg.Type == CoherenceRequestType:RdBlk || in_msg.Type == CoherenceRequestType:Atomic){
+          tbe.Destination.add(in_msg.Requestor);
+        }
+      }
+    }
+  }
+
+  action(dt_deallocateTBE, "dt", desc="Deallocate TBE entry") {
+    tbe.Destination.clear();
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(wcb_writeCacheBlock, "wcb", desc="write data to TCC") {
+    peek(responseFromNB_in, ResponseMsg) {
+      cache_entry.DataBlk := in_msg.DataBlk;
+      DPRINTF(RubySlicc, "Writing to TCC: %s\n", in_msg);
+    }
+  }
+
+  action(wdb_writeDirtyBytes, "wdb", desc="write data to TCC") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      cache_entry.DataBlk.copyPartial(in_msg.DataBlk,in_msg.writeMask);
+      cache_entry.writeMask.orMask(in_msg.writeMask);
+      DPRINTF(RubySlicc, "Writing to TCC: %s\n", in_msg);
+    }
+  }
+
+  action(wt_writeThrough, "wt", desc="write through data") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+        out_msg.addr := address;
+        out_msg.Requestor := machineID;
+        out_msg.WTRequestor := in_msg.Requestor;
+        out_msg.Destination.add(getPeer(machineID));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.Type := CoherenceRequestType:WriteThrough;
+        out_msg.Dirty := true;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.writeMask.orMask(in_msg.writeMask);
+      }
+    }
+  }
+
+  action(wb_writeBack, "wb", desc="write back data") {
+    enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+      out_msg.addr := address;
+      out_msg.Requestor := machineID;
+      out_msg.WTRequestor := machineID;
+      out_msg.Destination.add(getPeer(machineID));
+      out_msg.MessageSize := MessageSizeType:Data;
+      out_msg.Type := CoherenceRequestType:WriteThrough;
+      out_msg.Dirty := true;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.writeMask.orMask(cache_entry.writeMask);
+    }
+  }
+
+  action(at_atomicThrough, "at", desc="write back data") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+        out_msg.addr := address;
+        out_msg.Requestor := machineID;
+        out_msg.WTRequestor := in_msg.Requestor;
+        out_msg.Destination.add(getPeer(machineID));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.Type := CoherenceRequestType:Atomic;
+        out_msg.Dirty := true;
+        out_msg.writeMask.orMask(in_msg.writeMask);
+      }
+    }
+  }
+
+  action(pi_sendProbeResponseInv, "pi", desc="send probe ack inv, no data") {
+    enqueue(responseToNB_out, ResponseMsg, 1) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Dirty := false;
+      out_msg.Hit := false;
+      out_msg.Ntsl := true;
+      out_msg.State := CoherenceState:NA;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+  action(ut_updateTag, "ut", desc="update Tag (i.e. set MRU)") {
+    L2cache.setMRU(address);
+  }
+
+  action(p_popRequestQueue, "p", desc="pop request queue") {
+    coreRequestNetwork_in.dequeue(clockEdge());
+  }
+
+  action(pr_popResponseQueue, "pr", desc="pop response queue") {
+    responseFromNB_in.dequeue(clockEdge());
+  }
+
+  action(pp_popProbeQueue, "pp", desc="pop probe queue") {
+    probeNetwork_in.dequeue(clockEdge());
+  }
+  action(zz_recycleRequestQueue, "z", desc="stall"){
+    coreRequestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+
+  action(ina_incrementNumAtomics, "ina", desc="inc num atomics") {
+    tbe.numAtomics := tbe.numAtomics + 1;
+  }
+
+
+  action(dna_decrementNumAtomics, "dna", desc="dec num atomics") {
+    tbe.numAtomics := tbe.numAtomics - 1;
+    if (tbe.numAtomics==0) {
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+        out_msg.addr := address;
+        out_msg.Type := TriggerType:AtomicDone;
+      }
+    }
+  }
+
+  action(ptr_popTriggerQueue, "ptr", desc="pop Trigger") {
+    triggerQueue_in.dequeue(clockEdge());
+  }
+
+  // END ACTIONS
+
+  // BEGIN TRANSITIONS
+  // transitions from base
+  // Assumptions for ArrayRead/Write
+  // TBE checked before tags
+  // Data Read/Write requires Tag Read
+
+  transition(WI, {RdBlk, WrVicBlk, Atomic, WrVicBlkBack}) {TagArrayRead} {
+    zz_recycleRequestQueue;
+  }
+  transition(A, {RdBlk, WrVicBlk, WrVicBlkBack}) {TagArrayRead} {
+    zz_recycleRequestQueue;
+  }
+  transition(IV, {WrVicBlk, Atomic, WrVicBlkBack}) {TagArrayRead} {
+    zz_recycleRequestQueue;
+  }
+  transition({M, V}, RdBlk) {TagArrayRead, DataArrayRead} {
+    sd_sendData;
+    ut_updateTag;
+    p_popRequestQueue;
+  }
+  transition(W, RdBlk, WI) {TagArrayRead, DataArrayRead} {
+    t_allocateTBE;
+    wb_writeBack;
+  }
+
+  transition(I, RdBlk, IV) {TagArrayRead} {
+    t_allocateTBE;
+    rd_requestData;
+    p_popRequestQueue;
+  }
+
+  transition(IV, RdBlk) {
+    t_allocateTBE;
+    rd_requestData;
+    p_popRequestQueue;
+  }
+
+  transition({V, I},Atomic, A) {TagArrayRead} {
+    i_invL2;
+    t_allocateTBE;
+    at_atomicThrough;
+    ina_incrementNumAtomics;
+    p_popRequestQueue;
+  }
+
+  transition(A, Atomic) {
+    at_atomicThrough;
+    ina_incrementNumAtomics;
+    p_popRequestQueue;
+  }
+
+  transition({M, W}, Atomic, WI) {TagArrayRead} {
+    t_allocateTBE;
+    wb_writeBack;
+  }
+
+  // Cahceblock stays in I state which implies
+  // this TCC is a write-no-allocate cache
+  transition(I, WrVicBlk) {TagArrayRead} {
+    wt_writeThrough;
+    p_popRequestQueue;
+  }
+
+  transition(V, WrVicBlk) {TagArrayRead, DataArrayWrite} {
+    ut_updateTag;
+    wdb_writeDirtyBytes;
+    wt_writeThrough;
+    p_popRequestQueue;
+  }
+
+  transition({V, M}, WrVicBlkBack, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    ut_updateTag;
+    swb_sendWBAck;
+    wdb_writeDirtyBytes;
+    p_popRequestQueue;
+  }
+
+  transition(W, WrVicBlkBack) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    ut_updateTag;
+    swb_sendWBAck;
+    wdb_writeDirtyBytes;
+    p_popRequestQueue;
+  }
+
+  transition(I, WrVicBlkBack, W) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    a_allocateBlock;
+    ut_updateTag;
+    swb_sendWBAck;
+    wdb_writeDirtyBytes;
+    p_popRequestQueue;
+  }
+
+  transition({W, M}, L2_Repl, WI) {TagArrayRead, DataArrayRead} {
+    t_allocateTBE;
+    wb_writeBack;
+    i_invL2;
+  }
+
+  transition({I, V}, L2_Repl, I) {TagArrayRead, TagArrayWrite} {
+    i_invL2;
+  }
+
+  transition({A, IV, WI}, L2_Repl) {
+    i_invL2;
+  }
+
+  transition({I, V}, PrbInv, I) {TagArrayRead, TagArrayWrite} {
+    pi_sendProbeResponseInv;
+    pp_popProbeQueue;
+  }
+
+  transition(M, PrbInv, W) {TagArrayRead, TagArrayWrite} {
+    pi_sendProbeResponseInv;
+    pp_popProbeQueue;
+  }
+
+  transition(W, PrbInv) {TagArrayRead} {
+    pi_sendProbeResponseInv;
+    pp_popProbeQueue;
+  }
+
+  transition({A, IV, WI}, PrbInv) {
+    pi_sendProbeResponseInv;
+    pp_popProbeQueue;
+  }
+
+  transition(IV, Data, V) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    a_allocateBlock;
+    ut_updateTag;
+    wcb_writeCacheBlock;
+    sdr_sendDataResponse;
+    sd2rb_sendDone2RegionBuffer;
+    pr_popResponseQueue;
+    dt_deallocateTBE;
+  }
+
+  transition(A, Data) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    a_allocateBlock;
+    ar_sendAtomicResponse;
+    sd2rb_sendDone2RegionBuffer;
+    dna_decrementNumAtomics;
+    pr_popResponseQueue;
+  }
+
+  transition(A, AtomicDone, I) {TagArrayRead, TagArrayWrite} {
+    dt_deallocateTBE;
+    ptr_popTriggerQueue;
+  }
+
+  transition(A, AtomicNotDone) {TagArrayRead} {
+    ptr_popTriggerQueue;
+  }
+
+  //M,W should not see WBAck as the cache is in WB mode
+  //WBAcks do not need to check tags
+  transition({I, V, IV, A}, WBAck) {
+    w_sendResponseWBAck;
+    sd2rb_sendDone2RegionBuffer;
+    pr_popResponseQueue;
+  }
+
+  transition(WI, WBAck,I) {
+    sd2rb_sendDone2RegionBuffer;
+    dt_deallocateTBE;
+    pr_popResponseQueue;
+  }
+}

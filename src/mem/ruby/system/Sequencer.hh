@@ -99,6 +99,7 @@ class Sequencer : public RubyPort
     void markRemoved();
     void evictionCallback(Addr address);
     void invalidateSC(Addr address);
+    int coreId() const { return m_coreId; }
 
     void recordRequestType(SequencerRequestType requestType);
     Stats::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
@@ -197,6 +198,8 @@ class Sequencer : public RubyPort
     Stats::Scalar m_store_waiting_on_store;
     Stats::Scalar m_load_waiting_on_store;
     Stats::Scalar m_load_waiting_on_load;
+
+    int m_coreId;
 
     bool m_usingNetworkTester;
 
