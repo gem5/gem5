@@ -341,39 +341,46 @@ AbstractMemory::access(PacketPtr pkt)
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 
     if (pkt->cmd == MemCmd::SwapReq) {
-        std::vector<uint8_t> overwrite_val(pkt->getSize());
-        uint64_t condition_val64;
-        uint32_t condition_val32;
+        if (pkt->isAtomicOp()) {
+            if (pmemAddr) {
+                memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+                (*(pkt->getAtomicOp()))(hostAddr);
+            }
+        } else {
+            std::vector<uint8_t> overwrite_val(pkt->getSize());
+            uint64_t condition_val64;
+            uint32_t condition_val32;
 
-        if (!pmemAddr)
-            panic("Swap only works if there is real memory (i.e. null=False)");
+            if (!pmemAddr)
+                panic("Swap only works if there is real memory (i.e. null=False)");
 
-        bool overwrite_mem = true;
-        // keep a copy of our possible write value, and copy what is at the
-        // memory address into the packet
-        std::memcpy(&overwrite_val[0], pkt->getConstPtr<uint8_t>(),
-                    pkt->getSize());
-        std::memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+            bool overwrite_mem = true;
+            // keep a copy of our possible write value, and copy what is at the
+            // memory address into the packet
+            std::memcpy(&overwrite_val[0], pkt->getConstPtr<uint8_t>(),
+                        pkt->getSize());
+            std::memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
 
-        if (pkt->req->isCondSwap()) {
-            if (pkt->getSize() == sizeof(uint64_t)) {
-                condition_val64 = pkt->req->getExtraData();
-                overwrite_mem = !std::memcmp(&condition_val64, hostAddr,
-                                             sizeof(uint64_t));
-            } else if (pkt->getSize() == sizeof(uint32_t)) {
-                condition_val32 = (uint32_t)pkt->req->getExtraData();
-                overwrite_mem = !std::memcmp(&condition_val32, hostAddr,
-                                             sizeof(uint32_t));
-            } else
-                panic("Invalid size for conditional read/write\n");
+            if (pkt->req->isCondSwap()) {
+                if (pkt->getSize() == sizeof(uint64_t)) {
+                    condition_val64 = pkt->req->getExtraData();
+                    overwrite_mem = !std::memcmp(&condition_val64, hostAddr,
+                                                 sizeof(uint64_t));
+                } else if (pkt->getSize() == sizeof(uint32_t)) {
+                    condition_val32 = (uint32_t)pkt->req->getExtraData();
+                    overwrite_mem = !std::memcmp(&condition_val32, hostAddr,
+                                                 sizeof(uint32_t));
+                } else
+                    panic("Invalid size for conditional read/write\n");
+            }
+
+            if (overwrite_mem)
+                std::memcpy(hostAddr, &overwrite_val[0], pkt->getSize());
+
+            assert(!pkt->req->isInstFetch());
+            TRACE_PACKET("Read/Write");
+            numOther[pkt->req->masterId()]++;
         }
-
-        if (overwrite_mem)
-            std::memcpy(hostAddr, &overwrite_val[0], pkt->getSize());
-
-        assert(!pkt->req->isInstFetch());
-        TRACE_PACKET("Read/Write");
-        numOther[pkt->req->masterId()]++;
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
         if (pkt->isLLSC()) {

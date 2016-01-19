@@ -661,6 +661,12 @@ class Packet : public Printable
     }
 
     /**
+     * Accessor function to atomic op.
+     */
+    AtomicOpFunctor *getAtomicOp() const { return req->getAtomicOpFunctor(); }
+    bool isAtomicOp() const { return req->isAtomic(); }
+
+    /**
      * It has been determined that the SC packet should successfully update
      * memory. Therefore, convert this SC packet to a normal write.
      */

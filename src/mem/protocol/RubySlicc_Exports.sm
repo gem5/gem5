@@ -56,6 +56,7 @@ bool testAndWrite(Addr addr, DataBlock datablk, Packet *pkt);
 enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent") {
   // Valid data
   Read_Only,  desc="block is Read Only (modulo functional writes)";
+  Write_Only, desc="block is Write Only";
   Read_Write, desc="block is Read/Write";
 
   // Possibly Invalid data
@@ -144,7 +145,9 @@ enumeration(TransitionResult, desc="...") {
 enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   LD,                desc="Load";
   ST,                desc="Store";
-  ATOMIC,            desc="Atomic Load/Store";
+  ATOMIC,            desc="Atomic Load/Store -- depricated. use ATOMIC_RETURN or ATOMIC_NO_RETURN";
+  ATOMIC_RETURN,     desc="Atomic Load/Store, return data";
+  ATOMIC_NO_RETURN,  desc="Atomic Load/Store, do not return data";
   IFETCH,            desc="Instruction fetch";
   IO,                desc="I/O";
   REPLACEMENT,       desc="Replacement";
@@ -166,6 +169,8 @@ enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL
   Default,     desc="Replace this with access_types passed to the DMA Ruby object";
   LD,          desc="Load";
   ST,          desc="Store";
+  ATOMIC,      desc="Atomic Load/Store";
+  REPLACEMENT, desc="Replacement";
   FLUSH,       desc="Flush request type";
   NULL,        desc="Invalid request type";
 }

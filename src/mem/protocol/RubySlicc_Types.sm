@@ -126,6 +126,7 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   int Size,                  desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
   int contextId,             desc="this goes away but must be replace with Nilay";
+  int wfid,                  desc="Writethrough wavefront";
   HSAScope scope,            desc="HSA scope";
   HSASegment segment,        desc="HSA segment";
 }

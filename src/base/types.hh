@@ -200,6 +200,19 @@ typedef std::shared_ptr<FaultBase> Fault;
 constexpr decltype(nullptr) NoFault = nullptr;
 #endif
 
+struct AtomicOpFunctor
+{
+    virtual void operator()(uint8_t *p) = 0;
+    virtual ~AtomicOpFunctor() {}
+};
+
+template <class T>
+struct TypedAtomicOpFunctor : public AtomicOpFunctor
+{
+    void operator()(uint8_t *p) { execute((T *)p); }
+    virtual void execute(T * p) = 0;
+};
+
 enum ByteOrder {
     BigEndianByteOrder,
     LittleEndianByteOrder

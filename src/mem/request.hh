@@ -160,6 +160,11 @@ class Request
         /** The request should be marked with RELEASE. */
         RELEASE                     = 0x00040000,
 
+        /** The request is an atomic that returns data. */
+        ATOMIC_RETURN_OP            = 0x40000000,
+        /** The request is an atomic that does not return data. */
+        ATOMIC_NO_RETURN_OP         = 0x80000000,
+
         /** The request should be marked with KERNEL.
           * Used to indicate the synchronization associated with a GPU kernel
           * launch or completion.
@@ -345,6 +350,9 @@ class Request
     /** Sequence number of the instruction that creates the request */
     InstSeqNum _reqInstSeqNum;
 
+    /** A pointer to an atomic operation */
+    AtomicOpFunctor *atomicOpFunctor;
+
   public:
 
     /**
@@ -356,7 +364,8 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
+          accessDelta(0), depth(0)
     {}
 
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid,
@@ -364,7 +373,8 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          _reqInstSeqNum(seq_num), translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(seq_num), atomicOpFunctor(nullptr), translateDelta(0),
+          accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, curTick());
         setThreadContext(cid, tid);
@@ -380,7 +390,8 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
+          accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, curTick());
     }
@@ -389,7 +400,8 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
+          accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
     }
@@ -398,12 +410,12 @@ class Request
             Addr pc)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
+          _extraData(0), _contextId(0), _threadId(0), _pc(pc),
+          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
+          accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, time);
         privateFlags.set(VALID_PC);
-        _pc = pc;
     }
 
     Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
@@ -411,13 +423,27 @@ class Request
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _threadId(0), _pc(0),
-          _reqInstSeqNum(0), translateDelta(0), accessDelta(0), depth(0)
+          _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
+          accessDelta(0), depth(0)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
         setThreadContext(cid, tid);
     }
 
-    ~Request() {}
+    Request(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc,
+            int cid, ThreadID tid, AtomicOpFunctor *atomic_op)
+        : atomicOpFunctor(atomic_op)
+    {
+        setVirt(asid, vaddr, size, flags, mid, pc);
+        setThreadContext(cid, tid);
+    }
+
+    ~Request()
+    {
+        if (hasAtomicOpFunctor()) {
+            delete atomicOpFunctor;
+        }
+    }
 
     /**
      * Set up CPU and thread numbers.
@@ -539,6 +565,22 @@ class Request
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         return _time;
+    }
+
+    /**
+     * Accessor for atomic-op functor.
+     */
+    bool
+    hasAtomicOpFunctor()
+    {
+        return atomicOpFunctor != NULL;
+    }
+
+    AtomicOpFunctor *
+    getAtomicOpFunctor()
+    {
+        assert(atomicOpFunctor != NULL);
+        return atomicOpFunctor;
     }
 
     /** Accessor for flags. */
@@ -749,6 +791,15 @@ class Request
     bool isAcquire() const { return _flags.isSet(ACQUIRE); }
     bool isRelease() const { return _flags.isSet(RELEASE); }
     bool isKernel() const { return _flags.isSet(KERNEL); }
+    bool isAtomicReturn() const { return _flags.isSet(ATOMIC_RETURN_OP); }
+    bool isAtomicNoReturn() const { return _flags.isSet(ATOMIC_NO_RETURN_OP); }
+
+    bool
+    isAtomic() const
+    {
+        return _flags.isSet(ATOMIC_RETURN_OP) ||
+               _flags.isSet(ATOMIC_NO_RETURN_OP);
+    }
 
     /**
      * Accessor functions for the memory space configuration flags and used by
