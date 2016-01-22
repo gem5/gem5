@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 ARM Limited
+# Copyright (c) 2012-2014, 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,13 +35,23 @@
 #
 # Authors: Vasileios Spiliopoulos
 #          Akash Bagdia
+#          Glenn Bergmans
 
 from m5.params import *
 from m5.SimObject import SimObject
 from Device import BasicPioDevice
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 class EnergyCtrl(BasicPioDevice):
     type = 'EnergyCtrl'
     cxx_header = "dev/arm/energy_ctrl.hh"
     dvfs_handler = Param.DVFSHandler(Parent.dvfs_handler, "DVFS handler")
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, 'gem5_energy_ctrl',
+            self.pio_addr, 0x1000)
+
+        node.appendCompatible("arm,gem5-energy-ctrl")
+
+        yield node
