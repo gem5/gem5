@@ -40,6 +40,7 @@
 # Authors: Nathan Binkert
 #          Rick Strong
 #          Andreas Hansson
+#          Glenn Bergmans
 
 import sys
 
@@ -47,12 +48,15 @@ from m5.SimObject import *
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 from XBar import L2XBar
 from InstTracer import InstTracer
 from CPUTracers import ExeTracer
 from MemObject import MemObject
+from SubSystem import SubSystem
 from ClockDomain import *
+from Platform import Platform
 
 default_tracer = ExeTracer()
 
@@ -322,3 +326,49 @@ class BaseCPU(MemObject):
 
     def addCheckerCpu(self):
         pass
+
+    def createPhandleKey(self, thread):
+        # This method creates a unique key for this cpu as a function of a
+        # certain thread
+        return 'CPU-%d-%d-%d' % (self.socket_id, self.cpu_id, thread)
+
+    #Generate simple CPU Device Tree structure
+    def generateDeviceTree(self, state):
+        """Generate cpu nodes for each thread and the corresponding part of the
+        cpu-map node. Note that this implementation does not support clusters
+        of clusters. Note that GEM5 is not compatible with the official way of
+        numbering cores as defined in the Device Tree documentation. Where the
+        cpu_id needs to reset to 0 for each cluster by specification, GEM5
+        expects the cpu_id to be globally unique and incremental. This
+        generated node adheres the GEM5 way of doing things."""
+        if bool(self.switched_out):
+            return
+
+        cpus_node = FdtNode('cpus')
+        cpus_node.append(state.CPUCellsProperty())
+        #Special size override of 0
+        cpus_node.append(FdtPropertyWords('#size-cells', [0]))
+
+        # Generate cpu nodes
+        for i in range(int(self.numThreads)):
+            reg = (int(self.socket_id)<<8) + int(self.cpu_id) + i
+            node = FdtNode("cpu@%x" % reg)
+            node.append(FdtPropertyStrings("device_type", "cpu"))
+            node.appendCompatible(["gem5,arm-cpu"])
+            node.append(FdtPropertyWords("reg", state.CPUAddrCells(reg)))
+            platform, found = self.system.unproxy(self).find_any(Platform)
+            if found:
+                platform.annotateCpuDeviceNode(node, state)
+            else:
+                warn("Platform not found for device tree generation; " \
+                     "system or multiple CPUs may not start")
+
+            freq = round(self.clk_domain.unproxy(self).clock[0].frequency)
+            node.append(FdtPropertyWords("clock-frequency", freq))
+
+            # Unique key for this CPU
+            phandle_key = self.createPhandleKey(i)
+            node.appendPhandle(phandle_key)
+            cpus_node.append(node)
+
+        yield cpus_node

@@ -34,3 +34,7 @@ class Platform(SimObject):
     abstract = True
     cxx_header = "dev/platform.hh"
     intrctrl = Param.IntrControl(Parent.any, "interrupt controller")
+
+    # for platforms using device trees to set properties of CPU nodes
+    def annotateCpuDeviceNode(self, cpu, state):
+        pass
