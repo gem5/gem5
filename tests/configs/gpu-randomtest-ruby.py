@@ -56,7 +56,7 @@ Options.addCommonOptions(parser)
 # add the gpu specific options expected by the the gpu and gpu_RfO
 parser.add_option("-u", "--num-compute-units", type="int", default=8,
                   help="number of compute units in the GPU")
-parser.add_option("--numCPs", type="int", default=0,
+parser.add_option("--num-cp", type="int", default=0,
                   help="Number of GPU Command Processors (CP)")
 parser.add_option("--simds-per-cu", type="int", default=4, help="SIMD units" \
                   "per CU")

@@ -600,7 +600,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
         # SQC also in GPU cluster
         gpuCluster.add(sqc_cntrl)
 
-    for i in xrange(options.numCPs):
+    for i in xrange(options.num_cp):
 
         tcp_cntrl = TCPCntrl(TCC_select_num_bits = TCC_bits,
                              number_of_TBEs = 2560) # max outstanding requests

@@ -59,7 +59,7 @@ parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
                   help="Wakeup every N cycles")
 parser.add_option("-u", "--num-compute-units", type="int", default=1,
                   help="number of compute units in the GPU")
-parser.add_option("--numCPs", type="int", default=0,
+parser.add_option("--num-cp", type="int", default=0,
                   help="Number of GPU Command Processors (CP)")
 # not super important now, but to avoid putting the number 4 everywhere, make
 # it an option/knob

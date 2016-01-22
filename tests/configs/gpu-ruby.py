@@ -92,7 +92,7 @@ parser.add_option("-k", "--kernel-files",
                   help="file(s) containing GPU kernel code (colon separated)")
 parser.add_option("-u", "--num-compute-units", type="int", default=2,
                   help="number of GPU compute units"),
-parser.add_option("--numCPs", type="int", default=0,
+parser.add_option("--num-cp", type="int", default=0,
                   help="Number of GPU Command Processors (CP)")
 parser.add_option("--simds-per-cu", type="int", default=4, help="SIMD units" \
                   "per CU")
@@ -308,7 +308,7 @@ system.ruby._cpu_ports[0].mem_master_port = system.piobus.slave
 # correctly.
 gpu_port_idx = len(system.ruby._cpu_ports) \
                - options.num_compute_units - options.num_sqc
-gpu_port_idx = gpu_port_idx - options.numCPs * 2
+gpu_port_idx = gpu_port_idx - options.num_cp * 2
 
 wavefront_size = options.wf_size
 for i in xrange(n_cu):
@@ -326,7 +326,8 @@ for i in xrange(n_cu):
             system.ruby._cpu_ports[gpu_port_idx].slave
 gpu_port_idx = gpu_port_idx + 1
 
-assert(options.numCPs == 0)
+# Current regression tests do not support the command processor
+assert(options.num_cp == 0)
 
 # connect dispatcher to the system.piobus
 dispatcher.pio = system.piobus.master

@@ -567,7 +567,7 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
         # SQC also in GPU cluster
         gpuCluster.add(sqc_cntrl)
 
-    for i in xrange(options.numCPs):
+    for i in xrange(options.num_cp):
 
         tcp_ID = options.num_compute_units + i
         sqc_ID = options.num_sqc + i
