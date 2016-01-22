@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:33:09
-gem5 started Dec 11 2015 20:33:36
-gem5 executing on zizzer, pid 856
-command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-timing -re /z/atgutier/gem5/gem5/tests/run.py build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-timing
+gem5 compiled Jan 21 2016 14:30:54
+gem5 started Jan 21 2016 14:31:27
+gem5 executing on zizzer, pid 8737
+command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-timing -re /z/atgutier/gem5/gem5-commit/tests/run.py build/SPARC/tests/opt/quick/se/02.insttest/sparc/linux/simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -4,11 +4,11 @@ sim_seconds                                  0.000107                       # Nu
 sim_ticks                                      107210                       # Number of ticks simulated
 final_tick                                     107210                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_inst_rate                                  30588                       # Simulator instruction rate (inst/s)
-host_op_rate                                    30584                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                 513061                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 388380                       # Number of bytes of host memory used
-host_seconds                                     0.21                       # Real time elapsed on the host
+host_inst_rate                                  29228                       # Simulator instruction rate (inst/s)
+host_op_rate                                    29224                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                 490268                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 394320                       # Number of bytes of host memory used
+host_seconds                                     0.22                       # Real time elapsed on the host
 sim_insts                                        6390                       # Number of instructions simulated
 sim_ops                                          6390                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -365,37 +365,37 @@ system.ruby.delayHist::max_bucket                   9                       # de
 system.ruby.delayHist::samples                   3456                       # delay histogram for all message
 system.ruby.delayHist                    |        3456    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for all message
 system.ruby.delayHist::total                     3456                       # delay histogram for all message
-system.ruby.outstanding_req_hist::bucket_size            1                      
-system.ruby.outstanding_req_hist::max_bucket            9                      
-system.ruby.outstanding_req_hist::samples         8449                      
-system.ruby.outstanding_req_hist::mean              1                      
-system.ruby.outstanding_req_hist::gmean             1                      
-system.ruby.outstanding_req_hist         |           0      0.00%      0.00% |        8449    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.outstanding_req_hist::total          8449                      
-system.ruby.latency_hist::bucket_size              64                      
-system.ruby.latency_hist::max_bucket              639                      
-system.ruby.latency_hist::samples                8448                      
-system.ruby.latency_hist::mean              11.690578                      
-system.ruby.latency_hist::gmean              2.205273                      
-system.ruby.latency_hist::stdev             25.830363                      
-system.ruby.latency_hist                 |        8209     97.17%     97.17% |         184      2.18%     99.35% |          38      0.45%     99.80% |           7      0.08%     99.88% |           6      0.07%     99.95% |           3      0.04%     99.99% |           0      0.00%     99.99% |           1      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.latency_hist::total                  8448                      
-system.ruby.hit_latency_hist::bucket_size            1                      
-system.ruby.hit_latency_hist::max_bucket            9                      
-system.ruby.hit_latency_hist::samples            6718                      
-system.ruby.hit_latency_hist::mean                  1                      
-system.ruby.hit_latency_hist::gmean                 1                      
-system.ruby.hit_latency_hist             |           0      0.00%      0.00% |        6718    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.hit_latency_hist::total              6718                      
-system.ruby.miss_latency_hist::bucket_size           64                      
-system.ruby.miss_latency_hist::max_bucket          639                      
-system.ruby.miss_latency_hist::samples           1730                      
-system.ruby.miss_latency_hist::mean         53.204624                      
-system.ruby.miss_latency_hist::gmean        47.556283                      
-system.ruby.miss_latency_hist::stdev        33.032605                      
-system.ruby.miss_latency_hist            |        1491     86.18%     86.18% |         184     10.64%     96.82% |          38      2.20%     99.02% |           7      0.40%     99.42% |           6      0.35%     99.77% |           3      0.17%     99.94% |           0      0.00%     99.94% |           1      0.06%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.miss_latency_hist::total             1730                      
-system.ruby.Directory.incomplete_times           1729                      
+system.ruby.outstanding_req_hist_seqr::bucket_size            1                      
+system.ruby.outstanding_req_hist_seqr::max_bucket            9                      
+system.ruby.outstanding_req_hist_seqr::samples         8449                      
+system.ruby.outstanding_req_hist_seqr::mean            1                      
+system.ruby.outstanding_req_hist_seqr::gmean            1                      
+system.ruby.outstanding_req_hist_seqr    |           0      0.00%      0.00% |        8449    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.outstanding_req_hist_seqr::total         8449                      
+system.ruby.latency_hist_seqr::bucket_size           64                      
+system.ruby.latency_hist_seqr::max_bucket          639                      
+system.ruby.latency_hist_seqr::samples           8448                      
+system.ruby.latency_hist_seqr::mean         11.690578                      
+system.ruby.latency_hist_seqr::gmean         2.205273                      
+system.ruby.latency_hist_seqr::stdev        25.830363                      
+system.ruby.latency_hist_seqr            |        8209     97.17%     97.17% |         184      2.18%     99.35% |          38      0.45%     99.80% |           7      0.08%     99.88% |           6      0.07%     99.95% |           3      0.04%     99.99% |           0      0.00%     99.99% |           1      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.latency_hist_seqr::total             8448                      
+system.ruby.hit_latency_hist_seqr::bucket_size            1                      
+system.ruby.hit_latency_hist_seqr::max_bucket            9                      
+system.ruby.hit_latency_hist_seqr::samples         6718                      
+system.ruby.hit_latency_hist_seqr::mean             1                      
+system.ruby.hit_latency_hist_seqr::gmean            1                      
+system.ruby.hit_latency_hist_seqr        |           0      0.00%      0.00% |        6718    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.hit_latency_hist_seqr::total         6718                      
+system.ruby.miss_latency_hist_seqr::bucket_size           64                      
+system.ruby.miss_latency_hist_seqr::max_bucket          639                      
+system.ruby.miss_latency_hist_seqr::samples         1730                      
+system.ruby.miss_latency_hist_seqr::mean    53.204624                      
+system.ruby.miss_latency_hist_seqr::gmean    47.556283                      
+system.ruby.miss_latency_hist_seqr::stdev    33.032605                      
+system.ruby.miss_latency_hist_seqr       |        1491     86.18%     86.18% |         184     10.64%     96.82% |          38      2.20%     99.02% |           7      0.40%     99.42% |           6      0.35%     99.77% |           3      0.17%     99.94% |           0      0.00%     99.94% |           1      0.06%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.miss_latency_hist_seqr::total         1730                      
+system.ruby.Directory.incomplete_times_seqr         1729                      
 system.ruby.l1_cntrl0.cacheMemory.demand_hits         6718                       # Number of cache demand hits
 system.ruby.l1_cntrl0.cacheMemory.demand_misses         1730                       # Number of cache demand misses
 system.ruby.l1_cntrl0.cacheMemory.demand_accesses         8448                       # Number of cache demand accesses
@@ -475,133 +475,133 @@ system.ruby.delayVCHist.vnet_2::max_bucket            9                       # 
 system.ruby.delayVCHist.vnet_2::samples          1726                       # delay histogram for vnet_2
 system.ruby.delayVCHist.vnet_2           |        1726    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% # delay histogram for vnet_2
 system.ruby.delayVCHist.vnet_2::total            1726                       # delay histogram for vnet_2
-system.ruby.LD.latency_hist::bucket_size           64                      
-system.ruby.LD.latency_hist::max_bucket           639                      
-system.ruby.LD.latency_hist::samples             1183                      
-system.ruby.LD.latency_hist::mean           31.638208                      
-system.ruby.LD.latency_hist::gmean          10.419015                      
-system.ruby.LD.latency_hist::stdev          35.065266                      
-system.ruby.LD.latency_hist              |        1085     91.72%     91.72% |          74      6.26%     97.97% |          18      1.52%     99.49% |           2      0.17%     99.66% |           3      0.25%     99.92% |           1      0.08%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.latency_hist::total               1183                      
-system.ruby.LD.hit_latency_hist::bucket_size            1                      
-system.ruby.LD.hit_latency_hist::max_bucket            9                      
-system.ruby.LD.hit_latency_hist::samples          456                      
-system.ruby.LD.hit_latency_hist::mean               1                      
-system.ruby.LD.hit_latency_hist::gmean              1                      
-system.ruby.LD.hit_latency_hist          |           0      0.00%      0.00% |         456    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.hit_latency_hist::total            456                      
-system.ruby.LD.miss_latency_hist::bucket_size           64                      
-system.ruby.LD.miss_latency_hist::max_bucket          639                      
-system.ruby.LD.miss_latency_hist::samples          727                      
-system.ruby.LD.miss_latency_hist::mean      50.855571                      
-system.ruby.LD.miss_latency_hist::gmean     45.315147                      
-system.ruby.LD.miss_latency_hist::stdev     32.287061                      
-system.ruby.LD.miss_latency_hist         |         629     86.52%     86.52% |          74     10.18%     96.70% |          18      2.48%     99.17% |           2      0.28%     99.45% |           3      0.41%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.miss_latency_hist::total           727                      
-system.ruby.ST.latency_hist::bucket_size           32                      
-system.ruby.ST.latency_hist::max_bucket           319                      
-system.ruby.ST.latency_hist::samples              865                      
-system.ruby.ST.latency_hist::mean           16.483237                      
-system.ruby.ST.latency_hist::gmean           3.324735                      
-system.ruby.ST.latency_hist::stdev          28.016571                      
-system.ruby.ST.latency_hist              |         592     68.44%     68.44% |         244     28.21%     96.65% |          18      2.08%     98.73% |           2      0.23%     98.96% |           5      0.58%     99.54% |           2      0.23%     99.77% |           1      0.12%     99.88% |           0      0.00%     99.88% |           1      0.12%    100.00% |           0      0.00%    100.00%
-system.ruby.ST.latency_hist::total                865                      
-system.ruby.ST.hit_latency_hist::bucket_size            1                      
-system.ruby.ST.hit_latency_hist::max_bucket            9                      
-system.ruby.ST.hit_latency_hist::samples          592                      
-system.ruby.ST.hit_latency_hist::mean               1                      
-system.ruby.ST.hit_latency_hist::gmean              1                      
-system.ruby.ST.hit_latency_hist          |           0      0.00%      0.00% |         592    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.ST.hit_latency_hist::total            592                      
-system.ruby.ST.miss_latency_hist::bucket_size           32                      
-system.ruby.ST.miss_latency_hist::max_bucket          319                      
-system.ruby.ST.miss_latency_hist::samples          273                      
-system.ruby.ST.miss_latency_hist::mean      50.058608                      
-system.ruby.ST.miss_latency_hist::gmean     44.997273                      
-system.ruby.ST.miss_latency_hist::stdev     28.984216                      
-system.ruby.ST.miss_latency_hist         |           0      0.00%      0.00% |         244     89.38%     89.38% |          18      6.59%     95.97% |           2      0.73%     96.70% |           5      1.83%     98.53% |           2      0.73%     99.27% |           1      0.37%     99.63% |           0      0.00%     99.63% |           1      0.37%    100.00% |           0      0.00%    100.00%
-system.ruby.ST.miss_latency_hist::total           273                      
-system.ruby.IFETCH.latency_hist::bucket_size           64                      
-system.ruby.IFETCH.latency_hist::max_bucket          639                      
-system.ruby.IFETCH.latency_hist::samples         6400                      
-system.ruby.IFETCH.latency_hist::mean        7.355625                      
-system.ruby.IFETCH.latency_hist::gmean       1.565715                      
-system.ruby.IFETCH.latency_hist::stdev      21.264557                      
-system.ruby.IFETCH.latency_hist          |        6288     98.25%     98.25% |          90      1.41%     99.66% |          13      0.20%     99.86% |           4      0.06%     99.92% |           2      0.03%     99.95% |           2      0.03%     99.98% |           0      0.00%     99.98% |           1      0.02%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.IFETCH.latency_hist::total           6400                      
-system.ruby.IFETCH.hit_latency_hist::bucket_size            1                      
-system.ruby.IFETCH.hit_latency_hist::max_bucket            9                      
-system.ruby.IFETCH.hit_latency_hist::samples         5670                      
-system.ruby.IFETCH.hit_latency_hist::mean            1                      
-system.ruby.IFETCH.hit_latency_hist::gmean            1                      
-system.ruby.IFETCH.hit_latency_hist      |           0      0.00%      0.00% |        5670    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.IFETCH.hit_latency_hist::total         5670                      
-system.ruby.IFETCH.miss_latency_hist::bucket_size           64                      
-system.ruby.IFETCH.miss_latency_hist::max_bucket          639                      
-system.ruby.IFETCH.miss_latency_hist::samples          730                      
-system.ruby.IFETCH.miss_latency_hist::mean    56.720548                      
-system.ruby.IFETCH.miss_latency_hist::gmean    50.941265                      
-system.ruby.IFETCH.miss_latency_hist::stdev    34.853032                      
-system.ruby.IFETCH.miss_latency_hist     |         618     84.66%     84.66% |          90     12.33%     96.99% |          13      1.78%     98.77% |           4      0.55%     99.32% |           2      0.27%     99.59% |           2      0.27%     99.86% |           0      0.00%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.IFETCH.miss_latency_hist::total          730                      
-system.ruby.Directory.miss_mach_latency_hist::bucket_size           64                      
-system.ruby.Directory.miss_mach_latency_hist::max_bucket          639                      
-system.ruby.Directory.miss_mach_latency_hist::samples         1730                      
-system.ruby.Directory.miss_mach_latency_hist::mean    53.204624                      
-system.ruby.Directory.miss_mach_latency_hist::gmean    47.556283                      
-system.ruby.Directory.miss_mach_latency_hist::stdev    33.032605                      
-system.ruby.Directory.miss_mach_latency_hist |        1491     86.18%     86.18% |         184     10.64%     96.82% |          38      2.20%     99.02% |           7      0.40%     99.42% |           6      0.35%     99.77% |           3      0.17%     99.94% |           0      0.00%     99.94% |           1      0.06%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.Directory.miss_mach_latency_hist::total         1730                      
-system.ruby.Directory.miss_latency_hist.issue_to_initial_request::bucket_size            1                      
-system.ruby.Directory.miss_latency_hist.issue_to_initial_request::max_bucket            9                      
-system.ruby.Directory.miss_latency_hist.issue_to_initial_request::samples            1                      
-system.ruby.Directory.miss_latency_hist.issue_to_initial_request::stdev          nan                      
-system.ruby.Directory.miss_latency_hist.issue_to_initial_request |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.Directory.miss_latency_hist.issue_to_initial_request::total            1                      
-system.ruby.Directory.miss_latency_hist.initial_to_forward::bucket_size            1                      
-system.ruby.Directory.miss_latency_hist.initial_to_forward::max_bucket            9                      
-system.ruby.Directory.miss_latency_hist.initial_to_forward::samples            1                      
-system.ruby.Directory.miss_latency_hist.initial_to_forward::stdev          nan                      
-system.ruby.Directory.miss_latency_hist.initial_to_forward |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.Directory.miss_latency_hist.initial_to_forward::total            1                      
-system.ruby.Directory.miss_latency_hist.forward_to_first_response::bucket_size            1                      
-system.ruby.Directory.miss_latency_hist.forward_to_first_response::max_bucket            9                      
-system.ruby.Directory.miss_latency_hist.forward_to_first_response::samples            1                      
-system.ruby.Directory.miss_latency_hist.forward_to_first_response::stdev          nan                      
-system.ruby.Directory.miss_latency_hist.forward_to_first_response |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.Directory.miss_latency_hist.forward_to_first_response::total            1                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::bucket_size            8                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::max_bucket           79                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::samples            1                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::mean           75                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::gmean    75.000000                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::stdev          nan                      
-system.ruby.Directory.miss_latency_hist.first_response_to_completion |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1    100.00%    100.00%
-system.ruby.Directory.miss_latency_hist.first_response_to_completion::total            1                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::bucket_size           64                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::max_bucket          639                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::samples          727                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::mean    50.855571                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::gmean    45.315147                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist::stdev    32.287061                      
-system.ruby.LD.Directory.miss_type_mach_latency_hist |         629     86.52%     86.52% |          74     10.18%     96.70% |          18      2.48%     99.17% |           2      0.28%     99.45% |           3      0.41%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.Directory.miss_type_mach_latency_hist::total          727                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::bucket_size           32                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::max_bucket          319                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::samples          273                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::mean    50.058608                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::gmean    44.997273                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist::stdev    28.984216                      
-system.ruby.ST.Directory.miss_type_mach_latency_hist |           0      0.00%      0.00% |         244     89.38%     89.38% |          18      6.59%     95.97% |           2      0.73%     96.70% |           5      1.83%     98.53% |           2      0.73%     99.27% |           1      0.37%     99.63% |           0      0.00%     99.63% |           1      0.37%    100.00% |           0      0.00%    100.00%
-system.ruby.ST.Directory.miss_type_mach_latency_hist::total          273                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::bucket_size           64                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::max_bucket          639                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::samples          730                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::mean    56.720548                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::gmean    50.941265                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::stdev    34.853032                      
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist |         618     84.66%     84.66% |          90     12.33%     96.99% |          13      1.78%     98.77% |           4      0.55%     99.32% |           2      0.27%     99.59% |           2      0.27%     99.86% |           0      0.00%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.IFETCH.Directory.miss_type_mach_latency_hist::total          730                      
+system.ruby.LD.latency_hist_seqr::bucket_size           64                      
+system.ruby.LD.latency_hist_seqr::max_bucket          639                      
+system.ruby.LD.latency_hist_seqr::samples         1183                      
+system.ruby.LD.latency_hist_seqr::mean      31.638208                      
+system.ruby.LD.latency_hist_seqr::gmean     10.419015                      
+system.ruby.LD.latency_hist_seqr::stdev     35.065266                      
+system.ruby.LD.latency_hist_seqr         |        1085     91.72%     91.72% |          74      6.26%     97.97% |          18      1.52%     99.49% |           2      0.17%     99.66% |           3      0.25%     99.92% |           1      0.08%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.latency_hist_seqr::total          1183                      
+system.ruby.LD.hit_latency_hist_seqr::bucket_size            1                      
+system.ruby.LD.hit_latency_hist_seqr::max_bucket            9                      
+system.ruby.LD.hit_latency_hist_seqr::samples          456                      
+system.ruby.LD.hit_latency_hist_seqr::mean            1                      
+system.ruby.LD.hit_latency_hist_seqr::gmean            1                      
+system.ruby.LD.hit_latency_hist_seqr     |           0      0.00%      0.00% |         456    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.hit_latency_hist_seqr::total          456                      
+system.ruby.LD.miss_latency_hist_seqr::bucket_size           64                      
+system.ruby.LD.miss_latency_hist_seqr::max_bucket          639                      
+system.ruby.LD.miss_latency_hist_seqr::samples          727                      
+system.ruby.LD.miss_latency_hist_seqr::mean    50.855571                      
+system.ruby.LD.miss_latency_hist_seqr::gmean    45.315147                      
+system.ruby.LD.miss_latency_hist_seqr::stdev    32.287061                      
+system.ruby.LD.miss_latency_hist_seqr    |         629     86.52%     86.52% |          74     10.18%     96.70% |          18      2.48%     99.17% |           2      0.28%     99.45% |           3      0.41%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.miss_latency_hist_seqr::total          727                      
+system.ruby.ST.latency_hist_seqr::bucket_size           32                      
+system.ruby.ST.latency_hist_seqr::max_bucket          319                      
+system.ruby.ST.latency_hist_seqr::samples          865                      
+system.ruby.ST.latency_hist_seqr::mean      16.483237                      
+system.ruby.ST.latency_hist_seqr::gmean      3.324735                      
+system.ruby.ST.latency_hist_seqr::stdev     28.016571                      
+system.ruby.ST.latency_hist_seqr         |         592     68.44%     68.44% |         244     28.21%     96.65% |          18      2.08%     98.73% |           2      0.23%     98.96% |           5      0.58%     99.54% |           2      0.23%     99.77% |           1      0.12%     99.88% |           0      0.00%     99.88% |           1      0.12%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.latency_hist_seqr::total           865                      
+system.ruby.ST.hit_latency_hist_seqr::bucket_size            1                      
+system.ruby.ST.hit_latency_hist_seqr::max_bucket            9                      
+system.ruby.ST.hit_latency_hist_seqr::samples          592                      
+system.ruby.ST.hit_latency_hist_seqr::mean            1                      
+system.ruby.ST.hit_latency_hist_seqr::gmean            1                      
+system.ruby.ST.hit_latency_hist_seqr     |           0      0.00%      0.00% |         592    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.hit_latency_hist_seqr::total          592                      
+system.ruby.ST.miss_latency_hist_seqr::bucket_size           32                      
+system.ruby.ST.miss_latency_hist_seqr::max_bucket          319                      
+system.ruby.ST.miss_latency_hist_seqr::samples          273                      
+system.ruby.ST.miss_latency_hist_seqr::mean    50.058608                      
+system.ruby.ST.miss_latency_hist_seqr::gmean    44.997273                      
+system.ruby.ST.miss_latency_hist_seqr::stdev    28.984216                      
+system.ruby.ST.miss_latency_hist_seqr    |           0      0.00%      0.00% |         244     89.38%     89.38% |          18      6.59%     95.97% |           2      0.73%     96.70% |           5      1.83%     98.53% |           2      0.73%     99.27% |           1      0.37%     99.63% |           0      0.00%     99.63% |           1      0.37%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.miss_latency_hist_seqr::total          273                      
+system.ruby.IFETCH.latency_hist_seqr::bucket_size           64                      
+system.ruby.IFETCH.latency_hist_seqr::max_bucket          639                      
+system.ruby.IFETCH.latency_hist_seqr::samples         6400                      
+system.ruby.IFETCH.latency_hist_seqr::mean     7.355625                      
+system.ruby.IFETCH.latency_hist_seqr::gmean     1.565715                      
+system.ruby.IFETCH.latency_hist_seqr::stdev    21.264557                      
+system.ruby.IFETCH.latency_hist_seqr     |        6288     98.25%     98.25% |          90      1.41%     99.66% |          13      0.20%     99.86% |           4      0.06%     99.92% |           2      0.03%     99.95% |           2      0.03%     99.98% |           0      0.00%     99.98% |           1      0.02%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.IFETCH.latency_hist_seqr::total         6400                      
+system.ruby.IFETCH.hit_latency_hist_seqr::bucket_size            1                      
+system.ruby.IFETCH.hit_latency_hist_seqr::max_bucket            9                      
+system.ruby.IFETCH.hit_latency_hist_seqr::samples         5670                      
+system.ruby.IFETCH.hit_latency_hist_seqr::mean            1                      
+system.ruby.IFETCH.hit_latency_hist_seqr::gmean            1                      
+system.ruby.IFETCH.hit_latency_hist_seqr |           0      0.00%      0.00% |        5670    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.IFETCH.hit_latency_hist_seqr::total         5670                      
+system.ruby.IFETCH.miss_latency_hist_seqr::bucket_size           64                      
+system.ruby.IFETCH.miss_latency_hist_seqr::max_bucket          639                      
+system.ruby.IFETCH.miss_latency_hist_seqr::samples          730                      
+system.ruby.IFETCH.miss_latency_hist_seqr::mean    56.720548                      
+system.ruby.IFETCH.miss_latency_hist_seqr::gmean    50.941265                      
+system.ruby.IFETCH.miss_latency_hist_seqr::stdev    34.853032                      
+system.ruby.IFETCH.miss_latency_hist_seqr |         618     84.66%     84.66% |          90     12.33%     96.99% |          13      1.78%     98.77% |           4      0.55%     99.32% |           2      0.27%     99.59% |           2      0.27%     99.86% |           0      0.00%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.IFETCH.miss_latency_hist_seqr::total          730                      
+system.ruby.Directory.miss_mach_latency_hist_seqr::bucket_size           64                      
+system.ruby.Directory.miss_mach_latency_hist_seqr::max_bucket          639                      
+system.ruby.Directory.miss_mach_latency_hist_seqr::samples         1730                      
+system.ruby.Directory.miss_mach_latency_hist_seqr::mean    53.204624                      
+system.ruby.Directory.miss_mach_latency_hist_seqr::gmean    47.556283                      
+system.ruby.Directory.miss_mach_latency_hist_seqr::stdev    33.032605                      
+system.ruby.Directory.miss_mach_latency_hist_seqr |        1491     86.18%     86.18% |         184     10.64%     96.82% |          38      2.20%     99.02% |           7      0.40%     99.42% |           6      0.35%     99.77% |           3      0.17%     99.94% |           0      0.00%     99.94% |           1      0.06%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_mach_latency_hist_seqr::total         1730                      
+system.ruby.Directory.miss_latency_hist_seqr.issue_to_initial_request::bucket_size            1                      
+system.ruby.Directory.miss_latency_hist_seqr.issue_to_initial_request::max_bucket            9                      
+system.ruby.Directory.miss_latency_hist_seqr.issue_to_initial_request::samples            1                      
+system.ruby.Directory.miss_latency_hist_seqr.issue_to_initial_request::stdev          nan                      
+system.ruby.Directory.miss_latency_hist_seqr.issue_to_initial_request |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist_seqr.issue_to_initial_request::total            1                      
+system.ruby.Directory.miss_latency_hist_seqr.initial_to_forward::bucket_size            1                      
+system.ruby.Directory.miss_latency_hist_seqr.initial_to_forward::max_bucket            9                      
+system.ruby.Directory.miss_latency_hist_seqr.initial_to_forward::samples            1                      
+system.ruby.Directory.miss_latency_hist_seqr.initial_to_forward::stdev          nan                      
+system.ruby.Directory.miss_latency_hist_seqr.initial_to_forward |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist_seqr.initial_to_forward::total            1                      
+system.ruby.Directory.miss_latency_hist_seqr.forward_to_first_response::bucket_size            1                      
+system.ruby.Directory.miss_latency_hist_seqr.forward_to_first_response::max_bucket            9                      
+system.ruby.Directory.miss_latency_hist_seqr.forward_to_first_response::samples            1                      
+system.ruby.Directory.miss_latency_hist_seqr.forward_to_first_response::stdev          nan                      
+system.ruby.Directory.miss_latency_hist_seqr.forward_to_first_response |           1    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.Directory.miss_latency_hist_seqr.forward_to_first_response::total            1                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::bucket_size            8                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::max_bucket           79                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::samples            1                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::mean           75                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::gmean    75.000000                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::stdev          nan                      
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           1    100.00%    100.00%
+system.ruby.Directory.miss_latency_hist_seqr.first_response_to_completion::total            1                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::bucket_size           64                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::max_bucket          639                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::samples          727                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::mean    50.855571                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::gmean    45.315147                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::stdev    32.287061                      
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr |         629     86.52%     86.52% |          74     10.18%     96.70% |          18      2.48%     99.17% |           2      0.28%     99.45% |           3      0.41%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.Directory.miss_type_mach_latency_hist_seqr::total          727                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::bucket_size           32                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::max_bucket          319                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::samples          273                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::mean    50.058608                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::gmean    44.997273                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::stdev    28.984216                      
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr |           0      0.00%      0.00% |         244     89.38%     89.38% |          18      6.59%     95.97% |           2      0.73%     96.70% |           5      1.83%     98.53% |           2      0.73%     99.27% |           1      0.37%     99.63% |           0      0.00%     99.63% |           1      0.37%    100.00% |           0      0.00%    100.00%
+system.ruby.ST.Directory.miss_type_mach_latency_hist_seqr::total          273                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::bucket_size           64                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::max_bucket          639                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::samples          730                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::mean    56.720548                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::gmean    50.941265                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::stdev    34.853032                      
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr |         618     84.66%     84.66% |          90     12.33%     96.99% |          13      1.78%     98.77% |           4      0.55%     99.32% |           2      0.27%     99.59% |           2      0.27%     99.86% |           0      0.00%     99.86% |           1      0.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.IFETCH.Directory.miss_type_mach_latency_hist_seqr::total          730                      
 system.ruby.Directory_Controller.GETX            1730      0.00%      0.00%
 system.ruby.Directory_Controller.PUTX            1726      0.00%      0.00%
 system.ruby.Directory_Controller.Memory_Data         1730      0.00%      0.00%

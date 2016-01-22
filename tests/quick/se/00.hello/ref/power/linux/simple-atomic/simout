@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:27:54
-gem5 started Dec 11 2015 20:28:29
-gem5 executing on zizzer, pid 60780
-command line: build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic
+gem5 compiled Jan 21 2016 14:25:19
+gem5 started Jan 21 2016 14:25:54
+gem5 executing on zizzer, pid 3347
+command line: build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

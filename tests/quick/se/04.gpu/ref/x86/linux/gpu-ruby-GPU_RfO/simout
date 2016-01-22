@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 19 2016 13:28:55
-gem5 started Jan 19 2016 13:29:16
-gem5 executing on zizzer, pid 48854
+gem5 compiled Jan 21 2016 14:58:44
+gem5 started Jan 21 2016 14:59:07
+gem5 executing on zizzer, pid 26194
 command line: build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /z/atgutier/gem5/gem5-commit/tests/run.py build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
 
 Using GPU kernel code file(s) /dist/m5/regression/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm

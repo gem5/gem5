@@ -62,7 +62,7 @@
             "frontend_latency": 2
         }, 
         "symbolfile": "", 
-        "readfile": "/z/atgutier/gem5/gem5/tests/halt.sh", 
+        "readfile": "/z/atgutier/gem5/gem5-commit/tests/halt.sh", 
         "have_large_asid_64": false, 
         "phys_addr_range_64": 40, 
         "have_lpae": false, 
@@ -1166,6 +1166,7 @@
         }, 
         "multi_thread": false, 
         "eventq_index": 0, 
+        "work_begin_cpu_id_exit": -1, 
         "iocache": {
             "cpu_side": {
                 "peer": "system.iobus.master[25]", 
@@ -1759,11 +1760,11 @@
             "system.realview.nvmem", 
             "system.realview.vram"
         ], 
-        "work_begin_cpu_id_exit": -1, 
+        "num_work_ids": 16, 
         "boot_loader": [
             "/dist/m5/system/binaries/boot_emm.arm"
         ], 
-        "num_work_ids": 16
+        "exit_on_work_items": false
     }, 
     "time_sync_period": 100000000000, 
     "eventq_index": 0, 

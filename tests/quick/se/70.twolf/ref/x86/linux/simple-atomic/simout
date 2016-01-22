@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:42:59
-gem5 started Dec 11 2015 20:43:47
-gem5 executing on zizzer, pid 10151
-command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/70.twolf/x86/linux/simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/X86/tests/opt/quick/se/70.twolf/x86/linux/simple-atomic
+gem5 compiled Jan 21 2016 14:41:03
+gem5 started Jan 21 2016 14:41:53
+gem5 executing on zizzer, pid 17904
+command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/70.twolf/x86/linux/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/X86/tests/opt/quick/se/70.twolf/x86/linux/simple-atomic
 
 Couldn't unlink  build/X86/tests/opt/quick/se/70.twolf/x86/linux/simple-atomic/smred.sav
 Couldn't unlink  build/X86/tests/opt/quick/se/70.twolf/x86/linux/simple-atomic/smred.sv2

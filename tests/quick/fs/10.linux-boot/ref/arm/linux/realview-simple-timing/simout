@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:46:46
-gem5 started Dec 11 2015 20:47:09
-gem5 executing on zizzer, pid 11541
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /z/atgutier/gem5/gem5/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
+gem5 compiled Jan 21 2016 14:45:42
+gem5 started Jan 21 2016 14:47:16
+gem5 executing on zizzer, pid 20794
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux.aarch32.ll_20131205.0-gem5

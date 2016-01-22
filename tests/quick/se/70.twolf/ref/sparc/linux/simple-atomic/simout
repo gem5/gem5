@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:33:09
-gem5 started Dec 11 2015 20:33:42
-gem5 executing on zizzer, pid 902
-command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic -re /z/atgutier/gem5/gem5/tests/run.py build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic
+gem5 compiled Jan 21 2016 14:30:54
+gem5 started Jan 21 2016 14:31:26
+gem5 executing on zizzer, pid 8722
+command line: build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic
 
 Couldn't unlink  build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic/smred.sav
 Couldn't unlink  build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic/smred.sv2

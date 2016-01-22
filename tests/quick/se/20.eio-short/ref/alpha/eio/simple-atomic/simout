@@ -1,13 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 28 2015 15:28:59
-gem5 started Dec 28 2015 15:29:36
-gem5 executing on zizzer, pid 17011
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-atomic -re /z/stever/hg/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-atomic
+gem5 compiled Jan 21 2016 13:49:21
+gem5 started Jan 21 2016 13:50:02
+gem5 executing on zizzer, pid 33994
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-atomic
 
-Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
-main dictionary has 1245 entries
-49508 bytes wasted
->Exiting @ tick 250015500 because a thread reached the max instruction count
+Skipping test: Test requires the 'EioProcess' SimObject.

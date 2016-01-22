@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:00:36
-gem5 started Dec 11 2015 20:01:07
-gem5 executing on zizzer, pid 31719
-command line: build/ALPHA_MOESI_hammer/gem5.opt -d build/ALPHA_MOESI_hammer/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer -re /z/atgutier/gem5/gem5/tests/run.py build/ALPHA_MOESI_hammer/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer
+gem5 compiled Jan 21 2016 13:56:08
+gem5 started Jan 21 2016 13:56:42
+gem5 executing on zizzer, pid 39359
+command line: build/ALPHA_MOESI_hammer/gem5.opt -d build/ALPHA_MOESI_hammer/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ALPHA_MOESI_hammer/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer
 
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

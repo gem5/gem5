@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec 11 2015 20:15:50
-gem5 started Dec 11 2015 20:16:20
-gem5 executing on zizzer, pid 47643
-command line: build/ALPHA_MOESI_CMP_token/gem5.opt -d build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_token -re /z/atgutier/gem5/gem5/tests/run.py build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_token
+gem5 compiled Jan 21 2016 14:12:23
+gem5 started Jan 21 2016 14:12:59
+gem5 executing on zizzer, pid 55396
+command line: build/ALPHA_MOESI_CMP_token/gem5.opt -d build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_token -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_token
 
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
