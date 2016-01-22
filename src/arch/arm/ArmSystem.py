@@ -88,9 +88,21 @@ class ArmSystem(System):
         # creating a node called '/' which will then be merged with the
         # root instead of appended.
 
+        def generateMemNode(mem_range):
+            node = FdtNode("memory@%x" % long(mem_range.start))
+            node.append(FdtPropertyStrings("device_type", ["memory"]))
+            node.append(FdtPropertyWords("reg",
+                state.addrCells(mem_range.start) +
+                state.sizeCells(mem_range.size()) ))
+            return node
+
         root = FdtNode('/')
         root.append(state.addrCellsProperty())
         root.append(state.sizeCellsProperty())
+
+        # Add memory nodes
+        for mem_range in self.mem_ranges:
+            root.append(generateMemNode(mem_range))
 
         for node in self.recurseDeviceTree(state):
             # Merge root nodes instead of adding them (for children
