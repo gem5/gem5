@@ -69,7 +69,6 @@ bool testAndWrite(Addr addr, DataBlock datablk, Packet *pkt);
 enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent") {
   // Valid data
   Read_Only,  desc="block is Read Only (modulo functional writes)";
-  Write_Only, desc="block is Write Only";
   Read_Write, desc="block is Read/Write";
 
   // Possibly Invalid data
