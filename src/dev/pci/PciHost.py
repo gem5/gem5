@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015-2016 ARM Limited
 #  All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -34,6 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Sandberg
+#          Glenn Bergmans
 
 from m5.SimObject import SimObject
 from m5.params import *
@@ -62,3 +63,34 @@ class GenericPciHost(PciHost):
     pci_pio_base = Param.Addr(0, "Base address for PCI IO accesses")
     pci_mem_base = Param.Addr(0, "Base address for PCI memory accesses")
     pci_dma_base = Param.Addr(0, "Base address for DMA memory accesses")
+
+    def pciFdtAddr(self, bus=0, device=0, function=0, register=0, space=0,
+                   aliased=0, prefetchable=0, relocatable=0, addr=0):
+
+        busf = bus & 0xff
+        devicef = device & 0x1f
+        functionf = function & 0x7
+        registerf = register & 0xff
+        spacef = space & 0x3
+        aliasedf = aliased & 0x1
+        prefetchablef = prefetchable & 0x1
+        relocatablef = relocatable & 0x1
+
+        if  busf != bus or \
+            devicef != device or \
+            functionf != function or \
+            registerf != register or \
+            spacef != space or \
+            aliasedf != aliased or \
+            prefetchablef != prefetchable or \
+            relocatablef != relocatable:
+            fatal("One of the fields for the PCI address is out of bounds")
+
+        address = registerf | (functionf << 8) | (devicef << 11) | \
+                (busf << 16) | (spacef << 24) | (aliasedf << 29) | \
+                (prefetchablef << 30) | (relocatablef << 31)
+
+        low_addr = addr & 0xffffffff
+        high_addr = (addr >> 32) & 0xffffffff
+
+        return [address, high_addr, low_addr]

@@ -118,6 +118,71 @@ class GenericArmPciHost(GenericPciHost):
     int_base = Param.Unsigned("PCI interrupt base")
     int_count = Param.Unsigned("Maximum number of interrupts used by this host")
 
+    def generateDeviceTree(self, state):
+        local_state = FdtState(addr_cells=3, size_cells=2, cpu_cells=1)
+        intterrupt_cells = 1
+
+        node = FdtNode("pci")
+
+        if int(self.conf_device_bits) == 8:
+            node.appendCompatible("pci-host-cam-generic")
+        elif int(self.conf_device_bits) == 12:
+            node.appendCompatible("pci-host-ecam-generic")
+        else:
+            m5.fatal("No compatibility string for the set conf_device_width")
+
+        node.append(FdtPropertyStrings("device_type", ["pci"]))
+
+        # Cell sizes of child nodes/peripherals
+        node.append(local_state.addrCellsProperty())
+        node.append(local_state.sizeCellsProperty())
+        node.append(FdtPropertyWords("#interrupt-cells", intterrupt_cells))
+        # PCI address for CPU
+        node.append(FdtPropertyWords("reg",
+            state.addrCells(self.conf_base) +
+            state.sizeCells(self.conf_size) ))
+
+        # Ranges mapping
+        # For now some of this is hard coded, because the PCI module does not
+        # have a proper full understanding of the memory map, but adapting the
+        # PCI module is beyond the scope of what I'm trying to do here.
+        # Values are taken from the VExpress_GEM5_V1 platform.
+        ranges = []
+        # Pio address range
+        ranges += self.pciFdtAddr(space=1, addr=0)
+        ranges += state.addrCells(self.pci_pio_base)
+        ranges += local_state.sizeCells(0x10000)  # Fixed size
+
+        # AXI memory address range
+        ranges += self.pciFdtAddr(space=2, addr=0)
+        ranges += state.addrCells(0x40000000) # Fixed offset
+        ranges += local_state.sizeCells(0x40000000) # Fixed size
+        node.append(FdtPropertyWords("ranges", ranges))
+
+        if str(self.int_policy) == 'ARM_PCI_INT_DEV':
+            int_phandle = state.phandle(self._parent.unproxy(self).gic)
+            # Interrupt mapping
+            interrupts = []
+            for i in range(int(self.int_count)):
+                interrupts += self.pciFdtAddr(device=i, addr=0) + \
+                    [0x0, int_phandle, 0, int(self.int_base) - 32 + i, 1]
+
+            node.append(FdtPropertyWords("interrupt-map", interrupts))
+
+            int_count = int(self.int_count)
+            if int_count & (int_count - 1):
+                fatal("PCI interrupt count should be power of 2")
+
+            intmask = self.pciFdtAddr(device=int_count - 1, addr=0) + [0x0]
+            node.append(FdtPropertyWords("interrupt-map-mask", intmask))
+        else:
+            m5.fatal("Unsupported PCI interrupt policy " +
+                     "for Device Tree generation")
+
+        node.append(FdtProperty("dma-coherent"))
+
+        yield node
+
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
     cxx_header = "dev/arm/rv_ctrl.hh"
