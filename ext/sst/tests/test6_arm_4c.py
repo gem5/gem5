@@ -90,7 +90,7 @@ GEM5.addParams({
     "comp_debug" : getenv("GEM5_DEBUG"),
     "gem5DebugFlags" : getenv("M5_DEBUG"),
     "frequency" : clockRate,
-    "cmd" : "configs/example/fs.py --num-cpus 4 --disk-image=vexpress64-openembedded_minimal-armv8_20130623-376.img --root-device=/dev/sda2 --kernel=vmlinux.aarch64.20140821 --dtb-filename=vexpress.aarch64.20140821.dtb --mem-size=256MB --machine-type=VExpress_EMM64 --cpu-type=timing --external-memory-system=sst --initialize-only"
+    "cmd" : "configs/example/fs.py --num-cpus 4 --disk-image=vexpress64-openembedded_minimal-armv8_20130623-376.img --root-device=/dev/sda2 --kernel=vmlinux.aarch64.20140821 --dtb-filename=vexpress.aarch64.20140821.dtb --mem-size=256MB --machine-type=VExpress_EMM64 --cpu-type=timing --external-memory-system=sst"
     })
 
 bus = sst.Component("membus", "memHierarchy.Bus")
