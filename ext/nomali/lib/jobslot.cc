@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,10 @@
 #include "regutils.hh"
 
 namespace NoMali {
+
+static const Status STATUS_IDLE(Status::CLASS_NOFAULT, 0, 0);
+static const Status STATUS_DONE(Status::CLASS_NOFAULT, 0, 1);
+static const Status STATUS_ACTIVE(Status::CLASS_NOFAULT, 1, 0);
 
 const std::vector<JobSlot::cmd_t> JobSlot::cmds {
     &JobSlot::cmdNop,                      // JSn_COMMAND_NOP
@@ -104,7 +108,7 @@ JobSlot::tryStart()
         return;
 
     // Reset the status register
-    regs[RegAddr(JSn_STATUS)] = 0;
+    regs[RegAddr(JSn_STATUS)] = STATUS_ACTIVE.value;
 
     // Transfer the next job configuration to the active job
     // configuration
@@ -113,12 +117,9 @@ JobSlot::tryStart()
     regs.set64(RegAddr(JSn_AFFINITY_LO),
                regs.get64(RegAddr(JSn_AFFINITY_NEXT_LO)));
     regs[RegAddr(JSn_CONFIG)] = regs[RegAddr(JSn_CONFIG_NEXT)];
-    regs[RegAddr(JSn_COMMAND)] = regs[RegAddr(JSn_COMMAND_NEXT)];
 
     // Reset the next job configuration
     regs.set64(RegAddr(JSn_HEAD_NEXT_LO), 0);
-    regs.set64(RegAddr(JSn_AFFINITY_NEXT_LO), 0);
-    regs[RegAddr(JSn_CONFIG_NEXT)] = 0;
     regs[RegAddr(JSn_COMMAND_NEXT)] = 0;
 
     runJob();
@@ -127,7 +128,7 @@ JobSlot::tryStart()
 void
 JobSlot::runJob()
 {
-    exitJob(Status(Status::CLASS_NOFAULT, 0, 1), // JSn_STATUS_DONE
+    exitJob(STATUS_DONE,
             0); // Time stamp counter value
 }
 

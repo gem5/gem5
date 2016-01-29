@@ -27,6 +27,8 @@ HELPER_OBJS := $(addprefix $(d)/,	\
 TESTS := $(addprefix $(d)/nomali_,	\
 	test0				\
 	test_ints			\
+	test_reset			\
+	test_mmu			\
 	)
 
 OBJS := $(HELPER_OBJS) $(addsuffix .o, $(TESTS))

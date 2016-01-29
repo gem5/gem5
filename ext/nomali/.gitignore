@@ -1,6 +1,6 @@
 /docs
-/tests/nomali_test0
-/tests/nomali_test_ints
+/tests/nomali_test*
+!/tests/nomali_test*.*
 *~
 *.o
 *.d

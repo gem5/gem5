@@ -33,7 +33,6 @@ on_int(nomali_handle_t h, void *usr, nomali_int_t intno, int set)
 static void
 test_gpu_int(nomali_handle_t h)
 {
-    nomali_error_t error = NOMALI_E_OK;
     int int_triggered = 0;
     nomali_callback_t int_callback = {
         .type = NOMALI_CALLBACK_INT,
@@ -115,7 +114,6 @@ main(int argc, char **argv)
     };
 
     nomali_handle_t h;
-    nomali_error_t error = NOMALI_E_OK;
 
     E_NOMALI_BAIL(nomali_create(&h, &cfg));
 

@@ -47,6 +47,8 @@ class JobControl
     JobControl(GPU &_gpu);
     virtual ~JobControl();
 
+    void reset() override;
+
     uint32_t readReg(RegAddr idx)  override;
     void writeReg(RegAddr idx, uint32_t value) override;
 

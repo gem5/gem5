@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@
 
 #define E_NOMALI_BAIL(c)                                \
     do {                                                \
+        nomali_error_t error;                           \
         if ((error = (c)) != NOMALI_E_OK) {             \
             test_bail(# c " failed: %s (%i)",           \
                       nomali_errstr(error), error);     \
@@ -41,6 +42,19 @@
             test_ok(t);                                 \
         }                                               \
     } while (0)
+
+#define NOMALI_TEST_REG(t, handle, reg, test)                           \
+    do {                                                                \
+        uint32_t value;                                                 \
+        E_NOMALI_BAIL(                                                  \
+            nomali_reg_read(handle, &value, (reg)));                    \
+        if (!(test)) {                                                  \
+            test_fail(t);                                               \
+        } else {                                                        \
+            test_ok(t);                                                 \
+        }                                                               \
+    } while (0)
+
 
 
 #endif /* _TESTS_NOMALI_TEST_HELPERS_H */

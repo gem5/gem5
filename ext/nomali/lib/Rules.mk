@@ -26,6 +26,7 @@ NOMALI_OBJS := $(addprefix $(d)/, 	\
 	gpucontrol.o			\
 	jobcontrol.o			\
 	jobslot.o			\
+	addrspace.o			\
 	mmu.o				\
 					\
 	mali_midgard.o			\

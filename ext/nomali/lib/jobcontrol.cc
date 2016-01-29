@@ -41,6 +41,15 @@ JobControl::~JobControl()
 {
 }
 
+void
+JobControl::reset()
+{
+    GPUBlockInt::reset();
+
+    for (auto &js : slots)
+        js.reset();
+}
+
 uint32_t
 JobControl::readReg(RegAddr addr)
 {

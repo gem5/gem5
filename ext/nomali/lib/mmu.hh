@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "gpublock.hh"
+#include "addrspace.hh"
 #include "types.hh"
 
 namespace NoMali {
@@ -44,12 +45,19 @@ class MMU
     MMU(GPU &_gpu);
     virtual ~MMU();
 
+    void reset() override;
+
+    uint32_t readReg(RegAddr idx)  override;
     void writeReg(RegAddr idx, uint32_t value) override;
+
+    uint32_t readRegRaw(RegAddr idx)  override;
+    void writeRegRaw(RegAddr idx, uint32_t value) override;
 
   protected:
     void onInterrupt(int set) override;
 
-    RegVector regs;
+    /** Address spaces belonging to this MMU block */
+    std::vector<AddrSpace> spaces;
 };
 
 }

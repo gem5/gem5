@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,6 +85,8 @@ enum {
     NOMALI_CALLBACK_MEMREAD,
     /** Model write physical memory callback */
     NOMALI_CALLBACK_MEMWRITE,
+    /** Model reset callback */
+    NOMALI_CALLBACK_RESET,
 
     /** Number of defined callbacks */
     NOMALI_CALLBACK_NUM_CALLBACKS
@@ -125,6 +127,7 @@ typedef struct {
                          nomali_addr_t addr, uint32_t value);
         uint32_t (*memread)(nomali_handle_t h, void *usr,
                             nomali_addr_t addr);
+        void (*reset)(nomali_handle_t h, void *usr);
     } func;
 } nomali_callback_t;
 

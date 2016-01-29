@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,8 +95,52 @@ getJobSlotAddr(const RegAddr &addr)
     return addr - slot_base;
 }
 
+
 /** Number of registers per job slot */
 static const unsigned JSn_NO_REGS = 0x20;
+
+/**
+ * Does this MMU register belong to an address space block?
+ *
+ * @return 1 if the address maps to a valid address space block, 0
+ * otherwise.
+ */
+static inline bool
+isAddrSpaceReg(const RegAddr &addr)
+{
+    return addr.value >= MMU_AS0 && addr.value <= 0x7FF;
+}
+
+/**
+ * Get the address space number owning an address within the MMU
+ * block.
+ *
+ * @param addr Address relative to the JobControl block.
+ */
+static inline unsigned
+getAddrSpaceNo(const RegAddr &addr)
+{
+    assert(isAddrSpaceReg(addr));
+    return (addr.value - MMU_AS0) >> 6;
+}
+
+/**
+ * Get a AS-relative address from a MMU-relative
+ * address.
+ *
+ * @param addr Address relative to the MMU block.
+ * @return Address relative the start of the address space block.
+ */
+static inline RegAddr
+getAddrSpaceAddr(const RegAddr &addr)
+{
+    const unsigned as_no(getAddrSpaceNo(addr));
+    const RegAddr as_base(RegAddr(MMU_AS0 + as_no * 0x40));
+    return addr - as_base;
+}
+
+/** Number of registers per address space */
+static const unsigned ASn_NO_REGS = 0x10;
 
 }
 

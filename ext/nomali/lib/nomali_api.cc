@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,6 +59,7 @@ class NoMaliApi
 
   public:
     void callbackInt(nomali_int_t intno, int set);
+    void callbackReset();
 
   private:
     nomali_callback_t callbacks[NOMALI_CALLBACK_NUM_CALLBACKS];
@@ -76,7 +77,12 @@ class NoMaliApiGpu
         : BaseGpu(std::forward<Args>(args)...),
           api(_api)
     {
+        reset();
+    }
+
+    void reset() override {
         BaseGpu::reset();
+        api.callbackReset();
     }
 
   public:
@@ -203,6 +209,15 @@ NoMaliApi::callbackInt(nomali_int_t intno, int set)
 
     if (c.func.interrupt)
         c.func.interrupt(static_cast<nomali_handle_t>(this), c.usr, intno, set);
+}
+
+void
+NoMaliApi::callbackReset()
+{
+    const nomali_callback_t &c(callbacks[NOMALI_CALLBACK_RESET]);
+
+    if (c.func.reset)
+        c.func.reset(static_cast<nomali_handle_t>(this), c.usr);
 }
 
 

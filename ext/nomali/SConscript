@@ -53,6 +53,7 @@ nomali_sources = [
     "lib/mali_midgard.cc",
     "lib/mali_t6xx.cc",
     "lib/mali_t7xx.cc",
+    "lib/addrspace.cc",
     "lib/mmu.cc",
     "lib/nomali_api.cc",
 ]
