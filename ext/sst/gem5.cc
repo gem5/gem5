@@ -69,7 +69,6 @@
 #include <sst/core/params.h>
 #include <sst/core/link.h>
 #include <sst/core/timeConverter.h>
-#include <sst/core/debug.h>
 
 using namespace SST;
 using namespace SST::gem5;
@@ -93,7 +92,7 @@ gem5Component::gem5Component(ComponentId_t id, Params &params) :
 
     std::string cmd = params.find_string("cmd", "");
     if (cmd.empty()) {
-        _abort(gem5Component, "Component %s must have a 'cmd' parameter.\n",
+        dbg.fatal(CALL_INFO, -1, "Component %s must have a 'cmd' parameter.\n",
                getName().c_str());
     }
 
@@ -223,7 +222,8 @@ gem5Component::initPython(int argc, char *argv[])
 
     int ret = initM5Python();
     if (ret != 0) {
-        _abort(gem5Component, "Python failed to initialize. Code: %d\n", ret);
+        dbg.fatal(CALL_INFO, -1, "Python failed to initialize. Code: %d\n",
+                  ret);
     }
 
     PySys_SetArgv(argc, argv);

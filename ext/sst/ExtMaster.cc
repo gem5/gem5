@@ -44,6 +44,10 @@
 
 #include "gem5.hh"
 
+#ifdef fatal  // gem5 sets this
+#undef fatal
+#endif
+
 #include <sst_config.h>
 
 #include <mem/packet.hh>
@@ -52,10 +56,6 @@
 #include <sst/core/params.h>
 #include <sst/core/link.h>
 #include <sst/elements/memHierarchy/memNIC.h>
-
-#ifdef fatal  // gem5 sets this
-#undef fatal
-#endif
 
 using namespace SST;
 using namespace SST::gem5;
