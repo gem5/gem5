@@ -82,6 +82,18 @@ class EtherBus(EtherObject):
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
 
+class EtherSwitch(EtherObject):
+    type = 'EtherSwitch'
+    cxx_header = "dev/net/etherswitch.hh"
+    dump = Param.EtherDump(NULL, "dump object")
+    fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in bits "
+                                          "per second")
+    interface = VectorMasterPort("Ethernet Interface")
+    output_buffer_size = Param.MemorySize('1MB', "size of output port buffers")
+    delay = Param.Latency('0us', "packet transmit delay")
+    delay_var = Param.Latency('0ns', "packet transmit delay variability")
+    time_to_live = Param.Latency('10ms', "time to live of MAC address maping")
+
 class EtherTap(EtherObject):
     type = 'EtherTap'
     cxx_header = "dev/net/ethertap.hh"

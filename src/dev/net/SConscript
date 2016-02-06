@@ -51,6 +51,7 @@ SimObject('Ethernet.py')
 
 # Basic Ethernet infrastructure
 Source('etherbus.cc')
+Source('etherswitch.cc')
 Source('etherdevice.cc')
 Source('etherdump.cc')
 Source('etherint.cc')
