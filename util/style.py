@@ -404,12 +404,6 @@ class SortedIncludes(Verifier):
             f.write('\n')
         f.close()
 
-# list of all verifier classes
-all_verifiers = [
-    Whitespace,
-    ControlSpace,
-    SortedIncludes
-]
 
 def linelen(line):
     tabs = line.count('\t')
@@ -424,6 +418,48 @@ def linelen(line):
             count += 1
 
     return count
+
+class LineLength(Verifier):
+    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+    test_name = 'line length'
+    opt_name = 'length'
+
+    def check_line(self, line):
+        return linelen(line) <= 78
+
+    def fix(self, filename, regions=all_regions):
+        self.write("Warning: cannot automatically fix overly long lines.\n")
+
+
+class BoolCompare(Verifier):
+    languages = set(('C', 'C++', 'python'))
+    test_name = 'boolean comparison'
+    opt_name = 'boolcomp'
+
+    regex = re.compile(r'\s*==\s*([Tt]rue|[Ff]alse)\b')
+
+    def check_line(self, line):
+        return self.regex.search(line) == None
+
+    def fix_line(self, line):
+        match = self.regex.search(line)
+        if match:
+            if match.group(1) in ('true', 'True'):
+                line = self.regex.sub('', line)
+            else:
+                self.write("Warning: cannot automatically fix "
+                           "comparisons with false/False.\n")
+        return line
+
+
+# list of all verifier classes
+all_verifiers = [
+    Whitespace,
+    ControlSpace,
+    LineLength,
+    BoolCompare,
+    SortedIncludes
+]
 
 class ValidationStats(object):
     def __init__(self):
