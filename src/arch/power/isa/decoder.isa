@@ -309,10 +309,10 @@ decode OPCODE default Unknown::unknown() {
             151: stwx({{ Mem = Rs; }});
             150: stwcx({{
                 bool store_performed = false;
+                Mem = Rs;
                 if (Rsv) {
                     if (RsvLen == 4) {
                         if (RsvAddr == EA) {
-                            Mem = Rs;
                             store_performed = true;
                         }
                     }

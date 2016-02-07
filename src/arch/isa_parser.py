@@ -790,10 +790,8 @@ class MemOperand(Operand):
         return ''
 
     def makeDecl(self):
-        # Note that initializations in the declarations are solely
-        # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
-        return '%s %s = 0;\n' % (self.ctype, self.base_name)
+        return '%s %s;\n' % (self.ctype, self.base_name)
 
     def makeRead(self, predRead):
         if self.read_code != None:
