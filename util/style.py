@@ -13,6 +13,7 @@
 #
 # Copyright (c) 2006 The Regents of The University of Michigan
 # Copyright (c) 2007,2011 The Hewlett-Packard Development Company
+# Copyright (c) 2016 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,6 +40,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Steve Reinhardt
 
 import heapq
 import os
@@ -62,8 +64,7 @@ all_regions = Regions(Region(neg_inf, pos_inf))
 tabsize = 8
 lead = re.compile(r'^([ \t]+)')
 trail = re.compile(r'([ \t]+)$')
-any_control = re.compile(r'\b(if|while|for)[ \t]*[(]')
-good_control = re.compile(r'\b(if|while|for) [(]')
+any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
 
 format_types = set(('C', 'C++'))
 
@@ -153,10 +154,31 @@ class StdioUI(UserInterface):
     def write(self, string):
         sys.stdout.write(string)
 
+
 class Verifier(object):
-    def __init__(self, ui, repo):
+    """Base class for style verifier objects
+
+    Subclasses must define these class attributes:
+      languages = set of strings identifying applicable languages
+      test_name = long descriptive name of test, will be used in
+                  messages such as "error in <foo>" or "invalid <foo>"
+      opt_name = short name used to generate command-line options to
+                 control the test (--fix-<foo>, --ignore-<foo>, etc.)
+    """
+
+    def __init__(self, ui, repo, opts):
         self.ui = ui
         self.repo = repo
+        # opt_name must be defined as a class attribute of derived classes.
+        # Check test-specific opts first as these have precedence.
+        self.opt_fix = opts.get('fix_' + self.opt_name, False)
+        self.opt_ignore = opts.get('ignore_' + self.opt_name, False)
+        self.opt_skip = opts.get('skip_' + self.opt_name, False)
+        # If no test-specific opts were set, then set based on "-all" opts.
+        if not (self.opt_fix or self.opt_ignore or self.opt_skip):
+            self.opt_fix = opts.get('fix_all', False)
+            self.opt_ignore = opts.get('ignore_all', False)
+            self.opt_skip = opts.get('skip_all', False)
 
     def __getattr__(self, attr):
         if attr in ('prompt', 'write'):
@@ -197,6 +219,17 @@ class Verifier(object):
         return lang_type(filename) not in self.languages
 
     def check(self, filename, regions=all_regions):
+        """Check specified regions of file 'filename'.
+
+        Line-by-line checks can simply provide a check_line() method
+        that returns True if the line is OK and False if it has an
+        error.  Verifiers that need a multi-line view (like
+        SortedIncludes) must override this entire function.
+
+        Returns a count of errors (0 if none), though actual non-zero
+        count value is not currently used anywhere.
+        """
+
         f = self.open(filename, 'r')
 
         errors = 0
@@ -205,13 +238,20 @@ class Verifier(object):
                 continue
             if not self.check_line(line):
                 self.write("invalid %s in %s:%d\n" % \
-                               (self.test_name, filename, num + 1))
+                           (self.test_name, filename, num + 1))
                 if self.ui.verbose:
-                    self.write(">>%s<<\n" % line[-1])
+                    self.write(">>%s<<\n" % line[:-1])
                 errors += 1
         return errors
 
     def fix(self, filename, regions=all_regions):
+        """Fix specified regions of file 'filename'.
+
+        Line-by-line fixes can simply provide a fix_line() method that
+        returns the fixed line. Verifiers that need a multi-line view
+        (like SortedIncludes) must override this entire function.
+        """
+
         f = self.open(filename, 'r+')
 
         lines = list(f)
@@ -226,18 +266,46 @@ class Verifier(object):
             f.write(line)
         f.close()
 
-    def apply(self, filename, prompt, regions=all_regions):
-        if not self.skip(filename):
+
+    def apply(self, filename, regions=all_regions):
+        """Possibly apply to specified regions of file 'filename'.
+
+        Verifier is skipped if --skip-<test> option was provided or if
+        file is not of an applicable type.  Otherwise file is checked
+        and error messages printed.  Errors are fixed or ignored if
+        the corresponding --fix-<test> or --ignore-<test> options were
+        provided.  If neither, the user is prompted for an action.
+
+        Returns True to abort, False otherwise.
+        """
+        if not (self.opt_skip or self.skip(filename)):
             errors = self.check(filename, regions)
-            if errors:
-                if prompt(filename, self.fix, regions):
-                    return True
+            if errors and not self.opt_ignore:
+                if self.opt_fix:
+                    self.fix(filename, regions)
+                else:
+                    result = self.ui.prompt("(a)bort, (i)gnore, or (f)ix?",
+                                            'aif', 'a')
+                    if result == 'f':
+                        self.fix(filename, regions)
+                    elif result == 'a':
+                        return True # abort
+
         return False
 
 
 class Whitespace(Verifier):
+    """Check whitespace.
+
+    Specifically:
+    - No tabs used for indent
+    - No trailing whitespace
+    """
+
     languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
     test_name = 'whitespace'
+    opt_name = 'white'
+
     def check_line(self, line):
         match = lead.search(line)
         if match and match.group(1).find('\t') != -1:
@@ -265,8 +333,30 @@ class Whitespace(Verifier):
 
         return line.rstrip() + '\n'
 
+
+class ControlSpace(Verifier):
+    """Check for exactly one space after if/while/for"""
+
+    languages = set(('C', 'C++'))
+    test_name = 'spacing after if/while/for'
+    opt_name = 'control'
+
+    def check_line(self, line):
+        match = any_control.search(line)
+        return not (match and match.group(2) != " ")
+
+    def fix_line(self, line):
+        new_line = any_control.sub(r'\1 (', line)
+        return new_line
+
+
 class SortedIncludes(Verifier):
+    """Check for proper sorting of include statements"""
+
     languages = sort_includes.default_languages
+    test_name = 'include file order'
+    opt_name = 'include'
+
     def __init__(self, *args, **kwargs):
         super(SortedIncludes, self).__init__(*args, **kwargs)
         self.sort_includes = sort_includes.SortIncludes()
@@ -313,6 +403,13 @@ class SortedIncludes(Verifier):
             f.write(line)
             f.write('\n')
         f.close()
+
+# list of all verifier classes
+all_verifiers = [
+    Whitespace,
+    ControlSpace,
+    SortedIncludes
+]
 
 def linelen(line):
     tabs = line.count('\t')
@@ -411,7 +508,7 @@ def validate(filename, stats, verbose, exit_code):
         # for c++, exactly one space betwen if/while/for and (
         if lang == 'C++':
             match = any_control.search(line)
-            if match and not good_control.search(line):
+            if match and match.group(2) != " ":
                 stats.badcontrol += 1
                 if verbose > 1:
                     msg(i, line, 'improper spacing after %s' % match.group(1))
@@ -464,41 +561,41 @@ def do_check_style(hgui, repo, *pats, **opts):
 
     The --all option can be specified to include clean files and check
     modified files in their entirety.
+
+    The --fix-<check>, --ignore-<check>, and --skip-<check> options
+    can be used to control individual style checks:
+
+    --fix-<check> will perform the check and automatically attempt to
+      fix sny style error (printing a warning if unsuccessful)
+
+    --ignore-<check> will perform the check but ignore any errors
+      found (other than printing a message for each)
+
+    --skip-<check> will skip performing the check entirely
+
+    If none of these options are given, all checks will be performed
+    and the user will be prompted on how to handle each error.
+
+    --fix-all, --ignore-all, and --skip-all are equivalent to specifying
+    --fix-<check>, --ignore-<check>, or --skip-<check> for all checks,
+    respectively.  However, option settings for specific checks take
+    precedence.  Thus --skip-all --fix-white can be used to skip every
+    check other than whitespace errors, which will be checked and
+    automatically fixed.
+
+    The -v/--verbose flag will display the offending line(s) as well
+    as their location.
     """
-    opt_fix_all = opts.get('fix_all', False)
-    if not opt_fix_all:
-        opt_fix_white = opts.get('fix_white', False)
-        opt_fix_include = opts.get('fix_include', False)
-    else:
-        opt_fix_white = True
-        opt_fix_include = True
 
     ui = MercurialUI(hgui, verbose=hgui.verbose)
 
-    def prompt(name, func, regions=all_regions):
-        result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", 'aif', 'a')
-        if result == 'a':
-            return True
-        elif result == 'f':
-            func(name, regions)
+    # instantiate varifier objects
+    verifiers = [v(ui, repo, opts) for v in all_verifiers]
 
-        return False
-
-    def no_prompt(name, func, regions=all_regions):
-        func(name, regions)
-        return False
-
-    prompt_white = prompt if not opt_fix_white else no_prompt
-    prompt_include = prompt if not opt_fix_include else no_prompt
-
-    whitespace = Whitespace(ui, repo)
-    sorted_includes = SortedIncludes(ui, repo)
     for fname, mod_regions in _modified_regions(repo, pats, **opts):
-        if whitespace.apply(fname, prompt_white, mod_regions):
-            return True
-
-        if sorted_includes.apply(fname, prompt_include, mod_regions):
-            return True
+        for verifier in verifiers:
+            if verifier.apply(fname, mod_regions):
+                return True
 
     return False
 
@@ -536,6 +633,8 @@ def check_hook(hooktype):
         raise AttributeError, \
               "This hook is not meant for %s" % hooktype
 
+# This function provides a hook that is called before transaction
+# commit and on qrefresh
 def check_style(ui, repo, hooktype, **kwargs):
     check_hook(hooktype)
     args = {}
@@ -570,13 +669,22 @@ _common_region_options = [
     ('', 'no-ignore', False, _("ignore the style ignore list")),
     ]
 
+
+fix_opts = [('f', 'fix-all', False, _("fix all style errors"))] + \
+           [('', 'fix-' + v.opt_name, False,
+             _('fix errors in ' + v.test_name)) for v in all_verifiers]
+ignore_opts = [('', 'ignore-all', False, _("ignore all style errors"))] + \
+              [('', 'ignore-' + v.opt_name, False,
+                _('ignore errors in ' + v.test_name)) for v in all_verifiers]
+skip_opts = [('', 'skip-all', False, _("skip all style error checks"))] + \
+            [('', 'skip-' + v.opt_name, False,
+              _('skip checking for ' + v.test_name)) for v in all_verifiers]
+all_opts = fix_opts + ignore_opts + skip_opts
+
+
 cmdtable = {
     '^m5style' : (
-        do_check_style, [
-            ('f', 'fix-all', False, _("automatically fix style issues")),
-            ('', 'fix-white', False, _("automatically fix white space issues")),
-            ('', 'fix-include', False, _("automatically fix include ordering")),
-            ] + _common_region_options +  commands.walkopts,
+        do_check_style, all_opts + _common_region_options + commands.walkopts,
         _('hg m5style [-a] [FILE]...')),
     '^m5format' :
     ( do_check_format, [
