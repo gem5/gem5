@@ -101,7 +101,7 @@ namespace X86ISA
     enum MiscRegIndex
     {
         // Control registers
-        // Most of these are invalid.
+        // Most of these are invalid.  See isValidMiscReg() below.
         MISCREG_CR_BASE,
         MISCREG_CR0 = MISCREG_CR_BASE,
         MISCREG_CR1,
@@ -398,6 +398,15 @@ namespace X86ISA
 
         NUM_MISCREGS
     };
+
+    static inline bool
+    isValidMiscReg(int index)
+    {
+        return (index >= MISCREG_CR0 && index < NUM_MISCREGS &&
+                index != MISCREG_CR1 &&
+                !(index > MISCREG_CR4 && index < MISCREG_CR8) &&
+                !(index > MISCREG_CR8 && index <= MISCREG_CR15));
+    }
 
     static inline MiscRegIndex
     MISCREG_CR(int index)

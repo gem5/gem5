@@ -217,11 +217,9 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     // need to be considered while copying state. That will likely not be
     // true in the future.
     for (int i = 0; i < NUM_MISCREGS; ++i) {
-        if ( ( i != MISCREG_CR1 &&
-             !(i > MISCREG_CR4 && i < MISCREG_CR8) &&
-             !(i > MISCREG_CR8 && i <= MISCREG_CR15) ) == false) {
+        if (!isValidMiscReg(i))
              continue;
-        }
+
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
     }
 
