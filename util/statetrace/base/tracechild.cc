@@ -108,7 +108,7 @@ TraceChild::ptraceSingleStep()
           default: cout << "Unknown error" << endl; break;
         }
         cout << "Not able to single step!" << endl;
-        tracing == false;
+        tracing = false;
         return false;
     }
     doWait();
