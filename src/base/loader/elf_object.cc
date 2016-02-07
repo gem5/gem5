@@ -179,7 +179,7 @@ ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
                     // 2 == solaris, 3 == freebsd
                     data = elf_rawdata(section, NULL);
                     assert(data->d_buf);
-                    if(ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
+                    if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
                         osAbi = htole(((uint32_t*)data->d_buf)[4]);
                     else
                         osAbi = htobe(((uint32_t*)data->d_buf)[4]);
@@ -218,7 +218,7 @@ ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
         result->_programHeaderCount = ehdr.e_phnum;
         //Record the size of each entry
         result->_programHeaderSize = ehdr.e_phentsize;
-        if(result->_programHeaderCount) //If there is a program header table
+        if (result->_programHeaderCount) //If there is a program header table
         {
             //Figure out the virtual address of the header table in the
             //final memory image. We use the program headers themselves
@@ -226,11 +226,11 @@ ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
             GElf_Phdr phdr;
             uint64_t e_phoff = ehdr.e_phoff;
             result->_programHeaderTable = 0;
-            for(int hdrnum = 0; hdrnum < result->_programHeaderCount; hdrnum++)
+            for (int hdrnum = 0; hdrnum < result->_programHeaderCount; hdrnum++)
             {
                 gelf_getphdr(elf, hdrnum, &phdr);
                 //Check if we've found the segment with the headers in it
-                if(phdr.p_offset <= e_phoff &&
+                if (phdr.p_offset <= e_phoff &&
                         phdr.p_offset + phdr.p_filesz > e_phoff)
                 {
                     result->_programHeaderTable =

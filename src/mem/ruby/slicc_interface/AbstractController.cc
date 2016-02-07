@@ -156,7 +156,7 @@ AbstractController::wakeUpAllBuffers()
     std::vector<MsgVecType*> wokeUpMsgVecs;
     MsgBufType wokeUpMsgBufs;
 
-    if(m_waiting_buffers.size() > 0) {
+    if (m_waiting_buffers.size() > 0) {
         for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
              buf_iter != m_waiting_buffers.end();
              ++buf_iter) {

@@ -263,7 +263,7 @@ MessageBuffer::recycle(Tick current_time, Tick recycle_latency)
 void
 MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 {
-    while(!lt.empty()) {
+    while (!lt.empty()) {
         m_msg_counter++;
         MsgPtr m = lt.front();
         m->setLastEnqueueTime(schdTick);

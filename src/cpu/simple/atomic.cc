@@ -139,7 +139,7 @@ AtomicSimpleCPU::threadSnoop(PacketPtr pkt, ThreadID sender)
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         if (tid != sender) {
-            if(getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            if (getCpuAddrMonitor(tid)->doMonitor(pkt)) {
                 wakeup(tid);
             }
 
@@ -312,7 +312,7 @@ AtomicSimpleCPU::AtomicCPUDPort::recvFunctionalSnoop(PacketPtr pkt)
     // X86 ISA: Snooping an invalidation for monitor/mwait
     AtomicSimpleCPU *cpu = (AtomicSimpleCPU *)(&owner);
     for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
-        if(cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
             cpu->wakeup(tid);
         }
     }
@@ -450,13 +450,13 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
     //across a cache line boundary.
     Addr secondAddr = roundDown(addr + size - 1, cacheLineSize());
 
-    if(secondAddr > addr)
+    if (secondAddr > addr)
         size = secondAddr - addr;
 
     dcache_latency = 0;
 
     req->taskId(taskId());
-    while(1) {
+    while (1) {
         req->setVirt(0, addr, size, flags, dataMasterId(), thread->pcState().instAddr());
 
         // translate to physical address
@@ -600,7 +600,7 @@ AtomicSimpleCPU::tick()
                 // like the I cache. It should be flushed, and when that works
                 // this code should be uncommented.
                 //Fetch more instruction memory if necessary
-                //if(decoder.needMoreBytes())
+                //if (decoder.needMoreBytes())
                 //{
                     icache_access = true;
                     Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq);
@@ -657,7 +657,7 @@ AtomicSimpleCPU::tick()
             }
 
         }
-        if(fault != NoFault || !t_info.stayAtPC)
+        if (fault != NoFault || !t_info.stayAtPC)
             advancePC(fault);
     }
 

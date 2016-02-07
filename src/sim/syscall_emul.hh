@@ -335,7 +335,7 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         int mem_val = *((int *)buf);
         delete buf;
 
-        if(val != mem_val) {
+        if (val != mem_val) {
             DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAKE, read: %d, "
                                     "expected: %d\n", mem_val, val);
             return -OS::TGT_EWOULDBLOCK;
@@ -365,7 +365,7 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                 tcWaitList->pop_front();
                 wokenUp++;
             }
-            if(tcWaitList->empty()) {
+            if (tcWaitList->empty()) {
                 futex_map.erase(uaddr);
                 delete tcWaitList;
             }
@@ -1502,7 +1502,7 @@ timeFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     Addr taddr = (Addr)process->getSyscallArg(tc, index);
-    if(taddr != 0) {
+    if (taddr != 0) {
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
         SETranslatingPortProxy &p = tc->getMemProxy();

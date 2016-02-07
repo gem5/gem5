@@ -114,7 +114,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
     // Lookup pc-based information
     StrideEntry *entry;
 
-    if(pcTableHit(pc, is_secure, master_id, entry)) {
+    if (pcTableHit(pc, is_secure, master_id, entry)) {
         // Hit in table
         int new_stride = pkt_addr - entry->lastAddr;
         bool stride_match = (new_stride == entry->stride);

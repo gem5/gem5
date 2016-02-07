@@ -90,7 +90,7 @@ class NativeTrace : public ExeTracer
     bool
     checkReg(const char * regName, T &val, T &realVal)
     {
-        if(val != realVal)
+        if (val != realVal)
         {
             DPRINTFN("Register %s should be %#x but is %#x.\n",
                     regName, realVal, val);

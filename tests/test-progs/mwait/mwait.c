@@ -44,7 +44,7 @@ int main( int argc, char** argv)
 
     // invalidate flags in this cpu's cache
     pthread_create(&threads[0], NULL, DoWork1, NULL);
-    while(wait[0]);
+    while (wait[0]);
 
     // launch thread to invalidate address being monitored
     pthread_create(&threads[0], NULL, DoWork2, NULL);
@@ -53,17 +53,17 @@ int main( int argc, char** argv)
     int mwait_cnt = 0;
     do {
         pthread_mutex_lock (&mutex);
-        if(flags[0] != 2) {
+        if (flags[0] != 2) {
             pthread_mutex_unlock (&mutex);
             __builtin_ia32_mwait(0, 0);
         } else {
             pthread_mutex_unlock (&mutex);
         }
         mwait_cnt++;
-    } while(flags[0] != 2 && mwait_cnt < NUM_TRIES);
+    } while (flags[0] != 2 && mwait_cnt < NUM_TRIES);
 
     // test may hang if mwait is not working
-    if(flags[0]==2) {
+    if (flags[0]==2) {
         printf("mwait regression PASSED, flags[0] = %d\n", flags[0]);
     } else {
         printf("mwait regression FAILED, flags[0] = %d\n", flags[0]);

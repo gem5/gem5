@@ -239,7 +239,7 @@ GPUCoalescer::getRequestStatus(PacketPtr pkt, RubyRequestType request_type)
         return RequestStatus_BufferFull;
     }
 
-    if(m_controller->isBlocked(line_addr) &&
+    if (m_controller->isBlocked(line_addr) &&
        request_type != RubyRequestType_Locked_RMW_Write) {
         return RequestStatus_Aliased;
     }
@@ -519,7 +519,7 @@ GPUCoalescer::writeCallback(Addr address,
     // Not valid for Network_test protocl
     //
     bool success = true;
-    if(!m_usingNetworkTester)
+    if (!m_usingNetworkTester)
         success = handleLlsc(address, request);
 
     if (request->m_type == RubyRequestType_Locked_RMW_Read) {
@@ -704,7 +704,7 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
             // This is a Kernel Begin leave handling to
             // virtual xCoalescer::makeRequest
             return RequestStatus_Issued;
-        }else if(pkt->req->isRelease()) {
+        }else if (pkt->req->isRelease()) {
             // This is a Kernel End leave handling to
             // virtual xCoalescer::makeRequest
             // If we are here then we didn't call
@@ -917,7 +917,7 @@ GPUCoalescer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
             std::pair<int,AtomicOpFunctor *> tmpAtomicOp(tmpOffset,
                                                         tmpPkt->getAtomicOp());
             atomicOps.push_back(tmpAtomicOp);
-        } else if(tmpPkt->isWrite()) {
+        } else if (tmpPkt->isWrite()) {
             dataBlock.setData(tmpPkt->getPtr<uint8_t>(),
                               tmpOffset, tmpSize);
         }
@@ -1151,11 +1151,11 @@ GPUCoalescer::atomicCallback(Addr address,
 void
 GPUCoalescer::recordCPReadCallBack(MachineID myMachID, MachineID senderMachID)
 {
-    if(myMachID == senderMachID) {
+    if (myMachID == senderMachID) {
         CP_TCPLdHits++;
-    } else if(machineIDToMachineType(senderMachID) == MachineType_TCP) {
+    } else if (machineIDToMachineType(senderMachID) == MachineType_TCP) {
         CP_TCPLdTransfers++;
-    } else if(machineIDToMachineType(senderMachID) == MachineType_TCC) {
+    } else if (machineIDToMachineType(senderMachID) == MachineType_TCC) {
         CP_TCCLdHits++;
     } else {
         CP_LdMiss++;
@@ -1165,11 +1165,11 @@ GPUCoalescer::recordCPReadCallBack(MachineID myMachID, MachineID senderMachID)
 void
 GPUCoalescer::recordCPWriteCallBack(MachineID myMachID, MachineID senderMachID)
 {
-    if(myMachID == senderMachID) {
+    if (myMachID == senderMachID) {
         CP_TCPStHits++;
-    } else if(machineIDToMachineType(senderMachID) == MachineType_TCP) {
+    } else if (machineIDToMachineType(senderMachID) == MachineType_TCP) {
         CP_TCPStTransfers++;
-    } else if(machineIDToMachineType(senderMachID) == MachineType_TCC) {
+    } else if (machineIDToMachineType(senderMachID) == MachineType_TCC) {
         CP_TCCStHits++;
     } else {
         CP_StMiss++;

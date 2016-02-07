@@ -39,9 +39,9 @@ WeightedLRUPolicy::WeightedLRUPolicy(const Params* p)
     : AbstractReplacementPolicy(p), m_cache(p->cache)
 {
     m_last_occ_ptr = new int*[m_num_sets];
-    for(unsigned i = 0; i < m_num_sets; i++){
+    for (unsigned i = 0; i < m_num_sets; i++){
         m_last_occ_ptr[i] = new int[m_assoc];
-        for(unsigned j = 0; j < m_assoc; j++){
+        for (unsigned j = 0; j < m_assoc; j++){
             m_last_occ_ptr[i][j] = 0;
         }
     }

@@ -183,12 +183,12 @@ ARMTraceChild::outputStartState(ostream & os)
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sprintf(obuf, "0x%08x: argv[%d] = 0x%08x\n",
                 sp, argCount++, cargv);
-        if(cargv)
-            if(highestInfo < cargv)
+        if (cargv)
+            if (highestInfo < cargv)
                 highestInfo = cargv;
         os << obuf;
         sp += 4;
-    } while(cargv);
+    } while (cargv);
 
     //Output the envp pointers
     int envCount = 0;
@@ -199,7 +199,7 @@ ARMTraceChild::outputStartState(ostream & os)
                 sp, envCount++, cenvp);
         os << obuf;
         sp += 4;
-    } while(cenvp);
+    } while (cenvp);
     uint32_t auxType, auxVal;
     do {
         auxType = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
@@ -209,7 +209,7 @@ ARMTraceChild::outputStartState(ostream & os)
         sprintf(obuf, "0x%08x: Auxiliary vector = {0x%08x, 0x%08x}\n",
                 sp - 8, auxType, auxVal);
         os << obuf;
-    } while(auxType != 0 || auxVal != 0);
+    } while (auxType != 0 || auxVal != 0);
     //Print out the argument strings, environment strings, and file name.
     string current;
     uint32_t buf;
@@ -231,7 +231,7 @@ ARMTraceChild::outputStartState(ostream & os)
         }
         sp += 4;
         clearedInitialPadding = clearedInitialPadding || buf != 0;
-    } while(!clearedInitialPadding || buf != 0 || sp <= highestInfo);
+    } while (!clearedInitialPadding || buf != 0 || sp <= highestInfo);
     return os;
 }
 

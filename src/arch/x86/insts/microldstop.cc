@@ -49,7 +49,7 @@ namespace X86ISA
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
-        if(flags[IsLoad])
+        if (flags[IsLoad])
             printDestReg(response, 0, dataSize);
         else
             printSrcReg(response, 2, dataSize);

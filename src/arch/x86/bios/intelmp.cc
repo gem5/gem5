@@ -76,7 +76,7 @@ writeOutField(PortProxy& proxy, Addr addr, T val)
     proxy.writeBlob(addr, (uint8_t *)(&guestVal), sizeof(T));
 
     uint8_t checkSum = 0;
-    while(guestVal) {
+    while (guestVal) {
         checkSum += guestVal;
         guestVal >>= 8;
     }

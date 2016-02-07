@@ -83,7 +83,7 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     // newer kernels use __loop_udelay and __loop_const_udelay symbols
     uDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
         "__loop_udelay", "__udelay", 1000, 0);
-    if(!uDelaySkipEvent)
+    if (!uDelaySkipEvent)
         uDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
          "__udelay", "__udelay", 1000, 0);
 
@@ -91,7 +91,7 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     // time. Constant comes from code.
     constUDelaySkipEvent = addKernelFuncEvent<UDelayEvent>(
         "__loop_const_udelay", "__const_udelay", 1000, 107374);
-    if(!constUDelaySkipEvent)
+    if (!constUDelaySkipEvent)
         constUDelaySkipEvent = addKernelFuncEventOrPanic<UDelayEvent>(
          "__const_udelay", "__const_udelay", 1000, 107374);
 

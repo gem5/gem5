@@ -91,7 +91,7 @@ namespace X86ISA
         inline uint64_t merge(uint64_t into, uint64_t val, int size) const
         {
             X86IntReg reg = into;
-            if(_destRegIdx[0] & IntFoldBit)
+            if (_destRegIdx[0] & IntFoldBit)
             {
                 reg.H = val;
                 return reg;
@@ -122,7 +122,7 @@ namespace X86ISA
         {
             X86IntReg reg = from;
             DPRINTF(X86, "Picking with size %d\n", size);
-            if(_srcRegIdx[idx] & IntFoldBit)
+            if (_srcRegIdx[idx] & IntFoldBit)
                 return reg.H;
             switch(size)
             {
@@ -143,7 +143,7 @@ namespace X86ISA
         {
             X86IntReg reg = from;
             DPRINTF(X86, "Picking with size %d\n", size);
-            if(_srcRegIdx[idx] & IntFoldBit)
+            if (_srcRegIdx[idx] & IntFoldBit)
                 return reg.SH;
             switch(size)
             {

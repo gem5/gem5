@@ -226,7 +226,7 @@ Decode::evaluate()
                 execSeqNum++;
 
                 /* Correctly size the output before writing */
-                if(output_index == 0) insts_out.resize(outputWidth);
+                if (output_index == 0) insts_out.resize(outputWidth);
                 /* Push into output */
                 insts_out.insts[output_index] = output_inst;
                 output_index++;

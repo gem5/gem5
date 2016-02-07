@@ -1205,7 +1205,7 @@ CPA::serialize(CheckpointOut &cp) const
     }
 
     // qData (vector<AnnotateList>)
-    for(x = 0; x < qData.size(); x++) {
+    for (x = 0; x < qData.size(); x++) {
         if (!qData[x].size())
             continue;
         y = 0;

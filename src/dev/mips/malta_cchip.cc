@@ -207,14 +207,14 @@ MaltaCChip::write(PacketPtr pkt)
         olddir = dir[number];
         dim[number] = pkt->get<uint64_t>();
         dir[number] = dim[number] & drir;
-        for(int x = 0; x < Malta::Max_CPUs; x++)
+        for (int x = 0; x < Malta::Max_CPUs; x++)
         {
             bitvector = ULL(1) << x;
             // Figure out which bits have changed
             if ((dim[number] & bitvector) != (olddim & bitvector))
             {
                 // The bit is now set and it wasn't before (set)
-                if((dim[number] & bitvector) && (dir[number] & bitvector))
+                if ((dim[number] & bitvector) && (dir[number] & bitvector))
                 {
                     malta->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
                     DPRINTF(Malta, "dim write resulting in posting dir"
@@ -269,7 +269,7 @@ MaltaCChip::write(PacketPtr pkt)
               if (pkt->get<uint64_t>() & 0x10000000)
                   supportedWrite = true;
 
-            if(!supportedWrite)
+            if (!supportedWrite)
                   panic("TSDEV_CC_MISC write not implemented\n");
 
             break;
@@ -283,11 +283,11 @@ MaltaCChip::write(PacketPtr pkt)
             case TSDEV_CC_DIM2:
             case TSDEV_CC_DIM3:
                 int number;
-                if(regnum == TSDEV_CC_DIM0)
+                if (regnum == TSDEV_CC_DIM0)
                     number = 0;
-                else if(regnum == TSDEV_CC_DIM1)
+                else if (regnum == TSDEV_CC_DIM1)
                     number = 1;
-                else if(regnum == TSDEV_CC_DIM2)
+                else if (regnum == TSDEV_CC_DIM2)
                     number = 2;
                 else
                     number = 3;
@@ -300,14 +300,14 @@ MaltaCChip::write(PacketPtr pkt)
                 olddir = dir[number];
                 dim[number] = pkt->get<uint64_t>();
                 dir[number] = dim[number] & drir;
-                for(int x = 0; x < 64; x++)
+                for (int x = 0; x < 64; x++)
                 {
                     bitvector = ULL(1) << x;
                     // Figure out which bits have changed
                     if ((dim[number] & bitvector) != (olddim & bitvector))
                     {
                         // The bit is now set and it wasn't before (set)
-                        if((dim[number] & bitvector) && (dir[number] & bitvector))
+                        if ((dim[number] & bitvector) && (dir[number] & bitvector))
                         {
                           malta->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
                           DPRINTF(Malta, "posting dir interrupt to cpu 0\n");
@@ -476,7 +476,7 @@ MaltaCChip::postIntr(uint32_t interrupt)
     uint64_t size = sys->threadContexts.size();
     assert(size <= Malta::Max_CPUs);
 
-    for(int i=0; i < size; i++) {
+    for (int i=0; i < size; i++) {
                                         //Note: Malta does not use index, but this was added to use the pre-existing implementation
               malta->intrctrl->post(i, interrupt, 0);
               DPRINTF(Malta, "posting  interrupt to cpu %d,"
@@ -491,7 +491,7 @@ MaltaCChip::clearIntr(uint32_t interrupt)
     uint64_t size = sys->threadContexts.size();
     assert(size <= Malta::Max_CPUs);
 
-    for(int i=0; i < size; i++) {
+    for (int i=0; i < size; i++) {
                                         //Note: Malta does not use index, but this was added to use the pre-existing implementation
               malta->intrctrl->clear(i, interrupt, 0);
               DPRINTF(Malta, "clearing interrupt to cpu %d,"

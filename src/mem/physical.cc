@@ -373,7 +373,7 @@ PhysicalMemory::unserialize(CheckpointIn &cp)
     vector<ContextID> lal_cid;
     UNSERIALIZE_CONTAINER(lal_addr);
     UNSERIALIZE_CONTAINER(lal_cid);
-    for(size_t i = 0; i < lal_addr.size(); ++i) {
+    for (size_t i = 0; i < lal_addr.size(); ++i) {
         const auto& m = addrMap.find(lal_addr[i]);
         m->second->addLockedAddr(LockedAddr(lal_addr[i], lal_cid[i]));
     }

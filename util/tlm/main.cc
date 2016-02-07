@@ -249,7 +249,7 @@ SimControl::run()
 {
     GlobalSimLoopExitEvent *exit_event = NULL;
 
-    if(sim_end == 0) {
+    if (sim_end == 0) {
         exit_event = simulate();
     } else {
         exit_event = simulate(sim_end);

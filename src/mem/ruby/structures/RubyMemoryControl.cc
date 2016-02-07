@@ -639,7 +639,7 @@ DrainState
 RubyMemoryControl::drain()
 {
     DPRINTF(RubyMemory, "MemoryController drain\n");
-    if(m_event.scheduled()) {
+    if (m_event.scheduled()) {
         deschedule(m_event);
     }
     return DrainState::Drained;

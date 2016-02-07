@@ -386,7 +386,7 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     //Figure out the effective address size. This can be overriden to
     //a fixed value at the decoder level.
     int logAddrSize;
-    if(emi.legacy.addr)
+    if (emi.legacy.addr)
         logAddrSize = altAddr;
     else
         logAddrSize = defAddr;
@@ -410,7 +410,7 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     if (modrmTable[opcode]) {
         nextState = ModRMState;
     } else {
-        if(immediateSize) {
+        if (immediateSize) {
             nextState = ImmediateState;
         } else {
             instDone = true;
@@ -439,7 +439,7 @@ Decoder::processExtendedOpcode(ByteTable &immTable)
     //Figure out the effective address size. This can be overriden to
     //a fixed value at the decoder level.
     int logAddrSize;
-    if(emi.legacy.addr)
+    if (emi.legacy.addr)
         logAddrSize = altAddr;
     else
         logAddrSize = defAddr;
@@ -509,9 +509,9 @@ Decoder::doModRMState(uint8_t nextByte)
     if (modRM.rm == 4 && modRM.mod != 3) {
             // && in 32/64 bit mode)
         nextState = SIBState;
-    } else if(displacementSize) {
+    } else if (displacementSize) {
         nextState = DisplacementState;
-    } else if(immediateSize) {
+    } else if (immediateSize) {
         nextState = ImmediateState;
     } else {
         instDone = true;
@@ -537,7 +537,7 @@ Decoder::doSIBState(uint8_t nextByte)
         displacementSize = 4;
     if (displacementSize) {
         nextState = DisplacementState;
-    } else if(immediateSize) {
+    } else if (immediateSize) {
         nextState = ImmediateState;
     } else {
         instDone = true;
@@ -560,7 +560,7 @@ Decoder::doDisplacementState()
     DPRINTF(Decoder, "Collecting %d byte displacement, got %d bytes.\n",
             displacementSize, immediateCollected);
 
-    if(displacementSize == immediateCollected) {
+    if (displacementSize == immediateCollected) {
         //Reset this for other immediates.
         immediateCollected = 0;
         //Sign extend the displacement
@@ -580,7 +580,7 @@ Decoder::doDisplacementState()
         }
         DPRINTF(Decoder, "Collected displacement %#x.\n",
                 emi.displacement);
-        if(immediateSize) {
+        if (immediateSize) {
             nextState = ImmediateState;
         } else {
             instDone = true;
@@ -608,7 +608,7 @@ Decoder::doImmediateState()
     DPRINTF(Decoder, "Collecting %d byte immediate, got %d bytes.\n",
             immediateSize, immediateCollected);
 
-    if(immediateSize == immediateCollected)
+    if (immediateSize == immediateCollected)
     {
         //Reset this for other immediates.
         immediateCollected = 0;

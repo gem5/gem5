@@ -36,9 +36,9 @@ AbstractReplacementPolicy::AbstractReplacementPolicy(const Params * p)
     m_num_sets = p->size/p->block_size/p->assoc;
     m_assoc = p->assoc;
     m_last_ref_ptr = new Tick*[m_num_sets];
-    for(unsigned i = 0; i < m_num_sets; i++){
+    for (unsigned i = 0; i < m_num_sets; i++){
         m_last_ref_ptr[i] = new Tick[m_assoc];
-        for(unsigned j = 0; j < m_assoc; j++){
+        for (unsigned j = 0; j < m_assoc; j++){
             m_last_ref_ptr[i][j] = 0;
         }
     }

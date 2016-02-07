@@ -64,9 +64,9 @@ AccessTraceForAddress::update(RubyRequestType type,
 {
     m_touched_by.add(cpu);
     m_total++;
-    if(type == RubyRequestType_ATOMIC) {
+    if (type == RubyRequestType_ATOMIC) {
         m_atomics++;
-    } else if(type == RubyRequestType_LD){
+    } else if (type == RubyRequestType_LD){
         m_loads++;
     } else if (type == RubyRequestType_ST){
         m_stores++;

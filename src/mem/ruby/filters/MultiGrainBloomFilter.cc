@@ -58,7 +58,7 @@ MultiGrainBloomFilter::clear()
     for (int i = 0; i < m_filter_size; i++) {
         m_filter[i] = 0;
     }
-    for(int i=0; i < m_page_filter_size; ++i){
+    for (int i=0; i < m_page_filter_size; ++i){
         m_page_filter[i] = 0;
     }
 }
@@ -125,7 +125,7 @@ MultiGrainBloomFilter::getTotalCount()
         count += m_filter[i];
     }
 
-    for(int i=0; i < m_page_filter_size; ++i) {
+    for (int i=0; i < m_page_filter_size; ++i) {
         count += m_page_filter[i] = 0;
     }
 

@@ -142,7 +142,7 @@ namespace X86ISA {
                     funcNum);
                 return false;
             }
-        } else if(family == 0x0000) {
+        } else if (family == 0x0000) {
             // The standard functions
             switch (funcNum) {
               case VendorAndLargestStdFunc:

@@ -72,7 +72,7 @@ BaseMasterPort::~BaseMasterPort()
 BaseSlavePort&
 BaseMasterPort::getSlavePort() const
 {
-    if(_baseSlavePort == NULL)
+    if (_baseSlavePort == NULL)
         panic("Cannot getSlavePort on master port %s that is not connected\n",
               name());
 
@@ -98,7 +98,7 @@ BaseSlavePort::~BaseSlavePort()
 BaseMasterPort&
 BaseSlavePort::getMasterPort() const
 {
-    if(_baseMasterPort == NULL)
+    if (_baseMasterPort == NULL)
         panic("Cannot getMasterPort on slave port %s that is not connected\n",
               name());
 

@@ -385,7 +385,7 @@ Bridge::BridgeMasterPort::checkFunctional(PacketPtr pkt)
     bool found = false;
     auto i = transmitList.begin();
 
-    while(i != transmitList.end() && !found) {
+    while (i != transmitList.end() && !found) {
         if (pkt->checkFunctional((*i).pkt)) {
             pkt->makeResponse();
             found = true;

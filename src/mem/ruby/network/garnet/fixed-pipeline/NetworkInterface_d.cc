@@ -185,7 +185,7 @@ NetworkInterface_d::calculateVC(int vnet)
         for (int i = 0; i < m_vc_per_vnet; i++) {
                 int delta = m_vc_allocator[vnet];
                 m_vc_allocator[vnet]++;
-                if(m_vc_allocator[vnet] == m_vc_per_vnet)
+                if (m_vc_allocator[vnet] == m_vc_per_vnet)
                         m_vc_allocator[vnet] = 0;
 
                 if (m_out_vc_state[(vnet*m_vc_per_vnet) + delta]->isInState(

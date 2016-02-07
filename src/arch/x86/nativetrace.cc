@@ -105,9 +105,9 @@ X86NativeTrace::X86NativeTrace(const Params *p)
 bool
 X86NativeTrace::checkRcxReg(const char * name, uint64_t &mVal, uint64_t &nVal)
 {
-    if(!checkRcx)
+    if (!checkRcx)
         checkRcx = (mVal != oldRcxVal || nVal != oldRealRcxVal);
-    if(checkRcx)
+    if (checkRcx)
         return checkReg(name, mVal, nVal);
     return true;
 }
@@ -115,9 +115,9 @@ X86NativeTrace::checkRcxReg(const char * name, uint64_t &mVal, uint64_t &nVal)
 bool
 X86NativeTrace::checkR11Reg(const char * name, uint64_t &mVal, uint64_t &nVal)
 {
-    if(!checkR11)
+    if (!checkR11)
         checkR11 = (mVal != oldR11Val || nVal != oldRealR11Val);
-    if(checkR11)
+    if (checkR11)
         return checkReg(name, mVal, nVal);
     return true;
 }
@@ -142,7 +142,7 @@ X86NativeTrace::check(NativeTraceRecord *record)
     nState.update(this);
     mState.update(record->getThread());
 
-    if(record->getStaticInst()->isSyscall())
+    if (record->getStaticInst()->isSyscall())
     {
         checkRcx = false;
         checkR11 = false;

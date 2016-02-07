@@ -216,14 +216,14 @@ TsunamiCChip::write(PacketPtr pkt)
         olddir = dir[number];
         dim[number] = pkt->get<uint64_t>();
         dir[number] = dim[number] & drir;
-        for(int x = 0; x < Tsunami::Max_CPUs; x++)
+        for (int x = 0; x < Tsunami::Max_CPUs; x++)
         {
             bitvector = ULL(1) << x;
             // Figure out which bits have changed
             if ((dim[number] & bitvector) != (olddim & bitvector))
             {
                 // The bit is now set and it wasn't before (set)
-                if((dim[number] & bitvector) && (dir[number] & bitvector))
+                if ((dim[number] & bitvector) && (dir[number] & bitvector))
                 {
                     tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
                     DPRINTF(Tsunami, "dim write resulting in posting dir"
@@ -278,7 +278,7 @@ TsunamiCChip::write(PacketPtr pkt)
               if (pkt->get<uint64_t>() & 0x10000000)
                   supportedWrite = true;
 
-            if(!supportedWrite)
+            if (!supportedWrite)
                   panic("TSDEV_CC_MISC write not implemented\n");
 
             break;
@@ -292,11 +292,11 @@ TsunamiCChip::write(PacketPtr pkt)
             case TSDEV_CC_DIM2:
             case TSDEV_CC_DIM3:
                 int number;
-                if(regnum == TSDEV_CC_DIM0)
+                if (regnum == TSDEV_CC_DIM0)
                     number = 0;
-                else if(regnum == TSDEV_CC_DIM1)
+                else if (regnum == TSDEV_CC_DIM1)
                     number = 1;
-                else if(regnum == TSDEV_CC_DIM2)
+                else if (regnum == TSDEV_CC_DIM2)
                     number = 2;
                 else
                     number = 3;
@@ -309,14 +309,14 @@ TsunamiCChip::write(PacketPtr pkt)
                 olddir = dir[number];
                 dim[number] = pkt->get<uint64_t>();
                 dir[number] = dim[number] & drir;
-                for(int x = 0; x < 64; x++)
+                for (int x = 0; x < 64; x++)
                 {
                     bitvector = ULL(1) << x;
                     // Figure out which bits have changed
                     if ((dim[number] & bitvector) != (olddim & bitvector))
                     {
                         // The bit is now set and it wasn't before (set)
-                        if((dim[number] & bitvector) && (dir[number] & bitvector))
+                        if ((dim[number] & bitvector) && (dir[number] & bitvector))
                         {
                           tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
                           DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
@@ -471,7 +471,7 @@ TsunamiCChip::postDRIR(uint32_t interrupt)
     assert(size <= Tsunami::Max_CPUs);
     drir |= bitvector;
 
-    for(int i=0; i < size; i++) {
+    for (int i=0; i < size; i++) {
         dir[i] = dim[i] & drir;
        if (dim[i] & bitvector) {
               tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
@@ -491,7 +491,7 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
     if (drir & bitvector)
     {
         drir &= ~bitvector;
-        for(int i=0; i < size; i++) {
+        for (int i=0; i < size; i++) {
            if (dir[i] & bitvector) {
                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
                DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"

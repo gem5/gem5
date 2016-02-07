@@ -93,7 +93,7 @@ MultiBitSelBloomFilter::merge(AbstractBloomFilter *other_filter)
 {
     // assumes both filters are the same size!
     MultiBitSelBloomFilter * temp = (MultiBitSelBloomFilter*) other_filter;
-    for(int i = 0; i < m_filter_size; ++i){
+    for (int i = 0; i < m_filter_size; ++i){
         m_filter[i] |= (*temp)[i];
     }
 }

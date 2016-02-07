@@ -175,7 +175,7 @@ objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
     do {                                                \
         event.unserializeSection(cp, #event);           \
         eventQueue()->checkpointReschedule(&event);     \
-    } while(0)
+    } while (0)
 
 #define SERIALIZE_OBJ(obj) obj.serializeSection(cp, #obj)
 #define UNSERIALIZE_OBJ(obj) obj.unserializeSection(cp, #obj)

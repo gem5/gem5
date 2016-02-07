@@ -271,7 +271,7 @@ AMD64TraceChild::outputStartState(ostream & os)
                 highestInfo = cargv;
         os << obuf;
         sp += 8;
-    } while(cargv);
+    } while (cargv);
 
     //Output the envp pointers
     int envCount = 0;
@@ -282,7 +282,7 @@ AMD64TraceChild::outputStartState(ostream & os)
                 sp, envCount++, cenvp);
         os << obuf;
         sp += 8;
-    } while(cenvp);
+    } while (cenvp);
     uint64_t auxType, auxVal;
     do {
         auxType = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
@@ -292,7 +292,7 @@ AMD64TraceChild::outputStartState(ostream & os)
         sprintf(obuf, "0x%016lx: Auxiliary vector = {0x%016lx, 0x%016lx}\n",
                 sp - 16, auxType, auxVal);
         os << obuf;
-    } while(auxType != 0 || auxVal != 0);
+    } while (auxType != 0 || auxVal != 0);
     //Print out the argument strings, environment strings, and file name.
     string current;
     uint64_t buf;
@@ -329,7 +329,7 @@ AMD64TraceChild::findSyscall()
         for (int i = 0; i < sizeof(uint64_t); i++) {
             unsigned char byte = buf & 0xFF;
             if (!foundOpcode) {
-                if(!(byte == 0x66 || //operand override
+                if (!(byte == 0x66 || //operand override
                      byte == 0x67 || //address override
                      byte == 0x2E || //cs
                      byte == 0x3E || //ds
@@ -395,7 +395,7 @@ AMD64TraceChild::step()
         do {
             ptraceSingleStep();
             newPC = getPC();
-        } while(newPC == origPC);
+        } while (newPC == origPC);
     }
 }
 

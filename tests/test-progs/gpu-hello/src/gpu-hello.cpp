@@ -70,7 +70,7 @@ int
 setupDataStructs()
 {
     msg = (char *)memalign(CACHE_LINE_SIZE, (grid_size + 1) * sizeof(char));
-    if(msg == NULL) {
+    if (msg == NULL) {
         printf("%s:%d: error: %s\n", __FILE__, __LINE__,
                "could not allocate host buffers\n");
        exit(-1);
@@ -126,7 +126,7 @@ setupOpenCL()
         delete platforms;
     }
 
-    if(NULL == platform) {
+    if (NULL == platform) {
         printf("NULL platform found so Exiting Application.\n");
         return FAILURE;
     }

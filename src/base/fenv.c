@@ -47,7 +47,7 @@ int m5_fegetround()
 {
     int x;
     int rm = fegetround();
-    for(x = 0; x < 4; x++)
+    for (x = 0; x < 4; x++)
         if (m5_round_ops[x] == rm)
             return x;
     abort();

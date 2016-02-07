@@ -110,7 +110,7 @@ void
 Intel8254Timer::Counter::latchCount()
 {
     // behave like a real latch
-    if(!latch_on) {
+    if (!latch_on) {
         latch_on = true;
         read_byte = LSB;
         latched_count = currentCount();
@@ -207,7 +207,7 @@ Intel8254Timer::Counter::setRW(int rw_val)
 void
 Intel8254Timer::Counter::setMode(int mode_val)
 {
-    if(mode_val != InitTc && mode_val != RateGen &&
+    if (mode_val != InitTc && mode_val != RateGen &&
        mode_val != SquareWave)
         panic("PIT mode %#x is not implemented: \n", mode_val);
 

@@ -364,9 +364,9 @@ HistStor::add(HistStor *hs)
     squares += hs->squares;
     samples += hs->samples;
 
-    while(bucket_size > hs->bucket_size)
+    while (bucket_size > hs->bucket_size)
         hs->grow_up();
-    while(bucket_size < hs->bucket_size)
+    while (bucket_size < hs->bucket_size)
         grow_up();
 
     for (uint32_t i = 0; i < b_size; i++)

@@ -146,7 +146,7 @@ BulkBloomFilter::isSet(Addr addr)
 
     // check second section
     zero = false;
-    for(int i = m_filter_size / 2; i < m_filter_size; ++i) {
+    for (int i = m_filter_size / 2; i < m_filter_size; ++i) {
         // get intersection of signatures
         m_temp_filter[i] =  m_temp_filter[i] && m_filter[i];
         zero = zero || m_temp_filter[i];

@@ -84,12 +84,12 @@ Target::transport_dbg(tlm::tlm_generic_payload& trans)
 
     /* Load / Store the access: */
     if ( cmd == tlm::TLM_READ_COMMAND ) {
-        if(debug) {
+        if (debug) {
             SC_REPORT_INFO("target", "tlm::TLM_READ_COMMAND");
         }
         std::memcpy(ptr, mem_array_ptr, len);
     } else if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-        if(debug) {
+        if (debug) {
             SC_REPORT_INFO("target", "tlm::TLM_WRITE_COMMAND");
         }
         std::memcpy(mem_array_ptr, ptr, len);
@@ -115,8 +115,8 @@ Target::peq_cb(tlm::tlm_generic_payload& trans,
 {
     sc_time delay;
 
-    if(phase == tlm::BEGIN_REQ) {
-        if(debug) SC_REPORT_INFO("target", "tlm::BEGIN_REQ");
+    if (phase == tlm::BEGIN_REQ) {
+        if (debug) SC_REPORT_INFO("target", "tlm::BEGIN_REQ");
 
         /* Increment the transaction reference count */
         trans.acquire();
@@ -226,12 +226,12 @@ Target::execute_transaction(tlm::tlm_generic_payload& trans)
 
     /* Load / Store the access: */
     if ( cmd == tlm::TLM_READ_COMMAND ) {
-        if(debug) {
+        if (debug) {
             SC_REPORT_INFO("target", "tlm::TLM_READ_COMMAND");
         }
         std::memcpy(ptr, mem_array_ptr, len);
     } else if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-        if(debug) {
+        if (debug) {
             SC_REPORT_INFO("target", "tlm::TLM_WRITE_COMMAND");
         }
         std::memcpy(mem_array_ptr, ptr, len);

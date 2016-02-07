@@ -379,7 +379,7 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     // Not valid for Network_test protocl
     //
     bool success = true;
-    if(!m_usingNetworkTester)
+    if (!m_usingNetworkTester)
         success = handleLlsc(address, request);
 
     if (request->m_type == RubyRequestType_Locked_RMW_Read) {

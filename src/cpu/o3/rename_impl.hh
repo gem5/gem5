@@ -766,7 +766,7 @@ DefaultRename<Impl>::skidInsert(ThreadID tid)
     {
         typename InstQueue::iterator it;
         warn("Skidbuffer contents:\n");
-        for(it = skidBuffer[tid].begin(); it != skidBuffer[tid].end(); it++)
+        for (it = skidBuffer[tid].begin(); it != skidBuffer[tid].end(); it++)
         {
             warn("[tid:%u]: %s [sn:%i].\n", tid,
                     (*it)->staticInst->disassemble(inst->instAddr()),

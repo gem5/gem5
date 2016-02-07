@@ -52,7 +52,7 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
 
     m_vnet_type.resize(m_virtual_networks);
 
-    for(int i = 0 ; i < m_virtual_networks ; i++)
+    for (int i = 0 ; i < m_virtual_networks ; i++)
     {
         if (m_vnet_type_names[i] == "response")
             m_vnet_type[i] = DATA_VNET_; // carries data (and ctrl) packets
@@ -94,7 +94,7 @@ GarnetNetwork_d::init()
     m_topology_ptr->createLinks(this);
 
     // FaultModel: declare each router to the fault model
-    if(isFaultModelEnabled()){
+    if (isFaultModelEnabled()){
         for (vector<Router_d*>::const_iterator i= m_routers.begin();
              i != m_routers.end(); ++i) {
             Router_d* router = safe_cast<Router_d*>(*i);

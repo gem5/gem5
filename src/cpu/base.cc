@@ -98,7 +98,7 @@ CPUProgressEvent::process()
     if (_repeatEvent)
       cpu->schedule(this, curTick() + _interval);
 
-    if(cpu->switchedOut()) {
+    if (cpu->switchedOut()) {
       return;
     }
 
@@ -288,7 +288,7 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];
 
-    if(monitor.gotWakeup == false) {
+    if (monitor.gotWakeup == false) {
         int block_size = cacheLineSize();
         uint64_t mask = ~((uint64_t)(block_size - 1));
 
@@ -701,8 +701,8 @@ AddressMonitor::AddressMonitor() {
 
 bool AddressMonitor::doMonitor(PacketPtr pkt) {
     assert(pkt->req->hasPaddr());
-    if(armed && waiting) {
-        if(pAddr == pkt->getAddr()) {
+    if (armed && waiting) {
+        if (pAddr == pkt->getAddr()) {
             DPRINTF(Mwait,"pAddr=0x%lx invalidated: waking up core\n",
                     pkt->getAddr());
             waiting = false;

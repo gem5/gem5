@@ -71,7 +71,7 @@ __kernel void read_kernel(size_t code_size,
     barrier(CLK_LOCAL_MEM_FENCE);
 
 
-    if(get_local_id(0) == 0) {
+    if (get_local_id(0) == 0) {
         int _lcount = atomic_load(&lcount);
         atomic_fetch_add((atomic_int *)chars_decoded, _lcount);
     }

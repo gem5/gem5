@@ -497,7 +497,7 @@ BaseSimpleCPU::preExecute()
         //Predecode, ie bundle up an ExtMachInst
         //If more fetch data is needed, pass it in.
         Addr fetchPC = (pcState.instAddr() & PCMask) + t_info.fetchOffset;
-        //if(decoder->needMoreBytes())
+        //if (decoder->needMoreBytes())
             decoder->moreBytes(pcState, fetchPC, inst);
         //else
         //    decoder->process();

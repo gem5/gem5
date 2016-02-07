@@ -53,7 +53,7 @@ ssize_t atomic_write(int fd, const void *s, size_t n);
     do {                                                        \
         static const char msg[] = m;                            \
         atomic_write(fd, msg, sizeof(msg) - 1);                 \
-    } while(0)
+    } while (0)
 
 /**
  * Statically allocate a string and write it to STDERR.

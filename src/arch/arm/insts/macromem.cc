@@ -145,7 +145,7 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
             // 32-bit memory operation
             // Find register for operation
             unsigned reg_idx;
-            while(!bits(regs, reg)) reg++;
+            while (!bits(regs, reg)) reg++;
             replaceBits(regs, reg, 0);
             reg_idx = force_user ? intRegInMode(MODE_USER, reg) : reg;
 
@@ -1149,7 +1149,7 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
         TLB::AllowUnaligned;
 
     int i = 0;
-    for(; i < numMemMicroops - 1; ++i) {
+    for (; i < numMemMicroops - 1; ++i) {
         microOps[uopIdx++] = new MicroNeonLoad64(
             machInst, vx + (RegIndex) i, rnsp, 16 * i, memaccessFlags,
             baseIsSP, 16 /* accSize */, eSize);
@@ -1231,7 +1231,7 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
 
-    for(int i = 0; i < numMarshalMicroops; ++i) {
+    for (int i = 0; i < numMarshalMicroops; ++i) {
         switch (numRegs) {
             case 1: microOps[uopIdx++] = new MicroIntNeon64_1Reg(
                         machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
@@ -1257,7 +1257,7 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
         TLB::AllowUnaligned;
 
     int i = 0;
-    for(; i < numMemMicroops - 1; ++i) {
+    for (; i < numMemMicroops - 1; ++i) {
         microOps[uopIdx++] = new MicroNeonStore64(
             machInst, vx + (RegIndex) i, rnsp, 16 * i, memaccessFlags,
             baseIsSP, 16 /* accSize */, eSize);
@@ -1347,7 +1347,7 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
         }
     }
 
-    for(int i = 0; i < numMarshalMicroops; ++i) {
+    for (int i = 0; i < numMarshalMicroops; ++i) {
         microOps[uopIdx++] = new MicroUnpackNeon64(
             machInst, vd + (RegIndex) (2 * i), vx, eSize, dataSize,
             numStructElems, index, i /* step */, replicate);
@@ -1394,7 +1394,7 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
 
-    for(int i = 0; i < numMarshalMicroops; ++i) {
+    for (int i = 0; i < numMarshalMicroops; ++i) {
         microOps[uopIdx++] = new MicroPackNeon64(
             machInst, vx + (RegIndex) (2 * i), vd, eSize, dataSize,
             numStructElems, index, i /* step */, replicate);
@@ -1404,7 +1404,7 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
         TLB::AllowUnaligned;
 
     int i = 0;
-    for(; i < numMemMicroops - 1; ++i) {
+    for (; i < numMemMicroops - 1; ++i) {
         microOps[uopIdx++] = new MicroNeonStore64(
             machInst, vx + (RegIndex) i, rnsp, 16 * i, memaccessFlags,
             baseIsSP, 16 /* accsize */, eSize);

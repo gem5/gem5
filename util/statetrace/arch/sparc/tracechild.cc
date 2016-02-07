@@ -230,7 +230,7 @@ SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
             target1 = npc;
             target2 = npc + 4;
             return 2;
-        } else if(ba) {
+        } else if (ba) {
             //This branches immediately to the effective address of the branch
             //which we'll have to calculate.
             uint64_t disp = 0;
@@ -249,7 +249,7 @@ SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
             //smart enough to turn this into a shift.
             disp *= 4;
             target1 = pc + disp;
-        } else if(bn)
+        } else if (bn)
             target1 = npc + 4;
         else
             target1 = npc;
@@ -416,7 +416,7 @@ SparcTraceChild::outputStartState(ostream & os)
                 sp, argCount++, cargv);
         os << obuf;
         sp += v8 ? 4 : 8;
-    } while(cargv);
+    } while (cargv);
     //Output the envp pointers
     int envCount = 0;
     uint64_t cenvp;

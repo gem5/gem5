@@ -239,7 +239,7 @@ Walker::WalkerState::startWalk()
             nextState = Ready;
             if (write)
                 walker->port.sendAtomic(write);
-        } while(read);
+        } while (read);
         state = Ready;
         nextState = Waiting;
     }
@@ -263,7 +263,7 @@ Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
         assert(fault == NoFault || read == NULL);
         state = nextState;
         nextState = Ready;
-    } while(read);
+    } while (read);
     logBytes = entry.logBytes;
     addr = entry.paddr;
 

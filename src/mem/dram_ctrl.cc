@@ -723,7 +723,7 @@ DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
 
     if (memSchedPolicy == Enums::fcfs) {
         // check if there is a packet going to a free rank
-        for(auto i = queue.begin(); i != queue.end() ; ++i) {
+        for (auto i = queue.begin(); i != queue.end() ; ++i) {
             DRAMPacket* dram_pkt = *i;
             if (ranks[dram_pkt->rank]->isAvailable()) {
                 queue.erase(i);
@@ -911,7 +911,7 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
     bank_ref.colAllowedAt = std::max(act_tick + tRCD, bank_ref.colAllowedAt);
 
     // start by enforcing tRRD
-    for(int i = 0; i < banksPerRank; i++) {
+    for (int i = 0; i < banksPerRank; i++) {
         // next activate to any bank in this rank must not happen
         // before tRRD
         if (bankGroupArch && (bank_ref.bankgr == rank_ref.banks[i].bankgr)) {
@@ -956,7 +956,7 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
             DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate "
                     "no earlier than %llu\n", activationLimit,
                     rank_ref.actTicks.back() + tXAW);
-            for(int j = 0; j < banksPerRank; j++)
+            for (int j = 0; j < banksPerRank; j++)
                 // next activate must not happen before end of window
                 rank_ref.banks[j].actAllowedAt =
                     std::max(rank_ref.actTicks.back() + tXAW,
@@ -1073,8 +1073,8 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // update the time for the next read/write burst for each
     // bank (add a max with tCCD/tCCD_L here)
     Tick cmd_dly;
-    for(int j = 0; j < ranksPerChannel; j++) {
-        for(int i = 0; i < banksPerRank; i++) {
+    for (int j = 0; j < ranksPerChannel; j++) {
+        for (int i = 0; i < banksPerRank; i++) {
             // next burst to same bank group in this rank must not happen
             // before tCCD_L.  Different bank group timing requirement is
             // tBURST; Add tCS for different ranks
@@ -1454,7 +1454,7 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
     // bank in question
     vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
     for (const auto& p : queue) {
-        if(p->rankRef.isAvailable())
+        if (p->rankRef.isAvailable())
             got_waiting[p->bankId] = true;
     }
 

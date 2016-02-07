@@ -107,14 +107,14 @@ namespace X86ISA
     void
     X86StaticInst::printSrcReg(std::ostream &os, int reg, int size) const
     {
-        if(_numSrcRegs > reg)
+        if (_numSrcRegs > reg)
             printReg(os, _srcRegIdx[reg], size);
     }
 
     void
     X86StaticInst::printDestReg(std::ostream &os, int reg, int size) const
     {
-        if(_numDestRegs > reg)
+        if (_numDestRegs > reg)
             printReg(os, _destRegIdx[reg], size);
     }
 
@@ -139,9 +139,9 @@ namespace X86ISA
             bool fold = rel_reg & IntFoldBit;
             rel_reg &= ~IntFoldBit;
 
-            if(fold)
+            if (fold)
                 suffix = "h";
-            else if(rel_reg < 8 && size == 1)
+            else if (rel_reg < 8 && size == 1)
                 suffix = "l";
 
             switch (rel_reg) {
@@ -247,14 +247,14 @@ namespace X86ISA
         } else {
             if (scale != 0 && index != ZeroReg)
             {
-                if(scale != 1)
+                if (scale != 1)
                     ccprintf(os, "%d*", scale);
                 printReg(os, index, addressSize);
                 someAddr = true;
             }
             if (base != ZeroReg)
             {
-                if(someAddr)
+                if (someAddr)
                     os << " + ";
                 printReg(os, base, addressSize);
                 someAddr = true;
@@ -262,7 +262,7 @@ namespace X86ISA
         }
         if (disp != 0)
         {
-            if(someAddr)
+            if (someAddr)
                 os << " + ";
             ccprintf(os, "%#x", disp);
             someAddr = true;

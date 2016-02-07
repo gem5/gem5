@@ -110,7 +110,7 @@ template<class ENTRY>
 inline ENTRY*
 TBETable<ENTRY>::lookup(Addr address)
 {
-  if(m_map.find(address) != m_map.end()) return &(m_map.find(address)->second);
+  if (m_map.find(address) != m_map.end()) return &(m_map.find(address)->second);
   return NULL;
 }
 

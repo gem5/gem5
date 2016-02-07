@@ -63,7 +63,7 @@ DVFSHandler::DVFSHandler(const Params *p)
 {
     // Check supplied list of domains for sanity and add them to the
     // domain ID -> domain* hash
-    for(auto dit = p->domains.begin(); dit != p->domains.end(); ++dit) {
+    for (auto dit = p->domains.begin(); dit != p->domains.end(); ++dit) {
         SrcClockDomain *d = *dit;
         DomainID domain_id = d->domainID();
 
@@ -203,7 +203,7 @@ DVFSHandler::unserialize(CheckpointIn &cp)
 
     UNSERIALIZE_SCALAR(enableHandler);
 
-    if(temp != enableHandler) {
+    if (temp != enableHandler) {
         warn("DVFS: Forcing enable handler status to unserialized value of %d",
              enableHandler);
     }

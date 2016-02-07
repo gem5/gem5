@@ -119,7 +119,7 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     mo1 = dynamic_cast<MemObject*>(o1);
     mo2 = dynamic_cast<MemObject*>(o2);
 
-    if(mo1 == NULL || mo2 == NULL) {
+    if (mo1 == NULL || mo2 == NULL) {
         panic ("Error casting SimObjects %s and %s to MemObject", o1->name(),
                o2->name());
     }

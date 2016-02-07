@@ -323,7 +323,7 @@ CacheMemory::lookup(Addr address)
     assert(address == makeLineAddress(address));
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    if(loc == -1) return NULL;
+    if (loc == -1) return NULL;
     return m_cache[cacheSet][loc];
 }
 
@@ -334,7 +334,7 @@ CacheMemory::lookup(Addr address) const
     assert(address == makeLineAddress(address));
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    if(loc == -1) return NULL;
+    if (loc == -1) return NULL;
     return m_cache[cacheSet][loc];
 }
 
@@ -345,7 +345,7 @@ CacheMemory::setMRU(Addr address)
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
-    if(loc != -1)
+    if (loc != -1)
         m_replacementPolicy_ptr->touch(cacheSet, loc, curTick());
 }
 
@@ -363,7 +363,7 @@ CacheMemory::setMRU(Addr address, int occupancy)
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
-    if(loc != -1) {
+    if (loc != -1) {
         if (m_replacementPolicy_ptr->useOccupancy()) {
             (static_cast<WeightedLRUPolicy*>(m_replacementPolicy_ptr))->
                 touch(cacheSet, loc, curTick(), occupancy);
@@ -380,7 +380,7 @@ CacheMemory::getReplacementWeight(int64_t set, int64_t loc)
     assert(set < m_cache_num_sets);
     assert(loc < m_cache_assoc);
     int ret = 0;
-    if(m_cache[set][loc] != NULL) {
+    if (m_cache[set][loc] != NULL) {
         ret = m_cache[set][loc]->getNumValidBlocks();
         assert(ret >= 0);
     }

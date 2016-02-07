@@ -98,7 +98,7 @@ FlashDevice::FlashDevice(const FlashDeviceParams* p):
      * bitwise AND with those two numbers results in an integer with all bits
      * cleared.
      */
-    if(numPlanes & planeMask)
+    if (numPlanes & planeMask)
         fatal("Number of planes is not a power of 2 in flash device.\n");
 }
 
@@ -245,7 +245,7 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount, Callback *event,
         DPRINTF(FlashDevice, "Plane %d is busy for %d ticks\n", count,
                 time[count]);
 
-        if  (time[count] != 0) {
+        if (time[count] != 0) {
 
             struct CallBackEntry cbe;
             /**

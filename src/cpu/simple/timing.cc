@@ -551,7 +551,7 @@ TimingSimpleCPU::threadSnoop(PacketPtr pkt, ThreadID sender)
 {
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         if (tid != sender) {
-            if(getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+            if (getCpuAddrMonitor(tid)->doMonitor(pkt)) {
                 wakeup(tid);
             }
             TheISA::handleLockedSnoop(threadInfo[tid]->thread, pkt,
@@ -885,7 +885,7 @@ void
 TimingSimpleCPU::DcachePort::recvFunctionalSnoop(PacketPtr pkt)
 {
     for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
-        if(cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
+        if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
             cpu->wakeup(tid);
         }
     }

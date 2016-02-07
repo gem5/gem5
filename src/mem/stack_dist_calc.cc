@@ -216,13 +216,13 @@ StackDistCalc::getSum(Node* node, bool from_left, uint64_t sum_from_below,
     ++level;
     // Variable stack_dist is updated only
     // when arriving from Left.
-    if(from_left) {
+    if (from_left) {
         stack_dist += node->sumRight;
     }
 
     // Recursively call the getSum operation till the
     // root node is reached
-    if(node->parent) {
+    if (node->parent) {
         stack_dist = getSum(node->parent, node->isLeftNode,
                             node->sumLeft + node->sumRight,
                             stack_dist, level);

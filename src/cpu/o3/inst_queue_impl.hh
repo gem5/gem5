@@ -498,7 +498,7 @@ InstructionQueue<Impl>::resetEntries()
 
             if (iqPolicy == Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
-            } else if(iqPolicy == Threshold && active_threads == 1) {
+            } else if (iqPolicy == Threshold && active_threads == 1) {
                 maxEntries[tid] = numEntries;
             }
         }

@@ -415,7 +415,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
             RAS[tid].restore(pred_hist.front().RASIndex,
                              pred_hist.front().RASTarget);
-        } else if(pred_hist.front().wasCall && pred_hist.front().pushedRAS) {
+        } else if (pred_hist.front().wasCall && pred_hist.front().pushedRAS) {
              // Was a call but predicated false. Pop RAS here
              DPRINTF(Branch, "[tid: %i] Squashing"
                      "  Call [sn:%i] PC: %s Popping RAS\n", tid,

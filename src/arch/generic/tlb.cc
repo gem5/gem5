@@ -45,7 +45,7 @@ GenericTLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode)
     Process * p = tc->getProcessPtr();
 
     Fault fault = p->pTable->translate(req);
-    if(fault != NoFault)
+    if (fault != NoFault)
         return fault;
 
     return NoFault;

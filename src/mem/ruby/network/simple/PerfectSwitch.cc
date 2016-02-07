@@ -61,7 +61,7 @@ PerfectSwitch::init(SimpleNetwork *network_ptr)
 {
     m_network_ptr = network_ptr;
 
-    for(int i = 0;i < m_virtual_networks;++i) {
+    for (int i = 0;i < m_virtual_networks;++i) {
         m_pending_message_count.push_back(0);
     }
 }
@@ -110,7 +110,7 @@ PerfectSwitch::operateVnet(int vnet)
         m_round_robin_start = 0;
     }
 
-    if(m_pending_message_count[vnet] > 0) {
+    if (m_pending_message_count[vnet] > 0) {
         // for all input ports, use round robin scheduling
         for (int counter = 0; counter < m_in.size(); counter++) {
             // Round robin scheduling

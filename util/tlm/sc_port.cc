@@ -191,7 +191,7 @@ sc_transactor::recvTimingReq(PacketPtr packet)
     /*  NOTE: normal tlm is blocking here. But in our case we return false
      *  and tell gem5 when a retry can be done. This is the main difference
      *  in the protocol:
-     *  if(requestInProgress)
+     *  if (requestInProgress)
      *  {
      *      wait(endRequestEvent);
      *  }
@@ -214,11 +214,11 @@ sc_transactor::recvTimingReq(PacketPtr packet)
     tlm::tlm_sync_enum status;
     status = iSocket->nb_transport_fw(*trans, phase, delay);
     /* Check returned value: */
-    if(status == tlm::TLM_ACCEPTED) {
+    if (status == tlm::TLM_ACCEPTED) {
         sc_assert(phase == tlm::BEGIN_REQ);
         /* Accepted but is now blocking until END_REQ (exclusion rule)*/
         blockingRequest = trans;
-    } else if(status == tlm::TLM_UPDATED) {
+    } else if (status == tlm::TLM_UPDATED) {
         /* The Timing annotation must be honored: */
         sc_assert(phase == tlm::END_REQ || phase == tlm::BEGIN_RESP);
 
@@ -226,7 +226,7 @@ sc_transactor::recvTimingReq(PacketPtr packet)
         pe = new payloadEvent<sc_transactor>(*this,
             &sc_transactor::pec, "PEQ");
         pe->notify(*trans, phase, delay);
-    } else if(status == tlm::TLM_COMPLETED) {
+    } else if (status == tlm::TLM_COMPLETED) {
         /* Transaction is over nothing has do be done. */
         sc_assert(phase == tlm::END_RESP);
         trans->release();
@@ -243,7 +243,7 @@ sc_transactor::pec(
 {
     sc_time delay;
 
-    if(phase == tlm::END_REQ ||
+    if (phase == tlm::END_REQ ||
             &trans == blockingRequest && phase == tlm::BEGIN_RESP) {
         sc_assert(&trans == blockingRequest);
         blockingRequest = NULL;
@@ -254,7 +254,7 @@ sc_transactor::pec(
            iSocket.sendRetryReq();
         }
     }
-    else if(phase == tlm::BEGIN_RESP)
+    else if (phase == tlm::BEGIN_RESP)
     {
         CAUGHT_UP;
 

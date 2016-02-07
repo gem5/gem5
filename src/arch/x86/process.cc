@@ -552,7 +552,7 @@ X86_64LiveProcess::initState()
             dataAttr.system = 1;
 
             //Initialize the segment registers.
-            for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
+            for (int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
                 tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
                 tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
                 tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
@@ -663,7 +663,7 @@ I386LiveProcess::initState()
         dataAttr.system = 1;
 
         //Initialize the segment registers.
-        for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
+        for (int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
             tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
             tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
             tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
@@ -735,7 +735,7 @@ X86LiveProcess::argsInit(int pageSize,
     std::vector<auxv_t> auxv = extraAuxvs;
 
     string filename;
-    if(argv.size() < 1)
+    if (argv.size() < 1)
         filename = "";
     else
         filename = argv[0];

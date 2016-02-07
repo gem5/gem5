@@ -551,7 +551,7 @@ fpMulX(T a, T b)
     bool zero1 = (std::fpclassify(a) == FP_ZERO);
     bool zero2 = (std::fpclassify(b) == FP_ZERO);
     if ((inf1 && zero2) || (zero1 && inf2)) {
-        if(sign1 ^ sign2)
+        if (sign1 ^ sign2)
             return (T)(-2.0);
         else
             return (T)(2.0);
@@ -685,7 +685,7 @@ fpRSqrts(T a, T b)
     }
     aXb = a*b;
     fpClassAxB = std::fpclassify(aXb);
-    if(fpClassAxB == FP_SUBNORMAL) {
+    if (fpClassAxB == FP_SUBNORMAL) {
        feraiseexcept(FeUnderflow);
        return 1.5;
     }
@@ -707,7 +707,7 @@ fpRecps(T a, T b)
     }
     aXb = a*b;
     fpClassAxB = std::fpclassify(aXb);
-    if(fpClassAxB == FP_SUBNORMAL) {
+    if (fpClassAxB == FP_SUBNORMAL) {
        feraiseexcept(FeUnderflow);
        return 2.0;
     }
@@ -729,7 +729,7 @@ fpRSqrtsS(float a, float b)
     }
     aXb = a*b;
     fpClassAxB = std::fpclassify(aXb);
-    if(fpClassAxB == FP_SUBNORMAL) {
+    if (fpClassAxB == FP_SUBNORMAL) {
        feraiseexcept(FeUnderflow);
        return 1.5;
     }
@@ -750,7 +750,7 @@ fpRecpsS(float a, float b)
     }
     aXb = a*b;
     fpClassAxB = std::fpclassify(aXb);
-    if(fpClassAxB == FP_SUBNORMAL) {
+    if (fpClassAxB == FP_SUBNORMAL) {
        feraiseexcept(FeUnderflow);
        return 2.0;
     }

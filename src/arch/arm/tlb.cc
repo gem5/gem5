@@ -148,7 +148,7 @@ TLB::lookup(Addr va, uint16_t asn, uint8_t vmid, bool hyp, bool secure,
             // than rangeMRU
             if (x > rangeMRU && !functional) {
                 TlbEntry tmp_entry = table[x];
-                for(int i = x; i > 0; i--)
+                for (int i = x; i > 0; i--)
                     table[i] = table[i - 1];
                 table[0] = tmp_entry;
                 retval = &table[0];
@@ -394,7 +394,7 @@ TLB::serialize(CheckpointOut &cp) const
 
     int num_entries = size;
     SERIALIZE_SCALAR(num_entries);
-    for(int i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
         table[i].serializeSection(cp, csprintf("TlbEntry%d", i));
 }
 
@@ -410,7 +410,7 @@ TLB::unserialize(CheckpointIn &cp)
 
     int num_entries;
     UNSERIALIZE_SCALAR(num_entries);
-    for(int i = 0; i < min(size, num_entries); i++)
+    for (int i = 0; i < min(size, num_entries); i++)
         table[i].unserializeSection(cp, csprintf("TlbEntry%d", i));
 }
 

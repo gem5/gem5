@@ -73,7 +73,7 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     std::vector<auxv_t>  auxv;
 
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
-    if(elfObject)
+    if (elfObject)
     {
         // modern glibc uses a bunch of auxiliary vectors to set up
         // TLS as well as do a bunch of other stuff

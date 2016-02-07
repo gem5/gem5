@@ -48,7 +48,7 @@
     do {                                                        \
         static const char msg[] = m;                            \
         atomic_write(STDERR_FILENO, msg, sizeof(msg) - 1);      \
-    } while(0)
+    } while (0)
 
 void
 print_backtrace()

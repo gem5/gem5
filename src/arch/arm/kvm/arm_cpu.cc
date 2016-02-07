@@ -399,7 +399,7 @@ ArmKvmCPU::decodeCoProcReg(uint64_t id) const
           default:
             return NUM_MISCREGS;
         }
-    } else if(is_reg64) {
+    } else if (is_reg64) {
         return NUM_MISCREGS;
     } else {
         warn("Unhandled register length, register (0x%x) ignored.\n");

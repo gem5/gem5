@@ -419,7 +419,7 @@ H3BloomFilter::merge(AbstractBloomFilter *other_filter)
 {
     // assumes both filters are the same size!
     H3BloomFilter * temp = (H3BloomFilter*) other_filter;
-    for(int i = 0; i < m_filter_size; ++i){
+    for (int i = 0; i < m_filter_size; ++i){
         m_filter[i] |= (*temp)[i];
     }
 }
@@ -513,7 +513,7 @@ H3BloomFilter::hash_H3(uint64_t value, int index)
     int result = 0;
 
     for (int i = 0; i < 64; i++) {
-        if(val&mask) result ^= H3[i][index];
+        if (val&mask) result ^= H3[i][index];
         val = val >> 1;
     }
     return result;

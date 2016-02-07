@@ -117,7 +117,7 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
         // isKernel + isRelease
         insertKernel(pkt->req->contextId(), pkt);
         wbL1();
-        if(m_outstanding_wb == 0) {
+        if (m_outstanding_wb == 0) {
             for (auto it =  kernelEndList.begin(); it != kernelEndList.end(); it++) {
                 newKernelEnds.push_back(it->first);
             }
@@ -261,7 +261,7 @@ VIPERCoalescer::invwbL1()
 {
     int size = m_dataCache_ptr->getNumBlocks();
     // Walk the cache
-    for(int i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Evict Read-only data
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
@@ -273,7 +273,7 @@ VIPERCoalescer::invwbL1()
         m_outstanding_inv++;
     }
     // Walk the cache
-    for(int i = 0; i< size; i++) {
+    for (int i = 0; i< size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Write dirty data back
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
