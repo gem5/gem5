@@ -983,8 +983,10 @@ X86LiveProcess::argsInit(int pageSize,
     }
     //Write out the terminating zeroed auxilliary vector
     const uint64_t zero = 0;
-    initVirtMem.writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
-            (uint8_t*)&zero, 2 * intSize);
+    initVirtMem.writeBlob(auxv_array_base + auxv.size() * 2 * intSize,
+                          (uint8_t*)&zero, intSize);
+    initVirtMem.writeBlob(auxv_array_base + (auxv.size() * 2 + 1) * intSize,
+                          (uint8_t*)&zero, intSize);
 
     initVirtMem.writeString(aux_data_base, platform.c_str());
 
