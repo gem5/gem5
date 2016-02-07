@@ -49,6 +49,7 @@ let {{
 }};
 
 output header {{
+#include <array>
 #include <cstring>
 #include <iostream>
 #include <sstream>

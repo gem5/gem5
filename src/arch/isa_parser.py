@@ -1053,9 +1053,14 @@ stringRE = re.compile(r'"([^"\\]|\\.)*"')
 commentRE = re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',
         re.DOTALL | re.MULTILINE)
 
-# Regular expression object to match assignment statements
-# (used in findOperands())
-assignRE = re.compile(r'\s*=(?!=)', re.MULTILINE)
+# Regular expression object to match assignment statements (used in
+# findOperands()).  If the code immediately following the first
+# appearance of the operand matches this regex, then the operand
+# appears to be on the LHS of an assignment, and is thus a
+# destination.  basically we're looking for an '=' that's not '=='.
+# The heinous tangle before that handles the case where the operand
+# has an array subscript.
+assignRE = re.compile(r'(\[[^\]]+\])?\s*=(?!=)', re.MULTILINE)
 
 def makeFlagConstructor(flag_list):
     if len(flag_list) == 0:
