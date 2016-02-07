@@ -71,9 +71,9 @@ class Router_d : public BasicRouter
     int get_num_outports()  { return m_output_unit.size(); }
     int get_id()            { return m_id; }
 
-    void init_net_ptr(GarnetNetwork_d* net_ptr) 
-    { 
-        m_network_ptr = net_ptr; 
+    void init_net_ptr(GarnetNetwork_d* net_ptr)
+    {
+        m_network_ptr = net_ptr;
     }
 
     GarnetNetwork_d* get_net_ptr()                  { return m_network_ptr; }
@@ -95,13 +95,13 @@ class Router_d : public BasicRouter
     void collateStats();
     void resetStats();
 
-    bool get_fault_vector(int temperature, float fault_vector[]){ 
-        return m_network_ptr->fault_model->fault_vector(m_id, temperature, 
-                                                        fault_vector); 
+    bool get_fault_vector(int temperature, float fault_vector[]){
+        return m_network_ptr->fault_model->fault_vector(m_id, temperature,
+                                                        fault_vector);
     }
-    bool get_aggregate_fault_probability(int temperature, 
+    bool get_aggregate_fault_probability(int temperature,
                                          float *aggregate_fault_prob){
-        return m_network_ptr->fault_model->fault_prob(m_id, temperature, 
+        return m_network_ptr->fault_model->fault_prob(m_id, temperature,
                                                       aggregate_fault_prob);
     }
 

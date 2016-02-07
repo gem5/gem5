@@ -68,9 +68,9 @@ class Router : public BasicRouter, public FlexibleConsumer
 
     void print(std::ostream& out) const;
 
-    void init_net_ptr(GarnetNetwork* net_ptr) 
-    { 
-        m_net_ptr = net_ptr; 
+    void init_net_ptr(GarnetNetwork* net_ptr)
+    {
+        m_net_ptr = net_ptr;
     }
 
     bool functionalRead(Packet *);

@@ -612,7 +612,7 @@ I386LiveProcess::initState()
 
     argsInit(sizeof(uint32_t), PageBytes);
 
-    /* 
+    /*
      * Set up a GDT for this process. The whole GDT wouldn't really be for
      * this process, but the only parts we care about are.
      */

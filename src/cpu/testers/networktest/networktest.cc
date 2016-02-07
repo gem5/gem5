@@ -207,14 +207,14 @@ NetworkTest::generatePkt()
 
     // Modeling different coherence msg types over different msg classes.
     //
-    // networktest assumes the Network_test coherence protocol 
+    // networktest assumes the Network_test coherence protocol
     // which models three message classes/virtual networks.
     // These are: request, forward, response.
     // requests and forwards are "control" packets (typically 8 bytes),
     // while responses are "data" packets (typically 72 bytes).
     //
     // Life of a packet from the tester into the network:
-    // (1) This function generatePkt() generates packets of one of the 
+    // (1) This function generatePkt() generates packets of one of the
     //     following 3 types (randomly) : ReadReq, INST_FETCH, WriteReq
     // (2) mem/ruby/system/RubyPort.cc converts these to RubyRequestType_LD,
     //     RubyRequestType_IFETCH, RubyRequestType_ST respectively
@@ -222,13 +222,13 @@ NetworkTest::generatePkt()
     //     in the coherence protocol.
     // (4) Network_test-cache.sm tags RubyRequestType:LD,
     //     RubyRequestType:IFETCH and RubyRequestType:ST as
-    //     Request, Forward, and Response events respectively; 
+    //     Request, Forward, and Response events respectively;
     //     and injects them into virtual networks 0, 1 and 2 respectively.
     //     It immediately calls back the sequencer.
     // (5) The packet traverses the network (simple/garnet) and reaches its
     //     destination (Directory), and network stats are updated.
     // (6) Network_test-dir.sm simply drops the packet.
-    // 
+    //
     MemCmd::Command requestType;
 
     Request *req = nullptr;

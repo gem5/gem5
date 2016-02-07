@@ -95,7 +95,7 @@ inline void curEventQueue(EventQueue *q) { _curEventQueue = q; }
  */
 class EventBase
 {
-  protected:   
+  protected:
     typedef unsigned short FlagsType;
     typedef ::Flags<FlagsType> Flags;
 

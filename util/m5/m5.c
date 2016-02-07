@@ -285,7 +285,7 @@ do_pin(int argc, char *argv[])
     if (argc < 2)
         usage();
 
-    cpu_set_t mask;  
+    cpu_set_t mask;
     CPU_ZERO(&mask);
 
     const char *sep = ",";
@@ -293,7 +293,7 @@ do_pin(int argc, char *argv[])
     while (target) {
         CPU_SET(atoi(target), &mask);
         target = strtok(NULL, sep);
-    }            
+    }
 
     if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) < 0)
         err(1, "setaffinity");

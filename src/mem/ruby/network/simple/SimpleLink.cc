@@ -32,9 +32,9 @@ SimpleExtLink::SimpleExtLink(const Params *p)
     : BasicExtLink(p)
 {
     // For the simple links, the bandwidth factor translates to the
-    // bandwidth multiplier.  The multipiler, in combination with the 
-    // endpoint bandwidth multiplier - message size multiplier ratio, 
-    // determines the link bandwidth in bytes 
+    // bandwidth multiplier.  The multipiler, in combination with the
+    // endpoint bandwidth multiplier - message size multiplier ratio,
+    // determines the link bandwidth in bytes
     m_bw_multiplier = p->bandwidth_factor;
 }
 
@@ -54,9 +54,9 @@ SimpleIntLink::SimpleIntLink(const Params *p)
     : BasicIntLink(p)
 {
     // For the simple links, the bandwidth factor translates to the
-    // bandwidth multiplier.  The multipiler, in combination with the 
-    // endpoint bandwidth multiplier - message size multiplier ratio, 
-    // determines the link bandwidth in bytes 
+    // bandwidth multiplier.  The multipiler, in combination with the
+    // endpoint bandwidth multiplier - message size multiplier ratio,
+    // determines the link bandwidth in bytes
     m_bw_multiplier = p->bandwidth_factor;
 }
 

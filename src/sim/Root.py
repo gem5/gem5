@@ -50,7 +50,7 @@ class Root(SimObject):
         # args.  Seems like a bad design but that's the way it is.
         Root._the_instance = SimObject.__new__(cls)
         return Root._the_instance
-        
+
     @classmethod
     def getInstance(cls):
         return Root._the_instance

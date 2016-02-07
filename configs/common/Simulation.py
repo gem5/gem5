@@ -1,6 +1,6 @@
 # Copyright (c) 2012-2013 ARM Limited
 # All rights reserved
-# 
+#
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
 # property including but not limited to intellectual property relating

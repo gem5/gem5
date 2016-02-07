@@ -50,7 +50,7 @@ def macroop MOVD_MMX_P {
 };
 
 def macroop MOVD_R_MMX {
-    mov2int reg, mmxm, size=dsz 
+    mov2int reg, mmxm, size=dsz
 };
 
 def macroop MOVD_M_MMX {

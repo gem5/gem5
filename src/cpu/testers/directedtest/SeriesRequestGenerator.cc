@@ -87,11 +87,11 @@ SeriesRequestGenerator::initiate()
     }
 }
 
-void 
+void
 SeriesRequestGenerator::performCallback(uint32_t proc, Addr address)
 {
     assert(m_active_node == proc);
-    assert(m_address == address);  
+    assert(m_address == address);
     assert(m_status == SeriesRequestGeneratorStatus_Request_Pending);
 
     m_status = SeriesRequestGeneratorStatus_Thinking;

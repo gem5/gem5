@@ -61,11 +61,11 @@ class I8254 : public BasicPioDevice
         {}
     };
 
-    
+
     X86Intel8254Timer pit;
 
     IntSourcePin *intPin;
-    
+
     void counterInterrupt(unsigned int num);
 
   public:

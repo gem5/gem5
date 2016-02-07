@@ -521,7 +521,7 @@ struct TcpHdr : public tcp_hdr
 
     void sum(uint16_t sum) { th_sum = sum; }
     void seq(uint32_t _seq) { th_seq = htonl(_seq); }
-    void flags(uint8_t _flags) { th_flags  = _flags; } 
+    void flags(uint8_t _flags) { th_flags  = _flags; }
 
     bool options(std::vector<const TcpOpt *> &vec) const;
 

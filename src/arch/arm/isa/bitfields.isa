@@ -65,7 +65,7 @@ def bitfield OPCODE_18     opcode18;
 def bitfield OPCODE_15_12  opcode15_12;
 def bitfield OPCODE_15     opcode15;
 def bitfield MISC_OPCODE   miscOpcode;
-def bitfield OPC2          opc2; 
+def bitfield OPC2          opc2;
 def bitfield OPCODE_7      opcode7;
 def bitfield OPCODE_6      opcode6;
 def bitfield OPCODE_4      opcode4;

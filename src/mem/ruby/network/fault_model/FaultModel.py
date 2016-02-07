@@ -28,7 +28,7 @@
 
 # Official Tool Website: www.mit.edu/~kaisopos/FaultModel
 #
-# If you use our tool for academic research, we request that you cite: 
+# If you use our tool for academic research, we request that you cite:
 # Konstantinos Aisopos, Chia-Hsin Owen Chen, and Li-Shiuan Peh. Enabling
 # System-Level Modeling of Variation-Induced Faults in Networks-on-Chip.
 # Proceedings of the 48th Design Automation Conference (DAC'11)
@@ -38,9 +38,9 @@ from m5.SimObject import SimObject
 
 class FaultModel(SimObject):
     type = 'FaultModel'
-    cxx_class = 'FaultModel' 
+    cxx_class = 'FaultModel'
     cxx_header = "mem/ruby/network/fault_model/FaultModel.hh"
-    
+
     baseline_fault_vector_database = VectorParam.Float([
         5, 40, 0.080892, 0.109175, 0.018864, 0.130408, 0.059724, 0.077571, 0.034830, 0.083430, 0.067500, 0.121500,
         5, 39, 0.062640, 0.089100, 0.016821, 0.109620, 0.051462, 0.060210, 0.029700, 0.076140, 0.062100, 0.116100,

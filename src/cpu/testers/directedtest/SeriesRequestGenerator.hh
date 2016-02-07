@@ -27,7 +27,7 @@
  */
 
 //
-// This Deterministic Generator generates GETX requests for all nodes in the 
+// This Deterministic Generator generates GETX requests for all nodes in the
 // system.  The GETX requests are generated one at a time in round-robin fashion
 // 0...1...2...etc.
 //
@@ -40,17 +40,17 @@
 #include "mem/protocol/SeriesRequestGeneratorStatus.hh"
 #include "params/SeriesRequestGenerator.hh"
 
-class SeriesRequestGenerator : public DirectedGenerator 
+class SeriesRequestGenerator : public DirectedGenerator
 {
   public:
     typedef SeriesRequestGeneratorParams Params;
     SeriesRequestGenerator(const Params *p);
-    
+
     ~SeriesRequestGenerator();
-    
+
     bool initiate();
     void performCallback(uint32_t proc, Addr address);
-    
+
   private:
     SeriesRequestGeneratorStatus m_status;
     Addr m_address;

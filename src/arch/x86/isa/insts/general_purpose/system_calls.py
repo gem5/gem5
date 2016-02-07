@@ -43,7 +43,7 @@ def macroop SYSCALL_64
 
     # Save the next RIP.
     rdip rcx
-    
+
     # Stick rflags with RF masked into r11.
     rflags t2
     limm t3, "~RFBit", dataSize=8
@@ -96,7 +96,7 @@ def macroop SYSCALL_COMPAT
 
     # Save the next RIP.
     rdip rcx
-    
+
     # Stick rflags with RF masked into r11.
     rflags t2
     limm t3, "~RFBit", dataSize=8

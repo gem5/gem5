@@ -78,8 +78,8 @@ class SparcLinux : public Linux
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
     static const unsigned TGT_MAP_FIXED     = 0x10;
-   
-    typedef struct {   
+
+    typedef struct {
         int64_t  uptime;    /* Seconds since boot */
         uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
         uint64_t totalram;  /* Total usable main memory size */
@@ -151,7 +151,7 @@ class Sparc32Linux : public SparcLinux
         uint32_t __unused4;
         uint32_t __unused5;
     } tgt_stat64;
-      
+
     typedef struct {
         int32_t  uptime;    /* Seconds since boot */
         uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
@@ -165,7 +165,7 @@ class Sparc32Linux : public SparcLinux
         uint32_t totalhigh; /* Total high memory size */
         uint32_t freehigh;  /* Available high memory size */
         uint32_t mem_unit;  /* Memory unit size in bytes */
-    } tgt_sysinfo;   
+    } tgt_sysinfo;
 
     /// Resource constants for getrlimit() (overide some generics).
     static const unsigned TGT_RLIMIT_NPROC = 7;

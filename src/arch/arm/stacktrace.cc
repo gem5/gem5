@@ -170,7 +170,7 @@ namespace ArmISA
     StackTrace::dump()
     {
         DPRINTFN("------ Stack ------\n");
-    
+
         DPRINTFN(" Not implemented\n");
     }
 #endif

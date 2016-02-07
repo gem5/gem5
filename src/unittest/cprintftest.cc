@@ -48,7 +48,7 @@ main()
     int length = 11;
     char bar[length + 1];
     bar[length] = 0;
-    
+
     memcpy(bar, _bar.c_str(), length);
     warn("%s\n", bar);
 

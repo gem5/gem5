@@ -39,7 +39,7 @@
 
 // Only alpha will be able to load ecoff files for now.
 // base/types.hh and ecoff_machdep.h must be before the other .h files
-// because they are are gathered from other code bases and require some 
+// because they are are gathered from other code bases and require some
 // typedefs from those files.
 #include "arch/alpha/ecoff_machdep.h"
 #include "base/loader/coff_sym.h"

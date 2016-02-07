@@ -419,7 +419,7 @@ unixBoot(int argc, char **argv)
 
     rpb = (struct rpb *)unix_boot_alloc(HWRPB_PAGES);
 
-    mdt_bitmap = (unsigned char *)unix_boot_alloc(mdt_bitmap_pages); 
+    mdt_bitmap = (unsigned char *)unix_boot_alloc(mdt_bitmap_pages);
     first = (ulong *)unix_boot_alloc(1);
     second = (ulong *)unix_boot_alloc(1);
     third_rpb = (ulong *)unix_boot_alloc(1);

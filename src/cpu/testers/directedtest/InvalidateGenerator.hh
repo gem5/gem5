@@ -27,7 +27,7 @@
  */
 
 //
-// This Directed Generator generates GETX requests for all nodes in the 
+// This Directed Generator generates GETX requests for all nodes in the
 // system.  The GETX requests are generated one at a time in round-robin fashion
 // 0...1...2...etc.
 //
@@ -40,17 +40,17 @@
 #include "mem/protocol/InvalidateGeneratorStatus.hh"
 #include "params/InvalidateGenerator.hh"
 
-class InvalidateGenerator : public DirectedGenerator 
+class InvalidateGenerator : public DirectedGenerator
 {
   public:
     typedef InvalidateGeneratorParams Params;
     InvalidateGenerator(const Params *p);
-    
+
     ~InvalidateGenerator();
-    
+
     bool initiate();
     void performCallback(uint32_t proc, Addr address);
-    
+
   private:
     InvalidateGeneratorStatus m_status;
     Addr m_address;

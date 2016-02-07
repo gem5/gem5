@@ -44,7 +44,7 @@ class Flags
 
     operator const Type() const { return _flags; }
 
-    template <typename U> 
+    template <typename U>
     const Flags<T> &
     operator=(const Flags<U> &flags)
     {
@@ -58,7 +58,7 @@ class Flags
         _flags = flags;
         return *this;
     }
-    
+
     bool isSet() const { return _flags; }
     bool isSet(Type flags) const { return (_flags & flags); }
     bool allSet() const { return !(~_flags); }

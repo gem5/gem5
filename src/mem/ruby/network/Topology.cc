@@ -57,7 +57,7 @@ Topology::Topology(uint32_t num_routers,
 
     // analyze both the internal and external links, create data structures
     // Note that the python created links are bi-directional, but that the
-    // topology and networks utilize uni-directional links.  Thus each 
+    // topology and networks utilize uni-directional links.  Thus each
     // BasicLink is converted to two calls to add link, on for each direction
     for (vector<BasicExtLink*>::const_iterator i = ext_links.begin();
          i != ext_links.end(); ++i) {
@@ -106,7 +106,7 @@ Topology::createLinks(Network *net)
          i != m_link_map.end(); ++i) {
         std::pair<SwitchID, SwitchID> src_dest = (*i).first;
         max_switch_id = max(max_switch_id, src_dest.first);
-        max_switch_id = max(max_switch_id, src_dest.second);        
+        max_switch_id = max(max_switch_id, src_dest.second);
     }
 
     // Initialize weight, latency, and inter switched vectors
@@ -133,7 +133,7 @@ Topology::createLinks(Network *net)
         component_latencies[src][dst] = link->m_latency;
         topology_weights[src][dst] = link->m_weight;
     }
-        
+
     // Walk topology and hookup the links
     Matrix dist = shortest_path(topology_weights, component_latencies,
                                 component_inter_switches);
@@ -151,12 +151,12 @@ Topology::createLinks(Network *net)
 }
 
 void
-Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link, 
+Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
                   LinkDirection dir)
 {
     assert(src <= m_number_of_switches+m_nodes+m_nodes);
     assert(dest <= m_number_of_switches+m_nodes+m_nodes);
-    
+
     std::pair<int, int> src_dest_pair;
     LinkEntry link_entry;
 
@@ -176,7 +176,7 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
     assert(src >= 2 * m_nodes || dest >= 2 * m_nodes);
 
     std::pair<int, int> src_dest;
-    LinkEntry link_entry;    
+    LinkEntry link_entry;
 
     if (src < m_nodes) {
         src_dest.first = src;

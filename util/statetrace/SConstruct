@@ -35,7 +35,7 @@ scons build/arm/statetrace
 
 You may need a cross compiler in order to build statetrace successfully. To
 specify an alternative compiler, set the CXX scons argument on the command
-line. The CXX environment variable is NOT considered when selecting the 
+line. The CXX environment variable is NOT considered when selecting the
 compiler. To override the compiler for a particular target ISA, set the
 <arch>CXX scons argument. For example, to build both the AMD64 version and
 the ARM version at the same time using the system compiler for the AMD64

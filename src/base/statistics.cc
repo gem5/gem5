@@ -178,7 +178,7 @@ Info::setName(const string &name)
 
     Info *other = p.first->second;
     bool result = p.second;
-    
+
     if (!result) {
         // using other->name instead of just name to avoid a compiler
         // warning.  They should be the same.

@@ -49,7 +49,7 @@ namespace X86ISA {
         L2L3CacheAndL2TLB,
         APMInfo,
         LongModeAddressSize,
- 
+
         /*
          * The following are defined by the spec but not yet implemented
          */

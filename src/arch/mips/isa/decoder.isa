@@ -359,7 +359,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 Rt &= 0xFFFFE7FF;
                         }
                     }});
-                    0x4: mtc0({{ 
+                    0x4: mtc0({{
                         CP0_RD_SEL = Rt;
                         CauseReg cause = Cause;
                         IntCtlReg intCtl = IntCtl;
@@ -1238,7 +1238,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x3: CP1Unimpl::unknown();
                     0x7: CP1Unimpl::unknown();
 
-                    //Table A-16 MIPS32 COP1 Encoding of Function 
+                    //Table A-16 MIPS32 COP1 Encoding of Function
                     //Field When rs=W
                     0x4: decode FUNCTION {
                         format FloatConvertOp {
@@ -1867,7 +1867,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }});
                             0x7: precr_sra_r_ph_w({{
                                 Rt_uw = dspPrecrSra(Rt_uw, Rs_uw, RD,
-                                                    SIMD_FMT_W, ROUND); 
+                                                    SIMD_FMT_W, ROUND);
                             }});
                         }
                     }

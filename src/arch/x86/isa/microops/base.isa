@@ -51,7 +51,7 @@ let {{
 
 let {{
     class X86Microop(object):
- 
+
         generatorNameTemplate = "generate_%s_%d"
 
         generatorTemplate = '''

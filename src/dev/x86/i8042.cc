@@ -490,7 +490,7 @@ X86ISA::I8042::serialize(CheckpointOut &cp) const
 {
     uint8_t statusRegData = statusReg.__data;
     uint8_t commandByteData = commandByte.__data;
-    
+
     SERIALIZE_SCALAR(dataPort);
     SERIALIZE_SCALAR(commandPort);
     SERIALIZE_SCALAR(statusRegData);

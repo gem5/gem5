@@ -41,7 +41,7 @@
 // Authors: Stephen Hines
 
 let {{
- 
+
      calcCcCode = '''
         if (%(canOverflow)s){
            cprintf("canOverflow: %%d\\n", Rd < resTemp);
@@ -52,7 +52,7 @@ let {{
             _iz = (resTemp == 0);
             _iv = %(ivValue)s;
             _ic = %(icValue)s;
-            
+
             CondCodesNZ =  (_in << 1) | (_iz);
             CondCodesC  =  _ic;
             CondCodesV  =  _iv;
@@ -79,7 +79,7 @@ let {{
             iv = 'CondCodesV'
             negBit = 63
         elif flagtype == "overflow":
-            canOverflow = "true" 
+            canOverflow = "true"
             icReg = icImm = iv = '0'
         elif flagtype == "add":
             icReg = icImm = 'findCarry(32, resTemp, Rn, op2)'
@@ -94,12 +94,12 @@ let {{
             icReg = 'shift_carry_rs(Rm, Rs<7:0>, shift, CondCodesC)'
             icImm = 'shift_carry_imm(Rm, shift_size, shift, CondCodesC)'
             iv = 'CondCodesV'
-        return (calcCcCode % {"icValue" : icReg, 
-                              "ivValue" : iv, 
+        return (calcCcCode % {"icValue" : icReg,
+                              "ivValue" : iv,
                               "negBit" : negBit,
                               "canOverflow" : canOverflow },
-               calcCcCode % {"icValue" : icImm, 
-                              "ivValue" : iv, 
+               calcCcCode % {"icValue" : icImm,
+                              "ivValue" : iv,
                               "negBit" : negBit,
                               "canOverflow" : canOverflow })
 
@@ -116,7 +116,7 @@ let {{
             negBit = 63
         elif flagtype == "overflow":
             icVaule = ivValue = '0'
-            canOverflow = "true" 
+            canOverflow = "true"
         elif flagtype == "add":
             icValue = 'findCarry(32, resTemp, Rn, rotated_imm)'
             ivValue = 'findOverflow(32, resTemp, Rn, rotated_imm)'

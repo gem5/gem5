@@ -210,7 +210,7 @@ class IntSourcePin : public SimObject
             pin.device->raiseInterruptPin(pin.number);
         }
     }
-    
+
     void
     lower()
     {

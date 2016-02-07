@@ -142,7 +142,7 @@ system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
 # artifical delay is randomly inserted on messages
 #
 system.ruby.randomization = True
- 
+
 assert(len(cpus) == len(system.ruby._cpu_ports))
 
 for (i, cpu) in enumerate(cpus):

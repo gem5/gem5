@@ -76,7 +76,7 @@ cpus = [ MemTest(percent_functional=50,
 
 # overwrite options.num_cpus with the nb_cores value
 options.num_cpus = nb_cores
- 
+
 # system simulated
 system = System(cpu = cpus)
 # Dummy voltage domain for all our clock domains

@@ -65,7 +65,7 @@ struct PTE
     bool V1;    // Odd entry Valid Bit
     uint8_t C1; // Cache Coherency Bits (3 bits)
 
-    /* 
+    /*
      * The next few variables are put in as optimizations to reduce
      * TLB lookup overheads. For a given Mask, what is the address shift
      * amount, and what is the OffsetMask

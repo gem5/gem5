@@ -187,7 +187,7 @@ enum IntTypes
 
 // Receive Descriptor struct
 struct RxDesc {
-    union { 
+    union {
         struct {
             Addr buf;
             uint16_t len;
@@ -250,7 +250,7 @@ inline bool rs(TxDesc *d)   { return bits(d->d2, 27,27); }
 inline bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 26,26); }
 inline bool tse(TxDesc *d)  {
     if (isTypes(d, TXD_CNXT, TXD_DATA))
-        return bits(d->d2, 26,26); 
+        return bits(d->d2, 26,26);
     if (isType(d, TXD_ADVDATA))
         return bits(d->d2, 31, 31);
     return false;
@@ -275,10 +275,10 @@ inline int ipcso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,15,8); }
 inline int ipcss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,7,0); }
 inline int mss(TxDesc *d) { assert(isContext(d)); return bits(d->d2,63,48); }
 inline int hdrlen(TxDesc *d) {
-    assert(isContext(d)); 
+    assert(isContext(d));
     if (!isAdvDesc(d))
         return bits(d->d2,47,40);
-    return bits(d->d2, 47,40) + bits(d->d1, 8,0) + bits(d->d1, 15, 9); 
+    return bits(d->d2, 47,40) + bits(d->d1, 8,0) + bits(d->d1, 15, 9);
 }
 
 inline int getTsoLen(TxDesc *d) { assert(isType(d, TXD_ADVDATA)); return bits(d->d2, 63,46); }
@@ -744,9 +744,9 @@ struct Regs : public Serializable {
 
     struct FWSM : public Reg<uint32_t> { // 0x5B54 FWSM register
         using Reg<uint32_t>::operator=;
-        ADD_FIELD32(eep_fw_semaphore,0,1); 
-        ADD_FIELD32(fw_mode, 1,3); 
-        ADD_FIELD32(ide, 4,1); 
+        ADD_FIELD32(eep_fw_semaphore,0,1);
+        ADD_FIELD32(fw_mode, 1,3);
+        ADD_FIELD32(ide, 4,1);
         ADD_FIELD32(sol, 5,1);
         ADD_FIELD32(eep_roload, 6,1);
         ADD_FIELD32(reserved, 7,8);

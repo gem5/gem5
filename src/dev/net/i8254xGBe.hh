@@ -414,7 +414,7 @@ class IGbE : public EtherDevice
             if (!igbe->txTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
-        
+
 
 
         bool pktDone;
@@ -424,7 +424,7 @@ class IGbE : public EtherDevice
         Addr completionAddress;
         bool completionEnabled;
         uint32_t descEnd;
-        
+
 
         // tso variables
         bool useTso;
@@ -491,7 +491,7 @@ class IGbE : public EtherDevice
 
         void completionWriteback(Addr a, bool enabled) {
             DPRINTF(EthernetDesc,
-                    "Completion writeback Addr: %#x enabled: %d\n", 
+                    "Completion writeback Addr: %#x enabled: %d\n",
                     a, enabled);
             completionAddress = a;
             completionEnabled = enabled;

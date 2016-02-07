@@ -93,7 +93,7 @@ bool
 RubyDirectedTester::CpuPort::recvTimingResp(PacketPtr pkt)
 {
     tester->hitCallback(id, pkt->getAddr());
-    
+
     //
     // Now that the tester has completed, delete the packet, then return
     //
@@ -118,7 +118,7 @@ RubyDirectedTester::hitCallback(NodeID proc, Addr addr)
             proc,
             addr);
 
-    generator->performCallback(proc, addr);    
+    generator->performCallback(proc, addr);
     schedule(directedStartEvent, curTick());
 }
 

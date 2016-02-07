@@ -41,7 +41,7 @@ class TypeFieldEnumAST(TypeFieldAST):
     def generate(self, type):
         if str(type) == "State":
             self.error("States must in a State Declaration, not a normal enum.")
-        
+
         # Add enumeration
         if not type.addEnum(self.field_id, self.pairs_ast.pairs):
             self.error("Duplicate enumeration: %s:%s" % (type, self.field_id))

@@ -53,7 +53,7 @@ class Network;
 
 typedef std::vector<std::vector<int> > Matrix;
 
-struct LinkEntry 
+struct LinkEntry
 {
     BasicLink *link;
     LinkDirection direction;

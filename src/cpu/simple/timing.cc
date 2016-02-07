@@ -817,7 +817,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
         delete pkt;
         PacketPtr big_pkt = send_state->bigPkt;
         delete send_state;
-        
+
         SplitMainSenderState * main_send_state =
             dynamic_cast<SplitMainSenderState *>(big_pkt->senderState);
         assert(main_send_state);
@@ -932,7 +932,7 @@ TimingSimpleCPU::DcachePort::recvReqRetry()
             dynamic_cast<SplitFragmentSenderState *>(tmp->senderState);
         assert(send_state);
         PacketPtr big_pkt = send_state->bigPkt;
-        
+
         SplitMainSenderState * main_send_state =
             dynamic_cast<SplitMainSenderState *>(big_pkt->senderState);
         assert(main_send_state);

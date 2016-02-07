@@ -103,7 +103,7 @@ namespace X86ISA
 
         return ss.str();
     }
-    
+
     void X86Trap::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     {
         X86FaultBase::invoke(tc);

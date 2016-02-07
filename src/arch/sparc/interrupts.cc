@@ -29,7 +29,7 @@
  */
 
 #include "arch/sparc/interrupts.hh"
-    
+
 SparcISA::Interrupts *
 SparcInterruptsParams::create()
 {

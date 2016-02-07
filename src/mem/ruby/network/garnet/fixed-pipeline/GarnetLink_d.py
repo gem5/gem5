@@ -55,7 +55,7 @@ class GarnetIntLink_d(BasicIntLink):
     # forward links and two backward flow-control links, one per direction
     nls = []
     # In uni-directional link
-    nls.append(NetworkLink_d()); 
+    nls.append(NetworkLink_d());
     # Out uni-directional link
     nls.append(NetworkLink_d());
     network_links = VectorParam.NetworkLink_d(nls, "forward links")

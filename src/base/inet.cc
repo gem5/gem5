@@ -374,7 +374,7 @@ TcpHdr::options(vector<const TcpOpt *> &vec) const
     return true;
 }
 
-int 
+int
 hsplit(const EthPacketPtr &ptr)
 {
     int split_point = 0;

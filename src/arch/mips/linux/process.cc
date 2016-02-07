@@ -77,7 +77,7 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     switch (op) {
       case 45:
-        { 
+        {
             // GSI_IEEE_FP_CONTROL
             TypedBufferArg<uint64_t> fpcr(bufPtr);
             // I don't think this exactly matches the HW FPCR

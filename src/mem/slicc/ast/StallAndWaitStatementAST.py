@@ -33,7 +33,7 @@ class StallAndWaitStatementAST(StatementAST):
         super(StatementAST, self).__init__(slicc)
         self.in_port = in_port
         self.address = address
-        
+
     def __repr__(self):
         return "[StallAndWaitStatementAst: %r]" % self.in_port
 

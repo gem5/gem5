@@ -174,7 +174,7 @@ def readCommand(cmd, **kwargs):
 
     no_exception = 'exception' in kwargs
     exception = kwargs.pop('exception', None)
-    
+
     kwargs.setdefault('shell', False)
     kwargs.setdefault('stdout', PIPE)
     kwargs.setdefault('stderr', STDOUT)

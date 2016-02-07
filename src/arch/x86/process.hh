@@ -74,7 +74,7 @@ namespace X86ISA
       public:
         Addr gdtStart()
         { return _gdtStart; }
-        
+
         Addr gdtSize()
         { return _gdtSize; }
 

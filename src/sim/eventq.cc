@@ -263,9 +263,9 @@ Event::unserialize(CheckpointIn &cp)
 
     // Old checkpoints had no concept of the Initialized flag
     // so restoring from old checkpoints always fail.
-    // Events are initialized on construction but original code 
-    // "flags = _flags" would just overwrite the initialization. 
-    // So, read in the checkpoint flags, but then set the Initialized 
+    // Events are initialized on construction but original code
+    // "flags = _flags" would just overwrite the initialization.
+    // So, read in the checkpoint flags, but then set the Initialized
     // flag on top of it in order to avoid failures.
     assert(initialized());
     flags = _flags;

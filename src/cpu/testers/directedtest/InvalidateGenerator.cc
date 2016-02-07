@@ -98,10 +98,10 @@ InvalidateGenerator::initiate()
     }
 }
 
-void 
+void
 InvalidateGenerator::performCallback(uint32_t proc, Addr address)
 {
-    assert(m_address == address);  
+    assert(m_address == address);
 
     if (m_status == InvalidateGeneratorStatus_Load_Pending) {
         assert(m_active_read_node == proc);
@@ -128,8 +128,8 @@ InvalidateGenerator::performCallback(uint32_t proc, Addr address)
         //
         m_directed_tester->incrementCycleCompletions();
         m_status = InvalidateGeneratorStatus_Load_Waiting;
-    } 
-    
+    }
+
 }
 
 InvalidateGenerator *

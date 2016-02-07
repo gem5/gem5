@@ -66,7 +66,7 @@ def rom
     wrdh t9, t4, t2, dataSize=8
 
 
-    # 
+    #
     # Figure out where the stack should be
     #
 
@@ -74,7 +74,7 @@ def rom
     rdsel t11, ss
 
     # Check if we're changing privelege level. At this point we can assume
-    # we're going to a DPL that's less than or equal to the CPL. 
+    # we're going to a DPL that's less than or equal to the CPL.
     rdattr t10, hs, dataSize=8
     andi t10, t10, 3, dataSize=8
     rdattr t5, cs, dataSize=8
@@ -139,7 +139,7 @@ def rom
     # Build up the interrupt stack frame
     #
 
-    
+
     # Write out the contents of memory
     %(errorCodeCode)s
     st t7, hs, [1, t0, t6], %(errorCodeSize)d, dataSize=8, addressSize=8
@@ -173,7 +173,7 @@ def rom
 
     # Put the results into rflags
     wrflags t6, t10
-    
+
     eret
 };
 '''

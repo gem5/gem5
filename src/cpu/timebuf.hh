@@ -138,7 +138,7 @@ class TimeBuffer
 
   public:
     TimeBuffer(int p, int f)
-        : past(p), future(f), size(past + future + 1), 
+        : past(p), future(f), size(past + future + 1),
           data(new char[size * sizeof(T)]), index(size), base(0)
     {
         assert(past >= 0 && future >= 0);

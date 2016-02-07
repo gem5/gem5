@@ -38,7 +38,7 @@ DirectedGenerator::DirectedGenerator(const Params *p)
     m_directed_tester = NULL;
 }
 
-void 
+void
 DirectedGenerator::setDirectedTester(RubyDirectedTester* directed_tester)
 {
     assert(m_directed_tester == NULL);

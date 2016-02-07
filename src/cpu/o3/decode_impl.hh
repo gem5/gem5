@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2012, 2014 ARM Limited
  * All rights reserved
  *

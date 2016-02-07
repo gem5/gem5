@@ -30,7 +30,7 @@
 #          Ali Saidi
 
 # Important!
-# This script expects a simple $ prompt, if you are using a shell other than 
+# This script expects a simple $ prompt, if you are using a shell other than
 # sh which defaults to this you'll need to add something like the following
 # to your bashrc/bash_profile script:
 #if [ "$OAR_USER" = "xxxx" ]; then
@@ -97,11 +97,11 @@ class Shell(pexpect.spawn):
 
     def __init__(self, cmd):
         # initialize base pexpect.spawn object
-	try:
+        try:
             pexpect.spawn.__init__(self, cmd)
-	except pexpect.ExceptionPexpect, exc:
-	    print "%s:" % progname, exc
-	    sys.exit(1)
+        except pexpect.ExceptionPexpect, exc:
+            print "%s:" % progname, exc
+            sys.exit(1)
         # full_output accumulates the full output of the session
         self.full_output = ""
         self.quick_timeout = 15
@@ -146,17 +146,17 @@ class Shell(pexpect.spawn):
         (output, status) = shell.do_command('[ -d %s ]' % dirname,
                                             self.quick_timeout)
         return status == 0
-    
+
     # Don't actually try to close it.. just wait until it closes by itself
-    # We can't actually kill the pid which is what it's trying to do, and if 
-    # we call wait we could be in an unfortunate situation of it printing input 
+    # We can't actually kill the pid which is what it's trying to do, and if
+    # we call wait we could be in an unfortunate situation of it printing input
     # right as we call wait, so the input is never read and the process never ends
     def safe_close(self):
         count = 0
         while self.isalive() and count < 10:
             time.sleep(1)
         self.close(force=False)
-        
+
 # Spawn the interactive pool job.
 
 # Hack to do link on poolfs... disabled for now since

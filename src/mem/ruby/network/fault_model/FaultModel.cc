@@ -31,7 +31,7 @@
 /*
  * Official Tool Website: www.mit.edu/~kaisopos/FaultModel
  *
- * If you use our tool for academic research, we request that you cite: 
+ * If you use our tool for academic research, we request that you cite:
  * Konstantinos Aisopos, Chia-Hsin Owen Chen, and Li-Shiuan Peh. Enabling
  * System-Level Modeling of Variation-Induced Faults in Networks-on-Chip.
  * Proceedings of the 48th Design Automation Conference (DAC'11)
@@ -45,7 +45,7 @@
 
 // GEM5 includes
 #include "FaultModel.hh"
-#include "base/misc.hh" 
+#include "base/misc.hh"
 
 using namespace std;
 
@@ -55,18 +55,18 @@ using namespace std;
 FaultModel::FaultModel(const Params *p) : SimObject(p)
 {
     // read configurations into "configurations" vector
-    // format: <buff/vc> <vcs> <10 fault types> 
+    // format: <buff/vc> <vcs> <10 fault types>
     bool more_records = true;
     for (int i = 0; more_records; i += (fields_per_conf_record)){
         system_conf configuration;
-        configuration.buff_per_vc = 
+        configuration.buff_per_vc =
             p->baseline_fault_vector_database[i + conf_record_buff_per_vc];
-        configuration.vcs = 
+        configuration.vcs =
             p->baseline_fault_vector_database[i + conf_record_vcs];
-        for (int fault_index = 0; fault_index < number_of_fault_types; 
+        for (int fault_index = 0; fault_index < number_of_fault_types;
             fault_index++){
-            configuration.fault_type[fault_index] = 
-                p->baseline_fault_vector_database[i + 
+            configuration.fault_type[fault_index] =
+                p->baseline_fault_vector_database[i +
                    conf_record_first_fault_type + fault_index] / 100;
         }
         configurations.push_back(configuration);
@@ -79,13 +79,13 @@ FaultModel::FaultModel(const Params *p) : SimObject(p)
     // format: <temperature> <weight>
     more_records = true;
     for (int i = 0; more_records; i += (fields_per_temperature_record)){
-        int record_temperature = 
+        int record_temperature =
                p->temperature_weights_database[i + temperature_record_temp];
         int record_weight =
                p->temperature_weights_database[i + temperature_record_weight];
         static int first_record = true;
         if (first_record){
-            for (int temperature = 0; temperature < record_temperature; 
+            for (int temperature = 0; temperature < record_temperature;
                  temperature++){
                  temperature_weights.push_back(0);
             }
@@ -93,7 +93,7 @@ FaultModel::FaultModel(const Params *p) : SimObject(p)
         }
         assert(record_temperature == temperature_weights.size());
         temperature_weights.push_back(record_weight);
-        if (p->temperature_weights_database[i + 
+        if (p->temperature_weights_database[i +
                fields_per_temperature_record] < 0){
             more_records = false;
         }
@@ -131,16 +131,16 @@ FaultModel::fault_type_to_string(int ft)
 }
 
 
-int 
-FaultModel::declare_router(int number_of_inputs, 
-                           int number_of_outputs, 
-                           int number_of_vcs_per_input, 
-                           int number_of_buff_per_data_vc, 
+int
+FaultModel::declare_router(int number_of_inputs,
+                           int number_of_outputs,
+                           int number_of_vcs_per_input,
+                           int number_of_buff_per_data_vc,
                            int number_of_buff_per_ctrl_vc)
 {
     // check inputs (are they legal?)
     if (number_of_inputs <= 0 || number_of_outputs <= 0 ||
-        number_of_vcs_per_input <= 0 || number_of_buff_per_data_vc <= 0 || 
+        number_of_vcs_per_input <= 0 || number_of_buff_per_data_vc <= 0 ||
         number_of_buff_per_ctrl_vc <= 0){
         fatal("Fault Model: ERROR in argument of FaultModel_declare_router!");
     }
@@ -156,7 +156,7 @@ FaultModel::declare_router(int number_of_inputs,
 
     // link the router to a DB record
     int record_hit = -1;
-    for (int record = 0; record < configurations.size(); record++){    
+    for (int record = 0; record < configurations.size(); record++){
         if ((configurations[record].buff_per_vc == number_of_buffers_per_vc)&&
             (configurations[record].vcs == total_vcs)){
             record_hit = record;
@@ -172,8 +172,8 @@ FaultModel::declare_router(int number_of_inputs,
     return router_index++;
 }
 
-bool 
-FaultModel::fault_vector(int routerID, 
+bool
+FaultModel::fault_vector(int routerID,
                          int temperature_input,
                          float fault_vector[])
 {
@@ -182,7 +182,7 @@ FaultModel::fault_vector(int routerID,
     // is the routerID recorded?
     if (routerID < 0 || routerID >= ((int) routers.size())){
          warn("Fault Model: ERROR! unknown router ID argument.");
-        fatal("Fault Model: Did you enable the fault model flag)?");     
+        fatal("Fault Model: Did you enable the fault model flag)?");
     }
 
     // is the temperature too high/too low?
@@ -201,14 +201,14 @@ FaultModel::fault_vector(int routerID,
 
     // recover the router record and return its fault vector
     for (int i = 0; i < number_of_fault_types; i++){
-        fault_vector[i] = routers[routerID].fault_type[i] * 
+        fault_vector[i] = routers[routerID].fault_type[i] *
                           ((float)temperature_weights[temperature]);
     }
     return ok;
 }
 
-bool 
-FaultModel::fault_prob(int routerID, 
+bool
+FaultModel::fault_prob(int routerID,
                        int temperature_input,
                        float *aggregate_fault_prob)
 {
@@ -218,7 +218,7 @@ FaultModel::fault_prob(int routerID,
     // is the routerID recorded?
     if (routerID < 0 || routerID >= ((int) routers.size())){
          warn("Fault Model: ERROR! unknown router ID argument.");
-        fatal("Fault Model: Did you enable the fault model flag)?");     
+        fatal("Fault Model: Did you enable the fault model flag)?");
     }
 
     // is the temperature too high/too low?
@@ -237,8 +237,8 @@ FaultModel::fault_prob(int routerID,
 
     // recover the router record and return its aggregate fault probability
     for (int i = 0; i < number_of_fault_types; i++){
-        *aggregate_fault_prob=  *aggregate_fault_prob * 
-                               ( 1.0 - (routers[routerID].fault_type[i] * 
+        *aggregate_fault_prob=  *aggregate_fault_prob *
+                               ( 1.0 - (routers[routerID].fault_type[i] *
                                  ((float)temperature_weights[temperature])) );
     }
     *aggregate_fault_prob = 1.0 - *aggregate_fault_prob;
@@ -246,7 +246,7 @@ FaultModel::fault_prob(int routerID,
 }
 
 // this function is used only for debugging purposes
-void 
+void
 FaultModel::print(void)
 {
     cout << "--- PRINTING configurations ---\n";
@@ -254,10 +254,10 @@ FaultModel::print(void)
         cout << "(" << record << ") ";
         cout << "VCs=" << configurations[record].vcs << " ";
         cout << "Buff/VC=" << configurations[record].buff_per_vc << " [";
-        for (int fault_type_num = 0; 
-             fault_type_num < number_of_fault_types; 
+        for (int fault_type_num = 0;
+             fault_type_num < number_of_fault_types;
              fault_type_num++){
-            cout << (100 * configurations[record].fault_type[fault_type_num]); 
+            cout << (100 * configurations[record].fault_type[fault_type_num]);
             cout << "% ";
         }
         cout << "]\n";

@@ -69,7 +69,7 @@ struct Print
     {
         return data;
     }
-    
+
     template <typename T>
     int
     get_number(const T& data)
@@ -90,7 +90,7 @@ struct Print
             fmt.width = get_number(data);
             return;
         }
-            
+
         if (fmt.get_precision) {
             fmt.get_precision = false;
             cont = true;

@@ -127,7 +127,7 @@ class AlphaLinux : public Linux
     static const unsigned TGT_RLIMIT_AS = 7;
     static const unsigned TGT_RLIMIT_NOFILE = 6;
     static const unsigned TGT_RLIMIT_MEMLOCK = 9;
-   
+
     typedef struct {
        int64_t  uptime;    /* Seconds since boot */
        uint64_t loads[3];  /* 1, 5, and 15 minute load averages */

@@ -109,7 +109,7 @@ for dir in dirs:
         cpts.append(int(match.group(1)))
 
 cpts.sort()
-        
+
 # We test by loading checkpoint N, simulating to (and dumping at)
 # checkpoint N+1, then comparing the resulting checkpoint with the
 # original checkpoint N+1.  Thus the number of tests we can run is one
@@ -132,4 +132,4 @@ for i in range(1, len(cpts)):
     print diffout.read(),
     diffout.close()
 
-        
+

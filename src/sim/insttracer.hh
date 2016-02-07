@@ -183,7 +183,7 @@ class InstRecord
     void setPredicate(bool val) { predicate = val; }
 
     virtual void dump() = 0;
-    
+
   public:
     Tick getWhen() const { return when; }
     ThreadContext *getThread() const { return thread; }

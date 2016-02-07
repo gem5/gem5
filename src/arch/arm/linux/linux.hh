@@ -177,7 +177,7 @@ class ArmLinux32 : public Linux
         uint32_t freehigh;  /* Available high memory size */
         uint32_t mem_unit;  /* Memory unit size in bytes */
     } tgt_sysinfo;
-   
+
     /// For getrusage().
     struct rusage {
         struct timeval ru_utime;        //!< user time used

@@ -45,7 +45,7 @@ Import('*')
 
 if env['TARGET_ISA'] == 'arm':
 # Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 M5 Bug id: 308 
+# Scons bug id: 2006 M5 Bug id: 308
     Dir('isa/formats')
     Source('decoder.cc')
     Source('faults.cc')

@@ -214,7 +214,7 @@ let {{
             if ext is None:
                 self.ext = 0
             else:
-                self.ext = ext 
+                self.ext = ext
 
         def getAllocator(self, microFlags):
             className = self.className
@@ -926,7 +926,7 @@ let {{
                 uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits = arg1Bits + arg2Bits;
-                
+
                 if (ext & 0x2) {
                     if (signedOp()) {
                         int arg1Sign = bits(arg1Bits, sizeBits - 1);
@@ -963,7 +963,7 @@ let {{
                 uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits = arg1Bits - arg2Bits;
-                
+
                 if (ext & 0x2) {
                     if (signedOp()) {
                         int arg1Sign = bits(arg1Bits, sizeBits - 1);
@@ -1025,7 +1025,7 @@ let {{
 
                 if (ext & 0x4)
                     resBits += (ULL(1) << (destBits - 1));
-                
+
                 if (multHi())
                     resBits >>= destBits;
 
@@ -1050,7 +1050,7 @@ let {{
                 uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits = (arg1Bits + arg2Bits + 1) / 2;
-                
+
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
             FpDestReg_uqw = result;

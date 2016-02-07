@@ -57,11 +57,11 @@
             pyevent->incref();
         $self->schedule(event, when);
     }
-    
+
     void
     deschedule(Event *event)
     {
-        $self->deschedule(event); 
+        $self->deschedule(event);
 
         // Now that we're removing the python object from the event
         // queue, we need to decrement its reference count.

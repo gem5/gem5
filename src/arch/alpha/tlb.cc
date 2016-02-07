@@ -230,9 +230,9 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
             req->setPaddr(req->getPaddr() & PAddrUncachedMask);
         }
         // We shouldn't be able to read from an uncachable address in Alpha as
-        // we don't have a ROM and we don't want to try to fetch from a device 
-        // register as we destroy any data that is clear-on-read. 
-        if (req->isUncacheable() && itb) 
+        // we don't have a ROM and we don't want to try to fetch from a device
+        // register as we destroy any data that is clear-on-read.
+        if (req->isUncacheable() && itb)
             return std::make_shared<UnimpFault>(
                 "CPU trying to fetch from uncached I/O");
 

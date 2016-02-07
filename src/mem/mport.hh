@@ -49,7 +49,7 @@
 /*
  * This file defines a port class which is used for sending and receiving
  * messages. These messages are atomic units which don't interact and
- * should be smaller than a cache block. This class is based on 
+ * should be smaller than a cache block. This class is based on
  * the underpinnings of SimpleTimingPort, but it tweaks some of the external
  * functions.
  */

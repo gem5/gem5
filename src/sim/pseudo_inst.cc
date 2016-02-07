@@ -645,7 +645,7 @@ switchcpu(ThreadContext *tc)
 }
 
 //
-// This function is executed when annotated work items begin.  Depending on 
+// This function is executed when annotated work items begin.  Depending on
 // what the user specified at the command line, the simulation may exit and/or
 // take a checkpoint when a certain work item begins.
 //
@@ -708,7 +708,7 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 }
 
 //
-// This function is executed when annotated work items end.  Depending on 
+// This function is executed when annotated work items end.  Depending on
 // what the user specified at the command line, the simulation may exit and/or
 // take a checkpoint when a certain work item ends.
 //

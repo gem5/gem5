@@ -238,7 +238,7 @@ let {{
             global exec_output
 
             # Stick all the code together so it can be searched at once
-            allCode = "|".join((code, flag_code, cond_check, else_code, 
+            allCode = "|".join((code, flag_code, cond_check, else_code,
                                 cond_control_flag_init))
             allBigCode = "|".join((big_code, flag_code, cond_check, else_code,
                                    cond_control_flag_init))
@@ -786,7 +786,7 @@ let {{
                 PredecfBit = PredecfBit & ~(ext & ECFBit);
 
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && 
+                if ((ext & (CFBit | ECFBit)) &&
                         shiftAmt <= dataSize * 8 &&
                         bits(SrcReg1, shiftAmt - 1)) {
                     PredcfofBits = PredcfofBits | (ext & CFBit);
@@ -1018,7 +1018,7 @@ let {{
                 int msb = bits(DestReg, dataSize * 8 - 1);
                 int CFBits = bits(SrcReg1, dataSize * 8 - realShiftAmt);
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && 
+                if ((ext & (CFBit | ECFBit)) &&
                         (realShiftAmt == 0) ? origCFBit : CFBits) {
                     PredcfofBits = PredcfofBits | (ext & CFBit);
                     PredecfBit = PredecfBit | (ext & ECFBit);

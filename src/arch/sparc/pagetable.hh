@@ -57,7 +57,7 @@ class TteTag
     TteTag(uint64_t e) : entry(e), populated(true) {}
 
     const TteTag &
-    operator=(uint64_t e) 
+    operator=(uint64_t e)
     {
         populated = true;
         entry = e;

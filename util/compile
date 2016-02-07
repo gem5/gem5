@@ -147,7 +147,7 @@ add_option('-E', "--experimental", action='store_true', default=False,
            help="enable experimental builds")
 add_option('-v', "--verbose", default=False, action='store_true',
            help="be verbose")
-          
+
 set_group("Output binary types")
 bool_option("debug", default=False, help="compile debug binaries")
 bool_option("opt", default=False, help="compile opt binaries")
