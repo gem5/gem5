@@ -1,4 +1,5 @@
 # Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2015 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -126,12 +127,14 @@ def macroop XADD_R_R {
 
 '''
 
+# Despite the name, this microcode sequence implements both
+# cmpxchg8b and cmpxchg16b, depending on the dynamic value
+# of dataSize.
 cmpxchg8bCode = '''
 def macroop CMPXCHG8B_%(suffix)s {
     %(rdip)s
     lea t1, seg, %(sib)s, disp, dataSize=asz
-    ldst%(l)s t2, seg, [1, t0, t1], 0
-    ldst%(l)s t3, seg, [1, t0, t1], dsz
+    ldsplit%(l)s (t2, t3), seg, [1, t0, t1], disp=0
 
     sub t0, rax, t2, flags=(ZF,)
     br label("doneComparing"), flags=(nCZF,)
@@ -147,8 +150,7 @@ doneComparing:
     mov rdx, rdx, t3, flags=(nCZF,)
 
     # Write to memory
-    st%(ul)s t3, seg, [1, t0, t1], dsz
-    st%(ul)s t2, seg, [1, t0, t1], 0
+    stsplit%(ul)s (t2, t3), seg, [1, t0, t1], disp=0
 };
 '''
 

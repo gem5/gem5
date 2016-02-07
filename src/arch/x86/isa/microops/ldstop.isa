@@ -1,4 +1,5 @@
 // Copyright (c) 2007-2008 The Hewlett-Packard Development Company
+// Copyright (c) 2015 Advanced Micro Devices, Inc.
 // All rights reserved.
 //
 // The license below extends only to copyright in the software and shall
@@ -98,7 +99,8 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = readMemAtomic(xc, traceData, EA, Mem, dataSize, memFlags);
+        fault = readMemAtomic(xc, traceData, EA, Mem,
+                              %(memDataSize)s, memFlags);
 
         if (fault == NoFault) {
             %(code)s;
@@ -127,7 +129,8 @@ def template MicroLoadInitiateAcc {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = initiateMemRead(xc, traceData, EA, dataSize, memFlags);
+        fault = initiateMemRead(xc, traceData, EA,
+                                %(memDataSize)s, memFlags);
 
         return fault;
     }
@@ -143,7 +146,7 @@ def template MicroLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        getMem(pkt, Mem, dataSize, traceData);
+        getMem(pkt, Mem, %(memDataSize)s, traceData);
 
         %(code)s;
 
@@ -174,7 +177,7 @@ def template MicroStoreExecute {{
 
         if(fault == NoFault)
         {
-            fault = writeMemAtomic(xc, traceData, Mem, dataSize, EA,
+            fault = writeMemAtomic(xc, traceData, Mem, %(memDataSize)s, EA,
                     memFlags, NULL);
             if(fault == NoFault)
             {
@@ -202,7 +205,7 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            fault = writeMemTiming(xc, traceData, Mem, dataSize, EA,
+            fault = writeMemTiming(xc, traceData, Mem, %(memDataSize)s, EA,
                     memFlags, NULL);
         }
         return fault;
@@ -253,6 +256,28 @@ def template MicroLdStOpDeclare {{
     };
 }};
 
+// LdStSplitOp is a load or store that uses a pair of regs as the
+// source or destination.  Used for cmpxchg{8,16}b.
+def template MicroLdStSplitOpDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem, uint64_t setFlags,
+                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+                uint64_t _disp, InstRegIndex _segment,
+                InstRegIndex _dataLow, InstRegIndex _dataHi,
+                uint8_t _dataSize, uint8_t _addressSize,
+                Request::FlagsType _memFlags);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
 def template MicroLdStOpConstructor {{
     %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
@@ -264,6 +289,23 @@ def template MicroLdStOpConstructor {{
         %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _scale, _index, _base,
                 _disp, _segment, _data,
+                _dataSize, _addressSize, _memFlags, %(op_class)s)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template MicroLdStSplitOpConstructor {{
+    %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
+            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+            uint64_t _disp, InstRegIndex _segment,
+            InstRegIndex _dataLow, InstRegIndex _dataHi,
+            uint8_t _dataSize, uint8_t _addressSize,
+            Request::FlagsType _memFlags) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
+                _scale, _index, _base,
+                _disp, _segment, _dataLow, _dataHi,
                 _dataSize, _addressSize, _memFlags, %(op_class)s)
     {
         %(constructor)s;
@@ -350,6 +392,33 @@ let {{
                 "dataSize" : self.dataSize, "addressSize" : self.addressSize,
                 "memFlags" : self.memFlags}
             return allocator
+
+    class LdStSplitOp(LdStOp):
+        def __init__(self, data, segment, addr, disp,
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec):
+            super(LdStSplitOp, self).__init__(0, segment, addr, disp,
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec)
+            (self.dataLow, self.dataHi) = data
+
+        def getAllocator(self, microFlags):
+            allocString = '''(StaticInstPtr)(new %(class_name)s(machInst,
+                        macrocodeBlock, %(flags)s, %(scale)s, %(index)s,
+                        %(base)s, %(disp)s, %(segment)s,
+                        %(dataLow)s, %(dataHi)s,
+                        %(dataSize)s, %(addressSize)s, %(memFlags)s))
+            '''
+            allocator = allocString % {
+                "class_name" : self.className,
+                "flags" : self.microFlagsText(microFlags) + self.instFlags,
+                "scale" : self.scale, "index" : self.index,
+                "base" : self.base,
+                "disp" : self.disp,
+                "segment" : self.segment,
+                "dataLow" : self.dataLow, "dataHi" : self.dataHi,
+                "dataSize" : self.dataSize, "addressSize" : self.addressSize,
+                "memFlags" : self.memFlags}
+            return allocator
+
 }};
 
 let {{
@@ -360,12 +429,13 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    calculateEA = '''
-    EA = SegBase + bits(scale * Index + Base + disp, addressSize * 8 - 1, 0);
-    '''
+    segmentEAExpr = \
+        'bits(scale * Index + Base + disp, addressSize * 8 - 1, 0);'
+
+    calculateEA = 'EA = SegBase + ' + segmentEAExpr
 
     def defineMicroLoadOp(mnemonic, code, bigCode='',
-                          mem_flags="0", big=True):
+                          mem_flags="0", big=True, nonSpec=False):
         global header_output
         global decoder_output
         global exec_output
@@ -375,10 +445,14 @@ let {{
 
         # Build up the all register version of this micro op
         iops = [InstObjParams(name, Name, 'X86ISA::LdStOp',
-                {"code": code, "ea_code": calculateEA})]
+                              { "code": code,
+                                "ea_code": calculateEA,
+                                "memDataSize": "dataSize" })]
         if big:
             iops += [InstObjParams(name, Name + "Big", 'X86ISA::LdStOp',
-                     {"code": bigCode, "ea_code": calculateEA})]
+                                   { "code": bigCode,
+                                     "ea_code": calculateEA,
+                                     "memDataSize": "dataSize" })]
         for iop in iops:
             header_output += MicroLdStOpDeclare.subst(iop)
             decoder_output += MicroLdStOpConstructor.subst(iop)
@@ -393,7 +467,7 @@ let {{
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
                     addressSize="env.addressSize",
-                    atCPL0=False, prefetch=False, nonSpec=False):
+                    atCPL0=False, prefetch=False, nonSpec=nonSpec):
                 super(LoadOp, self).__init__(data, segment, addr,
                         disp, dataSize, addressSize, mem_flags,
                         atCPL0, prefetch, nonSpec)
@@ -409,7 +483,8 @@ let {{
                       '(StoreCheck << FlagShift)')
     defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
                                'Data = Mem & mask(dataSize * 8);',
-                      '(StoreCheck << FlagShift) | Request::LOCKED_RMW')
+                      '(StoreCheck << FlagShift) | Request::LOCKED_RMW',
+                      nonSpec=True)
 
     defineMicroLoadOp('Ldfp', code='FpData_uqw = Mem', big = False)
 
@@ -446,6 +521,59 @@ let {{
         }
     ''', big = False)
 
+    def defineMicroLoadSplitOp(mnemonic, code, mem_flags="0", nonSpec=False):
+        global header_output
+        global decoder_output
+        global exec_output
+        global microopClasses
+        Name = mnemonic
+        name = mnemonic.lower()
+
+        iop = InstObjParams(name, Name, 'X86ISA::LdStSplitOp',
+                            { "code": code,
+                              "ea_code": calculateEA,
+                              "memDataSize": "2 * dataSize" })
+
+        header_output += MicroLdStSplitOpDeclare.subst(iop)
+        decoder_output += MicroLdStSplitOpConstructor.subst(iop)
+        exec_output += MicroLoadExecute.subst(iop)
+        exec_output += MicroLoadInitiateAcc.subst(iop)
+        exec_output += MicroLoadCompleteAcc.subst(iop)
+
+        class LoadOp(LdStSplitOp):
+            def __init__(self, data, segment, addr, disp = 0,
+                    dataSize="env.dataSize",
+                    addressSize="env.addressSize",
+                    atCPL0=False, prefetch=False, nonSpec=nonSpec):
+                super(LoadOp, self).__init__(data, segment, addr,
+                        disp, dataSize, addressSize, mem_flags,
+                        atCPL0, prefetch, nonSpec)
+                self.className = Name
+                self.mnemonic = name
+
+        microopClasses[name] = LoadOp
+
+    code = '''
+        switch (dataSize) {
+          case 4:
+            DataLow = bits(Mem_u2qw[0], 31, 0);
+            DataHi  = bits(Mem_u2qw[0], 63, 32);
+            break;
+          case 8:
+            DataLow = Mem_u2qw[0];
+            DataHi  = Mem_u2qw[1];
+            break;
+          default:
+            panic("Unhandled data size %d in LdSplit.\\n", dataSize);
+        }'''
+
+    defineMicroLoadSplitOp('LdSplit', code,
+                           '(StoreCheck << FlagShift)')
+
+    defineMicroLoadSplitOp('LdSplitl', code,
+                           '(StoreCheck << FlagShift) | Request::LOCKED_RMW',
+                           nonSpec=True)
+
     def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0"):
         global header_output
         global decoder_output
@@ -456,9 +584,10 @@ let {{
 
         # Build up the all register version of this micro op
         iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
-                {"code": code,
-                 "complete_code": completeCode,
-                 "ea_code": calculateEA})
+                            { "code": code,
+                              "complete_code": completeCode,
+                              "ea_code": calculateEA,
+                              "memDataSize": "dataSize" })
         header_output += MicroLdStOpDeclare.subst(iop)
         decoder_output += MicroLdStOpConstructor.subst(iop)
         exec_output += MicroStoreExecute.subst(iop)
@@ -501,11 +630,62 @@ let {{
 
     defineMicroStoreOp('Cda', 'Mem = 0;', mem_flags="Request::NO_ACCESS")
 
+    def defineMicroStoreSplitOp(mnemonic, code,
+                                completeCode="", mem_flags="0"):
+        global header_output
+        global decoder_output
+        global exec_output
+        global microopClasses
+        Name = mnemonic
+        name = mnemonic.lower()
+
+        iop = InstObjParams(name, Name, 'X86ISA::LdStSplitOp',
+                            { "code": code,
+                              "complete_code": completeCode,
+                              "ea_code": calculateEA,
+                              "memDataSize": "2 * dataSize" })
+
+        header_output += MicroLdStSplitOpDeclare.subst(iop)
+        decoder_output += MicroLdStSplitOpConstructor.subst(iop)
+        exec_output += MicroStoreExecute.subst(iop)
+        exec_output += MicroStoreInitiateAcc.subst(iop)
+        exec_output += MicroStoreCompleteAcc.subst(iop)
+
+        class StoreOp(LdStSplitOp):
+            def __init__(self, data, segment, addr, disp = 0,
+                    dataSize="env.dataSize",
+                    addressSize="env.addressSize",
+                    atCPL0=False, nonSpec=False):
+                super(StoreOp, self).__init__(data, segment, addr, disp,
+                        dataSize, addressSize, mem_flags, atCPL0, False,
+                        nonSpec)
+                self.className = Name
+                self.mnemonic = name
+
+        microopClasses[name] = StoreOp
+
+    code = '''
+        switch (dataSize) {
+          case 4:
+            Mem_u2qw[0] = (DataHi << 32) | DataLow;
+            break;
+          case 8:
+            Mem_u2qw[0] = DataLow;
+            Mem_u2qw[1] = DataHi;
+            break;
+          default:
+            panic("Unhandled data size %d in StSplit.\\n", dataSize);
+        }'''
+
+    defineMicroStoreSplitOp('StSplit', code);
+
+    defineMicroStoreSplitOp('StSplitul', code,
+                            mem_flags='Request::LOCKED_RMW')
+
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
-            {"code": "Data = merge(Data, EA, dataSize);",
-             "ea_code": '''
-             EA = bits(scale * Index + Base + disp, addressSize * 8 - 1, 0);
-             '''})
+                        { "code": "Data = merge(Data, EA, dataSize);",
+                          "ea_code": "EA = " + segmentEAExpr,
+                          "memDataSize": "dataSize" })
     header_output += MicroLeaDeclare.subst(iop)
     decoder_output += MicroLdStOpConstructor.subst(iop)
     exec_output += MicroLeaExecute.subst(iop)
@@ -522,8 +702,9 @@ let {{
 
 
     iop = InstObjParams("tia", "Tia", 'X86ISA::LdStOp',
-            {"code": "xc->demapPage(EA, 0);",
-             "ea_code": calculateEA})
+                        { "code": "xc->demapPage(EA, 0);",
+                          "ea_code": calculateEA,
+                          "memDataSize": "dataSize" })
     header_output += MicroLeaDeclare.subst(iop)
     decoder_output += MicroLdStOpConstructor.subst(iop)
     exec_output += MicroLeaExecute.subst(iop)
