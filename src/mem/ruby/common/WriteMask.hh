@@ -71,7 +71,7 @@ class WriteMask
     test(int offset)
     {
         assert(offset < mSize);
-        return mMask[offset] == true;
+        return mMask[offset];
     }
 
     void

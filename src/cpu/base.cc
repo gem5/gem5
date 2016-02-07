@@ -288,7 +288,7 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];
 
-    if (monitor.gotWakeup == false) {
+    if (!monitor.gotWakeup) {
         int block_size = cacheLineSize();
         uint64_t mask = ~((uint64_t)(block_size - 1));
 

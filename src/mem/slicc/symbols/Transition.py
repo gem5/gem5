@@ -43,7 +43,7 @@ class Transition(Symbol):
                 if func.c_ident == 'getNextState_Addr':
                     found = True
                     break
-            if found == False:
+            if not found:
                 fatal("Machine uses a wildcard transition without getNextState defined")
             self.nextState = WildcardState(machine.symtab,
                                            '*', location)

@@ -188,8 +188,8 @@ SWallocator_d::arbitrate_outports()
                         m_router->curCycle());
 
                     // This Input VC should now be empty
-                    assert(m_input_unit[inport]->isReady(invc,
-                        m_router->curCycle()) == false);
+                    assert(!m_input_unit[inport]->
+                                      isReady(invc, m_router->curCycle()));
 
                     m_input_unit[inport]->set_vc_state(IDLE_, invc,
                         m_router->curCycle());

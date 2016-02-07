@@ -517,8 +517,8 @@ void
 DistIface::RecvScheduler::unserialize(CheckpointIn &cp)
 {
     assert(descQueue.size() == 0);
-    assert(recvDone->scheduled() == false);
-    assert(ckptRestore == false);
+    assert(!recvDone->scheduled());
+    assert(!ckptRestore);
 
     UNSERIALIZE_SCALAR(prevRecvTick);
     // unserialize the receive desc queue

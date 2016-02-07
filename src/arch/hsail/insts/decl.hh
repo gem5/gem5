@@ -189,7 +189,7 @@ namespace HsailISA
         int numSrcRegOperands() {
             int operands = 0;
             for (int i = 0; i < NumSrcOperands; i++) {
-                if (src[i].isVectorRegister() == true) {
+                if (src[i].isVectorRegister()) {
                     operands++;
                 }
             }
@@ -325,13 +325,13 @@ namespace HsailISA
 
         int numSrcRegOperands() {
             int operands = 0;
-            if (src0.isVectorRegister() == true) {
+            if (src0.isVectorRegister()) {
                 operands++;
             }
-            if (src1.isVectorRegister() == true) {
+            if (src1.isVectorRegister()) {
                 operands++;
             }
-            if (src2.isVectorRegister() == true) {
+            if (src2.isVectorRegister()) {
                 operands++;
             }
             return operands;
@@ -485,10 +485,10 @@ namespace HsailISA
 
         int numSrcRegOperands() {
             int operands = 0;
-            if (src0.isVectorRegister() == true) {
+            if (src0.isVectorRegister()) {
                 operands++;
             }
-            if (src1.isVectorRegister() == true) {
+            if (src1.isVectorRegister()) {
                 operands++;
             }
             return operands;

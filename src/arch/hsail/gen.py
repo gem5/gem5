@@ -584,7 +584,7 @@ def gen(brig_opcode, types=None, expr=None, base_class='ArithInst',
         else:
             decoder_code(decode_case_prolog)
         if not type2_info:
-            if is_store == False:
+            if not is_store:
                 # single list of types, to basic one-level decode
                 for type_name in types:
                     full_class_name = '%s<%s>' % (class_name, type_name.upper())

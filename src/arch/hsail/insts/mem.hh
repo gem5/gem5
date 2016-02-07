@@ -1239,7 +1239,7 @@ namespace HsailISA
         {
             int operands = 0;
             for (int i = 0; i < NumSrcOperands; i++) {
-                if (src[i].isVectorRegister() == true) {
+                if (src[i].isVectorRegister()) {
                     operands++;
                 }
             }

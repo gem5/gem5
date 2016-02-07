@@ -320,7 +320,7 @@ GPUCoalescer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
     assert(m_outstanding_count == total_outstanding);
 
     // See if we should schedule a deadlock check
-    if (deadlockCheckEvent.scheduled() == false) {
+    if (!deadlockCheckEvent.scheduled()) {
         schedule(deadlockCheckEvent, m_deadlock_threshold + curTick());
     }
 
