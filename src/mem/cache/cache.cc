@@ -1011,8 +1011,6 @@ Cache::recvAtomic(PacketPtr pkt)
 {
     // We are in atomic mode so we pay just for lookupLatency here.
     Cycles lat = lookupLatency;
-    // @TODO: make this a parameter
-    bool last_level_cache = false;
 
     // Forward the request if the system is in cache bypass mode.
     if (system->bypassCaches())
@@ -1020,30 +1018,18 @@ Cache::recvAtomic(PacketPtr pkt)
 
     promoteWholeLineWrites(pkt);
 
+    // follow the same flow as in recvTimingReq, and check if a cache
+    // above us is responding
     if (pkt->cacheResponding()) {
-        // have to invalidate ourselves and any lower caches even if
-        // upper cache will be responding
-        if (pkt->isInvalidate()) {
-            CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
-            if (blk && blk->isValid()) {
-                tags->invalidate(blk);
-                blk->invalidate();
-                DPRINTF(Cache, "Other cache responding to %s on %#llx (%s):"
-                        " invalidating\n",
-                        pkt->cmdString(), pkt->getAddr(),
-                        pkt->isSecure() ? "s" : "ns");
-            }
-            if (!last_level_cache) {
-                DPRINTF(Cache, "Other cache responding to %s on %#llx (%s):"
-                        " forwarding\n",
-                        pkt->cmdString(), pkt->getAddr(),
-                        pkt->isSecure() ? "s" : "ns");
-                lat += ticksToCycles(memSidePort->sendAtomic(pkt));
-            }
-        } else {
-            DPRINTF(Cache, "Other cache responding to %s on %#llx: "
-                    "not responding\n",
-                    pkt->cmdString(), pkt->getAddr());
+        DPRINTF(Cache, "Cache above responding to %#llx (%s): "
+                "not responding\n",
+                pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
+
+        // if a cache is responding, and it had the line in Owned
+        // rather than Modified state, we need to invalidate any
+        // copies that are not on the same path to memory
+        if (pkt->needsWritable() && !pkt->responderHadWritable()) {
+            lat += ticksToCycles(memSidePort->sendAtomic(pkt));
         }
 
         return lat * clockPeriod();
