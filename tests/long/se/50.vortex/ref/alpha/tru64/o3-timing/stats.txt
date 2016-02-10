@@ -4,11 +4,11 @@ sim_seconds                                  0.022297                       # Nu
 sim_ticks                                 22296591500                       # Number of ticks simulated
 final_tick                                22296591500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 221726                       # Simulator instruction rate (inst/s)
-host_op_rate                                   221726                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               62113736                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 308500                       # Number of bytes of host memory used
-host_seconds                                   358.96                       # Real time elapsed on the host
+host_inst_rate                                 210659                       # Simulator instruction rate (inst/s)
+host_op_rate                                   210659                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               59013272                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 309644                       # Number of bytes of host memory used
+host_seconds                                   377.82                       # Real time elapsed on the host
 sim_insts                                    79591756                       # Number of instructions simulated
 sim_ops                                      79591756                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -47,7 +47,7 @@ system.physmem.bytesReadSys                  10563200                       # To
 system.physmem.bytesWrittenSys                7322432                       # Total written bytes from the system interface side
 system.physmem.servicedByWrQ                        6                       # Number of DRAM read bursts serviced by the write queue
 system.physmem.mergedWrBursts                       0                       # Number of DRAM write bursts merged with an existing one
-system.physmem.neitherReadNorWriteReqs          14730                       # Number of requests that are neither read nor write
+system.physmem.neitherReadNorWriteReqs              0                       # Number of requests that are neither read nor write
 system.physmem.perBankRdBursts::0               10292                       # Per bank write bursts
 system.physmem.perBankRdBursts::1               10329                       # Per bank write bursts
 system.physmem.perBankRdBursts::2               10209                       # Per bank write bursts

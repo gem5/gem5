@@ -4,11 +4,11 @@ sim_seconds                                  0.061602                       # Nu
 sim_ticks                                 61602281500                       # Number of ticks simulated
 final_tick                                61602281500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 108860                       # Simulator instruction rate (inst/s)
-host_op_rate                                   191684                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               42446103                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 458164                       # Number of bytes of host memory used
-host_seconds                                  1451.31                       # Real time elapsed on the host
+host_inst_rate                                 110070                       # Simulator instruction rate (inst/s)
+host_op_rate                                   193816                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               42918086                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 460124                       # Number of bytes of host memory used
+host_seconds                                  1435.35                       # Real time elapsed on the host
 sim_insts                                   157988547                       # Number of instructions simulated
 sim_ops                                     278192464                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -47,7 +47,7 @@ system.physmem.bytesReadSys                   1947008                       # To
 system.physmem.bytesWrittenSys                  12160                       # Total written bytes from the system interface side
 system.physmem.servicedByWrQ                       86                       # Number of DRAM read bursts serviced by the write queue
 system.physmem.mergedWrBursts                       1                       # Number of DRAM write bursts merged with an existing one
-system.physmem.neitherReadNorWriteReqs             24                       # Number of requests that are neither read nor write
+system.physmem.neitherReadNorWriteReqs              0                       # Number of requests that are neither read nor write
 system.physmem.perBankRdBursts::0                1928                       # Per bank write bursts
 system.physmem.perBankRdBursts::1                2059                       # Per bank write bursts
 system.physmem.perBankRdBursts::2                2023                       # Per bank write bursts
@@ -343,15 +343,15 @@ system.cpu.rename.tempSerializingInsts            490                       # co
 system.cpu.rename.skidInsts                  66412323                       # count of insts added to the skid buffer
 system.cpu.memDep0.insertedLoads            105336194                       # Number of loads inserted to the mem dependence unit.
 system.cpu.memDep0.insertedStores            36169392                       # Number of stores inserted to the mem dependence unit.
-system.cpu.memDep0.conflictingLoads          49402348                       # Number of conflicting loads.
+system.cpu.memDep0.conflictingLoads          49401722                       # Number of conflicting loads.
 system.cpu.memDep0.conflictingStores          8500449                       # Number of conflicting stores.
-system.cpu.iq.iqInstsAdded                  322302018                       # Number of instructions added to the IQ (excludes non-spec)
-system.cpu.iq.iqNonSpecInstsAdded                1714                       # Number of non-speculative instructions added to the IQ
+system.cpu.iq.iqInstsAdded                  322301392                       # Number of instructions added to the IQ (excludes non-spec)
+system.cpu.iq.iqNonSpecInstsAdded                2340                       # Number of non-speculative instructions added to the IQ
 system.cpu.iq.iqInstsIssued                 306103027                       # Number of instructions issued
 system.cpu.iq.iqSquashedInstsIssued             45906                       # Number of squashed instructions issued
 system.cpu.iq.iqSquashedInstsExamined        44111268                       # Number of squashed instructions iterated over during squash; mainly for profiling
-system.cpu.iq.iqSquashedOperandsExamined     63884608                       # Number of squashed operands that are examined and possibly removed from graph
-system.cpu.iq.iqSquashedNonSpecRemoved           1269                       # Number of squashed non-spec instructions that were removed
+system.cpu.iq.iqSquashedOperandsExamined     63882730                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu.iq.iqSquashedNonSpecRemoved           1895                       # Number of squashed non-spec instructions that were removed
 system.cpu.iq.issued_per_cycle::samples     123139703                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::mean         2.485819                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::stdev        2.139102                       # Number of insts issued each cycle
@@ -467,7 +467,7 @@ system.cpu.iew.iewDispatchedInsts           322303732                       # Nu
 system.cpu.iew.iewDispSquashedInsts             76830                       # Number of squashed instructions skipped by dispatch
 system.cpu.iew.iewDispLoadInsts             105336194                       # Number of dispatched load instructions
 system.cpu.iew.iewDispStoreInsts             36169392                       # Number of dispatched store instructions
-system.cpu.iew.iewDispNonSpecInsts                475                       # Number of dispatched non-speculative instructions
+system.cpu.iew.iewDispNonSpecInsts               1101                       # Number of dispatched non-speculative instructions
 system.cpu.iew.iewIQFullEvents                   2588                       # Number of times the IQ has become full, causing a stall
 system.cpu.iew.iewLSQFullEvents               3102623                       # Number of times the LSQ has become full, causing a stall
 system.cpu.iew.memOrderViolationEvents          41328                       # Number of memory order violations
@@ -486,9 +486,9 @@ system.cpu.iew.exec_rate                     2.476830                       # In
 system.cpu.iew.wb_sent                      304565842                       # cumulative count of insts sent to commit
 system.cpu.iew.wb_count                     304282792                       # cumulative count of insts written-back
 system.cpu.iew.wb_producers                 230213909                       # num instructions producing a value
-system.cpu.iew.wb_consumers                 333860979                       # num instructions consuming a value
+system.cpu.iew.wb_consumers                 333860423                       # num instructions consuming a value
 system.cpu.iew.wb_rate                       2.469736                       # insts written-back per cycle
-system.cpu.iew.wb_fanout                     0.689550                       # average fanout of values written-back
+system.cpu.iew.wb_fanout                     0.689551                       # average fanout of values written-back
 system.cpu.commit.commitSquashedInsts        44209690                       # The number of squashed insts skipped by commit
 system.cpu.commit.commitNonSpecStalls             445                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu.commit.branchMispredicts            742008                       # The number of times a branch was mispredicted
@@ -956,7 +956,7 @@ system.cpu.toL2Bus.snoop_filter.hit_multi_snoops            0                   
 system.cpu.toL2Bus.trans_dist::ReadResp       1995354                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WritebackDirty      2066791                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WritebackClean           53                       # Transaction distribution
-system.cpu.toL2Bus.trans_dist::CleanEvict         5974                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::CleanEvict         6015                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::UpgradeReq            1                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::UpgradeResp            1                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExReq        82069                       # Transaction distribution
@@ -964,8 +964,8 @@ system.cpu.toL2Bus.trans_dist::ReadExResp        82069                       # T
 system.cpu.toL2Bus.trans_dist::ReadCleanReq         1014                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadSharedReq      1994340                       # Transaction distribution
 system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side         2081                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side      6225092                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count::total           6227173                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side      6225133                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count::total           6227214                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side        68288                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side    265152640                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size::total          265220928                       # Cumulative packet size per connected master and slave (bytes)

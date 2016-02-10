@@ -4,11 +4,11 @@ sim_seconds                                  0.000050                       # Nu
 sim_ticks                                    49855000                       # Number of ticks simulated
 final_tick                                   49855000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  93266                       # Simulator instruction rate (inst/s)
-host_op_rate                                   107828                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              931188295                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 634440                       # Number of bytes of host memory used
-host_seconds                                     0.05                       # Real time elapsed on the host
+host_inst_rate                                 411650                       # Simulator instruction rate (inst/s)
+host_op_rate                                   475781                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4107877451                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 655016                       # Number of bytes of host memory used
+host_seconds                                     0.01                       # Real time elapsed on the host
 sim_insts                                        4988                       # Number of instructions simulated
 sim_ops                                          5770                       # Number of ops (including micro ops) simulated
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
@@ -629,13 +629,13 @@ system.l2bus.snoop_filter.tot_snoops                0                       # To
 system.l2bus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l2bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.l2bus.trans_dist::ReadResp                 348                       # Transaction distribution
-system.l2bus.trans_dist::CleanEvict                60                       # Transaction distribution
+system.l2bus.trans_dist::CleanEvict                70                       # Transaction distribution
 system.l2bus.trans_dist::ReadExReq                 43                       # Transaction distribution
 system.l2bus.trans_dist::ReadExResp                43                       # Transaction distribution
 system.l2bus.trans_dist::ReadSharedReq            348                       # Transaction distribution
-system.l2bus.pkt_count_system.cpu.icache.mem_side::system.l2cache.cpu_side          558                       # Packet count per connected master and slave (bytes)
+system.l2bus.pkt_count_system.cpu.icache.mem_side::system.l2cache.cpu_side          568                       # Packet count per connected master and slave (bytes)
 system.l2bus.pkt_count_system.cpu.dcache.mem_side::system.l2cache.cpu_side          284                       # Packet count per connected master and slave (bytes)
-system.l2bus.pkt_count::total                     842                       # Packet count per connected master and slave (bytes)
+system.l2bus.pkt_count::total                     852                       # Packet count per connected master and slave (bytes)
 system.l2bus.pkt_size_system.cpu.icache.mem_side::system.l2cache.cpu_side        15936                       # Cumulative packet size per connected master and slave (bytes)
 system.l2bus.pkt_size_system.cpu.dcache.mem_side::system.l2cache.cpu_side         9088                       # Cumulative packet size per connected master and slave (bytes)
 system.l2bus.pkt_size::total                    25024                       # Cumulative packet size per connected master and slave (bytes)

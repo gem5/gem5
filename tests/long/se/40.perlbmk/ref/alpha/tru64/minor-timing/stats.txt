@@ -4,11 +4,11 @@ sim_seconds                                  0.560955                       # Nu
 sim_ticks                                560955232000                       # Number of ticks simulated
 final_tick                               560955232000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 340981                       # Simulator instruction rate (inst/s)
-host_op_rate                                   340981                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              205940379                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 308844                       # Number of bytes of host memory used
-host_seconds                                  2723.87                       # Real time elapsed on the host
+host_inst_rate                                 326346                       # Simulator instruction rate (inst/s)
+host_op_rate                                   326346                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              197101410                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 309500                       # Number of bytes of host memory used
+host_seconds                                  2846.02                       # Real time elapsed on the host
 sim_insts                                   928789150                       # Number of instructions simulated
 sim_ops                                     928789150                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -47,7 +47,7 @@ system.physmem.bytesReadSys                  18704768                       # To
 system.physmem.bytesWrittenSys                4267712                       # Total written bytes from the system interface side
 system.physmem.servicedByWrQ                      315                       # Number of DRAM read bursts serviced by the write queue
 system.physmem.mergedWrBursts                       0                       # Number of DRAM write bursts merged with an existing one
-system.physmem.neitherReadNorWriteReqs         191173                       # Number of requests that are neither read nor write
+system.physmem.neitherReadNorWriteReqs              0                       # Number of requests that are neither read nor write
 system.physmem.perBankRdBursts::0               18033                       # Per bank write bursts
 system.physmem.perBankRdBursts::1               18359                       # Per bank write bursts
 system.physmem.perBankRdBursts::2               18394                       # Per bank write bursts
@@ -82,7 +82,7 @@ system.physmem.perBankWrBursts::14               4096                       # Pe
 system.physmem.perBankWrBursts::15               4157                       # Per bank write bursts
 system.physmem.numRdRetry                           0                       # Number of times read queue was full causing retry
 system.physmem.numWrRetry                           0                       # Number of times write queue was full causing retry
-system.physmem.totGap                    560955208000                       # Total gap between requests
+system.physmem.totGap                    560955150000                       # Total gap between requests
 system.physmem.readPktSize::0                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::1                       0                       # Read request sizes (log2)
 system.physmem.readPktSize::2                       0                       # Read request sizes (log2)
@@ -248,7 +248,7 @@ system.physmem.readRowHits                     202530                       # Nu
 system.physmem.writeRowHits                     52011                       # Number of row buffer hits during writes
 system.physmem.readRowHitRate                   69.37                       # Row buffer hit rate for reads
 system.physmem.writeRowHitRate                  78.00                       # Row buffer hit rate for writes
-system.physmem.avgGap                      1562788.75                       # Average gap between requests
+system.physmem.avgGap                      1562788.59                       # Average gap between requests
 system.physmem.pageHitRate                      70.98                       # Row buffer hit rate, read and write combined
 system.physmem_0.actEnergy                  392416920                       # Energy for activate commands per rank (pJ)
 system.physmem_0.preEnergy                  214116375                       # Energy for precharge commands per rank (pJ)

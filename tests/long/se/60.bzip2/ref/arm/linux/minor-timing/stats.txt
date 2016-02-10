@@ -4,11 +4,11 @@ sim_seconds                                  1.116861                       # Nu
 sim_ticks                                1116860578500                       # Number of ticks simulated
 final_tick                               1116860578500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 237615                       # Simulator instruction rate (inst/s)
-host_op_rate                                   255994                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              171817202                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 317996                       # Number of bytes of host memory used
-host_seconds                                  6500.28                       # Real time elapsed on the host
+host_inst_rate                                 228405                       # Simulator instruction rate (inst/s)
+host_op_rate                                   246072                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              165157932                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 318996                       # Number of bytes of host memory used
+host_seconds                                  6762.38                       # Real time elapsed on the host
 sim_insts                                  1544563088                       # Number of instructions simulated
 sim_ops                                    1664032481                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -47,7 +47,7 @@ system.physmem.bytesReadSys                 130981888                       # To
 system.physmem.bytesWrittenSys               67207872                       # Total written bytes from the system interface side
 system.physmem.servicedByWrQ                     1309                       # Number of DRAM read bursts serviced by the write queue
 system.physmem.mergedWrBursts                       0                       # Number of DRAM write bursts merged with an existing one
-system.physmem.neitherReadNorWriteReqs         962724                       # Number of requests that are neither read nor write
+system.physmem.neitherReadNorWriteReqs              0                       # Number of requests that are neither read nor write
 system.physmem.perBankRdBursts::0              127279                       # Per bank write bursts
 system.physmem.perBankRdBursts::1              124661                       # Per bank write bursts
 system.physmem.perBankRdBursts::2              121601                       # Per bank write bursts
@@ -833,14 +833,14 @@ system.cpu.toL2Bus.snoop_filter.hit_multi_snoops            6                   
 system.cpu.toL2Bus.trans_dist::ReadResp       7335104                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WritebackDirty      4734689                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WritebackClean           29                       # Transaction distribution
-system.cpu.toL2Bus.trans_dist::CleanEvict      6498678                       # Transaction distribution
+system.cpu.toL2Bus.trans_dist::CleanEvict      6500272                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExReq      1890853                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadExResp      1890853                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadCleanReq          820                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::ReadSharedReq      7334284                       # Transaction distribution
 system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side         1669                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side     27669721                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count::total          27671390                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side     27671315                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count::total          27672984                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side        54336                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side    826220992                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size::total          826275328                       # Cumulative packet size per connected master and slave (bytes)
