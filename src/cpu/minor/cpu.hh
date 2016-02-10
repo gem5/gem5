@@ -107,9 +107,6 @@ class MinorCPU : public BaseCPU
             : MasterPort(name_, &cpu_), cpu(cpu_)
         { }
 
-      protected:
-        /** Snooping a coherence request, do nothing.  */
-        virtual void recvTimingSnoopReq(PacketPtr pkt) { }
     };
 
   protected:

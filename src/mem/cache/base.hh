@@ -302,7 +302,7 @@ class BaseCache : public MemObject
     const int numTarget;
 
     /** Do we forward snoops from mem side port through to cpu side port? */
-    const bool forwardSnoops;
+    bool forwardSnoops;
 
     /**
      * Is this cache read only, for example the instruction cache, or

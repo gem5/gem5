@@ -127,7 +127,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
         { }
 
       protected:
-        virtual Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
 
         bool recvTimingResp(PacketPtr pkt)
         {

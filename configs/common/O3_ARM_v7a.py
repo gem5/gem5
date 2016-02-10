@@ -149,7 +149,6 @@ class O3_ARM_v7a_ICache(Cache):
     tgts_per_mshr = 8
     size = '32kB'
     assoc = 2
-    forward_snoops = False
     is_read_only = True
     # Writeback clean lines as well
     writeback_clean = True
@@ -176,7 +175,6 @@ class O3_ARM_v7aWalkCache(Cache):
     size = '1kB'
     assoc = 8
     write_buffers = 16
-    forward_snoops = False
     is_read_only = True
     # Writeback clean lines as well
     writeback_clean = True

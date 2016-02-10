@@ -77,7 +77,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       fillLatency(p->response_latency),
       responseLatency(p->response_latency),
       numTarget(p->tgts_per_mshr),
-      forwardSnoops(p->forward_snoops),
+      forwardSnoops(true),
       isReadOnly(p->is_read_only),
       blocked(0),
       order(0),
@@ -86,6 +86,8 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
 {
+    // forward snoops is overridden in init() once we can query
+    // whether the connected master is actually snooping or not
 }
 
 void
@@ -131,6 +133,7 @@ BaseCache::init()
     if (!cpuSidePort->isConnected() || !memSidePort->isConnected())
         fatal("Cache ports on %s are not connected\n", name());
     cpuSidePort->sendRangeChange();
+    forwardSnoops = cpuSidePort->isSnooping();
 }
 
 BaseMasterPort &

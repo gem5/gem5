@@ -103,8 +103,12 @@ class LSQ : public Named
 
         void recvReqRetry() { lsq.recvReqRetry(); }
 
+        bool isSnooping() const override { return true; }
+
         void recvTimingSnoopReq(PacketPtr pkt)
         { return lsq.recvTimingSnoopReq(pkt); }
+
+        void recvFunctionalSnoop(PacketPtr pkt) { }
     };
 
     DcachePort dcachePort;
