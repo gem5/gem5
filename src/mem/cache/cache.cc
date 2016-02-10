@@ -630,57 +630,55 @@ Cache::recvTimingReq(PacketPtr pkt)
         // flag) is not providing writable (it is in Owned rather than
         // the Modified state), we know that there may be other Shared
         // copies in the system; go out and invalidate them all
-        if (pkt->needsWritable() && !pkt->responderHadWritable()) {
-            // an upstream cache that had the line in Owned state
-            // (dirty, but not writable), is responding and thus
-            // transferring the dirty line from one branch of the
-            // cache hierarchy to another
+        assert(pkt->needsWritable() && !pkt->responderHadWritable());
 
-            // send out an express snoop and invalidate all other
-            // copies (snooping a packet that needs writable is the
-            // same as an invalidation), thus turning the Owned line
-            // into a Modified line, note that we don't invalidate the
-            // block in the current cache or any other cache on the
-            // path to memory
+        // an upstream cache that had the line in Owned state
+        // (dirty, but not writable), is responding and thus
+        // transferring the dirty line from one branch of the
+        // cache hierarchy to another
 
-            // create a downstream express snoop with cleared packet
-            // flags, there is no need to allocate any data as the
-            // packet is merely used to co-ordinate state transitions
-            Packet *snoop_pkt = new Packet(pkt, true, false);
+        // send out an express snoop and invalidate all other
+        // copies (snooping a packet that needs writable is the
+        // same as an invalidation), thus turning the Owned line
+        // into a Modified line, note that we don't invalidate the
+        // block in the current cache or any other cache on the
+        // path to memory
 
-            // also reset the bus time that the original packet has
-            // not yet paid for
-            snoop_pkt->headerDelay = snoop_pkt->payloadDelay = 0;
+        // create a downstream express snoop with cleared packet
+        // flags, there is no need to allocate any data as the
+        // packet is merely used to co-ordinate state transitions
+        Packet *snoop_pkt = new Packet(pkt, true, false);
 
-            // make this an instantaneous express snoop, and let the
-            // other caches in the system know that the another cache
-            // is responding, because we have found the authorative
-            // copy (Modified or Owned) that will supply the right
-            // data
-            snoop_pkt->setExpressSnoop();
-            snoop_pkt->setCacheResponding();
+        // also reset the bus time that the original packet has
+        // not yet paid for
+        snoop_pkt->headerDelay = snoop_pkt->payloadDelay = 0;
 
-            // this express snoop travels towards the memory, and at
-            // every crossbar it is snooped upwards thus reaching
-            // every cache in the system
-            bool M5_VAR_USED success = memSidePort->sendTimingReq(snoop_pkt);
-            // express snoops always succeed
-            assert(success);
+        // make this an instantaneous express snoop, and let the
+        // other caches in the system know that the another cache
+        // is responding, because we have found the authorative
+        // copy (Modified or Owned) that will supply the right
+        // data
+        snoop_pkt->setExpressSnoop();
+        snoop_pkt->setCacheResponding();
 
-            // main memory will delete the snoop packet
-        }
+        // this express snoop travels towards the memory, and at
+        // every crossbar it is snooped upwards thus reaching
+        // every cache in the system
+        bool M5_VAR_USED success = memSidePort->sendTimingReq(snoop_pkt);
+        // express snoops always succeed
+        assert(success);
+
+        // main memory will delete the snoop packet
 
         // queue for deletion, as opposed to immediate deletion, as
         // the sending cache is still relying on the packet
         pendingDelete.reset(pkt);
 
-        // no need to take any action in this particular cache as an
-        // upstream cache has already committed to responding, and
-        // either the packet does not need writable (and we can let
-        // the cache that set the cache responding flag pass on the
-        // line without any need for intervention), or if the packet
-        // needs writable it is provided, or we have already sent out
-        // any express snoops in the section above
+        // no need to take any further action in this particular cache
+        // as an upstram cache has already committed to responding,
+        // and we have already sent out any express snoops in the
+        // section above to ensure all other copies in the system are
+        // invalidated
         return true;
     }
 
@@ -1028,9 +1026,8 @@ Cache::recvAtomic(PacketPtr pkt)
         // if a cache is responding, and it had the line in Owned
         // rather than Modified state, we need to invalidate any
         // copies that are not on the same path to memory
-        if (pkt->needsWritable() && !pkt->responderHadWritable()) {
-            lat += ticksToCycles(memSidePort->sendAtomic(pkt));
-        }
+        assert(pkt->needsWritable() && !pkt->responderHadWritable());
+        lat += ticksToCycles(memSidePort->sendAtomic(pkt));
 
         return lat * clockPeriod();
     }
@@ -2493,11 +2490,8 @@ Cache::CpuSidePort::recvTimingReq(PacketPtr pkt)
 
     bool success = false;
 
-    // always let packets through if an upstream cache has committed
-    // to responding, even if blocked (we should technically look at
-    // the isExpressSnoop flag, but it is set by the cache itself, and
-    // consequently we have to rely on the cacheResponding flag)
-    if (pkt->cacheResponding()) {
+    // always let express snoop packets through if even if blocked
+    if (pkt->isExpressSnoop()) {
         // do not change the current retry state
         bool M5_VAR_USED bypass_success = cache->recvTimingReq(pkt);
         assert(bypass_success);

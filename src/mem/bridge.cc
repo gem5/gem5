@@ -154,14 +154,8 @@ Bridge::BridgeSlavePort::recvTimingReq(PacketPtr pkt)
     DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 
-    // if a cache is responding, sink the packet without further
-    // action, also discard any packet that is not a read or a write
-    if (pkt->cacheResponding() ||
-        !(pkt->isWrite() || pkt->isRead())) {
-        assert(!pkt->needsResponse());
-        pendingDelete.reset(pkt);
-        return true;
-    }
+    panic_if(pkt->cacheResponding(), "Should not see packets where cache "
+             "is responding");
 
     // we should not get a new request after committing to retry the
     // current one, but unfortunately the CPU violates this rule, so
@@ -352,6 +346,9 @@ Bridge::BridgeSlavePort::recvRespRetry()
 Tick
 Bridge::BridgeSlavePort::recvAtomic(PacketPtr pkt)
 {
+    panic_if(pkt->cacheResponding(), "Should not see packets where cache "
+             "is responding");
+
     return delay * bridge.clockPeriod() + masterPort.sendAtomic(pkt);
 }
 

@@ -56,7 +56,8 @@
 
 CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter),
-      snoopResponseLatency(p->snoop_response_latency)
+      snoopResponseLatency(p->snoop_response_latency),
+      pointOfCoherency(p->point_of_coherency)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
@@ -219,32 +220,48 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         pkt->snoopDelay = 0;
     }
 
-    // forwardTiming snooped into peer caches of the sender, and if
-    // this is a clean evict or clean writeback, but the packet is
-    // found in a cache, do not forward it
-    if ((pkt->cmd == MemCmd::CleanEvict ||
-         pkt->cmd == MemCmd::WritebackClean) && pkt->isBlockCached()) {
-        DPRINTF(CoherentXBar, "Clean evict/writeback %#llx still cached, "
-                "not forwarding\n", pkt->getAddr());
-
-        // update the layer state and schedule an idle event
-        reqLayers[master_port_id]->succeededTiming(packetFinishTime);
-
-        // queue the packet for deletion
-        pendingDelete.reset(pkt);
-
-        return true;
-    }
+    // set up a sensible starting point
+    bool success = true;
 
     // remember if the packet will generate a snoop response by
     // checking if a cache set the cacheResponding flag during the
     // snooping above
     const bool expect_snoop_resp = !cache_responding && pkt->cacheResponding();
-    const bool expect_response = pkt->needsResponse() &&
-        !pkt->cacheResponding();
+    bool expect_response = pkt->needsResponse() && !pkt->cacheResponding();
 
-    // since it is a normal request, attempt to send the packet
-    bool success = masterPorts[master_port_id]->sendTimingReq(pkt);
+    const bool sink_packet = sinkPacket(pkt);
+
+    // in certain cases the crossbar is responsible for responding
+    bool respond_directly = false;
+
+    if (sink_packet) {
+        DPRINTF(CoherentXBar, "Not forwarding %s to %#llx\n",
+                pkt->cmdString(), pkt->getAddr());
+    } else {
+        // determine if we are forwarding the packet, or responding to
+        // it
+        if (!pointOfCoherency || pkt->isRead() || pkt->isWrite()) {
+            // if we are passing on, rather than sinking, a packet to
+            // which an upstream cache has committed to responding,
+            // the line was needs writable, and the responding only
+            // had an Owned copy, so we need to immidiately let the
+            // downstream caches know, bypass any flow control
+            if (pkt->cacheResponding()) {
+                pkt->setExpressSnoop();
+            }
+
+            // since it is a normal request, attempt to send the packet
+            success = masterPorts[master_port_id]->sendTimingReq(pkt);
+        } else {
+            // no need to forward, turn this packet around and respond
+            // directly
+            assert(pkt->needsResponse());
+
+            respond_directly = true;
+            assert(!expect_snoop_resp);
+            expect_response = false;
+        }
+    }
 
     if (snoopFilter && !system->bypassCaches()) {
         // Let the snoop filter know about the success of the send operation
@@ -301,6 +318,27 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
         if (is_express_snoop)
             snoops++;
+    }
+
+    if (sink_packet)
+        // queue the packet for deletion
+        pendingDelete.reset(pkt);
+
+    if (respond_directly) {
+        assert(pkt->needsResponse());
+        assert(success);
+
+        pkt->makeResponse();
+
+        if (snoopFilter && !system->bypassCaches()) {
+            // let the snoop filter inspect the response and update its state
+            snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
+        }
+
+        Tick response_time = clockEdge() + pkt->headerDelay;
+        pkt->headerDelay = 0;
+
+        slavePorts[slave_port_id]->schedTimingResp(pkt, response_time);
     }
 
     return success;
@@ -633,27 +671,35 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         snoop_response_latency += snoop_result.second;
     }
 
-    // forwardAtomic snooped into peer caches of the sender, and if
-    // this is a clean evict, but the packet is found in a cache, do
-    // not forward it
-    if ((pkt->cmd == MemCmd::CleanEvict ||
-         pkt->cmd == MemCmd::WritebackClean) && pkt->isBlockCached()) {
-        DPRINTF(CoherentXBar, "Clean evict/writeback %#llx still cached, "
-                "not forwarding\n", pkt->getAddr());
-        return 0;
-    }
+    // set up a sensible default value
+    Tick response_latency = 0;
+
+    const bool sink_packet = sinkPacket(pkt);
 
     // even if we had a snoop response, we must continue and also
     // perform the actual request at the destination
     PortID master_port_id = findPort(pkt->getAddr());
+
+    if (sink_packet) {
+        DPRINTF(CoherentXBar, "Not forwarding %s to %#llx\n",
+                pkt->cmdString(), pkt->getAddr());
+    } else {
+        if (!pointOfCoherency || pkt->isRead() || pkt->isWrite()) {
+            // forward the request to the appropriate destination
+            response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
+        } else {
+            // if it does not need a response we sink the packet above
+            assert(pkt->needsResponse());
+
+            pkt->makeResponse();
+        }
+    }
 
     // stats updates for the request
     pktCount[slave_port_id][master_port_id]++;
     pktSize[slave_port_id][master_port_id] += pkt_size;
     transDist[pkt_cmd]++;
 
-    // forward the request to the appropriate destination
-    Tick response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
 
     // if lower levels have replied, tell the snoop filter
     if (!system->bypassCaches() && snoopFilter && pkt->isResponse()) {
@@ -875,6 +921,30 @@ CoherentXBar::forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id)
             break;
         }
     }
+}
+
+bool
+CoherentXBar::sinkPacket(const PacketPtr pkt) const
+{
+    // we can sink the packet if:
+    // 1) the crossbar is the point of coherency, and a cache is
+    //    responding after being snooped
+    // 2) the crossbar is the point of coherency, and the packet is a
+    //    coherency packet (not a read or a write) that does not
+    //    require a response
+    // 3) this is a clean evict or clean writeback, but the packet is
+    //    found in a cache above this crossbar
+    // 4) a cache is responding after being snooped, and the packet
+    //    either does not need the block to be writable, or the cache
+    //    that has promised to respond (setting the cache responding
+    //    flag) is providing writable and thus had a Modified block,
+    //    and no further action is needed
+    return (pointOfCoherency && pkt->cacheResponding()) ||
+        (pointOfCoherency && !(pkt->isRead() || pkt->isWrite()) &&
+         !pkt->needsResponse()) ||
+        (pkt->isCleanEviction() && pkt->isBlockCached()) ||
+        (pkt->cacheResponding() &&
+         (!pkt->needsWritable() || pkt->responderHadWritable()));
 }
 
 void

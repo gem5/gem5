@@ -100,6 +100,12 @@ class CoherentXBar(BaseXBar):
     # An optional snoop filter
     snoop_filter = Param.SnoopFilter(NULL, "Selected snoop filter")
 
+    # Determine how this crossbar handles packets where caches have
+    # already committed to responding, by establishing if the crossbar
+    # is the point of coherency or not.
+    point_of_coherency = Param.Bool(False, "Consider this crossbar the " \
+                                    "point of coherency")
+
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
 class SnoopFilter(SimObject):
@@ -146,6 +152,11 @@ class SystemXBar(CoherentXBar):
     forward_latency = 4
     response_latency = 2
     snoop_response_latency = 4
+
+    # This specialisation of the coherent crossbar is to be considered
+    # the point of coherency, as there are no (coherent) downstream
+    # caches.
+    point_of_coherency = True
 
 # In addition to the system interconnect, we typically also have one
 # or more on-chip I/O crossbars. Note that at some point we might want

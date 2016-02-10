@@ -273,6 +273,9 @@ class CoherentXBar : public BaseXBar
     /** Cycles of snoop response latency.*/
     const Cycles snoopResponseLatency;
 
+    /** Is this crossbar the point of coherency? **/
+    const bool pointOfCoherency;
+
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call
@@ -383,6 +386,12 @@ class CoherentXBar : public BaseXBar
      * @param exclude_slave_port_id Id of slave port to exclude
      */
     void forwardFunctional(PacketPtr pkt, PortID exclude_slave_port_id);
+
+    /**
+     * Determine if the crossbar should sink the packet, as opposed to
+     * forwarding it, or responding.
+     */
+    bool sinkPacket(const PacketPtr pkt) const;
 
     Stats::Scalar snoops;
     Stats::Distribution snoopFanout;

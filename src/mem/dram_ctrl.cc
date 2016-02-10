@@ -273,11 +273,14 @@ DRAMCtrl::recvAtomic(PacketPtr pkt)
 {
     DPRINTF(DRAM, "recvAtomic: %s 0x%x\n", pkt->cmdString(), pkt->getAddr());
 
+    panic_if(pkt->cacheResponding(), "Should not see packets where cache "
+             "is responding");
+
     // do the actual memory access and turn the packet into a response
     access(pkt);
 
     Tick latency = 0;
-    if (!pkt->cacheResponding() && pkt->hasData()) {
+    if (pkt->hasData()) {
         // this value is not supposed to be accurate, just enough to
         // keep things going, mimic a closed page
         latency = tRP + tRCD + tCL;
@@ -590,11 +593,11 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
     DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
-    // if a cache is responding, sink the packet without further action
-    if (pkt->cacheResponding()) {
-        pendingDelete.reset(pkt);
-        return true;
-    }
+    panic_if(pkt->cacheResponding(), "Should not see packets where cache "
+             "is responding");
+
+    panic_if(!(pkt->isRead() || pkt->isWrite()),
+             "Should only see read and writes at memory controller\n");
 
     // Calc avg gap between requests
     if (prevArrival != 0) {
@@ -625,7 +628,8 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
             readReqs++;
             bytesReadSys += size;
         }
-    } else if (pkt->isWrite()) {
+    } else {
+        assert(pkt->isWrite());
         assert(size != 0);
         if (writeQueueFull(dram_pkt_count)) {
             DPRINTF(DRAM, "Write queue full, not accepting\n");
@@ -638,10 +642,6 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
             writeReqs++;
             bytesWrittenSys += size;
         }
-    } else {
-        DPRINTF(DRAM,"Neither read nor write, ignore timing\n");
-        neitherReadNorWrite++;
-        accessAndRespond(pkt, 1);
     }
 
     return true;
