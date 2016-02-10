@@ -2152,48 +2152,34 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
             return;
         }
 
-        if (wb_pkt->cmd == MemCmd::WritebackDirty) {
-            // we have dirty data, and so will proceed to respond
-            pkt->setCacheResponding();
-            if (!pkt->needsWritable()) {
-                // the packet should end up in the Shared state (non
-                // writable) on the completion of the fill
-                pkt->setHasSharers();
-                // similarly, the writeback is no longer passing
-                // writeable (the receiving cache should consider the
-                // block Owned rather than Modified)
-                wb_pkt->setHasSharers();
-            } else {
-                // we need to invalidate our copy. we do that
-                // below.
-                assert(pkt->isInvalidate());
-            }
-            doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
-                                   false, false);
-        } else {
-            // on hitting a clean writeback we play it safe and do not
-            // provide a response, the block may be dirty somewhere
-            // else
-            assert(wb_pkt->isCleanEviction());
-            // The cache technically holds the block until the
-            // corresponding message reaches the crossbar
-            // below. Therefore when a snoop encounters a CleanEvict
-            // or WritebackClean message we must call
-            // setHasSharers (just like when it encounters a
-            // Writeback) to avoid the snoop filter prematurely
-            // clearing the holder bit in the crossbar below
-            if (!pkt->needsWritable()) {
-                pkt->setHasSharers();
-                // the writeback is no longer passing writeable (the
-                // receiving cache should consider the block Owned
-                // rather than Modified)
-                wb_pkt->setHasSharers();
-            } else {
-                assert(pkt->isInvalidate());
-            }
+        // conceptually writebacks are no different to other blocks in
+        // this cache, so the behaviour is modelled after handleSnoop,
+        // the difference being that instead of querying the block
+        // state to determine if it is dirty and writable, we use the
+        // command and fields of the writeback packet
+        bool respond = wb_pkt->cmd == MemCmd::WritebackDirty &&
+            pkt->needsResponse() && pkt->cmd != MemCmd::InvalidateReq;
+        bool have_writable = !wb_pkt->hasSharers();
+        bool invalidate = pkt->isInvalidate();
+
+        if (!pkt->req->isUncacheable() && pkt->isRead() && !invalidate) {
+            assert(!pkt->needsWritable());
+            pkt->setHasSharers();
+            wb_pkt->setHasSharers();
         }
 
-        if (pkt->isInvalidate()) {
+        if (respond) {
+            pkt->setCacheResponding();
+
+            if (have_writable) {
+                pkt->setResponderHadWritable();
+            }
+
+            doTimingSupplyResponse(pkt, wb_pkt->getConstPtr<uint8_t>(),
+                                   false, false);
+        }
+
+        if (invalidate) {
             // Invalidation trumps our writeback... discard here
             // Note: markInService will remove entry from writeback buffer.
             markInService(wb_entry, false);
