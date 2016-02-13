@@ -383,7 +383,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 261 */ SyscallDesc("timer_delete", unimplementedFunc),
     /* 262 */ SyscallDesc("clock_settime", unimplementedFunc),
     /* 263 */ SyscallDesc("clock_gettime", clock_gettimeFunc<ArmLinux32>),
-    /* 264 */ SyscallDesc("clock_getres", unimplementedFunc),
+    /* 264 */ SyscallDesc("clock_getres", clock_getresFunc<ArmLinux32>),
     /* 265 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
     /* 266 */ SyscallDesc("statfs64", unimplementedFunc),
     /* 267 */ SyscallDesc("fstatfs64", unimplementedFunc),

@@ -447,7 +447,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 226 */ SyscallDesc("timer_delete", unimplementedFunc),
     /* 227 */ SyscallDesc("clock_settime", unimplementedFunc),
     /* 228 */ SyscallDesc("clock_gettime", clock_gettimeFunc<X86Linux64>),
-    /* 229 */ SyscallDesc("clock_getres", unimplementedFunc),
+    /* 229 */ SyscallDesc("clock_getres", clock_getresFunc<X86Linux64>),
     /* 230 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
     /* 231 */ SyscallDesc("exit_group", exitGroupFunc),
     /* 232 */ SyscallDesc("epoll_wait", unimplementedFunc),

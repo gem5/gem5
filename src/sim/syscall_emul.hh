@@ -1357,6 +1357,23 @@ clock_gettimeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     return 0;
 }
 
+/// Target clock_getres() function.
+template <class OS>
+SyscallReturn
+clock_getresFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    int index = 1;
+    TypedBufferArg<typename OS::timespec> tp(p->getSyscallArg(tc, index));
+
+    // Set resolution at ns, which is what clock_gettime() returns
+    tp->tv_sec = 0;
+    tp->tv_nsec = 1;
+
+    tp.copyOut(tc->getMemProxy());
+
+    return 0;
+}
+
 /// Target gettimeofday() handler.
 template <class OS>
 SyscallReturn
