@@ -103,6 +103,8 @@ def parse_options():
         help="Sets the flags for debug output (-FLAG disables a flag)")
     option("--debug-start", metavar="TICK", type='int',
         help="Start debug output at TICK")
+    option("--debug-end", metavar="TICK", type='int',
+        help="End debug output at TICK")
     option("--debug-file", metavar="FILE", default="cout",
         help="Sets the output file for debug [Default: %default]")
     option("--debug-ignore", metavar="EXPR", action='append', split=':',
@@ -347,6 +349,11 @@ def main(*args):
         event.mainq.schedule(e, options.debug_start)
     else:
         trace.enable()
+
+    if options.debug_end:
+        check_tracing()
+        e = event.create(trace.disable, event.Event.Debug_Enable_Pri)
+        event.mainq.schedule(e, options.debug_end)
 
     trace.output(options.debug_file)
 
