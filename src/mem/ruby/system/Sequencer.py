@@ -78,12 +78,6 @@ class RubySequencer(RubyPort):
    # 99 is the dummy default value
    coreid = Param.Int(99, "CorePair core id")
 
-class DMASequencer(MemObject):
+class DMASequencer(RubyPort):
    type = 'DMASequencer'
    cxx_header = "mem/ruby/system/DMASequencer.hh"
-
-   version = Param.Int(0, "")
-   slave = SlavePort("Device slave port")
-   using_ruby_tester = Param.Bool(False, "")
-   ruby_system = Param.RubySystem(Parent.any, "")
-   system = Param.System(Parent.any, "system object")
