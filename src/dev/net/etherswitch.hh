@@ -60,7 +60,7 @@ class EtherSwitch : public EtherObject
         return dynamic_cast<const Params*>(_params);
     }
 
-    EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 
   protected:
     /**

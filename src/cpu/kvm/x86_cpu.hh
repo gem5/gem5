@@ -44,7 +44,7 @@ class X86KvmCPU : public BaseKvmCPU
     X86KvmCPU(X86KvmCPUParams *params);
     virtual ~X86KvmCPU();
 
-    void startup();
+    void startup() override;
 
     /** @{ */
     void dump() const override;
@@ -61,7 +61,7 @@ class X86KvmCPU : public BaseKvmCPU
   protected:
     typedef std::vector<struct kvm_msr_entry> KvmMSRVector;
 
-    Tick kvmRun(Tick ticks);
+    Tick kvmRun(Tick ticks) override;
 
     /**
      * Run the virtual CPU until draining completes.
@@ -78,12 +78,12 @@ class X86KvmCPU : public BaseKvmCPU
      *
      * @return Number of ticks executed
      */
-    Tick kvmRunDrain();
+    Tick kvmRunDrain() override;
 
     /** Wrapper that synchronizes state in kvm_run */
     Tick kvmRunWrapper(Tick ticks);
 
-    uint64_t getHostCycles() const;
+    uint64_t getHostCycles() const override;
 
     /**
      * Methods to access CPUID information using the extended
@@ -132,8 +132,8 @@ class X86KvmCPU : public BaseKvmCPU
     void setVCpuEvents(const struct kvm_vcpu_events &events);
     /** @} */
 
-    void updateKvmState();
-    void updateThreadContext();
+    void updateKvmState() override;
+    void updateThreadContext() override;
 
     /**
      * Inject pending interrupts from gem5 into the virtual CPU.
@@ -143,9 +143,9 @@ class X86KvmCPU : public BaseKvmCPU
     /**
      * Handle x86 legacy IO (in/out)
      */
-    Tick handleKvmExitIO();
+    Tick handleKvmExitIO() override;
 
-    Tick handleKvmExitIRQWindowOpen();
+    Tick handleKvmExitIRQWindowOpen() override;
 
     /**
      * Check if there are pending events in the vCPU that prevents it
@@ -158,7 +158,7 @@ class X86KvmCPU : public BaseKvmCPU
      * @return False if there are pending events in the guest, True
      * otherwise.
      */
-    bool archIsDrained() const;
+    bool archIsDrained() const override;
 
   private:
     /**

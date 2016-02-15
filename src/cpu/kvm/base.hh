@@ -80,9 +80,9 @@ class BaseKvmCPU : public BaseCPU
     BaseKvmCPU(BaseKvmCPUParams *params);
     virtual ~BaseKvmCPU();
 
-    void init();
-    void startup();
-    void regStats();
+    void init() override;
+    void startup() override;
+    void regStats() override;
 
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
@@ -90,24 +90,24 @@ class BaseKvmCPU : public BaseCPU
     DrainState drain() override;
     void drainResume() override;
 
-    void switchOut();
-    void takeOverFrom(BaseCPU *cpu);
+    void switchOut() override;
+    void takeOverFrom(BaseCPU *cpu) override;
 
-    void verifyMemoryMode() const;
+    void verifyMemoryMode() const override;
 
-    MasterPort &getDataPort() { return dataPort; }
-    MasterPort &getInstPort() { return instPort; }
+    MasterPort &getDataPort() override { return dataPort; }
+    MasterPort &getInstPort() override { return instPort; }
 
     void wakeup(ThreadID tid = 0) override;
-    void activateContext(ThreadID thread_num);
-    void suspendContext(ThreadID thread_num);
+    void activateContext(ThreadID thread_num) override;
+    void suspendContext(ThreadID thread_num) override;
     void deallocateContext(ThreadID thread_num);
-    void haltContext(ThreadID thread_num);
+    void haltContext(ThreadID thread_num) override;
 
-    ThreadContext *getContext(int tn);
+    ThreadContext *getContext(int tn) override;
 
-    Counter totalInsts() const;
-    Counter totalOps() const;
+    Counter totalInsts() const override;
+    Counter totalOps() const override;
 
     /** Dump the internal state to the terminal. */
     virtual void dump() const;

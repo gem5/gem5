@@ -115,7 +115,7 @@ class TLB : public BaseTLB
             bool update_used = true);
 
     /** Remove all entries from the TLB */
-    void flushAll();
+    void flushAll() override;
 
   protected:
     /** Insert a PTE into the TLB. */
@@ -153,10 +153,10 @@ class TLB : public BaseTLB
     typedef SparcTLBParams Params;
     TLB(const Params *p);
 
-    void takeOverFrom(BaseTLB *otlb) {}
+    void takeOverFrom(BaseTLB *otlb) override {}
 
     void
-    demapPage(Addr vaddr, uint64_t asn)
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         panic("demapPage(Addr) is not implemented.\n");
     }

@@ -48,7 +48,7 @@ class SparcSystem : public System
     SparcSystem(Params *p);
     ~SparcSystem();
 
-    virtual void initState();
+    void initState() override;
 
 /**
  * Serialization stuff

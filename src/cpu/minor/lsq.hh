@@ -98,17 +98,17 @@ class LSQ : public Named
         { }
 
       protected:
-        bool recvTimingResp(PacketPtr pkt)
+        bool recvTimingResp(PacketPtr pkt) override
         { return lsq.recvTimingResp(pkt); }
 
-        void recvReqRetry() { lsq.recvReqRetry(); }
+        void recvReqRetry() override { lsq.recvReqRetry(); }
 
         bool isSnooping() const override { return true; }
 
-        void recvTimingSnoopReq(PacketPtr pkt)
+        void recvTimingSnoopReq(PacketPtr pkt) override
         { return lsq.recvTimingSnoopReq(pkt); }
 
-        void recvFunctionalSnoop(PacketPtr pkt) { }
+        void recvFunctionalSnoop(PacketPtr pkt) override { }
     };
 
     DcachePort dcachePort;

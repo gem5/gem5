@@ -49,11 +49,11 @@ class WeightedLRUPolicy : public AbstractReplacementPolicy
     WeightedLRUPolicy(const Params* p);
     ~WeightedLRUPolicy();
 
-    void touch(int64_t set, int64_t way, Tick time);
+    void touch(int64_t set, int64_t way, Tick time) override;
     void touch(int64_t set, int64_t way, Tick time, int occupancy);
     int64_t getVictim(int64_t set) const override;
 
-    bool useOccupancy() const { return true; }
+    bool useOccupancy() const override { return true; }
 
     CacheMemory * m_cache;
     int **m_last_occ_ptr;

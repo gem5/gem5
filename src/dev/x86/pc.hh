@@ -57,7 +57,7 @@ class Pc : public Platform
     /**
      * Do platform initialization stuff
      */
-    void init();
+    void init() override;
 
     Pc(const Params *p);
 
