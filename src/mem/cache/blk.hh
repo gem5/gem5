@@ -347,15 +347,16 @@ class CacheBlk
             bool success = false;
 
             auto l = lockList.begin();
-            while (l != lockList.end() && !success) {
+            while (!success && l != lockList.end()) {
                 if (l->matches(pkt->req)) {
                     // it's a store conditional, and as far as the
                     // memory system can tell, the requesting
                     // context's lock is still valid.
                     success = true;
                     lockList.erase(l);
+                } else {
+                    ++l;
                 }
-                ++l;
             }
 
             req->setExtraData(success ? 1 : 0);
