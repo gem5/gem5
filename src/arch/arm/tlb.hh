@@ -393,6 +393,8 @@ protected:
     bool haveVirtualization;
     bool haveLargeAsid64;
 
+    AddrRange m5opRange;
+
     void updateMiscReg(ThreadContext *tc,
                        ArmTranslationType tranType = NormalTran);
 

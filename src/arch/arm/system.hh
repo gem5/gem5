@@ -116,6 +116,12 @@ class ArmSystem : public System
      */
     const bool _haveLargeAsid64;
 
+    /**
+     * Range for memory-mapped m5 pseudo ops. The range will be
+     * invalid/empty if disabled.
+     */
+    const AddrRange _m5opRange;
+
   protected:
     /**
      * Get a boot loader that matches the kernel.
@@ -215,6 +221,12 @@ class ArmSystem : public System
     {
         return mask(physAddrRange());
     }
+
+    /**
+     * Range used by memory-mapped m5 pseudo-ops if enabled. Returns
+     * an invalid/empty range if disabled.
+     */
+    const AddrRange &m5opRange() const { return _m5opRange; }
 
     /** Returns true if the system of a specific thread context implements the
      * Security Extensions

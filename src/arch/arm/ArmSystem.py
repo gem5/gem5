@@ -76,6 +76,10 @@ class ArmSystem(System):
     have_large_asid_64 = Param.Bool(False,
         "True if ASID is 16 bits in AArch64 (ARMv8)")
 
+    m5ops_base = Param.Addr(0,
+        "Base of the 64KiB PA range used for memory-mapped m5ops. Set to 0 "
+        "to disable.")
+
 class GenericArmSystem(ArmSystem):
     type = 'GenericArmSystem'
     cxx_header = "arch/arm/system.hh"

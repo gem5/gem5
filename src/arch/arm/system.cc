@@ -65,6 +65,9 @@ ArmSystem::ArmSystem(Params *p)
       _resetAddr64(p->reset_addr_64),
       _physAddrRange64(p->phys_addr_range_64),
       _haveLargeAsid64(p->have_large_asid_64),
+      _m5opRange(p->m5ops_base ?
+                 RangeSize(p->m5ops_base, 0x10000) :
+                 AddrRange(1, 0)), // Create an empty range if disabled
       multiProc(p->multi_proc)
 {
     // Check if the physical address range is valid
