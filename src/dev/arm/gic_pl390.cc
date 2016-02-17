@@ -76,7 +76,8 @@ Pl390::Pl390(const Params *p)
       cpuSgiPending {}, cpuSgiActive {},
       cpuSgiPendingExt {}, cpuSgiActiveExt {},
       cpuPpiPending {}, cpuPpiActive {},
-      irqEnable(false)
+      irqEnable(false),
+      pendingDelayedInterrupts(0)
 {
     for (int x = 0; x < CPU_MAX; x++) {
         iccrpr[x] = 0xff;
@@ -85,7 +86,7 @@ Pl390::Pl390(const Params *p)
         cpuBpr[x] = 0;
         // Initialize cpu highest int
         cpuHighestInt[x] = SPURIOUS_INT;
-        postIntEvent[x] = new PostIntEvent(x, p->platform);
+        postIntEvent[x] = new PostIntEvent(*this, x);
     }
     DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled[0],
             cpuEnabled[1]);
@@ -812,10 +813,31 @@ Pl390::clearPPInt(uint32_t num, uint32_t cpu)
 void
 Pl390::postInt(uint32_t cpu, Tick when)
 {
-    if (!(postIntEvent[cpu]->scheduled()))
+    if (!(postIntEvent[cpu]->scheduled())) {
+        ++pendingDelayedInterrupts;
         eventq->schedule(postIntEvent[cpu], when);
+    }
 }
 
+void
+Pl390::postDelayedInt(uint32_t cpu)
+{
+    platform->intrctrl->post(cpu, ArmISA::INT_IRQ, 0);
+    --pendingDelayedInterrupts;
+    assert(pendingDelayedInterrupts >= 0);
+    if (pendingDelayedInterrupts == 0)
+        signalDrainDone();
+}
+
+DrainState
+Pl390::drain()
+{
+    if (pendingDelayedInterrupts == 0) {
+        return DrainState::Drained;
+    } else {
+        return DrainState::Draining;
+    }
+}
 
 void
 Pl390::serialize(CheckpointOut &cp) const
@@ -842,14 +864,6 @@ Pl390::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
     SERIALIZE_SCALAR(irqEnable);
-    Tick interrupt_time[CPU_MAX];
-    for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
-        interrupt_time[cpu] = 0;
-        if (postIntEvent[cpu]->scheduled()) {
-            interrupt_time[cpu] = postIntEvent[cpu]->when();
-        }
-    }
-    SERIALIZE_ARRAY(interrupt_time, CPU_MAX);
     SERIALIZE_SCALAR(gem5ExtensionsEnabled);
 
     for (uint32_t i=0; i < bankedRegs.size(); ++i) {
@@ -895,13 +909,18 @@ Pl390::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
     UNSERIALIZE_SCALAR(irqEnable);
 
-    Tick interrupt_time[CPU_MAX];
-    UNSERIALIZE_ARRAY(interrupt_time, CPU_MAX);
+    // Handle checkpoints from before we drained the GIC to prevent
+    // in-flight interrupts.
+    if (cp.entryExists(Serializable::currentSection(), "interrupt_time")) {
+        Tick interrupt_time[CPU_MAX];
+        UNSERIALIZE_ARRAY(interrupt_time, CPU_MAX);
 
-    for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
-        if (interrupt_time[cpu])
-            schedule(postIntEvent[cpu], interrupt_time[cpu]);
+        for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
+            if (interrupt_time[cpu])
+                schedule(postIntEvent[cpu], interrupt_time[cpu]);
+        }
     }
+
     if (!UNSERIALIZE_OPT_SCALAR(gem5ExtensionsEnabled))
         gem5ExtensionsEnabled = false;
 

@@ -318,25 +318,32 @@ class Pl390 : public BaseGic
     int intNumToWord(int num) const { return num >> 5; }
     int intNumToBit(int num) const { return num % 32; }
 
-    /** Post an interrupt to a CPU
+    /**
+     * Post an interrupt to a CPU with a delay
      */
     void postInt(uint32_t cpu, Tick when);
+
+    /**
+     * Deliver a delayed interrupt to the target CPU
+     */
+    void postDelayedInt(uint32_t cpu);
 
     /** Event definition to post interrupt to CPU after a delay
     */
     class PostIntEvent : public Event
     {
       private:
+        Pl390 &parent;
         uint32_t cpu;
-        Platform *platform;
       public:
-        PostIntEvent( uint32_t c, Platform* p)
-            : cpu(c), platform(p)
+        PostIntEvent(Pl390 &_parent, uint32_t _cpu)
+            : parent(_parent), cpu(_cpu)
         { }
-        void process() { platform->intrctrl->post(cpu, ArmISA::INT_IRQ, 0);}
+        void process() { parent.postDelayedInt(cpu); }
         const char *description() const { return "Post Interrupt to CPU"; }
     };
     PostIntEvent *postIntEvent[CPU_MAX];
+    int pendingDelayedInterrupts;
 
   public:
     typedef Pl390Params Params;
@@ -346,6 +353,8 @@ class Pl390 : public BaseGic
         return dynamic_cast<const Params *>(_params);
     }
     Pl390(const Params *p);
+
+    DrainState drain() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
