@@ -84,6 +84,9 @@ RubyPort::init()
 {
     assert(m_controller != NULL);
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
+
+    for (const auto &s_port : slave_ports)
+        s_port->sendRangeChange();
 }
 
 BaseMasterPort &
