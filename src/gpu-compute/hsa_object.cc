@@ -35,9 +35,10 @@
 
 #include "gpu-compute/hsa_object.hh"
 
+#include <cassert>
 #include <fstream>
 
-#include "gpu-compute/brig_object.hh"
+#include "base/misc.hh"
 
 HsaObject::HsaObject(const std::string &fname)
     : readonlyData(nullptr), filename(fname)
