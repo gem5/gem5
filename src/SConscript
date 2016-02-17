@@ -1083,16 +1083,26 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
             new_env.Append(CCFLAGS='-fsanitize=undefined')
             new_env.Append(LINKFLAGS='-fsanitize=undefined')
 
+        # The address sanitizer is available for gcc >= 4.8
+        if GetOption('with_asan')  and \
+                compareVersions(env['GCC_VERSION'], '4.8') >= 0:
+            new_env.Append(CCFLAGS='-fsanitize=address')
+            new_env.Append(LINKFLAGS='-fsanitize=address')
+
     if env['CLANG']:
         swig_env.Append(CCFLAGS=['-Wno-sometimes-uninitialized',
                                  '-Wno-deprecated-register',
                                  '-Wno-tautological-compare'])
 
-        # All supported clang versions have support for UBSan, so if
-        # asked to use it, append the compiler and linker flags.
+        # We require clang >= 3.1, so there is no need to check any
+        # versions here.
         if GetOption('with_ubsan'):
             new_env.Append(CCFLAGS='-fsanitize=undefined')
             new_env.Append(LINKFLAGS='-fsanitize=undefined')
+
+        if GetOption('with_asan'):
+            new_env.Append(CCFLAGS='-fsanitize=address')
+            new_env.Append(LINKFLAGS='-fsanitize=address')
 
     werror_env = new_env.Clone()
     # Treat warnings as errors but white list some warnings that we

@@ -194,6 +194,8 @@ AddLocalOption('--without-tcmalloc', dest='without_tcmalloc',
                help='Disable linking against tcmalloc')
 AddLocalOption('--with-ubsan', dest='with_ubsan', action='store_true',
                help='Build with Undefined Behavior Sanitizer if available')
+AddLocalOption('--with-asan', dest='with_asan', action='store_true',
+               help='Build with Address Sanitizer if available')
 
 termcap = get_termcap(GetOption('use_colors'))
 
@@ -209,6 +211,7 @@ use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                  'PYTHONPATH', 'RANLIB', 'SWIG', 'TERM' ])
 
 use_prefixes = [
+    "ASAN_",           # address sanitizer symbolizer path and settings
     "CCACHE_",         # ccache (caching compiler wrapper) configuration
     "CCC_",            # clang static analyzer configuration
     "DISTCC_",         # distcc (distributed compiler wrapper) configuration
