@@ -192,6 +192,8 @@ class RubyPort : public MemObject
     bool m_usingRubyTester;
     System* system;
 
+    std::vector<MemSlavePort *> slave_ports;
+
   private:
     bool onRetryList(MemSlavePort * port)
     {
@@ -212,7 +214,6 @@ class RubyPort : public MemObject
 
     /** Vector of M5 Ports attached to this Ruby port. */
     typedef std::vector<MemSlavePort *>::iterator CpuPortIter;
-    std::vector<MemSlavePort *> slave_ports;
     std::vector<PioMasterPort *> master_ports;
 
     //
