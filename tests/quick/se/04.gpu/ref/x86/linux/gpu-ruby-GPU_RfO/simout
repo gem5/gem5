@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:58:44
-gem5 started Jan 21 2016 14:59:07
-gem5 executing on zizzer, pid 26194
-command line: build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /z/atgutier/gem5/gem5-commit/tests/run.py build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
+gem5 compiled Mar 10 2016 12:22:56
+gem5 started Mar 10 2016 12:23:20
+gem5 executing on phenom, pid 9635
+command line: build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
 
-Using GPU kernel code file(s) /dist/m5/regression/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
+Using GPU kernel code file(s) /home/stever/hg/m5sim.org/gem5/tests/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
 Global frequency set at 1000000000000 ticks per second
 Forcing maxCoalescedReqs to 32 (TLB assoc.) 
 Forcing maxCoalescedReqs to 32 (TLB assoc.) 

@@ -4,11 +4,11 @@ sim_seconds                                  0.000663                       # Nu
 sim_ticks                                   663454500                       # Number of ticks simulated
 final_tick                                  663454500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  74039                       # Simulator instruction rate (inst/s)
-host_op_rate                                   152254                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              733530611                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1301780                       # Number of bytes of host memory used
-host_seconds                                     0.90                       # Real time elapsed on the host
+host_inst_rate                                  97803                       # Simulator instruction rate (inst/s)
+host_op_rate                                   201121                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              968968514                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1290208                       # Number of bytes of host memory used
+host_seconds                                     0.68                       # Real time elapsed on the host
 sim_insts                                       66963                       # Number of instructions simulated
 sim_ops                                        137705                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -87,8 +87,8 @@ system.mem_ctrls.rdQLenPdf::1                       2                       # Wh
 system.mem_ctrls.rdQLenPdf::2                       1                       # What read queue length does an incoming req see
 system.mem_ctrls.rdQLenPdf::3                       1                       # What read queue length does an incoming req see
 system.mem_ctrls.rdQLenPdf::4                       2                       # What read queue length does an incoming req see
-system.mem_ctrls.rdQLenPdf::5                       3                       # What read queue length does an incoming req see
-system.mem_ctrls.rdQLenPdf::6                       0                       # What read queue length does an incoming req see
+system.mem_ctrls.rdQLenPdf::5                       2                       # What read queue length does an incoming req see
+system.mem_ctrls.rdQLenPdf::6                       1                       # What read queue length does an incoming req see
 system.mem_ctrls.rdQLenPdf::7                       0                       # What read queue length does an incoming req see
 system.mem_ctrls.rdQLenPdf::8                       0                       # What read queue length does an incoming req see
 system.mem_ctrls.rdQLenPdf::9                       0                       # What read queue length does an incoming req see
@@ -192,8 +192,8 @@ system.mem_ctrls.bytesPerActivate::768-895            9      1.86%     98.56% # 
 system.mem_ctrls.bytesPerActivate::896-1023            2      0.41%     98.97% # Bytes accessed per row activation
 system.mem_ctrls.bytesPerActivate::1024-1151            5      1.03%    100.00% # Bytes accessed per row activation
 system.mem_ctrls.bytesPerActivate::total          485                       # Bytes accessed per row activation
-system.mem_ctrls.totQLat                     15500500                       # Total ticks spent queuing
-system.mem_ctrls.totMemAccLat                44581750                       # Total ticks spent from burst creation until serviced by the DRAM
+system.mem_ctrls.totQLat                     15500495                       # Total ticks spent queuing
+system.mem_ctrls.totMemAccLat                44581745                       # Total ticks spent from burst creation until serviced by the DRAM
 system.mem_ctrls.totBusLat                    7755000                       # Total ticks spent in databus transfers
 system.mem_ctrls.avgQLat                      9993.87                       # Average queueing delay per DRAM burst
 system.mem_ctrls.avgBusLat                    5000.00                       # Average bus latency per DRAM burst
@@ -293,34 +293,34 @@ system.ruby.outstanding_req_hist_seqr    |           0      0.00%      0.00% |  
 system.ruby.outstanding_req_hist_seqr::total       114203                      
 system.ruby.outstanding_req_hist_coalsr::bucket_size            1                      
 system.ruby.outstanding_req_hist_coalsr::max_bucket            9                      
-system.ruby.outstanding_req_hist_coalsr::samples           28                      
-system.ruby.outstanding_req_hist_coalsr::mean     1.642857                      
-system.ruby.outstanding_req_hist_coalsr::gmean     1.455771                      
-system.ruby.outstanding_req_hist_coalsr::stdev     0.911421                      
-system.ruby.outstanding_req_hist_coalsr  |           0      0.00%      0.00% |          16     57.14%     57.14% |           8     28.57%     85.71% |           2      7.14%     92.86% |           2      7.14%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.outstanding_req_hist_coalsr::total           28                      
+system.ruby.outstanding_req_hist_coalsr::samples           27                      
+system.ruby.outstanding_req_hist_coalsr::mean     1.629630                      
+system.ruby.outstanding_req_hist_coalsr::gmean     1.438746                      
+system.ruby.outstanding_req_hist_coalsr::stdev     0.926040                      
+system.ruby.outstanding_req_hist_coalsr  |           0      0.00%      0.00% |          16     59.26%     59.26% |           7     25.93%     85.19% |           2      7.41%     92.59% |           2      7.41%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.outstanding_req_hist_coalsr::total           27                      
 system.ruby.latency_hist_seqr::bucket_size           64                      
 system.ruby.latency_hist_seqr::max_bucket          639                      
 system.ruby.latency_hist_seqr::samples         114203                      
-system.ruby.latency_hist_seqr::mean          4.784183                      
+system.ruby.latency_hist_seqr::mean          4.784165                      
 system.ruby.latency_hist_seqr::gmean         2.131364                      
-system.ruby.latency_hist_seqr::stdev        23.846744                      
+system.ruby.latency_hist_seqr::stdev        23.846473                      
 system.ruby.latency_hist_seqr            |      112668     98.66%     98.66% |           0      0.00%     98.66% |           0      0.00%     98.66% |        1506      1.32%     99.97% |          19      0.02%     99.99% |          10      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.latency_hist_seqr::total           114203                      
 system.ruby.latency_hist_coalsr::bucket_size           64                      
 system.ruby.latency_hist_coalsr::max_bucket          639                      
-system.ruby.latency_hist_coalsr::samples           28                      
-system.ruby.latency_hist_coalsr::mean      136.285714                      
-system.ruby.latency_hist_coalsr::gmean      19.975449                      
-system.ruby.latency_hist_coalsr::stdev     139.699905                      
-system.ruby.latency_hist_coalsr          |          14     50.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |          10     35.71%     85.71% |           1      3.57%     89.29% |           3     10.71%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.latency_hist_coalsr::total             28                      
+system.ruby.latency_hist_coalsr::samples           27                      
+system.ruby.latency_hist_coalsr::mean      141.296296                      
+system.ruby.latency_hist_coalsr::gmean      21.202698                      
+system.ruby.latency_hist_coalsr::stdev     140.217089                      
+system.ruby.latency_hist_coalsr          |          13     48.15%     48.15% |           0      0.00%     48.15% |           0      0.00%     48.15% |          10     37.04%     85.19% |           1      3.70%     88.89% |           3     11.11%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.latency_hist_coalsr::total             27                      
 system.ruby.hit_latency_hist_seqr::bucket_size           64                      
 system.ruby.hit_latency_hist_seqr::max_bucket          639                      
 system.ruby.hit_latency_hist_seqr::samples         1535                      
-system.ruby.hit_latency_hist_seqr::mean    208.449511                      
-system.ruby.hit_latency_hist_seqr::gmean   208.002927                      
-system.ruby.hit_latency_hist_seqr::stdev    15.847049                      
+system.ruby.hit_latency_hist_seqr::mean    208.448208                      
+system.ruby.hit_latency_hist_seqr::gmean   208.002202                      
+system.ruby.hit_latency_hist_seqr::stdev    15.833423                      
 system.ruby.hit_latency_hist_seqr        |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |        1506     98.11%     98.11% |          19      1.24%     99.35% |          10      0.65%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.hit_latency_hist_seqr::total         1535                      
 system.ruby.miss_latency_hist_seqr::bucket_size            4                      
@@ -333,12 +333,12 @@ system.ruby.miss_latency_hist_seqr       |      112609     99.95%     99.95% |  
 system.ruby.miss_latency_hist_seqr::total       112668                      
 system.ruby.miss_latency_hist_coalsr::bucket_size           64                      
 system.ruby.miss_latency_hist_coalsr::max_bucket          639                      
-system.ruby.miss_latency_hist_coalsr::samples           28                      
-system.ruby.miss_latency_hist_coalsr::mean   136.285714                      
-system.ruby.miss_latency_hist_coalsr::gmean    19.975449                      
-system.ruby.miss_latency_hist_coalsr::stdev   139.699905                      
-system.ruby.miss_latency_hist_coalsr     |          14     50.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |          10     35.71%     85.71% |           1      3.57%     89.29% |           3     10.71%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.miss_latency_hist_coalsr::total           28                      
+system.ruby.miss_latency_hist_coalsr::samples           27                      
+system.ruby.miss_latency_hist_coalsr::mean   141.296296                      
+system.ruby.miss_latency_hist_coalsr::gmean    21.202698                      
+system.ruby.miss_latency_hist_coalsr::stdev   140.217089                      
+system.ruby.miss_latency_hist_coalsr     |          13     48.15%     48.15% |           0      0.00%     48.15% |           0      0.00%     48.15% |          10     37.04%     85.19% |           1      3.70%     88.89% |           3     11.11%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.miss_latency_hist_coalsr::total           27                      
 system.ruby.L1Cache.incomplete_times_seqr       112609                      
 system.ruby.L2Cache.incomplete_times_seqr           59                      
 system.cp_cntrl0.L1D0cache.demand_hits              0                       # Number of cache demand hits
@@ -388,10 +388,10 @@ system.cpu0.num_cc_register_writes              42183                       # nu
 system.cpu0.num_mem_refs                        27198                       # number of memory refs
 system.cpu0.num_load_insts                      16684                       # Number of load instructions
 system.cpu0.num_store_insts                     10514                       # Number of store instructions
-system.cpu0.num_idle_cycles               5227.003992                       # Number of idle cycles
-system.cpu0.num_busy_cycles              1321681.996008                       # Number of busy cycles
-system.cpu0.not_idle_fraction                0.996061                       # Percentage of non-idle cycles
-system.cpu0.idle_fraction                    0.003939                       # Percentage of idle cycles
+system.cpu0.num_idle_cycles               5231.003992                       # Number of idle cycles
+system.cpu0.num_busy_cycles              1321677.996008                       # Number of busy cycles
+system.cpu0.not_idle_fraction                0.996058                       # Percentage of non-idle cycles
+system.cpu0.idle_fraction                    0.003942                       # Percentage of idle cycles
 system.cpu0.Branches                            16199                       # Number of branches fetched
 system.cpu0.op_class::No_OpClass                  615      0.45%      0.45% # Class of executed instruction
 system.cpu0.op_class::IntAlu                   108791     79.00%     79.45% # Class of executed instruction
@@ -432,7 +432,7 @@ system.cpu1.clk_domain.voltage_domain.voltage            1                      
 system.cpu1.clk_domain.clock                     1000                       # Clock period in ticks
 system.cpu1.CUs0.wavefronts00.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs0.wavefronts00.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs0.wavefronts00.timesBlockedDueRAWDependencies          297                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs0.wavefronts00.timesBlockedDueRAWDependencies          307                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs0.wavefronts00.src_reg_operand_dist::samples           39                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts00.src_reg_operand_dist::mean     0.794872                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts00.src_reg_operand_dist::stdev     0.863880                       # number of executed instructions with N source register operands
@@ -624,7 +624,7 @@ system.cpu1.CUs0.wavefronts07.dst_reg_operand_dist::max_value            0      
 system.cpu1.CUs0.wavefronts07.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs0.wavefronts08.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs0.wavefronts08.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs0.wavefronts08.timesBlockedDueRAWDependencies          273                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs0.wavefronts08.timesBlockedDueRAWDependencies          279                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs0.wavefronts08.src_reg_operand_dist::samples           34                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts08.src_reg_operand_dist::mean     0.852941                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts08.src_reg_operand_dist::stdev     0.857493                       # number of executed instructions with N source register operands
@@ -816,7 +816,7 @@ system.cpu1.CUs0.wavefronts15.dst_reg_operand_dist::max_value            0      
 system.cpu1.CUs0.wavefronts15.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs0.wavefronts16.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs0.wavefronts16.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs0.wavefronts16.timesBlockedDueRAWDependencies          272                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs0.wavefronts16.timesBlockedDueRAWDependencies          282                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs0.wavefronts16.src_reg_operand_dist::samples           34                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts16.src_reg_operand_dist::mean     0.852941                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts16.src_reg_operand_dist::stdev     0.857493                       # number of executed instructions with N source register operands
@@ -1008,7 +1008,7 @@ system.cpu1.CUs0.wavefronts23.dst_reg_operand_dist::max_value            0      
 system.cpu1.CUs0.wavefronts23.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs0.wavefronts24.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs0.wavefronts24.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs0.wavefronts24.timesBlockedDueRAWDependencies          256                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs0.wavefronts24.timesBlockedDueRAWDependencies          276                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs0.wavefronts24.src_reg_operand_dist::samples           34                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts24.src_reg_operand_dist::mean     0.852941                       # number of executed instructions with N source register operands
 system.cpu1.CUs0.wavefronts24.src_reg_operand_dist::stdev     0.857493                       # number of executed instructions with N source register operands
@@ -1238,65 +1238,65 @@ system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::overflows            0   
 system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::min_value            2                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::max_value            8                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::total           43                       # For each instruction fetch request recieved record how many instructions you got from it
-system.cpu1.CUs0.ExecStage.num_cycles_with_no_issue         3230                       # number of cycles the CU issues nothing
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_issued          128                       # number of cycles the CU issued at least one instruction
+system.cpu1.CUs0.ExecStage.num_cycles_with_no_issue         3261                       # number of cycles the CU issues nothing
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_issued           99                       # number of cycles the CU issued at least one instruction
 system.cpu1.CUs0.ExecStage.num_cycles_with_instrtype_issue::ALU0           30                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs0.ExecStage.num_cycles_with_instrtype_issue::ALU1           29                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs0.ExecStage.num_cycles_with_instrtype_issue::ALU2           29                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs0.ExecStage.num_cycles_with_instrtype_issue::ALU3           29                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs0.ExecStage.num_cycles_with_instrtype_issue::GM           18                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs0.ExecStage.num_cycles_with_instrtype_issue::LM            6                       # Number of cycles at least one instruction of specific type issued
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU0          780                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU1          367                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU2          384                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU3          327                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::GM          414                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::LM           30                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs0.ExecStage.spc::samples          3358                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::mean         0.041989                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::stdev        0.220406                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU0          769                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU1          357                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU2          375                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::ALU3          332                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::GM          398                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs0.ExecStage.num_cycles_with_instr_type_no_issue::LM           22                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs0.ExecStage.spc::samples          3360                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.spc::mean         0.041964                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.spc::stdev        0.257708                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::underflows            0      0.00%      0.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::0                3230     96.19%     96.19% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::1                 116      3.45%     99.64% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::2                  11      0.33%     99.97% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::3                   1      0.03%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.spc::0                3261     97.05%     97.05% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.spc::1                  59      1.76%     98.81% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.spc::2                  38      1.13%     99.94% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.spc::3                   2      0.06%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::4                   0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::5                   0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::6                   0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::overflows            0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::min_value            0                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs0.ExecStage.spc::max_value            3                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.spc::total            3358                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs0.ExecStage.num_transitions_active_to_idle           82                       # number of CU transitions from active to idle
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::samples           82                       # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::mean    39.280488                       # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::stdev   158.161058                       # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.spc::total            3360                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs0.ExecStage.num_transitions_active_to_idle           93                       # number of CU transitions from active to idle
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::samples           93                       # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::mean    34.967742                       # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::stdev   149.478110                       # duration of idle periods in cycles
 system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::underflows            0      0.00%      0.00% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::0-4           62     75.61%     75.61% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::5-9            9     10.98%     86.59% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::10-14            1      1.22%     87.80% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::15-19            0      0.00%     87.80% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::20-24            2      2.44%     90.24% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::25-29            1      1.22%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::30-34            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::35-39            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::40-44            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::45-49            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::50-54            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::55-59            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::60-64            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::65-69            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::70-74            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::75            0      0.00%     91.46% # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::overflows            7      8.54%    100.00% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::0-4           74     79.57%     79.57% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::5-9            7      7.53%     87.10% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::10-14            1      1.08%     88.17% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::15-19            1      1.08%     89.25% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::20-24            2      2.15%     91.40% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::25-29            1      1.08%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::30-34            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::35-39            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::40-44            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::45-49            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::50-54            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::55-59            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::60-64            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::65-69            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::70-74            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::75            0      0.00%     92.47% # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::overflows            7      7.53%    100.00% # duration of idle periods in cycles
 system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::min_value            1                       # duration of idle periods in cycles
 system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::max_value         1285                       # duration of idle periods in cycles
-system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::total           82                       # duration of idle periods in cycles
+system.cpu1.CUs0.ExecStage.idle_duration_in_cycles::total           93                       # duration of idle periods in cycles
 system.cpu1.CUs0.GlobalMemPipeline.load_vrf_bank_conflict_cycles            0                       # total number of cycles GM data are delayed before updating the VRF
 system.cpu1.CUs0.LocalMemPipeline.load_vrf_bank_conflict_cycles            0                       # total number of cycles LDS data are delayed before updating the VRF
 system.cpu1.CUs0.tlb_requests                     769                       # number of uncoalesced requests
-system.cpu1.CUs0.tlb_cycles              -452460956000                       # total number of cycles for all uncoalesced requests
-system.cpu1.CUs0.avg_translation_latency -588375755.526658                       # Avg. translation latency for data translations
+system.cpu1.CUs0.tlb_cycles              -452453001000                       # total number of cycles for all uncoalesced requests
+system.cpu1.CUs0.avg_translation_latency -588365410.923277                       # Avg. translation latency for data translations
 system.cpu1.CUs0.TLB_hits_distribution::page_table          769                       # TLB hits distribution (0 for page table, x for Lx-TLB
 system.cpu1.CUs0.TLB_hits_distribution::L1_TLB            0                       # TLB hits distribution (0 for page table, x for Lx-TLB
 system.cpu1.CUs0.TLB_hits_distribution::L2_TLB            0                       # TLB hits distribution (0 for page table, x for Lx-TLB
@@ -1373,22 +1373,22 @@ system.cpu1.CUs0.wg_blocked_due_lds_alloc            0                       # W
 system.cpu1.CUs0.num_instr_executed               141                       # number of instructions executed
 system.cpu1.CUs0.inst_exec_rate::samples          141                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs0.inst_exec_rate::mean       86.382979                       # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::stdev     229.391669                       # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::stdev     229.706697                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs0.inst_exec_rate::underflows            0      0.00%      0.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::0-1                1      0.71%      0.71% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::2-3               12      8.51%      9.22% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::4-5               51     36.17%     45.39% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::6-7               32     22.70%     68.09% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::8-9                2      1.42%     69.50% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::10                 2      1.42%     70.92% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::overflows           41     29.08%    100.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs0.inst_exec_rate::min_value            1                       # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::0-1                0      0.00%      0.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::2-3               12      8.51%      8.51% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::4-5               52     36.88%     45.39% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::6-7               31     21.99%     67.38% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::8-9                3      2.13%     69.50% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::10                 3      2.13%     71.63% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::overflows           40     28.37%    100.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs0.inst_exec_rate::min_value            2                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs0.inst_exec_rate::max_value         1291                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs0.inst_exec_rate::total            141                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs0.num_vec_ops_executed            6769                       # number of vec ops executed (e.g. VSZ/inst)
-system.cpu1.CUs0.num_total_cycles                3358                       # number of cycles the CU ran for
-system.cpu1.CUs0.vpc                         2.015783                       # Vector Operations per cycle (this CU only)
-system.cpu1.CUs0.ipc                         0.041989                       # Instructions per cycle (this CU only)
+system.cpu1.CUs0.num_total_cycles                3360                       # number of cycles the CU ran for
+system.cpu1.CUs0.vpc                         2.014583                       # Vector Operations per cycle (this CU only)
+system.cpu1.CUs0.ipc                         0.041964                       # Instructions per cycle (this CU only)
 system.cpu1.CUs0.warp_execution_dist::samples          141                       # number of lanes active per instruction (oval all instructions)
 system.cpu1.CUs0.warp_execution_dist::mean    48.007092                       # number of lanes active per instruction (oval all instructions)
 system.cpu1.CUs0.warp_execution_dist::stdev    23.719942                       # number of lanes active per instruction (oval all instructions)
@@ -1468,7 +1468,7 @@ system.cpu1.CUs0.num_failed_CAS_ops                 0                       # nu
 system.cpu1.CUs0.num_completed_wfs                  4                       # number of completed wavefronts
 system.cpu1.CUs1.wavefronts00.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs1.wavefronts00.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs1.wavefronts00.timesBlockedDueRAWDependencies          381                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs1.wavefronts00.timesBlockedDueRAWDependencies          401                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs1.wavefronts00.src_reg_operand_dist::samples           39                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts00.src_reg_operand_dist::mean     0.794872                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts00.src_reg_operand_dist::stdev     0.863880                       # number of executed instructions with N source register operands
@@ -1660,7 +1660,7 @@ system.cpu1.CUs1.wavefronts07.dst_reg_operand_dist::max_value            0      
 system.cpu1.CUs1.wavefronts07.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs1.wavefronts08.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs1.wavefronts08.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs1.wavefronts08.timesBlockedDueRAWDependencies          356                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs1.wavefronts08.timesBlockedDueRAWDependencies          372                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs1.wavefronts08.src_reg_operand_dist::samples           34                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts08.src_reg_operand_dist::mean     0.852941                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts08.src_reg_operand_dist::stdev     0.857493                       # number of executed instructions with N source register operands
@@ -1852,7 +1852,7 @@ system.cpu1.CUs1.wavefronts15.dst_reg_operand_dist::max_value            0      
 system.cpu1.CUs1.wavefronts15.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs1.wavefronts16.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs1.wavefronts16.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs1.wavefronts16.timesBlockedDueRAWDependencies          356                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs1.wavefronts16.timesBlockedDueRAWDependencies          371                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs1.wavefronts16.src_reg_operand_dist::samples           34                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts16.src_reg_operand_dist::mean     0.852941                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts16.src_reg_operand_dist::stdev     0.857493                       # number of executed instructions with N source register operands
@@ -2044,7 +2044,7 @@ system.cpu1.CUs1.wavefronts23.dst_reg_operand_dist::max_value            0      
 system.cpu1.CUs1.wavefronts23.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs1.wavefronts24.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs1.wavefronts24.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
-system.cpu1.CUs1.wavefronts24.timesBlockedDueRAWDependencies          339                       # number of times the wf's instructions are blocked due to RAW dependencies
+system.cpu1.CUs1.wavefronts24.timesBlockedDueRAWDependencies          361                       # number of times the wf's instructions are blocked due to RAW dependencies
 system.cpu1.CUs1.wavefronts24.src_reg_operand_dist::samples           34                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts24.src_reg_operand_dist::mean     0.852941                       # number of executed instructions with N source register operands
 system.cpu1.CUs1.wavefronts24.src_reg_operand_dist::stdev     0.857493                       # number of executed instructions with N source register operands
@@ -2274,27 +2274,27 @@ system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::overflows            0   
 system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::min_value            2                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::max_value            8                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::total           43                       # For each instruction fetch request recieved record how many instructions you got from it
-system.cpu1.CUs1.ExecStage.num_cycles_with_no_issue         3228                       # number of cycles the CU issues nothing
-system.cpu1.CUs1.ExecStage.num_cycles_with_instr_issued          130                       # number of cycles the CU issued at least one instruction
+system.cpu1.CUs1.ExecStage.num_cycles_with_no_issue         3261                       # number of cycles the CU issues nothing
+system.cpu1.CUs1.ExecStage.num_cycles_with_instr_issued           99                       # number of cycles the CU issued at least one instruction
 system.cpu1.CUs1.ExecStage.num_cycles_with_instrtype_issue::ALU0           30                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs1.ExecStage.num_cycles_with_instrtype_issue::ALU1           29                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs1.ExecStage.num_cycles_with_instrtype_issue::ALU2           29                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs1.ExecStage.num_cycles_with_instrtype_issue::ALU3           29                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs1.ExecStage.num_cycles_with_instrtype_issue::GM           18                       # Number of cycles at least one instruction of specific type issued
 system.cpu1.CUs1.ExecStage.num_cycles_with_instrtype_issue::LM            6                       # Number of cycles at least one instruction of specific type issued
-system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU0          778                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU0          777                       # Number of cycles no instruction of specific type issued
 system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU1          472                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU2          447                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU3          411                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::GM          417                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::LM           26                       # Number of cycles no instruction of specific type issued
-system.cpu1.CUs1.ExecStage.spc::samples          3358                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.spc::mean         0.041989                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.spc::stdev        0.217686                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU2          444                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::ALU3          416                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::GM          404                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs1.ExecStage.num_cycles_with_instr_type_no_issue::LM           22                       # Number of cycles no instruction of specific type issued
+system.cpu1.CUs1.ExecStage.spc::samples          3360                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.spc::mean         0.041964                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.spc::stdev        0.256550                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs1.ExecStage.spc::underflows            0      0.00%      0.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.spc::0                3228     96.13%     96.13% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.spc::1                 120      3.57%     99.70% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.spc::2                   9      0.27%     99.97% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.spc::0                3261     97.05%     97.05% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.spc::1                  58      1.73%     98.78% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.spc::2                  40      1.19%     99.97% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs1.ExecStage.spc::3                   1      0.03%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs1.ExecStage.spc::4                   0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs1.ExecStage.spc::5                   0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
@@ -2302,37 +2302,37 @@ system.cpu1.CUs1.ExecStage.spc::6                   0      0.00%    100.00% # Ex
 system.cpu1.CUs1.ExecStage.spc::overflows            0      0.00%    100.00% # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs1.ExecStage.spc::min_value            0                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
 system.cpu1.CUs1.ExecStage.spc::max_value            3                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.spc::total            3358                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
-system.cpu1.CUs1.ExecStage.num_transitions_active_to_idle           81                       # number of CU transitions from active to idle
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::samples           81                       # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::mean    38.617284                       # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::stdev   158.076213                       # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.spc::total            3360                       # Execution units active per cycle (Exec unit=SIMD,MemPipe)
+system.cpu1.CUs1.ExecStage.num_transitions_active_to_idle           94                       # number of CU transitions from active to idle
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::samples           94                       # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::mean    33.585106                       # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::stdev   147.747562                       # duration of idle periods in cycles
 system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::underflows            0      0.00%      0.00% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::0-4           60     74.07%     74.07% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::5-9           10     12.35%     86.42% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::10-14            0      0.00%     86.42% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::15-19            2      2.47%     88.89% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::20-24            2      2.47%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::25-29            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::30-34            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::35-39            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::40-44            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::45-49            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::50-54            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::55-59            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::60-64            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::65-69            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::70-74            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::75            0      0.00%     91.36% # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::overflows            7      8.64%    100.00% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::0-4           75     79.79%     79.79% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::5-9            8      8.51%     88.30% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::10-14            0      0.00%     88.30% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::15-19            1      1.06%     89.36% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::20-24            2      2.13%     91.49% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::25-29            1      1.06%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::30-34            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::35-39            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::40-44            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::45-49            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::50-54            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::55-59            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::60-64            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::65-69            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::70-74            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::75            0      0.00%     92.55% # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::overflows            7      7.45%    100.00% # duration of idle periods in cycles
 system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::min_value            1                       # duration of idle periods in cycles
 system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::max_value         1293                       # duration of idle periods in cycles
-system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::total           81                       # duration of idle periods in cycles
+system.cpu1.CUs1.ExecStage.idle_duration_in_cycles::total           94                       # duration of idle periods in cycles
 system.cpu1.CUs1.GlobalMemPipeline.load_vrf_bank_conflict_cycles            0                       # total number of cycles GM data are delayed before updating the VRF
 system.cpu1.CUs1.LocalMemPipeline.load_vrf_bank_conflict_cycles            0                       # total number of cycles LDS data are delayed before updating the VRF
 system.cpu1.CUs1.tlb_requests                     769                       # number of uncoalesced requests
-system.cpu1.CUs1.tlb_cycles              -452466433000                       # total number of cycles for all uncoalesced requests
-system.cpu1.CUs1.avg_translation_latency -588382877.763329                       # Avg. translation latency for data translations
+system.cpu1.CUs1.tlb_cycles              -452459838000                       # total number of cycles for all uncoalesced requests
+system.cpu1.CUs1.avg_translation_latency -588374301.690507                       # Avg. translation latency for data translations
 system.cpu1.CUs1.TLB_hits_distribution::page_table          769                       # TLB hits distribution (0 for page table, x for Lx-TLB
 system.cpu1.CUs1.TLB_hits_distribution::L1_TLB            0                       # TLB hits distribution (0 for page table, x for Lx-TLB
 system.cpu1.CUs1.TLB_hits_distribution::L2_TLB            0                       # TLB hits distribution (0 for page table, x for Lx-TLB
@@ -2408,23 +2408,23 @@ system.cpu1.CUs1.local_mem_instr_cnt                6                       # dy
 system.cpu1.CUs1.wg_blocked_due_lds_alloc            0                       # Workgroup blocked due to LDS capacity
 system.cpu1.CUs1.num_instr_executed               141                       # number of instructions executed
 system.cpu1.CUs1.inst_exec_rate::samples          141                       # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::mean       85.666667                       # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::stdev     230.212531                       # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::mean       85.553191                       # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::stdev     230.829913                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs1.inst_exec_rate::underflows            0      0.00%      0.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::0-1                1      0.71%      0.71% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::2-3               12      8.51%      9.22% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::0-1                0      0.00%      0.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::2-3               13      9.22%      9.22% # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs1.inst_exec_rate::4-5               52     36.88%     46.10% # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs1.inst_exec_rate::6-7               33     23.40%     69.50% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::8-9                4      2.84%     72.34% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::10                 1      0.71%     73.05% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::overflows           38     26.95%    100.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
-system.cpu1.CUs1.inst_exec_rate::min_value            1                       # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::8-9                6      4.26%     73.76% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::10                 0      0.00%     73.76% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::overflows           37     26.24%    100.00% # Instruction Execution Rate: Number of executed vector instructions per cycle
+system.cpu1.CUs1.inst_exec_rate::min_value            2                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs1.inst_exec_rate::max_value         1299                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs1.inst_exec_rate::total            141                       # Instruction Execution Rate: Number of executed vector instructions per cycle
 system.cpu1.CUs1.num_vec_ops_executed            6762                       # number of vec ops executed (e.g. VSZ/inst)
-system.cpu1.CUs1.num_total_cycles                3358                       # number of cycles the CU ran for
-system.cpu1.CUs1.vpc                         2.013699                       # Vector Operations per cycle (this CU only)
-system.cpu1.CUs1.ipc                         0.041989                       # Instructions per cycle (this CU only)
+system.cpu1.CUs1.num_total_cycles                3360                       # number of cycles the CU ran for
+system.cpu1.CUs1.vpc                         2.012500                       # Vector Operations per cycle (this CU only)
+system.cpu1.CUs1.ipc                         0.041964                       # Instructions per cycle (this CU only)
 system.cpu1.CUs1.warp_execution_dist::samples          141                       # number of lanes active per instruction (oval all instructions)
 system.cpu1.CUs1.warp_execution_dist::mean    47.957447                       # number of lanes active per instruction (oval all instructions)
 system.cpu1.CUs1.warp_execution_dist::stdev    23.818022                       # number of lanes active per instruction (oval all instructions)
@@ -2659,13 +2659,12 @@ system.ruby.network.ext_links1.int_node.msg_bytes.Unblock_Control::4        1228
 system.tcp_cntrl0.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl0.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl0.L1cache.demand_accesses            0                       # Number of cache demand accesses
-system.tcp_cntrl0.L1cache.num_data_array_reads           10                       # number of data array reads
+system.tcp_cntrl0.L1cache.num_data_array_reads            9                       # number of data array reads
 system.tcp_cntrl0.L1cache.num_data_array_writes           11                       # number of data array writes
-system.tcp_cntrl0.L1cache.num_tag_array_reads           27                       # number of tag array reads
+system.tcp_cntrl0.L1cache.num_tag_array_reads           26                       # number of tag array reads
 system.tcp_cntrl0.L1cache.num_tag_array_writes           18                       # number of tag array writes
-system.tcp_cntrl0.L1cache.num_tag_array_stalls            2                       # number of stalls caused by tag array
 system.tcp_cntrl0.L1cache.num_data_array_stalls            2                       # number of stalls caused by data array
-system.tcp_cntrl0.coalescer.gpu_tcp_ld_hits            3                       # loads that hit in the TCP
+system.tcp_cntrl0.coalescer.gpu_tcp_ld_hits            2                       # loads that hit in the TCP
 system.tcp_cntrl0.coalescer.gpu_tcp_ld_transfers            0                       # TCP to TCP load transfers
 system.tcp_cntrl0.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
 system.tcp_cntrl0.coalescer.gpu_ld_misses            2                       # loads that miss in the GPU
@@ -2732,7 +2731,7 @@ system.sqc_cntrl0.L1cache.num_data_array_reads           86                     
 system.sqc_cntrl0.L1cache.num_data_array_writes            5                       # number of data array writes
 system.sqc_cntrl0.L1cache.num_tag_array_reads           86                       # number of tag array reads
 system.sqc_cntrl0.L1cache.num_tag_array_writes            5                       # number of tag array writes
-system.sqc_cntrl0.L1cache.num_data_array_stalls           44                       # number of stalls caused by data array
+system.sqc_cntrl0.L1cache.num_data_array_stalls           47                       # number of stalls caused by data array
 system.sqc_cntrl0.sequencer.load_waiting_on_load          120                       # Number of times a load aliased with a pending load
 system.tcc_cntrl0.L2cache.demand_hits               0                       # Number of cache demand hits
 system.tcc_cntrl0.L2cache.demand_misses             0                       # Number of cache demand misses
@@ -2755,16 +2754,16 @@ system.ruby.network.msg_byte.Unblock_Control        24968
 system.sqc_coalescer.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.sqc_coalescer.clk_domain.clock            1000                       # Clock period in ticks
 system.sqc_coalescer.uncoalesced_accesses           86                       # Number of uncoalesced TLB accesses
-system.sqc_coalescer.coalesced_accesses            63                       # Number of coalesced TLB accesses
-system.sqc_coalescer.queuing_cycles            100000                       # Number of cycles spent in queue
-system.sqc_coalescer.local_queuing_cycles       100000                       # Number of cycles spent in queue for all incoming reqs
-system.sqc_coalescer.local_latency        1162.790698                       # Avg. latency over all incoming pkts
+system.sqc_coalescer.coalesced_accesses            60                       # Number of coalesced TLB accesses
+system.sqc_coalescer.queuing_cycles            108000                       # Number of cycles spent in queue
+system.sqc_coalescer.local_queuing_cycles       108000                       # Number of cycles spent in queue for all incoming reqs
+system.sqc_coalescer.local_latency        1255.813953                       # Avg. latency over all incoming pkts
 system.sqc_tlb.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.sqc_tlb.clk_domain.clock                  1000                       # Clock period in ticks
-system.sqc_tlb.local_TLB_accesses                  63                       # Number of TLB accesses
-system.sqc_tlb.local_TLB_hits                      62                       # Number of TLB hits
+system.sqc_tlb.local_TLB_accesses                  60                       # Number of TLB accesses
+system.sqc_tlb.local_TLB_hits                      59                       # Number of TLB hits
 system.sqc_tlb.local_TLB_misses                     1                       # Number of TLB misses
-system.sqc_tlb.local_TLB_miss_rate           1.587302                       # TLB miss rate
+system.sqc_tlb.local_TLB_miss_rate           1.666667                       # TLB miss rate
 system.sqc_tlb.global_TLB_accesses                 86                       # Number of TLB accesses
 system.sqc_tlb.global_TLB_hits                     78                       # Number of TLB hits
 system.sqc_tlb.global_TLB_misses                    8                       # Number of TLB misses
@@ -2772,8 +2771,8 @@ system.sqc_tlb.global_TLB_miss_rate          9.302326                       # TL
 system.sqc_tlb.access_cycles                    86008                       # Cycles spent accessing this TLB level
 system.sqc_tlb.page_table_cycles                    0                       # Cycles spent accessing the page table
 system.sqc_tlb.unique_pages                         1                       # Number of unique pages touched
-system.sqc_tlb.local_cycles                     63001                       # Number of cycles spent in queue for all incoming reqs
-system.sqc_tlb.local_latency              1000.015873                       # Avg. latency over incoming coalesced reqs
+system.sqc_tlb.local_cycles                     60001                       # Number of cycles spent in queue for all incoming reqs
+system.sqc_tlb.local_latency              1000.016667                       # Avg. latency over incoming coalesced reqs
 system.sqc_tlb.avg_reuse_distance                   0                       # avg. reuse distance over all pages (in ticks)
 system.ruby.network.ext_links0.int_node.throttle0.link_utilization     0.005592                      
 system.ruby.network.ext_links0.int_node.throttle0.msg_count.Request_Control::0         1551                      
@@ -2897,22 +2896,22 @@ system.ruby.Directory_Controller.CoreUnblock         1551      0.00%      0.00%
 system.ruby.Directory_Controller.U.RdBlkS         1039      0.00%      0.00%
 system.ruby.Directory_Controller.U.RdBlkM          335      0.00%      0.00%
 system.ruby.Directory_Controller.U.RdBlk          177      0.00%      0.00%
-system.ruby.Directory_Controller.BS_M.MemData           29      0.00%      0.00%
-system.ruby.Directory_Controller.BM_M.MemData           12      0.00%      0.00%
+system.ruby.Directory_Controller.BS_M.MemData           30      0.00%      0.00%
+system.ruby.Directory_Controller.BM_M.MemData           11      0.00%      0.00%
 system.ruby.Directory_Controller.B_M.MemData            1      0.00%      0.00%
-system.ruby.Directory_Controller.BS_PM.CPUPrbResp           29      0.00%      0.00%
-system.ruby.Directory_Controller.BS_PM.ProbeAcksComplete           29      0.00%      0.00%
-system.ruby.Directory_Controller.BS_PM.MemData         1010      0.00%      0.00%
-system.ruby.Directory_Controller.BM_PM.CPUPrbResp           12      0.00%      0.00%
-system.ruby.Directory_Controller.BM_PM.ProbeAcksComplete           12      0.00%      0.00%
-system.ruby.Directory_Controller.BM_PM.MemData          323      0.00%      0.00%
+system.ruby.Directory_Controller.BS_PM.CPUPrbResp           30      0.00%      0.00%
+system.ruby.Directory_Controller.BS_PM.ProbeAcksComplete           30      0.00%      0.00%
+system.ruby.Directory_Controller.BS_PM.MemData         1009      0.00%      0.00%
+system.ruby.Directory_Controller.BM_PM.CPUPrbResp           11      0.00%      0.00%
+system.ruby.Directory_Controller.BM_PM.ProbeAcksComplete           11      0.00%      0.00%
+system.ruby.Directory_Controller.BM_PM.MemData          324      0.00%      0.00%
 system.ruby.Directory_Controller.B_PM.CPUPrbResp            1      0.00%      0.00%
 system.ruby.Directory_Controller.B_PM.ProbeAcksComplete            1      0.00%      0.00%
 system.ruby.Directory_Controller.B_PM.MemData          176      0.00%      0.00%
-system.ruby.Directory_Controller.BS_Pm.CPUPrbResp         1010      0.00%      0.00%
-system.ruby.Directory_Controller.BS_Pm.ProbeAcksComplete         1010      0.00%      0.00%
-system.ruby.Directory_Controller.BM_Pm.CPUPrbResp          323      0.00%      0.00%
-system.ruby.Directory_Controller.BM_Pm.ProbeAcksComplete          323      0.00%      0.00%
+system.ruby.Directory_Controller.BS_Pm.CPUPrbResp         1009      0.00%      0.00%
+system.ruby.Directory_Controller.BS_Pm.ProbeAcksComplete         1009      0.00%      0.00%
+system.ruby.Directory_Controller.BM_Pm.CPUPrbResp          324      0.00%      0.00%
+system.ruby.Directory_Controller.BM_Pm.ProbeAcksComplete          324      0.00%      0.00%
 system.ruby.Directory_Controller.B_Pm.CPUPrbResp          176      0.00%      0.00%
 system.ruby.Directory_Controller.B_Pm.ProbeAcksComplete          176      0.00%      0.00%
 system.ruby.Directory_Controller.B.CoreUnblock         1551      0.00%      0.00%
@@ -2926,12 +2925,12 @@ system.ruby.LD.latency_hist_seqr         |       16160     98.93%     98.93% |  
 system.ruby.LD.latency_hist_seqr::total         16335                      
 system.ruby.LD.latency_hist_coalsr::bucket_size           64                      
 system.ruby.LD.latency_hist_coalsr::max_bucket          639                      
-system.ruby.LD.latency_hist_coalsr::samples           10                      
-system.ruby.LD.latency_hist_coalsr::mean   119.100000                      
-system.ruby.LD.latency_hist_coalsr::gmean    16.830524                      
-system.ruby.LD.latency_hist_coalsr::stdev   153.079827                      
-system.ruby.LD.latency_hist_coalsr       |           6     60.00%     60.00% |           0      0.00%     60.00% |           0      0.00%     60.00% |           2     20.00%     80.00% |           0      0.00%     80.00% |           2     20.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.latency_hist_coalsr::total           10                      
+system.ruby.LD.latency_hist_coalsr::samples            9                      
+system.ruby.LD.latency_hist_coalsr::mean          133                      
+system.ruby.LD.latency_hist_coalsr::gmean    19.809210                      
+system.ruby.LD.latency_hist_coalsr::stdev   158.221364                      
+system.ruby.LD.latency_hist_coalsr       |           5     55.56%     55.56% |           0      0.00%     55.56% |           0      0.00%     55.56% |           2     22.22%     77.78% |           0      0.00%     77.78% |           2     22.22%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.latency_hist_coalsr::total            9                      
 system.ruby.LD.hit_latency_hist_seqr::bucket_size           32                      
 system.ruby.LD.hit_latency_hist_seqr::max_bucket          319                      
 system.ruby.LD.hit_latency_hist_seqr::samples          175                      
@@ -2950,12 +2949,12 @@ system.ruby.LD.miss_latency_hist_seqr    |       16155     99.97%     99.97% |  
 system.ruby.LD.miss_latency_hist_seqr::total        16160                      
 system.ruby.LD.miss_latency_hist_coalsr::bucket_size           64                      
 system.ruby.LD.miss_latency_hist_coalsr::max_bucket          639                      
-system.ruby.LD.miss_latency_hist_coalsr::samples           10                      
-system.ruby.LD.miss_latency_hist_coalsr::mean   119.100000                      
-system.ruby.LD.miss_latency_hist_coalsr::gmean    16.830524                      
-system.ruby.LD.miss_latency_hist_coalsr::stdev   153.079827                      
-system.ruby.LD.miss_latency_hist_coalsr  |           6     60.00%     60.00% |           0      0.00%     60.00% |           0      0.00%     60.00% |           2     20.00%     80.00% |           0      0.00%     80.00% |           2     20.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.miss_latency_hist_coalsr::total           10                      
+system.ruby.LD.miss_latency_hist_coalsr::samples            9                      
+system.ruby.LD.miss_latency_hist_coalsr::mean          133                      
+system.ruby.LD.miss_latency_hist_coalsr::gmean    19.809210                      
+system.ruby.LD.miss_latency_hist_coalsr::stdev   158.221364                      
+system.ruby.LD.miss_latency_hist_coalsr  |           5     55.56%     55.56% |           0      0.00%     55.56% |           0      0.00%     55.56% |           2     22.22%     77.78% |           0      0.00%     77.78% |           2     22.22%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.miss_latency_hist_coalsr::total            9                      
 system.ruby.ST.latency_hist_seqr::bucket_size           64                      
 system.ruby.ST.latency_hist_seqr::max_bucket          639                      
 system.ruby.ST.latency_hist_seqr::samples        10412                      
@@ -2967,9 +2966,9 @@ system.ruby.ST.latency_hist_seqr::total         10412
 system.ruby.ST.latency_hist_coalsr::bucket_size           32                      
 system.ruby.ST.latency_hist_coalsr::max_bucket          319                      
 system.ruby.ST.latency_hist_coalsr::samples           16                      
-system.ruby.ST.latency_hist_coalsr::mean   125.375000                      
-system.ruby.ST.latency_hist_coalsr::gmean    15.803091                      
-system.ruby.ST.latency_hist_coalsr::stdev   128.466792                      
+system.ruby.ST.latency_hist_coalsr::mean   124.937500                      
+system.ruby.ST.latency_hist_coalsr::gmean    15.775436                      
+system.ruby.ST.latency_hist_coalsr::stdev   128.013264                      
 system.ruby.ST.latency_hist_coalsr       |           8     50.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           8     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.ST.latency_hist_coalsr::total           16                      
 system.ruby.ST.hit_latency_hist_seqr::bucket_size           64                      
@@ -2990,9 +2989,9 @@ system.ruby.ST.miss_latency_hist_seqr::total        10090
 system.ruby.ST.miss_latency_hist_coalsr::bucket_size           32                      
 system.ruby.ST.miss_latency_hist_coalsr::max_bucket          319                      
 system.ruby.ST.miss_latency_hist_coalsr::samples           16                      
-system.ruby.ST.miss_latency_hist_coalsr::mean   125.375000                      
-system.ruby.ST.miss_latency_hist_coalsr::gmean    15.803091                      
-system.ruby.ST.miss_latency_hist_coalsr::stdev   128.466792                      
+system.ruby.ST.miss_latency_hist_coalsr::mean   124.937500                      
+system.ruby.ST.miss_latency_hist_coalsr::gmean    15.775436                      
+system.ruby.ST.miss_latency_hist_coalsr::stdev   128.013264                      
 system.ruby.ST.miss_latency_hist_coalsr  |           8     50.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           0      0.00%     50.00% |           8     50.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.ST.miss_latency_hist_coalsr::total           16                      
 system.ruby.ATOMIC.latency_hist_coalsr::bucket_size           64                      
@@ -3014,17 +3013,17 @@ system.ruby.ATOMIC.miss_latency_hist_coalsr::total            2
 system.ruby.IFETCH.latency_hist_seqr::bucket_size           64                      
 system.ruby.IFETCH.latency_hist_seqr::max_bucket          639                      
 system.ruby.IFETCH.latency_hist_seqr::samples        87095                      
-system.ruby.IFETCH.latency_hist_seqr::mean     4.462093                      
+system.ruby.IFETCH.latency_hist_seqr::mean     4.462070                      
 system.ruby.IFETCH.latency_hist_seqr::gmean     2.116390                      
-system.ruby.IFETCH.latency_hist_seqr::stdev    22.435279                      
+system.ruby.IFETCH.latency_hist_seqr::stdev    22.434900                      
 system.ruby.IFETCH.latency_hist_seqr     |       86061     98.81%     98.81% |           0      0.00%     98.81% |           0      0.00%     98.81% |        1011      1.16%     99.97% |          16      0.02%     99.99% |           7      0.01%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.latency_hist_seqr::total        87095                      
 system.ruby.IFETCH.hit_latency_hist_seqr::bucket_size           64                      
 system.ruby.IFETCH.hit_latency_hist_seqr::max_bucket          639                      
 system.ruby.IFETCH.hit_latency_hist_seqr::samples         1034                      
-system.ruby.IFETCH.hit_latency_hist_seqr::mean   208.444874                      
-system.ruby.IFETCH.hit_latency_hist_seqr::gmean   207.968565                      
-system.ruby.IFETCH.hit_latency_hist_seqr::stdev    16.462617                      
+system.ruby.IFETCH.hit_latency_hist_seqr::mean   208.442940                      
+system.ruby.IFETCH.hit_latency_hist_seqr::gmean   207.967489                      
+system.ruby.IFETCH.hit_latency_hist_seqr::stdev    16.443135                      
 system.ruby.IFETCH.hit_latency_hist_seqr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |        1011     97.78%     97.78% |          16      1.55%     99.32% |           7      0.68%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.hit_latency_hist_seqr::total         1034                      
 system.ruby.IFETCH.miss_latency_hist_seqr::bucket_size            4                      
@@ -3102,33 +3101,33 @@ system.ruby.L2Cache.miss_mach_latency_hist_seqr::total           59
 system.ruby.Directory.hit_mach_latency_hist_seqr::bucket_size           64                      
 system.ruby.Directory.hit_mach_latency_hist_seqr::max_bucket          639                      
 system.ruby.Directory.hit_mach_latency_hist_seqr::samples         1535                      
-system.ruby.Directory.hit_mach_latency_hist_seqr::mean   208.449511                      
-system.ruby.Directory.hit_mach_latency_hist_seqr::gmean   208.002927                      
-system.ruby.Directory.hit_mach_latency_hist_seqr::stdev    15.847049                      
+system.ruby.Directory.hit_mach_latency_hist_seqr::mean   208.448208                      
+system.ruby.Directory.hit_mach_latency_hist_seqr::gmean   208.002202                      
+system.ruby.Directory.hit_mach_latency_hist_seqr::stdev    15.833423                      
 system.ruby.Directory.hit_mach_latency_hist_seqr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |        1506     98.11%     98.11% |          19      1.24%     99.35% |          10      0.65%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.Directory.hit_mach_latency_hist_seqr::total         1535                      
 system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::bucket_size           64                      
 system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::max_bucket          639                      
 system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::samples            3                      
-system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::mean          342                      
-system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::gmean   341.902506                      
-system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::stdev           10                      
+system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::mean   345.333333                      
+system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::gmean   345.301362                      
+system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::stdev     5.773503                      
 system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           3    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.L1Cache_wCC.miss_mach_latency_hist_coalsr::total            3                      
 system.ruby.TCP.miss_mach_latency_hist_coalsr::bucket_size            1                      
 system.ruby.TCP.miss_mach_latency_hist_coalsr::max_bucket            9                      
-system.ruby.TCP.miss_mach_latency_hist_coalsr::samples           14                      
-system.ruby.TCP.miss_mach_latency_hist_coalsr::mean     1.714286                      
-system.ruby.TCP.miss_mach_latency_hist_coalsr::gmean     1.485994                      
-system.ruby.TCP.miss_mach_latency_hist_coalsr::stdev     1.069045                      
-system.ruby.TCP.miss_mach_latency_hist_coalsr |           0      0.00%      0.00% |           8     57.14%     57.14% |           4     28.57%     85.71% |           0      0.00%     85.71% |           2     14.29%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.TCP.miss_mach_latency_hist_coalsr::total           14                      
+system.ruby.TCP.miss_mach_latency_hist_coalsr::samples           13                      
+system.ruby.TCP.miss_mach_latency_hist_coalsr::mean     1.538462                      
+system.ruby.TCP.miss_mach_latency_hist_coalsr::gmean     1.377009                      
+system.ruby.TCP.miss_mach_latency_hist_coalsr::stdev     0.877058                      
+system.ruby.TCP.miss_mach_latency_hist_coalsr |           0      0.00%      0.00% |           8     61.54%     61.54% |           4     30.77%     92.31% |           0      0.00%     92.31% |           1      7.69%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.TCP.miss_mach_latency_hist_coalsr::total           13                      
 system.ruby.TCCdir.miss_mach_latency_hist_coalsr::bucket_size           32                      
 system.ruby.TCCdir.miss_mach_latency_hist_coalsr::max_bucket          319                      
 system.ruby.TCCdir.miss_mach_latency_hist_coalsr::samples           11                      
-system.ruby.TCCdir.miss_mach_latency_hist_coalsr::mean   251.454545                      
-system.ruby.TCCdir.miss_mach_latency_hist_coalsr::gmean   251.396753                      
-system.ruby.TCCdir.miss_mach_latency_hist_coalsr::stdev     5.733474                      
+system.ruby.TCCdir.miss_mach_latency_hist_coalsr::mean   250.818182                      
+system.ruby.TCCdir.miss_mach_latency_hist_coalsr::gmean   250.757089                      
+system.ruby.TCCdir.miss_mach_latency_hist_coalsr::stdev     5.896070                      
 system.ruby.TCCdir.miss_mach_latency_hist_coalsr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |          10     90.91%     90.91% |           1      9.09%    100.00% |           0      0.00%    100.00%
 system.ruby.TCCdir.miss_mach_latency_hist_coalsr::total           11                      
 system.ruby.LD.L1Cache.miss_type_mach_latency_hist_seqr::bucket_size            1                      
@@ -3156,19 +3155,18 @@ system.ruby.LD.Directory.hit_type_mach_latency_hist_seqr::total          175
 system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::bucket_size           64                      
 system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::max_bucket          639                      
 system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::samples            2                      
-system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::mean          337                      
-system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::gmean   336.962906                      
-system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::stdev     7.071068                      
+system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::mean          342                      
+system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::gmean   342.000000                      
 system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           2    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.LD.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::total            2                      
 system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::bucket_size            1                      
 system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::max_bucket            9                      
-system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::samples            6                      
-system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::mean     2.666667                      
-system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::gmean     2.519842                      
-system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::stdev     1.032796                      
-system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr |           0      0.00%      0.00% |           0      0.00%      0.00% |           4     66.67%     66.67% |           0      0.00%     66.67% |           2     33.33%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::total            6                      
+system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::samples            5                      
+system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::mean     2.400000                      
+system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::gmean     2.297397                      
+system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::stdev     0.894427                      
+system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr |           0      0.00%      0.00% |           0      0.00%      0.00% |           4     80.00%     80.00% |           0      0.00%     80.00% |           1     20.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.LD.TCP.miss_type_mach_latency_hist_coalsr::total            5                      
 system.ruby.LD.TCCdir.miss_type_mach_latency_hist_coalsr::bucket_size           32                      
 system.ruby.LD.TCCdir.miss_type_mach_latency_hist_coalsr::max_bucket          319                      
 system.ruby.LD.TCCdir.miss_type_mach_latency_hist_coalsr::samples            2                      
@@ -3202,9 +3200,9 @@ system.ruby.ST.TCP.miss_type_mach_latency_hist_coalsr::total            8
 system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::bucket_size           32                      
 system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::max_bucket          319                      
 system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::samples            8                      
-system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::mean   249.750000                      
-system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::gmean   249.737699                      
-system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::stdev     2.659216                      
+system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::mean   248.875000                      
+system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::gmean   248.864382                      
+system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::stdev     2.474874                      
 system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |           8    100.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.ST.TCCdir.miss_type_mach_latency_hist_coalsr::total            8                      
 system.ruby.ATOMIC.L1Cache_wCC.miss_type_mach_latency_hist_coalsr::bucket_size           64                      
@@ -3240,9 +3238,9 @@ system.ruby.IFETCH.L2Cache.miss_type_mach_latency_hist_seqr::total           54
 system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::bucket_size           64                      
 system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::max_bucket          639                      
 system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::samples         1034                      
-system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::mean   208.444874                      
-system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::gmean   207.968565                      
-system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::stdev    16.462617                      
+system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::mean   208.442940                      
+system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::gmean   207.967489                      
+system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::stdev    16.443135                      
 system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr |           0      0.00%      0.00% |           0      0.00%      0.00% |           0      0.00%      0.00% |        1011     97.78%     97.78% |          16      1.55%     99.32% |           7      0.68%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.IFETCH.Directory.hit_type_mach_latency_hist_seqr::total         1034                      
 system.ruby.RMW_Read.L1Cache.miss_type_mach_latency_hist_seqr::bucket_size            1                      
@@ -3278,7 +3276,7 @@ system.ruby.SQC_Controller.TCC_AckS                 5      0.00%      0.00%
 system.ruby.SQC_Controller.I.Fetch                  5      0.00%      0.00%
 system.ruby.SQC_Controller.S.Fetch                 81      0.00%      0.00%
 system.ruby.SQC_Controller.I_S.TCC_AckS             5      0.00%      0.00%
-system.ruby.TCCdir_Controller.RdBlk                53      0.00%      0.00%
+system.ruby.TCCdir_Controller.RdBlk                54      0.00%      0.00%
 system.ruby.TCCdir_Controller.RdBlkM               36      0.00%      0.00%
 system.ruby.TCCdir_Controller.RdBlkS                5      0.00%      0.00%
 system.ruby.TCCdir_Controller.CPUPrbResp           14      0.00%      0.00%
@@ -3313,12 +3311,12 @@ system.ruby.TCCdir_Controller.BBM_M.CPUPrbResp            1      0.00%      0.00
 system.ruby.TCCdir_Controller.BBM_M.ProbeAcksComplete            1      0.00%      0.00%
 system.ruby.TCCdir_Controller.BB_M.CoreUnblock            1      0.00%      0.00%
 system.ruby.TCCdir_Controller.BB_S.LastCoreUnblock            2      0.00%      0.00%
-system.ruby.TCCdir_Controller.BBB_S.RdBlk            8      0.00%      0.00%
+system.ruby.TCCdir_Controller.BBB_S.RdBlk            9      0.00%      0.00%
 system.ruby.TCCdir_Controller.BBB_S.CoreUnblock            7      0.00%      0.00%
 system.ruby.TCCdir_Controller.BBB_M.RdBlkM            4      0.00%      0.00%
 system.ruby.TCCdir_Controller.BBB_M.CoreUnblock            9      0.00%      0.00%
-system.ruby.TCP_Controller.Load          |           5     50.00%     50.00% |           5     50.00%    100.00%
-system.ruby.TCP_Controller.Load::total             10                      
+system.ruby.TCP_Controller.Load          |           4     44.44%     44.44% |           5     55.56%    100.00%
+system.ruby.TCP_Controller.Load::total              9                      
 system.ruby.TCP_Controller.Store         |           9     50.00%     50.00% |           9     50.00%    100.00%
 system.ruby.TCP_Controller.Store::total            18                      
 system.ruby.TCP_Controller.TCC_AckS      |           2     50.00%     50.00% |           2     50.00%    100.00%
@@ -3333,8 +3331,8 @@ system.ruby.TCP_Controller.I.Load        |           2     50.00%     50.00% |  
 system.ruby.TCP_Controller.I.Load::total            4                      
 system.ruby.TCP_Controller.I.Store       |           5     50.00%     50.00% |           5     50.00%    100.00%
 system.ruby.TCP_Controller.I.Store::total           10                      
-system.ruby.TCP_Controller.S.Load        |           3     50.00%     50.00% |           3     50.00%    100.00%
-system.ruby.TCP_Controller.S.Load::total            6                      
+system.ruby.TCP_Controller.S.Load        |           2     40.00%     40.00% |           3     60.00%    100.00%
+system.ruby.TCP_Controller.S.Load::total            5                      
 system.ruby.TCP_Controller.S.PrbInvData  |           1     50.00%     50.00% |           1     50.00%    100.00%
 system.ruby.TCP_Controller.S.PrbInvData::total            2                      
 system.ruby.TCP_Controller.S.PrbShrData  |           2    100.00%    100.00% |           0      0.00%    100.00%
