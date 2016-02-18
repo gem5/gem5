@@ -162,7 +162,6 @@ Wavefront::isGmInstruction(GPUDynInstPtr ii)
 
     if (IS_OT_READ_GM(ii->opType()) || IS_OT_WRITE_GM(ii->opType()) ||
         IS_OT_ATOMIC_GM(ii->opType())) {
-
         return true;
     }
 
@@ -349,7 +348,7 @@ Wavefront::ready(itype_e type)
     }
     bool locMemBusRdy = false;
     bool locMemIssueRdy = false;
-    if (type == I_SHARED) {
+    if (type == I_SHARED || type == I_FLAT) {
         for (int j=0; j < computeUnit->numLocMemUnits; ++j) {
             if (computeUnit->vrfToLocalMemPipeBus[j].prerdy())
                 locMemBusRdy = true;
@@ -598,7 +597,6 @@ Wavefront::ready(itype_e type)
 
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit->cu_id,
             simdId, wfSlotId, ii->disassemble());
-
     return 1;
 }
 

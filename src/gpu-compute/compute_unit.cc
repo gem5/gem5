@@ -587,8 +587,8 @@ void
 ComputeUnit::init()
 {
     // Initialize CU Bus models
-    glbMemToVrfBus.init(&shader->tick_cnt, 1);
-    locMemToVrfBus.init(&shader->tick_cnt, 1);
+    glbMemToVrfBus.init(&shader->tick_cnt, shader->ticks(1));
+    locMemToVrfBus.init(&shader->tick_cnt, shader->ticks(1));
     nextGlbMemBus = 0;
     nextLocMemBus = 0;
     fatal_if(numGlbMemUnits > 1,
@@ -596,7 +596,7 @@ ComputeUnit::init()
     vrfToGlobalMemPipeBus.resize(numGlbMemUnits);
     for (int j = 0; j < numGlbMemUnits; ++j) {
         vrfToGlobalMemPipeBus[j] = WaitClass();
-        vrfToGlobalMemPipeBus[j].init(&shader->tick_cnt, 1);
+        vrfToGlobalMemPipeBus[j].init(&shader->tick_cnt, shader->ticks(1));
     }
 
     fatal_if(numLocMemUnits > 1,
@@ -604,7 +604,7 @@ ComputeUnit::init()
     vrfToLocalMemPipeBus.resize(numLocMemUnits);
     for (int j = 0; j < numLocMemUnits; ++j) {
         vrfToLocalMemPipeBus[j] = WaitClass();
-        vrfToLocalMemPipeBus[j].init(&shader->tick_cnt, 1);
+        vrfToLocalMemPipeBus[j].init(&shader->tick_cnt, shader->ticks(1));
     }
     vectorRegsReserved.resize(numSIMDs, 0);
     aluPipe.resize(numSIMDs);
@@ -612,12 +612,12 @@ ComputeUnit::init()
 
     for (int i = 0; i < numSIMDs + numLocMemUnits + numGlbMemUnits; ++i) {
         wfWait[i] = WaitClass();
-        wfWait[i].init(&shader->tick_cnt, 1);
+        wfWait[i].init(&shader->tick_cnt, shader->ticks(1));
     }
 
     for (int i = 0; i < numSIMDs; ++i) {
         aluPipe[i] = WaitClass();
-        aluPipe[i].init(&shader->tick_cnt, 1);
+        aluPipe[i].init(&shader->tick_cnt, shader->ticks(1));
     }
 
     // Setup space for call args

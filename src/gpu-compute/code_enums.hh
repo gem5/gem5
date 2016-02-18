@@ -84,6 +84,7 @@
                     ||(a)==Enums::OT_PRIVATE_ATOMIC \
                     ||(a)==Enums::OT_SPILL_ATOMIC \
                     ||(a)==Enums::OT_READONLY_ATOMIC \
+                    ||(a)==Enums::OT_BOTH_MEMFENCE \
                     ||(a)==Enums::OT_FLAT_ATOMIC)
 
 #define IS_OT_ATOMIC_GM(a) ((a)==Enums::OT_GLOBAL_ATOMIC \
@@ -93,8 +94,7 @@
                     ||(a)==Enums::OT_BOTH_MEMFENCE)
 
 #define IS_OT_ATOMIC_LM(a) ((a)==Enums::OT_SHARED_ATOMIC \
-                    ||(a)==Enums::OT_SHARED_MEMFENCE \
-                    ||(a)==Enums::OT_BOTH_MEMFENCE)
+                    ||(a)==Enums::OT_SHARED_MEMFENCE)
 
 #define IS_OT_ATOMIC_PM(a) ((a)==Enums::OT_PRIVATE_ATOMIC)
 
