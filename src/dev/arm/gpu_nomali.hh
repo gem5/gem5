@@ -54,6 +54,8 @@ class NoMaliGpu : public PioDevice
     NoMaliGpu(const NoMaliGpuParams *p);
     virtual ~NoMaliGpu();
 
+    void init() override;
+
   public: /* Checkpointing */
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -126,6 +128,14 @@ class NoMaliGpu : public PioDevice
      */
     virtual void onInterrupt(nomali_int_t intno, bool set);
 
+    /**
+     * Reset callback from the NoMali library
+     *
+     * This method is called whenever the GPU is reset through the
+     * register interface or the API (reset() or nomali_reset()).
+     */
+    virtual void onReset();
+
     /** @} */
 
   private: /* Callback helpers */
@@ -145,6 +155,18 @@ class NoMaliGpu : public PioDevice
      */
     static void _interrupt(nomali_handle_t h, void *usr,
                            nomali_int_t intno, int set);
+
+    /**
+     * Reset callback from the NoMali library.
+     *
+     * This method calls onReset() on the NoMaliGpu owning this
+     * device.
+     *
+     * @param h NoMali library handle.
+     * @param usr Pointer to an instance of the NoMaliGpu
+     */
+    static void _reset(nomali_handle_t h, void *usr);
+
   protected:
     /** Device base address */
     const Addr pioAddr;

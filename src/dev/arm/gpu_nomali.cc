@@ -92,6 +92,13 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams *p)
     cbk_int.func.interrupt = NoMaliGpu::_interrupt;
     setCallback(cbk_int);
 
+    /* Setup a reset callback */
+    nomali_callback_t cbk_rst;
+    cbk_rst.type = NOMALI_CALLBACK_RESET;
+    cbk_rst.usr = (void *)this;
+    cbk_rst.func.reset = NoMaliGpu::_reset;
+    setCallback(cbk_rst);
+
     panicOnErr(
         nomali_get_info(nomali, &nomaliInfo),
         "Failed to get NoMali information struct");
@@ -100,6 +107,18 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams *p)
 NoMaliGpu::~NoMaliGpu()
 {
     nomali_destroy(nomali);
+}
+
+
+void
+NoMaliGpu::init()
+{
+    PioDevice::init();
+
+    /* Reset the GPU here since the reset callback won't have been
+     * installed when the GPU was reset at instantiation time.
+     */
+    reset();
 }
 
 void
@@ -268,6 +287,12 @@ NoMaliGpu::onInterrupt(nomali_int_t intno, bool set)
 }
 
 void
+NoMaliGpu::onReset()
+{
+    DPRINTF(NoMali, "Reset\n");
+}
+
+void
 NoMaliGpu::setCallback(const nomali_callback_t &callback)
 {
     DPRINTF(NoMali, "Registering callback %i\n",
@@ -285,6 +310,14 @@ NoMaliGpu::_interrupt(nomali_handle_t h, void *usr,
     NoMaliGpu *_this(static_cast<NoMaliGpu *>(usr));
 
     _this->onInterrupt(intno, !!set);
+}
+
+void
+NoMaliGpu::_reset(nomali_handle_t h, void *usr)
+{
+    NoMaliGpu *_this(static_cast<NoMaliGpu *>(usr));
+
+    _this->onReset();
 }
 
 NoMaliGpu *
