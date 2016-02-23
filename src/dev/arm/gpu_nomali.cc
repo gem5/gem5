@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,6 +46,12 @@
 #include "mem/packet_access.hh"
 #include "params/NoMaliGpu.hh"
 
+static const std::map<Enums::NoMaliGpuType, nomali_gpu_type_t> gpuTypeMap{
+    { Enums::T60x, NOMALI_GPU_T60X },
+    { Enums::T62x, NOMALI_GPU_T62X },
+    { Enums::T760, NOMALI_GPU_T760 },
+};
+
 NoMaliGpu::NoMaliGpu(const NoMaliGpuParams *p)
     : PioDevice(p),
       pioAddr(p->pio_addr),
@@ -63,22 +69,12 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams *p)
     nomali_config_t cfg;
     memset(&cfg, 0, sizeof(cfg));
 
-    switch (p->gpu_type) {
-      case Enums::T60x:
-        cfg.type = NOMALI_GPU_T60X;
-        break;
-
-      case Enums::T62x:
-        cfg.type = NOMALI_GPU_T62X;
-        break;
-
-      case Enums::T760:
-        cfg.type = NOMALI_GPU_T760;
-        break;
-
-      default:
-        fatal("Unknown GPU type\n");
+    const auto it_gpu(gpuTypeMap.find(p->gpu_type));
+    if (it_gpu == gpuTypeMap.end()) {
+        fatal("Unrecognized GPU type: %s (%i)\n",
+              Enums::NoMaliGpuTypeStrings[p->gpu_type], p->gpu_type);
     }
+    cfg.type = it_gpu->second;
 
     cfg.ver_maj = p->ver_maj;
     cfg.ver_min = p->ver_min;
@@ -94,9 +90,7 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams *p)
     cbk_int.type = NOMALI_CALLBACK_INT;
     cbk_int.usr = (void *)this;
     cbk_int.func.interrupt = NoMaliGpu::_interrupt;
-    panicOnErr(
-        nomali_set_callback(nomali, &cbk_int),
-        "Failed to setup interrupt callback");
+    setCallback(cbk_int);
 
     panicOnErr(
         nomali_get_info(nomali, &nomaliInfo),
@@ -107,7 +101,6 @@ NoMaliGpu::~NoMaliGpu()
 {
     nomali_destroy(nomali);
 }
-
 
 void
 NoMaliGpu::serialize(CheckpointOut &cp) const
@@ -179,6 +172,16 @@ NoMaliGpu::getAddrRanges() const
     return AddrRangeList({ RangeSize(pioAddr, nomaliInfo.reg_size) });
 }
 
+void
+NoMaliGpu::reset()
+{
+    DPRINTF(NoMali, "reset()\n");
+
+    panicOnErr(
+        nomali_reset(nomali),
+        "Failed to reset GPU");
+}
+
 uint32_t
 NoMaliGpu::readReg(nomali_addr_t reg)
 {
@@ -227,16 +230,26 @@ NoMaliGpu::writeRegRaw(nomali_addr_t reg, uint32_t value)
         "GPU raw register write failed");
 }
 
-void
-NoMaliGpu::_interrupt(nomali_handle_t h, void *usr, nomali_int_t intno, int set)
+bool
+NoMaliGpu::intState(nomali_int_t intno)
 {
-    NoMaliGpu *_this(static_cast<NoMaliGpu *>(usr));
+    int state = 0;
+    panicOnErr(
+        nomali_int_state(nomali, &state, intno),
+        "Failed to get interrupt state");
 
-    _this->onInterrupt(h, intno, !!set);
+    return !!state;
 }
 
 void
-NoMaliGpu::onInterrupt(nomali_handle_t h, nomali_int_t intno, bool set)
+NoMaliGpu::gpuPanic(nomali_error_t err, const char *msg)
+{
+    panic("%s: %s\n", msg, nomali_errstr(err));
+}
+
+
+void
+NoMaliGpu::onInterrupt(nomali_int_t intno, bool set)
 {
     const auto it_int(interruptMap.find(intno));
     if (it_int == interruptMap.end())
@@ -255,9 +268,23 @@ NoMaliGpu::onInterrupt(nomali_handle_t h, nomali_int_t intno, bool set)
 }
 
 void
-NoMaliGpu::gpuPanic(nomali_error_t err, const char *msg)
+NoMaliGpu::setCallback(const nomali_callback_t &callback)
 {
-    panic("%s: %s\n", msg, nomali_errstr(err));
+    DPRINTF(NoMali, "Registering callback %i\n",
+            callback.type);
+
+    panicOnErr(
+        nomali_set_callback(nomali, &callback),
+        "Failed to register callback");
+}
+
+void
+NoMaliGpu::_interrupt(nomali_handle_t h, void *usr,
+                      nomali_int_t intno, int set)
+{
+    NoMaliGpu *_this(static_cast<NoMaliGpu *>(usr));
+
+    _this->onInterrupt(intno, !!set);
 }
 
 NoMaliGpu *

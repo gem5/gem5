@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,22 +63,14 @@ class NoMaliGpu : public PioDevice
     Tick write(PacketPtr pkt) override;
     AddrRangeList getAddrRanges() const override;
 
-  private:
+  protected: /* API wrappers/helpers */
     /**
-     * Interrupt callback from the NoMali library.
-     *
-     * This method calls onInterrupt() on the NoMaliGpu owning this
-     * device.
-     *
-     * @param h NoMali library handle.
-     * @param usr Pointer to an instance of the NoMaliGpu
-     * @param intno GPU interrupt type
-     * @param set Was the interrupt raised (1) or lowered (0)?
+     * @{
+     * @name API wrappers
      */
-    static void _interrupt(nomali_handle_t h, void *usr,
-                           nomali_int_t intno, int set);
 
-    void onInterrupt(nomali_handle_t h, nomali_int_t intno, bool set);
+    /** Wrapper around nomali_reset(). */
+    void reset();
 
     /** Wrapper around nomali_reg_read(). */
     uint32_t readReg(nomali_addr_t reg);
@@ -89,6 +81,16 @@ class NoMaliGpu : public PioDevice
     uint32_t readRegRaw(nomali_addr_t reg) const;
     /** Wrapper around nomali_reg_write_raw(). */
     void writeRegRaw(nomali_addr_t reg, uint32_t value);
+
+    /**
+     * Wrapper around nomali_int_state()
+     *
+     * @param intno Interrupt number
+     * @return True if asserted, false otherwise.
+     */
+    bool intState(nomali_int_t intno);
+
+    /** @} */
 
     /**
      * Format a NoMali error into an error message and panic.
@@ -108,6 +110,42 @@ class NoMaliGpu : public PioDevice
             gpuPanic(err, msg);
     }
 
+  protected: /* Callbacks */
+    /**
+     * @{
+     * @name Callbacks
+     */
+
+    /**
+     * Interrupt callback from the NoMali library
+     *
+     * This method is called whenever there is an interrupt state change.
+     *
+     * @param intno Interrupt number
+     * @param set True is the interrupt is being asserted, false otherwise.
+     */
+    virtual void onInterrupt(nomali_int_t intno, bool set);
+
+    /** @} */
+
+  private: /* Callback helpers */
+    /** Wrapper around nomali_set_callback() */
+    void setCallback(const nomali_callback_t &callback);
+
+    /**
+     * Interrupt callback from the NoMali library.
+     *
+     * This method calls onInterrupt() on the NoMaliGpu owning this
+     * device.
+     *
+     * @param h NoMali library handle.
+     * @param usr Pointer to an instance of the NoMaliGpu
+     * @param intno GPU interrupt type
+     * @param set Was the interrupt raised (1) or lowered (0)?
+     */
+    static void _interrupt(nomali_handle_t h, void *usr,
+                           nomali_int_t intno, int set);
+  protected:
     /** Device base address */
     const Addr pioAddr;
 
@@ -117,7 +155,6 @@ class NoMaliGpu : public PioDevice
     /** Map between NoMali interrupt types and actual GIC
      * interrupts */
     const std::map<nomali_int_t, uint32_t> interruptMap;
-
 
     /** Cached information struct from the NoMali library */
     nomali_info_t nomaliInfo;
