@@ -56,11 +56,11 @@ class DMASequencer : public RubyPort
     void init() override;
 
     /* external interface */
-    RequestStatus makeRequest(PacketPtr pkt);
+    RequestStatus makeRequest(PacketPtr pkt) override;
     bool busy() { return m_is_busy;}
-    int outstandingCount() const { return (m_is_busy ? 1 : 0); }
-    bool isDeadlockEventScheduled() const { return false; }
-    void descheduleDeadlockEvent() {}
+    int outstandingCount() const override { return (m_is_busy ? 1 : 0); }
+    bool isDeadlockEventScheduled() const override { return false; }
+    void descheduleDeadlockEvent() override {}
 
     /* SLICC callback */
     void dataCallback(const DataBlock & dblk);

@@ -87,22 +87,22 @@ class Malta : public Platform
     /**
      * Cause the cpu to post a serial interrupt to the CPU.
      */
-    virtual void postConsoleInt();
+    void postConsoleInt() override;
 
     /**
      * Clear a posted CPU interrupt (id=55)
      */
-    virtual void clearConsoleInt();
+    void clearConsoleInt() override;
 
     /**
      * Cause the chipset to post a cpi interrupt to the CPU.
      */
-    virtual void postPciInt(int line);
+    void postPciInt(int line) override;
 
     /**
      * Clear a posted PCI->CPU interrupt
      */
-    virtual void clearPciInt(int line);
+    void clearPciInt(int line) override;
 
 
     virtual Addr pciToDma(Addr pciAddr) const;

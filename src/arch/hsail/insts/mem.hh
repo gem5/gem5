@@ -102,50 +102,52 @@ namespace HsailISA
             addr.init(op_offs, obj);
         }
 
-        int numSrcRegOperands() { return(this->addr.isVectorRegister()); }
-        int numDstRegOperands() { return dest.isVectorRegister(); }
-        bool isVectorRegister(int operandIndex)
+        int numSrcRegOperands() override
+        { return(this->addr.isVectorRegister()); }
+        int numDstRegOperands() override
+        { return dest.isVectorRegister(); }
+        bool isVectorRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.isVectorRegister() :
                    this->addr.isVectorRegister());
         }
-        bool isCondRegister(int operandIndex)
+        bool isCondRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.isCondRegister() :
                    this->addr.isCondRegister());
         }
-        bool isScalarRegister(int operandIndex)
+        bool isScalarRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.isScalarRegister() :
                    this->addr.isScalarRegister());
         }
-        bool isSrcOperand(int operandIndex)
+        bool isSrcOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex > 0)
                 return(this->addr.isVectorRegister());
             return false;
         }
-        bool isDstOperand(int operandIndex) {
+        bool isDstOperand(int operandIndex) override {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return(operandIndex == 0);
         }
-        int getOperandSize(int operandIndex)
+        int getOperandSize(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.opSize() :
                    this->addr.opSize());
         }
-        int getRegisterIndex(int operandIndex)
+        int getRegisterIndex(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.regIndex() :
                    this->addr.regIndex());
         }
-        int getNumOperands()
+        int getNumOperands() override
         {
             if (this->addr.isVectorRegister())
                 return 2;
@@ -348,52 +350,53 @@ namespace HsailISA
             }
         }
 
-        int numSrcRegOperands() { return(this->addr.isVectorRegister()); }
-        int numDstRegOperands() { return dest.isVectorRegister(); }
-        int getNumOperands()
+        int numSrcRegOperands() override
+        { return(this->addr.isVectorRegister()); }
+        int numDstRegOperands() override { return dest.isVectorRegister(); }
+        int getNumOperands() override
         {
             if (this->addr.isVectorRegister())
                 return 2;
             else
                 return 1;
         }
-        bool isVectorRegister(int operandIndex)
+        bool isVectorRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.isVectorRegister() :
                    this->addr.isVectorRegister());
         }
-        bool isCondRegister(int operandIndex)
+        bool isCondRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.isCondRegister() :
                    this->addr.isCondRegister());
         }
-        bool isScalarRegister(int operandIndex)
+        bool isScalarRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.isScalarRegister() :
                    this->addr.isScalarRegister());
         }
-        bool isSrcOperand(int operandIndex)
+        bool isSrcOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex > 0)
                 return(this->addr.isVectorRegister());
             return false;
         }
-        bool isDstOperand(int operandIndex)
+        bool isDstOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return(operandIndex == 0);
         }
-        int getOperandSize(int operandIndex)
+        int getOperandSize(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.opSize() :
                    this->addr.opSize());
         }
-        int getRegisterIndex(int operandIndex)
+        int getRegisterIndex(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.regIndex() :
@@ -410,7 +413,7 @@ namespace HsailISA
     {
         typename DestDataType::OperandType::DestOperand dest_vect[4];
         uint16_t num_dest_operands;
-        void generateDisassembly();
+        void generateDisassembly() override;
 
       public:
         LdInst(const Brig::BrigInstBase *ib, const BrigObject *obj,
@@ -539,7 +542,7 @@ namespace HsailISA
             return this->segment == Brig::BRIG_SEGMENT_GROUP;
         }
 
-        bool isVectorRegister(int operandIndex)
+        bool isVectorRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -555,7 +558,7 @@ namespace HsailISA
             }
             return false;
         }
-        bool isCondRegister(int operandIndex)
+        bool isCondRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -569,7 +572,7 @@ namespace HsailISA
                        AddrOperandType>::dest.isCondRegister();
             return false;
         }
-        bool isScalarRegister(int operandIndex)
+        bool isScalarRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -583,7 +586,7 @@ namespace HsailISA
                        AddrOperandType>::dest.isScalarRegister();
             return false;
         }
-        bool isSrcOperand(int operandIndex)
+        bool isSrcOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -591,7 +594,7 @@ namespace HsailISA
                 return(this->addr.isVectorRegister());
             return false;
         }
-        bool isDstOperand(int operandIndex)
+        bool isDstOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -599,7 +602,7 @@ namespace HsailISA
                 return false;
             return true;
         }
-        int getOperandSize(int operandIndex)
+        int getOperandSize(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -613,7 +616,7 @@ namespace HsailISA
                        AddrOperandType>::dest.opSize());
             return 0;
         }
-        int getRegisterIndex(int operandIndex)
+        int getRegisterIndex(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -627,14 +630,14 @@ namespace HsailISA
                        AddrOperandType>::dest.regIndex());
             return -1;
         }
-        int getNumOperands()
+        int getNumOperands() override
         {
             if (this->addr.isVectorRegister() || this->addr.isScalarRegister())
                 return(num_dest_operands+1);
             else
                 return(num_dest_operands);
         }
-        void execute(GPUDynInstPtr gpuDynInst);
+        void execute(GPUDynInstPtr gpuDynInst) override;
     };
 
     template<typename MemDT, typename DestDT>
@@ -851,48 +854,48 @@ namespace HsailISA
             }
         }
 
-        int numDstRegOperands() { return 0; }
-        int numSrcRegOperands()
+        int numDstRegOperands() override { return 0; }
+        int numSrcRegOperands() override
         {
             return src.isVectorRegister() + this->addr.isVectorRegister();
         }
-        int getNumOperands()
+        int getNumOperands() override
         {
             if (this->addr.isVectorRegister() || this->addr.isScalarRegister())
                 return 2;
             else
                 return 1;
         }
-        bool isVectorRegister(int operandIndex)
+        bool isVectorRegister(int operandIndex) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.isVectorRegister() :
                    this->addr.isVectorRegister();
         }
-        bool isCondRegister(int operandIndex)
+        bool isCondRegister(int operandIndex) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.isCondRegister() :
                    this->addr.isCondRegister();
         }
-        bool isScalarRegister(int operandIndex)
+        bool isScalarRegister(int operandIndex) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.isScalarRegister() :
                    this->addr.isScalarRegister();
         }
-        bool isSrcOperand(int operandIndex)
+        bool isSrcOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return true;
         }
-        bool isDstOperand(int operandIndex) { return false; }
-        int getOperandSize(int operandIndex)
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.opSize() : this->addr.opSize();
         }
-        int getRegisterIndex(int operandIndex)
+        int getRegisterIndex(int operandIndex) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.regIndex() : this->addr.regIndex();
@@ -910,7 +913,7 @@ namespace HsailISA
       public:
         typename SrcDataType::OperandType::SrcOperand src_vect[4];
         uint16_t num_src_operands;
-        void generateDisassembly();
+        void generateDisassembly() override;
 
         StInst(const Brig::BrigInstBase *ib, const BrigObject *obj,
                         const char *_opcode, int srcIdx)
@@ -1045,7 +1048,7 @@ namespace HsailISA
         }
 
       public:
-        bool isVectorRegister(int operandIndex)
+        bool isVectorRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1058,7 +1061,7 @@ namespace HsailISA
                        AddrOperandType>::src.isVectorRegister();
             return false;
         }
-        bool isCondRegister(int operandIndex)
+        bool isCondRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1071,7 +1074,7 @@ namespace HsailISA
                        AddrOperandType>::src.isCondRegister();
             return false;
         }
-        bool isScalarRegister(int operandIndex)
+        bool isScalarRegister(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1084,13 +1087,13 @@ namespace HsailISA
                        AddrOperandType>::src.isScalarRegister();
             return false;
         }
-        bool isSrcOperand(int operandIndex)
+        bool isSrcOperand(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return true;
         }
-        bool isDstOperand(int operandIndex) { return false; }
-        int getOperandSize(int operandIndex)
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1103,7 +1106,7 @@ namespace HsailISA
                        AddrOperandType>::src.opSize();
             return 0;
         }
-        int getRegisterIndex(int operandIndex)
+        int getRegisterIndex(int operandIndex) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1116,14 +1119,14 @@ namespace HsailISA
                        AddrOperandType>::src.regIndex();
             return -1;
         }
-        int getNumOperands()
+        int getNumOperands() override
         {
             if (this->addr.isVectorRegister() || this->addr.isScalarRegister())
                 return num_src_operands + 1;
             else
                 return num_src_operands;
         }
-        void execute(GPUDynInstPtr gpuDynInst);
+        void execute(GPUDynInstPtr gpuDynInst) override;
     };
 
     template<typename DataType, typename SrcDataType>
@@ -1332,7 +1335,7 @@ namespace HsailISA
         public MemInst
     {
       public:
-        void generateDisassembly();
+        void generateDisassembly() override;
 
         AtomicInst(const Brig::BrigInstBase *ib, const BrigObject *obj,
                    const char *_opcode)
@@ -1376,7 +1379,7 @@ namespace HsailISA
 
         }
 
-        void execute(GPUDynInstPtr gpuDynInst);
+        void execute(GPUDynInstPtr gpuDynInst) override;
 
         bool
         isLocalMem() const override

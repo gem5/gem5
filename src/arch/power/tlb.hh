@@ -133,7 +133,7 @@ class TLB : public BaseTLB
     TLB(const Params *p);
     virtual ~TLB();
 
-    void takeOverFrom(BaseTLB *otlb) {}
+    void takeOverFrom(BaseTLB *otlb) override {}
 
     int probeEntry(Addr vpn,uint8_t) const;
     PowerISA::PTE *getEntry(unsigned) const;
@@ -149,10 +149,10 @@ class TLB : public BaseTLB
     PowerISA::PTE &index(bool advance = true);
     void insert(Addr vaddr, PowerISA::PTE &pte);
     void insertAt(PowerISA::PTE &pte, unsigned Index, int _smallPages);
-    void flushAll();
+    void flushAll() override;
 
     void
-    demapPage(Addr vaddr, uint64_t asn)
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         panic("demapPage unimplemented.\n");
     }
@@ -175,7 +175,7 @@ class TLB : public BaseTLB
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    void regStats();
+    void regStats() override;
 };
 
 } // namespace PowerISA

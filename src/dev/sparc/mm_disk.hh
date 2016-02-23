@@ -58,8 +58,8 @@ class MmDisk : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
 };

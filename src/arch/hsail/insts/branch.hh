@@ -51,7 +51,7 @@ namespace HsailISA
     class BrnInstBase : public HsailGPUStaticInst
     {
     public:
-        void generateDisassembly();
+        void generateDisassembly() override;
 
         Brig::BrigWidth8_t width;
         TargetType target;
@@ -69,43 +69,43 @@ namespace HsailISA
         uint32_t getTargetPc()  override { return target.getTarget(0, 0); }
 
         bool unconditionalJumpInstruction() override { return true; }
-        bool isVectorRegister(int operandIndex) {
+        bool isVectorRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isVectorRegister();
         }
-        bool isCondRegister(int operandIndex) {
+        bool isCondRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isCondRegister();
         }
-        bool isScalarRegister(int operandIndex) {
+        bool isScalarRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isScalarRegister();
         }
 
-        bool isSrcOperand(int operandIndex) {
+        bool isSrcOperand(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return true;
         }
 
-        bool isDstOperand(int operandIndex) {
+        bool isDstOperand(int operandIndex) override {
             return false;
         }
 
-        int getOperandSize(int operandIndex) {
+        int getOperandSize(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.opSize();
         }
 
-        int getRegisterIndex(int operandIndex) {
+        int getRegisterIndex(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.regIndex();
         }
 
-        int getNumOperands() {
+        int getNumOperands() override {
             return 1;
         }
 
-        void execute(GPUDynInstPtr gpuDynInst);
+        void execute(GPUDynInstPtr gpuDynInst) override;
     };
 
     template<typename TargetType>
@@ -166,7 +166,7 @@ namespace HsailISA
     class CbrInstBase : public HsailGPUStaticInst
     {
       public:
-        void generateDisassembly();
+        void generateDisassembly() override;
 
         Brig::BrigWidth8_t width;
         CRegOperand cond;
@@ -186,47 +186,47 @@ namespace HsailISA
 
         uint32_t getTargetPc() override { return target.getTarget(0, 0); }
 
-        void execute(GPUDynInstPtr gpuDynInst);
+        void execute(GPUDynInstPtr gpuDynInst) override;
         // Assumption: Target is operand 0, Condition Register is operand 1
-        bool isVectorRegister(int operandIndex) {
+        bool isVectorRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             if (!operandIndex)
                 return target.isVectorRegister();
             else
                 return false;
         }
-        bool isCondRegister(int operandIndex) {
+        bool isCondRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             if (!operandIndex)
                 return target.isCondRegister();
             else
                 return true;
         }
-        bool isScalarRegister(int operandIndex) {
+        bool isScalarRegister(int operandIndex) override {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (!operandIndex)
                 return target.isScalarRegister();
             else
                 return false;
         }
-        bool isSrcOperand(int operandIndex) {
+        bool isSrcOperand(int operandIndex) override {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == 0)
                 return true;
             return false;
         }
         // both Condition Register and Target are source operands
-        bool isDstOperand(int operandIndex) {
+        bool isDstOperand(int operandIndex) override {
             return false;
         }
-        int getOperandSize(int operandIndex) {
+        int getOperandSize(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             if (!operandIndex)
                 return target.opSize();
             else
                 return 1;
         }
-        int getRegisterIndex(int operandIndex) {
+        int getRegisterIndex(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             if (!operandIndex)
                 return target.regIndex();
@@ -235,7 +235,7 @@ namespace HsailISA
          }
 
         // Operands = Target, Condition Register
-        int getNumOperands() {
+        int getNumOperands() override {
             return 2;
         }
     };
@@ -335,7 +335,7 @@ namespace HsailISA
     class BrInstBase : public HsailGPUStaticInst
     {
       public:
-        void generateDisassembly();
+        void generateDisassembly() override;
 
         ImmOperand<uint32_t> width;
         TargetType target;
@@ -354,33 +354,33 @@ namespace HsailISA
 
         bool unconditionalJumpInstruction() override { return true; }
 
-        void execute(GPUDynInstPtr gpuDynInst);
-        bool isVectorRegister(int operandIndex) {
+        void execute(GPUDynInstPtr gpuDynInst) override;
+        bool isVectorRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isVectorRegister();
         }
-        bool isCondRegister(int operandIndex) {
+        bool isCondRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isCondRegister();
         }
-        bool isScalarRegister(int operandIndex) {
+        bool isScalarRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isScalarRegister();
         }
-        bool isSrcOperand(int operandIndex) {
+        bool isSrcOperand(int operandIndex) override {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return true;
         }
-        bool isDstOperand(int operandIndex) { return false; }
-        int getOperandSize(int operandIndex) {
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+        int getRegisterIndex(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.regIndex();
         }
-        int getNumOperands() { return 1; }
+        int getNumOperands() override { return 1; }
     };
 
     template<typename TargetType>

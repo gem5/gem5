@@ -328,13 +328,13 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
 #if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(int misc_reg, ThreadID tid)
+    MiscReg readRegOtherThread(int misc_reg, ThreadID tid) override
     {
         panic("MIPS MT not defined for CheckerCPU.\n");
         return 0;
     }
 
-    void setRegOtherThread(int misc_reg, MiscReg val, ThreadID tid)
+    void setRegOtherThread(int misc_reg, MiscReg val, ThreadID tid) override
     {
         panic("MIPS MT not defined for CheckerCPU.\n");
     }
