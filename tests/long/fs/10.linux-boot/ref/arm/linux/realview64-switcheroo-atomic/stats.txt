@@ -4,11 +4,11 @@ sim_seconds                                 51.111167                       # Nu
 sim_ticks                                51111167216500                       # Number of ticks simulated
 final_tick                               51111167216500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1097269                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1289528                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            57098875481                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 677960                       # Number of bytes of host memory used
-host_seconds                                   895.13                       # Real time elapsed on the host
+host_inst_rate                                1764627                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2073818                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            91826344419                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 678044                       # Number of bytes of host memory used
+host_seconds                                   556.61                       # Real time elapsed on the host
 sim_insts                                   982203438                       # Number of instructions simulated
 sim_ops                                    1154301153                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -16,13 +16,13 @@ system.clk_domain.clock                          1000                       # Cl
 system.physmem.bytes_read::cpu0.dtb.walker       206336                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker       188160                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.inst          3278004                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu0.data         64990856                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu0.data         38030280                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.dtb.walker       207616                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.itb.walker       185216                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1.inst          2205952                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu1.data         45263168                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu1.data         36881856                       # Number of bytes read from this memory
 system.physmem.bytes_read::realview.ide        436800                       # Number of bytes read from this memory
-system.physmem.bytes_read::total            116962108                       # Number of bytes read from this memory
+system.physmem.bytes_read::total             81620220                       # Number of bytes read from this memory
 system.physmem.bytes_inst_read::cpu0.inst      3278004                       # Number of instructions bytes read from this memory
 system.physmem.bytes_inst_read::cpu1.inst      2205952                       # Number of instructions bytes read from this memory
 system.physmem.bytes_inst_read::total         5483956                       # Number of instructions bytes read from this memory
@@ -32,26 +32,26 @@ system.physmem.bytes_written::total         103298148                       # Nu
 system.physmem.num_reads::cpu0.dtb.walker         3224                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu0.itb.walker         2940                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu0.inst             91626                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu0.data           1015495                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu0.data            594236                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.dtb.walker         3244                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.itb.walker         2894                       # Number of read requests responded to by this memory
 system.physmem.num_reads::cpu1.inst             34468                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu1.data            707237                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu1.data            576279                       # Number of read requests responded to by this memory
 system.physmem.num_reads::realview.ide           6825                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total               1867953                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total               1315736                       # Number of read requests responded to by this memory
 system.physmem.num_writes::writebacks         1613712                       # Number of write requests responded to by this memory
 system.physmem.num_writes::cpu0.data             2573                       # Number of write requests responded to by this memory
 system.physmem.num_writes::total              1616285                       # Number of write requests responded to by this memory
 system.physmem.bw_read::cpu0.dtb.walker          4037                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu0.itb.walker          3681                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu0.inst               64135                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu0.data             1271559                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu0.data              744070                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.dtb.walker          4062                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.itb.walker          3624                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::cpu1.inst               43160                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu1.data              885583                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu1.data              721601                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_read::realview.ide             8546                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total                 2288387                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total                 1596916                       # Total read bandwidth from this memory (bytes/s)
 system.physmem.bw_inst_read::cpu0.inst          64135                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_inst_read::cpu1.inst          43160                       # Instruction read bandwidth from this memory (bytes/s)
 system.physmem.bw_inst_read::total             107295                       # Instruction read bandwidth from this memory (bytes/s)
@@ -62,13 +62,13 @@ system.physmem.bw_total::writebacks           2020646                       # To
 system.physmem.bw_total::cpu0.dtb.walker         4037                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu0.itb.walker         3681                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu0.inst              64135                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu0.data            1271961                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu0.data             744473                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.dtb.walker         4062                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.itb.walker         3624                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu1.inst              43160                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu1.data             885583                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu1.data             721601                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::realview.ide            8546                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total                4309435                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total                3617964                       # Total bandwidth to/from this memory (bytes/s)
 system.realview.nvmem.bytes_read::cpu0.inst           96                       # Number of bytes read from this memory
 system.realview.nvmem.bytes_read::cpu0.data           36                       # Number of bytes read from this memory
 system.realview.nvmem.bytes_read::total           132                       # Number of bytes read from this memory
@@ -1007,11 +1007,11 @@ system.membus.trans_dist::CleanEvict           226309                       # Tr
 system.membus.trans_dist::UpgradeReq            40494                       # Transaction distribution
 system.membus.trans_dist::SCUpgradeReq              1                       # Transaction distribution
 system.membus.trans_dist::UpgradeResp           40495                       # Transaction distribution
-system.membus.trans_dist::ReadExReq           1379260                       # Transaction distribution
-system.membus.trans_dist::ReadExResp          1379260                       # Transaction distribution
+system.membus.trans_dist::ReadExReq            827043                       # Transaction distribution
+system.membus.trans_dist::ReadExResp           827043                       # Transaction distribution
 system.membus.trans_dist::ReadSharedReq        448255                       # Transaction distribution
-system.membus.trans_dist::InvalidateReq        106664                       # Transaction distribution
-system.membus.trans_dist::InvalidateResp       106664                       # Transaction distribution
+system.membus.trans_dist::InvalidateReq        658881                       # Transaction distribution
+system.membus.trans_dist::InvalidateResp       658881                       # Transaction distribution
 system.membus.pkt_count_system.l2c.mem_side::system.bridge.slave       122480                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.l2c.mem_side::system.realview.nvmem.port           58                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count_system.l2c.mem_side::system.realview.gic.pio         6654                       # Packet count per connected master and slave (bytes)
@@ -1023,11 +1023,11 @@ system.membus.pkt_count::total                6009939                       # Pa
 system.membus.pkt_size_system.l2c.mem_side::system.bridge.slave       155610                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size_system.l2c.mem_side::system.realview.nvmem.port          132                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size_system.l2c.mem_side::system.realview.gic.pio        13308                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.pkt_size_system.l2c.mem_side::system.physmem.port    213040864                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.pkt_size_system.l2c.mem_side::total    213209914                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.l2c.mem_side::system.physmem.port    177698976                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.l2c.mem_side::total    177868026                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size_system.iocache.mem_side::system.physmem.port      7390784                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size_system.iocache.mem_side::total      7390784                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.pkt_size::total               220600698                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total               185258810                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoop_fanout::samples           3924980                       # Request fanout histogram
 system.membus.snoop_fanout::mean                    1                       # Request fanout histogram
