@@ -420,11 +420,9 @@ TraceGen::InputStream::init()
     ProtoMessage::PacketHeader header_msg;
     if (!trace.read(header_msg)) {
         panic("Failed to read packet header from trace\n");
-
-        if (header_msg.tick_freq() != SimClock::Frequency) {
-            panic("Trace was recorded with a different tick frequency %d\n",
-                  header_msg.tick_freq());
-        }
+    } else if (header_msg.tick_freq() != SimClock::Frequency) {
+        panic("Trace was recorded with a different tick frequency %d\n",
+              header_msg.tick_freq());
     }
 }
 

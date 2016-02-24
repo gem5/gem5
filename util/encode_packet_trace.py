@@ -105,7 +105,7 @@ def main():
     header = packet_pb2.PacketHeader()
     header.obj_id = "Converted ASCII trace " + sys.argv[1]
     # Assume the default tick rate
-    header.tick_freq = 1000000000
+    header.tick_freq = 1000000000000
     protolib.encodeMessage(proto_out, header)
 
     # For each line in the ASCII trace, create a packet message and
