@@ -124,7 +124,7 @@ let {{
                                           'EA = URb + (up ? imm : -imm);',
                                        'predicate_test': condPredicateTest},
                                       ['IsMicroop','IsNonSpeculative',
-                                       'IsSerializeAfter'])
+                                       'IsSerializeAfter', 'IsSquashAfter'])
 
     microStrUopCode = "Mem = cSwap(URa_uw, ((CPSR)Cpsr).e);"
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
@@ -668,7 +668,7 @@ let {{
                                      {'code': microRetUopCode % 'URb',
                                       'predicate_test': predicateTest},
                                      ['IsMicroop', 'IsNonSpeculative',
-                                      'IsSerializeAfter'])
+                                      'IsSerializeAfter', 'IsSquashAfter'])
 
     setPCCPSRDecl = '''
                     CPSR cpsrOrCondCodes = URc;

@@ -273,10 +273,12 @@ let {{
             '''
             buildImmDataInst(mnem + 's', code, flagType,
                              suffix = "ImmPclr", buildCc = False,
-                             instFlags = ["IsSerializeAfter","IsNonSpeculative"])
+                             instFlags = ["IsSerializeAfter","IsNonSpeculative",
+                                          "IsSquashAfter"])
             buildRegDataInst(mnem + 's', code, flagType,
                              suffix = "RegPclr", buildCc = False,
-                             instFlags = ["IsSerializeAfter","IsNonSpeculative"])
+                             instFlags = ["IsSerializeAfter","IsNonSpeculative",
+                                          "IsSquashAfter"])
 
     buildDataInst("and", "Dest = resTemp = Op1 & secondOp;")
     buildDataInst("eor", "Dest = resTemp = Op1 ^ secondOp;")

@@ -130,7 +130,8 @@ let {{
     eretIop = InstObjParams("eret", "Eret", "PredOp",
                            { "code": eretCode,
                              "predicate_test": predicateTest },
-                           ["IsNonSpeculative", "IsSerializeAfter"])
+                           ["IsNonSpeculative", "IsSerializeAfter",
+                            "IsSquashAfter"])
     header_output += BasicDeclare.subst(eretIop)
     decoder_output += BasicConstructor.subst(eretIop)
     exec_output += PredOpExecute.subst(eretIop)
