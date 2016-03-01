@@ -53,7 +53,8 @@ public class gem5Op {
     public native void wakeCPU(long cpuid);
 
     public native void exit(long ns_delay);
-    public native long initparam();
+    public native void fail(long ns_delay, long code);
+    public native long initparam(long key_str1, long key_str2);
     public native void checkpoint(long ns_delay, long ns_period);
     public native void reset_stats(long ns_delay, long ns_period);
     public native void dump_stats(long ns_delay, long ns_period);

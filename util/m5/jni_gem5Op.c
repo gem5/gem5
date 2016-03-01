@@ -101,10 +101,17 @@ Java_jni_gem5Op_exit(JNIEnv *env, jobject obj, jlong j_ns_delay)
     m5_exit(j_ns_delay);
 }
 
-JNIEXPORT jlong JNICALL
-Java_jni_gem5Op_initparam(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL
+Java_jni_gem5Op_fail(JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_code)
 {
-    uint64_t param = m5_initparam();
+    m5_fail(j_ns_delay, j_code);
+}
+
+JNIEXPORT jlong JNICALL
+Java_jni_gem5Op_initparam(JNIEnv *env, jobject obj, jlong j_key_str1,
+                          jlong j_key_str2)
+{
+    uint64_t param = m5_initparam(j_key_str1, j_key_str2);
     if (param & 0x8000000000000000ULL)
         printf("Truncated return value from m_initparam() to 63 bits\n");
     return (param & 0x7FFFFFFFFFFFFFFFULL);
