@@ -1620,7 +1620,7 @@ ComputeUnit::CUExitCallback::process()
 {
     if (computeUnit->countPages) {
         std::ostream *page_stat_file =
-            simout.create(computeUnit->name().c_str());
+            simout.create(computeUnit->name().c_str())->stream();
 
         *page_stat_file << "page, wavefront accesses, workitem accesses" <<
             std::endl;

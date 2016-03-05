@@ -1709,7 +1709,7 @@ namespace X86ISA
             // print per page statistics to a separate file (.csv format)
             // simout is the gem5 output directory (default is m5out or the one
             // specified with -d
-            page_stat_file = simout.create(name().c_str());
+            page_stat_file = simout.create(name().c_str())->stream();
 
             // print header
             *page_stat_file << "page,max_access_distance,mean_access_distance, "
