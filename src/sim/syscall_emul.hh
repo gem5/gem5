@@ -333,7 +333,7 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         uint8_t *buf = new uint8_t[sizeof(int)];
         tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int));
         int mem_val = *((int *)buf);
-        delete buf;
+        delete[] buf;
 
         if (val != mem_val) {
             DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAKE, read: %d, "
