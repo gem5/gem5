@@ -343,6 +343,8 @@ def addFSOptions(parser):
         parser.add_option("--enable-context-switch-stats-dump", \
                 action="store_true", help="Enable stats dump at context "\
                 "switches and dump tasks file (required for Streamline)")
+        parser.add_option("--generate-dtb", action="store_true", default=False,
+                    help="Automatically generate a dtb file")
 
     # Benchmark options
     parser.add_option("--dual", action="store_true",

@@ -48,6 +48,7 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal, warn
+from m5.util.fdthelper import *
 
 addToPath('../')
 
@@ -99,7 +100,9 @@ def build_test_system(np):
                                  options.num_cpus, bm[0], options.dtb_filename,
                                  bare_metal=options.bare_metal,
                                  cmdline=cmdline,
-                                 external_memory=options.external_memory_system,
+                                 ignore_dtb=options.generate_dtb,
+                                 external_memory=
+                                   options.external_memory_system,
                                  ruby=options.ruby,
                                  security=options.enable_security_extensions)
         if options.enable_context_switch_stats_dump:
@@ -248,7 +251,8 @@ def build_drive_system(np):
                                        cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'arm':
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, np,
-                                  bm[1], options.dtb_filename, cmdline=cmdline)
+                                  bm[1], options.dtb_filename, cmdline=cmdline,
+                                  ignore_dtb=options.generate_dtb)
 
     # Create a top-level voltage domain
     drive_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
@@ -361,6 +365,35 @@ if options.timesync:
 
 if options.frame_capture:
     VncServer.frame_capture = True
+
+if buildEnv['TARGET_ISA'] == "arm" and options.generate_dtb:
+    # Sanity checks
+    if options.dtb_filename:
+        fatal("--generate-dtb and --dtb-filename cannot be specified at the"\
+             "same time.")
+
+    if options.machine_type not in ["VExpress_GEM5", "VExpress_GEM5_V1"]:
+        warn("Can only correctly generate a dtb for VExpress_GEM5_V1 " \
+             "platforms, unless custom hardware models have been equipped "\
+             "with generation functionality.")
+
+    # Generate a Device Tree
+    def create_dtb_for_system(system, filename):
+        state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
+        rootNode = system.generateDeviceTree(state)
+
+        fdt = Fdt()
+        fdt.add_rootnode(rootNode)
+        dtb_filename = os.path.join(m5.options.outdir, filename)
+        return fdt.writeDtbFile(dtb_filename)
+
+    for sysname in ('system', 'testsys', 'drivesys'):
+        if hasattr(root, sysname):
+            sys = getattr(root, sysname)
+            sys.dtb_filename = create_dtb_for_system(sys, '%s.dtb' % sysname)
+
+elif buildEnv['TARGET_ISA'] != "arm" and options.generate_dtb:
+    fatal("Can only generate dtb files for ARM systems.")
 
 Simulation.setWorkCountOptions(test_sys, options)
 Simulation.run(options, root, test_sys, FutureClass)

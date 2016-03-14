@@ -204,7 +204,8 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   dtb_filename=None, bare_metal=False, cmdline=None,
-                  external_memory="", ruby=False, security=False):
+                  external_memory="", ruby=False, security=False,
+                  ignore_dtb=False):
     assert machine_type
 
     default_dtbs = {
@@ -249,7 +250,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     machine_type = platform_class.__name__
     self.realview = platform_class()
 
-    if not dtb_filename and not bare_metal:
+    if not dtb_filename and not (bare_metal or ignore_dtb):
         try:
             dtb_filename = default_dtbs[machine_type]
         except KeyError:
@@ -305,7 +306,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         if machine_type in default_kernels:
             self.kernel = binary(default_kernels[machine_type])
 
-        if dtb_filename:
+        if dtb_filename and not ignore_dtb:
             self.dtb_filename = binary(dtb_filename)
 
         self.machine_type = machine_type if machine_type in ArmMachineType.map \
