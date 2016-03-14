@@ -1251,7 +1251,6 @@ needed_envs = [identifyTarget(target) for target in BUILD_TARGETS]
 if 'all' in needed_envs:
     needed_envs += target_types
 
-gem5_root = Dir('.').up().up().abspath
 def makeEnvirons(target, source, env):
     # cause any later Source() calls to be fatal, as a diagnostic.
     Source.done()
@@ -1300,7 +1299,7 @@ def makeEnvirons(target, source, env):
 
     # Set up the regression tests for each build.
     for e in envList:
-        SConscript(os.path.join(gem5_root, 'tests', 'SConscript'),
+        SConscript(os.path.join(env.root.abspath, 'tests', 'SConscript'),
                    variant_dir = variantd('tests', e.Label),
                    exports = { 'env' : e }, duplicate = False)
 
