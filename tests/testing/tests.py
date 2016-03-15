@@ -102,6 +102,7 @@ arch_configs = {
         'realview-minor-dual',
         'realview-switcheroo-atomic',
         'realview-switcheroo-timing',
+        'realview-switcheroo-noncaching-timing',
         'realview-switcheroo-o3',
         'realview-switcheroo-full',
         'realview64-simple-atomic',

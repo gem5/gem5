@@ -164,8 +164,6 @@ def addCommonOptions(parser):
     parser.add_option("-l", "--lpae", action="store_true")
     parser.add_option("-V", "--virtualisation", action="store_true")
 
-    parser.add_option("--fastmem", action="store_true")
-
     # dist-gem5 options
     parser.add_option("--dist", action="store_true",
                       help="Parallel distributed gem5 simulation.")

@@ -69,6 +69,7 @@ def _cpu_subclass_tester(name):
     return tester
 
 is_kvm_cpu = _cpu_subclass_tester("BaseKvmCPU")
+is_atomic_cpu = _cpu_subclass_tester("AtomicSimpleCPU")
 
 def get(name):
     """Get a CPU class from a user provided class name or alias."""

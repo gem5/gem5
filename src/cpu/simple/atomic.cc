@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2012-2013,2015,2017 ARM Limited
+ * Copyright (c) 2012-2013,2015,2017-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -83,7 +83,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       simulate_inst_stalls(p->simulate_inst_stalls),
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
-      fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
+      dcache_access(false), dcache_latency(0),
       ppCommit(nullptr)
 {
     _status = Idle;
@@ -271,6 +271,11 @@ AtomicSimpleCPU::suspendContext(ThreadID thread_num)
     BaseCPU::suspendContext(thread_num);
 }
 
+Tick
+AtomicSimpleCPU::sendPacket(MasterPort &port, const PacketPtr &pkt)
+{
+    return port.sendAtomic(pkt);
+}
 
 Tick
 AtomicSimpleCPU::AtomicCPUDPort::recvAtomicSnoop(PacketPtr pkt)
@@ -364,13 +369,10 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
             Packet pkt(req, Packet::makeReadCmd(req));
             pkt.dataStatic(data);
 
-            if (req->isMmappedIpr())
+            if (req->isMmappedIpr()) {
                 dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
-            else {
-                if (fastmem && system->isMemAddr(pkt.getAddr()))
-                    system->getPhysMem().access(&pkt);
-                else
-                    dcache_latency += dcachePort.sendAtomic(&pkt);
+            } else {
+                dcache_latency += sendPacket(dcachePort, &pkt);
             }
             dcache_access = true;
 
@@ -483,10 +485,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
                     dcache_latency +=
                         TheISA::handleIprWrite(thread->getTC(), &pkt);
                 } else {
-                    if (fastmem && system->isMemAddr(pkt.getAddr()))
-                        system->getPhysMem().access(&pkt);
-                    else
-                        dcache_latency += dcachePort.sendAtomic(&pkt);
+                    dcache_latency += sendPacket(dcachePort, &pkt);
 
                     // Notify other threads on this CPU of write
                     threadSnoop(&pkt, curThread);
@@ -603,10 +602,7 @@ AtomicSimpleCPU::tick()
                     Packet ifetch_pkt = Packet(ifetch_req, MemCmd::ReadReq);
                     ifetch_pkt.dataStatic(&inst);
 
-                    if (fastmem && system->isMemAddr(ifetch_pkt.getAddr()))
-                        system->getPhysMem().access(&ifetch_pkt);
-                    else
-                        icache_latency = icachePort.sendAtomic(&ifetch_pkt);
+                    icache_latency = sendPacket(icachePort, &ifetch_pkt);
 
                     assert(!ifetch_pkt.isError());
 

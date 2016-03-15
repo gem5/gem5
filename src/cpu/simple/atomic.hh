@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -58,7 +58,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     void init() override;
 
-  private:
+  protected:
 
     EventFunctionWrapper tickEvent;
 
@@ -103,6 +103,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      */
     bool tryCompleteDrain();
 
+    virtual Tick sendPacket(MasterPort &port, const PacketPtr &pkt);
+
     /**
      * An AtomicCPUPort overrides the default behaviour of the
      * recvAtomicSnoop and ignores the packet instead of panicking. It
@@ -137,7 +139,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     {
 
       public:
-
         AtomicCPUDPort(const std::string &_name, BaseSimpleCPU* _cpu)
             : AtomicCPUPort(_name, _cpu), cpu(_cpu)
         {
@@ -158,7 +159,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     AtomicCPUPort icachePort;
     AtomicCPUDPort dcachePort;
 
-    bool fastmem;
+
     RequestPtr ifetch_req;
     RequestPtr data_read_req;
     RequestPtr data_write_req;
