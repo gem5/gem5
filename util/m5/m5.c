@@ -86,7 +86,7 @@ parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
 void
 parse_str_args_to_regs(int argc, char *argv[], uint64_t regs[], int len)
 {
-    if (argc > 1 || strlen(argv[0]) > len * sizeof(uint64_t))
+    if (argc > 1 || (argc > 0 && strlen(argv[0]) > len * sizeof(uint64_t)))
         usage();
 
     int i;
