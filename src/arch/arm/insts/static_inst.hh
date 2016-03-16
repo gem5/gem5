@@ -180,7 +180,7 @@ class ArmStaticInst : public StaticInst
     void printDataInst(std::ostream &os, bool withImm, bool immShift, bool s,
                        IntRegIndex rd, IntRegIndex rn, IntRegIndex rm,
                        IntRegIndex rs, uint32_t shiftAmt, ArmShiftType type,
-                       uint32_t imm) const;
+                       uint64_t imm) const;
 
     void
     advancePC(PCState &pcState) const

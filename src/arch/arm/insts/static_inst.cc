@@ -559,7 +559,7 @@ void
 ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
         bool immShift, bool s, IntRegIndex rd, IntRegIndex rn,
         IntRegIndex rm, IntRegIndex rs, uint32_t shiftAmt,
-        ArmShiftType type, uint32_t imm) const
+        ArmShiftType type, uint64_t imm) const
 {
     printMnemonic(os, s ? "s" : "");
     bool firstOp = true;
@@ -581,7 +581,7 @@ ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
     if (!firstOp)
         os << ", ";
     if (withImm) {
-        ccprintf(os, "#%d", imm);
+        ccprintf(os, "#%ld", imm);
     } else {
         printShiftOperand(os, rm, immShift, shiftAmt, rs, type);
     }
