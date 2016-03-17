@@ -1,14 +1,16 @@
+Redirecting stdout to build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple/simout
+Redirecting stderr to build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:17:41
-gem5 started Jan 21 2016 14:18:13
-gem5 executing on zizzer, pid 60583
-command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple -re /z/atgutier/gem5/gem5-commit/tests/run.py build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple
+gem5 compiled Mar 14 2016 22:04:10
+gem5 started Mar 14 2016 22:06:34
+gem5 executing on phenom, pid 29862
+command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-simple
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 367783000 because target called exit()
+Exiting @ tick 368887000 because target called exit()

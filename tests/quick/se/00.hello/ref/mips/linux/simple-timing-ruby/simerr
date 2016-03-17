@@ -7,4 +7,3 @@ warn: rounding error > tolerance
 warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (256 Mbytes)
 warn: Sockets disabled, not accepting gdb connections
 warn: Replacement policy updates recently became the responsibility of SLICC state machines. Make sure to setMRU() near callbacks in .sm files!
-warn: mmap failing: arguments not page-aligned: start 0x0 offset 0x7efefeff

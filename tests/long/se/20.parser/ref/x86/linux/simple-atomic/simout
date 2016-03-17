@@ -3,9 +3,9 @@ Redirecting stderr to build/X86/tests/opt/long/se/20.parser/x86/linux/simple-ato
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 16 2016 15:38:19
-gem5 started Mar 16 2016 15:38:59
-gem5 executing on dinar2c11, pid 14361
+gem5 compiled Mar 16 2016 22:57:26
+gem5 started Mar 16 2016 22:58:08
+gem5 executing on dinar2c11, pid 24736
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/simple-atomic -re /home/stever/gem5-public/tests/run.py build/X86/tests/opt/long/se/20.parser/x86/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
@@ -72,4 +72,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 885256008500 because target called exit()
+Exiting @ tick 885772926000 because target called exit()

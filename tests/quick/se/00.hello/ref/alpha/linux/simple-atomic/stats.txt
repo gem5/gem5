@@ -1,61 +1,61 @@
 
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.000003                       # Number of seconds simulated
-sim_ticks                                     3208000                       # Number of ticks simulated
-final_tick                                    3208000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_ticks                                     3214500                       # Number of ticks simulated
+final_tick                                    3214500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 146057                       # Simulator instruction rate (inst/s)
-host_op_rate                                   145971                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               73240755                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 220608                       # Number of bytes of host memory used
-host_seconds                                     0.04                       # Real time elapsed on the host
-sim_insts                                        6390                       # Number of instructions simulated
-sim_ops                                          6390                       # Number of ops (including micro ops) simulated
+host_inst_rate                                  21023                       # Simulator instruction rate (inst/s)
+host_op_rate                                    21020                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               10551583                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 216888                       # Number of bytes of host memory used
+host_seconds                                     0.30                       # Real time elapsed on the host
+sim_insts                                        6403                       # Number of instructions simulated
+sim_ops                                          6403                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
-system.physmem.bytes_read::cpu.inst             25600                       # Number of bytes read from this memory
-system.physmem.bytes_read::cpu.data              8788                       # Number of bytes read from this memory
-system.physmem.bytes_read::total                34388                       # Number of bytes read from this memory
-system.physmem.bytes_inst_read::cpu.inst        25600                       # Number of instructions bytes read from this memory
-system.physmem.bytes_inst_read::total           25600                       # Number of instructions bytes read from this memory
+system.physmem.bytes_read::cpu.inst             25652                       # Number of bytes read from this memory
+system.physmem.bytes_read::cpu.data              8804                       # Number of bytes read from this memory
+system.physmem.bytes_read::total                34456                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read::cpu.inst        25652                       # Number of instructions bytes read from this memory
+system.physmem.bytes_inst_read::total           25652                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written::cpu.data           6696                       # Number of bytes written to this memory
 system.physmem.bytes_written::total              6696                       # Number of bytes written to this memory
-system.physmem.num_reads::cpu.inst               6400                       # Number of read requests responded to by this memory
-system.physmem.num_reads::cpu.data               1183                       # Number of read requests responded to by this memory
-system.physmem.num_reads::total                  7583                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu.inst               6413                       # Number of read requests responded to by this memory
+system.physmem.num_reads::cpu.data               1185                       # Number of read requests responded to by this memory
+system.physmem.num_reads::total                  7598                       # Number of read requests responded to by this memory
 system.physmem.num_writes::cpu.data               865                       # Number of write requests responded to by this memory
 system.physmem.num_writes::total                  865                       # Number of write requests responded to by this memory
-system.physmem.bw_read::cpu.inst           7980049875                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::cpu.data           2739401496                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_read::total             10719451372                       # Total read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::cpu.inst      7980049875                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_inst_read::total         7980049875                       # Instruction read bandwidth from this memory (bytes/s)
-system.physmem.bw_write::cpu.data          2087281796                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_write::total             2087281796                       # Write bandwidth from this memory (bytes/s)
-system.physmem.bw_total::cpu.inst          7980049875                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::cpu.data          4826683292                       # Total bandwidth to/from this memory (bytes/s)
-system.physmem.bw_total::total            12806733167                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_read::cpu.inst           7980090216                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::cpu.data           2738839633                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_read::total             10718929849                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::cpu.inst      7980090216                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read::total         7980090216                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write::cpu.data          2083061129                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_write::total             2083061129                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total::cpu.inst          7980090216                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::cpu.data          4821900762                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bw_total::total            12801990978                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.fetch_acv                            0                       # ITB acv
 system.cpu.dtb.fetch_accesses                       0                       # ITB accesses
-system.cpu.dtb.read_hits                         1183                       # DTB read hits
+system.cpu.dtb.read_hits                         1185                       # DTB read hits
 system.cpu.dtb.read_misses                          7                       # DTB read misses
 system.cpu.dtb.read_acv                             0                       # DTB read access violations
-system.cpu.dtb.read_accesses                     1190                       # DTB read accesses
+system.cpu.dtb.read_accesses                     1192                       # DTB read accesses
 system.cpu.dtb.write_hits                         865                       # DTB write hits
 system.cpu.dtb.write_misses                         3                       # DTB write misses
 system.cpu.dtb.write_acv                            0                       # DTB write access violations
 system.cpu.dtb.write_accesses                     868                       # DTB write accesses
-system.cpu.dtb.data_hits                         2048                       # DTB hits
+system.cpu.dtb.data_hits                         2050                       # DTB hits
 system.cpu.dtb.data_misses                         10                       # DTB misses
 system.cpu.dtb.data_acv                             0                       # DTB access violations
-system.cpu.dtb.data_accesses                     2058                       # DTB accesses
-system.cpu.itb.fetch_hits                        6400                       # ITB hits
+system.cpu.dtb.data_accesses                     2060                       # DTB accesses
+system.cpu.itb.fetch_hits                        6413                       # ITB hits
 system.cpu.itb.fetch_misses                        17                       # ITB misses
 system.cpu.itb.fetch_acv                            0                       # ITB acv
-system.cpu.itb.fetch_accesses                    6417                       # ITB accesses
+system.cpu.itb.fetch_accesses                    6430                       # ITB accesses
 system.cpu.itb.read_hits                            0                       # DTB read hits
 system.cpu.itb.read_misses                          0                       # DTB read misses
 system.cpu.itb.read_acv                             0                       # DTB read access violations
@@ -69,84 +69,84 @@ system.cpu.itb.data_misses                          0                       # DT
 system.cpu.itb.data_acv                             0                       # DTB access violations
 system.cpu.itb.data_accesses                        0                       # DTB accesses
 system.cpu.workload.num_syscalls                   17                       # Number of system calls
-system.cpu.numCycles                             6417                       # number of cpu cycles simulated
+system.cpu.numCycles                             6430                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.committedInsts                        6390                       # Number of instructions committed
-system.cpu.committedOps                          6390                       # Number of ops (including micro ops) committed
-system.cpu.num_int_alu_accesses                  6317                       # Number of integer alu accesses
+system.cpu.committedInsts                        6403                       # Number of instructions committed
+system.cpu.committedOps                          6403                       # Number of ops (including micro ops) committed
+system.cpu.num_int_alu_accesses                  6329                       # Number of integer alu accesses
 system.cpu.num_fp_alu_accesses                     10                       # Number of float alu accesses
 system.cpu.num_func_calls                         251                       # number of times a function call or return occured
-system.cpu.num_conditional_control_insts          749                       # number of instructions that are conditional controls
-system.cpu.num_int_insts                         6317                       # number of integer instructions
+system.cpu.num_conditional_control_insts          754                       # number of instructions that are conditional controls
+system.cpu.num_int_insts                         6329                       # number of integer instructions
 system.cpu.num_fp_insts                            10                       # number of float instructions
-system.cpu.num_int_register_reads                8285                       # number of times the integer registers were read
-system.cpu.num_int_register_writes               4568                       # number of times the integer registers were written
+system.cpu.num_int_register_reads                8297                       # number of times the integer registers were read
+system.cpu.num_int_register_writes               4575                       # number of times the integer registers were written
 system.cpu.num_fp_register_reads                    8                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                   2                       # number of times the floating registers were written
-system.cpu.num_mem_refs                          2058                       # number of memory refs
-system.cpu.num_load_insts                        1190                       # Number of load instructions
+system.cpu.num_mem_refs                          2060                       # number of memory refs
+system.cpu.num_load_insts                        1192                       # Number of load instructions
 system.cpu.num_store_insts                        868                       # Number of store instructions
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_busy_cycles                       6417                       # Number of busy cycles
+system.cpu.num_busy_cycles                       6430                       # Number of busy cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
-system.cpu.Branches                              1050                       # Number of branches fetched
+system.cpu.Branches                              1056                       # Number of branches fetched
 system.cpu.op_class::No_OpClass                    19      0.30%      0.30% # Class of executed instruction
-system.cpu.op_class::IntAlu                      4320     67.50%     67.80% # Class of executed instruction
-system.cpu.op_class::IntMult                        1      0.02%     67.81% # Class of executed instruction
-system.cpu.op_class::IntDiv                         0      0.00%     67.81% # Class of executed instruction
-system.cpu.op_class::FloatAdd                       2      0.03%     67.84% # Class of executed instruction
-system.cpu.op_class::FloatCmp                       0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::FloatCvt                       0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::FloatMult                      0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::FloatDiv                       0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::FloatSqrt                      0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdAdd                        0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdAddAcc                     0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdAlu                        0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdCmp                        0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdCvt                        0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdMisc                       0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdMult                       0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdMultAcc                    0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdShift                      0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdShiftAcc                   0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdSqrt                       0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatAdd                   0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatAlu                   0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatCmp                   0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatCvt                   0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatDiv                   0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatMisc                  0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatMult                  0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatMultAcc               0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::SimdFloatSqrt                  0      0.00%     67.84% # Class of executed instruction
-system.cpu.op_class::MemRead                     1190     18.59%     86.44% # Class of executed instruction
-system.cpu.op_class::MemWrite                     868     13.56%    100.00% # Class of executed instruction
+system.cpu.op_class::IntAlu                      4331     67.53%     67.83% # Class of executed instruction
+system.cpu.op_class::IntMult                        1      0.02%     67.85% # Class of executed instruction
+system.cpu.op_class::IntDiv                         0      0.00%     67.85% # Class of executed instruction
+system.cpu.op_class::FloatAdd                       2      0.03%     67.88% # Class of executed instruction
+system.cpu.op_class::FloatCmp                       0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::FloatCvt                       0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::FloatMult                      0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::FloatDiv                       0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::FloatSqrt                      0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdAdd                        0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdAddAcc                     0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdAlu                        0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdCmp                        0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdCvt                        0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdMisc                       0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdMult                       0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdMultAcc                    0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdShift                      0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdShiftAcc                   0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdSqrt                       0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatAdd                   0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatAlu                   0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatCmp                   0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatCvt                   0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatDiv                   0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatMisc                  0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatMult                  0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatMultAcc               0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::SimdFloatSqrt                  0      0.00%     67.88% # Class of executed instruction
+system.cpu.op_class::MemRead                     1192     18.59%     86.46% # Class of executed instruction
+system.cpu.op_class::MemWrite                     868     13.54%    100.00% # Class of executed instruction
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
-system.cpu.op_class::total                       6400                       # Class of executed instruction
-system.membus.trans_dist::ReadReq                7583                       # Transaction distribution
-system.membus.trans_dist::ReadResp               7583                       # Transaction distribution
+system.cpu.op_class::total                       6413                       # Class of executed instruction
+system.membus.trans_dist::ReadReq                7598                       # Transaction distribution
+system.membus.trans_dist::ReadResp               7598                       # Transaction distribution
 system.membus.trans_dist::WriteReq                865                       # Transaction distribution
 system.membus.trans_dist::WriteResp               865                       # Transaction distribution
-system.membus.pkt_count_system.cpu.icache_port::system.physmem.port        12800                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count_system.cpu.dcache_port::system.physmem.port         4096                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_count::total                  16896                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_size_system.cpu.icache_port::system.physmem.port        25600                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port        15484                       # Cumulative packet size per connected master and slave (bytes)
-system.membus.pkt_size::total                   41084                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.icache_port::system.physmem.port        12826                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.dcache_port::system.physmem.port         4100                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count::total                  16926                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.icache_port::system.physmem.port        25652                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port        15500                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size::total                   41152                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
-system.membus.snoop_fanout::samples              8448                       # Request fanout histogram
-system.membus.snoop_fanout::mean             0.757576                       # Request fanout histogram
-system.membus.snoop_fanout::stdev            0.428575                       # Request fanout histogram
+system.membus.snoop_fanout::samples              8463                       # Request fanout histogram
+system.membus.snoop_fanout::mean             0.757769                       # Request fanout histogram
+system.membus.snoop_fanout::stdev            0.428459                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::0                    2048     24.24%     24.24% # Request fanout histogram
-system.membus.snoop_fanout::1                    6400     75.76%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::0                    2050     24.22%     24.22% # Request fanout histogram
+system.membus.snoop_fanout::1                    6413     75.78%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
-system.membus.snoop_fanout::total                8448                       # Request fanout histogram
+system.membus.snoop_fanout::total                8463                       # Request fanout histogram
 
 ---------- End Simulation Statistics   ----------

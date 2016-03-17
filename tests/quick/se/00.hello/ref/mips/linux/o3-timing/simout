@@ -1,9 +1,11 @@
+Redirecting stdout to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing/simout
+Redirecting stderr to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 13 2016 22:42:39
-gem5 started Mar 13 2016 22:47:14
-gem5 executing on phenom, pid 19880
+gem5 compiled Mar 14 2016 22:04:10
+gem5 started Mar 14 2016 22:06:34
+gem5 executing on phenom, pid 29859
 command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second

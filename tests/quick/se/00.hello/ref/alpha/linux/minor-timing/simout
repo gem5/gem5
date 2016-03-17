@@ -1,13 +1,15 @@
+Redirecting stdout to build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/minor-timing/simout
+Redirecting stderr to build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/minor-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 13:49:21
-gem5 started Jan 21 2016 13:50:03
-gem5 executing on zizzer, pid 34007
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/minor-timing -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/minor-timing
+gem5 compiled Mar 14 2016 21:54:46
+gem5 started Mar 14 2016 21:56:23
+gem5 executing on phenom, pid 28115
+command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/minor-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/00.hello/alpha/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 37553000 because target called exit()
+Exiting @ tick 37629000 because target called exit()

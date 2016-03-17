@@ -1,3 +1,2 @@
 warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (512 Mbytes)
 warn: Sockets disabled, not accepting gdb connections
-warn: mmap failing: arguments not page-aligned: start 0x0 offset 0x7efefeff
