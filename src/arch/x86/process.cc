@@ -80,6 +80,7 @@ static const int ArgumentReg32[] = {
     INTREG_EDX,
     INTREG_ESI,
     INTREG_EDI,
+    INTREG_EBP
 };
 static const int NumArgumentRegs32 = sizeof(ArgumentReg) / sizeof(const int);
 

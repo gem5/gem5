@@ -1223,11 +1223,11 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return result;
 }
 
-
-/// Target mmap() handler.
+/// Real mmap handler.
 template <class OS>
 SyscallReturn
-mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+mmapImpl(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
+         bool is_mmap2)
 {
     int index = 0;
     Addr start = p->getSyscallArg(tc, index);
@@ -1237,9 +1237,8 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int tgt_fd = p->getSyscallArg(tc, index);
     int offset = p->getSyscallArg(tc, index);
 
-    DPRINTF_SYSCALL(Verbose, "mmap(0x%x, len %d, prot %d, flags %d, fd %d, "
-                    "offs %d)\n", start, length, prot, tgt_flags, tgt_fd,
-                    offset);
+    if (is_mmap2)
+        offset *= TheISA::PageBytes;
 
     if (start & (TheISA::PageBytes - 1) ||
         offset & (TheISA::PageBytes - 1) ||
@@ -1361,6 +1360,22 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     }
 
     return start;
+}
+
+/// Target mmap() handler.
+template <class OS>
+SyscallReturn
+mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    return mmapImpl<OS>(desc, num, p, tc, false);
+}
+
+/// Target mmap2() handler.
+template <class OS>
+SyscallReturn
+mmap2Func(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    return mmapImpl<OS>(desc, num, p, tc, true);
 }
 
 /// Target getrlimit() handler.

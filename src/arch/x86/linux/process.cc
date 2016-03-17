@@ -733,7 +733,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 189 */ SyscallDesc("putpmsg", unimplementedFunc),
     /* 190 */ SyscallDesc("vfork", unimplementedFunc),
     /* 191 */ SyscallDesc("ugetrlimit", ignoreFunc),
-    /* 192 */ SyscallDesc("mmap2", mmapFunc<X86Linux32>),
+    /* 192 */ SyscallDesc("mmap2", mmap2Func<X86Linux32>),
     /* 193 */ SyscallDesc("truncate64", truncate64Func),
     /* 194 */ SyscallDesc("ftruncate64", ftruncate64Func),
     /* 195 */ SyscallDesc("stat64", stat64Func<X86Linux32>),
