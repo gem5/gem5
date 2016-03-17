@@ -53,9 +53,9 @@ using namespace std;
 
 ObjectFile::ObjectFile(const string &_filename,
                        size_t _len, uint8_t *_data,
-                       Arch _arch, OpSys _opSys)
+                       Arch _arch, OpSys _op_sys)
     : filename(_filename), fileData(_data), len(_len),
-      arch(_arch), opSys(_opSys), entry(0), globalPtr(0),
+      arch(_arch), opSys(_op_sys), entry(0), globalPtr(0),
       text{0, nullptr, 0}, data{0, nullptr, 0}, bss{0, nullptr, 0}
 {
 }
@@ -63,21 +63,25 @@ ObjectFile::ObjectFile(const string &_filename,
 
 ObjectFile::~ObjectFile()
 {
-    close();
+    if (fileData) {
+        ::munmap((char*)fileData, len);
+        fileData = NULL;
+    }
 }
 
 
 bool
-ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask, Addr offset)
+ObjectFile::loadSection(Section *sec, PortProxy& mem_proxy, Addr addr_mask,
+                        Addr offset)
 {
     if (sec->size != 0) {
-        Addr addr = (sec->baseAddr & addrMask) + offset;
+        Addr addr = (sec->baseAddr & addr_mask) + offset;
         if (sec->fileImage) {
-            memProxy.writeBlob(addr, sec->fileImage, sec->size);
+            mem_proxy.writeBlob(addr, sec->fileImage, sec->size);
         }
         else {
             // no image: must be bss
-            memProxy.memsetBlob(addr, 0, sec->size);
+            mem_proxy.memsetBlob(addr, 0, sec->size);
         }
     }
     return true;
@@ -85,21 +89,11 @@ ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask, Addr o
 
 
 bool
-ObjectFile::loadSections(PortProxy& memProxy, Addr addrMask, Addr offset)
+ObjectFile::loadSections(PortProxy& mem_proxy, Addr addr_mask, Addr offset)
 {
-    return (loadSection(&text, memProxy, addrMask, offset)
-            && loadSection(&data, memProxy, addrMask, offset)
-            && loadSection(&bss, memProxy, addrMask, offset));
-}
-
-
-void
-ObjectFile::close()
-{
-    if (fileData) {
-        ::munmap((char*)fileData, len);
-        fileData = NULL;
-    }
+    return (loadSection(&text, mem_proxy, addr_mask, offset)
+            && loadSection(&data, mem_proxy, addr_mask, offset)
+            && loadSection(&bss, mem_proxy, addr_mask, offset));
 }
 
 static bool
@@ -182,36 +176,37 @@ createObjectFile(const string &fname, bool raw)
     auto len = static_cast<size_t>(off);
 
     // mmap the whole shebang
-    auto fileData = (uint8_t *)mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
+    uint8_t *file_data = (uint8_t *)mmap(NULL, len, PROT_READ, MAP_SHARED,
+                                         fd, 0);
     close(fd);
 
-    if (fileData == MAP_FAILED) {
+    if (file_data == MAP_FAILED) {
         return NULL;
     }
 
-    ObjectFile *fileObj = NULL;
+    ObjectFile *file_obj = NULL;
 
     // figure out what we have here
-    if ((fileObj = ElfObject::tryFile(fname, len, fileData)) != NULL) {
-        return fileObj;
+    if ((file_obj = ElfObject::tryFile(fname, len, file_data)) != NULL) {
+        return file_obj;
     }
 
-    if ((fileObj = EcoffObject::tryFile(fname, len, fileData)) != NULL) {
-        return fileObj;
+    if ((file_obj = EcoffObject::tryFile(fname, len, file_data)) != NULL) {
+        return file_obj;
     }
 
-    if ((fileObj = AoutObject::tryFile(fname, len, fileData)) != NULL) {
-        return fileObj;
+    if ((file_obj = AoutObject::tryFile(fname, len, file_data)) != NULL) {
+        return file_obj;
     }
 
-    if ((fileObj = DtbObject::tryFile(fname, len, fileData)) != NULL) {
-        return fileObj;
+    if ((file_obj = DtbObject::tryFile(fname, len, file_data)) != NULL) {
+        return file_obj;
     }
 
     if (raw)
-        return RawObject::tryFile(fname, len, fileData);
+        return RawObject::tryFile(fname, len, file_data);
 
     // don't know what it is
-    munmap((char*)fileData, len);
+    munmap((char*)file_data, len);
     return NULL;
 }

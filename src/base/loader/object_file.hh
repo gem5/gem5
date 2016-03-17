@@ -82,8 +82,6 @@ class ObjectFile
   public:
     virtual ~ObjectFile();
 
-    void close();
-
     virtual bool loadSections(PortProxy& memProxy, Addr addrMask =
                               std::numeric_limits<Addr>::max(),
                               Addr offset = 0);

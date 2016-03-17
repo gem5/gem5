@@ -60,258 +60,231 @@
 #include "gelf.h"
 #include "sim/byteswap.hh"
 
-using namespace std;
-
 ObjectFile *
-ElfObject::tryFile(const string &fname, size_t len, uint8_t *data,
+ElfObject::tryFile(const std::string &fname, size_t len, uint8_t *data,
                    bool skip_interp_check)
 {
-    Elf *elf;
-    GElf_Ehdr ehdr;
-    Arch arch = UnknownArch;
-    OpSys opSys = UnknownOpSys;
-
     // check that header matches library version
     if (elf_version(EV_CURRENT) == EV_NONE)
         panic("wrong elf version number!");
 
     // get a pointer to elf structure
-    elf = elf_memory((char*)data,len);
-    assert(elf != NULL);
-
     // Check that we actually have a elf file
+    Elf *elf = elf_memory((char*)data, len);
+    assert(elf);
+
+    GElf_Ehdr ehdr;
     if (gelf_getehdr(elf, &ehdr) == 0) {
         DPRINTFR(Loader, "Not ELF\n");
         elf_end(elf);
         return NULL;
+    }
+
+    // Detect the architecture
+    Arch arch = UnknownArch;
+    if (ehdr.e_machine == EM_SPARC64 ||
+        (ehdr.e_machine == EM_SPARC &&
+         ehdr.e_ident[EI_CLASS] == ELFCLASS64) ||
+        ehdr.e_machine == EM_SPARCV9) {
+        arch = SPARC64;
+    } else if (ehdr.e_machine == EM_SPARC32PLUS ||
+               (ehdr.e_machine == EM_SPARC &&
+                ehdr.e_ident[EI_CLASS] == ELFCLASS32)) {
+        arch = SPARC32;
+    } else if (ehdr.e_machine == EM_MIPS &&
+               ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+        arch = Mips;
+        if (ehdr.e_ident[EI_DATA] != ELFDATA2LSB) {
+            fatal("The binary you're trying to load is compiled for big "
+                  "endian MIPS. gem5\nonly supports little endian MIPS. "
+                  "Please recompile your binary.\n");
+        }
+    } else if (ehdr.e_machine == EM_X86_64 &&
+               ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
+        arch = X86_64;
+    } else if (ehdr.e_machine == EM_386 &&
+               ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+        arch = I386;
+    } else if (ehdr.e_machine == EM_ARM &&
+               ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+        arch = bits(ehdr.e_entry, 0) ? Thumb : Arm;
+    } else if (ehdr.e_machine == EM_AARCH64 &&
+               ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
+        arch = Arm64;
+    } else if (ehdr.e_machine == EM_PPC &&
+               ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+        arch = Power;
+        if (ehdr.e_ident[EI_DATA] != ELFDATA2MSB) {
+            fatal("The binary you're trying to load is compiled for "
+                  "little endian Power.\ngem5 only supports big "
+                  "endian Power. Please recompile your binary.\n");
+        }
+    } else if (ehdr.e_machine == EM_PPC64) {
+        fatal("The binary you're trying to load is compiled for 64-bit "
+              "Power. M5\n only supports 32-bit Power. Please "
+              "recompile your binary.\n");
+    } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
+        // Since we don't know how to check for alpha right now, we'll
+        // just assume if it wasn't something else and it's 64 bit, that's
+        // what it must be.
+        arch = Alpha;
     } else {
-        //Detect the architecture
-        //Since we don't know how to check for alpha right now, we'll
-        //just assume if it wasn't something else and it's 64 bit, that's
-        //what it must be.
-        if (ehdr.e_machine == EM_SPARC64 ||
-                (ehdr.e_machine == EM_SPARC &&
-                 ehdr.e_ident[EI_CLASS] == ELFCLASS64)||
-                ehdr.e_machine == EM_SPARCV9) {
-            arch = ObjectFile::SPARC64;
-        } else if (ehdr.e_machine == EM_SPARC32PLUS ||
-                        (ehdr.e_machine == EM_SPARC &&
-                         ehdr.e_ident[EI_CLASS] == ELFCLASS32)) {
-            arch = ObjectFile::SPARC32;
-        } else if (ehdr.e_machine == EM_MIPS
-                && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-            if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB) {
-                arch = ObjectFile::Mips;
-            } else {
-                fatal("The binary you're trying to load is compiled for big "
-                        "endian MIPS. M5\nonly supports little endian MIPS. "
-                        "Please recompile your binary.\n");
-            }
-        } else if (ehdr.e_machine == EM_X86_64 &&
-                ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
-            arch = ObjectFile::X86_64;
-        } else if (ehdr.e_machine == EM_386 &&
-                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-            arch = ObjectFile::I386;
-        } else if (ehdr.e_machine == EM_ARM &&
-                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-            if (bits(ehdr.e_entry, 0)) {
-                arch = ObjectFile::Thumb;
-            } else {
-                arch = ObjectFile::Arm;
-            }
-        } else if ((ehdr.e_machine == EM_AARCH64) &&
-                ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
-            arch = ObjectFile::Arm64;
-        } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
-            arch = ObjectFile::Alpha;
-        } else if (ehdr.e_machine == EM_PPC &&
-                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-            if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) {
-                  arch = ObjectFile::Power;
-            } else {
-                  fatal("The binary you're trying to load is compiled for "
-                        "little endian Power.\nM5 only supports big "
-                        "endian Power. Please recompile your binary.\n");
-            }
-        } else if (ehdr.e_machine == EM_PPC64) {
-            fatal("The binary you're trying to load is compiled for 64-bit "
-                  "Power. M5\n only supports 32-bit Power. Please "
-                  "recompile your binary.\n");
-        } else {
-            warn("Unknown architecture: %d\n", ehdr.e_machine);
-            arch = ObjectFile::UnknownArch;
-        }
+        warn("Unknown architecture: %d\n", ehdr.e_machine);
+        arch = UnknownArch;
+    }
 
-        //Detect the operating system
-        switch (ehdr.e_ident[EI_OSABI]) {
-          case ELFOSABI_LINUX:
-            opSys = ObjectFile::Linux;
-            break;
-          case ELFOSABI_SOLARIS:
-            opSys = ObjectFile::Solaris;
-            break;
-          case ELFOSABI_TRU64:
-            opSys = ObjectFile::Tru64;
-            break;
-          case ELFOSABI_ARM:
-            opSys = ObjectFile::LinuxArmOABI;
-            break;
-          case ELFOSABI_FREEBSD:
-            opSys = ObjectFile::FreeBSD;
-            break;
-          default:
-            opSys = ObjectFile::UnknownOpSys;
-        }
+    // Detect the operating system
+    OpSys op_sys;
+    switch (ehdr.e_ident[EI_OSABI]) {
+      case ELFOSABI_LINUX:
+        op_sys = Linux;
+        break;
+      case ELFOSABI_SOLARIS:
+        op_sys = Solaris;
+        break;
+      case ELFOSABI_TRU64:
+        op_sys = Tru64;
+        break;
+      case ELFOSABI_ARM:
+        op_sys = LinuxArmOABI;
+        break;
+      case ELFOSABI_FREEBSD:
+        op_sys = FreeBSD;
+        break;
+      default:
+        op_sys = UnknownOpSys;
+    }
 
-        //take a look at the .note.ABI section
-        //It can let us know what's what.
-        if (opSys == ObjectFile::UnknownOpSys) {
-            Elf_Scn *section;
+    // Take a look at the .note.ABI section.
+    // It can let us know what's what.
+    if (op_sys == UnknownOpSys) {
+        int sec_idx = 1;
+
+        // Get the first section
+        Elf_Scn *section = elf_getscn(elf, sec_idx);
+
+        // While there are no more sections
+        while (section && op_sys == UnknownOpSys) {
             GElf_Shdr shdr;
-            Elf_Data *data;
-            uint32_t osAbi;
-            uint32_t *elem;
-            int secIdx = 1;
+            gelf_getshdr(section, &shdr);
 
-            // Get the first section
-            section = elf_getscn(elf, secIdx);
+            char *e_str = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+            if (shdr.sh_type == SHT_NOTE &&
+                !strcmp(".note.ABI-tag", e_str)) {
+                // we have found a ABI note section
+                // Check the 5th 32bit word for OS  0 == linux, 1 == hurd,
+                // 2 == solaris, 3 == freebsd
+                Elf_Data *raw_data = elf_rawdata(section, NULL);
+                assert(raw_data && raw_data->d_buf);
 
-            // While there are no more sections
-            while (section != NULL && opSys == ObjectFile::UnknownOpSys) {
-                gelf_getshdr(section, &shdr);
-                if (shdr.sh_type == SHT_NOTE && !strcmp(".note.ABI-tag",
-                            elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name))) {
-                    // we have found a ABI note section
-                    // Check the 5th 32bit word for OS  0 == linux, 1 == hurd,
-                    // 2 == solaris, 3 == freebsd
-                    data = elf_rawdata(section, NULL);
-                    assert(data->d_buf);
-                    if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
-                        osAbi = htole(((uint32_t*)data->d_buf)[4]);
-                    else
-                        osAbi = htobe(((uint32_t*)data->d_buf)[4]);
+                uint32_t raw_abi = ((uint32_t*)raw_data->d_buf)[4];
+                bool is_le = ehdr.e_ident[EI_DATA] == ELFDATA2LSB;
+                uint32_t os_abi = is_le ? htole(raw_abi) : htobe(raw_abi);
 
-                    switch(osAbi) {
-                      case 0:
-                        opSys = ObjectFile::Linux;
-                        break;
-                      case 2:
-                        opSys = ObjectFile::Solaris;
-                        break;
-                    }
-                } // if section found
-                if (!strcmp(".SUNW_version", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
-                        opSys = ObjectFile::Solaris;
-                if (!strcmp(".stab.index", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
-                        opSys = ObjectFile::Solaris;
-                if (shdr.sh_type == SHT_NOTE && !strcmp(".note.tag",
-                            elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name))) {
-                    data = elf_rawdata(section, NULL);
-                    assert(data->d_buf);
-                    elem = (uint32_t *)data->d_buf;
-                    if (elem[0] == 0x8) { //size of name
-                        if (memcmp((void *)&elem[3], "FreeBSD", 0x8) == 0)
-                                opSys = ObjectFile::FreeBSD;
-                    }
-                }
-
-            section = elf_getscn(elf, ++secIdx);
-            } // while sections
-        }
-
-        ElfObject * result = new ElfObject(fname, len, data, arch, opSys);
-
-        //The number of headers in the file
-        result->_programHeaderCount = ehdr.e_phnum;
-        //Record the size of each entry
-        result->_programHeaderSize = ehdr.e_phentsize;
-        if (result->_programHeaderCount) //If there is a program header table
-        {
-            //Figure out the virtual address of the header table in the
-            //final memory image. We use the program headers themselves
-            //to translate from a file offset to the address in the image.
-            GElf_Phdr phdr;
-            uint64_t e_phoff = ehdr.e_phoff;
-            result->_programHeaderTable = 0;
-            for (int hdrnum = 0; hdrnum < result->_programHeaderCount; hdrnum++)
-            {
-                gelf_getphdr(elf, hdrnum, &phdr);
-                //Check if we've found the segment with the headers in it
-                if (phdr.p_offset <= e_phoff &&
-                        phdr.p_offset + phdr.p_filesz > e_phoff)
-                {
-                    result->_programHeaderTable =
-                        phdr.p_paddr + (e_phoff - phdr.p_offset);
+                switch (os_abi) {
+                  case 0:
+                    op_sys = Linux;
+                    break;
+                  case 1:
+                    fatal("gem5 does not support the HURD ABI.\n");
+                  case 2:
+                    op_sys = Solaris;
+                    break;
+                  case 3:
+                    op_sys = FreeBSD;
                     break;
                 }
-            }
-        }
-        else
-            result->_programHeaderTable = 0;
+            } // if section found
 
+            if (!strcmp(".SUNW_version", e_str) ||
+                !strcmp(".stab.index", e_str))
+                op_sys = Solaris;
 
-        if (!skip_interp_check) {
-            for (int i = 0; i < ehdr.e_phnum; i++) {
-                GElf_Phdr phdr;
-                M5_VAR_USED void *check_p = gelf_getphdr(elf, i, &phdr);
-                assert(check_p != nullptr);
+            section = elf_getscn(elf, ++sec_idx);
+        } // while sections
+    }
 
-                if (phdr.p_type != PT_INTERP)
-                    continue;
+    ElfObject * result = new ElfObject(fname, len, data, arch, op_sys);
 
-                char *interp_path = (char*)data + phdr.p_offset;
-                int fd = open(interp_path, O_RDONLY);
-                if (fd == -1) {
-                    fatal("Unable to open dynamic executable's "
-                          "interpreter.\n");
-                }
+    // The number of headers in the file
+    result->_programHeaderCount = ehdr.e_phnum;
+    // Record the size of each entry
+    result->_programHeaderSize = ehdr.e_phentsize;
+    result->_programHeaderTable = 0;
+    if (result->_programHeaderCount) { // If there is a program header table
+        // Figure out the virtual address of the header table in the
+        // final memory image. We use the program headers themselves
+        // to translate from a file offset to the address in the image.
+        GElf_Phdr phdr;
+        uint64_t e_phoff = ehdr.e_phoff;
 
-                struct stat sb;
-                M5_VAR_USED int check_i = fstat(fd, &sb);
-                assert(check_i == 0);
-
-                void *mm = mmap(nullptr, sb.st_size, PROT_READ,
-                                MAP_PRIVATE, fd, 0);
-                assert(mm != MAP_FAILED);
-                ::close(fd);
-
-                uint8_t *interp_image = (uint8_t*)mm;
-                ObjectFile *obj = tryFile(interp_path, sb.st_size,
-                                          interp_image, true);
-                assert(obj != nullptr);
-                result->interpreter = dynamic_cast<ElfObject*>(obj);
-                assert(result->interpreter != nullptr);
+        for (int i = 0; i < result->_programHeaderCount; i++) {
+            gelf_getphdr(elf, i, &phdr);
+            // Check if we've found the segment with the headers in it
+            if (phdr.p_offset <= e_phoff &&
+                phdr.p_offset + phdr.p_filesz > e_phoff) {
+                result->_programHeaderTable =
+                    phdr.p_paddr + (e_phoff - phdr.p_offset);
                 break;
             }
         }
-
-        elf_end(elf);
-        return result;
     }
+
+    if (!skip_interp_check) {
+        for (int i = 0; i < ehdr.e_phnum; i++) {
+            GElf_Phdr phdr;
+            M5_VAR_USED void *check_p = gelf_getphdr(elf, i, &phdr);
+            assert(check_p != nullptr);
+
+           if (phdr.p_type != PT_INTERP)
+                continue;
+
+            char *interp_path = (char*)data + phdr.p_offset;
+            int fd = open(interp_path, O_RDONLY);
+            if (fd == -1)
+                fatal("Unable to open dynamic executable's interpreter.\n");
+
+            struct stat sb;
+            M5_VAR_USED int check_i = fstat(fd, &sb);
+            assert(check_i == 0);
+
+            void *mm = mmap(nullptr, sb.st_size, PROT_READ,
+                            MAP_PRIVATE, fd, 0);
+            assert(mm != MAP_FAILED);
+            close(fd);
+
+            uint8_t *interp_image = (uint8_t*)mm;
+            ObjectFile *obj = tryFile(interp_path, sb.st_size,
+                                      interp_image, true);
+            assert(obj != nullptr);
+            result->interpreter = dynamic_cast<ElfObject*>(obj);
+            assert(result->interpreter != nullptr);
+            break;
+        }
+    }
+
+    elf_end(elf);
+    return result;
 }
 
-
-ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
-                     Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _len, _data, _arch, _opSys),
+ElfObject::ElfObject(const std::string &_filename, size_t _len,
+                     uint8_t *_data, Arch _arch, OpSys _op_sys)
+    : ObjectFile(_filename, _len, _data, _arch, _op_sys),
       _programHeaderTable(0), _programHeaderSize(0), _programHeaderCount(0),
       interpreter(nullptr), ldBias(0), relocate(true),
       ldMin(std::numeric_limits<Addr>::max()),
       ldMax(std::numeric_limits<Addr>::min())
 {
-    Elf *elf;
-    GElf_Ehdr ehdr;
-
     // check that header matches library version
     if (elf_version(EV_CURRENT) == EV_NONE)
         panic("wrong elf version number!");
 
     // get a pointer to elf structure
-    elf = elf_memory((char*)fileData,len);
-    assert(elf != NULL);
+    Elf *elf = elf_memory((char*)fileData,len);
+    assert(elf);
 
     // Check that we actually have a elf file
+    GElf_Ehdr ehdr;
     if (gelf_getehdr(elf, &ehdr) ==0) {
         panic("Not ELF, shouldn't be here");
     }
@@ -322,30 +295,29 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
     text.size = data.size = bss.size = 0;
     text.baseAddr = data.baseAddr = bss.baseAddr = 0;
 
-    int secIdx = 1;
-    Elf_Scn *section;
-    GElf_Shdr shdr;
+    int sec_idx = 1;
 
     // The first address of some important sections.
-    Addr textSecStart = 0;
-    Addr dataSecStart = 0;
-    Addr bssSecStart = 0;
+    Addr text_sec_start = 0;
+    Addr data_sec_start = 0;
+    Addr bss_sec_start = 0;
 
     // Get the first section
-    section = elf_getscn(elf, secIdx);
+    Elf_Scn *section = elf_getscn(elf, sec_idx);
 
     // Find the beginning of the most interesting sections.
-    while (section != NULL) {
+    while (section) {
+        GElf_Shdr shdr;
         gelf_getshdr(section, &shdr);
-        char * secName = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+        char *sec_name = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
 
-        if (secName) {
-            if (!strcmp(".text", secName)) {
-                textSecStart = shdr.sh_addr;
-            } else if (!strcmp(".data", secName)) {
-                dataSecStart = shdr.sh_addr;
-            } else if (!strcmp(".bss", secName)) {
-                bssSecStart = shdr.sh_addr;
+        if (sec_name) {
+            if (!strcmp(".text", sec_name)) {
+                text_sec_start = shdr.sh_addr;
+            } else if (!strcmp(".data", sec_name)) {
+                data_sec_start = shdr.sh_addr;
+            } else if (!strcmp(".bss", sec_name)) {
+                bss_sec_start = shdr.sh_addr;
             }
         } else {
             Elf_Error errorNum = (Elf_Error)elf_errno();
@@ -355,7 +327,7 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
             }
         }
 
-        section = elf_getscn(elf, ++secIdx);
+        section = elf_getscn(elf, ++sec_idx);
     }
 
     // Go through all the segments in the program, record them, and scrape
@@ -375,17 +347,17 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
         ldMax = std::max(ldMax, phdr.p_vaddr + phdr.p_memsz);
 
         // Check to see if this segment contains the bss section.
-        if (phdr.p_paddr <= bssSecStart &&
-                phdr.p_paddr + phdr.p_memsz > bssSecStart &&
-                phdr.p_memsz - phdr.p_filesz > 0) {
+        if (phdr.p_paddr <= bss_sec_start &&
+            phdr.p_paddr + phdr.p_memsz > bss_sec_start &&
+            phdr.p_memsz - phdr.p_filesz > 0) {
             bss.baseAddr = phdr.p_paddr + phdr.p_filesz;
             bss.size = phdr.p_memsz - phdr.p_filesz;
             bss.fileImage = NULL;
         }
 
         // Check to see if this is the text or data segment
-        if (phdr.p_vaddr <= textSecStart &&
-                phdr.p_vaddr + phdr.p_filesz > textSecStart) {
+        if (phdr.p_vaddr <= text_sec_start &&
+            phdr.p_vaddr + phdr.p_filesz > text_sec_start) {
 
             // If this value is nonzero, we need to flip the relocate flag.
             if (phdr.p_vaddr != 0)
@@ -394,8 +366,8 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
             text.baseAddr = phdr.p_paddr;
             text.size = phdr.p_filesz;
             text.fileImage = fileData + phdr.p_offset;
-        } else if (phdr.p_vaddr <= dataSecStart &&
-                phdr.p_vaddr + phdr.p_filesz > dataSecStart) {
+        } else if (phdr.p_vaddr <= data_sec_start &&
+                   phdr.p_vaddr + phdr.p_filesz > data_sec_start) {
             data.baseAddr = phdr.p_paddr;
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
@@ -426,15 +398,6 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
 bool
 ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
 {
-    Elf *elf;
-    int sec_idx = 1; // there is a 0 but it is nothing, go figure
-    Elf_Scn *section;
-    GElf_Shdr shdr;
-    Elf_Data *data;
-    int count, ii;
-    bool found = false;
-    GElf_Sym sym;
-
     if (!symtab)
         return false;
 
@@ -443,26 +406,29 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
         panic("wrong elf version number!");
 
     // get a pointer to elf structure
-    elf = elf_memory((char*)fileData,len);
-
+    Elf *elf = elf_memory((char*)fileData,len);
     assert(elf != NULL);
 
     // Get the first section
-    section = elf_getscn(elf, sec_idx);
+    int sec_idx = 1; // there is a 0 but it is nothing, go figure
+    Elf_Scn *section = elf_getscn(elf, sec_idx);
 
     // While there are no more sections
+    bool found = false;
     while (section != NULL) {
+        GElf_Shdr shdr;
         gelf_getshdr(section, &shdr);
 
         if (shdr.sh_type == SHT_SYMTAB) {
             found = true;
-            data = elf_getdata(section, NULL);
-            count = shdr.sh_size / shdr.sh_entsize;
+            Elf_Data *data = elf_getdata(section, NULL);
+            int count = shdr.sh_size / shdr.sh_entsize;
             DPRINTF(Loader, "Found Symbol Table, %d symbols present\n", count);
 
             // loop through all the symbols, only loading global ones
-            for (ii = 0; ii < count; ++ii) {
-                gelf_getsym(data, ii, &sym);
+            for (int i = 0; i < count; ++i) {
+                GElf_Sym sym;
+                gelf_getsym(data, i, &sym);
                 if (GELF_ST_BIND(sym.st_info) == binding) {
                     char *sym_name = elf_strptr(elf, shdr.sh_link, sym.st_name);
                     if (sym_name && sym_name[0] != '$') {
@@ -483,41 +449,39 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
 }
 
 bool
-ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
+ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr addr_mask)
 {
-    return loadSomeSymbols(symtab, STB_GLOBAL, addrMask);
+    return loadSomeSymbols(symtab, STB_GLOBAL, addr_mask);
 }
 
 bool
-ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
+ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addr_mask)
 {
-    bool found_local = loadSomeSymbols(symtab, STB_LOCAL, addrMask);
-    bool found_weak = loadSomeSymbols(symtab, STB_WEAK, addrMask);
+    bool found_local = loadSomeSymbols(symtab, STB_LOCAL, addr_mask);
+    bool found_weak = loadSomeSymbols(symtab, STB_WEAK, addr_mask);
     return found_local || found_weak;
 }
 
 bool
-ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr addrMask)
+ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr addr_mask)
 {
-    return loadSomeSymbols(symtab, STB_WEAK, addrMask);
+    return loadSomeSymbols(symtab, STB_WEAK, addr_mask);
 }
 
 bool
-ElfObject::loadSections(PortProxy& memProxy, Addr addrMask, Addr offset)
+ElfObject::loadSections(PortProxy& mem_proxy, Addr addr_mask, Addr offset)
 {
-    if (!ObjectFile::loadSections(memProxy, addrMask, offset))
+    if (!ObjectFile::loadSections(mem_proxy, addr_mask, offset))
         return false;
 
-    vector<Segment>::iterator extraIt;
-    for (extraIt = extraSegments.begin();
-            extraIt != extraSegments.end(); extraIt++) {
-        if (!loadSection(&(*extraIt), memProxy, addrMask, offset)) {
+    for (auto seg : extraSegments) {
+        if (!loadSection(&seg, mem_proxy, addr_mask, offset)) {
             return false;
         }
     }
 
     if (interpreter)
-        interpreter->loadSections(memProxy, addrMask, offset);
+        interpreter->loadSections(mem_proxy, addr_mask, offset);
 
     return true;
 }
@@ -525,13 +489,6 @@ ElfObject::loadSections(PortProxy& memProxy, Addr addrMask, Addr offset)
 void
 ElfObject::getSections()
 {
-    Elf *elf;
-    int sec_idx = 1; // there is a 0 but it is nothing, go figure
-    Elf_Scn *section;
-    GElf_Shdr shdr;
-
-    GElf_Ehdr ehdr;
-
     assert(!sectionNames.size());
 
     // check that header matches library version
@@ -539,19 +496,22 @@ ElfObject::getSections()
         panic("wrong elf version number!");
 
     // get a pointer to elf structure
-    elf = elf_memory((char*)fileData,len);
+    Elf *elf = elf_memory((char*)fileData,len);
     assert(elf != NULL);
 
     // Check that we actually have a elf file
+    GElf_Ehdr ehdr;
     if (gelf_getehdr(elf, &ehdr) ==0) {
         panic("Not ELF, shouldn't be here");
     }
 
     // Get the first section
-    section = elf_getscn(elf, sec_idx);
+    int sec_idx = 1; // there is a 0 but it is nothing, go figure
+    Elf_Scn *section = elf_getscn(elf, sec_idx);
 
     // While there are no more sections
-    while (section != NULL) {
+    while (section) {
+        GElf_Shdr shdr;
         gelf_getshdr(section, &shdr);
         sectionNames.insert(elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name));
         section = elf_getscn(elf, ++sec_idx);
@@ -559,10 +519,11 @@ ElfObject::getSections()
 }
 
 bool
-ElfObject::sectionExists(string sec)
+ElfObject::sectionExists(std::string sec)
 {
     if (!sectionNames.size())
         getSections();
+
     return sectionNames.find(sec) != sectionNames.end();
 }
 
