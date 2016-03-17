@@ -28,9 +28,10 @@
  * Authors: Gabe Black
  */
 
-#include <fcntl.h>
-
 #include "arch/sparc/linux/linux.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 // open(2) flags translation table
 SyscallFlagTransTable SparcLinux::openFlagTable[] = {
@@ -94,4 +95,33 @@ SyscallFlagTransTable SparcLinux::openFlagTable[] = {
 
 const int SparcLinux::NUM_OPEN_FLAGS =
         (sizeof(SparcLinux::openFlagTable)/sizeof(SparcLinux::openFlagTable[0]));
+
+// mmap(2) flags translation table
+SyscallFlagTransTable SparcLinux::mmapFlagTable[] = {
+  { SparcLinux::TGT_MAP_SHARED,     MAP_SHARED },
+  { SparcLinux::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { SparcLinux::TGT_MAP_ANON,       MAP_ANON },
+  { SparcLinux::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { SparcLinux::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { SparcLinux::TGT_MAP_FILE,       MAP_FILE },
+  { SparcLinux::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+  { SparcLinux::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+  { SparcLinux::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { SparcLinux::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { SparcLinux::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { SparcLinux::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { SparcLinux::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { SparcLinux::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { SparcLinux::TGT_MAP_FIXED,      MAP_FIXED },
+#ifdef MAP_INHERIT
+  { SparcLinux::TGT_MAP_INHERIT,    MAP_INHERIT },
+#endif
+  { SparcLinux::TGT_MAP_POPULATE,   MAP_POPULATE },
+};
+
+const unsigned SparcLinux::NUM_MMAP_FLAGS =
+        sizeof(SparcLinux::mmapFlagTable) /
+        sizeof(SparcLinux::mmapFlagTable[0]);
 

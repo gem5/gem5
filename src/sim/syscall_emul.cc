@@ -324,7 +324,9 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 SyscallReturn
 munmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
-    // given that we don't really implement mmap, munmap is really easy
+    // With mmap more fully implemented, it might be worthwhile to bite
+    // the bullet and implement munmap. Should allow us to reuse simulated
+    // memory.
     return 0;
 }
 

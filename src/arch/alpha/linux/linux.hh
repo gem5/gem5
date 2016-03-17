@@ -104,8 +104,25 @@ class AlphaLinux : public Linux
     //@}
 
     /// For mmap().
-    static const unsigned TGT_MAP_ANONYMOUS = 0x10;
-    static const unsigned TGT_MAP_FIXED     = 0x100;
+    static SyscallFlagTransTable mmapFlagTable[];
+
+    static const unsigned TGT_MAP_SHARED        = 0x000001;
+    static const unsigned TGT_MAP_PRIVATE       = 0x000002;
+    static const unsigned TGT_MAP_ANON          = 0x000010;
+    static const unsigned TGT_MAP_DENYWRITE     = 0x002000;
+    static const unsigned TGT_MAP_EXECUTABLE    = 0x004000;
+    static const unsigned TGT_MAP_FILE          = 0x000000;
+    static const unsigned TGT_MAP_GROWSDOWN     = 0x001000;
+    static const unsigned TGT_MAP_HUGETLB       = 0x100000;
+    static const unsigned TGT_MAP_LOCKED        = 0x008000;
+    static const unsigned TGT_MAP_NONBLOCK      = 0x040000;
+    static const unsigned TGT_MAP_NORESERVE     = 0x010000;
+    static const unsigned TGT_MAP_POPULATE      = 0x020000;
+    static const unsigned TGT_MAP_STACK         = 0x080000;
+    static const unsigned TGT_MAP_ANONYMOUS     = 0x000010;
+    static const unsigned TGT_MAP_FIXED         = 0x000100;
+
+    static const unsigned NUM_MMAP_FLAGS;
 
     //@{
     /// For getsysinfo().

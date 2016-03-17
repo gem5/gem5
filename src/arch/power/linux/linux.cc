@@ -29,9 +29,10 @@
  * Authors: Timothy M. Jones
  */
 
-#include <fcntl.h>
-
 #include "arch/power/linux/linux.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 // open(2) flags translation table
 SyscallFlagTransTable PowerLinux::openFlagTable[] = {
@@ -104,4 +105,29 @@ SyscallFlagTransTable PowerLinux::openFlagTable[] = {
 
 const int PowerLinux::NUM_OPEN_FLAGS =
         (sizeof(PowerLinux::openFlagTable)/sizeof(PowerLinux::openFlagTable[0]));
+
+// mmap(2) flags translation table
+SyscallFlagTransTable PowerLinux::mmapFlagTable[] = {
+  { PowerLinux::TGT_MAP_SHARED,     MAP_SHARED },
+  { PowerLinux::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { PowerLinux::TGT_MAP_ANON,       MAP_ANON },
+  { PowerLinux::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { PowerLinux::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { PowerLinux::TGT_MAP_FILE,       MAP_FILE },
+  { PowerLinux::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+  { PowerLinux::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+  { PowerLinux::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { PowerLinux::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { PowerLinux::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { PowerLinux::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { PowerLinux::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { PowerLinux::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { PowerLinux::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned PowerLinux::NUM_MMAP_FLAGS =
+        sizeof(PowerLinux::mmapFlagTable) /
+        sizeof(PowerLinux::mmapFlagTable[0]);
 

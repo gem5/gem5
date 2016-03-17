@@ -28,9 +28,10 @@
  * Authors: Korey Sewell
  */
 
-#include <fcntl.h>
-
 #include "arch/alpha/linux/linux.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 // open(2) flags translation table
 SyscallFlagTransTable AlphaLinux::openFlagTable[] = {
@@ -99,3 +100,28 @@ SyscallFlagTransTable AlphaLinux::openFlagTable[] = {
 
 const int AlphaLinux::NUM_OPEN_FLAGS =
     (sizeof(AlphaLinux::openFlagTable)/sizeof(AlphaLinux::openFlagTable[0]));
+
+// mmap(2) flags translation table
+SyscallFlagTransTable AlphaLinux::mmapFlagTable[] = {
+  { AlphaLinux::TGT_MAP_SHARED,     MAP_SHARED },
+  { AlphaLinux::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { AlphaLinux::TGT_MAP_ANON,       MAP_ANON },
+  { AlphaLinux::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { AlphaLinux::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { AlphaLinux::TGT_MAP_FILE,       MAP_FILE },
+  { AlphaLinux::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+  { AlphaLinux::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+  { AlphaLinux::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { AlphaLinux::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { AlphaLinux::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { AlphaLinux::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { AlphaLinux::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { AlphaLinux::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { AlphaLinux::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned AlphaLinux::NUM_MMAP_FLAGS =
+        sizeof(AlphaLinux::mmapFlagTable) /
+        sizeof(AlphaLinux::mmapFlagTable[0]);

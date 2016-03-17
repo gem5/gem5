@@ -37,9 +37,10 @@
  * Authors: Gabe Black
  */
 
-#include <fcntl.h>
-
 #include "arch/x86/linux/linux.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 // open(2) flags translation table
 SyscallFlagTransTable X86Linux64::openFlagTable[] = {
@@ -110,6 +111,34 @@ const int X86Linux64::NUM_OPEN_FLAGS =
         sizeof(X86Linux64::openFlagTable) /
         sizeof(X86Linux64::openFlagTable[0]);
 
+// mmap(2) flags translation table
+SyscallFlagTransTable X86Linux64::mmapFlagTable[] = {
+  { X86Linux64::TGT_MAP_SHARED,     MAP_SHARED },
+  { X86Linux64::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { X86Linux64::TGT_MAP_32BIT,      MAP_32BIT},
+  { X86Linux64::TGT_MAP_ANON,       MAP_ANON },
+  { X86Linux64::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { X86Linux64::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { X86Linux64::TGT_MAP_FILE,       MAP_FILE },
+  { X86Linux64::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+#ifdef MAP_HUGETLB
+  { X86Linux64::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+#endif
+  { X86Linux64::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { X86Linux64::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { X86Linux64::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { X86Linux64::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { X86Linux64::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { X86Linux64::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { X86Linux64::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned X86Linux64::NUM_MMAP_FLAGS =
+        sizeof(X86Linux64::mmapFlagTable) /
+        sizeof(X86Linux64::mmapFlagTable[0]);
+
 // open(2) flags translation table
 SyscallFlagTransTable X86Linux32::openFlagTable[] = {
 #ifdef _MSC_VER
@@ -179,3 +208,30 @@ const int X86Linux32::NUM_OPEN_FLAGS =
         sizeof(X86Linux32::openFlagTable) /
         sizeof(X86Linux32::openFlagTable[0]);
 
+// mmap(2) flags translation table
+SyscallFlagTransTable X86Linux32::mmapFlagTable[] = {
+  { X86Linux32::TGT_MAP_SHARED,     MAP_SHARED },
+  { X86Linux32::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { X86Linux32::TGT_MAP_32BIT,      MAP_32BIT},
+  { X86Linux32::TGT_MAP_ANON,       MAP_ANON },
+  { X86Linux32::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { X86Linux32::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { X86Linux32::TGT_MAP_FILE,       MAP_FILE },
+  { X86Linux32::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+#ifdef MAP_HUGETLB
+  { X86Linux32::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+#endif
+  { X86Linux32::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { X86Linux32::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { X86Linux32::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { X86Linux32::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { X86Linux32::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { X86Linux32::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { X86Linux32::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned X86Linux32::NUM_MMAP_FLAGS =
+        sizeof(X86Linux32::mmapFlagTable) /
+        sizeof(X86Linux32::mmapFlagTable[0]);

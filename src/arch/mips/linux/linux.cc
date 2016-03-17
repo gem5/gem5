@@ -28,9 +28,10 @@
  * Authors: Korey Sewell
  */
 
-#include <fcntl.h>
-
 #include "arch/mips/linux/linux.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 // open(2) flags translation table
 SyscallFlagTransTable MipsLinux::openFlagTable[] = {
@@ -97,3 +98,29 @@ SyscallFlagTransTable MipsLinux::openFlagTable[] = {
 
 const int MipsLinux::NUM_OPEN_FLAGS =
         (sizeof(MipsLinux::openFlagTable)/sizeof(MipsLinux::openFlagTable[0]));
+
+// mmap(2) flags translation table
+SyscallFlagTransTable MipsLinux::mmapFlagTable[] = {
+  { MipsLinux::TGT_MAP_SHARED,     MAP_SHARED },
+  { MipsLinux::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { MipsLinux::TGT_MAP_ANON,       MAP_ANON },
+  { MipsLinux::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { MipsLinux::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { MipsLinux::TGT_MAP_FILE,       MAP_FILE },
+  { MipsLinux::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+  { MipsLinux::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+  { MipsLinux::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { MipsLinux::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { MipsLinux::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { MipsLinux::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { MipsLinux::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { MipsLinux::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { MipsLinux::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned MipsLinux::NUM_MMAP_FLAGS =
+        sizeof(MipsLinux::mmapFlagTable) /
+        sizeof(MipsLinux::mmapFlagTable[0]);
+

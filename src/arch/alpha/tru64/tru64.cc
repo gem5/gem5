@@ -68,5 +68,27 @@ SyscallFlagTransTable AlphaTru64::openFlagTable[] = {
 const int AlphaTru64::NUM_OPEN_FLAGS =
         (sizeof(AlphaTru64::openFlagTable)/sizeof(AlphaTru64::openFlagTable[0]));
 
+// mmap(2) flags translation table
+SyscallFlagTransTable AlphaTru64::mmapFlagTable[] = {
+  { TGT_MAP_SHARED, MAP_SHARED },
+  { TGT_MAP_PRIVATE, MAP_PRIVATE },
+  { TGT_MAP_32BIT, MAP_32BIT},
+  { TGT_MAP_ANON, MAP_ANON },
+  { TGT_MAP_DENYWRITE, MAP_DENYWRITE },
+  { TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { TGT_MAP_FILE, MAP_FILE },
+  { TGT_MAP_GROWSDOWN, MAP_GROWSDOWN },
+  { TGT_MAP_HUGETLB, MAP_HUGETLB },
+  { TGT_MAP_LOCKED, MAP_LOCKED },
+  { TGT_MAP_NONBLOCK, MAP_NONBLOCK },
+  { TGT_MAP_NORESERVE, MAP_NORESERVE },
+  { TGT_MAP_POPULATE, MAP_POPULATE },
+  { TGT_MAP_STACK, MAP_STACK },
+  { TGT_MAP_ANONYMOUS, MAP_ANONYMOUS },
+  { TGT_MAP_FIXED, MAP_FIXED },
+};
 
+const unsigned AlphaTru64::NUM_MMAP_FLAGS =
+        sizeof(AlphaTru64::mmapFlagTable) /
+        sizeof(AlphaTru64::mmapFlagTable[0]);
 

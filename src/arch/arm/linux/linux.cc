@@ -41,9 +41,10 @@
  * Authors: Stephen Hines
  */
 
-#include <fcntl.h>
-
 #include "arch/arm/linux/linux.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
 
 // open(2) flags translation table
 SyscallFlagTransTable ArmLinux32::openFlagTable[] = {
@@ -121,6 +122,31 @@ SyscallFlagTransTable ArmLinux32::openFlagTable[] = {
 const int ArmLinux32::NUM_OPEN_FLAGS = sizeof(ArmLinux32::openFlagTable) /
                                        sizeof(ArmLinux32::openFlagTable[0]);
 
+// mmap(2) flags translation table
+SyscallFlagTransTable ArmLinux32::mmapFlagTable[] = {
+  { ArmLinux32::TGT_MAP_SHARED,     MAP_SHARED },
+  { ArmLinux32::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { ArmLinux32::TGT_MAP_ANON,       MAP_ANON },
+  { ArmLinux32::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { ArmLinux32::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { ArmLinux32::TGT_MAP_FILE,       MAP_FILE },
+  { ArmLinux32::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+  { ArmLinux32::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+  { ArmLinux32::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { ArmLinux32::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { ArmLinux32::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { ArmLinux32::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { ArmLinux32::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { ArmLinux32::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { ArmLinux32::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned ArmLinux32::NUM_MMAP_FLAGS =
+        sizeof(ArmLinux32::mmapFlagTable) /
+        sizeof(ArmLinux32::mmapFlagTable[0]);
+
 // open(2) flags translation table
 SyscallFlagTransTable ArmLinux64::openFlagTable[] = {
 #ifdef _MSC_VER
@@ -196,4 +222,29 @@ SyscallFlagTransTable ArmLinux64::openFlagTable[] = {
 
 const int ArmLinux64::NUM_OPEN_FLAGS = sizeof(ArmLinux64::openFlagTable) /
                                        sizeof(ArmLinux64::openFlagTable[0]);
+
+// mmap(2) flags translation table
+SyscallFlagTransTable ArmLinux64::mmapFlagTable[] = {
+  { ArmLinux64::TGT_MAP_SHARED,     MAP_SHARED },
+  { ArmLinux64::TGT_MAP_PRIVATE,    MAP_PRIVATE },
+  { ArmLinux64::TGT_MAP_ANON,       MAP_ANON },
+  { ArmLinux64::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
+  { ArmLinux64::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
+  { ArmLinux64::TGT_MAP_FILE,       MAP_FILE },
+  { ArmLinux64::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
+  { ArmLinux64::TGT_MAP_HUGETLB,    MAP_HUGETLB },
+  { ArmLinux64::TGT_MAP_LOCKED,     MAP_LOCKED },
+  { ArmLinux64::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
+  { ArmLinux64::TGT_MAP_NORESERVE,  MAP_NORESERVE },
+  { ArmLinux64::TGT_MAP_POPULATE,   MAP_POPULATE },
+#ifdef MAP_STACK
+  { ArmLinux64::TGT_MAP_STACK,      MAP_STACK },
+#endif
+  { ArmLinux64::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
+  { ArmLinux64::TGT_MAP_FIXED,      MAP_FIXED },
+};
+
+const unsigned ArmLinux64::NUM_MMAP_FLAGS =
+        sizeof(ArmLinux64::mmapFlagTable) /
+        sizeof(ArmLinux64::mmapFlagTable[0]);
 

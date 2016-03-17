@@ -74,6 +74,8 @@ class ArmFreebsd32 : public FreeBSD
     //@}
 
     /// For mmap().
+    static const unsigned TGT_MAP_SHARED    = 0x0001;
+    static const unsigned TGT_MAP_PRIVATE   = 0x0002;
     static const unsigned TGT_MAP_ANONYMOUS = 0x1000;
     static const unsigned TGT_MAP_FIXED     = 0x0010;
 
@@ -229,6 +231,8 @@ class ArmFreebsd64 : public FreeBSD
     //@}
 
     /// For mmap().
+    static const unsigned TGT_MAP_SHARED    = 0x0001;
+    static const unsigned TGT_MAP_PRIVATE   = 0x0002;
     static const unsigned TGT_MAP_ANONYMOUS = 0x1000;
     static const unsigned TGT_MAP_FIXED     = 0x0010;
 

@@ -58,6 +58,7 @@
 #ifdef __CYGWIN32__
 #include <sys/fcntl.h>  // for O_BINARY
 #endif
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/uio.h>
@@ -1224,12 +1225,6 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 
 /// Target mmap() handler.
-///
-/// We don't really handle mmap().  If the target is mmaping an
-/// anonymous region or /dev/zero, we can get away with doing basically
-/// nothing (since memory is initialized to zero and the simulator
-/// doesn't really check addresses anyway).
-///
 template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
@@ -1237,77 +1232,133 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int index = 0;
     Addr start = p->getSyscallArg(tc, index);
     uint64_t length = p->getSyscallArg(tc, index);
-    index++; // int prot = p->getSyscallArg(tc, index);
-    int flags = p->getSyscallArg(tc, index);
+    int prot = p->getSyscallArg(tc, index);
+    int tgt_flags = p->getSyscallArg(tc, index);
     int tgt_fd = p->getSyscallArg(tc, index);
     int offset = p->getSyscallArg(tc, index);
 
-    if (length > 0x100000000ULL)
-        warn("mmap length argument %#x is unreasonably large.\n", length);
+    DPRINTF_SYSCALL(Verbose, "mmap(0x%x, len %d, prot %d, flags %d, fd %d, "
+                    "offs %d)\n", start, length, prot, tgt_flags, tgt_fd,
+                    offset);
 
-    if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
-        FDEntry *fde = p->getFDEntry(tgt_fd);
-        if (!fde || fde->fd < 0) {
-            warn("mmap failing: target fd %d is not valid\n", tgt_fd);
-            return -EBADF;
-        }
+    if (start & (TheISA::PageBytes - 1) ||
+        offset & (TheISA::PageBytes - 1) ||
+        (tgt_flags & OS::TGT_MAP_PRIVATE &&
+         tgt_flags & OS::TGT_MAP_SHARED) ||
+        (!(tgt_flags & OS::TGT_MAP_PRIVATE) &&
+         !(tgt_flags & OS::TGT_MAP_SHARED)) ||
+        !length) {
+        return -EINVAL;
+    }
 
-        if (fde->filename != "/dev/zero") {
-            // This is very likely broken, but leave a warning here
-            // (rather than panic) in case /dev/zero is known by
-            // another name on some platform
-            warn("allowing mmap of file %s; mmap not supported on files"
-                 " other than /dev/zero\n", fde->filename);
-        }
+    if ((prot & PROT_WRITE) && (tgt_flags & OS::TGT_MAP_SHARED)) {
+        // With shared mmaps, there are two cases to consider:
+        // 1) anonymous: writes should modify the mapping and this should be
+        // visible to observers who share the mapping. Currently, it's
+        // difficult to update the shared mapping because there's no
+        // structure which maintains information about the which virtual
+        // memory areas are shared. If that structure existed, it would be
+        // possible to make the translations point to the same frames.
+        // 2) file-backed: writes should modify the mapping and the file
+        // which is backed by the mapping. The shared mapping problem is the
+        // same as what was mentioned about the anonymous mappings. For
+        // file-backed mappings, the writes to the file are difficult
+        // because it requires syncing what the mapping holds with the file
+        // that resides on the host system. So, any write on a real system
+        // would cause the change to be propagated to the file mapping at
+        // some point in the future (the inode is tracked along with the
+        // mapping). This isn't guaranteed to always happen, but it usually
+        // works well enough. The guarantee is provided by the msync system
+        // call. We could force the change through with shared mappings with
+        // a call to msync, but that again would require more information
+        // than we currently maintain.
+        warn("mmap: writing to shared mmap region is currently "
+             "unsupported. The write succeeds on the target, but it "
+             "will not be propagated to the host or shared mappings");
     }
 
     length = roundUp(length, TheISA::PageBytes);
 
-    if ((start  % TheISA::PageBytes) != 0 ||
-        (offset % TheISA::PageBytes) != 0) {
-        warn("mmap failing: arguments not page-aligned: "
-             "start 0x%x offset 0x%x",
-             start, offset);
-        return -EINVAL;
-    }
+    int sim_fd = -1;
+    uint8_t *pmap = nullptr;
+    if (!(tgt_flags & OS::TGT_MAP_ANONYMOUS)) {
+        sim_fd = p->getSimFD(tgt_fd);
+        if (sim_fd < 0)
+            return -EBADF;
 
-    // are we ok with clobbering existing mappings?  only set this to
-    // true if the user has been warned.
-    bool clobber = false;
+        pmap = (decltype(pmap))mmap(NULL, length, PROT_READ, MAP_PRIVATE,
+                                    sim_fd, offset);
 
-    // try to use the caller-provided address if there is one
-    bool use_provided_address = (start != 0);
-
-    if (use_provided_address) {
-        // check to see if the desired address is already in use
-        if (!p->pTable->isUnmapped(start, length)) {
-            // there are existing mappings in the desired range
-            // whether we clobber them or not depends on whether the caller
-            // specified MAP_FIXED
-            if (flags & OS::TGT_MAP_FIXED) {
-                // MAP_FIXED specified: map attempt fails
-                return -EINVAL;
-            } else {
-                // MAP_FIXED not specified: ignore suggested start address
-                warn("mmap: ignoring suggested map address 0x%x\n", start);
-                use_provided_address = false;
-            }
+        if (pmap == (decltype(pmap))-1) {
+            warn("mmap: failed to map file into host address space");
+            return -errno;
         }
     }
 
-    if (!use_provided_address) {
-        // no address provided, or provided address unusable:
-        // pick next address from our "mmap region"
-        if (OS::mmapGrowsDown()) {
-            start = p->mmap_end - length;
-            p->mmap_end = start;
-        } else {
-            start = p->mmap_end;
-            p->mmap_end += length;
+    // Extend global mmap region if necessary. Note that we ignore the
+    // start address unless MAP_FIXED is specified.
+    if (!(tgt_flags & OS::TGT_MAP_FIXED)) {
+        start = (OS::mmapGrowsDown()) ? p->mmap_end - length : p->mmap_end;
+        p->mmap_end = (OS::mmapGrowsDown()) ? start : p->mmap_end + length;
+    }
+
+    DPRINTF_SYSCALL(Verbose, " mmap range is 0x%x - 0x%x\n",
+                    start, start + length - 1);
+
+    // We only allow mappings to overwrite existing mappings if
+    // TGT_MAP_FIXED is set. Otherwise it shouldn't be a problem
+    // because we ignore the start hint if TGT_MAP_FIXED is not set.
+    int clobber = tgt_flags & OS::TGT_MAP_FIXED;
+    if (clobber) {
+        for (auto tc : p->system->threadContexts) {
+            // If we might be overwriting old mappings, we need to
+            // invalidate potentially stale mappings out of the TLBs.
+            tc->getDTBPtr()->flushAll();
+            tc->getITBPtr()->flushAll();
         }
     }
 
+    // Allocate physical memory and map it in. If the page table is already
+    // mapped and clobber is not set, the simulator will issue throw a
+    // fatal and bail out of the simulation.
     p->allocateMem(start, length, clobber);
+
+    // Transfer content into target address space.
+    SETranslatingPortProxy &tp = tc->getMemProxy();
+    if (tgt_flags & OS::TGT_MAP_ANONYMOUS) {
+        // In general, we should zero the mapped area for anonymous mappings,
+        // with something like:
+        //     tp.memsetBlob(start, 0, length);
+        // However, given that we don't support sparse mappings, and
+        // some applications can map a couple of gigabytes of space
+        // (intending sparse usage), that can get painfully expensive.
+        // Fortunately, since we don't properly implement munmap either,
+        // there's no danger of remapping used memory, so for now all
+        // newly mapped memory should already be zeroed so we can skip it.
+    } else {
+        // It is possible to mmap an area larger than a file, however
+        // accessing unmapped portions the system triggers a "Bus error"
+        // on the host. We must know when to stop copying the file from
+        // the host into the target address space.
+        struct stat file_stat;
+        if (fstat(sim_fd, &file_stat) > 0)
+            fatal("mmap: cannot stat file");
+
+        // Copy the portion of the file that is resident. This requires
+        // checking both the mmap size and the filesize that we are
+        // trying to mmap into this space; the mmap size also depends
+        // on the specified offset into the file.
+        uint64_t size = std::min((uint64_t)file_stat.st_size - offset,
+                                 length);
+        tp.writeBlob(start, pmap, size);
+
+        // Cleanup the mmap region before exiting this function.
+        munmap(pmap, length);
+
+        // Note that we do not zero out the remainder of the mapping. This
+        // is done by a real system, but it probably will not affect
+        // execution (hopefully).
+    }
 
     return start;
 }
