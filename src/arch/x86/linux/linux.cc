@@ -42,7 +42,7 @@
 #include "arch/x86/linux/linux.hh"
 
 // open(2) flags translation table
-OpenFlagTransTable X86Linux64::openFlagTable[] = {
+SyscallFlagTransTable X86Linux64::openFlagTable[] = {
 #ifdef _MSC_VER
   { TGT_O_RDONLY, _O_RDONLY },
   { TGT_O_WRONLY, _O_WRONLY },
@@ -81,7 +81,7 @@ const int X86Linux64::NUM_OPEN_FLAGS =
         sizeof(X86Linux64::openFlagTable[0]);
 
 // open(2) flags translation table
-OpenFlagTransTable X86Linux32::openFlagTable[] = {
+SyscallFlagTransTable X86Linux32::openFlagTable[] = {
 #ifdef _MSC_VER
   { TGT_O_RDONLY, _O_RDONLY },
   { TGT_O_WRONLY, _O_WRONLY },

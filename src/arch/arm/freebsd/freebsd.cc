@@ -35,7 +35,7 @@
 #include <fcntl.h>
 
 // open(2) flags translation table
-OpenFlagTransTable ArmFreebsd32::openFlagTable[] = {
+SyscallFlagTransTable ArmFreebsd32::openFlagTable[] = {
   { ArmFreebsd32::TGT_O_RDONLY,     O_RDONLY },
   { ArmFreebsd32::TGT_O_WRONLY,     O_WRONLY },
   { ArmFreebsd32::TGT_O_RDWR,       O_RDWR },
@@ -58,7 +58,7 @@ const int ArmFreebsd32::NUM_OPEN_FLAGS = sizeof(ArmFreebsd32::openFlagTable) /
                                        sizeof(ArmFreebsd32::openFlagTable[0]);
 
 // open(2) flags translation table
-OpenFlagTransTable ArmFreebsd64::openFlagTable[] = {
+SyscallFlagTransTable ArmFreebsd64::openFlagTable[] = {
   { ArmFreebsd64::TGT_O_RDONLY,     O_RDONLY },
   { ArmFreebsd64::TGT_O_WRONLY,     O_WRONLY },
   { ArmFreebsd64::TGT_O_RDWR,       O_RDWR },

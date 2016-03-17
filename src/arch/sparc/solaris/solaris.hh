@@ -37,7 +37,7 @@ class SparcSolaris : public Solaris
 {
   public:
 
-    static OpenFlagTransTable openFlagTable[];
+    static SyscallFlagTransTable openFlagTable[];
 
     static const int TGT_O_RDONLY       = 0x00000000;   //!< O_RDONLY
     static const int TGT_O_WRONLY       = 0x00000001;   //!< O_WRONLY

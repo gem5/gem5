@@ -38,7 +38,7 @@ class AlphaTru64 : public Tru64
   public:
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
-    static OpenFlagTransTable openFlagTable[];
+    static SyscallFlagTransTable openFlagTable[];
 
     /// Number of entries in openFlagTable[].
     static const int NUM_OPEN_FLAGS;

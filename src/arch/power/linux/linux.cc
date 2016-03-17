@@ -34,7 +34,7 @@
 #include "arch/power/linux/linux.hh"
 
 // open(2) flags translation table
-OpenFlagTransTable PowerLinux::openFlagTable[] = {
+SyscallFlagTransTable PowerLinux::openFlagTable[] = {
 #ifdef _MSC_VER
   { PowerLinux::TGT_O_RDONLY,    _O_RDONLY },
   { PowerLinux::TGT_O_WRONLY,    _O_WRONLY },

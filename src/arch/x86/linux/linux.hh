@@ -67,7 +67,7 @@ class X86Linux64 : public Linux
         int64_t unused0[3];
     } tgt_stat64;
 
-    static OpenFlagTransTable openFlagTable[];
+    static SyscallFlagTransTable openFlagTable[];
 
     static const int TGT_O_RDONLY       = 00000000;     //!< O_RDONLY
     static const int TGT_O_WRONLY       = 00000001;     //!< O_WRONLY
@@ -140,7 +140,7 @@ class X86Linux32 : public Linux
         uint64_t st_ino;
     } __attribute__((__packed__)) tgt_stat64;
 
-    static OpenFlagTransTable openFlagTable[];
+    static SyscallFlagTransTable openFlagTable[];
 
     static const int TGT_O_RDONLY       = 00000000;     //!< O_RDONLY
     static const int TGT_O_WRONLY       = 00000001;     //!< O_WRONLY

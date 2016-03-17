@@ -33,7 +33,7 @@
 #include "arch/mips/linux/linux.hh"
 
 // open(2) flags translation table
-OpenFlagTransTable MipsLinux::openFlagTable[] = {
+SyscallFlagTransTable MipsLinux::openFlagTable[] = {
 #ifdef _MSC_VER
   { MipsLinux::TGT_O_RDONLY,    _O_RDONLY },
   { MipsLinux::TGT_O_WRONLY,    _O_WRONLY },

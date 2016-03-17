@@ -38,9 +38,9 @@
 class LiveProcess;
 class ThreadContext;
 
-/// This struct is used to build an target-OS-dependent table that
-/// maps the target's open() flags to the host open() flags.
-struct OpenFlagTransTable {
+/// This struct is used to build target-OS-dependent tables that
+/// map the target's flags to the host's flags.
+struct SyscallFlagTransTable {
     int tgtFlag;        //!< Target system flag value.
     int hostFlag;       //!< Corresponding host system flag value.
 };

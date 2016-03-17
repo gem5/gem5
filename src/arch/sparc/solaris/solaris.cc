@@ -33,7 +33,7 @@
 #include "arch/sparc/solaris/solaris.hh"
 
 // open(2) flags translation table
-OpenFlagTransTable SparcSolaris::openFlagTable[] = {
+SyscallFlagTransTable SparcSolaris::openFlagTable[] = {
 #ifdef _MSC_VER
   { SparcSolaris::TGT_O_RDONLY, _O_RDONLY },
   { SparcSolaris::TGT_O_WRONLY, _O_WRONLY },

@@ -31,7 +31,7 @@
 #include "arch/alpha/tru64/tru64.hh"
 
 // open(2) flags translation table
-OpenFlagTransTable AlphaTru64::openFlagTable[] = {
+SyscallFlagTransTable AlphaTru64::openFlagTable[] = {
 #ifdef _MSC_VER
   { AlphaTru64::TGT_O_RDONLY,   _O_RDONLY },
   { AlphaTru64::TGT_O_WRONLY,   _O_WRONLY },

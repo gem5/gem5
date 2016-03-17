@@ -33,7 +33,7 @@
 #include "arch/sparc/linux/linux.hh"
 
 // open(2) flags translation table
-OpenFlagTransTable SparcLinux::openFlagTable[] = {
+SyscallFlagTransTable SparcLinux::openFlagTable[] = {
 #ifdef _MSC_VER
   { SparcLinux::TGT_O_RDONLY,   _O_RDONLY },
   { SparcLinux::TGT_O_WRONLY,   _O_WRONLY },
