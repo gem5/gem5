@@ -306,19 +306,13 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     uint64_t result = lseek(sim_fd, offset, whence);
     result = TheISA::htog(result);
 
-    if (result == (off_t)-1) {
-        //The seek failed.
+    if (result == (off_t)-1)
         return -errno;
-    } else {
-        // The seek succeeded.
-        // Copy "result" to "result_ptr"
-        // XXX We'll assume that the size of loff_t is 64 bits on the
-        // target platform
-        BufferArg result_buf(result_ptr, sizeof(result));
-        memcpy(result_buf.bufferPtr(), &result, sizeof(result));
-        result_buf.copyOut(tc->getMemProxy());
-        return 0;
-    }
+    // Assuming that the size of loff_t is 64 bits on the target platform
+    BufferArg result_buf(result_ptr, sizeof(result));
+    memcpy(result_buf.bufferPtr(), &result, sizeof(result));
+    result_buf.copyOut(tc->getMemProxy());
+    return 0;
 }
 
 
