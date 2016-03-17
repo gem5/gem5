@@ -112,9 +112,15 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
-    // Set up region for mmaps. This was determined empirically and may not
-    // always be correct.
-    mmap_end = (Addr)0x2aaaaaaab000ULL;
+    // "mmap_base" is a function which defines where mmap region starts in
+    // the process address space.
+    // mmap_base: PAGE_ALIGN(TASK_SIZE-MIN_GAP-mmap_rnd())
+    // TASK_SIZE: (1<<47)-PAGE_SIZE
+    // MIN_GAP: 128*1024*1024+stack_maxrandom_size()
+    // We do not use any address space layout randomization in gem5
+    // therefore the random fields become zero; the smallest gap space was
+    // chosen but gap could potentially be much larger.
+    mmap_end = (Addr)0x7FFFF7FFF000ULL;
 }
 
 void
@@ -149,9 +155,15 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
-    // Set up region for mmaps. This was determined empirically and may not
-    // always be correct.
-    mmap_end = (Addr)0xf7ffe000ULL;
+    // "mmap_base" is a function which defines where mmap region starts in
+    // the process address space.
+    // mmap_base: PAGE_ALIGN(TASK_SIZE-MIN_GAP-mmap_rnd())
+    // TASK_SIZE: 0xC0000000
+    // MIN_GAP: 128*1024*1024+stack_maxrandom_size()
+    // We do not use any address space layout randomization in gem5
+    // therefore the random fields become zero; the smallest gap space was
+    // chosen but gap could potentially be much larger.
+    mmap_end = (Addr)0xB7FFF000ULL;
 }
 
 SyscallDesc*
