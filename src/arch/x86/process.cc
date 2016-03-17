@@ -756,6 +756,9 @@ X86LiveProcess::argsInit(int pageSize,
     //We want 16 byte alignment
     uint64_t align = 16;
 
+    // Patch the ld_bias for dynamic executables.
+    updateBias();
+
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
@@ -798,8 +801,10 @@ X86LiveProcess::argsInit(int pageSize,
         X86_IA64Processor = 1 << 30
     };
 
-    // Setup the auxilliary vectors. These will already have endian conversion.
-    // Auxilliary vectors are loaded only for elf formatted executables.
+    // Setup the auxiliary vectors. These will already have endian
+    // conversion. Auxiliary vectors are loaded only for elf formatted
+    // executables; the auxv is responsible for passing information from
+    // the OS to the interpreter.
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if (elfObject) {
         uint64_t features =
@@ -842,18 +847,17 @@ X86LiveProcess::argsInit(int pageSize,
         //Frequency at which times() increments
         //Defined to be 100 in the kernel source.
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
-        // For statically linked executables, this is the virtual address of the
-        // program header tables if they appear in the executable image
+        // This is the virtual address of the program header tables if they
+        // appear in the executable image.
         auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
         // This is the size of a program header entry from the elf file.
         auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
-        //This is the address of the elf "interpreter", It should be set
-        //to 0 for regular executables. It should be something else
-        //(not sure what) for dynamic libraries.
-        auxv.push_back(auxv_t(M5_AT_BASE, 0));
-
+        // This is the base address of the ELF interpreter; it should be
+        // zero for static executables or contain the base address for
+        // dynamic executables.
+        auxv.push_back(auxv_t(M5_AT_BASE, getBias()));
         //XXX Figure out what this should be.
         auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
         //The entry point to the program
@@ -1014,7 +1018,7 @@ X86LiveProcess::argsInit(int pageSize,
 
     // There doesn't need to be any segment base added in since we're dealing
     // with the flat segmentation model.
-    tc->pcState(objFile->entryPoint());
+    tc->pcState(getStartPC());
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

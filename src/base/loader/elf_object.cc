@@ -41,22 +41,30 @@
  *          Ali Saidi
  */
 
+#include "base/loader/elf_object.hh"
+
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <cassert>
 #include <string>
 
-#include "base/loader/elf_object.hh"
-#include "base/loader/symtab.hh"
 #include "base/bitfield.hh"
+#include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/Loader.hh"
-#include "sim/byteswap.hh"
 #include "gelf.h"
+#include "sim/byteswap.hh"
 
 using namespace std;
 
 ObjectFile *
-ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
+ElfObject::tryFile(const string &fname, size_t len, uint8_t *data,
+                   bool skip_interp_check)
 {
     Elf *elf;
     GElf_Ehdr ehdr;
@@ -243,6 +251,41 @@ ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
             result->_programHeaderTable = 0;
 
 
+        if (!skip_interp_check) {
+            for (int i = 0; i < ehdr.e_phnum; i++) {
+                GElf_Phdr phdr;
+                M5_VAR_USED void *check_p = gelf_getphdr(elf, i, &phdr);
+                assert(check_p != nullptr);
+
+                if (phdr.p_type != PT_INTERP)
+                    continue;
+
+                char *interp_path = (char*)data + phdr.p_offset;
+                int fd = open(interp_path, O_RDONLY);
+                if (fd == -1) {
+                    fatal("Unable to open dynamic executable's "
+                          "interpreter.\n");
+                }
+
+                struct stat sb;
+                M5_VAR_USED int check_i = fstat(fd, &sb);
+                assert(check_i == 0);
+
+                void *mm = mmap(nullptr, sb.st_size, PROT_READ,
+                                MAP_PRIVATE, fd, 0);
+                assert(mm != MAP_FAILED);
+                ::close(fd);
+
+                uint8_t *interp_image = (uint8_t*)mm;
+                ObjectFile *obj = tryFile(interp_path, sb.st_size,
+                                          interp_image, true);
+                assert(obj != nullptr);
+                result->interpreter = dynamic_cast<ElfObject*>(obj);
+                assert(result->interpreter != nullptr);
+                break;
+            }
+        }
+
         elf_end(elf);
         return result;
     }
@@ -252,8 +295,10 @@ ElfObject::tryFile(const string &fname, size_t len, uint8_t *data)
 ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
     : ObjectFile(_filename, _len, _data, _arch, _opSys),
-      _programHeaderTable(0), _programHeaderSize(0), _programHeaderCount(0)
-
+      _programHeaderTable(0), _programHeaderSize(0), _programHeaderCount(0),
+      interpreter(nullptr), ldBias(0), relocate(true),
+      ldMin(std::numeric_limits<Addr>::max()),
+      ldMax(std::numeric_limits<Addr>::min())
 {
     Elf *elf;
     GElf_Ehdr ehdr;
@@ -326,6 +371,9 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
         if (!(phdr.p_type & PT_LOAD))
             continue;
 
+        ldMin = std::min(ldMin, phdr.p_vaddr);
+        ldMax = std::max(ldMax, phdr.p_vaddr + phdr.p_memsz);
+
         // Check to see if this segment contains the bss section.
         if (phdr.p_paddr <= bssSecStart &&
                 phdr.p_paddr + phdr.p_memsz > bssSecStart &&
@@ -338,6 +386,11 @@ ElfObject::ElfObject(const string &_filename, size_t _len, uint8_t *_data,
         // Check to see if this is the text or data segment
         if (phdr.p_vaddr <= textSecStart &&
                 phdr.p_vaddr + phdr.p_filesz > textSecStart) {
+
+            // If this value is nonzero, we need to flip the relocate flag.
+            if (phdr.p_vaddr != 0)
+                relocate = false;
+
             text.baseAddr = phdr.p_paddr;
             text.size = phdr.p_filesz;
             text.fileImage = fileData + phdr.p_offset;
@@ -462,6 +515,10 @@ ElfObject::loadSections(PortProxy& memProxy, Addr addrMask, Addr offset)
             return false;
         }
     }
+
+    if (interpreter)
+        interpreter->loadSections(memProxy, addrMask, offset);
+
     return true;
 }
 
@@ -510,3 +567,19 @@ ElfObject::sectionExists(string sec)
 }
 
 
+void
+ElfObject::updateBias(Addr bias_addr)
+{
+    // Record the bias.
+    ldBias = bias_addr;
+
+    // Patch the entry point with bias_addr.
+    entry += bias_addr;
+
+    // Patch segments with the bias_addr.
+    text.baseAddr += bias_addr;
+    data.baseAddr += bias_addr;
+    bss.baseAddr  += bias_addr;
+    for (auto &segment : extraSegments)
+        segment.baseAddr += bias_addr;
+}

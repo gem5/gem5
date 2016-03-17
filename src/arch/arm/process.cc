@@ -156,6 +156,9 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
     //We want 16 byte alignment
     uint64_t align = 16;
 
+    // Patch the ld_bias for dynamic executables.
+    updateBias();
+
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
@@ -225,10 +228,10 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
         auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
-        //This is the address of the elf "interpreter", It should be set
-        //to 0 for regular executables. It should be something else
-        //(not sure what) for dynamic libraries.
-        auxv.push_back(auxv_t(M5_AT_BASE, 0));
+        // This is the base address of the ELF interpreter; it should be
+        // zero for static executables or contain the base address for
+        // dynamic executables.
+        auxv.push_back(auxv_t(M5_AT_BASE, getBias()));
         //XXX Figure out what this should be.
         auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
         //The entry point to the program
@@ -392,7 +395,7 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
     pc.nextThumb(pc.thumb());
     pc.aarch64(arch == ObjectFile::Arm64);
     pc.nextAArch64(pc.aarch64());
-    pc.set(objFile->entryPoint() & ~mask(1));
+    pc.set(getStartPC() & ~mask(1));
     tc->pcState(pc);
 
     //Align the "stack_min" to a page boundary.

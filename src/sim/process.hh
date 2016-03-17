@@ -336,6 +336,14 @@ class LiveProcess : public Process
      */
     EmulatedDriver *findDriver(std::string filename);
 
+    // This function acts as a callback to update the bias value in
+    // the object file because the parameters needed to calculate the
+    // bias are not available when the object file is created.
+    void updateBias();
+
+    Addr getBias();
+    Addr getStartPC();
+
     // this function is used to create the LiveProcess object, since
     // we can't tell which subclass of LiveProcess to use until we
     // open and look at the object file.

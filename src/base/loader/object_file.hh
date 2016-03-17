@@ -35,6 +35,7 @@
 #include <limits>
 #include <string>
 
+#include "base/misc.hh"
 #include "base/types.hh"
 
 class PortProxy;
@@ -94,7 +95,14 @@ class ObjectFile
             std::numeric_limits<Addr>::max())
     { return false; }
 
-    virtual bool isDynamic() { return false; }
+    virtual ObjectFile *getInterpreter() const { return nullptr; }
+    virtual bool relocatable() const { return false; }
+    virtual Addr mapSize() const
+    { panic("mapSize() should only be called on relocatable objects\n"); }
+    virtual void updateBias(Addr bias_addr)
+    { panic("updateBias() should only be called on relocatable objects\n"); }
+    virtual Addr bias() const { return 0; }
+
     virtual bool hasTLS() { return false; }
 
     Arch  getArch()  const { return arch; }

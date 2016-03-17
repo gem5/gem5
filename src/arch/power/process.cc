@@ -85,6 +85,9 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
     //We want 16 byte alignment
     uint64_t align = 16;
 
+    // Patch the ld_bias for dynamic executables.
+    updateBias();
+
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
@@ -108,11 +111,10 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
         auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
-        //This is the address of the elf "interpreter", It should be set
-        //to 0 for regular executables. It should be something else
-        //(not sure what) for dynamic libraries.
-        auxv.push_back(auxv_t(M5_AT_BASE, 0));
-
+        // This is the base address of the ELF interpreter; it should be
+        // zero for static executables or contain the base address for
+        // dynamic executables.
+        auxv.push_back(auxv_t(M5_AT_BASE, getBias()));
         //XXX Figure out what this should be.
         auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
         //The entry point to the program
@@ -255,7 +257,7 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
     //Set the stack pointer register
     tc->setIntReg(StackPointerReg, stack_min);
 
-    tc->pcState(objFile->entryPoint());
+    tc->pcState(getStartPC());
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

@@ -62,6 +62,24 @@ class ElfObject : public ObjectFile
     uint16_t _programHeaderCount;
     std::set<std::string> sectionNames;
 
+    ElfObject *interpreter;
+
+    // An interpreter load bias is the location in the process address space
+    // where the interpreter is chosen to reside. Typically, this is carved
+    // out of the top of the mmap reserve section.
+    Addr ldBias;
+
+    // The interpreter is typically a relocatable shared library and will
+    // have a default value of zero which means that it does not care where
+    // it is placed. However, the loader can be compiled and linked so that
+    // it does care and needs a specific entry point.
+    bool relocate;
+
+    // The ldMin and ldMax fields are required to know how large of an
+    // area is required to map the interpreter.
+    Addr ldMin;
+    Addr ldMax;
+
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask);
 
@@ -78,19 +96,26 @@ class ElfObject : public ObjectFile
 
     bool loadSections(PortProxy& memProxy,
             Addr addrMask = std::numeric_limits<Addr>::max(),
-            Addr offset = 0);
+            Addr offset = 0) override;
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
+            std::numeric_limits<Addr>::max()) override;
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
+            std::numeric_limits<Addr>::max()) override;
     virtual bool loadWeakSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
+            std::numeric_limits<Addr>::max()) override;
 
-    virtual bool isDynamic() { return sectionExists(".interp"); }
-    virtual bool hasTLS() { return sectionExists(".tbss"); }
+    virtual ObjectFile *getInterpreter() const override
+    { return interpreter; }
+    virtual Addr bias() const override { return ldBias; }
+    virtual bool relocatable() const override { return relocate; }
+    virtual Addr mapSize() const override { return ldMax - ldMin; }
+    virtual void updateBias(Addr bias_addr) override;
+
+    virtual bool hasTLS() override { return sectionExists(".tbss"); }
 
     static ObjectFile *tryFile(const std::string &fname,
-                               size_t len, uint8_t *data);
+                               size_t len, uint8_t *data,
+                               bool skip_interp_check = false);
     Addr programHeaderTable() {return _programHeaderTable;}
     uint16_t programHeaderSize() {return _programHeaderSize;}
     uint16_t programHeaderCount() {return _programHeaderCount;}

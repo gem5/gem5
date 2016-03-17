@@ -78,6 +78,9 @@ MipsLiveProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
 
+    // Patch the ld_bias for dynamic executables.
+    updateBias();
+
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
@@ -100,6 +103,10 @@ MipsLiveProcess::argsInit(int pageSize)
         auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
+        // This is the base address of the ELF interpreter; it should be
+        // zero for static executables or contain the base address for
+        // dynamic executables.
+        auxv.push_back(auxv_t(M5_AT_BASE, getBias()));
         //The entry point to the program
         auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
         //Different user and group IDs
@@ -177,7 +184,7 @@ MipsLiveProcess::argsInit(int pageSize)
     setSyscallArg(tc, 1, argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min);
 
-    tc->pcState(objFile->entryPoint());
+    tc->pcState(getStartPC());
 }
 
 

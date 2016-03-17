@@ -67,6 +67,9 @@ AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams *params,
 void
 AlphaLiveProcess::argsInit(int intSize, int pageSize)
 {
+    // Patch the ld_bias for dynamic executables.
+    updateBias();
+
     objFile->loadSections(initVirtMem);
 
     typedef AuxVector<uint64_t> auxv_t;
@@ -88,6 +91,10 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
         auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
         DPRINTF(Loader, "auxv at PHDR %08p\n", elfObject->programHeaderTable());
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
+        // This is the base address of the ELF interpreter; it should be
+        // zero for static executables or contain the base address for
+        // dynamic executables.
+        auxv.push_back(auxv_t(M5_AT_BASE, getBias()));
         auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
         auxv.push_back(auxv_t(M5_AT_UID, uid()));
         auxv.push_back(auxv_t(M5_AT_EUID, euid()));
@@ -163,7 +170,7 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     setSyscallArg(tc, 1, argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min);
 
-    tc->pcState(objFile->entryPoint());
+    tc->pcState(getStartPC());
 }
 
 void

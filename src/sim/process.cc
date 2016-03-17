@@ -518,6 +518,48 @@ LiveProcess::findDriver(std::string filename)
     return NULL;
 }
 
+void
+LiveProcess::updateBias()
+{
+    ObjectFile *interp = objFile->getInterpreter();
+
+    if (!interp || !interp->relocatable())
+        return;
+
+    // Determine how large the interpreters footprint will be in the process
+    // address space.
+    Addr interp_mapsize = roundUp(interp->mapSize(), TheISA::PageBytes);
+
+    // We are allocating the memory area; set the bias to the lowest address
+    // in the allocated memory region.
+    Addr ld_bias = mmapGrowsDown() ? mmap_end - interp_mapsize : mmap_end;
+
+    // Adjust the process mmap area to give the interpreter room; the real
+    // execve system call would just invoke the kernel's internal mmap
+    // functions to make these adjustments.
+    mmap_end = mmapGrowsDown() ? ld_bias : mmap_end + interp_mapsize;
+
+    interp->updateBias(ld_bias);
+}
+
+
+Addr
+LiveProcess::getBias()
+{
+    ObjectFile *interp = objFile->getInterpreter();
+
+    return interp ? interp->bias() : objFile->bias();
+}
+
+
+Addr
+LiveProcess::getStartPC()
+{
+    ObjectFile *interp = objFile->getInterpreter();
+
+    return interp ? interp->entryPoint() : objFile->entryPoint();
+}
+
 
 LiveProcess *
 LiveProcess::create(LiveProcessParams * params)
@@ -534,11 +576,6 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile == NULL) {
         fatal("Can't load object file %s", params->executable);
     }
-
-    if (objFile->isDynamic())
-       fatal("Object file is a dynamic executable however only static "
-             "executables are supported!\n       Please recompile your "
-             "executable as a static binary and try again.\n");
 
 #if THE_ISA == ALPHA_ISA
     if (objFile->getArch() != ObjectFile::Alpha)
