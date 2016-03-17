@@ -68,8 +68,8 @@ BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
 BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
     : MemObject(p),
       cpuSidePort(nullptr), memSidePort(nullptr),
-      mshrQueue("MSHRs", p->mshrs, 4, p->demand_mshr_reserve),
-      writeBuffer("write buffer", p->write_buffers, p->mshrs+1000),
+      mshrQueue("MSHRs", p->mshrs, 0, p->demand_mshr_reserve), // see below
+      writeBuffer("write buffer", p->write_buffers, p->mshrs), // see below
       blkSize(blk_size),
       lookupLatency(p->hit_latency),
       forwardLatency(p->hit_latency),
@@ -85,6 +85,12 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
 {
+    // the MSHR queue has no reserve entries as we check the MSHR
+    // queue on every single allocation, whereas the write queue has
+    // as many reserve entries as we have MSHRs, since every MSHR may
+    // eventually require a writeback, and we do not check the write
+    // buffer before committing to an MSHR
+
     // forward snoops is overridden in init() once we can query
     // whether the connected master is actually snooping or not
 }

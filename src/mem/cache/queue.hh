@@ -69,7 +69,7 @@ class Queue : public Drainable
 
     /**
      * The total number of entries in this queue. This number is set
-     * as the number of entries requested plus (numReserve - 1). This
+     * as the number of entries requested plus any reserve. This
      * allows for the same number of effective entries while still
      * maintaining an overflow reserve.
      */
@@ -120,10 +120,10 @@ class Queue : public Drainable
      * Create a queue with a given number of entries.
      *
      * @param num_entries The number of entries in this queue.
-     * @param num_overflow The extra overflow entries needed.
+     * @param reserve The extra overflow entries needed.
      */
     Queue(const std::string &_label, int num_entries, int reserve) :
-        label(_label), numEntries(num_entries + reserve - 1),
+        label(_label), numEntries(num_entries + reserve),
         numReserve(reserve), entries(numEntries), _numInService(0),
         allocated(0)
     {
@@ -139,7 +139,7 @@ class Queue : public Drainable
 
     bool isFull() const
     {
-        return (allocated > numEntries - numReserve);
+        return (allocated >= numEntries - numReserve);
     }
 
     int numInService() const

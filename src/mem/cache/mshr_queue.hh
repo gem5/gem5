@@ -141,7 +141,9 @@ class MSHRQueue : public Queue<MSHR>
      */
     bool canPrefetch() const
     {
-        return (allocated < numEntries - (numReserve + demandReserve));
+        // @todo we may want to revisit the +1, currently added to
+        // keep regressions unchanged
+        return (allocated < numEntries - (numReserve + 1 + demandReserve));
     }
 };
 
