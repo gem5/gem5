@@ -74,6 +74,7 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/SyscallBase.hh"
 #include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
@@ -82,6 +83,14 @@
 #include "sim/syscall_emul_buf.hh"
 #include "sim/syscallreturn.hh"
 #include "sim/system.hh"
+
+// This wrapper macro helps out with readability a bit. FLAGEXT specifies
+// the verbosity and FMT is the message to be appended to the syscall
+// header information. The syscall header information contains the cpuid
+// and thread id.
+#define DPRINTF_SYSCALL(FLAGEXT, FMT, ...)                                  \
+    DPRINTFS(Syscall##FLAGEXT, tc->getCpuPtr(), "T%d : syscall " FMT,       \
+             tc->threadId(), __VA_ARGS__)
 
 ///
 /// System call descriptor.
@@ -1100,7 +1109,7 @@ fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int tgt_fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
 
-    DPRINTF(SyscallVerbose, "fstat(%d, ...)\n", tgt_fd);
+    DPRINTF_SYSCALL(Verbose, "fstat(%d, ...)\n", tgt_fd);
 
     int sim_fd = process->getSimFD(tgt_fd);
     if (sim_fd < 0)

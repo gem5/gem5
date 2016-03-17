@@ -42,6 +42,7 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/SyscallBase.hh"
 #include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
@@ -55,28 +56,31 @@ using namespace TheISA;
 void
 SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 {
-    if (DTRACE(SyscallVerbose)) {
+    if (DTRACE(SyscallBase)) {
         int index = 0;
-        IntReg arg[4] M5_VAR_USED;
+        IntReg arg[6] M5_VAR_USED;
 
         // we can't just put the calls to getSyscallArg() in the
         // DPRINTF arg list, because C++ doesn't guarantee their order
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 6; ++i)
             arg[i] = process->getSyscallArg(tc, index);
 
-        DPRINTFNR("%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
-                  curTick(), tc->getCpuPtr()->name(), name,
-                  arg[0], arg[1], arg[2], arg[3]);
+        // Linux supports up to six system call arguments through registers
+        // so we want to print all six. Check to the relevant man page to
+        // verify how many are actually used by a given system call.
+        DPRINTF_SYSCALL(Base,
+                        "%s called w/arguments %d, %d, %d, %d, %d, %d\n",
+                        name, arg[0], arg[1], arg[2], arg[3], arg[4],
+                        arg[5]);
     }
 
     SyscallReturn retval = (*funcPtr)(this, callnum, process, tc);
 
     if (retval.needsRetry()) {
-        DPRINTFS(SyscallVerbose, tc->getCpuPtr(), "syscall %s needs retry\n",
-                 name);
+        DPRINTF_SYSCALL(Base, "%s needs retry\n", name);
     } else {
-        DPRINTFS(SyscallVerbose, tc->getCpuPtr(), "syscall %s returns %d\n",
-                 name, retval.encodedValue());
+        DPRINTF_SYSCALL(Base, "%s returns %d\n", name,
+                        retval.encodedValue());
     }
 
     if (!(flags & SyscallDesc::SuppressReturnValue) && !retval.needsRetry())
@@ -201,7 +205,8 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     }
 
     p->brk_point = new_brk;
-    DPRINTF(SyscallVerbose, "Break Point changed to: %#X\n", p->brk_point);
+    DPRINTF_SYSCALL(Verbose, "brk: break point changed to: %#X\n",
+                    p->brk_point);
     return p->brk_point;
 }
 
