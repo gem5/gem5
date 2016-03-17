@@ -39,82 +39,53 @@
  *
  * Authors: Erik Hallnor
  *          Andreas Sandberg
+ *          Andreas Hansson
  */
 
 /** @file
- * Definition of MSHRQueue class functions.
+ * Definition of WriteQueue class functions.
  */
 
-#include "mem/cache/mshr_queue.hh"
+#include "mem/cache/write_queue.hh"
 
 using namespace std;
 
-MSHRQueue::MSHRQueue(const std::string &_label,
-                     int num_entries, int reserve, int demand_reserve)
-    : Queue<MSHR>(_label, num_entries, reserve),
-      demandReserve(demand_reserve)
+WriteQueue::WriteQueue(const std::string &_label,
+                       int num_entries, int reserve)
+    : Queue<WriteQueueEntry>(_label, num_entries, reserve)
 {}
 
-MSHR *
-MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                    Tick when_ready, Counter order, bool alloc_on_fill)
+WriteQueueEntry *
+WriteQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
+                    Tick when_ready, Counter order)
 {
     assert(!freeList.empty());
-    MSHR *mshr = freeList.front();
-    assert(mshr->getNumTargets() == 0);
+    WriteQueueEntry *entry = freeList.front();
+    assert(entry->getNumTargets() == 0);
     freeList.pop_front();
 
-    mshr->allocate(blk_addr, blk_size, pkt, when_ready, order, alloc_on_fill);
-    mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
-    mshr->readyIter = addToReadyList(mshr);
+    entry->allocate(blk_addr, blk_size, pkt, when_ready, order);
+    entry->allocIter = allocatedList.insert(allocatedList.end(), entry);
+    entry->readyIter = addToReadyList(entry);
 
     allocated += 1;
-    return mshr;
+    return entry;
 }
 
 void
-MSHRQueue::moveToFront(MSHR *mshr)
+WriteQueue::markInService(WriteQueueEntry *entry)
 {
-    if (!mshr->inService) {
-        assert(mshr == *(mshr->readyIter));
-        readyList.erase(mshr->readyIter);
-        mshr->readyIter = readyList.insert(readyList.begin(), mshr);
+    if (!entry->isUncacheable()) {
+        // a normal eviction, such as a writeback or a clean evict, no
+        // more to do as we are done from the perspective of this
+        // cache
+        entry->popTarget();
+        deallocate(entry);
+    } else {
+        // uncacheable write, and we will eventually receive a
+        // response
+        entry->markInService();
+        readyList.erase(entry->readyIter);
+        _numInService += 1;
     }
-}
-
-void
-MSHRQueue::markInService(MSHR *mshr, bool pending_modified_resp)
-{
-    mshr->markInService(pending_modified_resp);
-    readyList.erase(mshr->readyIter);
-    _numInService += 1;
-}
-
-void
-MSHRQueue::markPending(MSHR *mshr)
-{
-    assert(mshr->inService);
-    mshr->inService = false;
-    --_numInService;
-    /**
-     * @ todo might want to add rerequests to front of pending list for
-     * performance.
-     */
-    mshr->readyIter = addToReadyList(mshr);
-}
-
-bool
-MSHRQueue::forceDeallocateTarget(MSHR *mshr)
-{
-    bool was_full = isFull();
-    assert(mshr->hasTargets());
-    // Pop the prefetch off of the target list
-    mshr->popTarget();
-    // Delete mshr if no remaining targets
-    if (!mshr->hasTargets() && !mshr->promoteDeferredTargets()) {
-        deallocate(mshr);
-    }
-
-    // Notify if MSHR queue no longer full
-    return was_full && !isFull();
 }

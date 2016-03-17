@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 ARM Limited
+ * Copyright (c) 2012-2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -137,6 +137,23 @@ class Cache : public BaseCache
          */
         virtual void sendDeferredPacket();
 
+        /**
+         * Check if there is a conflicting snoop response about to be
+         * send out, and if so simply stall any requests, and schedule
+         * a send event at the same time as the next snoop response is
+         * being sent out.
+         */
+        bool checkConflictingSnoop(Addr addr)
+        {
+            if (snoopRespQueue.hasAddr(addr)) {
+                DPRINTF(CachePort, "Waiting for snoop response to be "
+                        "sent\n");
+                Tick when = snoopRespQueue.deferredPacketReadyTime();
+                schedSendEvent(when);
+                return true;
+            }
+            return false;
+        }
     };
 
     /**
@@ -339,6 +356,12 @@ class Cache : public BaseCache
     void doWritebacksAtomic(PacketList& writebacks);
 
     /**
+     * Handling the special case of uncacheable write responses to
+     * make recvTimingResp less cluttered.
+     */
+    void handleUncacheableWriteResp(PacketPtr pkt);
+
+    /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The response packet
      */
@@ -451,12 +474,12 @@ class Cache : public BaseCache
                            bool needsExclusive) const;
 
     /**
-     * Return the next MSHR to service, either a pending miss from the
-     * mshrQueue, a buffered write from the write buffer, or something
-     * from the prefetcher.  This function is responsible for
-     * prioritizing among those sources on the fly.
+     * Return the next queue entry to service, either a pending miss
+     * from the MSHR queue, a buffered write from the write buffer, or
+     * something from the prefetcher. This function is responsible
+     * for prioritizing among those sources on the fly.
      */
-    MSHR *getNextMSHR();
+    QueueEntry* getNextQueueEntry();
 
     /**
      * Send up a snoop request and find cached copies. If cached copies are
@@ -465,28 +488,11 @@ class Cache : public BaseCache
     bool isCachedAbove(PacketPtr pkt, bool is_timing = true) const;
 
     /**
-     * Selects an outstanding request to service.  Called when the
-     * cache gets granted the downstream bus in timing mode.
-     * @return The request to service, NULL if none found.
-     */
-    PacketPtr getTimingPacket();
-
-    /**
-     * Marks a request as in service (sent downstream in the memory
-     * system). This can have side effect since storage for no
-     * response commands is deallocated once they are successfully
-     * sent. Also remember if we are expecting a Modified (dirty and
-     * writable) response from another cache, effectively making this
-     * MSHR the ordering point.
-     */
-    void markInService(MSHR *mshr, bool pending_modified_resp);
-
-    /**
      * Return whether there are any outstanding misses.
      */
     bool outstandingMisses() const
     {
-        return mshrQueue.allocated != 0;
+        return !mshrQueue.isEmpty();
     }
 
     CacheBlk *findBlock(Addr addr, bool is_secure) const {
@@ -504,7 +510,7 @@ class Cache : public BaseCache
     /**
      * Find next request ready time from among possible sources.
      */
-    Tick nextMSHRReadyTime() const;
+    Tick nextQueueReadyTime() const;
 
   public:
     /** Instantiates a basic cache object. */
@@ -514,6 +520,26 @@ class Cache : public BaseCache
     virtual ~Cache();
 
     void regStats() override;
+
+    /**
+     * Take an MSHR, turn it into a suitable downstream packet, and
+     * send it out. This construct allows a queue entry to choose a suitable
+     * approach based on its type.
+     *
+     * @param mshr The MSHR to turn into a packet and send
+     * @return True if the port is waiting for a retry
+     */
+    bool sendMSHRQueuePacket(MSHR* mshr);
+
+    /**
+     * Similar to sendMSHR, but for a write-queue entry
+     * instead. Create the packet, and send it, and if successful also
+     * mark the entry in service.
+     *
+     * @param wq_entry The write-queue entry to turn into a packet and send
+     * @return True if the port is waiting for a retry
+     */
+    bool sendWriteQueuePacket(WriteQueueEntry* wq_entry);
 
     /** serialize the state of the caches
      * We currently don't support checkpointing cache state, so this panics.

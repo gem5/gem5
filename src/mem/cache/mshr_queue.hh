@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -51,31 +51,14 @@
 #include <vector>
 
 #include "mem/cache/mshr.hh"
-#include "mem/packet.hh"
-#include "sim/drain.hh"
+#include "mem/cache/queue.hh"
 
 /**
  * A Class for maintaining a list of pending and allocated memory requests.
  */
-class MSHRQueue : public Drainable
+class MSHRQueue : public Queue<MSHR>
 {
   private:
-    /** Local label (for functional print requests) */
-    const std::string label;
-
-    // Parameters
-    /**
-     * The total number of entries in this queue. This number is set as the
-     * number of entries requested plus (numReserve - 1). This allows for
-     * the same number of effective entries while still maintaining the reserve.
-     */
-    const int numEntries;
-
-    /**
-     * The number of entries to hold in reserve. This is needed because copy
-     * operations can allocate upto 4 entries at one time.
-     */
-    const int numReserve;
 
     /**
      * The number of entries to reserve for future demand accesses.
@@ -83,26 +66,7 @@ class MSHRQueue : public Drainable
      */
     const int demandReserve;
 
-    /**  MSHR storage. */
-    std::vector<MSHR> registers;
-    /** Holds pointers to all allocated entries. */
-    MSHR::List allocatedList;
-    /** Holds pointers to entries that haven't been sent to the bus. */
-    MSHR::List readyList;
-    /** Holds non allocated entries. */
-    MSHR::List freeList;
-
-    MSHR::Iterator addToReadyList(MSHR *mshr);
-
-
   public:
-    /** The number of allocated entries. */
-    int allocated;
-    /** The number of entries that have been forwarded to the bus. */
-    int inServiceEntries;
-    /** The index of this queue within the cache (MSHR queue vs. write
-     * buffer). */
-    const int index;
 
     /**
      * Create a queue with a given number of entries.
@@ -113,35 +77,7 @@ class MSHRQueue : public Drainable
      * demand accesses.
      */
     MSHRQueue(const std::string &_label, int num_entries, int reserve,
-              int demand_reserve, int index);
-
-    /**
-     * Find the first MSHR that matches the provided address.
-     * @param blk_addr The block address to find.
-     * @param is_secure True if the target memory space is secure.
-     * @return Pointer to the matching MSHR, null if not found.
-     */
-    MSHR *findMatch(Addr blk_addr, bool is_secure) const;
-
-    /**
-     * Find and return all the matching entries in the provided vector.
-     * @param blk_addr The block  address to find.
-     * @param is_secure True if the target memory space is secure.
-     * @param matches The vector to return pointers to the matching entries.
-     * @return True if any matches are found, false otherwise.
-     */
-    bool findMatches(Addr blk_addr, bool is_secure,
-                     std::vector<MSHR*>& matches) const;
-
-    /**
-     * Find any pending requests that overlap the given request.
-     * @param blk_addr Block address.
-     * @param is_secure True if the target memory space is secure.
-     * @return A pointer to the earliest matching MSHR.
-     */
-    MSHR *findPending(Addr blk_addr, bool is_secure) const;
-
-    bool checkFunctional(PacketPtr pkt, Addr blk_addr);
+              int demand_reserve);
 
     /**
      * Allocates a new MSHR for the request and size. This places the request
@@ -160,21 +96,6 @@ class MSHRQueue : public Drainable
      */
     MSHR *allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
                    Tick when_ready, Counter order, bool alloc_on_fill);
-
-    /**
-     * Removes the given MSHR from the queue. This places the MSHR on the
-     * free list.
-     * @param mshr
-     */
-    void deallocate(MSHR *mshr);
-
-    /**
-     * Remove a MSHR from the queue. Returns an iterator into the
-     * allocatedList.
-     * @param mshr The MSHR to remove.
-     * @return An iterator to the next entry in the allocatedList.
-     */
-    MSHR::Iterator deallocateOne(MSHR *mshr);
 
     /**
      * Moves the MSHR to the front of the pending list if it is not
@@ -215,15 +136,6 @@ class MSHRQueue : public Drainable
     }
 
     /**
-     * Returns true if there are no free entries.
-     * @return True if this queue is full.
-     */
-    bool isFull() const
-    {
-        return (allocated > numEntries - numReserve);
-    }
-
-    /**
      * Returns true if sufficient mshrs for prefetch.
      * @return True if sufficient mshrs for prefetch.
      */
@@ -231,25 +143,6 @@ class MSHRQueue : public Drainable
     {
         return (allocated < numEntries - (numReserve + demandReserve));
     }
-
-    /**
-     * Returns the MSHR at the head of the readyList.
-     * @return The next request to service.
-     */
-    MSHR *getNextMSHR() const
-    {
-        if (readyList.empty() || readyList.front()->readyTime > curTick()) {
-            return NULL;
-        }
-        return readyList.front();
-    }
-
-    Tick nextMSHRReadyTime() const
-    {
-        return readyList.empty() ? MaxTick : readyList.front()->readyTime;
-    }
-
-    DrainState drain() override;
 };
 
 #endif //__MEM_CACHE_MSHR_QUEUE_HH__

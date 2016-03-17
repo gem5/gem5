@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -51,31 +51,26 @@
 #include <list>
 
 #include "base/printable.hh"
-#include "mem/packet.hh"
+#include "mem/cache/queue_entry.hh"
 
-class CacheBlk;
-class MSHRQueue;
+class Cache;
 
 /**
  * Miss Status and handling Register. This class keeps all the information
  * needed to handle a cache miss including a list of target requests.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
  */
-class MSHR : public Packet::SenderState, public Printable
+class MSHR : public QueueEntry, public Printable
 {
 
     /**
-     * Consider the MSHRQueue a friend to avoid making everything public
+     * Consider the queues friends to avoid making everything public.
      */
+    template<typename Entry>
+    friend class Queue;
     friend class MSHRQueue;
 
   private:
-
-    /** Cycle when ready to issue */
-    Tick readyTime;
-
-    /** True if the request is uncacheable */
-    bool _isUncacheable;
 
     /** Flag set by downstream caches */
     bool downstreamPending;
@@ -113,6 +108,9 @@ class MSHR : public Packet::SenderState, public Printable
     bool postDowngrade;
 
   public:
+
+    /** True if the entry is just a simple forward from an upper level */
+    bool isForward;
 
     class Target {
       public:
@@ -166,29 +164,6 @@ class MSHR : public Packet::SenderState, public Printable
     typedef std::list<MSHR *> List;
     /** MSHR list iterator. */
     typedef List::iterator Iterator;
-    /** MSHR list const_iterator. */
-    typedef List::const_iterator ConstIterator;
-
-    /** Pointer to queue containing this MSHR. */
-    MSHRQueue *queue;
-
-    /** Order number assigned by the miss queue. */
-    Counter order;
-
-    /** Block aligned address of the MSHR. */
-    Addr blkAddr;
-
-    /** Block size of the cache. */
-    unsigned blkSize;
-
-    /** True if the request targets the secure memory space. */
-    bool isSecure;
-
-    /** True if the request has been sent to the bus. */
-    bool inService;
-
-    /** True if the request is just a simple forward from an upper level */
-    bool isForward;
 
     /** Keep track of whether we should allocate on fill or not */
     bool allocOnFill;
@@ -213,11 +188,9 @@ class MSHR : public Packet::SenderState, public Printable
         assert(inService); return postDowngrade;
     }
 
-  private:
+    bool sendPacket(Cache &cache);
 
-    /** Data buffer (if needed).  Currently used only for pending
-     * upgrade handling. */
-    uint8_t *data;
+  private:
 
     /**
      * Pointer to this MSHR on the ready list.
@@ -238,8 +211,6 @@ class MSHR : public Packet::SenderState, public Printable
 
   public:
 
-    bool isUncacheable() const { return _isUncacheable; }
-
     /**
      * Allocate a miss to this MSHR.
      * @param blk_addr The address of the block.
@@ -252,7 +223,7 @@ class MSHR : public Packet::SenderState, public Printable
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
                   Tick when_ready, Counter _order, bool alloc_on_fill);
 
-    bool markInService(bool pending_modified_resp);
+    void markInService(bool pending_modified_resp);
 
     void clearDownstreamPending();
 
@@ -301,14 +272,6 @@ class MSHR : public Packet::SenderState, public Printable
     void popTarget()
     {
         targets.pop_front();
-    }
-
-    bool isForwardNoResponse() const
-    {
-        if (getNumTargets() != 1)
-            return false;
-        const Target *tgt = &targets.front();
-        return tgt->source == Target::FromCPU && !tgt->pkt->needsResponse();
     }
 
     bool promoteDeferredTargets();

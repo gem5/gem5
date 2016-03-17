@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,83 +38,72 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
- *          Andreas Sandberg
+ *          Andreas Hansson
  */
 
-/** @file
- * Definition of MSHRQueue class functions.
+/**
+ * @file
+ * Generic queue entry
  */
 
-#include "mem/cache/mshr_queue.hh"
+#ifndef __MEM_CACHE_QUEUE_ENTRY_HH__
+#define __MEM_CACHE_QUEUE_ENTRY_HH__
 
-using namespace std;
+#include "mem/packet.hh"
 
-MSHRQueue::MSHRQueue(const std::string &_label,
-                     int num_entries, int reserve, int demand_reserve)
-    : Queue<MSHR>(_label, num_entries, reserve),
-      demandReserve(demand_reserve)
-{}
+class Cache;
 
-MSHR *
-MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                    Tick when_ready, Counter order, bool alloc_on_fill)
+/**
+ * A queue entry base class, to be used by both the MSHRs and
+ * write-queue entries.
+ */
+class QueueEntry : public Packet::SenderState
 {
-    assert(!freeList.empty());
-    MSHR *mshr = freeList.front();
-    assert(mshr->getNumTargets() == 0);
-    freeList.pop_front();
 
-    mshr->allocate(blk_addr, blk_size, pkt, when_ready, order, alloc_on_fill);
-    mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
-    mshr->readyIter = addToReadyList(mshr);
-
-    allocated += 1;
-    return mshr;
-}
-
-void
-MSHRQueue::moveToFront(MSHR *mshr)
-{
-    if (!mshr->inService) {
-        assert(mshr == *(mshr->readyIter));
-        readyList.erase(mshr->readyIter);
-        mshr->readyIter = readyList.insert(readyList.begin(), mshr);
-    }
-}
-
-void
-MSHRQueue::markInService(MSHR *mshr, bool pending_modified_resp)
-{
-    mshr->markInService(pending_modified_resp);
-    readyList.erase(mshr->readyIter);
-    _numInService += 1;
-}
-
-void
-MSHRQueue::markPending(MSHR *mshr)
-{
-    assert(mshr->inService);
-    mshr->inService = false;
-    --_numInService;
     /**
-     * @ todo might want to add rerequests to front of pending list for
-     * performance.
+     * Consider the Queue a friend to avoid making everything public
      */
-    mshr->readyIter = addToReadyList(mshr);
-}
+    template <class Entry>
+    friend class Queue;
 
-bool
-MSHRQueue::forceDeallocateTarget(MSHR *mshr)
-{
-    bool was_full = isFull();
-    assert(mshr->hasTargets());
-    // Pop the prefetch off of the target list
-    mshr->popTarget();
-    // Delete mshr if no remaining targets
-    if (!mshr->hasTargets() && !mshr->promoteDeferredTargets()) {
-        deallocate(mshr);
-    }
+  protected:
 
-    // Notify if MSHR queue no longer full
-    return was_full && !isFull();
-}
+    /** Tick when ready to issue */
+    Tick readyTime;
+
+    /** True if the entry is uncacheable */
+    bool _isUncacheable;
+
+  public:
+
+    /** True if the entry has been sent downstream. */
+    bool inService;
+
+    /** Order number assigned to disambiguate writes and misses. */
+    Counter order;
+
+    /** Block aligned address. */
+    Addr blkAddr;
+
+    /** Block size of the cache. */
+    unsigned blkSize;
+
+    /** True if the entry targets the secure memory space. */
+    bool isSecure;
+
+    QueueEntry() : readyTime(0), _isUncacheable(false),
+                   inService(false), order(0), blkAddr(0), blkSize(0),
+                   isSecure(false)
+    {}
+
+    bool isUncacheable() const { return _isUncacheable; }
+
+    /**
+     * Send this queue entry as a downstream packet, with the exact
+     * behaviour depending on the specific entry type.
+     */
+    virtual bool sendPacket(Cache &cache) = 0;
+
+};
+
+#endif // __MEM_CACHE_QUEUE_ENTRY_HH__

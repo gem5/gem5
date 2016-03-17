@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -62,6 +62,7 @@
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
 #include "mem/cache/mshr_queue.hh"
+#include "mem/cache/write_queue.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/qport.hh"
@@ -72,12 +73,12 @@
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
-class MSHR;
 /**
  * A basic cache interface. Implements some common functions for speed.
  */
 class BaseCache : public MemObject
 {
+  protected:
     /**
      * Indexes to enumerate the MSHR queues.
      */
@@ -190,47 +191,29 @@ class BaseCache : public MemObject
     MSHRQueue mshrQueue;
 
     /** Write/writeback buffer */
-    MSHRQueue writeBuffer;
+    WriteQueue writeBuffer;
 
     /**
-     * Allocate a buffer, passing the time indicating when schedule an
-     * event to the queued port to go and ask the MSHR and write queue
-     * if they have packets to send.
-     *
-     * allocateBufferInternal() function is called in:
-     * - MSHR allocateWriteBuffer (unchached write forwarded to WriteBuffer);
-     * - MSHR allocateMissBuffer (miss in MSHR queue);
+     * Mark a request as in service (sent downstream in the memory
+     * system), effectively making this MSHR the ordering point.
      */
-    MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
-                                 PacketPtr pkt, Tick time,
-                                 bool sched_send)
+    void markInService(MSHR *mshr, bool pending_modified_resp)
     {
-        // check that the address is block aligned since we rely on
-        // this in a number of places when checking for matches and
-        // overlap
-        assert(addr == blockAlign(addr));
+        bool wasFull = mshrQueue.isFull();
+        mshrQueue.markInService(mshr, pending_modified_resp);
 
-        MSHR *mshr = mq->allocate(addr, size, pkt, time, order++,
-                                  allocOnFill(pkt->cmd));
-
-        if (mq->isFull()) {
-            setBlocked((BlockedCause)mq->index);
+        if (wasFull && !mshrQueue.isFull()) {
+            clearBlocked(Blocked_NoMSHRs);
         }
-
-        if (sched_send)
-            // schedule the send
-            schedMemSideSendEvent(time);
-
-        return mshr;
     }
 
-    void markInServiceInternal(MSHR *mshr, bool pending_modified_resp)
+    void markInService(WriteQueueEntry *entry)
     {
-        MSHRQueue *mq = mshr->queue;
-        bool wasFull = mq->isFull();
-        mq->markInService(mshr, pending_modified_resp);
-        if (wasFull && !mq->isFull()) {
-            clearBlocked((BlockedCause)mq->index);
+        bool wasFull = writeBuffer.isFull();
+        writeBuffer.markInService(entry);
+
+        if (wasFull && !writeBuffer.isFull()) {
+            clearBlocked(Blocked_NoWBBuffers);
         }
     }
 
@@ -511,19 +494,44 @@ class BaseCache : public MemObject
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool sched_send = true)
     {
-        return allocateBufferInternal(&mshrQueue,
-                                      blockAlign(pkt->getAddr()), blkSize,
-                                      pkt, time, sched_send);
+        MSHR *mshr = mshrQueue.allocate(blockAlign(pkt->getAddr()), blkSize,
+                                        pkt, time, order++,
+                                        allocOnFill(pkt->cmd));
+
+        if (mshrQueue.isFull()) {
+            setBlocked((BlockedCause)MSHRQueue_MSHRs);
+        }
+
+        if (sched_send) {
+            // schedule the send
+            schedMemSideSendEvent(time);
+        }
+
+        return mshr;
     }
 
-    MSHR *allocateWriteBuffer(PacketPtr pkt, Tick time)
+    void allocateWriteBuffer(PacketPtr pkt, Tick time)
     {
         // should only see writes or clean evicts here
         assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
 
-        return allocateBufferInternal(&writeBuffer,
-                                      blockAlign(pkt->getAddr()), blkSize,
-                                      pkt, time, true);
+        Addr blk_addr = blockAlign(pkt->getAddr());
+
+        WriteQueueEntry *wq_entry =
+            writeBuffer.findMatch(blk_addr, pkt->isSecure());
+        if (wq_entry && !wq_entry->inService) {
+            DPRINTF(Cache, "Potential to merge writeback %s to %#llx",
+                    pkt->cmdString(), pkt->getAddr());
+        }
+
+        writeBuffer.allocate(blk_addr, blkSize, pkt, time, order++);
+
+        if (writeBuffer.isFull()) {
+            setBlocked((BlockedCause)MSHRQueue_WriteBuffer);
+        }
+
+        // schedule the send
+        schedMemSideSendEvent(time);
     }
 
     /**

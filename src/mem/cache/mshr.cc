@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -61,16 +61,12 @@
 
 using namespace std;
 
-MSHR::MSHR() : readyTime(0), _isUncacheable(false), downstreamPending(false),
+MSHR::MSHR() : downstreamPending(false),
                pendingModified(false),
                postInvalidate(false), postDowngrade(false),
-               queue(NULL), order(0), blkAddr(0),
-               blkSize(0), isSecure(false), inService(false),
-               isForward(false), allocOnFill(false),
-               data(NULL)
+               isForward(false), allocOnFill(false)
 {
 }
-
 
 MSHR::TargetList::TargetList()
     : needsWritable(false), hasUpgrade(false)
@@ -239,7 +235,6 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
         Target::FromPrefetcher : Target::FromCPU;
     targets.add(target, when_ready, _order, source, true);
     assert(deferredTargets.isReset());
-    data = NULL;
 }
 
 
@@ -253,17 +248,10 @@ MSHR::clearDownstreamPending()
     targets.clearDownstreamPending();
 }
 
-bool
+void
 MSHR::markInService(bool pending_modified_resp)
 {
     assert(!inService);
-    if (isForwardNoResponse()) {
-        // we just forwarded the request packet & don't expect a
-        // response, so get rid of it
-        assert(getNumTargets() == 1);
-        popTarget();
-        return true;
-    }
 
     inService = true;
     pendingModified = targets.needsWritable || pending_modified_resp;
@@ -274,7 +262,6 @@ MSHR::markInService(bool pending_modified_resp)
         // level where it's going to get a response
         targets.clearDownstreamPending();
     }
-    return false;
 }
 
 
@@ -512,6 +499,11 @@ MSHR::checkFunctional(PacketPtr pkt)
     }
 }
 
+bool
+MSHR::sendPacket(Cache &cache)
+{
+    return cache.sendMSHRQueuePacket(this);
+}
 
 void
 MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
@@ -521,7 +513,6 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
              allocOnFill ? "AllocOnFill" : "",
-             isForwardNoResponse() ? "ForwNoResp" : "",
              needsWritable() ? "Wrtbl" : "",
              _isUncacheable ? "Unc" : "",
              inService ? "InSvc" : "",
