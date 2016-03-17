@@ -3,13 +3,11 @@ Redirecting stderr to build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/s
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 15 2016 19:39:16
-gem5 started Mar 15 2016 19:40:28
-gem5 executing on dinar2c11, pid 3690
+gem5 compiled Mar 16 2016 15:38:19
+gem5 started Mar 16 2016 15:38:50
+gem5 executing on dinar2c11, pid 14357
 command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing -re /home/stever/gem5-public/tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing
 
-Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sav
-Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 

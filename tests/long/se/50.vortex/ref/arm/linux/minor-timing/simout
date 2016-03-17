@@ -3,12 +3,12 @@ Redirecting stderr to build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 23:29:19
-gem5 started Sep 15 2015 03:05:45
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing
+gem5 compiled Mar 16 2016 15:51:04
+gem5 started Mar 16 2016 16:24:45
+gem5 executing on dinar2c11, pid 15928
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing -re /home/stever/gem5-public/tests/run.py build/ARM/tests/opt/long/se/50.vortex/arm/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 56986224500 because target called exit()
+Exiting @ tick 56966152500 because target called exit()

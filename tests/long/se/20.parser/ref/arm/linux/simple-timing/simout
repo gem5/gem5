@@ -1,12 +1,14 @@
+Redirecting stdout to build/ARM/tests/opt/long/se/20.parser/arm/linux/simple-timing/simout
+Redirecting stderr to build/ARM/tests/opt/long/se/20.parser/arm/linux/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2014 12:08:08
-gem5 started Jan 23 2014 17:21:27
-gem5 executing on u200540-lin
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/20.parser/arm/linux/simple-timing -re tests/run.py build/ARM/tests/opt/long/se/20.parser/arm/linux/simple-timing
+gem5 compiled Mar 16 2016 15:51:04
+gem5 started Mar 16 2016 15:51:37
+gem5 executing on dinar2c11, pid 15211
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/20.parser/arm/linux/simple-timing -re /home/stever/gem5-public/tests/run.py build/ARM/tests/opt/long/se/20.parser/arm/linux/simple-timing
+
 Global frequency set at 1000000000000 ticks per second
-      0: system.cpu.isa: ISA system set to: 0 0x6322040
 info: Entering event queue @ 0.  Starting simulation...
 
  Reading the dictionary files: *************************************************
@@ -68,4 +70,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 717366012000 because target called exit()
+Exiting @ tick 708539449500 because target called exit()

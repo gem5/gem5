@@ -1,12 +1,14 @@
+Redirecting stdout to build/ARM/tests/opt/quick/se/50.vortex/arm/linux/simple-atomic/simout
+Redirecting stderr to build/ARM/tests/opt/quick/se/50.vortex/arm/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:45:42
-gem5 started Jan 21 2016 14:46:23
-gem5 executing on zizzer, pid 20742
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/50.vortex/arm/linux/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ARM/tests/opt/quick/se/50.vortex/arm/linux/simple-atomic
+gem5 compiled Mar 14 2016 17:50:51
+gem5 started Mar 14 2016 18:07:36
+gem5 executing on phenom, pid 27152
+command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/50.vortex/arm/linux/simple-atomic -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/quick/se/50.vortex/arm/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 48960011500 because target called exit()
+Exiting @ tick 48960022500 because target called exit()
