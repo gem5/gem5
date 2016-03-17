@@ -378,8 +378,7 @@ Process::fixFileOffsets()
             fde->fd = fds[0];
 
             FDEntry *fde_write = getFDEntry(fde->readPipeSource);
-            assert(
-                    fde_write->filename == "PIPE-WRITE");
+            assert(fde_write->filename == "PIPE-WRITE");
             fde_write->fd = fds[1];
         } else {
             fde->fd = openFile(fde->filename.c_str(), fde->flags, fde->mode);
