@@ -4,11 +4,11 @@ sim_seconds                                  0.079141                       # Nu
 sim_ticks                                 79140979500                       # Number of ticks simulated
 final_tick                                79140979500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  91812                       # Simulator instruction rate (inst/s)
-host_op_rate                                   153885                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               55016334                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 351180                       # Number of bytes of host memory used
-host_seconds                                  1438.50                       # Real time elapsed on the host
+host_inst_rate                                  48534                       # Simulator instruction rate (inst/s)
+host_op_rate                                    81347                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               29082810                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 336912                       # Number of bytes of host memory used
+host_seconds                                  2721.23                       # Real time elapsed on the host
 sim_insts                                   132071192                       # Number of instructions simulated
 sim_ops                                     221363384                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -547,7 +547,7 @@ system.cpu.cpi                               1.198459                       # CP
 system.cpu.cpi_total                         1.198459                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               0.834405                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.834405                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads                448575218                       # number of integer regfile reads
+system.cpu.int_regfile_reads                448575235                       # number of integer regfile reads
 system.cpu.int_regfile_writes               232602901                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                   3212636                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                  1997796                       # number of floating regfile writes

@@ -3,10 +3,10 @@ Redirecting stderr to build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/s
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 22:13:36
-gem5 started Sep 14 2015 23:11:50
-gem5 executing on ribera.cs.wisc.edu
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing
+gem5 compiled Mar 15 2016 19:39:16
+gem5 started Mar 15 2016 19:40:28
+gem5 executing on dinar2c11, pid 3690
+command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing -re /home/stever/gem5-public/tests/run.py build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing
 
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sav
 Couldn't unlink  build/X86/tests/opt/long/se/70.twolf/x86/linux/o3-timing/smred.sv2
@@ -28,4 +28,4 @@ info: Increasing stack size by one page.
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
 122 123 124 info: Increasing stack size by one page.
-Exiting @ tick 79147317000 because target called exit()
+Exiting @ tick 79140979500 because target called exit()
