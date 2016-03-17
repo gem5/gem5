@@ -44,34 +44,64 @@
 // open(2) flags translation table
 SyscallFlagTransTable X86Linux64::openFlagTable[] = {
 #ifdef _MSC_VER
-  { TGT_O_RDONLY, _O_RDONLY },
-  { TGT_O_WRONLY, _O_WRONLY },
-  { TGT_O_RDWR, _O_RDWR },
-  { TGT_O_APPEND, _O_APPEND },
-  { TGT_O_CREAT, _O_CREAT },
-  { TGT_O_TRUNC, _O_TRUNC },
-  { TGT_O_EXCL, _O_EXCL },
-#ifdef _O_NONBLOCK
-  { TGT_O_NONBLOCK, _O_NONBLOCK },
-#endif
+  { X86Linux64::TGT_O_RDONLY,    _O_RDONLY },
+  { X86Linux64::TGT_O_WRONLY,    _O_WRONLY },
+  { X86Linux64::TGT_O_RDWR,      _O_RDWR },
+  { X86Linux64::TGT_O_CREAT,     _O_CREAT },
+  { X86Linux64::TGT_O_EXCL,      _O_EXCL },
 #ifdef _O_NOCTTY
-  { TGT_O_NOCTTY, _O_NOCTTY },
+  { X86Linux64::TGT_O_NOCTTY,    _O_NOCTTY },
+#endif
+  { X86Linux64::TGT_O_TRUNC,     _O_TRUNC },
+  { X86Linux64::TGT_O_APPEND,    _O_APPEND },
+#ifdef _O_NONBLOCK
+  { X86Linux64::TGT_O_NONBLOCK,  _O_NONBLOCK },
+#endif
+#ifdef _O_DSYNC
+  { X86Linux64::TGT_O_DSYNC ,    _O_DSYNC },
+#endif
+  { X86Linux64::TGT_FASYNC,      _O_ASYNC },
+  { X86Linux64::TGT_O_DIRECT,    _O_DIRECT },
+  { X86Linux64::TGT_O_LARGEFILE, _O_LARGEFILE },
+  { X86Linux64::TGT_O_DIRECTORY, _O_DIRECTORY },
+  { X86Linux64::TGT_O_NOFOLLOW,  _O_NOFOLLOW },
+  { X86Linux64::TGT_O_NOATIME,   _O_NOATIME },
+#ifdef _O_CLOEXEC
+  { X86Linux64::TGT_O_CLOEXEC,   _O_CLOEXEC },
 #endif
 #ifdef _O_SYNC
-  { TGT_O_SYNC, _O_SYNC },
+  { X86Linux64::TGT_O_SYNC,      _O_SYNC },
+#endif
+#ifdef _O_PATH
+  { X86Linux64::TGT_O_PATH ,     _O_PATH },
 #endif
 #else /* !_MSC_VER */
-  { TGT_O_RDONLY, O_RDONLY },
-  { TGT_O_WRONLY, O_WRONLY },
-  { TGT_O_RDWR, O_RDWR },
-  { TGT_O_APPEND, O_APPEND },
-  { TGT_O_CREAT, O_CREAT },
-  { TGT_O_TRUNC, O_TRUNC },
-  { TGT_O_EXCL, O_EXCL },
-  { TGT_O_NONBLOCK, O_NONBLOCK },
-  { TGT_O_NOCTTY, O_NOCTTY },
+  { X86Linux64::TGT_O_RDONLY,    O_RDONLY },
+  { X86Linux64::TGT_O_WRONLY,    O_WRONLY },
+  { X86Linux64::TGT_O_RDWR,      O_RDWR },
+  { X86Linux64::TGT_O_CREAT,     O_CREAT },
+  { X86Linux64::TGT_O_EXCL,      O_EXCL },
+  { X86Linux64::TGT_O_NOCTTY,    O_NOCTTY },
+  { X86Linux64::TGT_O_TRUNC,     O_TRUNC },
+  { X86Linux64::TGT_O_APPEND,    O_APPEND },
+  { X86Linux64::TGT_O_NONBLOCK,  O_NONBLOCK },
+#ifdef O_DSYNC
+  { X86Linux64::TGT_O_DSYNC,     O_DSYNC },
+#endif
+  { X86Linux64::TGT_FASYNC,      O_ASYNC },
+  { X86Linux64::TGT_O_DIRECT,    O_DIRECT },
+  { X86Linux64::TGT_O_LARGEFILE, O_LARGEFILE },
+  { X86Linux64::TGT_O_DIRECTORY, O_DIRECTORY },
+  { X86Linux64::TGT_O_NOFOLLOW,  O_NOFOLLOW },
+  { X86Linux64::TGT_O_NOATIME,   O_NOATIME },
+#ifdef O_CLOEXEC
+  { X86Linux64::TGT_O_CLOEXEC,   O_CLOEXEC },
+#endif
 #ifdef O_SYNC
-  { TGT_O_SYNC, O_SYNC },
+  { X86Linux64::TGT_O_SYNC,      O_SYNC },
+#endif
+#ifdef O_PATH
+  { X86Linux64::TGT_O_PATH,      O_PATH },
 #endif
 #endif /* _MSC_VER */
 };
@@ -83,34 +113,64 @@ const int X86Linux64::NUM_OPEN_FLAGS =
 // open(2) flags translation table
 SyscallFlagTransTable X86Linux32::openFlagTable[] = {
 #ifdef _MSC_VER
-  { TGT_O_RDONLY, _O_RDONLY },
-  { TGT_O_WRONLY, _O_WRONLY },
-  { TGT_O_RDWR, _O_RDWR },
-  { TGT_O_APPEND, _O_APPEND },
-  { TGT_O_CREAT, _O_CREAT },
-  { TGT_O_TRUNC, _O_TRUNC },
-  { TGT_O_EXCL, _O_EXCL },
-#ifdef _O_NONBLOCK
-  { TGT_O_NONBLOCK, _O_NONBLOCK },
-#endif
+  { X86Linux32::TGT_O_RDONLY,    _O_RDONLY },
+  { X86Linux32::TGT_O_WRONLY,    _O_WRONLY },
+  { X86Linux32::TGT_O_RDWR,      _O_RDWR },
+  { X86Linux32::TGT_O_CREAT,     _O_CREAT },
+  { X86Linux32::TGT_O_EXCL,      _O_EXCL },
 #ifdef _O_NOCTTY
-  { TGT_O_NOCTTY, _O_NOCTTY },
+  { X86Linux32::TGT_O_NOCTTY,    _O_NOCTTY },
+#endif
+  { X86Linux32::TGT_O_TRUNC,     _O_TRUNC },
+  { X86Linux32::TGT_O_APPEND,    _O_APPEND },
+#ifdef _O_NONBLOCK
+  { X86Linux32::TGT_O_NONBLOCK,  _O_NONBLOCK },
+#endif
+#ifdef O_DSYNC
+  { X86Linux32::TGT_O_DSYNC,     _O_DSYNC },
+#endif
+  { X86Linux32::TGT_FASYNC,      _O_ASYNC },
+  { X86Linux32::TGT_O_DIRECT,    _O_DIRECT },
+  { X86Linux32::TGT_O_LARGEFILE, _O_LARGEFILE },
+  { X86Linux32::TGT_O_DIRECTORY, _O_DIRECTORY },
+  { X86Linux32::TGT_O_NOFOLLOW,  _O_NOFOLLOW },
+  { X86Linux32::TGT_O_NOATIME,   _O_NOATIME },
+#ifdef _O_CLOEXEC
+  { X86Linux32::TGT_O_CLOEXEC,   _O_CLOEXEC },
 #endif
 #ifdef _O_SYNC
-  { TGT_O_SYNC, _O_SYNC },
+  { X86Linux32::TGT_O_SYNC,      _O_SYNC },
+#endif
+#ifdef _O_PATH
+  { X86Linux32::TGT_O_PATH,      _O_PATH },
 #endif
 #else /* !_MSC_VER */
-  { TGT_O_RDONLY, O_RDONLY },
-  { TGT_O_WRONLY, O_WRONLY },
-  { TGT_O_RDWR, O_RDWR },
-  { TGT_O_APPEND, O_APPEND },
-  { TGT_O_CREAT, O_CREAT },
-  { TGT_O_TRUNC, O_TRUNC },
-  { TGT_O_EXCL, O_EXCL },
-  { TGT_O_NONBLOCK, O_NONBLOCK },
-  { TGT_O_NOCTTY, O_NOCTTY },
+  { X86Linux32::TGT_O_RDONLY,    O_RDONLY },
+  { X86Linux32::TGT_O_WRONLY,    O_WRONLY },
+  { X86Linux32::TGT_O_RDWR,      O_RDWR },
+  { X86Linux32::TGT_O_CREAT,     O_CREAT },
+  { X86Linux32::TGT_O_EXCL,      O_EXCL },
+  { X86Linux32::TGT_O_NOCTTY,    O_NOCTTY },
+  { X86Linux32::TGT_O_TRUNC,     O_TRUNC },
+  { X86Linux32::TGT_O_APPEND,    O_APPEND },
+  { X86Linux32::TGT_O_NONBLOCK,  O_NONBLOCK },
+#ifdef O_DSYNC
+  { X86Linux32::TGT_O_DSYNC,     O_DSYNC },
+#endif
+  { X86Linux32::TGT_FASYNC,      O_ASYNC },
+  { X86Linux32::TGT_O_DIRECT,    O_DIRECT },
+  { X86Linux32::TGT_O_LARGEFILE, O_LARGEFILE },
+  { X86Linux32::TGT_O_DIRECTORY, O_DIRECTORY },
+  { X86Linux32::TGT_O_NOFOLLOW,  O_NOFOLLOW },
+  { X86Linux32::TGT_O_NOATIME,   O_NOATIME },
+#ifdef O_CLOEXEC
+  { X86Linux32::TGT_O_CLOEXEC,   O_CLOEXEC },
+#endif
 #ifdef O_SYNC
-  { TGT_O_SYNC, O_SYNC },
+  { X86Linux32::TGT_O_SYNC,      O_SYNC },
+#endif
+#ifdef O_PATH
+  { X86Linux32::TGT_O_PATH,      O_PATH },
 #endif
 #endif /* _MSC_VER */
 };

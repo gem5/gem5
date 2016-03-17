@@ -35,34 +35,64 @@
 // open(2) flags translation table
 SyscallFlagTransTable AlphaLinux::openFlagTable[] = {
 #ifdef _MSC_VER
-  { AlphaLinux::TGT_O_RDONLY,   _O_RDONLY },
-  { AlphaLinux::TGT_O_WRONLY,   _O_WRONLY },
-  { AlphaLinux::TGT_O_RDWR,     _O_RDWR },
-  { AlphaLinux::TGT_O_APPEND,   _O_APPEND },
-  { AlphaLinux::TGT_O_CREAT,    _O_CREAT },
-  { AlphaLinux::TGT_O_TRUNC,    _O_TRUNC },
-  { AlphaLinux::TGT_O_EXCL,     _O_EXCL },
-#ifdef _O_NONBLOCK
-  { AlphaLinux::TGT_O_NONBLOCK, _O_NONBLOCK },
-#endif
+  { AlphaLinux::TGT_O_RDONLY,    _O_RDONLY },
+  { AlphaLinux::TGT_O_WRONLY,    _O_WRONLY },
+  { AlphaLinux::TGT_O_RDWR,      _O_RDWR },
+  { AlphaLinux::TGT_O_CREAT,     _O_CREAT },
+  { AlphaLinux::TGT_O_EXCL,      _O_EXCL },
 #ifdef _O_NOCTTY
-  { AlphaLinux::TGT_O_NOCTTY,   _O_NOCTTY },
+  { AlphaLinux::TGT_O_NOCTTY,    _O_NOCTTY },
+#endif
+  { AlphaLinux::TGT_O_TRUNC,     _O_TRUNC },
+  { AlphaLinux::TGT_O_APPEND,    _O_APPEND },
+#ifdef _O_NONBLOCK
+  { AlphaLinux::TGT_O_NONBLOCK,  _O_NONBLOCK },
+#endif
+#ifdef _O_DSYNC
+  { AlphaLinux::TGT_O_DSYNC,     _O_DSYNC },
+#endif
+  { AlphaLinux::TGT_FASYNC,      _O_ASYNC },
+  { AlphaLinux::TGT_O_DIRECT,    _O_DIRECT },
+  { AlphaLinux::TGT_O_LARGEFILE, _O_LARGEFILE },
+  { AlphaLinux::TGT_O_DIRECTORY, _O_DIRECTORY },
+  { AlphaLinux::TGT_O_NOFOLLOW,  _O_NOFOLLOW },
+  { AlphaLinux::TGT_O_NOATIME,   _O_NOATIME },
+#ifdef _O_CLOEXEC
+  { AlphaLinux::TGT_O_CLOEXEC,   _O_CLOEXEC },
 #endif
 #ifdef _O_SYNC
-  { AlphaLinux::TGT_O_SYNC,     _O_SYNC },
+  { AlphaLinux::TGT_O_SYNC,      _O_SYNC },
+#endif
+#ifdef _O_PATH
+  { AlphaLinux::TGT_O_PATH,      _O_PATH },
 #endif
 #else /* !_MSC_VER */
-  { AlphaLinux::TGT_O_RDONLY,   O_RDONLY },
-  { AlphaLinux::TGT_O_WRONLY,   O_WRONLY },
-  { AlphaLinux::TGT_O_RDWR,     O_RDWR },
-  { AlphaLinux::TGT_O_APPEND,   O_APPEND },
-  { AlphaLinux::TGT_O_CREAT,    O_CREAT },
-  { AlphaLinux::TGT_O_TRUNC,    O_TRUNC },
-  { AlphaLinux::TGT_O_EXCL,     O_EXCL },
-  { AlphaLinux::TGT_O_NONBLOCK, O_NONBLOCK },
-  { AlphaLinux::TGT_O_NOCTTY,   O_NOCTTY },
+  { AlphaLinux::TGT_O_RDONLY,    O_RDONLY },
+  { AlphaLinux::TGT_O_WRONLY,    O_WRONLY },
+  { AlphaLinux::TGT_O_RDWR,      O_RDWR },
+  { AlphaLinux::TGT_O_CREAT,     O_CREAT },
+  { AlphaLinux::TGT_O_EXCL,      O_EXCL },
+  { AlphaLinux::TGT_O_NOCTTY,    O_NOCTTY },
+  { AlphaLinux::TGT_O_TRUNC,     O_TRUNC },
+  { AlphaLinux::TGT_O_APPEND,    O_APPEND },
+  { AlphaLinux::TGT_O_NONBLOCK,  O_NONBLOCK },
+#ifdef O_DSYNC
+  { AlphaLinux::TGT_O_DSYNC,     O_DSYNC },
+#endif
+  { AlphaLinux::TGT_FASYNC,     O_ASYNC },
+  { AlphaLinux::TGT_O_DIRECT,    O_DIRECT },
+  { AlphaLinux::TGT_O_LARGEFILE, O_LARGEFILE },
+  { AlphaLinux::TGT_O_DIRECTORY, O_DIRECTORY },
+  { AlphaLinux::TGT_O_NOFOLLOW,  O_NOFOLLOW },
+  { AlphaLinux::TGT_O_NOATIME,   O_NOATIME },
+#ifdef O_CLOEXEC
+  { AlphaLinux::TGT_O_CLOEXEC,   O_CLOEXEC },
+#endif
 #ifdef O_SYNC
-  { AlphaLinux::TGT_O_SYNC,     O_SYNC },
+  { AlphaLinux::TGT_O_SYNC,      O_SYNC },
+#endif
+#ifdef O_PATH
+  { AlphaLinux::TGT_O_PATH,      O_PATH },
 #endif
 #endif /* _MSC_VER */
 };

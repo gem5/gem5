@@ -37,6 +37,41 @@ class MipsLinux : public Linux
 {
   public:
 
+    static const int TGT_SIGHUP         = 0x000001;
+    static const int TGT_SIGINT         = 0x000002;
+    static const int TGT_SIGQUIT        = 0x000003;
+    static const int TGT_SIGILL         = 0x000004;
+    static const int TGT_SIGTRAP        = 0x000005;
+    static const int TGT_SIGIOT         = 0x000006;
+    static const int TGT_SIGABRT        = 0x000006;
+    static const int TGT_SIGEMT         = 0x000007;
+    static const int TGT_SIGFPE         = 0x000008;
+    static const int TGT_SIGKILL        = 0x000009;
+    static const int TGT_SIGBUS         = 0x00000a;
+    static const int TGT_SIGSEGV        = 0x00000b;
+    static const int TGT_SIGSYS         = 0x00000c;
+    static const int TGT_SIGPIPE        = 0x00000d;
+    static const int TGT_SIGALRM        = 0x00000e;
+    static const int TGT_SIGTERM        = 0x00000f;
+    static const int TGT_SIGUSR1        = 0x000010;
+    static const int TGT_SIGUSR2        = 0x000011;
+    static const int TGT_SIGCHLD        = 0x000012;
+    static const int TGT_SIGCLD         = 0x000012;
+    static const int TGT_SIGPWR         = 0x000013;
+    static const int TGT_SIGWINCH       = 0x000014;
+    static const int TGT_SIGURG         = 0x000015;
+    static const int TGT_SIGIO          = 0x000016;
+    static const int TGT_SIGPOLL        = 0x000016;
+    static const int TGT_SIGSTOP        = 0x000017;
+    static const int TGT_SIGTSTP        = 0x000018;
+    static const int TGT_SIGCONT        = 0x000019;
+    static const int TGT_SIGTTIN        = 0x00001a;
+    static const int TGT_SIGTTOU        = 0x00001b;
+    static const int TGT_SIGVTALRM      = 0x00001c;
+    static const int TGT_SIGPROF        = 0x00001d;
+    static const int TGT_SIGXCPU        = 0x00001e;
+    static const int TGT_SIGXFSZ        = 0x00001f;
+
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
     static SyscallFlagTransTable openFlagTable[];
@@ -49,18 +84,21 @@ class MipsLinux : public Linux
     static const int TGT_O_RDONLY       = 0x00000000;   //!< O_RDONLY
     static const int TGT_O_WRONLY       = 0x00000001;   //!< O_WRONLY
     static const int TGT_O_RDWR         = 0x00000002;   //!< O_RDWR
-    static const int TGT_O_NONBLOCK     = 0x00000080;   //!< O_NONBLOCK
-    static const int TGT_O_APPEND       = 0x00000008;   //!< O_APPEND
     static const int TGT_O_CREAT        = 0x00000100;   //!< O_CREAT
-    static const int TGT_O_TRUNC        = 0x00000200;   //!< O_TRUNC
     static const int TGT_O_EXCL         = 0x00000400;   //!< O_EXCL
     static const int TGT_O_NOCTTY       = 0x00000800;   //!< O_NOCTTY
-    static const int TGT_O_SYNC         = 0x00000010;   //!< O_SYNC
-    static const int TGT_O_DRD          = 0x00010000;   //!< O_DRD
-    static const int TGT_O_DIRECTIO     = 0x00020000;   //!< O_DIRECTIO
-    static const int TGT_O_CACHE        = 0x00002000;   //!< O_CACHE
-    static const int TGT_O_DSYNC        = 0x00008000;   //!< O_DSYNC
-    static const int TGT_O_RSYNC        = 0x00040000;   //!< O_RSYNC
+    static const int TGT_O_TRUNC        = 0x00000200;   //!< O_TRUNC
+    static const int TGT_O_APPEND       = 0x00000008;   //!< O_APPEND
+    static const int TGT_O_NONBLOCK     = 0x00000080;   //!< O_NONBLOCK
+    static const int TGT_O_DSYNC        = 0x00000010;   //!< O_DSYNC
+    static const int TGT_O_DIRECT       = 0x00008000;   //!< O_DIRECT
+    static const int TGT_O_LARGEFILE    = 0x00002000;   //!< O_LARGEFILE
+    static const int TGT_O_DIRECTORY    = 0x00010000;   //!< O_DIRECTORY
+    static const int TGT_O_NOFOLLOW     = 0x00020000;   //!< O_NOFOLLOW
+    static const int TGT_O_NOATIME      = 0x00040000;   //!< O_NOATIME
+    static const int TGT_O_CLOEXEC      = 0x00080000;   //!< O_CLOEXEC
+    static const int TGT_O_SYNC         = 0x00004010;   //!< O_SYNC
+    static const int TGT_O_PATH         = 0x00200000;   //!< O_PATH
     //@}
 
     /// For mmap().

@@ -51,18 +51,33 @@ SyscallFlagTransTable ArmLinux32::openFlagTable[] = {
   { ArmLinux32::TGT_O_RDONLY,     _O_RDONLY },
   { ArmLinux32::TGT_O_WRONLY,     _O_WRONLY },
   { ArmLinux32::TGT_O_RDWR,       _O_RDWR },
-  { ArmLinux32::TGT_O_APPEND,     _O_APPEND },
   { ArmLinux32::TGT_O_CREAT,      _O_CREAT },
-  { ArmLinux32::TGT_O_TRUNC,      _O_TRUNC },
   { ArmLinux32::TGT_O_EXCL,       _O_EXCL },
-#ifdef _O_NONBLOCK
-  { ArmLinux32::TGT_O_NONBLOCK,   _O_NONBLOCK },
-#endif
 #ifdef _O_NOCTTY
   { ArmLinux32::TGT_O_NOCTTY,     _O_NOCTTY },
 #endif
+  { ArmLinux32::TGT_O_TRUNC,      _O_TRUNC },
+  { ArmLinux32::TGT_O_APPEND,     _O_APPEND },
+#ifdef _O_NONBLOCK
+  { ArmLinux32::TGT_O_NONBLOCK,   _O_NONBLOCK },
+#endif
+#ifdef _O_DSYNC
+  { ArmLinux32::TGT_O_DSYNC,      _O_DSYNC },
+#endif
+  { ArmLinux32::TGT_FASYNC,       _O_ASYNC },
+  { ArmLinux32::TGT_O_DIRECT,     _O_DIRECT },
+  { ArmLinux32::TGT_O_LARGEFILE,  _O_LARGEFILE },
+  { ArmLinux32::TGT_O_DIRECTORY,  _O_DIRECTORY },
+  { ArmLinux32::TGT_O_NOFOLLOW,   _O_NOFOLLOW },
+  { ArmLinux32::TGT_O_NOATIME,    _O_NOATIME },
+#ifdef _O_CLOEXEC
+  { ArmLinux32::TGT_O_CLOEXEC,    _O_CLOEXEC },
+#endif
 #ifdef _O_SYNC
   { ArmLinux32::TGT_O_SYNC,       _O_SYNC },
+#endif
+#ifdef _O_PATH
+  { ArmLinux32::TGT_O_PATH,       _O_PATH },
 #endif
 #else /* !_MSC_VER */
   { ArmLinux32::TGT_O_RDONLY,     O_RDONLY },
@@ -74,12 +89,10 @@ SyscallFlagTransTable ArmLinux32::openFlagTable[] = {
   { ArmLinux32::TGT_O_TRUNC,      O_TRUNC },
   { ArmLinux32::TGT_O_APPEND,     O_APPEND },
   { ArmLinux32::TGT_O_NONBLOCK,   O_NONBLOCK },
-#ifdef O_SYNC
-  { ArmLinux32::TGT_O_SYNC,       O_SYNC },
+#ifdef O_DSYNC
+  { ArmLinux32::TGT_O_DSYNC,      O_DSYNC },
 #endif
-#ifdef FASYNC
-  { ArmLinux32::TGT_FASYNC,       FASYNC },
-#endif
+  { ArmLinux32::TGT_FASYNC,       O_ASYNC },
 #ifdef O_DIRECT
   { ArmLinux32::TGT_O_DIRECT,     O_DIRECT },
 #endif
@@ -91,6 +104,16 @@ SyscallFlagTransTable ArmLinux32::openFlagTable[] = {
 #endif
 #ifdef O_NOFOLLOW
   { ArmLinux32::TGT_O_NOFOLLOW,   O_NOFOLLOW },
+#endif
+  { ArmLinux32::TGT_O_NOATIME,    O_NOATIME },
+#ifdef O_CLOEXEC
+  { ArmLinux32::TGT_O_CLOEXEC,    O_CLOEXEC },
+#endif
+#ifdef O_SYNC
+  { ArmLinux32::TGT_O_SYNC,       O_SYNC },
+#endif
+#ifdef O_PATH
+  { ArmLinux32::TGT_O_PATH,       O_PATH },
 #endif
 #endif /* _MSC_VER */
 };
@@ -104,18 +127,33 @@ SyscallFlagTransTable ArmLinux64::openFlagTable[] = {
   { ArmLinux64::TGT_O_RDONLY,     _O_RDONLY },
   { ArmLinux64::TGT_O_WRONLY,     _O_WRONLY },
   { ArmLinux64::TGT_O_RDWR,       _O_RDWR },
-  { ArmLinux64::TGT_O_APPEND,     _O_APPEND },
   { ArmLinux64::TGT_O_CREAT,      _O_CREAT },
-  { ArmLinux64::TGT_O_TRUNC,      _O_TRUNC },
   { ArmLinux64::TGT_O_EXCL,       _O_EXCL },
-#ifdef _O_NONBLOCK
-  { ArmLinux64::TGT_O_NONBLOCK,   _O_NONBLOCK },
-#endif
 #ifdef _O_NOCTTY
   { ArmLinux64::TGT_O_NOCTTY,     _O_NOCTTY },
 #endif
+  { ArmLinux64::TGT_O_TRUNC,      _O_TRUNC },
+  { ArmLinux64::TGT_O_APPEND,     _O_APPEND },
+#ifdef _O_NONBLOCK
+  { ArmLinux64::TGT_O_NONBLOCK,   _O_NONBLOCK },
+#endif
+#ifdef _O_DSYNC
+  { ArmLinux64::TGT_O_DSYNC,       _O_DSYNC },
+#endif
+  { ArmLinux64::TGT_FASYNC,       _O_ASYNC },
+  { ArmLinux64::TGT_O_DIRECT,     _O_DIRECT },
+  { ArmLinux64::TGT_O_LARGEFILE,  _O_LARGEFILE },
+  { ArmLinux64::TGT_O_DIRECTORY,  _O_DIRECTORY },
+  { ArmLinux64::TGT_O_NOFOLLOW,   _O_NOFOLLOW },
+  { ArmLinux64::TGT_O_NOATIME,    _O_NOATIME },
+#ifdef _O_CLOEXEC
+  { ArmLinux64::TGT_O_CLOEXEC,    _O_CLOEXEC },
+#endif
 #ifdef _O_SYNC
   { ArmLinux64::TGT_O_SYNC,       _O_SYNC },
+#endif
+#ifdef _O_PATH
+  { ArmLinux64::TGT_O_PATH,       _O_PATH },
 #endif
 #else /* !_MSC_VER */
   { ArmLinux64::TGT_O_RDONLY,     O_RDONLY },
@@ -127,11 +165,9 @@ SyscallFlagTransTable ArmLinux64::openFlagTable[] = {
   { ArmLinux64::TGT_O_TRUNC,      O_TRUNC },
   { ArmLinux64::TGT_O_APPEND,     O_APPEND },
   { ArmLinux64::TGT_O_NONBLOCK,   O_NONBLOCK },
-#ifdef O_SYNC
-  { ArmLinux64::TGT_O_SYNC,       O_SYNC },
-#endif
+  { ArmLinux64::TGT_O_DSYNC,      O_DSYNC },
 #ifdef FASYNC
-  { ArmLinux64::TGT_FASYNC,       FASYNC },
+  { ArmLinux64::TGT_FASYNC,       O_ASYNC },
 #endif
 #ifdef O_DIRECT
   { ArmLinux64::TGT_O_DIRECT,     O_DIRECT },
@@ -144,6 +180,16 @@ SyscallFlagTransTable ArmLinux64::openFlagTable[] = {
 #endif
 #ifdef O_NOFOLLOW
   { ArmLinux64::TGT_O_NOFOLLOW,   O_NOFOLLOW },
+#endif
+  { ArmLinux64::TGT_O_NOATIME,    O_NOATIME },
+#ifdef O_CLOEXEC
+  { ArmLinux64::TGT_O_CLOEXEC,    O_CLOEXEC },
+#endif
+#ifdef O_SYNC
+  { ArmLinux64::TGT_O_SYNC,       O_SYNC },
+#endif
+#ifdef O_PATH
+  { ArmLinux64::TGT_O_PATH,       O_PATH },
 #endif
 #endif /* _MSC_VER */
 };

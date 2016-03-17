@@ -39,37 +39,65 @@ SyscallFlagTransTable PowerLinux::openFlagTable[] = {
   { PowerLinux::TGT_O_RDONLY,    _O_RDONLY },
   { PowerLinux::TGT_O_WRONLY,    _O_WRONLY },
   { PowerLinux::TGT_O_RDWR,      _O_RDWR },
-  { PowerLinux::TGT_O_APPEND,    _O_APPEND },
   { PowerLinux::TGT_O_CREAT,     _O_CREAT },
-  { PowerLinux::TGT_O_TRUNC,     _O_TRUNC },
   { PowerLinux::TGT_O_EXCL,      _O_EXCL },
+#ifdef _O_NOCTTY
+  { PowerLinux::TGT_O_NOCTTY,    _O_NOCTTY },
+#endif
+  { PowerLinux::TGT_O_TRUNC,     _O_TRUNC },
+  { PowerLinux::TGT_O_APPEND,    _O_APPEND },
 #ifdef _O_NONBLOCK
   { PowerLinux::TGT_O_NONBLOCK,  _O_NONBLOCK },
 #endif
-#ifdef _O_NOCTTY
-  { PowerLinux::TGT_O_NOCTTY,    _O_NOCTTY },
+#ifdef _O_DSYNC
+  { PowerLinux::TGT_O_DSYNC,     _O_DSYNC },
+#endif
+  { PowerLinux::TGT_FASYNC,      _O_ASYNC },
+  { PowerLinux::TGT_O_DIRECT,    _O_DIRECT },
+#ifdef _O_LARGEFILE
+  { PowerLinux::TGT_O_LARGEFILE, _O_LARGEFILE },
+#endif
+  { PowerLinux::TGT_O_DIRECTORY, _O_DIRECTORY },
+  { PowerLinux::TGT_O_NOFOLLOW,  _O_NOFOLLOW },
+  { PowerLinux::TGT_O_NOATIME,   _O_NOATIME },
+#ifdef _O_CLOEXEC
+  { PowerLinux::TGT_O_CLOEXEC,   _O_CLOEXEC },
 #endif
 #ifdef _O_SYNC
   { PowerLinux::TGT_O_SYNC,      _O_SYNC },
 #endif
-#ifdef _O_LARGEFILE
-  { PowerLinux::TGT_O_LARGEFILE, _O_LARGEFILE },
+#ifdef _O_PATH
+  { PowerLinux::TGT_O_PATH,      _O_PATH},
 #endif
 #else /* !_MSC_VER */
   { PowerLinux::TGT_O_RDONLY,    O_RDONLY },
   { PowerLinux::TGT_O_WRONLY,    O_WRONLY },
   { PowerLinux::TGT_O_RDWR,      O_RDWR },
-  { PowerLinux::TGT_O_APPEND,    O_APPEND },
   { PowerLinux::TGT_O_CREAT,     O_CREAT },
-  { PowerLinux::TGT_O_TRUNC,     O_TRUNC },
   { PowerLinux::TGT_O_EXCL,      O_EXCL },
-  { PowerLinux::TGT_O_NONBLOCK,  O_NONBLOCK },
   { PowerLinux::TGT_O_NOCTTY,    O_NOCTTY },
+  { PowerLinux::TGT_O_TRUNC,     O_TRUNC },
+  { PowerLinux::TGT_O_APPEND,    O_APPEND },
+  { PowerLinux::TGT_O_NONBLOCK,  O_NONBLOCK },
+#ifdef O_DSYNC
+  { PowerLinux::TGT_O_DSYNC,     O_DSYNC },
+#endif
+  { PowerLinux::TGT_FASYNC,      O_ASYNC },
+  { PowerLinux::TGT_O_DIRECT,    O_DIRECT },
+#ifdef O_LARGEFILE
+  { PowerLinux::TGT_O_LARGEFILE, O_LARGEFILE },
+#endif
+  { PowerLinux::TGT_O_DIRECTORY, O_DIRECTORY },
+  { PowerLinux::TGT_O_NOFOLLOW,  O_NOFOLLOW },
+  { PowerLinux::TGT_O_NOATIME,   O_NOATIME },
+#ifdef O_CLOEXEC
+  { PowerLinux::TGT_O_CLOEXEC,   O_CLOEXEC },
+#endif
 #ifdef O_SYNC
   { PowerLinux::TGT_O_SYNC,      O_SYNC },
 #endif
-#ifdef O_LARGEFILE
-  { PowerLinux::TGT_O_LARGEFILE, O_LARGEFILE },
+#ifdef O_PATH
+  { PowerLinux::TGT_O_PATH,      O_PATH},
 #endif
 #endif /* _MSC_VER */
 };

@@ -239,6 +239,29 @@ class Linux : public OperatingSystem
     // for MREMAP
     static const unsigned TGT_MREMAP_MAYMOVE    = 0x1;
     static const unsigned TGT_MREMAP_FIXED      = 0x2;
+
+    static const unsigned TGT_CLONE_VM              = 0x00000100;
+    static const unsigned TGT_CLONE_FS              = 0x00000200;
+    static const unsigned TGT_CLONE_FILES           = 0x00000400;
+    static const unsigned TGT_CLONE_SIGHAND         = 0x00000800;
+    static const unsigned TGT_CLONE_PTRACE          = 0x00002000;
+    static const unsigned TGT_CLONE_VFORK           = 0x00004000;
+    static const unsigned TGT_CLONE_PARENT          = 0x00008000;
+    static const unsigned TGT_CLONE_THREAD          = 0x00010000;
+    static const unsigned TGT_CLONE_NEWNS           = 0x00020000;
+    static const unsigned TGT_CLONE_SYSVSEM         = 0x00040000;
+    static const unsigned TGT_CLONE_SETTLS          = 0x00080000;
+    static const unsigned TGT_CLONE_PARENT_SETTID   = 0x00100000;
+    static const unsigned TGT_CLONE_CHILD_CLEARTID  = 0x00200000;
+    static const unsigned TGT_CLONE_DETACHED        = 0x00400000;
+    static const unsigned TGT_CLONE_UNTRACED        = 0x00800000;
+    static const unsigned TGT_CLONE_CHILD_SETTID    = 0x01000000;
+    static const unsigned TGT_CLONE_NEWUTS          = 0x04000000;
+    static const unsigned TGT_CLONE_NEWIPC          = 0x08000000;
+    static const unsigned TGT_CLONE_NEWUSER         = 0x10000000;
+    static const unsigned TGT_CLONE_NEWPID          = 0x20000000;
+    static const unsigned TGT_CLONE_NEWNET          = 0x40000000;
+    static const unsigned TGT_CLONE_IO              = 0x80000000;
 };  // class Linux
 
 #endif // __LINUX_HH__
