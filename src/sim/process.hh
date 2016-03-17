@@ -341,6 +341,8 @@ class LiveProcess : public Process
     // bias are not available when the object file is created.
     void updateBias();
 
+    ObjectFile *getInterpreter();
+
     Addr getBias();
     Addr getStartPC();
 

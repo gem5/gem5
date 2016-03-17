@@ -171,16 +171,24 @@ DtbObject::findReleaseAddr()
     return rel_addr;
 }
 
+bool
+DtbObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                          Addr addr_mask)
+{
+    return false;
+}
 
 bool
-DtbObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
+DtbObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                             Addr addr_mask)
 {
     // nothing to do here
     return false;
 }
 
 bool
-DtbObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
+DtbObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                            Addr addr_mask)
 {
     // nothing to do here
     return false;

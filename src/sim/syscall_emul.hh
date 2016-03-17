@@ -57,18 +57,20 @@
 
 #ifdef __CYGWIN32__
 #include <sys/fcntl.h>  // for O_BINARY
+
 #endif
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/uio.h>
-#include <fcntl.h>
 
 #include <cerrno>
 #include <string>
 
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"      // for RoundUp
+#include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
@@ -1353,6 +1355,31 @@ mmapImpl(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
 
         // Cleanup the mmap region before exiting this function.
         munmap(pmap, length);
+
+        // Maintain the symbol table for dynamic executables.
+        // The loader will call mmap to map the images into its address
+        // space and we intercept that here. We can verify that we are
+        // executing inside the loader by checking the program counter value.
+        // XXX: with multiprogrammed workloads or multi-node configurations,
+        // this will not work since there is a single global symbol table.
+        ObjectFile *interpreter = p->getInterpreter();
+        if (interpreter) {
+            Addr text_start = interpreter->textBase();
+            Addr text_end = text_start + interpreter->textSize();
+
+            Addr pc = tc->pcState().pc();
+
+            if (pc >= text_start && pc < text_end) {
+                FDEntry *fde = p->getFDEntry(tgt_fd);
+
+                ObjectFile *lib = createObjectFile(fde->filename);
+
+                if (lib) {
+                    lib->loadAllSymbols(debugSymbolTable,
+                                        lib->textBase(), start);
+                }
+            }
+        }
 
         // Note that we do not zero out the remainder of the mapping. This
         // is done by a real system, but it probably will not affect

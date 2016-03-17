@@ -396,7 +396,8 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
 
 
 bool
-ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
+ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
+                           Addr base, Addr offset)
 {
     if (!symtab)
         return false;
@@ -432,9 +433,11 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
                 if (GELF_ST_BIND(sym.st_info) == binding) {
                     char *sym_name = elf_strptr(elf, shdr.sh_link, sym.st_name);
                     if (sym_name && sym_name[0] != '$') {
-                        DPRINTF(Loader, "Symbol: %-40s value %#x\n",
-                                sym_name, sym.st_value);
-                        symtab->insert(sym.st_value & mask, sym_name);
+                        Addr value = sym.st_value - base + offset;
+                        if (symtab->insert(value & mask, sym_name)) {
+                            DPRINTF(Loader, "Symbol: %-40s value %#x\n",
+                                    sym_name, value);
+                        }
                     }
                 }
             }
@@ -449,23 +452,45 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
 }
 
 bool
-ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr addr_mask)
+ElfObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                          Addr addr_mask)
 {
-    return loadSomeSymbols(symtab, STB_GLOBAL, addr_mask);
+    return (loadGlobalSymbols(symtab, base, offset, addr_mask) &&
+            loadLocalSymbols(symtab, base, offset, addr_mask) &&
+            loadWeakSymbols(symtab, base, offset, addr_mask));
 }
 
 bool
-ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addr_mask)
+ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                             Addr addr_mask)
 {
-    bool found_local = loadSomeSymbols(symtab, STB_LOCAL, addr_mask);
-    bool found_weak = loadSomeSymbols(symtab, STB_WEAK, addr_mask);
-    return found_local || found_weak;
+    if (interpreter) {
+        interpreter->loadSomeSymbols(symtab, STB_GLOBAL, addr_mask,
+                                     base, offset);
+    }
+    return loadSomeSymbols(symtab, STB_GLOBAL, addr_mask, base, offset);
 }
 
 bool
-ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr addr_mask)
+ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                            Addr addr_mask)
 {
-    return loadSomeSymbols(symtab, STB_WEAK, addr_mask);
+    if (interpreter) {
+        interpreter->loadSomeSymbols(symtab, STB_LOCAL, addr_mask,
+                                     base, offset);
+    }
+    return loadSomeSymbols(symtab, STB_LOCAL, addr_mask, base, offset);
+}
+
+bool
+ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                           Addr addr_mask)
+{
+    if (interpreter) {
+        interpreter->loadSomeSymbols(symtab, STB_WEAK, addr_mask,
+                                     base, offset);
+    }
+    return loadSomeSymbols(symtab, STB_WEAK, addr_mask, base, offset);
 }
 
 bool

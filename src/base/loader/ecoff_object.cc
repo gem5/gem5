@@ -89,9 +89,18 @@ EcoffObject::EcoffObject(const string &_filename, size_t _len, uint8_t *_data,
              bss.baseAddr, bss.size);
 }
 
+bool
+EcoffObject::loadAllSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                            Addr addr_mask)
+{
+    bool retval = loadGlobalSymbols(symtab, base, offset, addr_mask);
+    retval = retval && loadLocalSymbols(symtab, base, offset, addr_mask);
+    return retval;
+}
 
 bool
-EcoffObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
+EcoffObject::loadGlobalSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                               Addr addr_mask)
 {
     if (!symtab)
         return false;
@@ -120,7 +129,8 @@ EcoffObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 }
 
 bool
-EcoffObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
+EcoffObject::loadLocalSymbols(SymbolTable *symtab, Addr base, Addr offset,
+                              Addr addr_mask)
 {
     if (!symtab)
         return false;

@@ -48,10 +48,13 @@ class AoutObject : public ObjectFile
   public:
     virtual ~AoutObject() {}
 
-    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
+    virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
+                                Addr offset = 0, Addr addr_mask = maxAddr);
+    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
+                                   Addr offset = 0,
+                                   Addr addr_mask = maxAddr);
+    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
+                                  Addr offset = 0, Addr addr_mask = maxAddr);
 
     static ObjectFile *tryFile(const std::string &fname,
                                size_t len, uint8_t *data);

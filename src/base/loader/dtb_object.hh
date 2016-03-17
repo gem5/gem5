@@ -66,10 +66,12 @@ class DtbObject : public ObjectFile
          */
         Addr findReleaseAddr();
 
-        bool loadGlobalSymbols(SymbolTable *symtab,
-            Addr addrMask = std::numeric_limits<Addr>::max());
-        bool loadLocalSymbols(SymbolTable *symtab,
-            Addr addrMask = std::numeric_limits<Addr>::max());
+        bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
+                            Addr offset = 0, Addr addrMask = maxAddr);
+        bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
+                               Addr offset = 0, Addr addrMask = maxAddr);
+        bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
+                              Addr offset = 0, Addr addrMask = maxAddr);
 
         /** Static function that tries to load file as a
           * flattened device tree blob.

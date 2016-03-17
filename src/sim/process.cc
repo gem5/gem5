@@ -543,10 +543,17 @@ LiveProcess::updateBias()
 }
 
 
+ObjectFile *
+LiveProcess::getInterpreter()
+{
+    return objFile->getInterpreter();
+}
+
+
 Addr
 LiveProcess::getBias()
 {
-    ObjectFile *interp = objFile->getInterpreter();
+    ObjectFile *interp = getInterpreter();
 
     return interp ? interp->bias() : objFile->bias();
 }
@@ -555,7 +562,7 @@ LiveProcess::getBias()
 Addr
 LiveProcess::getStartPC()
 {
-    ObjectFile *interp = objFile->getInterpreter();
+    ObjectFile *interp = getInterpreter();
 
     return interp ? interp->entryPoint() : objFile->entryPoint();
 }

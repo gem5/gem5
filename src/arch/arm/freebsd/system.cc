@@ -86,8 +86,8 @@ FreebsdArmSystem::initState()
     // to do this permanently, for but early bootup work
     // it is helpful.
     if (params()->early_kernel_symbols) {
-        kernel->loadGlobalSymbols(kernelSymtab, loadAddrMask);
-        kernel->loadGlobalSymbols(debugSymbolTable, loadAddrMask);
+        kernel->loadGlobalSymbols(kernelSymtab, 0, 0, loadAddrMask);
+        kernel->loadGlobalSymbols(debugSymbolTable, 0, 0, loadAddrMask);
     }
 
     // Setup boot data structure

@@ -81,7 +81,8 @@ class ElfObject : public ObjectFile
     Addr ldMax;
 
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
-    bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask);
+    bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
+                         Addr base, Addr offset);
 
     ElfObject(const std::string &_filename, size_t _len, uint8_t *_data,
               Arch _arch, OpSys _opSys);
@@ -94,15 +95,25 @@ class ElfObject : public ObjectFile
   public:
     virtual ~ElfObject() {}
 
-    bool loadSections(PortProxy& memProxy,
-            Addr addrMask = std::numeric_limits<Addr>::max(),
-            Addr offset = 0) override;
-    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max()) override;
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max()) override;
-    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max()) override;
+    bool loadSections(PortProxy& mem_proxy, Addr addr_mask = maxAddr,
+                      Addr offset = 0) override;
+
+    virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
+                                Addr offset = 0, Addr addr_mask = maxAddr)
+                                override;
+
+    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr base = 0,
+                                   Addr offset = 0, Addr addr_mask = maxAddr)
+                                   override;
+
+    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr base = 0,
+                                  Addr offset = 0, Addr addr_mask = maxAddr)
+                                  override;
+
+    virtual bool loadWeakSymbols(SymbolTable *symtab, Addr base = 0,
+                                 Addr offset = 0, Addr addr_mask = maxAddr)
+                                 override;
+
 
     virtual ObjectFile *getInterpreter() const override
     { return interpreter; }
