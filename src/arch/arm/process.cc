@@ -77,7 +77,7 @@ ArmLiveProcess32::ArmLiveProcess32(LiveProcessParams *params,
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps. For now, start at bottom of kuseg space.
-    mmap_start = mmap_end = 0x40000000L;
+    mmap_end = 0x40000000L;
 }
 
 ArmLiveProcess64::ArmLiveProcess64(LiveProcessParams *params,
@@ -94,7 +94,7 @@ ArmLiveProcess64::ArmLiveProcess64(LiveProcessParams *params,
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps. For now, start at bottom of kuseg space.
-    mmap_start = mmap_end = 0x4000000000L;
+    mmap_end = 0x4000000000L;
 }
 
 void

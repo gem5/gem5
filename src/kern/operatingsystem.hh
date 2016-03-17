@@ -116,10 +116,6 @@ class OperatingSystem {
 
     static int openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc);
 
-    static const bool mmapGrowsUp = true;
-
-    static bool mmapGrowsDown() { return false; }
-
 };  // class OperatingSystem
 
 #endif // __OPERATINGSYSTEM_HH__

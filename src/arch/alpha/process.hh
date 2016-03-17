@@ -54,6 +54,10 @@ class AlphaLiveProcess : public LiveProcess
     void setSyscallArg(ThreadContext *tc, int i, AlphaISA::IntReg val) override;
     void setSyscallReturn(ThreadContext *tc,
                           SyscallReturn return_value) override;
+
+    // override default implementation in LiveProcess as the mmap
+    // region for Alpha platforms grows upward
+    virtual bool mmapGrowsDown() const override { return false; }
 };
 
 /* No architectural page table defined for this ISA */

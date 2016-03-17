@@ -61,7 +61,7 @@ MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
-    mmap_start = mmap_end = brk_point + 0x40000000L;
+    mmap_end = brk_point + 0x40000000L;
 }
 
 void

@@ -59,7 +59,7 @@ PowerLiveProcess::PowerLiveProcess(LiveProcessParams *params,
     brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps. For now, start at bottom of kuseg space.
-    mmap_start = mmap_end = 0x70000000L;
+    mmap_end = 0x70000000L;
 }
 
 void

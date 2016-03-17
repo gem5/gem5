@@ -107,8 +107,12 @@ class Process : public SimObject
     Addr next_thread_stack_base;
 
     // Base of region for mmaps (when user doesn't specify an address).
-    Addr mmap_start;
     Addr mmap_end;
+
+    // Does mmap region grow upward or downward from mmap_end?  Most
+    // platforms grow downward, but a few (such as Alpha) grow upward
+    // instead, so they can override thie method to return false.
+    virtual bool mmapGrowsDown() const { return true; }
 
     // Base of region for nxm data
     Addr nxm_start;

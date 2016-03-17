@@ -114,7 +114,7 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
 
     // Set up region for mmaps. This was determined empirically and may not
     // always be correct.
-    mmap_start = mmap_end = (Addr)0x2aaaaaaab000ULL;
+    mmap_end = (Addr)0x2aaaaaaab000ULL;
 }
 
 void
@@ -151,7 +151,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
 
     // Set up region for mmaps. This was determined empirically and may not
     // always be correct.
-    mmap_start = mmap_end = (Addr)0xf7ffe000ULL;
+    mmap_end = (Addr)0xf7ffe000ULL;
 }
 
 SyscallDesc*

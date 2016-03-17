@@ -82,7 +82,7 @@ class Sparc32LiveProcess : public SparcLiveProcess
         stack_base = (Addr)0xf0000000ULL;
 
         // Set up region for mmaps.
-        mmap_start = mmap_end = 0x70000000;
+        mmap_end = 0x70000000;
     }
 
     void initState();
@@ -111,9 +111,8 @@ class Sparc64LiveProcess : public SparcLiveProcess
         // downward, less the hole for the kernel address space.
         stack_base = (Addr)0x80000000000ULL;
 
-        // Set up region for mmaps.  Tru64 seems to start just above 0 and
-        // grow up from there.
-        mmap_start = mmap_end = 0xfffff80000000000ULL;
+        // Set up region for mmaps.
+        mmap_end = 0xfffff80000000000ULL;
     }
 
     void initState();

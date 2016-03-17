@@ -78,25 +78,24 @@ Shader::mmap(int length)
     // round up length to the next page
     length = roundUp(length, TheISA::PageBytes);
 
-    if (X86Linux64::mmapGrowsDown()) {
+    Process *proc = gpuTc->getProcessPtr();
+
+    if (proc->mmapGrowsDown()) {
         DPRINTF(HSAIL, "GROWS DOWN");
-        start = gpuTc->getProcessPtr()->mmap_end -length;
-        gpuTc->getProcessPtr()->mmap_end = start;
+        start = proc->mmap_end - length;
+        proc->mmap_end = start;
     } else {
         DPRINTF(HSAIL, "GROWS UP");
-        start = gpuTc->getProcessPtr()->mmap_end;
-        gpuTc->getProcessPtr()->mmap_end += length;
+        start = proc->mmap_end;
+        proc->mmap_end += length;
 
         // assertion to make sure we don't overwrite the stack (it grows down)
-        assert(gpuTc->getProcessPtr()->mmap_end <
-                gpuTc->getProcessPtr()->stack_base -
-                gpuTc->getProcessPtr()->max_stack_size);
-
+        assert(proc->mmap_end < proc->stack_base - proc->max_stack_size);
     }
 
     DPRINTF(HSAIL,"Shader::mmap start= %#x, %#x\n", start, length);
 
-    gpuTc->getProcessPtr()->allocateMem(start,length);
+    proc->allocateMem(start, length);
 
     return start;
 }

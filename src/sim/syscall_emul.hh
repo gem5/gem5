@@ -1297,8 +1297,8 @@ mmapImpl(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
     // Extend global mmap region if necessary. Note that we ignore the
     // start address unless MAP_FIXED is specified.
     if (!(tgt_flags & OS::TGT_MAP_FIXED)) {
-        start = (OS::mmapGrowsDown()) ? p->mmap_end - length : p->mmap_end;
-        p->mmap_end = (OS::mmapGrowsDown()) ? start : p->mmap_end + length;
+        start = p->mmapGrowsDown() ? p->mmap_end - length : p->mmap_end;
+        p->mmap_end = p->mmapGrowsDown() ? start : p->mmap_end + length;
     }
 
     DPRINTF_SYSCALL(Verbose, " mmap range is 0x%x - 0x%x\n",

@@ -182,7 +182,7 @@ Process::Process(ProcessParams * params)
     fde_stderr->set(sim_fd, params->errout, O_WRONLY | O_CREAT | O_TRUNC,
                     0664, false);
 
-    mmap_start = mmap_end = 0;
+    mmap_end = 0;
     nxm_start = nxm_end = 0;
     // other parameters will be initialized when the program is loaded
 }
@@ -412,7 +412,6 @@ Process::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(stack_size);
     SERIALIZE_SCALAR(stack_min);
     SERIALIZE_SCALAR(next_thread_stack_base);
-    SERIALIZE_SCALAR(mmap_start);
     SERIALIZE_SCALAR(mmap_end);
     SERIALIZE_SCALAR(nxm_start);
     SERIALIZE_SCALAR(nxm_end);
@@ -432,7 +431,6 @@ Process::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(stack_size);
     UNSERIALIZE_SCALAR(stack_min);
     UNSERIALIZE_SCALAR(next_thread_stack_base);
-    UNSERIALIZE_SCALAR(mmap_start);
     UNSERIALIZE_SCALAR(mmap_end);
     UNSERIALIZE_SCALAR(nxm_start);
     UNSERIALIZE_SCALAR(nxm_end);
