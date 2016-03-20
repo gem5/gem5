@@ -177,6 +177,8 @@ class TrafficGen : public MemObject
     /** Event for scheduling updates */
     EventWrapper<TrafficGen, &TrafficGen::update> updateEvent;
 
+    uint64_t numSuppressed;
+
     /** Count the number of generated packets. */
     Stats::Scalar numPackets;
 

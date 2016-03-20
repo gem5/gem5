@@ -63,7 +63,8 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       port(name() + ".port", *this),
       retryPkt(NULL),
       retryPktTick(0),
-      updateEvent(this)
+      updateEvent(this),
+      numSuppressed(0)
 {
 }
 
@@ -198,6 +199,12 @@ TrafficGen::update()
         } else {
             DPRINTF(TrafficGen, "Suppressed packet %s 0x%x\n",
                     pkt->cmdString(), pkt->getAddr());
+
+            ++numSuppressed;
+            if (numSuppressed % 10000)
+                warn("%s suppressed %d packets with non-memory addresses\n",
+                     name(), numSuppressed);
+
             delete pkt->req;
             delete pkt;
             pkt = nullptr;
