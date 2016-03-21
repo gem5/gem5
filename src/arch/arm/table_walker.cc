@@ -502,9 +502,8 @@ TableWalker::processWalk()
 
     // Trickbox address check
     Fault f;
-    f = tlb->walkTrickBoxCheck(l1desc_addr, currState->isSecure,
-            currState->vaddr, sizeof(uint32_t), currState->isFetch,
-            currState->isWrite, TlbEntry::DomainType::NoAccess, L1);
+    f = testWalk(l1desc_addr, sizeof(uint32_t),
+                 TlbEntry::DomainType::NoAccess, L1);
     if (f) {
         DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
         if (currState->timing) {
@@ -668,10 +667,8 @@ TableWalker::processWalkLPAE()
     }
 
     // Trickbox address check
-    Fault f = tlb->walkTrickBoxCheck(desc_addr, currState->isSecure,
-                        currState->vaddr, sizeof(uint64_t), currState->isFetch,
-                        currState->isWrite, TlbEntry::DomainType::NoAccess,
-                        start_lookup_level);
+    Fault f = testWalk(desc_addr, sizeof(uint64_t),
+                       TlbEntry::DomainType::NoAccess, start_lookup_level);
     if (f) {
         DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
         if (currState->timing) {
@@ -913,10 +910,8 @@ TableWalker::processWalkAArch64()
               stride * (3 - start_lookup_level) + tg) << 3);
 
     // Trickbox address check
-    Fault f = tlb->walkTrickBoxCheck(desc_addr, currState->isSecure,
-                        currState->vaddr, sizeof(uint64_t), currState->isFetch,
-                        currState->isWrite, TlbEntry::DomainType::NoAccess,
-                        start_lookup_level);
+    Fault f = testWalk(desc_addr, sizeof(uint64_t),
+                       TlbEntry::DomainType::NoAccess, start_lookup_level);
     if (f) {
         DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
         if (currState->timing) {
@@ -1437,10 +1432,8 @@ TableWalker::doL1Descriptor()
                     l2desc_addr, currState->isSecure ? "s" : "ns");
 
             // Trickbox address check
-            currState->fault = tlb->walkTrickBoxCheck(
-                l2desc_addr, currState->isSecure, currState->vaddr,
-                sizeof(uint32_t), currState->isFetch, currState->isWrite,
-                currState->l1Desc.domain(), L2);
+            currState->fault = testWalk(l2desc_addr, sizeof(uint32_t),
+                                        currState->l1Desc.domain(), L2);
 
             if (currState->fault) {
                 if (!currState->timing) {
@@ -1616,12 +1609,9 @@ TableWalker::doLongDescriptor()
             }
 
             // Trickbox address check
-            currState->fault = tlb->walkTrickBoxCheck(
-                            next_desc_addr, currState->vaddr,
-                            currState->vaddr, sizeof(uint64_t),
-                            currState->isFetch, currState->isWrite,
-                            TlbEntry::DomainType::Client,
-                            toLookupLevel(currState->longDesc.lookupLevel +1));
+            currState->fault = testWalk(
+                next_desc_addr, sizeof(uint64_t), TlbEntry::DomainType::Client,
+                toLookupLevel(currState->longDesc.lookupLevel +1));
 
             if (currState->fault) {
                 if (!currState->timing) {
@@ -2095,6 +2085,15 @@ TableWalker::pendingChange()
         pendingChangeTick = now;
     }
 }
+
+Fault
+TableWalker::testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
+                      LookupLevel lookup_level)
+{
+    return tlb->testWalk(pa, size, currState->vaddr, currState->isSecure,
+                         currState->mode, domain, lookup_level);
+}
+
 
 uint8_t
 TableWalker::pageSizeNtoStatBin(uint8_t N)

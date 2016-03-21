@@ -75,7 +75,7 @@ TLB::TLB(const ArmTLBParams *p)
     : BaseTLB(p), table(new TlbEntry[p->size]), size(p->size),
       isStage2(p->is_stage2), stage2Req(false), _attr(0),
       directToStage2(false), tableWalker(p->walker), stage2Tlb(NULL),
-      stage2Mmu(NULL), rangeMRU(1),
+      stage2Mmu(NULL), test(nullptr), rangeMRU(1),
       aarch64(false), aarch64EL(EL0), isPriv(false), isSecure(false),
       isHyp(false), asid(0), vmid(0), dacr(0),
       miscRegValid(false), miscRegContext(0), curTranType(NormalTran)
@@ -577,19 +577,6 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::trickBoxCheck(RequestPtr req, Mode mode, TlbEntry::DomainType domain)
-{
-    return NoFault;
-}
-
-Fault
-TLB::walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz, bool is_exec,
-        bool is_write, TlbEntry::DomainType domain, LookupLevel lookup_level)
-{
-    return NoFault;
-}
-
-Fault
 TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
 {
     Addr vaddr = req->getVaddr(); // 32-bit don't have to purify
@@ -1038,7 +1025,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
                 isStage2);
         setAttr(temp_te.attributes);
 
-        return trickBoxCheck(req, mode, TlbEntry::DomainType::NoAccess);
+        return testTranslation(req, mode, TlbEntry::DomainType::NoAccess);
     }
 
     DPRINTF(TLBVerbose, "Translating %s=%#x context=%d\n",
@@ -1091,9 +1078,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         }
 
         // Check for a trickbox generated address fault
-        if (fault == NoFault) {
-            fault = trickBoxCheck(req, mode, te->domain);
-        }
+        if (fault == NoFault)
+            fault = testTranslation(req, mode, te->domain);
     }
 
     // Generate Illegal Inst Set State fault if IL bit is set in CPSR
@@ -1418,6 +1404,41 @@ TLB::getResultTe(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
     }
     return fault;
 }
+
+void
+TLB::setTestInterface(SimObject *_ti)
+{
+    if (!_ti) {
+        test = nullptr;
+    } else {
+        TlbTestInterface *ti(dynamic_cast<TlbTestInterface *>(_ti));
+        fatal_if(!ti, "%s is not a valid ARM TLB tester\n", _ti->name());
+        test = ti;
+    }
+}
+
+Fault
+TLB::testTranslation(RequestPtr req, Mode mode, TlbEntry::DomainType domain)
+{
+    if (!test) {
+        return NoFault;
+    } else {
+        return test->translationCheck(req, isPriv, mode, domain);
+    }
+}
+
+Fault
+TLB::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
+              TlbEntry::DomainType domain, LookupLevel lookup_level)
+{
+    if (!test) {
+        return NoFault;
+    } else {
+        return test->walkCheck(pa, size, va, is_secure, isPriv, mode,
+                               domain, lookup_level);
+    }
+}
+
 
 ArmISA::TLB *
 ArmTLBParams::create()

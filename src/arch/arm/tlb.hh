@@ -61,6 +61,43 @@ namespace ArmISA {
 class TableWalker;
 class Stage2LookUp;
 class Stage2MMU;
+class TLB;
+
+class TlbTestInterface
+{
+  public:
+    TlbTestInterface() {}
+    virtual ~TlbTestInterface() {}
+
+    /**
+     * Check if a TLB translation should be forced to fail.
+     *
+     * @param req Request requiring a translation.
+     * @param is_priv Access from a privileged mode (i.e., not EL0)
+     * @param mode Access type
+     * @param domain Domain type
+     */
+    virtual Fault translationCheck(RequestPtr req, bool is_priv,
+                                   BaseTLB::Mode mode,
+                                   TlbEntry::DomainType domain) = 0;
+
+    /**
+     * Check if a page table walker access should be forced to fail.
+     *
+     * @param pa Physical address the walker is accessing
+     * @param size Walker access size
+     * @param va Virtual address that initiated the walk
+     * @param is_secure Access from secure state
+     * @param is_priv Access from a privileged mode (i.e., not EL0)
+     * @param mode Access type
+     * @param domain Domain type
+     * @param lookup_level Page table walker level
+     */
+    virtual Fault walkCheck(Addr pa, Addr size, Addr va, bool is_secure,
+                            Addr is_priv, BaseTLB::Mode mode,
+                            TlbEntry::DomainType domain,
+                            LookupLevel lookup_level) = 0;
+};
 
 class TLB : public BaseTLB
 {
@@ -104,6 +141,8 @@ class TLB : public BaseTLB
     TableWalker *tableWalker;
     TLB *stage2Tlb;
     Stage2MMU *stage2Mmu;
+
+    TlbTestInterface *test;
 
     // Access Stats
     mutable Stats::Scalar instHits;
@@ -159,6 +198,8 @@ class TLB : public BaseTLB
 
     /// setup all the back pointers
     void init() override;
+
+    void setTestInterface(SimObject *ti);
 
     TableWalker *getTableWalker() { return tableWalker; }
 
@@ -223,10 +264,6 @@ class TLB : public BaseTLB
      * @param hyp if the operation affects hyp mode
      */
     void flushMva(Addr mva, bool secure_lookup, bool hyp, uint8_t target_el);
-
-    Fault trickBoxCheck(RequestPtr req, Mode mode, TlbEntry::DomainType domain);
-    Fault walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz, bool is_exec,
-            bool is_write, TlbEntry::DomainType domain, LookupLevel lookup_level);
 
     void printTlb() const;
 
@@ -356,6 +393,13 @@ private:
                    bool hyp, bool ignore_asn, uint8_t target_el);
 
     bool checkELMatch(uint8_t target_el, uint8_t tentry_el, bool ignore_el);
+
+  public: /* Testing */
+    Fault testTranslation(RequestPtr req, Mode mode,
+                          TlbEntry::DomainType domain);
+    Fault testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
+                   TlbEntry::DomainType domain,
+                   LookupLevel lookup_level);
 };
 
 } // namespace ArmISA

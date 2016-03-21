@@ -966,6 +966,9 @@ class TableWalker : public MemObject
     void pendingChange();
 
     static uint8_t pageSizeNtoStatBin(uint8_t N);
+
+    Fault testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
+                   LookupLevel lookup_level);
 };
 
 } // namespace ArmISA
