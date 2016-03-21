@@ -78,7 +78,6 @@ class ScoreboardCheckStage
     ComputeUnit *computeUnit;
     uint32_t numSIMDs;
     uint32_t numMemUnits;
-    uint32_t numGlbMemPipes;
     uint32_t numShrMemPipes;
 
     // flag per vector SIMD unit that is set when there is at least one

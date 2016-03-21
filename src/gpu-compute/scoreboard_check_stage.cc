@@ -44,7 +44,6 @@
 ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p)
     : numSIMDs(p->num_SIMDs),
       numMemUnits(p->num_global_mem_pipes + p->num_shared_mem_pipes),
-      numGlbMemPipes(p->num_global_mem_pipes),
       numShrMemPipes(p->num_shared_mem_pipes),
       vectorAluInstAvail(nullptr),
       lastGlbMemSimd(-1),
