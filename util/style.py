@@ -236,6 +236,7 @@ class Verifier(object):
         for num,line in enumerate(f):
             if num not in regions:
                 continue
+            line = line.rstrip('\n')
             if not self.check_line(line):
                 self.write("invalid %s in %s:%d\n" % \
                            (self.test_name, filename, num + 1))
