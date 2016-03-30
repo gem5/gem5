@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,7 +51,7 @@
 
 .text
 
-.macro simple_op name, func, subfunc
+.macro m5op_func name, func, subfunc
         .align 2
         .globl \name
 \name:
@@ -64,45 +64,9 @@
         mov pc,lr
 .endm
 
-#define SIMPLE_OP(name, func, subfunc) simple_op name, func, subfunc
+.text
+#define M5OP(name, func, subfunc) m5op_func name, func, subfunc
+        FOREACH_M5OP
 
-SIMPLE_OP(arm, arm_func, 0)
-SIMPLE_OP(quiesce, quiesce_func, 0)
-SIMPLE_OP(quiesceNs, quiescens_func, 0)
-SIMPLE_OP(quiesceCycle, quiescecycle_func, 0)
-SIMPLE_OP(quiesceTime, quiescetime_func, 0)
-SIMPLE_OP(rpns, rpns_func, 0)
-SIMPLE_OP(wakeCPU, wakecpu_func, 0)
-SIMPLE_OP(m5_exit, exit_func, 0)
-SIMPLE_OP(m5_fail, fail_func, 0)
-SIMPLE_OP(m5_initparam, initparam_func, 0)
-SIMPLE_OP(m5_loadsymbol, loadsymbol_func, 0)
-SIMPLE_OP(m5_reset_stats, resetstats_func, 0)
-SIMPLE_OP(m5_dump_stats, dumpstats_func, 0)
-SIMPLE_OP(m5_dumpreset_stats, dumprststats_func, 0)
-SIMPLE_OP(m5_checkpoint, ckpt_func, 0)
-SIMPLE_OP(m5_readfile, readfile_func, 0)
-SIMPLE_OP(m5_writefile, writefile_func, 0)
-SIMPLE_OP(m5_debugbreak, debugbreak_func, 0)
-SIMPLE_OP(m5_switchcpu, switchcpu_func, 0)
-SIMPLE_OP(m5_addsymbol, addsymbol_func, 0)
-SIMPLE_OP(m5_panic, panic_func, 0)
-SIMPLE_OP(m5_work_begin, work_begin_func, 0)
-SIMPLE_OP(m5_work_end, work_end_func, 0)
-
-SIMPLE_OP(m5a_bsm, annotate_func, an_bsm)
-SIMPLE_OP(m5a_esm, annotate_func, an_esm)
-SIMPLE_OP(m5a_begin, annotate_func, an_begin)
-SIMPLE_OP(m5a_end, annotate_func, an_end)
-SIMPLE_OP(m5a_q, annotate_func, an_q)
-SIMPLE_OP(m5a_rq, annotate_func, an_rq)
-SIMPLE_OP(m5a_dq, annotate_func, an_dq)
-SIMPLE_OP(m5a_wf, annotate_func, an_wf)
-SIMPLE_OP(m5a_we, annotate_func, an_we)
-SIMPLE_OP(m5a_ws, annotate_func, an_ws)
-SIMPLE_OP(m5a_sq, annotate_func, an_sq)
-SIMPLE_OP(m5a_aq, annotate_func, an_aq)
-SIMPLE_OP(m5a_pq, annotate_func, an_pq)
-SIMPLE_OP(m5a_l, annotate_func, an_l)
-SIMPLE_OP(m5a_identify, annotate_func, an_identify)
-SIMPLE_OP(m5a_getid, annotate_func, an_getid)
+#define M5_ANNOTATION(name, ann) m5op_func name, annotate_func, ann
+        FOREACH_M5_ANNOTATION

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2016 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,6 +39,7 @@
  *
  * Authors: Nathan Binkert
  *          Ali Saidi
+ *          Andreas Sandberg
  */
 
 #define arm_func                0x00
@@ -84,3 +97,46 @@
 #define an_identify       0x10
 #define an_getid          0x11
 
+
+#define FOREACH_M5OP                                    \
+    M5OP(arm, arm_func, 0);                             \
+    M5OP(quiesce, quiesce_func, 0);                     \
+    M5OP(quiesceNs, quiescens_func, 0);                 \
+    M5OP(quiesceCycle, quiescecycle_func, 0);           \
+    M5OP(quiesceTime, quiescetime_func, 0);             \
+    M5OP(rpns, rpns_func, 0);                           \
+    M5OP(wakeCPU, wakecpu_func, 0);                     \
+    M5OP(m5_exit, exit_func, 0);                        \
+    M5OP(m5_fail, fail_func, 0);                        \
+    M5OP(m5_initparam, initparam_func, 0);              \
+    M5OP(m5_loadsymbol, loadsymbol_func, 0);            \
+    M5OP(m5_reset_stats, resetstats_func, 0);           \
+    M5OP(m5_dump_stats, dumpstats_func, 0);             \
+    M5OP(m5_dumpreset_stats, dumprststats_func, 0);     \
+    M5OP(m5_checkpoint, ckpt_func, 0);                  \
+    M5OP(m5_readfile, readfile_func, 0);                \
+    M5OP(m5_writefile, writefile_func, 0);              \
+    M5OP(m5_debugbreak, debugbreak_func, 0);            \
+    M5OP(m5_switchcpu, switchcpu_func, 0);              \
+    M5OP(m5_addsymbol, addsymbol_func, 0);              \
+    M5OP(m5_panic, panic_func, 0);                      \
+    M5OP(m5_work_begin, work_begin_func, 0);            \
+    M5OP(m5_work_end, work_end_func, 0);
+
+#define FOREACH_M5_ANNOTATION                   \
+    M5_ANNOTATION(m5a_bsm, an_bsm);             \
+    M5_ANNOTATION(m5a_esm, an_esm);             \
+    M5_ANNOTATION(m5a_begin, an_begin);         \
+    M5_ANNOTATION(m5a_end, an_end);             \
+    M5_ANNOTATION(m5a_q, an_q);                 \
+    M5_ANNOTATION(m5a_dq, an_dq);               \
+    M5_ANNOTATION(m5a_wf, an_wf);               \
+    M5_ANNOTATION(m5a_we, an_we);               \
+    M5_ANNOTATION(m5a_rq, an_rq);               \
+    M5_ANNOTATION(m5a_ws, an_ws);               \
+    M5_ANNOTATION(m5a_sq, an_sq);               \
+    M5_ANNOTATION(m5a_aq, an_aq);               \
+    M5_ANNOTATION(m5a_pq, an_pq);               \
+    M5_ANNOTATION(m5a_l, an_l);                 \
+    M5_ANNOTATION(m5a_identify, an_identify);   \
+    M5_ANNOTATION(m5a_getid, an_getid);
