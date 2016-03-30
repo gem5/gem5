@@ -575,6 +575,12 @@ class BaseKvmCPU : public BaseCPU
     KVMCpuPort instPort;
 
     /**
+     * Be conservative and always synchronize the thread context on
+     * KVM entry/exit.
+     */
+    const bool alwaysSyncTC;
+
+    /**
      * Is the gem5 context dirty? Set to true to force an update of
      * the KVM vCPU state upon the next call to kvmRun().
      */

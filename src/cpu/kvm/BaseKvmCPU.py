@@ -71,6 +71,8 @@ class BaseKvmCPU(BaseCPU):
     kvmVM = Param.KvmVM(Parent.any, 'KVM VM (i.e., shared memory domain)')
     useCoalescedMMIO = Param.Bool(False, "Use coalesced MMIO (EXPERIMENTAL)")
     usePerfOverflow = Param.Bool(False, "Use perf event overflow counters (EXPERIMENTAL)")
+    alwaysSyncTC = Param.Bool(False,
+                              "Always sync thread contexts on entry/exit")
 
     hostFreq = Param.Clock("2GHz", "Host clock frequency")
     hostFactor = Param.Float(1.0, "Cycle scale factor")

@@ -69,6 +69,7 @@ BaseKvmCPU::BaseKvmCPU(BaseKvmCPUParams *params)
       _status(Idle),
       dataPort(name() + ".dcache_port", this),
       instPort(name() + ".icache_port", this),
+      alwaysSyncTC(params->alwaysSyncTC),
       threadContextDirty(true),
       kvmStateDirty(false),
       vcpuID(vm.allocVCPUID()), vcpuFD(-1), vcpuMMapSize(0),
@@ -557,6 +558,9 @@ BaseKvmCPU::tick()
               nextInstEvent > ctrInsts ?
               curEventQueue()->nextTick() - curTick() : 0);
 
+          if (alwaysSyncTC)
+              threadContextDirty = true;
+
           // We might need to update the KVM state.
           syncKvmState();
 
@@ -587,6 +591,9 @@ BaseKvmCPU::tick()
           // context from KVM if we want to access it. Flag the KVM state as
           // dirty with respect to the cached thread context.
           kvmStateDirty = true;
+
+          if (alwaysSyncTC)
+              syncThreadContext();
 
           // Enter into the RunningService state unless the
           // simulation was stopped by a timer.
