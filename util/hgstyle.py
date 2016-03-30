@@ -50,8 +50,6 @@ current_dir = os.path.dirname(__file__)
 sys.path.insert(0, current_dir)
 
 from style.verifiers import all_verifiers
-from style.validators import all_validators
-from style.file_types import lang_type
 from style.style import MercurialUI, check_ignores
 from style.region import *
 
@@ -83,35 +81,6 @@ def modregions(wctx, fname):
         mod_regions.append(0, len(lines))
 
     return mod_regions
-
-
-def validate(filename, verbose, exit_code):
-    lang = lang_type(filename)
-    if lang not in ('C', 'C++'):
-        return
-
-    def bad():
-        if exit_code is not None:
-            sys.exit(exit_code)
-
-    try:
-        f = file(filename, 'r')
-    except OSError:
-        if verbose > 0:
-            print 'could not open file %s' % filename
-        bad()
-        return None
-
-    vals = [ v(filename, verbose=(verbose > 1), language=lang)
-             for v in all_validators ]
-
-    for i, line in enumerate(f):
-        line = line.rstrip('\n')
-        for v in vals:
-            v.validate_line(i, line)
-
-
-    return vals
 
 
 def _modified_regions(repo, patterns, **kwargs):
@@ -198,37 +167,6 @@ def do_check_style(hgui, repo, *pats, **opts):
 
     return False
 
-def do_check_format(hgui, repo, *pats, **opts):
-    """check files for gem5 code formatting violations
-
-    Without an argument, checks all modified and added files for gem5
-    code formatting violations. A list of files can be specified to
-    limit the checker to a subset of the repository. The style rules
-    are normally applied on a diff of the repository state (i.e.,
-    added files are checked in their entirety while only modifications
-    of modified files are checked).
-
-    The --all option can be specified to include clean files and check
-    modified files in their entirety.
-    """
-    ui = MercurialUI(hgui, hgui.verbose)
-
-    verbose = 0
-    for fname, mod_regions in _modified_regions(repo, pats, **opts):
-        vals = validate(joinpath(repo.root, fname), verbose, None)
-        if vals is None:
-            return True
-        elif any([not v for v in vals]):
-            print "%s:" % fname
-            for v in vals:
-                v.dump()
-            result = ui.prompt("invalid formatting\n(i)gnore or (a)bort?",
-                               'ai', 'a')
-            if result == 'a':
-                return True
-
-    return False
-
 def check_hook(hooktype):
     if hooktype not in ('pretxncommit', 'pre-qrefresh'):
         raise AttributeError, \
@@ -242,17 +180,6 @@ def check_style(ui, repo, hooktype, **kwargs):
 
     try:
         return do_check_style(ui, repo, **args)
-    except Exception, e:
-        import traceback
-        traceback.print_exc()
-        return True
-
-def check_format(ui, repo, hooktype, **kwargs):
-    check_hook(hooktype)
-    args = {}
-
-    try:
-        return do_check_format(ui, repo, **args)
     except Exception, e:
         import traceback
         traceback.print_exc()
@@ -287,31 +214,9 @@ cmdtable = {
     '^m5style' : (
         do_check_style, all_opts + _common_region_options + commands.walkopts,
         _('hg m5style [-a] [FILE]...')),
-    '^m5format' :
-    ( do_check_format, [
-            ] + _common_region_options + commands.walkopts,
-      _('hg m5format [FILE]...')),
 }
 
 if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Check a file for style violations")
-
-    parser.add_argument("--verbose", "-v", action="count",
-                        help="Produce verbose output")
-
-    parser.add_argument("file", metavar="FILE", nargs="+",
-                        type=str,
-                        help="Source file to inspect")
-
-    args = parser.parse_args()
-
-    for filename in args.file:
-        vals = validate(filename, verbose=args.verbose,
-                        exit_code=1)
-
-        if args.verbose > 0 and vals is not None:
-            for v in vals:
-                v.dump()
+    print >> sys.stderr, "This file cannot be used from the command line. Use"
+    print >> sys.stderr, "style.py instead."
+    sys.exit(1)
