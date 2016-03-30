@@ -348,6 +348,20 @@ class LineLength(LineVerifier):
     def fix_line(self, line):
         pass
 
+class ControlCharacters(LineVerifier):
+    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+    test_name = 'control character'
+    opt_name = 'ascii'
+
+    valid = ('\n', '\t')
+    invalid = "".join([chr(i) for i in range(0, 0x20) if chr(i) not in valid])
+
+    def check_line(self, line):
+        return self.fix_line(line) == line
+
+    def fix_line(self, line):
+        return line.translate(None, ControlCharacters.invalid)
+
 class BoolCompare(LineVerifier):
     languages = set(('C', 'C++', 'python'))
     test_name = 'boolean comparison'
