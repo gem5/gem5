@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015 ARM Limited
+# Copyright (c) 2013, 2015, 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -260,12 +260,17 @@ main.AppendENVPath('PYTHONPATH', extra_python_paths)
 ########################################################################
 
 hgdir = main.root.Dir(".hg")
+gitdir = main.root.Dir(".git")
 
-mercurial_style_message = """
+
+style_message = """
 You're missing the gem5 style hook, which automatically checks your code
 against the gem5 style rules on hg commit and qrefresh commands.  This
-script will now install the hook in your .hg/hgrc file.
+script will now install the hook in your %s.
 Press enter to continue, or ctrl-c to abort: """
+
+mercurial_style_message = style_message % ".hg/hgrc file"
+git_style_message = style_message % ".git/hooks/ directory"
 
 mercurial_style_upgrade_message = """
 Your Mercurial style hooks are not up-to-date. This script will now
@@ -293,9 +298,13 @@ hook. It is important.
 """
 
 # Check for style hook and prompt for installation if it's not there.
-# Skip this if --ignore-style was specified, there's no .hg dir to
-# install a hook in, or there's no interactive terminal to prompt.
-if not GetOption('ignore_style') and hgdir.exists() and sys.stdin.isatty():
+# Skip this if --ignore-style was specified, there's no interactive
+# terminal to prompt, or no recognized revision control system can be
+# found.
+ignore_style = GetOption('ignore_style') or not sys.stdin.isatty()
+
+# Try wire up Mercurial to the style hooks
+if not ignore_style and hgdir.exists():
     style_hook = True
     style_hooks = tuple()
     hgrc = hgdir.File('hgrc')
@@ -359,6 +368,27 @@ if not GetOption('ignore_style') and hgdir.exists() and sys.stdin.isatty():
             print "Error updating", hgrc_path
             sys.exit(1)
 
+# Try to wire up git to the style hooks
+git_pre_commit_hook = gitdir.File("hooks/pre-commit")
+if not ignore_style and gitdir.exists() and not git_pre_commit_hook.exists():
+    git_style_script = File("util/git-pre-commit.py")
+
+    print git_style_message,
+    try:
+        raw_input()
+    except:
+        print "Input exception, exiting scons.\n"
+        sys.exit(1)
+
+    try:
+        rel_style_script = os.path.relpath(
+            git_style_script.get_abspath(),
+            git_pre_commit_hook.Dir(".").get_abspath())
+        os.symlink(rel_style_script, git_pre_commit_hook.get_abspath())
+    except:
+        print "Error updating git pre-commit hook"
+        raise
+        sys.exit(1)
 
 ###################################################
 #
