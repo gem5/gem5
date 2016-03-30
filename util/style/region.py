@@ -230,6 +230,8 @@ class Regions(object):
     def __repr__(self):
         return 'Regions(%s)' % ([(r[0], r[1]) for r in self.regions], )
 
+all_regions = Regions(Region(neg_inf, pos_inf))
+
 if __name__ == '__main__':
     x = Regions(*((i, i + 1) for i in xrange(0,30,2)))
     y = Regions(*((i, i + 4) for i in xrange(0,30,5)))

@@ -1,0 +1,379 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2014, 2016 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2007,2011 The Hewlett-Packard Development Company
+# Copyright (c) 2016 Advanced Micro Devices, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+#          Steve Reinhardt
+#          Andreas Sandberg
+
+from abc import ABCMeta, abstractmethod
+from difflib import SequenceMatcher
+import inspect
+import os
+import re
+import sys
+
+import style
+import sort_includes
+from region import *
+from file_types import lang_type
+
+def _modified_regions(old, new):
+    m = SequenceMatcher(a=old, b=new, autojunk=False)
+
+    regions = Regions()
+    for tag, i1, i2, j1, j2 in m.get_opcodes():
+        if tag != "equal":
+            regions.extend(Region(i1, i2))
+    return regions
+
+
+class Verifier(object):
+    """Base class for style verifiers
+
+    Verifiers check for style violations and optionally fix such
+    violations. Implementations should either inherit from this class
+    (Verifier) if they need to work on entire files or LineVerifier if
+    they operate on a line-by-line basis.
+
+    Subclasses must define these class attributes:
+      languages = set of strings identifying applicable languages
+      test_name = long descriptive name of test, will be used in
+                  messages such as "error in <foo>" or "invalid <foo>"
+      opt_name = short name used to generate command-line options to
+                 control the test (--fix-<foo>, --ignore-<foo>, etc.)
+
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, ui, opts, base=None):
+        self.ui = ui
+        self.base = base
+
+        # opt_name must be defined as a class attribute of derived classes.
+        # Check test-specific opts first as these have precedence.
+        self.opt_fix = opts.get('fix_' + self.opt_name, False)
+        self.opt_ignore = opts.get('ignore_' + self.opt_name, False)
+        self.opt_skip = opts.get('skip_' + self.opt_name, False)
+        # If no test-specific opts were set, then set based on "-all" opts.
+        if not (self.opt_fix or self.opt_ignore or self.opt_skip):
+            self.opt_fix = opts.get('fix_all', False)
+            self.opt_ignore = opts.get('ignore_all', False)
+            self.opt_skip = opts.get('skip_all', False)
+
+    def normalize_filename(self, name):
+        abs_name = os.path.abspath(name)
+        if self.base is None:
+            return abs_name
+
+        abs_base = os.path.abspath(self.base)
+        return os.path.relpath(abs_name, start=abs_base)
+
+    def open(self, filename, mode):
+        try:
+            f = file(filename, mode)
+        except OSError, msg:
+            print 'could not open file %s: %s' % (filename, msg)
+            return None
+
+        return f
+
+    def skip(self, filename):
+        # We never want to handle symlinks, so always skip them: If the location
+        # pointed to is a directory, skip it. If the location is a file inside
+        # the gem5 directory, it will be checked as a file, so symlink can be
+        # skipped. If the location is a file outside gem5, we don't want to
+        # check it anyway.
+        if os.path.islink(filename):
+            return True
+        return lang_type(filename) not in self.languages
+
+    def apply(self, filename, regions=all_regions):
+        """Possibly apply to specified regions of file 'filename'.
+
+        Verifier is skipped if --skip-<test> option was provided or if
+        file is not of an applicable type.  Otherwise file is checked
+        and error messages printed.  Errors are fixed or ignored if
+        the corresponding --fix-<test> or --ignore-<test> options were
+        provided.  If neither, the user is prompted for an action.
+
+        Returns True to abort, False otherwise.
+        """
+        if not (self.opt_skip or self.skip(filename)):
+            errors = self.check(filename, regions)
+            if errors and not self.opt_ignore:
+                if self.opt_fix:
+                    self.fix(filename, regions)
+                else:
+                    result = self.ui.prompt("(a)bort, (i)gnore, or (f)ix?",
+                                            'aif', 'a')
+                    if result == 'f':
+                        self.fix(filename, regions)
+                    elif result == 'a':
+                        return True # abort
+
+        return False
+
+    @abstractmethod
+    def check(self, filename, regions=all_regions):
+        """Check specified regions of file 'filename'.
+
+        Line-by-line checks can simply provide a check_line() method
+        that returns True if the line is OK and False if it has an
+        error.  Verifiers that need a multi-line view (like
+        SortedIncludes) must override this entire function.
+
+        Returns a count of errors (0 if none), though actual non-zero
+        count value is not currently used anywhere.
+        """
+        pass
+
+    @abstractmethod
+    def fix(self, filename, regions=all_regions):
+        """Fix specified regions of file 'filename'.
+
+        Line-by-line fixes can simply provide a fix_line() method that
+        returns the fixed line. Verifiers that need a multi-line view
+        (like SortedIncludes) must override this entire function.
+        """
+        pass
+
+class LineVerifier(Verifier):
+    def check(self, filename, regions=all_regions):
+        f = self.open(filename, 'r')
+
+        errors = 0
+        for num,line in enumerate(f):
+            if num not in regions:
+                continue
+            line = line.rstrip('\n')
+            if not self.check_line(line):
+                self.ui.write("invalid %s in %s:%d\n" % \
+                              (self.test_name, filename, num + 1))
+                if self.ui.verbose:
+                    self.ui.write(">>%s<<\n" % line[:-1])
+                errors += 1
+        return errors
+
+    def fix(self, filename, regions=all_regions):
+        f = self.open(filename, 'r+')
+
+        lines = list(f)
+
+        f.seek(0)
+        f.truncate()
+
+        for i,line in enumerate(lines):
+            line = line.rstrip('\n')
+            if i in regions:
+                line = self.fix_line(line)
+
+            f.write(line)
+            f.write("\n")
+        f.close()
+
+
+    @abstractmethod
+    def check_line(self, line):
+        pass
+
+    @abstractmethod
+    def fix_line(self, line):
+        pass
+
+class Whitespace(LineVerifier):
+    """Check whitespace.
+
+    Specifically:
+    - No tabs used for indent
+    - No trailing whitespace
+    """
+
+    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+    test_name = 'whitespace'
+    opt_name = 'white'
+
+    _lead = re.compile(r'^([ \t]+)')
+    _trail = re.compile(r'([ \t]+)$')
+
+    def check_line(self, line):
+        match = Whitespace._lead.search(line)
+        if match and match.group(1).find('\t') != -1:
+            return False
+
+        match = Whitespace._trail.search(line)
+        if match:
+            return False
+
+        return True
+
+    def fix_line(self, line):
+        if Whitespace._lead.search(line):
+            newline = ''
+            for i,c in enumerate(line):
+                if c == ' ':
+                    newline += ' '
+                elif c == '\t':
+                    newline += ' ' * (tabsize - len(newline) % tabsize)
+                else:
+                    newline += line[i:]
+                    break
+
+            line = newline
+
+        return line.rstrip() + '\n'
+
+
+class SortedIncludes(Verifier):
+    """Check for proper sorting of include statements"""
+
+    languages = sort_includes.default_languages
+    test_name = 'include file order'
+    opt_name = 'include'
+
+    def __init__(self, *args, **kwargs):
+        super(SortedIncludes, self).__init__(*args, **kwargs)
+        self.sort_includes = sort_includes.SortIncludes()
+
+    def check(self, filename, regions=all_regions):
+        f = self.open(filename, 'r')
+        norm_fname = self.normalize_filename(filename)
+
+        old = [ l.rstrip('\n') for l in f.xreadlines() ]
+        f.close()
+
+        if len(old) == 0:
+            return 0
+
+        language = lang_type(filename, old[0])
+        new = list(self.sort_includes(old, norm_fname, language))
+
+        modified = _modified_regions(old, new) & regions
+
+        if modified:
+            self.ui.write("invalid sorting of includes in %s\n" % (filename))
+            if self.ui.verbose:
+                for start, end in modified.regions:
+                    self.ui.write("bad region [%d, %d)\n" % (start, end))
+            return 1
+
+        return 0
+
+    def fix(self, filename, regions=all_regions):
+        f = self.open(filename, 'r+')
+
+        old = f.readlines()
+        lines = [ l.rstrip('\n') for l in old ]
+        language = lang_type(filename, lines[0])
+        sort_lines = list(self.sort_includes(lines, filename, language))
+        new = ''.join(line + '\n' for line in sort_lines)
+
+        f.seek(0)
+        f.truncate()
+
+        for i,line in enumerate(sort_lines):
+            f.write(line)
+            f.write('\n')
+        f.close()
+
+
+class ControlSpace(LineVerifier):
+    """Check for exactly one space after if/while/for"""
+
+    languages = set(('C', 'C++'))
+    test_name = 'spacing after if/while/for'
+    opt_name = 'control'
+
+    _any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
+
+    def check_line(self, line):
+        match = ControlSpace._any_control.search(line)
+        return not (match and match.group(2) != " ")
+
+    def fix_line(self, line):
+        new_line = _any_control.sub(r'\1 (', line)
+        return new_line
+
+
+class LineLength(LineVerifier):
+    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+    test_name = 'line length'
+    opt_name = 'length'
+
+    def check_line(self, line):
+        return style.normalized_len(line) <= 78
+
+    def fix(self, filename, regions=all_regions):
+        self.ui.write("Warning: cannot automatically fix overly long lines.\n")
+
+    def fix_line(self, line):
+        pass
+
+class BoolCompare(LineVerifier):
+    languages = set(('C', 'C++', 'python'))
+    test_name = 'boolean comparison'
+    opt_name = 'boolcomp'
+
+    regex = re.compile(r'\s*==\s*([Tt]rue|[Ff]alse)\b')
+
+    def check_line(self, line):
+        return self.regex.search(line) == None
+
+    def fix_line(self, line):
+        match = self.regex.search(line)
+        if match:
+            if match.group(1) in ('true', 'True'):
+                line = self.regex.sub('', line)
+            else:
+                self.ui.write("Warning: cannot automatically fix "
+                              "comparisons with false/False.\n")
+        return line
+
+def is_verifier(cls):
+    """Determine if a class is a Verifier that can be instantiated"""
+
+    return inspect.isclass(cls) and issubclass(cls, Verifier) and \
+        not inspect.isabstract(cls)
+
+# list of all verifier classes
+all_verifiers = [ v for n, v in \
+                  inspect.getmembers(sys.modules[__name__], is_verifier) ]

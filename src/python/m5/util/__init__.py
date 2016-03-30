@@ -40,7 +40,6 @@ from multidict import multidict
 from orderdict import orderdict
 from smartdict import SmartDict
 from sorteddict import SortedDict
-from region import neg_inf, pos_inf, Region, Regions
 
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5

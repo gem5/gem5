@@ -42,62 +42,20 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
-import heapq
-import os
-import re
 import sys
+import os
+from os.path import join as joinpath
 
-from os.path import dirname, join as joinpath
-from itertools import count
-from mercurial import bdiff, mdiff, commands
-
-current_dir = dirname(__file__)
+current_dir = os.path.dirname(__file__)
 sys.path.insert(0, current_dir)
-sys.path.insert(1, joinpath(dirname(current_dir), 'src', 'python'))
 
-from m5.util import neg_inf, pos_inf, Region, Regions
-import sort_includes
-from file_types import lang_type
+from style.verifiers import all_verifiers
+from style.validators import all_validators
+from style.file_types import lang_type
+from style.style import MercurialUI, check_ignores
+from style.region import *
 
-all_regions = Regions(Region(neg_inf, pos_inf))
-
-tabsize = 8
-lead = re.compile(r'^([ \t]+)')
-trail = re.compile(r'([ \t]+)$')
-any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
-
-format_types = set(('C', 'C++'))
-
-
-def re_ignore(expr):
-    """Helper function to create regular expression ignore file
-    matcher functions"""
-
-    rex = re.compile(expr)
-    def match_re(fname):
-        return rex.match(fname)
-    return match_re
-
-# This list contains a list of functions that are called to determine
-# if a file should be excluded from the style matching rules or
-# not. The functions are called with the file name relative to the
-# repository root (without a leading slash) as their argument. A file
-# is excluded if any function in the list returns true.
-style_ignores = [
-    # Ignore external projects as they are unlikely to follow the gem5
-    # coding convention.
-    re_ignore("^ext/"),
-]
-
-def check_ignores(fname):
-    """Check if a file name matches any of the ignore rules"""
-
-    for rule in style_ignores:
-        if rule(fname):
-            return True
-
-    return False
-
+from mercurial import bdiff, mdiff, commands
 
 def modified_regions(old_data, new_data):
     regions = Regions()
@@ -126,374 +84,11 @@ def modregions(wctx, fname):
 
     return mod_regions
 
-class UserInterface(object):
-    def __init__(self, verbose=False):
-        self.verbose = verbose
 
-    def prompt(self, prompt, results, default):
-        while True:
-            result = self.do_prompt(prompt, results, default)
-            if result in results:
-                return result
-
-class MercurialUI(UserInterface):
-    def __init__(self, ui, *args, **kwargs):
-        super(MercurialUI, self).__init__(*args, **kwargs)
-        self.ui = ui
-
-    def do_prompt(self, prompt, results, default):
-        return self.ui.prompt(prompt, default=default)
-
-    def write(self, string):
-        self.ui.write(string)
-
-class StdioUI(UserInterface):
-    def do_prompt(self, prompt, results, default):
-        return raw_input(prompt) or default
-
-    def write(self, string):
-        sys.stdout.write(string)
-
-
-class Verifier(object):
-    """Base class for style verifier objects
-
-    Subclasses must define these class attributes:
-      languages = set of strings identifying applicable languages
-      test_name = long descriptive name of test, will be used in
-                  messages such as "error in <foo>" or "invalid <foo>"
-      opt_name = short name used to generate command-line options to
-                 control the test (--fix-<foo>, --ignore-<foo>, etc.)
-    """
-
-    def __init__(self, ui, repo, opts):
-        self.ui = ui
-        self.repo = repo
-        # opt_name must be defined as a class attribute of derived classes.
-        # Check test-specific opts first as these have precedence.
-        self.opt_fix = opts.get('fix_' + self.opt_name, False)
-        self.opt_ignore = opts.get('ignore_' + self.opt_name, False)
-        self.opt_skip = opts.get('skip_' + self.opt_name, False)
-        # If no test-specific opts were set, then set based on "-all" opts.
-        if not (self.opt_fix or self.opt_ignore or self.opt_skip):
-            self.opt_fix = opts.get('fix_all', False)
-            self.opt_ignore = opts.get('ignore_all', False)
-            self.opt_skip = opts.get('skip_all', False)
-
-    def __getattr__(self, attr):
-        if attr in ('prompt', 'write'):
-            return getattr(self.ui, attr)
-
-        if attr == 'wctx':
-            try:
-                wctx = repo.workingctx()
-            except:
-                from mercurial import context
-                wctx = context.workingctx(repo)
-            self.wctx = wctx
-            return wctx
-
-        raise AttributeError
-
-    def open(self, filename, mode):
-        filename = self.repo.wjoin(filename)
-
-        try:
-            f = file(filename, mode)
-        except OSError, msg:
-            print 'could not open file %s: %s' % (filename, msg)
-            return None
-
-        return f
-
-    def skip(self, filename):
-        filename = self.repo.wjoin(filename)
-
-        # We never want to handle symlinks, so always skip them: If the location
-        # pointed to is a directory, skip it. If the location is a file inside
-        # the gem5 directory, it will be checked as a file, so symlink can be
-        # skipped. If the location is a file outside gem5, we don't want to
-        # check it anyway.
-        if os.path.islink(filename):
-            return True
-        return lang_type(filename) not in self.languages
-
-    def check(self, filename, regions=all_regions):
-        """Check specified regions of file 'filename'.
-
-        Line-by-line checks can simply provide a check_line() method
-        that returns True if the line is OK and False if it has an
-        error.  Verifiers that need a multi-line view (like
-        SortedIncludes) must override this entire function.
-
-        Returns a count of errors (0 if none), though actual non-zero
-        count value is not currently used anywhere.
-        """
-
-        f = self.open(filename, 'r')
-
-        errors = 0
-        for num,line in enumerate(f):
-            if num not in regions:
-                continue
-            line = line.rstrip('\n')
-            if not self.check_line(line):
-                self.write("invalid %s in %s:%d\n" % \
-                           (self.test_name, filename, num + 1))
-                if self.ui.verbose:
-                    self.write(">>%s<<\n" % line[:-1])
-                errors += 1
-        return errors
-
-    def fix(self, filename, regions=all_regions):
-        """Fix specified regions of file 'filename'.
-
-        Line-by-line fixes can simply provide a fix_line() method that
-        returns the fixed line. Verifiers that need a multi-line view
-        (like SortedIncludes) must override this entire function.
-        """
-
-        f = self.open(filename, 'r+')
-
-        lines = list(f)
-
-        f.seek(0)
-        f.truncate()
-
-        for i,line in enumerate(lines):
-            if i in regions:
-                line = self.fix_line(line)
-
-            f.write(line)
-        f.close()
-
-
-    def apply(self, filename, regions=all_regions):
-        """Possibly apply to specified regions of file 'filename'.
-
-        Verifier is skipped if --skip-<test> option was provided or if
-        file is not of an applicable type.  Otherwise file is checked
-        and error messages printed.  Errors are fixed or ignored if
-        the corresponding --fix-<test> or --ignore-<test> options were
-        provided.  If neither, the user is prompted for an action.
-
-        Returns True to abort, False otherwise.
-        """
-        if not (self.opt_skip or self.skip(filename)):
-            errors = self.check(filename, regions)
-            if errors and not self.opt_ignore:
-                if self.opt_fix:
-                    self.fix(filename, regions)
-                else:
-                    result = self.ui.prompt("(a)bort, (i)gnore, or (f)ix?",
-                                            'aif', 'a')
-                    if result == 'f':
-                        self.fix(filename, regions)
-                    elif result == 'a':
-                        return True # abort
-
-        return False
-
-
-class Whitespace(Verifier):
-    """Check whitespace.
-
-    Specifically:
-    - No tabs used for indent
-    - No trailing whitespace
-    """
-
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
-    test_name = 'whitespace'
-    opt_name = 'white'
-
-    def check_line(self, line):
-        match = lead.search(line)
-        if match and match.group(1).find('\t') != -1:
-            return False
-
-        match = trail.search(line)
-        if match:
-            return False
-
-        return True
-
-    def fix_line(self, line):
-        if lead.search(line):
-            newline = ''
-            for i,c in enumerate(line):
-                if c == ' ':
-                    newline += ' '
-                elif c == '\t':
-                    newline += ' ' * (tabsize - len(newline) % tabsize)
-                else:
-                    newline += line[i:]
-                    break
-
-            line = newline
-
-        return line.rstrip() + '\n'
-
-
-class ControlSpace(Verifier):
-    """Check for exactly one space after if/while/for"""
-
-    languages = set(('C', 'C++'))
-    test_name = 'spacing after if/while/for'
-    opt_name = 'control'
-
-    def check_line(self, line):
-        match = any_control.search(line)
-        return not (match and match.group(2) != " ")
-
-    def fix_line(self, line):
-        new_line = any_control.sub(r'\1 (', line)
-        return new_line
-
-
-class SortedIncludes(Verifier):
-    """Check for proper sorting of include statements"""
-
-    languages = sort_includes.default_languages
-    test_name = 'include file order'
-    opt_name = 'include'
-
-    def __init__(self, *args, **kwargs):
-        super(SortedIncludes, self).__init__(*args, **kwargs)
-        self.sort_includes = sort_includes.SortIncludes()
-
-    def check(self, filename, regions=all_regions):
-        f = self.open(filename, 'r')
-
-        lines = [ l.rstrip('\n') for l in f.xreadlines() ]
-        old = ''.join(line + '\n' for line in lines)
-        f.close()
-
-        if len(lines) == 0:
-            return 0
-
-        language = lang_type(filename, lines[0])
-        sort_lines = list(self.sort_includes(lines, filename, language))
-        new = ''.join(line + '\n' for line in sort_lines)
-
-        mod = modified_regions(old, new)
-        modified = mod & regions
-
-        if modified:
-            self.write("invalid sorting of includes in %s\n" % (filename))
-            if self.ui.verbose:
-                for start, end in modified.regions:
-                    self.write("bad region [%d, %d)\n" % (start, end))
-            return 1
-
-        return 0
-
-    def fix(self, filename, regions=all_regions):
-        f = self.open(filename, 'r+')
-
-        old = f.readlines()
-        lines = [ l.rstrip('\n') for l in old ]
-        language = lang_type(filename, lines[0])
-        sort_lines = list(self.sort_includes(lines, filename, language))
-        new = ''.join(line + '\n' for line in sort_lines)
-
-        f.seek(0)
-        f.truncate()
-
-        for i,line in enumerate(sort_lines):
-            f.write(line)
-            f.write('\n')
-        f.close()
-
-
-def linelen(line):
-    tabs = line.count('\t')
-    if not tabs:
-        return len(line)
-
-    count = 0
-    for c in line:
-        if c == '\t':
-            count += tabsize - count % tabsize
-        else:
-            count += 1
-
-    return count
-
-class LineLength(Verifier):
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
-    test_name = 'line length'
-    opt_name = 'length'
-
-    def check_line(self, line):
-        return linelen(line) <= 78
-
-    def fix(self, filename, regions=all_regions):
-        self.write("Warning: cannot automatically fix overly long lines.\n")
-
-
-class BoolCompare(Verifier):
-    languages = set(('C', 'C++', 'python'))
-    test_name = 'boolean comparison'
-    opt_name = 'boolcomp'
-
-    regex = re.compile(r'\s*==\s*([Tt]rue|[Ff]alse)\b')
-
-    def check_line(self, line):
-        return self.regex.search(line) == None
-
-    def fix_line(self, line):
-        match = self.regex.search(line)
-        if match:
-            if match.group(1) in ('true', 'True'):
-                line = self.regex.sub('', line)
-            else:
-                self.write("Warning: cannot automatically fix "
-                           "comparisons with false/False.\n")
-        return line
-
-
-# list of all verifier classes
-all_verifiers = [
-    Whitespace,
-    ControlSpace,
-    LineLength,
-    BoolCompare,
-    SortedIncludes
-]
-
-class ValidationStats(object):
-    def __init__(self):
-        self.toolong = 0
-        self.toolong80 = 0
-        self.leadtabs = 0
-        self.trailwhite = 0
-        self.badcontrol = 0
-        self.cret = 0
-
-    def dump(self):
-        print '''\
-%d violations of lines over 79 chars. %d of which are 80 chars exactly.
-%d cases of whitespace at the end of a line.
-%d cases of tabs to indent.
-%d bad parens after if/while/for.
-%d carriage returns found.
-''' % (self.toolong, self.toolong80, self.trailwhite, self.leadtabs,
-       self.badcontrol, self.cret)
-
-    def __nonzero__(self):
-        return self.toolong or self.toolong80 or self.leadtabs or \
-               self.trailwhite or self.badcontrol or self.cret
-
-def validate(filename, stats, verbose, exit_code):
+def validate(filename, verbose, exit_code):
     lang = lang_type(filename)
-    if lang not in format_types:
+    if lang not in ('C', 'C++'):
         return
-
-    def msg(lineno, line, message):
-        print '%s:%d>' % (filename, lineno + 1), message
-        if verbose > 2:
-            print line
 
     def bad():
         if exit_code is not None:
@@ -505,51 +100,18 @@ def validate(filename, stats, verbose, exit_code):
         if verbose > 0:
             print 'could not open file %s' % filename
         bad()
-        return
+        return None
 
-    for i,line in enumerate(f):
+    vals = [ v(filename, verbose=(verbose > 1), language=lang)
+             for v in all_validators ]
+
+    for i, line in enumerate(f):
         line = line.rstrip('\n')
+        for v in vals:
+            v.validate_line(i, line)
 
-        # no carriage returns
-        if line.find('\r') != -1:
-            self.cret += 1
-            if verbose > 1:
-                msg(i, line, 'carriage return found')
-            bad()
 
-        # lines max out at 79 chars
-        llen = linelen(line)
-        if llen > 79:
-            stats.toolong += 1
-            if llen == 80:
-                stats.toolong80 += 1
-            if verbose > 1:
-                msg(i, line, 'line too long (%d chars)' % llen)
-            bad()
-
-        # no tabs used to indent
-        match = lead.search(line)
-        if match and match.group(1).find('\t') != -1:
-            stats.leadtabs += 1
-            if verbose > 1:
-                msg(i, line, 'using tabs to indent')
-            bad()
-
-        # no trailing whitespace
-        if trail.search(line):
-            stats.trailwhite +=1
-            if verbose > 1:
-                msg(i, line, 'trailing whitespace')
-            bad()
-
-        # for c++, exactly one space betwen if/while/for and (
-        if lang == 'C++':
-            match = any_control.search(line)
-            if match and match.group(2) != " ":
-                stats.badcontrol += 1
-                if verbose > 1:
-                    msg(i, line, 'improper spacing after %s' % match.group(1))
-                bad()
+    return vals
 
 
 def _modified_regions(repo, patterns, **kwargs):
@@ -627,11 +189,11 @@ def do_check_style(hgui, repo, *pats, **opts):
     ui = MercurialUI(hgui, verbose=hgui.verbose)
 
     # instantiate varifier objects
-    verifiers = [v(ui, repo, opts) for v in all_verifiers]
+    verifiers = [v(ui, opts, base=repo.root) for v in all_verifiers]
 
     for fname, mod_regions in _modified_regions(repo, pats, **opts):
         for verifier in verifiers:
-            if verifier.apply(fname, mod_regions):
+            if verifier.apply(joinpath(repo.root, fname), mod_regions):
                 return True
 
     return False
@@ -653,11 +215,13 @@ def do_check_format(hgui, repo, *pats, **opts):
 
     verbose = 0
     for fname, mod_regions in _modified_regions(repo, pats, **opts):
-        stats = ValidationStats()
-        validate(joinpath(repo.root, fname), stats, verbose, None)
-        if stats:
+        vals = validate(joinpath(repo.root, fname), verbose, None)
+        if vals is None:
+            return True
+        elif any([not v for v in vals]):
             print "%s:" % fname
-            stats.dump()
+            for v in vals:
+                v.dump()
             result = ui.prompt("invalid formatting\n(i)gnore or (a)bort?",
                                'ai', 'a')
             if result == 'a':
@@ -744,9 +308,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    stats = ValidationStats()
     for filename in args.file:
-        validate(filename, stats=stats, verbose=args.verbose, exit_code=1)
+        vals = validate(filename, verbose=args.verbose,
+                        exit_code=1)
 
-        if args.verbose > 0:
-            stats.dump()
+        if args.verbose > 0 and vals is not None:
+            for v in vals:
+                v.dump()
