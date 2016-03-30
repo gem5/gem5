@@ -204,17 +204,15 @@ class SortIncludes(object):
         return sorted(set(includes))
 
     def dump_includes(self):
-        blocks = []
-        # Create a list of blocks in the prescribed include
-        # order. Each entry in the list is a multi-line string with
-        # multiple includes.
+        includes = []
         for types in self.block_order:
-            block = "\n".join(self.dump_blocks(types))
-            if block:
-                blocks.append(block)
+            block = self.dump_blocks(types)
+            if includes and block:
+                includes.append("")
+            includes += block
 
         self.reset()
-        return "\n\n".join(blocks)
+        return includes
 
     def __call__(self, lines, filename, language):
         self.reset()
@@ -263,7 +261,8 @@ class SortIncludes(object):
 
                 # Output pending includes, a new line between, and the
                 # current l.
-                yield self.dump_includes()
+                for include in self.dump_includes():
+                    yield include
                 yield ''
                 yield line
             else:
@@ -272,9 +271,8 @@ class SortIncludes(object):
 
         # We've reached EOF, so dump any pending includes
         if processing_includes:
-            yield self.dump_includes()
-
-
+            for include in self.dump_includes():
+                yield include
 
 # default language types to try to apply our sorting rules to
 default_languages = frozenset(('C', 'C++', 'isa', 'python', 'scons', 'swig'))
