@@ -730,56 +730,23 @@ cmdtable = {
 }
 
 if __name__ == '__main__':
-    import getopt
+    import argparse
 
-    progname = sys.argv[0]
-    if len(sys.argv) < 2:
-        sys.exit('usage: %s <command> [<command args>]' % progname)
+    parser = argparse.ArgumentParser(
+        description="Check a file for style violations")
 
-    fixwhite_usage = '%s fixwhite [-t <tabsize> ] <path> [...] \n' % progname
-    chkformat_usage = '%s chkformat <path> [...] \n' % progname
-    chkwhite_usage = '%s chkwhite <path> [...] \n' % progname
+    parser.add_argument("--verbose", "-v", action="count",
+                        help="Produce verbose output")
 
-    command = sys.argv[1]
-    if command == 'fixwhite':
-        flags = 't:'
-        usage = fixwhite_usage
-    elif command == 'chkwhite':
-        flags = 'nv'
-        usage = chkwhite_usage
-    elif command == 'chkformat':
-        flags = 'nv'
-        usage = chkformat_usage
-    else:
-        sys.exit(fixwhite_usage + chkwhite_usage + chkformat_usage)
+    parser.add_argument("file", metavar="FILE", nargs="+",
+                        type=str,
+                        help="Source file to inspect")
 
-    opts, args = getopt.getopt(sys.argv[2:], flags)
+    args = parser.parse_args()
 
-    code = 1
-    verbose = 1
-    for opt,arg in opts:
-        if opt == '-n':
-            code = None
-        if opt == '-t':
-            tabsize = int(arg)
-        if opt == '-v':
-            verbose += 1
+    stats = ValidationStats()
+    for filename in args.file:
+        validate(filename, stats=stats, verbose=args.verbose, exit_code=1)
 
-    if command == 'fixwhite':
-        for filename in args:
-            fixwhite(filename, tabsize)
-    elif command == 'chkwhite':
-        for filename in args:
-            for line,num in checkwhite(filename):
-                print 'invalid whitespace: %s:%d' % (filename, num)
-                if verbose:
-                    print '>>%s<<' % line[:-1]
-    elif command == 'chkformat':
-        stats = ValidationStats()
-        for filename in args:
-            validate(filename, stats=stats, verbose=verbose, exit_code=code)
-
-        if verbose > 0:
+        if args.verbose > 0:
             stats.dump()
-    else:
-        sys.exit("command '%s' not found" % command)
