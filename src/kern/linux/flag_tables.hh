@@ -46,7 +46,7 @@
  * @file flag_tables.hh
  *
  * This file contains definitions of flag translation tables for the
- * open() and mmap() system calls.  Since the tables are nearly identical
+ * open() system call.  Since the tables are nearly identical
  * across target platforms (other than the values of the target flags),
  * we use a single copy of the tables but include it separately for
  * each target platform.  The TARGET macro must be #defined before including
@@ -110,47 +110,3 @@ SyscallFlagTransTable TARGET::openFlagTable[] = {
 
 const int TARGET::NUM_OPEN_FLAGS =
   sizeof(TARGET::openFlagTable) / sizeof(TARGET::openFlagTable[0]);
-
-// mmap(2) flags translation table
-SyscallFlagTransTable TARGET::mmapFlagTable[] = {
-  { TARGET::TGT_MAP_SHARED,     MAP_SHARED },
-  { TARGET::TGT_MAP_PRIVATE,    MAP_PRIVATE },
-  { TARGET::TGT_MAP_FIXED,      MAP_FIXED },
-  { TARGET::TGT_MAP_ANONYMOUS,  MAP_ANONYMOUS },
-  { TARGET::TGT_MAP_ANON,       MAP_ANON },
-  { TARGET::TGT_MAP_FILE,       MAP_FILE },
-#if defined(MAP_32BIT) && defined(TARGET_HAS_MAP_32BIT)
-  { TARGET::TGT_MAP_32BIT,      MAP_32BIT },
-#endif
-#ifdef MAP_DENYWRITE
-  { TARGET::TGT_MAP_DENYWRITE,  MAP_DENYWRITE },
-#endif
-#ifdef MAP_EXECUTABLE
-  { TARGET::TGT_MAP_EXECUTABLE, MAP_EXECUTABLE },
-#endif
-#ifdef MAP_GROWSDOWN
-  { TARGET::TGT_MAP_GROWSDOWN,  MAP_GROWSDOWN },
-#endif
-#ifdef MAP_HUGETLB
-  { TARGET::TGT_MAP_HUGETLB,    MAP_HUGETLB },
-#endif
-#ifdef MAP_LOCKED
-  { TARGET::TGT_MAP_LOCKED,     MAP_LOCKED },
-#endif
-#ifdef MAP_NONBLOCK
-  { TARGET::TGT_MAP_NONBLOCK,   MAP_NONBLOCK },
-#endif
-#ifdef MAP_NORESERVE
-  { TARGET::TGT_MAP_NORESERVE,  MAP_NORESERVE },
-#endif
-#ifdef MAP_POPULATE
-  { TARGET::TGT_MAP_POPULATE,   MAP_POPULATE },
-#endif
-#ifdef MAP_STACK
-  { TARGET::TGT_MAP_STACK,      MAP_STACK },
-#endif
-};
-
-const unsigned TARGET::NUM_MMAP_FLAGS =
-  sizeof(TARGET::mmapFlagTable) / sizeof(TARGET::mmapFlagTable[0]);
-

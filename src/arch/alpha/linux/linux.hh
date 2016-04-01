@@ -103,9 +103,6 @@ class AlphaLinux : public Linux
     static const int TGT_O_PATH         = 040000000;    //!< O_PATH
     //@}
 
-    /// For mmap().
-    static SyscallFlagTransTable mmapFlagTable[];
-
     static const unsigned TGT_MAP_SHARED        = 0x000001;
     static const unsigned TGT_MAP_PRIVATE       = 0x000002;
     static const unsigned TGT_MAP_ANON          = 0x000010;

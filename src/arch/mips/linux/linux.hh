@@ -102,9 +102,6 @@ class MipsLinux : public Linux
     static const int TGT_O_PATH         = 0x00200000;   //!< O_PATH
     //@}
 
-    /// For mmap().
-    static SyscallFlagTransTable mmapFlagTable[];
-
     static const unsigned TGT_MAP_SHARED        = 0x00001;
     static const unsigned TGT_MAP_PRIVATE       = 0x00002;
     static const unsigned TGT_MAP_ANON          = 0x00800;
