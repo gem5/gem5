@@ -244,6 +244,11 @@ class SrcClockDomain : public ClockDomain
 
   private:
     /**
+     * Inform other components about the changed performance level
+     */
+    void signalPerfLevelUpdate();
+
+    /**
       * List of possible frequency operational points, should be in
       * descending order
       * An empty list corresponds to default frequency specified for its
