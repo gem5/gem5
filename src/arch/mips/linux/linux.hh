@@ -91,6 +91,7 @@ class MipsLinux : public Linux
     static const int TGT_O_APPEND       = 0x00000008;   //!< O_APPEND
     static const int TGT_O_NONBLOCK     = 0x00000080;   //!< O_NONBLOCK
     static const int TGT_O_DSYNC        = 0x00000010;   //!< O_DSYNC
+    static const int TGT_FASYNC         = 0x00001000;   //!< O_FASYNC
     static const int TGT_O_DIRECT       = 0x00008000;   //!< O_DIRECT
     static const int TGT_O_LARGEFILE    = 0x00002000;   //!< O_LARGEFILE
     static const int TGT_O_DIRECTORY    = 0x00010000;   //!< O_DIRECTORY

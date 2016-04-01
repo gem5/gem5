@@ -106,11 +106,12 @@ class SparcLinux : public Linux
     static const int TGT_O_TRUNC        = 0x00000400;   //!< O_TRUNC
     static const int TGT_O_EXCL         = 0x00000800;   //!< O_EXCL
     static const int TGT_O_NOCTTY       = 0x00008000;   //!< O_NOCTTY
-    static const int TGT_O_SYNC         = 0x00002000;   //!< O_SYNC
+    static const int TGT_O_DSYNC        = 0x00002000;   //!< O_DSYNC
     static const int TGT_O_LARGEFILE    = 0x00040000;   //!< O_LARGEFILE
     static const int TGT_O_DIRECT       = 0x00100000;   //!< O_DIRECT
     static const int TGT_O_NOATIME      = 0x00200000;   //!< O_NOATIME
     static const int TGT_O_CLOEXEC      = 0x00400000;   //!< O_CLOEXEC
+    static const int TGT_O_SYNC         = 0x00802000;   //!< O_SYNC
     static const int TGT_O_PATH         = 0x01000000;   //!< O_PATH
 
     static const int TGT_O_DIRECTORY    = 000200000;   //!< O_DIRECTORY
