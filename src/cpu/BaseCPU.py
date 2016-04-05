@@ -101,6 +101,7 @@ class BaseCPU(MemObject):
     Counter totalInsts();
     void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
     void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
+    uint64_t getCurrentInstCount(ThreadID tid);
 ''')
 
     @classmethod

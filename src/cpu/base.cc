@@ -691,6 +691,12 @@ BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
     comInstEventQueue[tid]->schedule(event, now + insts);
 }
 
+uint64_t
+BaseCPU::getCurrentInstCount(ThreadID tid)
+{
+    return Tick(comInstEventQueue[tid]->getCurTick());
+}
+
 AddressMonitor::AddressMonitor() {
     armed = false;
     waiting = false;

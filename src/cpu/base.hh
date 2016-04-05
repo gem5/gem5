@@ -465,6 +465,15 @@ class BaseCPU : public MemObject
      */
     void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
 
+    /**
+     * Get the number of instructions executed by the specified thread
+     * on this CPU. Used by Python to control simulation.
+     *
+     * @param tid Thread monitor
+     * @return Number of instructions executed
+     */
+    uint64_t getCurrentInstCount(ThreadID tid);
+
   public:
     /**
      * @{
