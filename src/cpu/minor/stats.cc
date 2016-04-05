@@ -82,6 +82,13 @@ MinorStats::regStats(const std::string &name, BaseCPU &baseCpu)
         .desc("IPC: instructions per cycle")
         .precision(6);
     ipc = numInsts / baseCpu.numCycles;
+
+    committedInstType
+        .init(baseCpu.numThreads, Enums::Num_OpClass)
+        .name(name + ".op_class")
+        .desc("Class of committed instruction")
+        .flags(Stats::total | Stats::pdf | Stats::dist);
+    committedInstType.ysubnames(Enums::OpClassStrings);
 }
 
 };

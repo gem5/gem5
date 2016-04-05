@@ -849,6 +849,8 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     thread->numOp++;
     thread->numOps++;
     cpu.stats.numOps++;
+    cpu.stats.committedInstType[inst->id.threadId]
+                               [inst->staticInst->opClass()]++;
 
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)

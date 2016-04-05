@@ -76,6 +76,9 @@ class MinorStats
     Stats::Formula cpi;
     Stats::Formula ipc;
 
+    /** Number of instructions by type (OpClass) */
+    Stats::Vector2d committedInstType;
+
   public:
     MinorStats();
 
