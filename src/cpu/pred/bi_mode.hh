@@ -63,6 +63,7 @@ class BiModeBP : public BPredUnit
     void btbUpdate(Addr branch_addr, void * &bp_history);
     void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
     void retireSquashed(void *bp_history);
+    unsigned getGHR(void *bp_history) const;
 
   private:
     void updateGlobalHistReg(bool taken);

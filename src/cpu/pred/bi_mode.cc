@@ -236,6 +236,12 @@ BiModeBP::retireSquashed(void *bp_history)
     delete history;
 }
 
+unsigned
+BiModeBP::getGHR(void *bp_history) const
+{
+    return static_cast<BPHistory*>(bp_history)->globalHistoryReg;
+}
+
 void
 BiModeBP::updateGlobalHistReg(bool taken)
 {

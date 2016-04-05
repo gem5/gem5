@@ -35,9 +35,11 @@ if env['TARGET_ISA'] == 'null':
 
 SimObject('BranchPredictor.py')
 
+DebugFlag('Indirect')
 Source('bpred_unit.cc')
 Source('2bit_local.cc')
 Source('btb.cc')
+Source('indirect.cc')
 Source('ras.cc')
 Source('tournament.cc')
 Source ('bi_mode.cc')
