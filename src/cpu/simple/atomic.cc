@@ -87,9 +87,9 @@ AtomicSimpleCPU::init()
     BaseSimpleCPU::init();
 
     int cid = threadContexts[0]->contextId();
-    ifetch_req.setThreadContext(cid, 0);
-    data_read_req.setThreadContext(cid, 0);
-    data_write_req.setThreadContext(cid, 0);
+    ifetch_req.setContext(cid);
+    data_read_req.setContext(cid);
+    data_write_req.setContext(cid);
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
@@ -557,9 +557,9 @@ AtomicSimpleCPU::tick()
     if (numThreads > 1) {
         ContextID cid = threadContexts[curThread]->contextId();
 
-        ifetch_req.setThreadContext(cid, curThread);
-        data_read_req.setThreadContext(cid, curThread);
-        data_write_req.setThreadContext(cid, curThread);
+        ifetch_req.setContext(cid);
+        data_read_req.setContext(cid);
+        data_write_req.setContext(cid);
     }
 
     SimpleExecContext& t_info = *threadInfo[curThread];

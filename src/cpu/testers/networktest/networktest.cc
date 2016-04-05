@@ -243,7 +243,7 @@ NetworkTest::generatePkt()
         // generate packet for virtual network 1
         requestType = MemCmd::ReadReq;
         flags.set(Request::INST_FETCH);
-        req = new Request(0, 0x0, access_size, flags, masterId, 0x0, 0, 0);
+        req = new Request(0, 0x0, access_size, flags, masterId, 0x0, 0);
         req->setPaddr(paddr);
     } else {  // if (randomReqType == 2)
         // generate packet for virtual network 2
@@ -251,7 +251,7 @@ NetworkTest::generatePkt()
         req = new Request(paddr, access_size, flags, masterId);
     }
 
-    req->setThreadContext(id,0);
+    req->setContext(id);
 
     //No need to do functional simulation
     //We just do timing simulation of the network

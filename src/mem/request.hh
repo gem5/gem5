@@ -257,14 +257,13 @@ class Request
         VALID_PC             = 0x00000010,
         /** Whether or not the context ID is valid. */
         VALID_CONTEXT_ID     = 0x00000020,
-        VALID_THREAD_ID      = 0x00000040,
         /** Whether or not the sc result is valid. */
         VALID_EXTRA_DATA     = 0x00000080,
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
          */
-        STICKY_PRIVATE_FLAGS = VALID_CONTEXT_ID | VALID_THREAD_ID
+        STICKY_PRIVATE_FLAGS = VALID_CONTEXT_ID
     };
 
   private:
@@ -339,10 +338,8 @@ class Request
      * store conditional or the compare value for a CAS. */
     uint64_t _extraData;
 
-    /** The context ID (for statistics, typically). */
+    /** The context ID (for statistics, locks, and wakeups). */
     ContextID _contextId;
-    /** The thread ID (id within this CPU) */
-    ThreadID _threadId;
 
     /** program counter of initiating access; for tracing/debugging */
     Addr _pc;
@@ -363,21 +360,21 @@ class Request
     Request()
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          _extraData(0), _contextId(0), _pc(0),
           _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
           accessDelta(0), depth(0)
     {}
 
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid,
-            InstSeqNum seq_num, ContextID cid, ThreadID tid)
+            InstSeqNum seq_num, ContextID cid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          _extraData(0), _contextId(0), _pc(0),
           _reqInstSeqNum(seq_num), atomicOpFunctor(nullptr), translateDelta(0),
           accessDelta(0), depth(0)
     {
         setPhys(paddr, size, flags, mid, curTick());
-        setThreadContext(cid, tid);
+        setContext(cid);
         privateFlags.set(VALID_INST_SEQ_NUM);
     }
 
@@ -389,7 +386,7 @@ class Request
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          _extraData(0), _contextId(0), _pc(0),
           _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
           accessDelta(0), depth(0)
     {
@@ -399,7 +396,7 @@ class Request
     Request(Addr paddr, unsigned size, Flags flags, MasterID mid, Tick time)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          _extraData(0), _contextId(0), _pc(0),
           _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
           accessDelta(0), depth(0)
     {
@@ -410,7 +407,7 @@ class Request
             Addr pc)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(pc),
+          _extraData(0), _contextId(0), _pc(pc),
           _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
           accessDelta(0), depth(0)
     {
@@ -419,15 +416,15 @@ class Request
     }
 
     Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc, ContextID cid, ThreadID tid)
+            Addr pc, ContextID cid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
-          _extraData(0), _contextId(0), _threadId(0), _pc(0),
+          _extraData(0), _contextId(0), _pc(0),
           _reqInstSeqNum(0), atomicOpFunctor(nullptr), translateDelta(0),
           accessDelta(0), depth(0)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
-        setThreadContext(cid, tid);
+        setContext(cid);
     }
 
     Request(int asid, Addr vaddr, int size, Flags flags, MasterID mid, Addr pc,
@@ -435,7 +432,7 @@ class Request
         : atomicOpFunctor(atomic_op)
     {
         setVirt(asid, vaddr, size, flags, mid, pc);
-        setThreadContext(cid, tid);
+        setContext(cid);
     }
 
     ~Request()
@@ -446,14 +443,13 @@ class Request
     }
 
     /**
-     * Set up CPU and thread numbers.
+     * Set up Context numbers.
      */
     void
-    setThreadContext(ContextID context_id, ThreadID tid)
+    setContext(ContextID context_id)
     {
         _contextId = context_id;
-        _threadId = tid;
-        privateFlags.set(VALID_CONTEXT_ID|VALID_THREAD_ID);
+        privateFlags.set(VALID_CONTEXT_ID);
     }
 
     /**
@@ -699,14 +695,6 @@ class Request
     {
         assert(privateFlags.isSet(VALID_CONTEXT_ID));
         return _contextId;
-    }
-
-    /** Accessor function for thread ID. */
-    ThreadID
-    threadId() const
-    {
-        assert(privateFlags.isSet(VALID_THREAD_ID));
-        return _threadId;
     }
 
     void
