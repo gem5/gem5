@@ -1,7 +1,14 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2015 ARM Limited
-# All rights reserved
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -28,17 +35,27 @@
 #
 # Authors: David Guillen Fandos
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import Parent
 
-SimObject('MathExprPowerModel.py')
-SimObject('PowerModel.py')
-SimObject('PowerModelState.py')
-SimObject('ThermalDomain.py')
-SimObject('ThermalModel.py')
+# Represents a power model for a simobj
+# The model itself is also a SimObject so we can make use some
+# nice features available such as Parent.any
+class PowerModel(SimObject):
+    type = 'PowerModel'
+    cxx_header = "sim/power/power_model.hh"
 
-Source('power_model.cc')
-Source('mathexpr_powermodel.cc')
-Source('thermal_domain.cc')
-Source('thermal_model.cc')
+    @classmethod
+    def export_methods(cls, code):
+        code('''
+      double getDynamicPower() const;
+      double getStaticPower() const;
+''')
 
-DebugFlag('ThermalDomain')
+    # Keep a list of every model for every power state
+    pm = VectorParam.PowerModelState([], "List of per-state power models.")
+
+    # Need a reference to the system so we can query the thermal domain
+    # about temperature (temperature is needed for leakage calculation)
+    subsystem = Param.SubSystem(Parent.any, "subsystem")

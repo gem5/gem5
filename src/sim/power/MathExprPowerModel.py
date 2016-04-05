@@ -1,7 +1,14 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2015 ARM Limited
-# All rights reserved
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -28,17 +35,18 @@
 #
 # Authors: David Guillen Fandos
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from PowerModelState import PowerModelState
 
-SimObject('MathExprPowerModel.py')
-SimObject('PowerModel.py')
-SimObject('PowerModelState.py')
-SimObject('ThermalDomain.py')
-SimObject('ThermalModel.py')
+# Represents a power model for a simobj
+class MathExprPowerModel(PowerModelState):
+    type = 'MathExprPowerModel'
+    cxx_header = "sim/power/mathexpr_powermodel.hh"
 
-Source('power_model.cc')
-Source('mathexpr_powermodel.cc')
-Source('thermal_domain.cc')
-Source('thermal_model.cc')
-
-DebugFlag('ThermalDomain')
+    # Equations for dynamic and static power
+    # Equations may use gem5 stats ie. "1.1*ipc + 2.3*l2_cache.overall_misses"
+    # It is possible to use automatic variables such as "temp"
+    # You may also use stat names (relative path to the simobject)
+    dyn = Param.String("", "Expression for the dynamic power")
+    st = Param.String("", "Expression for the static power")

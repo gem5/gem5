@@ -37,79 +37,75 @@
  * Authors: David Guillen Fandos
  */
 
-#include "sim/power/thermal_domain.hh"
+#ifndef __SIM_MATHEXPR_POWERMODEL_PM_HH__
+#define __SIM_MATHEXPR_POWERMODEL_PM_HH__
 
-#include <algorithm>
+#include <unordered_map>
 
 #include "base/statistics.hh"
-#include "debug/ThermalDomain.hh"
-#include "params/ThermalDomain.hh"
-#include "sim/power/thermal_model.hh"
+#include "params/MathExprPowerModel.hh"
+#include "sim/mathexpr.hh"
+#include "sim/power/power_model.hh"
 #include "sim/sim_object.hh"
 
-ThermalDomain::ThermalDomain(const Params *p)
-    : SimObject(p), _initTemperature(p->initial_temperature),
-    node(NULL), subsystem(NULL)
+/**
+ * A Equation power model. The power is represented as a combination
+ * of some stats and automatic variables (like temperature).
+ */
+class MathExprPowerModel : public PowerModelState
 {
-}
+  public:
 
-double
-ThermalDomain::currentTemperature() const
-{
-    return node->temp;
-}
+    typedef MathExprPowerModelParams Params;
+    MathExprPowerModel(const Params *p);
 
-void
-ThermalDomain::setSubSystem(SubSystem * ss)
-{
-    assert(!this->subsystem);
-    this->subsystem = ss;
+    /**
+     * Get the dynamic power consumption.
+     *
+     * @return Power (Watts) consumed by this object (dynamic component)
+     */
+    double getDynamicPower() const {
+        return dyn_expr.eval(
+            std::bind(&MathExprPowerModel::getStatValue,
+                this, std::placeholders::_1)
+        );
+    }
 
-    ppThermalUpdate = new ProbePointArg<double>(subsystem->getProbeManager(),
-                                                "thermalUpdate");
-}
+    /**
+     * Get the static power consumption.
+     *
+     * @return Power (Watts) consumed by this object (static component)
+     */
+    double getStaticPower() const {
+        return st_expr.eval(
+            std::bind(&MathExprPowerModel::getStatValue,
+                this, std::placeholders::_1)
+        );
+    }
 
-void
-ThermalDomain::regStats()
-{
-    currentTemp
-        .method(this, &ThermalDomain::currentTemperature)
-        .name(params()->name + ".temp")
-        .desc("Temperature in centigrate degrees")
-        ;
-}
+    /**
+     * Get the value for a variable (maps to a stat)
+     *
+     * @param name Name of the variable to retrieve the value from
+     *
+     * @return Power (Watts) consumed by this object (static component)
+     */
+    double getStatValue(const std::string & name) const;
 
-void
-ThermalDomain::emitUpdate()
-{
-    ppThermalUpdate->notify(node->temp);
-}
+    void startup();
 
-ThermalDomain *
-ThermalDomainParams::create()
-{
-    return new ThermalDomain(this);
-}
+    void regStats();
 
-void
-ThermalDomain::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_initTemperature);
-}
+  private:
 
-void
-ThermalDomain::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_initTemperature);
-}
+    // Math expressions for dynamic and static power
+    MathExpr dyn_expr, st_expr;
 
+    // Basename of the object in the gem5 stats hierachy
+    std::string basename;
 
-LinearEquation
-ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
-{
-    LinearEquation eq(n);
-    double power = subsystem->getDynamicPower() + subsystem->getStaticPower();
-    if (tn == node)
-        eq[eq.cnt()] = power;
-    return eq;
-}
+    // Map that contains relevant stats for this power model
+    std::unordered_map<std::string, Stats::Info*> stats_map;
+};
+
+#endif

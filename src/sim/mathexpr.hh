@@ -37,79 +37,91 @@
  * Authors: David Guillen Fandos
  */
 
-#include "sim/power/thermal_domain.hh"
+#ifndef __SIM_MATHEXPR_HH__
+#define __SIM_MATHEXPR_HH__
 
 #include <algorithm>
+#include <functional>
+#include <string>
 
-#include "base/statistics.hh"
-#include "debug/ThermalDomain.hh"
-#include "params/ThermalDomain.hh"
-#include "sim/power/thermal_model.hh"
-#include "sim/sim_object.hh"
+class MathExpr {
+  public:
 
-ThermalDomain::ThermalDomain(const Params *p)
-    : SimObject(p), _initTemperature(p->initial_temperature),
-    node(NULL), subsystem(NULL)
-{
-}
+    MathExpr(std::string expr);
 
-double
-ThermalDomain::currentTemperature() const
-{
-    return node->temp;
-}
+    typedef std::function<double(std::string)> EvalCallback;
 
-void
-ThermalDomain::setSubSystem(SubSystem * ss)
-{
-    assert(!this->subsystem);
-    this->subsystem = ss;
+    /**
+     * Prints an ASCII representation of the expression tree
+     *
+     * @return A string containing the ASCII representation of the expression
+     */
+    std::string toStr() const { return toStr(root, ""); }
 
-    ppThermalUpdate = new ProbePointArg<double>(subsystem->getProbeManager(),
-                                                "thermalUpdate");
-}
+    /**
+     * Evaluates the expression
+     *
+     * @param fn A callback funcion to evaluate variables
+     *
+     * @return The value for this expression
+     */
+    double eval(EvalCallback fn) const { return eval(root, fn); }
 
-void
-ThermalDomain::regStats()
-{
-    currentTemp
-        .method(this, &ThermalDomain::currentTemperature)
-        .name(params()->name + ".temp")
-        .desc("Temperature in centigrate degrees")
-        ;
-}
+  private:
+    enum Operator {
+        bAdd, bSub, bMul, bDiv, bPow, uNeg, sValue, sVariable, nInvalid
+    };
 
-void
-ThermalDomain::emitUpdate()
-{
-    ppThermalUpdate->notify(node->temp);
-}
+    // Match operators
+    const int MAX_PRIO = 4;
+    typedef double (*binOp)(double, double);
+    struct OpSearch {
+        bool binary;
+        Operator op;
+        int priority;
+        char c;
+        binOp fn;
+    };
 
-ThermalDomain *
-ThermalDomainParams::create()
-{
-    return new ThermalDomain(this);
-}
+    /** Operator list */
+    std::array<OpSearch, uNeg + 1> ops;
 
-void
-ThermalDomain::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_initTemperature);
-}
+    class Node {
+      public:
+        Node() : op(nInvalid), l(0), r(0), value(0) {}
+        std::string toStr() const {
+            const char opStr[] = {'+', '-', '*', '/', '^', '-'};
+            switch (op) {
+              case nInvalid:
+                return "INVALID";
+              case sVariable:
+                return variable;
+              case sValue:
+                return std::to_string(value);
+              default:
+                return std::string(1, opStr[op]);
+            };
+        }
 
-void
-ThermalDomain::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_initTemperature);
-}
+        Operator op;
+        Node *l, *r;
+        double value;
+        std::string variable;
+    };
+
+    /** Root node */
+    Node * root;
+
+    /** Parse and create nodes from string */
+    Node *parse(std::string expr);
+
+    /** Print tree as string */
+    std::string toStr(Node *n, std::string prefix) const;
+
+    /** Eval a node */
+    double eval(const Node *n, EvalCallback fn) const;
+};
+
+#endif
 
 
-LinearEquation
-ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
-{
-    LinearEquation eq(n);
-    double power = subsystem->getDynamicPower() + subsystem->getStaticPower();
-    if (tn == node)
-        eq[eq.cnt()] = power;
-    return eq;
-}

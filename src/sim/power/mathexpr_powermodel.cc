@@ -37,79 +37,66 @@
  * Authors: David Guillen Fandos
  */
 
-#include "sim/power/thermal_domain.hh"
-
-#include <algorithm>
+#include "sim/power/mathexpr_powermodel.hh"
 
 #include "base/statistics.hh"
-#include "debug/ThermalDomain.hh"
-#include "params/ThermalDomain.hh"
+#include "params/MathExprPowerModel.hh"
+#include "sim/mathexpr.hh"
 #include "sim/power/thermal_model.hh"
 #include "sim/sim_object.hh"
 
-ThermalDomain::ThermalDomain(const Params *p)
-    : SimObject(p), _initTemperature(p->initial_temperature),
-    node(NULL), subsystem(NULL)
+MathExprPowerModel::MathExprPowerModel(const Params *p)
+    : PowerModelState(p), dyn_expr(p->dyn), st_expr(p->st)
 {
+    // Calculate the name of the object we belong to
+    std::vector<std::string> path;
+    tokenize(path, name(), '.', true);
+    // It's something like xyz.power_model.pm2
+    assert(path.size() > 2);
+    for (unsigned i = 0; i < path.size() - 2; i++)
+        basename += path[i] + ".";
+}
+
+void
+MathExprPowerModel::startup()
+{
+    // Create a map with stats and pointers for quick access
+    // Has to be done here, since we need access to the statsList
+    for (auto & i: Stats::statsList())
+        if (i->name.find(basename) == 0)
+            stats_map[i->name.substr(basename.size())] = i;
 }
 
 double
-ThermalDomain::currentTemperature() const
+MathExprPowerModel::getStatValue(const std::string &name) const
 {
-    return node->temp;
+    using namespace Stats;
+
+    // Automatic variables:
+    if (name == "temp")
+        return _temp;
+
+    // Try to cast the stat, only these are supported right now
+    Info *info = stats_map.at(name);
+
+    ScalarInfo *si = dynamic_cast<ScalarInfo*>(info);
+    if (si)
+        return si->value();
+    FormulaInfo *fi = dynamic_cast<FormulaInfo*>(info);
+    if (fi)
+        return fi->total();
+
+    panic("Unknown stat type!\n");
 }
 
 void
-ThermalDomain::setSubSystem(SubSystem * ss)
+MathExprPowerModel::regStats()
 {
-    assert(!this->subsystem);
-    this->subsystem = ss;
-
-    ppThermalUpdate = new ProbePointArg<double>(subsystem->getProbeManager(),
-                                                "thermalUpdate");
+    PowerModelState::regStats();
 }
 
-void
-ThermalDomain::regStats()
+MathExprPowerModel*
+MathExprPowerModelParams::create()
 {
-    currentTemp
-        .method(this, &ThermalDomain::currentTemperature)
-        .name(params()->name + ".temp")
-        .desc("Temperature in centigrate degrees")
-        ;
-}
-
-void
-ThermalDomain::emitUpdate()
-{
-    ppThermalUpdate->notify(node->temp);
-}
-
-ThermalDomain *
-ThermalDomainParams::create()
-{
-    return new ThermalDomain(this);
-}
-
-void
-ThermalDomain::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_initTemperature);
-}
-
-void
-ThermalDomain::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_initTemperature);
-}
-
-
-LinearEquation
-ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
-{
-    LinearEquation eq(n);
-    double power = subsystem->getDynamicPower() + subsystem->getStaticPower();
-    if (tn == node)
-        eq[eq.cnt()] = power;
-    return eq;
+    return new MathExprPowerModel(this);
 }
