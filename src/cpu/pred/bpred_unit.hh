@@ -52,6 +52,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/pred/btb.hh"
+#include "cpu/pred/indirect.hh"
 #include "cpu/pred/ras.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
@@ -197,6 +198,9 @@ class BPredUnit : public SimObject
     void BTBUpdate(Addr instPC, const TheISA::PCState &target)
     { BTB.update(instPC, target, 0); }
 
+
+    virtual unsigned getGHR(void* bp_history) const { return 0; }
+
     void dump();
 
   private:
@@ -210,7 +214,7 @@ class BPredUnit : public SimObject
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
               RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0), wasSquashed(0)
+              wasCall(0), wasReturn(0), wasSquashed(0), wasIndirect(0)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -255,6 +259,9 @@ class BPredUnit : public SimObject
 
         /** Whether this instruction has already mispredicted/updated bp */
         bool wasSquashed;
+
+        /** Wether this instruction was an indirect branch */
+        bool wasIndirect;
     };
 
     typedef std::deque<PredictorHistory> History;
@@ -276,6 +283,12 @@ class BPredUnit : public SimObject
     /** The per-thread return address stack. */
     std::vector<ReturnAddrStack> RAS;
 
+    /** Option to disable indirect predictor. */
+    const bool useIndirect;
+
+    /** The indirect target predictor. */
+    IndirectPredictor iPred;
+
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
     /** Stat for number of conditional branches predicted. */
@@ -294,6 +307,15 @@ class BPredUnit : public SimObject
     Stats::Scalar usedRAS;
     /** Stat for number of times the RAS is incorrect. */
     Stats::Scalar RASIncorrect;
+
+    /** Stat for the number of indirect target lookups.*/
+    Stats::Scalar indirectLookups;
+    /** Stat for the number of indirect target hits.*/
+    Stats::Scalar indirectHits;
+    /** Stat for the number of indirect target misses.*/
+    Stats::Scalar indirectMisses;
+    /** Stat for the number of indirect target mispredictions.*/
+    Stats::Scalar indirectMispredicted;
 
   protected:
     /** Number of bits to shift instructions by for predictor addresses. */

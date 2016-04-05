@@ -114,6 +114,8 @@ class TournamentBP : public BPredUnit
      */
     void squash(void *bp_history);
 
+    unsigned getGHR(void *bp_history) const;
+
     /** Returns the global history. */
     inline unsigned readGlobalHist() { return globalHistory; }
 
