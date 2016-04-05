@@ -66,7 +66,7 @@ class DefaultBTB
      *  @param instShiftAmt Offset amount for instructions to ignore alignment.
      */
     DefaultBTB(unsigned numEntries, unsigned tagBits,
-               unsigned instShiftAmt);
+               unsigned instShiftAmt, unsigned numThreads);
 
     void reset();
 
@@ -97,7 +97,7 @@ class DefaultBTB
      *  @param inst_PC The branch to look up.
      *  @return Returns the index into the BTB.
      */
-    inline unsigned getIndex(Addr instPC);
+    inline unsigned getIndex(Addr instPC, ThreadID tid);
 
     /** Returns the tag bits of a given address.
      *  @param inst_PC The branch's address.
@@ -125,6 +125,9 @@ class DefaultBTB
 
     /** Number of bits to shift PC when calculating tag. */
     unsigned tagShiftAmt;
+
+    /** Log2 NumThreads used for hashing threadid */
+    unsigned log2NumThreads;
 };
 
 #endif // __CPU_PRED_BTB_HH__

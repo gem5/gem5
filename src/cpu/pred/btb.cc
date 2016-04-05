@@ -35,10 +35,12 @@
 
 DefaultBTB::DefaultBTB(unsigned _numEntries,
                        unsigned _tagBits,
-                       unsigned _instShiftAmt)
+                       unsigned _instShiftAmt,
+                       unsigned _num_threads)
     : numEntries(_numEntries),
       tagBits(_tagBits),
-      instShiftAmt(_instShiftAmt)
+      instShiftAmt(_instShiftAmt),
+      log2NumThreads(floorLog2(_num_threads))
 {
     DPRINTF(Fetch, "BTB: Creating BTB object.\n");
 
@@ -69,10 +71,12 @@ DefaultBTB::reset()
 
 inline
 unsigned
-DefaultBTB::getIndex(Addr instPC)
+DefaultBTB::getIndex(Addr instPC, ThreadID tid)
 {
     // Need to shift PC over by the word offset.
-    return (instPC >> instShiftAmt) & idxMask;
+    return ((instPC >> instShiftAmt)
+            ^ (tid << (tagShiftAmt - instShiftAmt - log2NumThreads)))
+            & idxMask;
 }
 
 inline
@@ -85,7 +89,7 @@ DefaultBTB::getTag(Addr instPC)
 bool
 DefaultBTB::valid(Addr instPC, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(instPC);
+    unsigned btb_idx = getIndex(instPC, tid);
 
     Addr inst_tag = getTag(instPC);
 
@@ -106,7 +110,7 @@ DefaultBTB::valid(Addr instPC, ThreadID tid)
 TheISA::PCState
 DefaultBTB::lookup(Addr instPC, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(instPC);
+    unsigned btb_idx = getIndex(instPC, tid);
 
     Addr inst_tag = getTag(instPC);
 
@@ -124,7 +128,7 @@ DefaultBTB::lookup(Addr instPC, ThreadID tid)
 void
 DefaultBTB::update(Addr instPC, const TheISA::PCState &target, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(instPC);
+    unsigned btb_idx = getIndex(instPC, tid);
 
     assert(btb_idx < numEntries);
 

@@ -59,7 +59,8 @@ BPredUnit::BPredUnit(const Params *params)
       predHist(numThreads),
       BTB(params->BTBEntries,
           params->BTBTagSize,
-          params->instShiftAmt),
+          params->instShiftAmt,
+          params->numThreads),
       RAS(numThreads),
       instShiftAmt(params->instShiftAmt)
 {
