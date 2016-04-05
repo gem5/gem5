@@ -195,10 +195,10 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         DPRINTF(Branch, "[tid:%i]: Unconditional control.\n", tid);
         pred_taken = true;
         // Tell the BP there was an unconditional branch.
-        uncondBranch(pc.instAddr(), bp_history);
+        uncondBranch(tid, pc.instAddr(), bp_history);
     } else {
         ++condPredicted;
-        pred_taken = lookup(pc.instAddr(), bp_history);
+        pred_taken = lookup(tid, pc.instAddr(), bp_history);
 
         DPRINTF(Branch, "[tid:%i]: [sn:%i] Branch predictor"
                 " predicted %i for PC %s\n", tid, seqNum,  pred_taken, pc);
@@ -265,7 +265,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     // because the BTB did not have an entry
                     // The predictor needs to be updated accordingly
                     if (!inst->isCall() && !inst->isReturn()) {
-                        btbUpdate(pc.instAddr(), bp_history);
+                        btbUpdate(tid, pc.instAddr(), bp_history);
                         DPRINTF(Branch, "[tid:%i]:[sn:%i] btbUpdate"
                                 " called for %s\n", tid, seqNum, pc);
                     } else if (inst->isCall() && !inst->isUncondCtrl()) {
@@ -278,8 +278,8 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 predict_record.wasIndirect = true;
                 ++indirectLookups;
                 //Consult indirect predictor on indirect control
-                if (iPred.lookup(pc.instAddr(), getGHR(bp_history), target,
-                        tid)) {
+                if (iPred.lookup(pc.instAddr(), getGHR(tid, bp_history),
+                        target, tid)) {
                     // Indirect predictor hit
                     ++indirectHits;
                     DPRINTF(Branch, "[tid:%i]: Instruction %s predicted "
@@ -346,7 +346,7 @@ BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         DPRINTF(Branch, "[tid:%i] Unconditional control.\n", tid);
         pred_taken = true;
         // Tell the BP there was an unconditional branch.
-        uncondBranch(instPC.instAddr(), bp_history);
+        uncondBranch(tid, instPC.instAddr(), bp_history);
 
         if (inst->isReturn() && RAS[tid].empty()) {
             DPRINTF(Branch, "[tid:%i] RAS is empty, predicting "
@@ -356,7 +356,7 @@ BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     } else {
         ++condPredicted;
 
-        pred_taken = lookup(predPC.instAddr(), bp_history);
+        pred_taken = lookup(tid, predPC.instAddr(), bp_history);
     }
 
     PredictorHistory predict_record(seqNum, predPC.instAddr(), pred_taken,
@@ -451,10 +451,11 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
            predHist[tid].back().seqNum <= done_sn) {
         // Update the branch predictor with the correct results.
         if (!predHist[tid].back().wasSquashed) {
-            update(predHist[tid].back().pc, predHist[tid].back().predTaken,
-                predHist[tid].back().bpHistory, false);
+            update(tid, predHist[tid].back().pc,
+                        predHist[tid].back().predTaken,
+                        predHist[tid].back().bpHistory, false);
         } else {
-            retireSquashed(predHist[tid].back().bpHistory);
+            retireSquashed(tid, predHist[tid].back().bpHistory);
         }
 
         predHist[tid].pop_back();
@@ -485,7 +486,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
         }
 
         // This call should delete the bpHistory.
-        squash(pred_hist.front().bpHistory);
+        squash(tid, pred_hist.front().bpHistory);
 
         DPRINTF(Branch, "[tid:%i]: Removing history for [sn:%i] "
                 "PC %s.\n", tid, pred_hist.front().seqNum,
@@ -550,9 +551,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         }
 
         // Have to get GHR here because the update deletes bpHistory
-        unsigned ghr = getGHR(hist_it->bpHistory);
+        unsigned ghr = getGHR(tid, hist_it->bpHistory);
 
-        update((*hist_it).pc, actually_taken,
+        update(tid, (*hist_it).pc, actually_taken,
                pred_hist.front().bpHistory, true);
         hist_it->wasSquashed = true;
 

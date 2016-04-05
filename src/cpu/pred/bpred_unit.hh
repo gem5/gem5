@@ -98,7 +98,7 @@ class BPredUnit : public SimObject
                         TheISA::PCState &predPC, ThreadID tid);
 
     // @todo: Rename this function.
-    virtual void uncondBranch(Addr pc, void * &bp_history) = 0;
+    virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history) = 0;
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -133,7 +133,7 @@ class BPredUnit : public SimObject
      * @param bp_history Pointer to the history object.  The predictor
      * will need to update any state and delete the object.
      */
-    virtual void squash(void *bp_history) = 0;
+    virtual void squash(ThreadID tid, void *bp_history) = 0;
 
     /**
      * Looks up a given PC in the BP to see if it is taken or not taken.
@@ -142,7 +142,7 @@ class BPredUnit : public SimObject
      * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    virtual bool lookup(Addr instPC, void * &bp_history) = 0;
+    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history) = 0;
 
      /**
      * If a branch is not taken, because the BTB address is invalid or missing,
@@ -152,7 +152,7 @@ class BPredUnit : public SimObject
      * @param bp_history Pointer that will be set to an object that
      * has the branch predictor state associated with the lookup.
      */
-    virtual void btbUpdate(Addr instPC, void * &bp_history) = 0;
+    virtual void btbUpdate(ThreadID tid, Addr instPC, void * &bp_history) = 0;
 
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
@@ -180,15 +180,15 @@ class BPredUnit : public SimObject
      * squash operation.
      * @todo Make this update flexible enough to handle a global predictor.
      */
-    virtual void update(Addr instPC, bool taken, void *bp_history,
-                        bool squashed) = 0;
+    virtual void update(ThreadID tid, Addr instPC, bool taken,
+                        void *bp_history, bool squashed) = 0;
      /**
      * Deletes the associated history with a branch, performs no predictor
      * updates.  Used for branches that mispredict and update tables but
      * are still speculative and later retire.
      * @param bp_history History to delete associated with this predictor
      */
-    virtual void retireSquashed(void *bp_history) = 0;
+    virtual void retireSquashed(ThreadID tid, void *bp_history) = 0;
 
     /**
      * Updates the BTB with the target of a branch.
@@ -199,7 +199,7 @@ class BPredUnit : public SimObject
     { BTB.update(instPC, target, 0); }
 
 
-    virtual unsigned getGHR(void* bp_history) const { return 0; }
+    virtual unsigned getGHR(ThreadID tid, void* bp_history) const { return 0; }
 
     void dump();
 
