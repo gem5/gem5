@@ -310,7 +310,7 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
                     except AttributeError:
                         # Just re-use the domain from above
                         c_dom = domain
-                        c_dom.__getattr__('voltage_domain')
+                        v_dom = c_dom.__getattr__('voltage_domain')
                         pass
 
                     if c_dom == domain or c_dom == None:
@@ -329,7 +329,7 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
                 except AttributeError:
                     # Just re-use the domain from above
                     c_dom = domain
-                    c_dom.__getattr__('voltage_domain')
+                    v_dom = c_dom.__getattr__('voltage_domain')
                     pass
 
                 if c_dom == domain or c_dom == None:
@@ -370,11 +370,19 @@ def do_dot(root, outdir, dotFilename):
 def do_dvfs_dot(root, outdir, dotFilename):
     if not pydot:
         return
-    dvfsgraph = pydot.Dot(graph_type='digraph', ranksep='1.3')
-    dot_create_dvfs_nodes(root, dvfsgraph)
-    dot_create_edges(root, dvfsgraph)
-    dot_filename = os.path.join(outdir, dotFilename)
-    dvfsgraph.write(dot_filename)
+
+    # There is a chance that we are unable to resolve the clock or
+    # voltage domains. If so, we fail silently.
+    try:
+        dvfsgraph = pydot.Dot(graph_type='digraph', ranksep='1.3')
+        dot_create_dvfs_nodes(root, dvfsgraph)
+        dot_create_edges(root, dvfsgraph)
+        dot_filename = os.path.join(outdir, dotFilename)
+        dvfsgraph.write(dot_filename)
+    except:
+        warn("Failed to generate dot graph for DVFS domains")
+        return
+
     try:
         # dot crashes if the figure is extremely wide.
         # So avoid terminating simulation unnecessarily

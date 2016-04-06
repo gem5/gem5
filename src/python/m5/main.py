@@ -91,7 +91,7 @@ def parse_options():
         help="Create JSON output of the configuration [Default: %default]")
     option("--dot-config", metavar="FILE", default="config.dot",
         help="Create DOT & pdf outputs of the configuration [Default: %default]")
-    option("--dot-dvfs-config", metavar="FILE", default="config_dvfs.dot",
+    option("--dot-dvfs-config", metavar="FILE", default=None,
         help="Create DOT & pdf outputs of the DVFS configuration" + \
              " [Default: %default]")
 

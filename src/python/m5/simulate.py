@@ -129,7 +129,8 @@ def instantiate(ckpt_dir=None):
     # We want to generate the DVFS diagram for the system. This can only be
     # done once all of the CPP objects have been created and initialised so
     # that we are able to figure out which object belongs to which domain.
-    do_dvfs_dot(root, options.outdir, options.dot_dvfs_config)
+    if options.dot_dvfs_config:
+        do_dvfs_dot(root, options.outdir, options.dot_dvfs_config)
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
