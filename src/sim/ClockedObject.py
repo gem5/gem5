@@ -66,9 +66,6 @@ class ClockedObject(SimObject):
     # parent's clock domain by default
     clk_domain = Param.ClockDomain(Parent.clk_domain, "Clock domain")
 
-    # Power model for this ClockedObject
-    power_model = Param.PowerModel(NULL, "Power model")
-
     # Provide initial power state, should ideally get redefined in startup
     # routine
     default_p_state = Param.PwrState("UNDEFINED", "Default Power State")

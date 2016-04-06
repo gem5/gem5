@@ -41,17 +41,6 @@
 #include "sim/clocked_object.hh"
 
 #include "base/misc.hh"
-#include "sim/power/power_model.hh"
-
-ClockedObject::ClockedObject(const ClockedObjectParams *p) :
-    SimObject(p), Clocked(*p->clk_domain),
-    _currPwrState(p->default_p_state),
-    prvEvalTick(0)
-{
-    // Register the power_model with the object
-    if (p->power_model)
-        p->power_model->setClockedObject(this);
-}
 
 void
 ClockedObject::serialize(CheckpointOut &cp) const

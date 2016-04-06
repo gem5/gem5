@@ -78,7 +78,7 @@ LocalBP::reset()
 }
 
 void
-LocalBP::btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history)
+LocalBP::btbUpdate(Addr branch_addr, void * &bp_history)
 {
 // Place holder for a function that is called to update predictor history when
 // a BTB entry is invalid or not found.
@@ -86,7 +86,7 @@ LocalBP::btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history)
 
 
 bool
-LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
+LocalBP::lookup(Addr branch_addr, void * &bp_history)
 {
     bool taken;
     uint8_t counter_val;
@@ -117,8 +117,7 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 }
 
 void
-LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed)
+LocalBP::update(Addr branch_addr, bool taken, void *bp_history, bool squashed)
 {
     assert(bp_history == NULL);
     unsigned local_predictor_idx;
@@ -153,7 +152,7 @@ LocalBP::getLocalIndex(Addr &branch_addr)
 }
 
 void
-LocalBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
+LocalBP::uncondBranch(Addr pc, void *&bp_history)
 {
 }
 

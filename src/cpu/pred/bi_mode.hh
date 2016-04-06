@@ -57,17 +57,15 @@ class BiModeBP : public BPredUnit
 {
   public:
     BiModeBP(const BiModeBPParams *params);
-    void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
-    void squash(ThreadID tid, void *bp_history);
-    bool lookup(ThreadID tid, Addr branch_addr, void * &bp_history);
-    void btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history);
-    void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed);
-    void retireSquashed(ThreadID tid, void *bp_history);
-    unsigned getGHR(ThreadID tid, void *bp_history) const;
+    void uncondBranch(Addr pc, void * &bp_history);
+    void squash(void *bp_history);
+    bool lookup(Addr branch_addr, void * &bp_history);
+    void btbUpdate(Addr branch_addr, void * &bp_history);
+    void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
+    void retireSquashed(void *bp_history);
 
   private:
-    void updateGlobalHistReg(ThreadID tid, bool taken);
+    void updateGlobalHistReg(bool taken);
 
     struct BPHistory {
         unsigned globalHistoryReg;
@@ -96,7 +94,7 @@ class BiModeBP : public BPredUnit
     // not-taken direction predictors
     std::vector<SatCounter> notTakenCounters;
 
-    std::vector<unsigned> globalHistoryReg;
+    unsigned globalHistoryReg;
     unsigned globalHistoryBits;
     unsigned historyRegisterMask;
 

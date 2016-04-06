@@ -279,11 +279,10 @@ class BaseCPU : public MemObject
     Trace::InstTracer * getTracer() { return tracer; }
 
     /// Notify the CPU that the indicated context is now active.
-    virtual void activateContext(ThreadID thread_num);
+    virtual void activateContext(ThreadID thread_num) {}
 
     /// Notify the CPU that the indicated context is now suspended.
-    /// Check if possible to enter a lower power state
-    virtual void suspendContext(ThreadID thread_num);
+    virtual void suspendContext(ThreadID thread_num) {}
 
     /// Notify the CPU that the indicated context is now halted.
     virtual void haltContext(ThreadID thread_num) {}
@@ -296,10 +295,6 @@ class BaseCPU : public MemObject
 
    /// Get the number of thread contexts available
    unsigned numContexts() { return threadContexts.size(); }
-
-    /// Convert ContextID to threadID
-    ThreadID contextToThread(ContextID cid)
-    { return static_cast<ThreadID>(cid - threadContexts[0]->contextId()); }
 
   public:
     typedef BaseCPUParams Params;

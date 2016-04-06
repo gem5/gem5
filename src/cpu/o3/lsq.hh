@@ -334,7 +334,7 @@ Fault
 LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                 int load_idx)
 {
-    ThreadID tid = cpu->contextToThread(req->contextId());
+    ThreadID tid = req->threadId();
 
     return thread[tid].read(req, sreqLow, sreqHigh, load_idx);
 }
@@ -344,7 +344,7 @@ Fault
 LSQ<Impl>::write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                  uint8_t *data, int store_idx)
 {
-    ThreadID tid = cpu->contextToThread(req->contextId());
+    ThreadID tid = req->threadId();
 
     return thread[tid].write(req, sreqLow, sreqHigh, data, store_idx);
 }

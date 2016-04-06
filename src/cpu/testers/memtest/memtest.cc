@@ -245,7 +245,7 @@ MemTest::tick()
     bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
         !uncacheable;
     Request *req = new Request(paddr, 1, flags, masterId);
-    req->setContext(id);
+    req->setThreadContext(id, 0);
 
     outstandingAddrs.insert(paddr);
 

@@ -627,7 +627,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // Create a request and the packet containing request
     Request* req = new Request(node_ptr->physAddr, node_ptr->size,
                                node_ptr->flags, masterID, node_ptr->seqNum,
-                               ContextID(0));
+                               ContextID(0), ThreadID(0));
     req->setPC(node_ptr->pc);
     // If virtual address is valid, set the asid and virtual address fields
     // of the request.
@@ -1123,7 +1123,7 @@ TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
     req->setPC(pc);
 
     // If this is not done it triggers assert in L1 cache for invalid contextId
-    req->setContext(ContextID(0));
+    req->setThreadContext(ContextID(0), ThreadID(0));
 
     // Embed it in a packet
     PacketPtr pkt = new Packet(req, cmd);

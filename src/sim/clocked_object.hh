@@ -236,7 +236,11 @@ class ClockedObject
     : public SimObject, public Clocked
 {
   public:
-    ClockedObject(const ClockedObjectParams *p);
+    ClockedObject(const ClockedObjectParams *p)
+        : SimObject(p), Clocked(*p->clk_domain),
+        _currPwrState(p->default_p_state),
+        prvEvalTick(0)
+    { }
 
     /** Parameters of ClockedObject */
     typedef ClockedObjectParams Params;

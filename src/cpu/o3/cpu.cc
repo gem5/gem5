@@ -735,8 +735,6 @@ FullO3CPU<Impl>::activateContext(ThreadID tid)
         lastActivatedCycle = curTick();
 
         _status = Running;
-
-        BaseCPU::activateContext(tid);
     }
 }
 
@@ -757,8 +755,6 @@ FullO3CPU<Impl>::suspendContext(ThreadID tid)
     }
 
     DPRINTF(Quiesce, "Suspending Context\n");
-
-    BaseCPU::suspendContext(tid);
 }
 
 template <class Impl>

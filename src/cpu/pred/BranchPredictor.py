@@ -42,16 +42,6 @@ class BranchPredictor(SimObject):
     RASSize = Param.Unsigned(16, "RAS size")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
 
-    useIndirect = Param.Bool(True, "Use indirect branch predictor")
-    indirectHashGHR = Param.Bool(True, "Hash branch predictor GHR")
-    indirectHashTargets = Param.Bool(True, "Hash path history targets")
-    indirectSets = Param.Unsigned(256, "Cache sets for indirect predictor")
-    indirectWays = Param.Unsigned(2, "Ways for indirect predictor")
-    indirectTagSize = Param.Unsigned(16, "Indirect target cache tag bits")
-    indirectPathLength = Param.Unsigned(3,
-        "Previous indirect targets to use for path history")
-
-
 
 class LocalBP(BranchPredictor):
     type = 'LocalBP'

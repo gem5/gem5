@@ -107,7 +107,7 @@ Check::initiatePrefetch()
     // Prefetches are assumed to be 0 sized
     Request *req = new Request(m_address, 0, flags,
             m_tester_ptr->masterId(), curTick(), m_pc);
-    req->setContext(index);
+    req->setThreadContext(index, 0);
 
     PacketPtr pkt = new Packet(req, cmd);
     // despite the oddity of the 0 size (questionable if this should
@@ -180,7 +180,7 @@ Check::initiateAction()
     Request *req = new Request(writeAddr, 1, flags, m_tester_ptr->masterId(),
                                curTick(), m_pc);
 
-    req->setContext(index);
+    req->setThreadContext(index, 0);
     Packet::Command cmd;
 
     // 1 out of 8 chance, issue an atomic rather than a write
@@ -245,7 +245,7 @@ Check::initiateCheck()
     Request *req = new Request(m_address, CHECK_SIZE, flags,
                                m_tester_ptr->masterId(), curTick(), m_pc);
 
-    req->setContext(index);
+    req->setThreadContext(index, 0);
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     uint8_t *dataArray = new uint8_t[CHECK_SIZE];
     pkt->dataDynamic(dataArray);

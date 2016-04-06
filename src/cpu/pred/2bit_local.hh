@@ -66,7 +66,7 @@ class LocalBP : public BPredUnit
      */
     LocalBP(const LocalBPParams *params);
 
-    virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
+    virtual void uncondBranch(Addr pc, void * &bp_history);
 
     /**
      * Looks up the given address in the branch predictor and returns
@@ -75,7 +75,7 @@ class LocalBP : public BPredUnit
      * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    bool lookup(ThreadID tid, Addr branch_addr, void * &bp_history);
+    bool lookup(Addr branch_addr, void * &bp_history);
 
     /**
      * Updates the branch predictor to Not Taken if a BTB entry is
@@ -84,20 +84,19 @@ class LocalBP : public BPredUnit
      * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    void btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history);
+    void btbUpdate(Addr branch_addr, void * &bp_history);
 
     /**
      * Updates the branch predictor with the actual result of a branch.
      * @param branch_addr The address of the branch to update.
      * @param taken Whether or not the branch was taken.
      */
-    void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed);
+    void update(Addr branch_addr, bool taken, void *bp_history, bool squashed);
 
-    void retireSquashed(ThreadID tid, void *bp_history)
+    void retireSquashed(void *bp_history)
     { assert(bp_history == NULL); }
 
-    void squash(ThreadID tid, void *bp_history)
+    void squash(void *bp_history)
     { assert(bp_history == NULL); }
 
     void reset();

@@ -378,7 +378,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 {
-    ThreadID tid = cpu->contextToThread(pkt->req->contextId());
+    ThreadID tid = pkt->req->threadId();
 
     DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n", tid);
     assert(!cpu->switchedOut());
@@ -622,7 +622,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     RequestPtr mem_req =
         new Request(tid, fetchBufferBlockPC, fetchBufferSize,
                     Request::INST_FETCH, cpu->instMasterId(), pc,
-                    cpu->thread[tid]->contextId());
+                    cpu->thread[tid]->contextId(), tid);
 
     mem_req->taskId(cpu->taskId());
 
@@ -640,7 +640,7 @@ template <class Impl>
 void
 DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
 {
-    ThreadID tid = cpu->contextToThread(mem_req->contextId());
+    ThreadID tid = mem_req->threadId();
     Addr fetchBufferBlockPC = mem_req->getVaddr();
 
     assert(!cpu->switchedOut());

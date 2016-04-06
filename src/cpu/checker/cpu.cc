@@ -155,7 +155,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
     // Need to account for multiple accesses like the Atomic and TimingSimple
     while (1) {
         memReq = new Request(0, addr, size, flags, masterId,
-                             thread->pcState().instAddr(), tc->contextId());
+                             thread->pcState().instAddr(), tc->contextId(), 0);
 
         // translate to physical address
         fault = dtb->translateFunctional(memReq, tc, BaseTLB::Read);
@@ -243,7 +243,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
     // Need to account for a multiple access like Atomic and Timing CPUs
     while (1) {
         memReq = new Request(0, addr, size, flags, masterId,
-                             thread->pcState().instAddr(), tc->contextId());
+                             thread->pcState().instAddr(), tc->contextId(), 0);
 
         // translate to physical address
         fault = dtb->translateFunctional(memReq, tc, BaseTLB::Write);

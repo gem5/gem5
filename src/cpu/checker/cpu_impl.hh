@@ -248,7 +248,8 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                                      sizeof(MachInst),
                                      0,
                                      masterId,
-                                     fetch_PC, thread->contextId());
+                                     fetch_PC, thread->contextId(),
+                                     unverifiedInst->threadNumber);
                 memReq->setVirt(0, fetch_PC, sizeof(MachInst),
                                 Request::INST_FETCH, masterId, thread->instAddr());
 

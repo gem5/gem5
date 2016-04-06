@@ -135,7 +135,8 @@ Fetch1::fetchLine()
         "%s addr: 0x%x pc: %s line_offset: %d request_size: %d\n",
         request_id, aligned_pc, pc, line_offset, request_size);
 
-    request->request.setContext(cpu.threads[0]->getTC()->contextId());
+    request->request.setThreadContext(cpu.threads[0]->getTC()->contextId(),
+                                      /* thread id */ 0);
     request->request.setVirt(0 /* asid */,
         aligned_pc, request_size, Request::INST_FETCH, cpu.instMasterId(),
         /* I've no idea why we need the PC, but give it */

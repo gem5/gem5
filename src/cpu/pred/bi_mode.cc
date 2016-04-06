@@ -38,7 +38,7 @@
 
 BiModeBP::BiModeBP(const BiModeBPParams *params)
     : BPredUnit(params),
-      globalHistoryReg(params->numThreads, 0),
+      globalHistoryReg(0),
       globalHistoryBits(ceilLog2(params->globalPredictorSize)),
       choicePredictorSize(params->choicePredictorSize),
       choiceCtrBits(params->choiceCtrBits),
@@ -77,23 +77,23 @@ BiModeBP::BiModeBP(const BiModeBPParams *params)
  * chooses the taken array and the taken array predicts taken.
  */
 void
-BiModeBP::uncondBranch(ThreadID tid, Addr pc, void * &bpHistory)
+BiModeBP::uncondBranch(Addr pc, void * &bpHistory)
 {
     BPHistory *history = new BPHistory;
-    history->globalHistoryReg = globalHistoryReg[tid];
+    history->globalHistoryReg = globalHistoryReg;
     history->takenUsed = true;
     history->takenPred = true;
     history->notTakenPred = true;
     history->finalPred = true;
     bpHistory = static_cast<void*>(history);
-    updateGlobalHistReg(tid, true);
+    updateGlobalHistReg(true);
 }
 
 void
-BiModeBP::squash(ThreadID tid, void *bpHistory)
+BiModeBP::squash(void *bpHistory)
 {
     BPHistory *history = static_cast<BPHistory*>(bpHistory);
-    globalHistoryReg[tid] = history->globalHistoryReg;
+    globalHistoryReg = history->globalHistoryReg;
 
     delete history;
 }
@@ -108,12 +108,12 @@ BiModeBP::squash(ThreadID tid, void *bpHistory)
  * direction predictors for the final branch prediction.
  */
 bool
-BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
+BiModeBP::lookup(Addr branchAddr, void * &bpHistory)
 {
     unsigned choiceHistoryIdx = ((branchAddr >> instShiftAmt)
                                 & choiceHistoryMask);
     unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
-                                ^ globalHistoryReg[tid])
+                                ^ globalHistoryReg)
                                 & globalHistoryMask);
 
     assert(choiceHistoryIdx < choicePredictorSize);
@@ -128,7 +128,7 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
     bool finalPrediction;
 
     BPHistory *history = new BPHistory;
-    history->globalHistoryReg = globalHistoryReg[tid];
+    history->globalHistoryReg = globalHistoryReg;
     history->takenUsed = choicePrediction;
     history->takenPred = takenGHBPrediction;
     history->notTakenPred = notTakenGHBPrediction;
@@ -141,15 +141,15 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
 
     history->finalPred = finalPrediction;
     bpHistory = static_cast<void*>(history);
-    updateGlobalHistReg(tid, finalPrediction);
+    updateGlobalHistReg(finalPrediction);
 
     return finalPrediction;
 }
 
 void
-BiModeBP::btbUpdate(ThreadID tid, Addr branchAddr, void * &bpHistory)
+BiModeBP::btbUpdate(Addr branchAddr, void * &bpHistory)
 {
-    globalHistoryReg[tid] &= (historyRegisterMask & ~ULL(1));
+    globalHistoryReg &= (historyRegisterMask & ~ULL(1));
 }
 
 /* Only the selected direction predictor will be updated with the final
@@ -159,8 +159,7 @@ BiModeBP::btbUpdate(ThreadID tid, Addr branchAddr, void * &bpHistory)
  * the direction predictors makes a correct final prediction.
  */
 void
-BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
-                 bool squashed)
+BiModeBP::update(Addr branchAddr, bool taken, void *bpHistory, bool squashed)
 {
     if (bpHistory) {
         BPHistory *history = static_cast<BPHistory*>(bpHistory);
@@ -219,11 +218,11 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
 
         if (squashed) {
             if (taken) {
-                globalHistoryReg[tid] = (history->globalHistoryReg << 1) | 1;
+                globalHistoryReg = (history->globalHistoryReg << 1) | 1;
             } else {
-                globalHistoryReg[tid] = (history->globalHistoryReg << 1);
+                globalHistoryReg = (history->globalHistoryReg << 1);
             }
-            globalHistoryReg[tid] &= historyRegisterMask;
+            globalHistoryReg &= historyRegisterMask;
         } else {
             delete history;
         }
@@ -231,24 +230,18 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
 }
 
 void
-BiModeBP::retireSquashed(ThreadID tid, void *bp_history)
+BiModeBP::retireSquashed(void *bp_history)
 {
     BPHistory *history = static_cast<BPHistory*>(bp_history);
     delete history;
 }
 
-unsigned
-BiModeBP::getGHR(ThreadID tid, void *bp_history) const
-{
-    return static_cast<BPHistory*>(bp_history)->globalHistoryReg;
-}
-
 void
-BiModeBP::updateGlobalHistReg(ThreadID tid, bool taken)
+BiModeBP::updateGlobalHistReg(bool taken)
 {
-    globalHistoryReg[tid] = taken ? (globalHistoryReg[tid] << 1) | 1 :
-                               (globalHistoryReg[tid] << 1);
-    globalHistoryReg[tid] &= historyRegisterMask;
+    globalHistoryReg = taken ? (globalHistoryReg << 1) | 1 :
+                               (globalHistoryReg << 1);
+    globalHistoryReg &= historyRegisterMask;
 }
 
 BiModeBP*

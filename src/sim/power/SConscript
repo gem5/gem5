@@ -30,14 +30,9 @@
 
 Import('*')
 
-SimObject('MathExprPowerModel.py')
-SimObject('PowerModel.py')
-SimObject('PowerModelState.py')
 SimObject('ThermalDomain.py')
 SimObject('ThermalModel.py')
 
-Source('power_model.cc')
-Source('mathexpr_powermodel.cc')
 Source('thermal_domain.cc')
 Source('thermal_model.cc')
 
