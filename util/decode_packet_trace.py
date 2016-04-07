@@ -118,11 +118,15 @@ def main():
         if packet.HasField('pkt_id'):
             ascii_out.write('%s,' % (packet.pkt_id))
         if packet.HasField('flags'):
-            ascii_out.write('%s,%s,%s,%s,%s\n' % (cmd, packet.addr, packet.size,
+            ascii_out.write('%s,%s,%s,%s,%s' % (cmd, packet.addr, packet.size,
                             packet.flags, packet.tick))
         else:
-            ascii_out.write('%s,%s,%s,%s\n' % (cmd, packet.addr, packet.size,
+            ascii_out.write('%s,%s,%s,%s' % (cmd, packet.addr, packet.size,
                                            packet.tick))
+        if packet.HasField('pc'):
+            ascii_out.write(',%s\n' % (packet.pc))
+        else:
+            ascii_out.write('\n')
 
     print "Parsed packets:", num_packets
 

@@ -64,6 +64,11 @@ class MemTraceProbe : public BaseMemProbe
 
     /** Trace output stream */
     ProtoOutputStream *traceStream;
+
+  private:
+
+    /** Include the Program Counter in the memory trace */
+    const bool withPC;
 };
 
 #endif //__MEM_PROBES_MEM_TRACE_HH__

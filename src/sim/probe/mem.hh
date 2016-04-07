@@ -56,12 +56,14 @@ struct PacketInfo {
     Addr addr;
     uint32_t size;
     Request::FlagsType flags;
+    Addr pc;
 
     explicit PacketInfo(const PacketPtr& pkt) :
         cmd(pkt->cmd),
         addr(pkt->getAddr()),
         size(pkt->getSize()),
-        flags(pkt->req->getFlags()) { }
+        flags(pkt->req->getFlags()),
+        pc(pkt->req->hasPC() ? pkt->req->getPC() : 0)  { }
 };
 
 /**
