@@ -197,8 +197,6 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 void
 MemTest::regStats()
 {
-    MemObject::regStats();
-
     using namespace Stats;
 
     numReadsStat

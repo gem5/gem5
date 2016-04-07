@@ -76,8 +76,6 @@ AbstractController::resetStats()
 void
 AbstractController::regStats()
 {
-    MemObject::regStats();
-
     m_fully_busy_cycles
         .name(name() + ".fully_busy_cycles")
         .desc("cycles for which number of transistions == max transitions")

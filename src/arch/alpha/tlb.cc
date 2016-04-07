@@ -76,8 +76,6 @@ TLB::~TLB()
 void
 TLB::regStats()
 {
-    BaseTLB::regStats();
-
     fetch_hits
         .name(name() + ".fetch_hits")
         .desc("ITB hits");

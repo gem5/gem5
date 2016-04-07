@@ -158,8 +158,6 @@ Router_d::update_sw_winner(int inport, flit_d *t_flit)
 void
 Router_d::regStats()
 {
-    BasicRouter::regStats();
-
     m_buffer_reads
         .name(name() + ".buffer_reads")
         .flags(Stats::nozero)

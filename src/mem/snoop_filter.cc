@@ -351,8 +351,6 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
 void
 SnoopFilter::regStats()
 {
-    SimObject::regStats();
-
     totRequests
         .name(name() + ".tot_requests")
         .desc("Total number of requests made to the snoop filter.");

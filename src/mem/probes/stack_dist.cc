@@ -57,8 +57,6 @@ StackDistProbe::StackDistProbe(StackDistProbeParams *p)
 void
 StackDistProbe::regStats()
 {
-    BaseMemProbe::regStats();
-
     const StackDistProbeParams *p(
         dynamic_cast<const StackDistProbeParams *>(params()));
     assert(p);

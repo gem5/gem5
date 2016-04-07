@@ -774,8 +774,6 @@ UFSHostDeviceParams::create()
 void
 UFSHostDevice::regStats()
 {
-    DmaDevice::regStats();
-
     using namespace Stats;
 
     std::string UFSHost_name = name() + ".UFSDiskHost";

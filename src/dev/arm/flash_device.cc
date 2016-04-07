@@ -472,8 +472,6 @@ FlashDevice::getUnknownPages(uint32_t index)
 void
 FlashDevice::regStats()
 {
-    AbstractNVM::regStats();
-
     using namespace Stats;
 
     std::string fd_name = name() + ".FlashDevice";

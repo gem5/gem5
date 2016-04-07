@@ -226,8 +226,6 @@ TLB::unserialize(CheckpointIn &cp)
 void
 TLB::regStats()
 {
-    BaseTLB::regStats();
-
     read_hits
         .name(name() + ".read_hits")
         .desc("DTB read hits")

@@ -488,8 +488,6 @@ CacheMemory::isLocked(Addr address, int context)
 void
 CacheMemory::regStats()
 {
-    SimObject::regStats();
-
     m_demand_hits
         .name(name() + ".demand_hits")
         .desc("Number of cache demand hits")

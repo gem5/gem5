@@ -69,8 +69,6 @@ BaseGarnetNetwork::init()
 void
 BaseGarnetNetwork::regStats()
 {
-    Network::regStats();
-
     m_flits_received
         .init(m_virtual_networks)
         .name(name() + ".flits_received")
