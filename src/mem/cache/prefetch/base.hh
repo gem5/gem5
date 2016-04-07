@@ -68,6 +68,9 @@ class BasePrefetcher : public ClockedObject
     /** The block size of the parent cache. */
     unsigned blkSize;
 
+    /** log_2(block size of the parent cache). */
+    unsigned lBlkSize;
+
     /** System we belong to */
     System* system;
 
@@ -102,6 +105,17 @@ class BasePrefetcher : public ClockedObject
 
     /** Determine if addresses are on the same page */
     bool samePage(Addr a, Addr b) const;
+    /** Determine the address of the block in which a lays */
+    Addr blockAddress(Addr a) const;
+    /** Determine the address of a at block granularity */
+    Addr blockIndex(Addr a) const;
+    /** Determine the address of the page in which a lays */
+    Addr pageAddress(Addr a) const;
+    /** Determine the page-offset of a  */
+    Addr pageOffset(Addr a) const;
+    /** Build the address of the i-th block inside the page */
+    Addr pageIthBlockAddress(Addr page, uint32_t i) const;
+
 
     Stats::Scalar pfIssued;
 

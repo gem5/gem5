@@ -48,13 +48,14 @@
 
 #include <list>
 
+#include "base/intmath.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/base.hh"
 #include "sim/system.hh"
 
 BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
-    : ClockedObject(p), cache(nullptr), blkSize(0), system(p->sys),
-      onMiss(p->on_miss), onRead(p->on_read),
+    : ClockedObject(p), cache(nullptr), blkSize(0), lBlkSize(0),
+      system(p->sys), onMiss(p->on_miss), onRead(p->on_read),
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
       masterId(system->getMasterId(name())),
       pageBytes(system->getPageBytes())
@@ -67,6 +68,7 @@ BasePrefetcher::setCache(BaseCache *_cache)
     assert(!cache);
     cache = _cache;
     blkSize = cache->getBlockSize();
+    lBlkSize = floorLog2(blkSize);
 }
 
 void
@@ -76,6 +78,7 @@ BasePrefetcher::regStats()
         .name(name() + ".num_hwpf_issued")
         .desc("number of hwpf issued")
         ;
+
 }
 
 bool
@@ -127,4 +130,32 @@ BasePrefetcher::samePage(Addr a, Addr b) const
     return roundDown(a, pageBytes) == roundDown(b, pageBytes);
 }
 
+Addr
+BasePrefetcher::blockAddress(Addr a) const
+{
+    return a & ~(blkSize-1);
+}
 
+Addr
+BasePrefetcher::blockIndex(Addr a) const
+{
+    return a >> lBlkSize;
+}
+
+Addr
+BasePrefetcher::pageAddress(Addr a) const
+{
+    return roundDown(a, pageBytes);
+}
+
+Addr
+BasePrefetcher::pageOffset(Addr a) const
+{
+    return a & (pageBytes - 1);
+}
+
+Addr
+BasePrefetcher::pageIthBlockAddress(Addr page, uint32_t blockIndex) const
+{
+    return page + (blockIndex << lBlkSize);
+}
