@@ -479,7 +479,7 @@ namespace HsailISA
                         } else {
                             Request *req = new Request(0, vaddr, sizeof(c0), 0,
                                           gpuDynInst->computeUnit()->masterId(),
-                                          0, gpuDynInst->wfDynId, i);
+                                          0, gpuDynInst->wfDynId);
 
                             gpuDynInst->setRequestFlags(req);
                             PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
@@ -528,7 +528,7 @@ namespace HsailISA
                     // create request
                     Request *req = new Request(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
-                                  0, gpuDynInst->wfDynId, -1);
+                                  0, gpuDynInst->wfDynId);
                     req->setFlags(Request::ACQUIRE);
                     gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false, req);
                 }
@@ -974,7 +974,7 @@ namespace HsailISA
                     // create request
                     Request *req = new Request(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
-                                  0, gpuDynInst->wfDynId, -1);
+                                  0, gpuDynInst->wfDynId);
                     req->setFlags(Request::RELEASE);
                     gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false, req);
 
@@ -1026,7 +1026,7 @@ namespace HsailISA
                             Request *req =
                               new Request(0, vaddr, sizeof(c0), 0,
                                           gpuDynInst->computeUnit()->masterId(),
-                                          0, gpuDynInst->wfDynId, i);
+                                          0, gpuDynInst->wfDynId);
 
                             gpuDynInst->setRequestFlags(req);
                             PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
@@ -1366,7 +1366,7 @@ namespace HsailISA
                     // create request
                     Request *req = new Request(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
-                                  0, gpuDynInst->wfDynId, -1);
+                                  0, gpuDynInst->wfDynId);
                     req->setFlags(Request::RELEASE);
                     gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false, req);
 
@@ -1477,7 +1477,7 @@ namespace HsailISA
                         Request *req =
                             new Request(0, vaddr, sizeof(c0), 0,
                                         gpuDynInst->computeUnit()->masterId(),
-                                        0, gpuDynInst->wfDynId, i,
+                                        0, gpuDynInst->wfDynId,
                                         gpuDynInst->makeAtomicOpFunctor<c0>(e,
                                         f, this->opType));
 
@@ -1533,7 +1533,7 @@ namespace HsailISA
                     // create request
                     Request *req = new Request(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
-                                  0, gpuDynInst->wfDynId, -1);
+                                  0, gpuDynInst->wfDynId);
                     req->setFlags(Request::ACQUIRE);
                     gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false, req);
                 }

@@ -886,7 +886,7 @@ BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size, unsigned flags)
         sreqHigh = savedSreqHigh;
     } else {
         req = new Request(asid, addr, size, flags, masterId(), this->pc.instAddr(),
-                          thread->contextId(), threadNumber);
+                          thread->contextId());
 
         req->taskId(cpu->taskId());
 
@@ -942,7 +942,7 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
         sreqHigh = savedSreqHigh;
     } else {
         req = new Request(asid, addr, size, flags, masterId(), this->pc.instAddr(),
-                          thread->contextId(), threadNumber);
+                          thread->contextId());
 
         req->taskId(cpu->taskId());
 

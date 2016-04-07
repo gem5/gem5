@@ -347,7 +347,8 @@ LSQ<Impl>::recvTimingResp(PacketPtr pkt)
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
 
-    thread[pkt->req->threadId()].completeDataAccess(pkt);
+    thread[cpu->contextToThread(pkt->req->contextId())]
+        .completeDataAccess(pkt);
 
     if (pkt->isInvalidate()) {
         // This response also contains an invalidate; e.g. this can be the case

@@ -296,6 +296,10 @@ class BaseCPU : public MemObject
    /// Get the number of thread contexts available
    unsigned numContexts() { return threadContexts.size(); }
 
+    /// Convert ContextID to threadID
+    ThreadID contextToThread(ContextID cid)
+    { return static_cast<ThreadID>(cid - threadContexts[0]->contextId()); }
+
   public:
     typedef BaseCPUParams Params;
     const Params *params() const

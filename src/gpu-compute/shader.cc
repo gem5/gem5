@@ -116,10 +116,10 @@ Shader::~Shader()
 }
 
 void
-Shader::updateThreadContext(int tid) {
-    // thread context of the thread which dispatched work
+Shader::updateContext(int cid) {
+    // context of the thread which dispatched work
     assert(cpuPointer);
-    gpuTc = cpuPointer->getContext(tid);
+    gpuTc = cpuPointer->getContext(cid);
     assert(gpuTc);
 }
 

@@ -122,8 +122,7 @@ QueuedPrefetcher::notify(const PacketPtr &pkt)
             pf_pkt->allocate();
 
             if (pkt->req->hasContextId()) {
-                pf_req->setThreadContext(pkt->req->contextId(),
-                                         pkt->req->threadId());
+                pf_req->setContext(pkt->req->contextId());
             }
 
             if (tagPrefetch && pkt->req->hasPC()) {

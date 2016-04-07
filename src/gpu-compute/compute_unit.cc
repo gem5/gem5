@@ -982,7 +982,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelLaunch,
                                   Request* req)
 {
     if (!req) {
-        req = new Request(0, 0, 0, 0, masterId(), 0, gpuDynInst->wfDynId, -1);
+        req = new Request(0, 0, 0, 0, masterId(), 0, gpuDynInst->wfDynId);
     }
     req->setPaddr(0);
     if (kernelLaunch) {

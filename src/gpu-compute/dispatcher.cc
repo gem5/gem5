@@ -222,7 +222,7 @@ GpuDispatcher::write(PacketPtr pkt)
         ndr->addrToNotify = (volatile bool*)curTask.addrToNotify;
         ndr->numDispLeft = (volatile uint32_t*)curTask.numDispLeft;
         ndr->dispatchId = nextId;
-        ndr->curTid = pkt->req->threadId();
+        ndr->curCid = pkt->req->contextId();
         DPRINTF(GPUDisp, "launching kernel %d\n",nextId);
         execIds.push(nextId);
         ++nextId;
@@ -272,7 +272,7 @@ GpuDispatcher::exec()
 
         while (ndRangeMap[execId].wg_disp_rem) {
             //update the thread context
-            shader->updateThreadContext(ndRangeMap[execId].curTid);
+            shader->updateContext(ndRangeMap[execId].curCid);
 
             // attempt to dispatch_workgroup
             if (!shader->dispatch_workgroups(&ndRangeMap[execId])) {

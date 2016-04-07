@@ -419,7 +419,6 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size, unsigned flags)
 
     Fault fault;
     const int asid = 0;
-    const ThreadID tid = curThread;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Read;
@@ -427,9 +426,8 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size, unsigned flags)
     if (traceData)
         traceData->setMem(addr, size, flags);
 
-    RequestPtr req  = new Request(asid, addr, size,
-                                  flags, dataMasterId(), pc,
-                                  thread->contextId(), tid);
+    RequestPtr req = new Request(asid, addr, size, flags, dataMasterId(), pc,
+                                 thread->contextId());
 
     req->taskId(taskId());
 
@@ -494,7 +492,6 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
     uint8_t *newData = new uint8_t[size];
     const int asid = 0;
-    const ThreadID tid = curThread;
     const Addr pc = thread->instAddr();
     unsigned block_size = cacheLineSize();
     BaseTLB::Mode mode = BaseTLB::Write;
@@ -510,9 +507,8 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     if (traceData)
         traceData->setMem(addr, size, flags);
 
-    RequestPtr req = new Request(asid, addr, size,
-                                 flags, dataMasterId(), pc,
-                                 thread->contextId(), tid);
+    RequestPtr req = new Request(asid, addr, size, flags, dataMasterId(), pc,
+                                 thread->contextId());
 
     req->taskId(taskId());
 
@@ -614,7 +610,7 @@ TimingSimpleCPU::fetch()
         _status = BaseSimpleCPU::Running;
         Request *ifetch_req = new Request();
         ifetch_req->taskId(taskId());
-        ifetch_req->setThreadContext(thread->contextId(), curThread);
+        ifetch_req->setContext(thread->contextId());
         setupFetchRequest(ifetch_req);
         DPRINTF(SimpleCPU, "Translating address %#x\n", ifetch_req->getVaddr());
         thread->itb->translateTiming(ifetch_req, thread->getTC(),

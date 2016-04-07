@@ -79,9 +79,9 @@ handleLockedRead(XC *xc, Request *req)
 {
     xc->setMiscReg(MISCREG_LLADDR, req->getPaddr() & ~0xf);
     xc->setMiscReg(MISCREG_LLFLAG, true);
-    DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link"
+    DPRINTF(LLSC, "[cid:%i]: Load-Link Flag Set & Load-Link"
                   " Address set to %x.\n",
-            req->threadId(), req->getPaddr() & ~0xf);
+            req->contextId(), req->getPaddr() & ~0xf);
 }
 
 template <class XC>
@@ -123,13 +123,13 @@ handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
             }
 
             if (!lock_flag){
-                DPRINTF(LLSC, "[tid:%i]: Lock Flag Set, "
+                DPRINTF(LLSC, "[cid:%i]: Lock Flag Set, "
                               "Store Conditional Failed.\n",
-                        req->threadId());
+                        req->contextId());
             } else if ((req->getPaddr() & ~0xf) != lock_addr) {
-                DPRINTF(LLSC, "[tid:%i]: Load-Link Address Mismatch, "
+                DPRINTF(LLSC, "[cid:%i]: Load-Link Address Mismatch, "
                               "Store Conditional Failed.\n",
-                        req->threadId());
+                        req->contextId());
             }
             // store conditional failed already, so don't issue it to mem
             return false;

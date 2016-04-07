@@ -64,7 +64,7 @@ struct NDRange
     volatile bool *addrToNotify;
     volatile uint32_t *numDispLeft;
     int dispatchId;
-    int curTid; // Current thread id
+    int curCid; // Current context id
 };
 
 #endif // __NDRANGE_HH__

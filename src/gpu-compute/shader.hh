@@ -205,7 +205,7 @@ class Shader : public SimObject
     bool dispatch_workgroups(NDRange *ndr);
     Addr mmap(int length);
     void functionalTLBAccess(PacketPtr pkt, int cu_id, BaseTLB::Mode mode);
-    void updateThreadContext(int tid);
+    void updateContext(int cid);
     void hostWakeUp(BaseCPU *cpu);
 };
 

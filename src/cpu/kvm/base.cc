@@ -1027,7 +1027,7 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
     syncThreadContext();
 
     Request mmio_req(paddr, size, Request::UNCACHEABLE, dataMasterId());
-    mmio_req.setThreadContext(tc->contextId(), 0);
+    mmio_req.setContext(tc->contextId());
     // Some architectures do need to massage physical addresses a bit
     // before they are inserted into the memory system. This enables
     // APIC accesses on x86 and m5ops where supported through a MMIO

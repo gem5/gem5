@@ -69,7 +69,7 @@ try_translate(ThreadContext *tc, Addr addr)
     Fault fault;
     // Set up a functional memory Request to pass to the TLB
     // to get it to translate the vaddr to a paddr
-    Request req(0, addr, 64, 0x40, -1, 0, 0, 0);
+    Request req(0, addr, 64, 0x40, -1, 0, 0);
     ArmISA::TLB *tlb;
 
     // Check the TLBs for a translation

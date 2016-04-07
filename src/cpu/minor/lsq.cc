@@ -422,7 +422,7 @@ LSQ::SplitDataRequest::makeFragmentRequests()
 
         Request *fragment = new Request();
 
-        fragment->setThreadContext(request.contextId(), /* thread id */ 0);
+        fragment->setContext(request.contextId());
         fragment->setVirt(0 /* asid */,
             fragment_addr, fragment_size, request.getFlags(),
             request.masterId(),
@@ -1070,7 +1070,8 @@ LSQ::tryToSend(LSQRequestPtr request)
 
         if (request->request.isMmappedIpr()) {
             ThreadContext *thread =
-                cpu.getContext(request->request.threadId());
+                cpu.getContext(cpu.contextToThread(
+                                request->request.contextId()));
 
             if (request->isLoad) {
                 DPRINTF(MinorMem, "IPR read inst: %s\n", *(request->inst));
@@ -1502,7 +1503,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
         inst->traceData->setMem(addr, size, flags);
 
     int cid = cpu.threads[inst->id.threadId]->getTC()->contextId();
-    request->request.setThreadContext(cid, /* thread id */ 0);
+    request->request.setContext(cid);
     request->request.setVirt(0 /* asid */,
         addr, size, flags, cpu.dataMasterId(),
         /* I've no idea why we need the PC, but give it */

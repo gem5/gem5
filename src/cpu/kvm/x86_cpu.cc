@@ -1346,7 +1346,7 @@ X86KvmCPU::handleKvmExitIO()
 
     Request io_req(pAddr, kvm_run.io.size, Request::UNCACHEABLE,
                    dataMasterId());
-    io_req.setThreadContext(tc->contextId(), 0);
+    io_req.setContext(tc->contextId());
 
     const MemCmd cmd(isWrite ? MemCmd::WriteReq : MemCmd::ReadReq);
     // Temporarily lock and migrate to the event queue of the
