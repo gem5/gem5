@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014-2015 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,8 +51,23 @@ class QueuedPrefetcher : public BasePrefetcher
     struct DeferredPacket {
         Tick tick;
         PacketPtr pkt;
-        DeferredPacket(Tick t, PacketPtr p) : tick(t), pkt(p) {}
+        int32_t priority;
+        DeferredPacket(Tick t, PacketPtr p, int32_t pr) : tick(t), pkt(p),
+                                                        priority(pr)  {}
+        bool operator>(const DeferredPacket& that) const
+        {
+            return priority > that.priority;
+        }
+        bool operator<(const DeferredPacket& that) const
+        {
+            return priority < that.priority;
+        }
+        bool operator<=(const DeferredPacket& that) const
+        {
+            return !(*this > that);
+        }
     };
+    using AddrPriority = std::pair<Addr, int32_t>;
 
     std::list<DeferredPacket> pfq;
 
@@ -76,7 +91,12 @@ class QueuedPrefetcher : public BasePrefetcher
     /** Tag prefetch with PC of generating access? */
     const bool tagPrefetch;
 
-    bool inPrefetch(Addr address, bool is_secure) const;
+    using const_iterator = std::list<DeferredPacket>::const_iterator;
+    std::list<DeferredPacket>::const_iterator inPrefetch(Addr address,
+            bool is_secure) const;
+    using iterator = std::list<DeferredPacket>::iterator;
+    std::list<DeferredPacket>::iterator inPrefetch(Addr address,
+            bool is_secure);
 
     // STATS
     Stats::Scalar pfIdentified;
@@ -90,10 +110,11 @@ class QueuedPrefetcher : public BasePrefetcher
     virtual ~QueuedPrefetcher();
 
     Tick notify(const PacketPtr &pkt);
+    PacketPtr insert(AddrPriority& info, bool is_secure);
 
     // Note: This should really be pure virtual, but doesnt go well with params
     virtual void calculatePrefetch(const PacketPtr &pkt,
-                                   std::vector<Addr> &addresses) = 0;
+                                   std::vector<AddrPriority> &addresses) = 0;
     PacketPtr getPacket();
 
     Tick nextPrefetchReadyTime() const

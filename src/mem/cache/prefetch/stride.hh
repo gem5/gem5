@@ -114,7 +114,8 @@ class StridePrefetcher : public QueuedPrefetcher
 
     StridePrefetcher(const StridePrefetcherParams *p);
 
-    void calculatePrefetch(const PacketPtr &pkt, std::vector<Addr> &addresses);
+    void calculatePrefetch(const PacketPtr &pkt,
+                           std::vector<AddrPriority> &addresses);
 };
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_HH__

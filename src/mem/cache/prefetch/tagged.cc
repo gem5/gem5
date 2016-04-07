@@ -43,7 +43,7 @@ TaggedPrefetcher::TaggedPrefetcher(const TaggedPrefetcherParams *p)
 
 void
 TaggedPrefetcher::calculatePrefetch(const PacketPtr &pkt,
-        std::vector<Addr> &addresses)
+        std::vector<AddrPriority> &addresses)
 {
     Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
 
@@ -54,7 +54,7 @@ TaggedPrefetcher::calculatePrefetch(const PacketPtr &pkt,
             pfSpanPage += degree - d + 1;
             return;
         } else {
-            addresses.push_back(newAddr);
+            addresses.push_back(AddrPriority(newAddr,0));
         }
     }
 }

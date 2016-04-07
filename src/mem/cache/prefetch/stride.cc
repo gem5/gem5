@@ -98,7 +98,7 @@ StridePrefetcher::PCTable::~PCTable() {
 
 void
 StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
-                                    std::vector<Addr> &addresses)
+                                    std::vector<AddrPriority> &addresses)
 {
     if (!pkt->req->hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -153,7 +153,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
             Addr new_addr = pkt_addr + d * prefetch_stride;
             if (samePage(pkt_addr, new_addr)) {
                 DPRINTF(HWPrefetch, "Queuing prefetch to %#x.\n", new_addr);
-                addresses.push_back(new_addr);
+                addresses.push_back(AddrPriority(new_addr, 0));
             } else {
                 // Record the number of page crossing prefetches generated
                 pfSpanPage += degree - d + 1;

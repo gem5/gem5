@@ -50,7 +50,8 @@ class TaggedPrefetcher : public QueuedPrefetcher
 
     ~TaggedPrefetcher() {}
 
-    void calculatePrefetch(const PacketPtr &pkt, std::vector<Addr> &addresses);
+    void calculatePrefetch(const PacketPtr &pkt,
+                           std::vector<AddrPriority> &addresses);
 };
 
 #endif // __MEM_CACHE_PREFETCH_TAGGED_HH__
