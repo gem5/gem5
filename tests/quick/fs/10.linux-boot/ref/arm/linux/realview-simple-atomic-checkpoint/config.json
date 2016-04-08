@@ -64,7 +64,9 @@
         "symbolfile": "", 
         "readfile": "/z/atgutier/gem5/gem5-commit/tests/halt.sh", 
         "have_large_asid_64": false, 
+        "thermal_model": null, 
         "phys_addr_range_64": 40, 
+        "work_begin_exit_count": 0, 
         "have_lpae": false, 
         "cxx_class": "LinuxArmSystem", 
         "load_offset": 2147483648, 
@@ -523,10 +525,6 @@
                     "freq": 20000, 
                     "type": "RealViewOsc"
                 }, 
-                "type": "SubSystem", 
-                "eventq_index": 0, 
-                "cxx_class": "SubSystem", 
-                "path": "system.realview.mcc", 
                 "osc_clcd": {
                     "position": 0, 
                     "name": "osc_clcd", 
@@ -541,6 +539,24 @@
                     "freq": 42105, 
                     "type": "RealViewOsc"
                 }, 
+                "thermal_domain": null, 
+                "eventq_index": 0, 
+                "cxx_class": "SubSystem", 
+                "path": "system.realview.mcc", 
+                "temp_crtl": {
+                    "system": "system", 
+                    "position": 0, 
+                    "name": "temp_crtl", 
+                    "parent": "system.realview.realview_io", 
+                    "dcc": 0, 
+                    "site": 0, 
+                    "eventq_index": 0, 
+                    "cxx_class": "RealViewTemperatureSensor", 
+                    "device": 0, 
+                    "path": "system.realview.mcc.temp_crtl", 
+                    "type": "RealViewTemperatureSensor"
+                }, 
+                "type": "SubSystem", 
                 "osc_system_bus": {
                     "position": 0, 
                     "name": "osc_system_bus", 
@@ -572,6 +588,7 @@
                     "freq": 25000, 
                     "type": "RealViewOsc"
                 }, 
+                "thermal_domain": null, 
                 "osc_sys": {
                     "position": 0, 
                     "name": "osc_sys", 
@@ -1139,6 +1156,7 @@
                 "type": "IsaFake", 
                 "ret_data16": 65535
             }, 
+            "point_of_coherency": true, 
             "snoop_filter": null, 
             "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
@@ -1200,11 +1218,10 @@
                 "role": "MASTER"
             }, 
             "type": "Cache", 
-            "forward_snoops": false, 
             "writeback_clean": false, 
             "hit_latency": 50, 
-            "tgts_per_mshr": 12, 
             "demand_mshr_reserve": 1, 
+            "tgts_per_mshr": 12, 
             "addr_ranges": [
                 "2147483648:2415919103"
             ], 
@@ -1381,6 +1398,7 @@
                         "role": "SLAVE"
                     }, 
                     "name": "toL2Bus", 
+                    "point_of_coherency": false, 
                     "snoop_filter": {
                         "name": "snoop_filter", 
                         "system": "system", 
@@ -1451,11 +1469,10 @@
                         "role": "MASTER"
                     }, 
                     "type": "Cache", 
-                    "forward_snoops": true, 
                     "writeback_clean": true, 
                     "hit_latency": 2, 
-                    "tgts_per_mshr": 20, 
                     "demand_mshr_reserve": 1, 
+                    "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -1544,11 +1561,10 @@
                         "role": "MASTER"
                     }, 
                     "type": "Cache", 
-                    "forward_snoops": true, 
                     "writeback_clean": false, 
                     "hit_latency": 20, 
-                    "tgts_per_mshr": 12, 
                     "demand_mshr_reserve": 1, 
+                    "tgts_per_mshr": 12, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -1627,11 +1643,10 @@
                         "role": "MASTER"
                     }, 
                     "type": "Cache", 
-                    "forward_snoops": true, 
                     "writeback_clean": false, 
                     "hit_latency": 2, 
-                    "tgts_per_mshr": 20, 
                     "demand_mshr_reserve": 1, 
+                    "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -1690,7 +1705,7 @@
         ], 
         "gic_cpu_addr": 738205696, 
         "work_cpus_ckpt_count": 0, 
-        "work_begin_exit_count": 0, 
+        "thermal_components": [], 
         "machine_type": "VExpress_EMM", 
         "flags_addr": 469827632, 
         "path": "system", 

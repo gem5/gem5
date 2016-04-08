@@ -1082,6 +1082,7 @@ system.cpu0.l2cache.avg_blocked_cycles::no_mshrs          nan                   
 system.cpu0.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.l2cache.fast_writes                     0                       # number of fast writes performed
 system.cpu0.l2cache.cache_copies                    0                       # number of cache copies performed
+system.cpu0.l2cache.unused_prefetches           10692                       # number of HardPF blocks evicted w/o reference
 system.cpu0.l2cache.writebacks::writebacks       231848                       # number of writebacks
 system.cpu0.l2cache.writebacks::total          231848                       # number of writebacks
 system.cpu0.l2cache.ReadExReq_mshr_hits::cpu0.data         1793                       # number of ReadExReq MSHR hits
@@ -2016,6 +2017,7 @@ system.cpu1.l2cache.avg_blocked_cycles::no_mshrs          nan                   
 system.cpu1.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.l2cache.fast_writes                     0                       # number of fast writes performed
 system.cpu1.l2cache.cache_copies                    0                       # number of cache copies performed
+system.cpu1.l2cache.unused_prefetches             502                       # number of HardPF blocks evicted w/o reference
 system.cpu1.l2cache.writebacks::writebacks        26072                       # number of writebacks
 system.cpu1.l2cache.writebacks::total           26072                       # number of writebacks
 system.cpu1.l2cache.ReadExReq_mshr_hits::cpu1.data           73                       # number of ReadExReq MSHR hits

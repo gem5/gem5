@@ -11,4 +11,4 @@ info: kernel located at: /dist/m5/system/binaries/vmlinux
       0: system.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
 info: Entering event queue @ 0.  Starting simulation...
 info: Launching CPU 1 @ 97861500
-Exiting @ tick 1869358498000 because m5_exit instruction encountered
+Exiting @ tick 1869357988000 because m5_exit instruction encountered
