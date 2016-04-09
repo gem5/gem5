@@ -4,11 +4,11 @@ sim_seconds                                  0.000023                       # Nu
 sim_ticks                                    22532000                       # Number of ticks simulated
 final_tick                                   22532000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  22135                       # Simulator instruction rate (inst/s)
-host_op_rate                                    22134                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               99411388                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 226732                       # Number of bytes of host memory used
-host_seconds                                     0.23                       # Real time elapsed on the host
+host_inst_rate                                 106399                       # Simulator instruction rate (inst/s)
+host_op_rate                                   106364                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              479269632                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 251364                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                        4999                       # Number of instructions simulated
 sim_ops                                          4999                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -889,10 +889,10 @@ system.cpu.l2cache.ReadCleanReq_mshr_miss_latency::total     22234500           
 system.cpu.l2cache.ReadSharedReq_mshr_miss_latency::cpu.data      6512000                       # number of ReadSharedReq MSHR miss cycles
 system.cpu.l2cache.ReadSharedReq_mshr_miss_latency::total      6512000                       # number of ReadSharedReq MSHR miss cycles
 system.cpu.l2cache.demand_mshr_miss_latency::cpu.inst     22234500                       # number of demand (read+write) MSHR miss cycles
-system.cpu.l2cache.demand_mshr_miss_latency::cpu.data      10019000                       # number of demand (read+write) MSHR miss cycles
+system.cpu.l2cache.demand_mshr_miss_latency::cpu.data     10019000                       # number of demand (read+write) MSHR miss cycles
 system.cpu.l2cache.demand_mshr_miss_latency::total     32253500                       # number of demand (read+write) MSHR miss cycles
 system.cpu.l2cache.overall_mshr_miss_latency::cpu.inst     22234500                       # number of overall MSHR miss cycles
-system.cpu.l2cache.overall_mshr_miss_latency::cpu.data      10019000                       # number of overall MSHR miss cycles
+system.cpu.l2cache.overall_mshr_miss_latency::cpu.data     10019000                       # number of overall MSHR miss cycles
 system.cpu.l2cache.overall_mshr_miss_latency::total     32253500                       # number of overall MSHR miss cycles
 system.cpu.l2cache.ReadExReq_mshr_miss_rate::cpu.data            1                       # mshr miss rate for ReadExReq accesses
 system.cpu.l2cache.ReadExReq_mshr_miss_rate::total            1                       # mshr miss rate for ReadExReq accesses
@@ -933,7 +933,7 @@ system.cpu.toL2Bus.trans_dist::ReadCleanReq          332                       #
 system.cpu.toL2Bus.trans_dist::ReadSharedReq           90                       # Transaction distribution
 system.cpu.toL2Bus.pkt_count_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side          681                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_count_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side          280                       # Packet count per connected master and slave (bytes)
-system.cpu.toL2Bus.pkt_count::total               959                       # Packet count per connected master and slave (bytes)
+system.cpu.toL2Bus.pkt_count::total               961                       # Packet count per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_side        22336                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side         8960                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size::total              31296                       # Cumulative packet size per connected master and slave (bytes)
@@ -959,9 +959,9 @@ system.membus.trans_dist::ReadResp                419                       # Tr
 system.membus.trans_dist::ReadExReq                50                       # Transaction distribution
 system.membus.trans_dist::ReadExResp               50                       # Transaction distribution
 system.membus.trans_dist::ReadSharedReq           419                       # Transaction distribution
-system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port          936                       # Packet count per connected master and slave (bytes)
+system.membus.pkt_count_system.cpu.l2cache.mem_side::system.physmem.port          938                       # Packet count per connected master and slave (bytes)
 system.membus.pkt_count::total                    938                       # Packet count per connected master and slave (bytes)
-system.membus.pkt_size_system.cpu.l2cache.mem_side::system.physmem.port        29952                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.pkt_size_system.cpu.l2cache.mem_side::system.physmem.port        30016                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size::total                   30016                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoop_fanout::samples               469                       # Request fanout histogram

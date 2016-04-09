@@ -4,11 +4,11 @@ sim_seconds                                 47.460623                       # Nu
 sim_ticks                                47460623015500                       # Number of ticks simulated
 final_tick                               47460623015500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1174285                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1381255                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            63679173545                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 746696                       # Number of bytes of host memory used
-host_seconds                                   745.31                       # Real time elapsed on the host
+host_inst_rate                                 731783                       # Simulator instruction rate (inst/s)
+host_op_rate                                   860761                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            39683148028                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 744736                       # Number of bytes of host memory used
+host_seconds                                  1195.99                       # Real time elapsed on the host
 sim_insts                                   875204273                       # Number of instructions simulated
 sim_ops                                    1029460892                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1151,6 +1151,7 @@ system.cpu0.l2cache.avg_blocked_cycles::no_mshrs          nan                   
 system.cpu0.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu0.l2cache.fast_writes                     0                       # number of fast writes performed
 system.cpu0.l2cache.cache_copies                    0                       # number of cache copies performed
+system.cpu0.l2cache.unused_prefetches           39383                       # number of HardPF blocks evicted w/o reference
 system.cpu0.l2cache.writebacks::writebacks      1473434                       # number of writebacks
 system.cpu0.l2cache.writebacks::total         1473434                       # number of writebacks
 system.cpu0.l2cache.ReadExReq_mshr_hits::cpu0.data         5831                       # number of ReadExReq MSHR hits
@@ -2133,6 +2134,7 @@ system.cpu1.l2cache.avg_blocked_cycles::no_mshrs          nan                   
 system.cpu1.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
 system.cpu1.l2cache.fast_writes                     0                       # number of fast writes performed
 system.cpu1.l2cache.cache_copies                    0                       # number of cache copies performed
+system.cpu1.l2cache.unused_prefetches           39620                       # number of HardPF blocks evicted w/o reference
 system.cpu1.l2cache.writebacks::writebacks      1103180                       # number of writebacks
 system.cpu1.l2cache.writebacks::total         1103180                       # number of writebacks
 system.cpu1.l2cache.ReadExReq_mshr_hits::cpu1.data         6962                       # number of ReadExReq MSHR hits
