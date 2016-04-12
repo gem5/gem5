@@ -87,10 +87,10 @@ class RawDiskImage : public DiskImage
     void close();
     void open(const std::string &filename, bool rd_only = false);
 
-    virtual std::streampos size() const;
+    std::streampos size() const override;
 
-    virtual std::streampos read(uint8_t *data, std::streampos offset) const;
-    virtual std::streampos write(const uint8_t *data, std::streampos offset);
+    std::streampos read(uint8_t *data, std::streampos offset) const override;
+    std::streampos write(const uint8_t *data, std::streampos offset) override;
 };
 
 /**

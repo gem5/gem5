@@ -83,7 +83,7 @@ class ThermalDomain : public SimObject, public ThermalEntity
 
     /** Get nodal equation imposed by this node */
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
-                               double step) const;
+                               double step) const override;
 
     /**
       *  Emit a temperature update through probe points interface
@@ -95,7 +95,7 @@ class ThermalDomain : public SimObject, public ThermalEntity
       */
     void setSubSystem(SubSystem * ss);
 
-    void regStats();
+    void regStats() override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 

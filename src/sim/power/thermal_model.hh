@@ -90,7 +90,7 @@ class ThermalResistor : public SimObject, public ThermalEntity
     }
 
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
-                               double step) const;
+                               double step) const override;
 
   private:
     /* Resistance value in K/W */
@@ -114,7 +114,7 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
     void unserialize(CheckpointIn &cp) override;
 
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
-                               double step) const;
+                               double step) const override;
 
     void setNodes(ThermalNode * n1, ThermalNode * n2) {
         node1 = n1;
@@ -143,7 +143,7 @@ class ThermalReference : public SimObject, public ThermalEntity
     }
 
     LinearEquation getEquation(ThermalNode * tn, unsigned n,
-                               double step) const;
+                               double step) const override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -176,7 +176,7 @@ class ThermalModel : public ClockedObject
 
     double getTemp() const;
 
-    void startup();
+    void startup() override;
     void doStep();
 
     void serialize(CheckpointOut &cp) const override;
