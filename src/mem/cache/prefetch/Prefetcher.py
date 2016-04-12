@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2014 ARM Limited
+# Copyright (c) 2012, 2014, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -98,6 +98,13 @@ class BasePrefetcher(ClockedObject):
         if len(probeNames) <= 0:
             raise TypeError("probeNames must have at least one element")
         self.addEvent(HWPProbeEvent(self, simObj, *probeNames))
+
+class MultiPrefetcher(BasePrefetcher):
+    type = 'MultiPrefetcher'
+    cxx_class = 'MultiPrefetcher'
+    cxx_header = 'mem/cache/prefetch/multi.hh'
+
+    prefetchers = VectorParam.BasePrefetcher([], "Array of prefetchers")
 
 class QueuedPrefetcher(BasePrefetcher):
     type = "QueuedPrefetcher"

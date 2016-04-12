@@ -34,6 +34,7 @@ SimObject('Prefetcher.py')
 
 Source('access_map_pattern_matching.cc')
 Source('base.cc')
+Source('multi.cc')
 Source('bop.cc')
 Source('delta_correlating_prediction_tables.cc')
 Source('irregular_stream_buffer.cc')

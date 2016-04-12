@@ -332,7 +332,7 @@ class BasePrefetcher : public ClockedObject
 
     virtual ~BasePrefetcher() {}
 
-    void setCache(BaseCache *_cache);
+    virtual void setCache(BaseCache *_cache);
 
     /**
      * Notify prefetcher of cache access (may be any access or just
