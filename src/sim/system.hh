@@ -229,6 +229,9 @@ class System : public MemObject
     /** Object pointer for the kernel code */
     ObjectFile *kernel;
 
+    /** Additional object files */
+    std::vector<ObjectFile *> kernelExtras;
+
     /** Beginning of kernel code */
     Addr kernelStart;
 

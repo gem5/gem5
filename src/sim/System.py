@@ -93,6 +93,7 @@ class System(MemObject):
     kernel = Param.String("", "file that contains the kernel code")
     kernel_addr_check = Param.Bool(True,
         "whether to address check on kernel (disable for baremetal)")
+    kernel_extras = VectorParam.String([],"Additional object files to load")
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")
     load_addr_mask = Param.UInt64(0xffffffffff,
