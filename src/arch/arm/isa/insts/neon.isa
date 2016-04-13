@@ -2939,29 +2939,32 @@ let {{
     twoRegShiftInst("vrsra", "NVrsraQ", "SimdShiftAccOp", allTypes, 4, vrsraCode, True)
 
     vsriCode = '''
-        if (imm >= sizeof(Element) * 8)
+        if (imm >= sizeof(Element) * 8) {
             destElem = destElem;
-        else
+        } else {
             destElem = (srcElem1 >> imm) |
                 (destElem & ~mask(sizeof(Element) * 8 - imm));
+        }
     '''
     twoRegShiftInst("vsri", "NVsriD", "SimdShiftOp", unsignedTypes, 2, vsriCode, True)
     twoRegShiftInst("vsri", "NVsriQ", "SimdShiftOp", unsignedTypes, 4, vsriCode, True)
 
     vshlCode = '''
-        if (imm >= sizeof(Element) * 8)
+        if (imm >= sizeof(Element) * 8) {
             destElem = (srcElem1 << (sizeof(Element) * 8 - 1)) << 1;
-        else
+        } else {
             destElem = srcElem1 << imm;
+        }
     '''
     twoRegShiftInst("vshl", "NVshlD", "SimdShiftOp", unsignedTypes, 2, vshlCode)
     twoRegShiftInst("vshl", "NVshlQ", "SimdShiftOp", unsignedTypes, 4, vshlCode)
 
     vsliCode = '''
-        if (imm >= sizeof(Element) * 8)
+        if (imm >= sizeof(Element) * 8) {
             destElem = destElem;
-        else
+        } else {
             destElem = (srcElem1 << imm) | (destElem & mask(imm));
+        }
     '''
     twoRegShiftInst("vsli", "NVsliD", "SimdShiftOp", unsignedTypes, 2, vsliCode, True)
     twoRegShiftInst("vsli", "NVsliQ", "SimdShiftOp", unsignedTypes, 4, vsliCode, True)

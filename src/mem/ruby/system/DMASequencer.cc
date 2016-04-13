@@ -45,7 +45,7 @@ DMASequencer::init()
 {
     RubyPort::init();
     m_is_busy = false;
-    m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
+    m_data_block_mask = mask(RubySystem::getBlockSizeBits());
 
     for (const auto &s_port : slave_ports)
         s_port->sendRangeChange();
