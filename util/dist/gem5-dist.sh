@@ -168,7 +168,7 @@ done
 
 # Default values to use (in case they are not defined as command line options)
 DEFAULT_FS_CONFIG=$M5_PATH/configs/example/fs.py
-DEFAULT_SW_CONFIG=$M5_PATH/configs/example/sw.py
+DEFAULT_SW_CONFIG=$M5_PATH/configs/dist/sw.py
 DEFAULT_SW_PORT=2200
 
 [ -z "$FS_CONFIG" ] && FS_CONFIG=$DEFAULT_FS_CONFIG

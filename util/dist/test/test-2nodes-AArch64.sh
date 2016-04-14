@@ -52,7 +52,7 @@ VMLINUX=$M5_PATH/binaries/vmlinux.aarch64.20140821
 DTB=$M5_PATH/binaries/vexpress.aarch64.20140821.dtb
 
 FS_CONFIG=$GEM5_DIR/configs/example/fs.py
-SW_CONFIG=$GEM5_DIR/configs/example/sw.py
+SW_CONFIG=$GEM5_DIR/configs/dist/sw.py
 GEM5_EXE=$GEM5_DIR/build/ARM/gem5.opt
 
 BOOT_SCRIPT=$GEM5_DIR/util/dist/test/simple_bootscript.rcS
