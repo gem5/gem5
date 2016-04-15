@@ -91,6 +91,13 @@ sc_transactor::recvAtomic(PacketPtr packet)
     CAUGHT_UP;
     SC_REPORT_INFO("transactor", "recvAtomic hasn't been tested much");
 
+    panic_if(packet->cacheResponding(), "Should not see packets where cache "
+             "is responding");
+
+    panic_if(!(packet->isRead() || packet->isWrite()),
+             "Should only see read and writes at TLM memory\n");
+
+
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
 
 
@@ -172,14 +179,16 @@ sc_transactor::recvTimingReq(PacketPtr packet)
 {
     CAUGHT_UP;
 
+    panic_if(packet->cacheResponding(), "Should not see packets where cache "
+             "is responding");
+
+    panic_if(!(packet->isRead() || packet->isWrite()),
+             "Should only see read and writes at TLM memory\n");
+
+
     /* We should never get a second request after noting that a retry is
      * required */
     sc_assert(!needToSendRequestRetry);
-
-    // simply drop inhibited packets and clean evictions
-    if (packet->memInhibitAsserted() ||
-        packet->cmd == MemCmd::CleanEvict)
-        return true;
 
     /* Remember if a request comes in while we're blocked so that a retry
      * can be sent to gem5 */
