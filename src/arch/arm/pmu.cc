@@ -574,8 +574,6 @@ PMU::CounterState::add(uint64_t delta)
     const uint64_t msb(1ULL << (overflow64 ? 63 : 31));
     const uint64_t old_value(value);
 
-    assert(delta > 0);
-
     value += delta;
 
     // Overflow if the msb goes from 1 to 0
