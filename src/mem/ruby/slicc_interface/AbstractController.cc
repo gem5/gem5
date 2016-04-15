@@ -192,6 +192,12 @@ AbstractController::blockOnQueue(Addr addr, MessageBuffer* port)
     m_block_map[addr] = port;
 }
 
+bool
+AbstractController::isBlocked(Addr addr) const
+{
+    return m_is_blocking && (m_block_map.find(addr) != m_block_map.end());
+}
+
 void
 AbstractController::unblock(Addr addr)
 {

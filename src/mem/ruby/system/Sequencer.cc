@@ -173,6 +173,16 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
     }
 
     Addr line_addr = makeLineAddress(pkt->getAddr());
+
+    // Check if the line is blocked for a Locked_RMW
+    if (m_controller->isBlocked(line_addr) &&
+        (request_type != RubyRequestType_Locked_RMW_Write)) {
+        // Return that this request's cache line address aliases with
+        // a prior request that locked the cache line. The request cannot
+        // proceed until the cache line is unlocked by a Locked_RMW_Write
+        return RequestStatus_Aliased;
+    }
+
     // Create a default entry, mapping the address to NULL, the cast is
     // there to make gcc 4.4 happy
     RequestTable::value_type default_entry(line_addr,
@@ -382,7 +392,15 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     if (!m_usingNetworkTester)
         success = handleLlsc(address, request);
 
+    // Handle SLICC block_on behavior for Locked_RMW accesses. NOTE: the
+    // address variable here is assumed to be a line address, so when
+    // blocking buffers, must check line addresses.
     if (request->m_type == RubyRequestType_Locked_RMW_Read) {
+        // blockOnQueue blocks all first-level cache controller queues
+        // waiting on memory accesses for the specified address that go to
+        // the specified queue. In this case, a Locked_RMW_Write must go to
+        // the mandatory_q before unblocking the first-level controller.
+        // This will block standard loads, stores, ifetches, etc.
         m_controller->blockOnQueue(address, m_mandatory_q_ptr);
     } else if (request->m_type == RubyRequestType_Locked_RMW_Write) {
         m_controller->unblock(address);

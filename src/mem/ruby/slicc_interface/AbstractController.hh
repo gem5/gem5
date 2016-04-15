@@ -73,6 +73,7 @@ class AbstractController : public MemObject, public Consumer
 
     // return instance name
     void blockOnQueue(Addr, MessageBuffer*);
+    bool isBlocked(Addr) const;
     void unblock(Addr);
     bool isBlocked(Addr);
 
