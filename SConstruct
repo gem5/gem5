@@ -332,25 +332,23 @@ if not ignore_style and hgdir.exists():
         shutil.copyfile(hgrc.abspath, hgrc_old.abspath)
         re_style_hook = re.compile(r"^([^=#]+)\.style\s*=\s*([^#\s]+).*")
         re_style_extension = re.compile("style\s*=\s*([^#\s]+).*")
-        with open(hgrc_old.abspath, 'r') as old, \
-             open(hgrc.abspath, 'w') as new:
+        old, new = open(hgrc_old.abspath, 'r'), open(hgrc.abspath, 'w')
+        for l in old:
+            m_hook = re_style_hook.match(l)
+            m_ext = re_style_extension.match(l)
+            if m_hook:
+                hook, check = m_hook.groups()
+                if check != "python:style.check_style":
+                    print "Warning: %s.style is using a non-default " \
+                        "checker: %s" % (hook, check)
+                if hook not in ("pretxncommit", "pre-qrefresh"):
+                    print "Warning: Updating unknown style hook: %s" % hook
 
-            for l in old:
-                m_hook = re_style_hook.match(l)
-                m_ext = re_style_extension.match(l)
-                if m_hook:
-                    hook, check = m_hook.groups()
-                    if check != "python:style.check_style":
-                        print "Warning: %s.style is using a non-default " \
-                            "checker: %s" % (hook, check)
-                    if hook not in ("pretxncommit", "pre-qrefresh"):
-                        print "Warning: Updating unknown style hook: %s" % hook
+                l = "%s.style = python:hgstyle.check_style\n" % hook
+            elif m_ext and m_ext.group(1) == style_extension:
+                l = "hgstyle = %s/util/hgstyle.py\n" % main.root.abspath
 
-                    l = "%s.style = python:hgstyle.check_style\n" % hook
-                elif m_ext and m_ext.group(1) == style_extension:
-                    l = "hgstyle = %s/util/hgstyle.py\n" % main.root.abspath
-
-                new.write(l)
+            new.write(l)
     elif not style_hook:
         print mercurial_style_message,
         # continue unless user does ctrl-c/ctrl-d etc.
