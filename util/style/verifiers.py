@@ -57,8 +57,12 @@ from region import *
 from file_types import lang_type
 
 def _modified_regions(old, new):
-    m = SequenceMatcher(a=old, b=new, autojunk=False)
-
+    try:
+        m = SequenceMatcher(a=old, b=new, autojunk=False)
+    except TypeError:
+        # autojunk was introduced in Python 2.7. We need a fallback
+        # mechanism to support old Python versions.
+        m = SequenceMatcher(a=old, b=new)
     regions = Regions()
     for tag, i1, i2, j1, j2 in m.get_opcodes():
         if tag != "equal":
