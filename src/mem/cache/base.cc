@@ -434,16 +434,6 @@ BaseCache::regStats()
 
     avg_blocked = blocked_cycles / blocked_causes;
 
-    fastWrites
-        .name(name() + ".fast_writes")
-        .desc("number of fast writes performed")
-        ;
-
-    cacheCopies
-        .name(name() + ".cache_copies")
-        .desc("number of cache copies performed")
-        ;
-
     unusedPrefetches
         .name(name() + ".unused_prefetches")
         .desc("number of HardPF blocks evicted w/o reference")
@@ -760,31 +750,5 @@ BaseCache::regStats()
     for (int i = 0; i < system->maxMasters(); i++) {
         overallAvgMshrUncacheableLatency.subname(i, system->getMasterName(i));
     }
-
-    mshr_cap_events
-        .init(system->maxMasters())
-        .name(name() + ".mshr_cap_events")
-        .desc("number of times MSHR cap was activated")
-        .flags(total | nozero | nonan)
-        ;
-    for (int i = 0; i < system->maxMasters(); i++) {
-        mshr_cap_events.subname(i, system->getMasterName(i));
-    }
-
-    //software prefetching stats
-    soft_prefetch_mshr_full
-        .init(system->maxMasters())
-        .name(name() + ".soft_prefetch_mshr_full")
-        .desc("number of mshr full events for SW prefetching instrutions")
-        .flags(total | nozero | nonan)
-        ;
-    for (int i = 0; i < system->maxMasters(); i++) {
-        soft_prefetch_mshr_full.subname(i, system->getMasterName(i));
-    }
-
-    mshr_no_allocate_misses
-        .name(name() +".no_allocate_misses")
-        .desc("Number of misses that were no-allocate")
-        ;
 
 }

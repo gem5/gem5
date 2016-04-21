@@ -381,12 +381,6 @@ class BaseCache : public MemObject
     /** The average number of cycles blocked for each blocked cause. */
     Stats::Formula avg_blocked;
 
-    /** The number of fast writes (WH64) performed. */
-    Stats::Scalar fastWrites;
-
-    /** The number of cache copies performed. */
-    Stats::Scalar cacheCopies;
-
     /** The number of times a HW-prefetched block is evicted w/o reference. */
     Stats::Scalar unusedPrefetches;
 
@@ -451,13 +445,6 @@ class BaseCache : public MemObject
     Stats::Formula avgMshrUncacheableLatency[MemCmd::NUM_MEM_CMDS];
     /** The average overall latency of an MSHR miss. */
     Stats::Formula overallAvgMshrUncacheableLatency;
-
-    /** The number of times a thread hit its MSHR cap. */
-    Stats::Vector mshr_cap_events;
-    /** The number of times software prefetches caused the MSHR to block. */
-    Stats::Vector soft_prefetch_mshr_full;
-
-    Stats::Scalar mshr_no_allocate_misses;
 
     /**
      * @}
