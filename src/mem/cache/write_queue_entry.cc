@@ -118,23 +118,6 @@ WriteQueueEntry::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     targets.add(target, when_ready, _order);
 }
 
-bool
-WriteQueueEntry::markInService()
-{
-    assert(!inService);
-    if (!isUncacheable()) {
-        // we just forwarded the request packet & don't expect a
-        // response, so get rid of it
-        assert(getNumTargets() == 1);
-        popTarget();
-        return true;
-    }
-
-    inService = true;
-
-    return false;
-}
-
 void
 WriteQueueEntry::deallocate()
 {

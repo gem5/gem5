@@ -1226,45 +1226,13 @@ Cache::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 void
 Cache::handleUncacheableWriteResp(PacketPtr pkt)
 {
-    WriteQueueEntry *wq_entry =
-        dynamic_cast<WriteQueueEntry*>(pkt->senderState);
-    assert(wq_entry);
-
-    WriteQueueEntry::Target *target = wq_entry->getTarget();
-    Packet *tgt_pkt = target->pkt;
-
-    // we send out invalidation reqs and get invalidation
-    // responses for write-line requests
-    assert(tgt_pkt->cmd != MemCmd::WriteLineReq);
-
-    int stats_cmd_idx = tgt_pkt->cmdToIndex();
-    Tick miss_latency = curTick() - target->recvTime;
-    assert(pkt->req->masterId() < system->maxMasters());
-    mshr_uncacheable_lat[stats_cmd_idx][pkt->req->masterId()] +=
-        miss_latency;
-
-    tgt_pkt->makeTimingResponse();
-    // if this packet is an error copy that to the new packet
-    if (pkt->isError())
-        tgt_pkt->copyError(pkt);
-    // Reset the bus additional time as it is now accounted for
-    tgt_pkt->headerDelay = tgt_pkt->payloadDelay = 0;
     Tick completion_time = clockEdge(responseLatency) +
         pkt->headerDelay + pkt->payloadDelay;
 
-    cpuSidePort->schedTimingResp(tgt_pkt, completion_time, true);
+    // Reset the bus additional time as it is now accounted for
+    pkt->headerDelay = pkt->payloadDelay = 0;
 
-    wq_entry->popTarget();
-    assert(!wq_entry->hasTargets());
-
-    bool wasFull = writeBuffer.isFull();
-    writeBuffer.deallocate(wq_entry);
-
-    if (wasFull && !writeBuffer.isFull()) {
-        clearBlocked(Blocked_NoWBBuffers);
-    }
-
-    delete pkt;
+    cpuSidePort->schedTimingResp(pkt, completion_time, true);
 }
 
 void
@@ -1299,7 +1267,7 @@ Cache::recvTimingResp(PacketPtr pkt)
 
     // we have dealt with any (uncacheable) writes above, from here on
     // we know we are dealing with an MSHR due to a miss or a prefetch
-    MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+    MSHR *mshr = dynamic_cast<MSHR*>(pkt->popSenderState());
     assert(mshr);
 
     if (mshr == noTargetMSHR) {
@@ -2248,12 +2216,8 @@ Cache::getNextQueueEntry()
     WriteQueueEntry *wq_entry = writeBuffer.getNext();
 
     // If we got a write buffer request ready, first priority is a
-    // full write buffer (but only if we have no uncacheable write
-    // responses outstanding, possibly revisit this last part),
-    // otherwhise we favour the miss requests
-    if (wq_entry &&
-        ((writeBuffer.isFull() && writeBuffer.numInService() == 0) ||
-         !miss_mshr)) {
+    // full write buffer, otherwise we favour the miss requests
+    if (wq_entry && (writeBuffer.isFull() || !miss_mshr)) {
         // need to search MSHR queue for conflicting earlier miss.
         MSHR *conflict_mshr =
             mshrQueue.findPending(wq_entry->blkAddr,
@@ -2501,34 +2465,8 @@ Cache::sendWriteQueuePacket(WriteQueueEntry* wq_entry)
             tgt_pkt->cmdString(), tgt_pkt->getAddr(),
             tgt_pkt->getSize());
 
-    PacketPtr pkt = nullptr;
-    bool delete_pkt = false;
-
-    if (tgt_pkt->isEviction()) {
-        assert(!wq_entry->isUncacheable());
-        // no response expected, just forward packet as it is
-        pkt = tgt_pkt;
-    } else {
-        // the only thing we deal with besides eviction commands
-        // are uncacheable writes
-        assert(tgt_pkt->req->isUncacheable() && tgt_pkt->isWrite());
-        // not a cache block request, but a response is expected
-        // make copy of current packet to forward, keep current
-        // copy for response handling
-        pkt = new Packet(tgt_pkt, false, true);
-        pkt->setData(tgt_pkt->getConstPtr<uint8_t>());
-        delete_pkt = true;
-    }
-
-    pkt->pushSenderState(wq_entry);
-
-    if (!memSidePort->sendTimingReq(pkt)) {
-        if (delete_pkt) {
-            // we are awaiting a retry, but we
-            // delete the packet and will be creating a new packet
-            // when we get the opportunity
-            delete pkt;
-        }
+    // forward as is, both for evictions and uncacheable writes
+    if (!memSidePort->sendTimingReq(tgt_pkt)) {
         // note that we have now masked any requestBus and
         // schedSendEvent (we will wait for a retry before
         // doing anything), and this is so even if we do not

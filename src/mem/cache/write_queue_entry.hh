@@ -136,7 +136,6 @@ class WriteQueueEntry : public QueueEntry, public Printable
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
                   Tick when_ready, Counter _order);
 
-    bool markInService();
 
     /**
      * Mark this entry as free.

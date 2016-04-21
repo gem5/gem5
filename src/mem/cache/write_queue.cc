@@ -75,17 +75,10 @@ WriteQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
 void
 WriteQueue::markInService(WriteQueueEntry *entry)
 {
-    if (!entry->isUncacheable()) {
-        // a normal eviction, such as a writeback or a clean evict, no
-        // more to do as we are done from the perspective of this
-        // cache
-        entry->popTarget();
-        deallocate(entry);
-    } else {
-        // uncacheable write, and we will eventually receive a
-        // response
-        entry->markInService();
-        readyList.erase(entry->readyIter);
-        _numInService += 1;
-    }
+    // for a normal eviction, such as a writeback or a clean evict,
+    // there is no more to do as we are done from the perspective of
+    // this cache, and for uncacheable write we do not need the entry
+    // as part of the response handling
+    entry->popTarget();
+    deallocate(entry);
 }
