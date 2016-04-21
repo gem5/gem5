@@ -4,11 +4,11 @@ sim_seconds                                  2.783855                       # Nu
 sim_ticks                                2783854535000                       # Number of ticks simulated
 final_tick                               2783854535000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1173204                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1428188                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            22875895912                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 581200                       # Number of bytes of host memory used
-host_seconds                                   121.69                       # Real time elapsed on the host
+host_inst_rate                                1225194                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1491477                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            23889629831                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 578692                       # Number of bytes of host memory used
+host_seconds                                   116.53                       # Real time elapsed on the host
 sim_insts                                   142771651                       # Number of instructions simulated
 sim_ops                                     173801592                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -346,11 +346,8 @@ system.cpu.dcache.blocked::no_mshrs                 0                       # nu
 system.cpu.dcache.blocked::no_targets               0                       # number of cycles access was blocked
 system.cpu.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu.dcache.fast_writes                       0                       # number of fast writes performed
-system.cpu.dcache.cache_copies                      0                       # number of cache copies performed
 system.cpu.dcache.writebacks::writebacks       682017                       # number of writebacks
 system.cpu.dcache.writebacks::total            682017                       # number of writebacks
-system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.icache.tags.replacements           1698998                       # number of replacements
 system.cpu.icache.tags.tagsinuse           511.663679                       # Cycle average of tags in use
 system.cpu.icache.tags.total_refs           145341757                       # Total number of references to valid blocks.
@@ -398,11 +395,8 @@ system.cpu.icache.blocked::no_mshrs                 0                       # nu
 system.cpu.icache.blocked::no_targets               0                       # number of cycles access was blocked
 system.cpu.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu.icache.fast_writes                       0                       # number of fast writes performed
-system.cpu.icache.cache_copies                      0                       # number of cache copies performed
 system.cpu.icache.writebacks::writebacks      1698998                       # number of writebacks
 system.cpu.icache.writebacks::total           1698998                       # number of writebacks
-system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.l2cache.tags.replacements           109913                       # number of replacements
 system.cpu.l2cache.tags.tagsinuse        65155.314985                       # Cycle average of tags in use
 system.cpu.l2cache.tags.total_refs            4524855                       # Total number of references to valid blocks.
@@ -536,11 +530,8 @@ system.cpu.l2cache.blocked::no_mshrs                0                       # nu
 system.cpu.l2cache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu.l2cache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu.l2cache.fast_writes                      0                       # number of fast writes performed
-system.cpu.l2cache.cache_copies                     0                       # number of cache copies performed
 system.cpu.l2cache.writebacks::writebacks       101950                       # number of writebacks
 system.cpu.l2cache.writebacks::total           101950                       # number of writebacks
-system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu.toL2Bus.snoop_filter.tot_requests      5059903                       # Total number of requests made to the snoop filter.
 system.cpu.toL2Bus.snoop_filter.hit_single_requests      2540486                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
 system.cpu.toL2Bus.snoop_filter.hit_multi_requests        39261                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
@@ -651,18 +642,18 @@ system.iocache.ReadReq_misses::realview.ide          240                       #
 system.iocache.ReadReq_misses::total              240                       # number of ReadReq misses
 system.iocache.WriteLineReq_misses::realview.ide        36224                       # number of WriteLineReq misses
 system.iocache.WriteLineReq_misses::total        36224                       # number of WriteLineReq misses
-system.iocache.demand_misses::realview.ide          240                       # number of demand (read+write) misses
-system.iocache.demand_misses::total               240                       # number of demand (read+write) misses
-system.iocache.overall_misses::realview.ide          240                       # number of overall misses
-system.iocache.overall_misses::total              240                       # number of overall misses
+system.iocache.demand_misses::realview.ide        36464                       # number of demand (read+write) misses
+system.iocache.demand_misses::total             36464                       # number of demand (read+write) misses
+system.iocache.overall_misses::realview.ide        36464                       # number of overall misses
+system.iocache.overall_misses::total            36464                       # number of overall misses
 system.iocache.ReadReq_accesses::realview.ide          240                       # number of ReadReq accesses(hits+misses)
 system.iocache.ReadReq_accesses::total            240                       # number of ReadReq accesses(hits+misses)
 system.iocache.WriteLineReq_accesses::realview.ide        36224                       # number of WriteLineReq accesses(hits+misses)
 system.iocache.WriteLineReq_accesses::total        36224                       # number of WriteLineReq accesses(hits+misses)
-system.iocache.demand_accesses::realview.ide          240                       # number of demand (read+write) accesses
-system.iocache.demand_accesses::total             240                       # number of demand (read+write) accesses
-system.iocache.overall_accesses::realview.ide          240                       # number of overall (read+write) accesses
-system.iocache.overall_accesses::total            240                       # number of overall (read+write) accesses
+system.iocache.demand_accesses::realview.ide        36464                       # number of demand (read+write) accesses
+system.iocache.demand_accesses::total           36464                       # number of demand (read+write) accesses
+system.iocache.overall_accesses::realview.ide        36464                       # number of overall (read+write) accesses
+system.iocache.overall_accesses::total          36464                       # number of overall (read+write) accesses
 system.iocache.ReadReq_miss_rate::realview.ide            1                       # miss rate for ReadReq accesses
 system.iocache.ReadReq_miss_rate::total             1                       # miss rate for ReadReq accesses
 system.iocache.WriteLineReq_miss_rate::realview.ide            1                       # miss rate for WriteLineReq accesses
@@ -677,11 +668,8 @@ system.iocache.blocked::no_mshrs                    0                       # nu
 system.iocache.blocked::no_targets                  0                       # number of cycles access was blocked
 system.iocache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.iocache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.iocache.fast_writes                          0                       # number of fast writes performed
-system.iocache.cache_copies                         0                       # number of cache copies performed
 system.iocache.writebacks::writebacks           36190                       # number of writebacks
 system.iocache.writebacks::total                36190                       # number of writebacks
-system.iocache.no_allocate_misses                   0                       # Number of misses that were no-allocate
 system.membus.trans_dist::ReadReq               40087                       # Transaction distribution
 system.membus.trans_dist::ReadResp              74202                       # Transaction distribution
 system.membus.trans_dist::WriteReq              27546                       # Transaction distribution
