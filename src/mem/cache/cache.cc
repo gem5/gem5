@@ -903,30 +903,20 @@ Cache::recvTimingReq(PacketPtr pkt)
     return true;
 }
 
-
-// See comment in cache.hh.
 PacketPtr
-Cache::getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                    bool needsWritable) const
+Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
+                        bool needsWritable) const
 {
+    // should never see evictions here
+    assert(!cpu_pkt->isEviction());
+
     bool blkValid = blk && blk->isValid();
 
-    if (cpu_pkt->req->isUncacheable()) {
-        // note that at the point we see the uncacheable request we
-        // flush any block, but there could be an outstanding MSHR,
-        // and the cache could have filled again before we actually
-        // send out the forwarded uncacheable request (blk could thus
-        // be non-null)
-        return NULL;
-    }
-
-    if (!blkValid &&
-        (cpu_pkt->isUpgrade() ||
-         cpu_pkt->isEviction())) {
-        // Writebacks that weren't allocated in access() and upgrades
-        // from upper-level caches that missed completely just go
-        // through.
-        return NULL;
+    if (cpu_pkt->req->isUncacheable() ||
+        (!blkValid && cpu_pkt->isUpgrade())) {
+        // uncacheable requests and upgrades from upper-level caches
+        // that missed completely just go through as is
+        return nullptr;
     }
 
     assert(cpu_pkt->needsResponse());
@@ -1032,7 +1022,16 @@ Cache::recvAtomic(PacketPtr pkt)
     if (!satisfied) {
         // MISS
 
-        PacketPtr bus_pkt = getBusPacket(pkt, blk, pkt->needsWritable());
+        // deal with the packets that go through the write path of
+        // the cache, i.e. any evictions and uncacheable writes
+        if (pkt->isEviction() ||
+            (pkt->req->isUncacheable() && pkt->isWrite())) {
+            lat += ticksToCycles(memSidePort->sendAtomic(pkt));
+            return lat * clockPeriod();
+        }
+        // only misses left
+
+        PacketPtr bus_pkt = createMissPacket(pkt, blk, pkt->needsWritable());
 
         bool is_forward = (bus_pkt == NULL);
 
@@ -1052,6 +1051,8 @@ Cache::recvAtomic(PacketPtr pkt)
 
         lat += ticksToCycles(memSidePort->sendAtomic(bus_pkt));
 
+        bool is_invalidate = bus_pkt->isInvalidate();
+
         // We are now dealing with the response handling
         DPRINTF(Cache, "Receive response: %s for addr %#llx (%s) in state %i\n",
                 bus_pkt->cmdString(), bus_pkt->getAddr(),
@@ -1068,12 +1069,6 @@ Cache::recvAtomic(PacketPtr pkt)
                 if (bus_pkt->isError()) {
                     pkt->makeAtomicResponse();
                     pkt->copyError(bus_pkt);
-                } else if (pkt->cmd == MemCmd::InvalidateReq) {
-                    if (blk) {
-                        // invalidate response to a cache that received
-                        // an invalidate request
-                        satisfyCpuSideRequest(pkt, blk);
-                    }
                 } else if (pkt->cmd == MemCmd::WriteLineReq) {
                     // note the use of pkt, not bus_pkt here.
 
@@ -1081,6 +1076,8 @@ Cache::recvAtomic(PacketPtr pkt)
                     // the write to a whole line
                     blk = handleFill(pkt, blk, writebacks,
                                      allocOnFill(pkt->cmd));
+                    assert(blk != NULL);
+                    is_invalidate = false;
                     satisfyCpuSideRequest(pkt, blk);
                 } else if (bus_pkt->isRead() ||
                            bus_pkt->cmd == MemCmd::UpgradeResp) {
@@ -1096,6 +1093,10 @@ Cache::recvAtomic(PacketPtr pkt)
                 }
             }
             delete bus_pkt;
+        }
+
+        if (is_invalidate && blk && blk->isValid()) {
+            invalidateBlock(blk);
         }
     }
 
@@ -2445,7 +2446,7 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
 
     // either a prefetch that is not present upstream, or a normal
     // MSHR request, proceed to get the packet to send downstream
-    PacketPtr pkt = getBusPacket(tgt_pkt, blk, mshr->needsWritable());
+    PacketPtr pkt = createMissPacket(tgt_pkt, blk, mshr->needsWritable());
 
     mshr->isForward = (pkt == NULL);
 

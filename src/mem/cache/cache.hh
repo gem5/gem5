@@ -460,18 +460,18 @@ class Cache : public BaseCache
     bool invalidateVisitor(CacheBlk &blk);
 
     /**
-     * Generate an appropriate downstream bus request packet for the
+     * Create an appropriate downstream bus request packet for the
      * given parameters.
-     * @param cpu_pkt  The upstream request that needs to be satisfied.
+     * @param cpu_pkt  The miss that needs to be satisfied.
      * @param blk The block currently in the cache corresponding to
      * cpu_pkt (NULL if none).
-     * @param needsExclusive  Indicates that an exclusive copy is required
+     * @param needsWritable Indicates that the block must be writable
      * even if the request in cpu_pkt doesn't indicate that.
      * @return A new Packet containing the request, or NULL if the
      * current request in cpu_pkt should just be forwarded on.
      */
-    PacketPtr getBusPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                           bool needsExclusive) const;
+    PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
+                               bool needsWritable) const;
 
     /**
      * Return the next queue entry to service, either a pending miss
