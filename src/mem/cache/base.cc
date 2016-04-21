@@ -197,7 +197,7 @@ BaseCache::regStats()
 // to change the subset of commands that are considered "demand" vs
 // "non-demand"
 #define SUM_DEMAND(s) \
-    (s[MemCmd::ReadReq] + s[MemCmd::WriteReq] + \
+    (s[MemCmd::ReadReq] + s[MemCmd::WriteReq] + s[MemCmd::WriteLineReq] + \
      s[MemCmd::ReadExReq] + s[MemCmd::ReadCleanReq] + s[MemCmd::ReadSharedReq])
 
 // should writebacks be included here?  prior code was inconsistent...
