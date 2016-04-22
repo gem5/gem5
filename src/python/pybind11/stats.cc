@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 ARM Limited
+ * Copyright (c) 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,13 +41,19 @@
  *          Andreas Sandberg
  */
 
+#include "config/use_hdf5.hh"
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include "base/statistics.hh"
 #include "base/stats/text.hh"
+#if USE_HDF5
+#include "base/stats/hdf5.hh"
+#endif
 #include "sim/stat_control.hh"
 #include "sim/stat_register.hh"
+
 
 namespace py = pybind11;
 
@@ -77,6 +83,9 @@ pybind_init_stats(py::module &m_native)
     m
         .def("initSimStats", &Stats::initSimStats)
         .def("initText", &Stats::initText, py::return_value_policy::reference)
+#if USE_HDF5
+        .def("initHDF5", &Stats::initHDF5)
+#endif
         .def("registerPythonStatsHandlers",
              &Stats::registerPythonStatsHandlers)
         .def("schedStatEvent", &Stats::schedStatEvent)

@@ -1,4 +1,4 @@
-# Copyright (c) 2017, 2019 Arm Limited
+# Copyright (c) 2017-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -119,12 +119,53 @@ def _textFactory(fn, desc=True):
 
     return _m5.stats.initText(fn, desc)
 
+@_url_factory
+def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):
+    """Output stats in HDF5 format.
+
+    The HDF5 file format is a structured binary file format. It has
+    the multiple benefits over traditional text stat files:
+
+      * Efficient storage of time series (multiple stat dumps)
+      * Fast lookup of stats
+      * Plenty of existing tooling (e.g., Python libraries and graphical
+        viewers)
+      * File format can be used to store frame buffers together with
+        normal stats.
+
+    There are some drawbacks compared to the default text format:
+      * Large startup cost (single stat dump larger than text equivalent)
+      * Stat dumps are slower than text
+
+
+    Known limitations:
+      * Distributions and histograms currently unsupported.
+      * No support for forking.
+
+
+    Parameters:
+      * chunking (unsigned): Number of time steps to pre-allocate (default: 10)
+      * desc (bool): Output stat descriptions (default: True)
+      * formulas (bool): Output derived stats (default: True)
+
+    Example:
+      h5://stats.h5?desc=False;chunking=100;formulas=False
+
+    """
+
+    if hasattr(_m5.stats, "initHDF5"):
+        return _m5.stats.initHDF5(fn, chunking, desc, formulas)
+    else:
+        fatal("HDF5 support not enabled at compile time")
+
 factories = {
     # Default to the text factory if we're given a naked path
     "" : _textFactory,
     "file" : _textFactory,
     "text" : _textFactory,
+    "h5" : _hdf5Factory,
 }
+
 
 def addStatVisitor(url):
     """Add a stat visitor specified using a URL string

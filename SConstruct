@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2017, 2019 ARM Limited
+# Copyright (c) 2013, 2015-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -591,6 +591,9 @@ if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     main.Append(CCFLAGS=["-Wno-uninitialized"])
 
+
+have_pkg_config = readCommand(['pkg-config', '--version'], exception='')
+
 # Check for the protobuf compiler
 protoc_version = readCommand([main['PROTOC'], '--version'],
                              exception='').split()
@@ -620,7 +623,7 @@ else:
         # protobuf without the involvement of pkg-config. Later on we
         # check go a library config check and at that point the test
         # will fail if libprotobuf cannot be found.
-        if readCommand(['pkg-config', '--version'], exception=''):
+        if have_pkg_config:
             try:
                 # Attempt to establish what linking flags to add for protobuf
                 # using pkg-config
@@ -913,6 +916,42 @@ def is_isa_kvm_compatible(isa):
 main['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
     'linux/perf_event.h', 'struct perf_event_attr', 'exclude_host')
 
+def check_hdf5():
+    return \
+        conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
+                                'H5Fcreate("", 0, 0, 0);') and \
+        conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
+                                'H5::H5File("", 0);')
+
+def check_hdf5_pkg(name):
+    print("Checking for %s using pkg-config..." % name, end="")
+    if not have_pkg_config:
+        print(" pkg-config not found")
+        return False
+
+    try:
+        main.ParseConfig('pkg-config --cflags-only-I --libs-only-L %s' % name)
+        print(" yes")
+        return True
+    except:
+        print(" no")
+        return False
+
+# Check if there is a pkg-config configuration for hdf5. If we find
+# it, setup the environment to enable linking and header inclusion. We
+# don't actually try to include any headers or link with hdf5 at this
+# stage.
+if not check_hdf5_pkg('hdf5-serial'):
+    check_hdf5_pkg('hdf5')
+
+# Check if the HDF5 libraries can be found. This check respects the
+# include path and library path provided by pkg-config. We perform
+# this check even if there isn't a pkg-config configuration for hdf5
+# since some installations don't use pkg-config.
+have_hdf5 = check_hdf5()
+if not have_hdf5:
+    print("Warning: Couldn't find any HDF5 C++ libraries. Disabling")
+    print("         HDF5 support.")
 
 ######################################################################
 #
@@ -1018,6 +1057,7 @@ sticky_vars.AddVariables(
                  backtrace_impls[-1], backtrace_impls),
     ('NUMBER_BITS_PER_SET', 'Max elements in set (default 64)',
                  64),
+    BoolVariable('USE_HDF5', 'Enable the HDF5 support', have_hdf5),
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
@@ -1025,7 +1065,7 @@ export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'TARGET_GPU_ISA',
                 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP',
                 'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
                 'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG',
-                'NUMBER_BITS_PER_SET']
+                'NUMBER_BITS_PER_SET', 'USE_HDF5']
 
 ###################################################
 #
