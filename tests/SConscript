@@ -364,7 +364,7 @@ else:
                 'simple-timing', 'simple-timing-mp',
                 'minor-timing', 'minor-timing-mp',
                 'o3-timing', 'o3-timing-mt', 'o3-timing-mp',
-                'rubytest', 'memtest', 'memtest-filter',
+                'rubytest', 'memcheck', 'memtest', 'memtest-filter',
                 'tgen-simple-mem', 'tgen-dram-ctrl']
 
     configs += ['learning-gem5-p1-simple', 'learning-gem5-p1-two-level']
