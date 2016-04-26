@@ -53,7 +53,7 @@ class RubyRequest : public Message
     int m_Size;
     PrefetchBit m_Prefetch;
     uint8_t* data;
-    PacketPtr pkt;
+    PacketPtr m_pkt;
     ContextID m_contextId;
     WriteMask m_writeMask;
     DataBlock m_WTData;
@@ -76,7 +76,7 @@ class RubyRequest : public Message
           m_Size(_len),
           m_Prefetch(_pb),
           data(_data),
-          pkt(_pkt),
+          m_pkt(_pkt),
           m_contextId(_core_id),
           m_scope(_scope),
           m_segment(_segment)
@@ -100,7 +100,7 @@ class RubyRequest : public Message
           m_Size(_len),
           m_Prefetch(_pb),
           data(_data),
-          pkt(_pkt),
+          m_pkt(_pkt),
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask),
           m_WTData(_Data),
@@ -128,7 +128,7 @@ class RubyRequest : public Message
           m_Size(_len),
           m_Prefetch(_pb),
           data(_data),
-          pkt(_pkt),
+          m_pkt(_pkt),
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask,_atomicOps),
           m_WTData(_Data),
