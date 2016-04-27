@@ -44,8 +44,8 @@
 #include "debug/Interrupt.hh"
 #include "params/KvmGic.hh"
 
-
-KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr)
+KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
+                               unsigned it_lines)
     : cpuRange(RangeSize(cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
       distRange(RangeSize(dist_addr, KVM_VGIC_V2_DIST_SIZE)),
       vm(_vm),
@@ -55,6 +55,8 @@ KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr)
         KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, dist_addr);
     kdev.setAttr<uint64_t>(
         KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, cpu_addr);
+
+    kdev.setAttr<uint32_t>(KVM_DEV_ARM_VGIC_GRP_NR_IRQS, 0, it_lines);
 }
 
 KvmKernelGicV2::~KvmKernelGicV2()
@@ -104,7 +106,7 @@ KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
 KvmGic::KvmGic(const KvmGicParams *p)
     : BaseGic(p),
       system(*p->system),
-      kernelGic(*p->kvmVM, p->cpu_addr, p->dist_addr),
+      kernelGic(*p->kvmVM, p->cpu_addr, p->dist_addr, p->it_lines),
       addrRanges{kernelGic.distRange, kernelGic.cpuRange}
 {
 }

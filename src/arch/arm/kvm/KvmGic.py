@@ -48,6 +48,7 @@ class KvmGic(BaseGic):
 
     dist_addr = Param.Addr(0x1f001000, "Address for distributor")
     cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
+    it_lines = Param.UInt32(128, "Number of interrupt lines supported")
 
     system = Param.System(Parent.any,
                           'System this interrupt controller belongs to')

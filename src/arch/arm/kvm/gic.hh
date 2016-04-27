@@ -65,8 +65,10 @@ class KvmKernelGicV2
      * @param vm KVM VM representing this system
      * @param cpu_addr GIC CPU interface base address
      * @param dist_addr GIC distributor base address
+     * @param it_liens Number of interrupt lines to support
      */
-    KvmKernelGicV2(KvmVM &vm, Addr cpu_addr, Addr dist_addr);
+    KvmKernelGicV2(KvmVM &vm, Addr cpu_addr, Addr dist_addr,
+                   unsigned it_lines);
     virtual ~KvmKernelGicV2();
 
     KvmKernelGicV2(const KvmKernelGicV2 &other) = delete;
