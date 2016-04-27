@@ -68,10 +68,6 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     if (p->panic_on_panic) {
         kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
             "panic", "Kernel panic in simulated kernel");
-    } else {
-#ifndef NDEBUG
-        kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
-#endif
     }
 
     if (p->panic_on_oops) {
