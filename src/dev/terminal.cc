@@ -204,7 +204,7 @@ Terminal::accept()
     char buf[1024];
     for (size_t i = 0; i < txbuf.size(); i += sizeof(buf)) {
         const size_t chunk_len(std::min(txbuf.size() - i, sizeof(buf)));
-        txbuf.peek(buf, chunk_len);
+        txbuf.peek(buf, i, chunk_len);
         write((const uint8_t *)buf, chunk_len);
     }
 }

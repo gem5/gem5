@@ -103,23 +103,35 @@ class CircleBuf
      */
     template <class OutputIterator>
     void peek(OutputIterator out, size_t len) const {
-        panic_if(len > size(),
+        peek(out, 0, len);
+    }
+
+    /**
+     * Copy buffer contents without advancing the read pointer
+     *
+     * @param out Output iterator/pointer
+     * @param offset Offset into the ring buffer
+     * @param len Number of elements to copy
+     */
+    template <class OutputIterator>
+    void peek(OutputIterator out, off_t offset, size_t len) const {
+        panic_if(offset + len > size(),
                  "Trying to read past end of circular buffer.\n");
 
-        if (_start + len <= buf.size()) {
-            std::copy(buf.begin() + _start,
-                      buf.begin() + _start + len,
+        const off_t real_start((offset + _start) % buf.size());
+        if (real_start + len <= buf.size()) {
+            std::copy(buf.begin() + real_start,
+                      buf.begin() + real_start + len,
                       out);
         } else {
-            const size_t head_size(buf.size() - _start);
+            const size_t head_size(buf.size() - real_start);
             const size_t tail_size(len - head_size);
-            std::copy(buf.begin() + _start, buf.end(),
+            std::copy(buf.begin() + real_start, buf.end(),
                       out);
             std::copy(buf.begin(), buf.begin() + tail_size,
                       out + head_size);
         }
     }
-
 
     /**
      * Copy buffer contents and advance the read pointer
