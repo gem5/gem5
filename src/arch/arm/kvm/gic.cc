@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,21 +44,69 @@
 #include "debug/Interrupt.hh"
 #include "params/KvmGic.hh"
 
+
+KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr)
+    : cpuRange(RangeSize(cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
+      distRange(RangeSize(dist_addr, KVM_VGIC_V2_DIST_SIZE)),
+      vm(_vm),
+      kdev(vm.createDevice(KVM_DEV_TYPE_ARM_VGIC_V2))
+{
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, dist_addr);
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, cpu_addr);
+}
+
+KvmKernelGicV2::~KvmKernelGicV2()
+{
+}
+
+void
+KvmKernelGicV2::setSPI(unsigned spi)
+{
+    setIntState(KVM_ARM_IRQ_TYPE_SPI, 0, spi, true);
+}
+
+void
+KvmKernelGicV2::clearSPI(unsigned spi)
+{
+    setIntState(KVM_ARM_IRQ_TYPE_SPI, 0, spi, false);
+}
+
+void
+KvmKernelGicV2::setPPI(unsigned vcpu, unsigned ppi)
+{
+    setIntState(KVM_ARM_IRQ_TYPE_PPI, vcpu, ppi, true);
+}
+
+void
+KvmKernelGicV2::clearPPI(unsigned vcpu, unsigned ppi)
+{
+    setIntState(KVM_ARM_IRQ_TYPE_PPI, vcpu, ppi, false);
+}
+
+void
+KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
+                            bool high)
+{
+    assert(type <= KVM_ARM_IRQ_TYPE_MASK);
+    assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
+    assert(irq <= KVM_ARM_IRQ_NUM_MASK);
+    const uint32_t line(
+        (type << KVM_ARM_IRQ_TYPE_SHIFT) |
+        (vcpu << KVM_ARM_IRQ_VCPU_SHIFT) |
+        (irq << KVM_ARM_IRQ_NUM_SHIFT));
+
+    vm.setIRQLine(line, high);
+}
+
+
 KvmGic::KvmGic(const KvmGicParams *p)
     : BaseGic(p),
       system(*p->system),
-      vm(*p->kvmVM),
-      kdev(vm.createDevice(KVM_DEV_TYPE_ARM_VGIC_V2)),
-      distRange(RangeSize(p->dist_addr, KVM_VGIC_V2_DIST_SIZE)),
-      cpuRange(RangeSize(p->cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
-      addrRanges{distRange, cpuRange}
+      kernelGic(*p->kvmVM, p->cpu_addr, p->dist_addr),
+      addrRanges{kernelGic.distRange, kernelGic.cpuRange}
 {
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST,
-        p->dist_addr);
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU,
-        p->cpu_addr);
 }
 
 KvmGic::~KvmGic()
@@ -93,28 +141,28 @@ void
 KvmGic::sendInt(uint32_t num)
 {
     DPRINTF(Interrupt, "Set SPI %d\n", num);
-    setIntState(KVM_ARM_IRQ_TYPE_SPI, 0, num, true);
+    kernelGic.setSPI(num);
 }
 
 void
 KvmGic::clearInt(uint32_t num)
 {
     DPRINTF(Interrupt, "Clear SPI %d\n", num);
-    setIntState(KVM_ARM_IRQ_TYPE_SPI, 0, num, false);
+    kernelGic.clearSPI(num);
 }
 
 void
 KvmGic::sendPPInt(uint32_t num, uint32_t cpu)
 {
     DPRINTF(Interrupt, "Set PPI %d:%d\n", cpu, num);
-    setIntState(KVM_ARM_IRQ_TYPE_PPI, cpu, num, true);
+    kernelGic.setPPI(cpu, num);
 }
 
 void
 KvmGic::clearPPInt(uint32_t num, uint32_t cpu)
 {
     DPRINTF(Interrupt, "Clear PPI %d:%d\n", cpu, num);
-    setIntState(KVM_ARM_IRQ_TYPE_PPI, cpu, num, false);
+    kernelGic.clearPPI(cpu, num);
 }
 
 void
@@ -124,20 +172,6 @@ KvmGic::verifyMemoryMode() const
         fatal("The in-kernel KVM GIC can only be used with KVM CPUs, but the "
               "current memory mode does not support KVM.\n");
     }
-}
-
-void
-KvmGic::setIntState(uint8_t type, uint8_t vcpu, uint16_t irq, bool high)
-{
-    assert(type < KVM_ARM_IRQ_TYPE_MASK);
-    assert(vcpu < KVM_ARM_IRQ_VCPU_MASK);
-    assert(irq < KVM_ARM_IRQ_NUM_MASK);
-    const uint32_t line(
-        (type << KVM_ARM_IRQ_TYPE_SHIFT) |
-        (vcpu << KVM_ARM_IRQ_VCPU_SHIFT) |
-        (irq << KVM_ARM_IRQ_NUM_SHIFT));
-
-    vm.setIRQLine(line, high);
 }
 
 
