@@ -42,7 +42,7 @@ import sys
 
 from style.repo import GitRepo
 from style.verifiers import all_verifiers, all_regions
-from style.style import StdioUI
+from style.style import StdioUI, check_ignores
 
 import argparse
 
@@ -66,6 +66,8 @@ failing_files = set()
 for status, fname in git.status(filter="MA", cached=True):
     if args.verbose:
         print "Checking %s..." % fname
+    if check_ignores(fname):
+        continue
     if status == "M":
         regions = git.staged_regions(fname)
     else:
