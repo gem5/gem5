@@ -185,7 +185,7 @@ class GitRepo(AbstractRepo):
         if cached:
             cmd.append("--cached")
         if filter:
-            cmd += [ "--diff-filter", filter ]
+            cmd += [ "--diff-filter=%s" % filter ]
         cmd += [ self.head_revision(), "--" ] + files
         status = subprocess.check_output(cmd).rstrip("\n")
 
