@@ -58,7 +58,6 @@ git = GitRepo()
 
 opts = {}
 repo_base = git.repo_base()
-context = 8
 ui = StdioUI()
 
 os.chdir(repo_base)
@@ -68,7 +67,7 @@ for status, fname in git.status(filter="MA", cached=True):
     if args.verbose:
         print "Checking %s..." % fname
     if status == "M":
-        regions = git.staged_regions(fname, context=context)
+        regions = git.staged_regions(fname)
     else:
         regions = all_regions
 
