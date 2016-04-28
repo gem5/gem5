@@ -265,12 +265,14 @@ gitdir = main.root.Dir(".git")
 
 style_message = """
 You're missing the gem5 style hook, which automatically checks your code
-against the gem5 style rules on hg commit and qrefresh commands.  This
-script will now install the hook in your %s.
+against the gem5 style rules on %s.
+This script will now install the hook in your %s.
 Press enter to continue, or ctrl-c to abort: """
 
-mercurial_style_message = style_message % ".hg/hgrc file"
-git_style_message = style_message % ".git/hooks/ directory"
+mercurial_style_message = style_message % ("hg commit and qrefresh commands",
+                                           ".hg/hgrc file")
+git_style_message = style_message % ("'git commit'",
+                                     ".git/hooks/ directory")
 
 mercurial_style_upgrade_message = """
 Your Mercurial style hooks are not up-to-date. This script will now
