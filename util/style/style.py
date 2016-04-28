@@ -113,6 +113,8 @@ style_ignores = [
     # Ignore external projects as they are unlikely to follow the gem5
     # coding convention.
     _re_ignore("^ext/"),
+    # Ignore test data, as they are not code
+    _re_ignore("^tests/(?:quick|long)/"),
 ]
 
 def check_ignores(fname):
