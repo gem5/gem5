@@ -43,7 +43,7 @@
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
                        GPUStaticInst *_staticInst, uint64_t instSeqNum)
     : GPUExecContext(_cu, _wf), m_op(Enums::MO_UNDEF),
-      memoryOrder(Enums::MEMORY_ORDER_NONE), useContinuation(false),
+      memoryOrder(Enums::MEMORY_ORDER_NONE), n_reg(0) ,useContinuation(false),
       statusBitVector(0), staticInst(_staticInst), _seqNum(instSeqNum)
 {
     tlbHitLevel.assign(VSZ, -1);
