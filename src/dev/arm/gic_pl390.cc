@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -144,39 +144,39 @@ Pl390::readDistributor(PacketPtr pkt)
 
     DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
-    if (daddr >= ICDISER_ST && daddr < ICDISER_ED + 4) {
-        assert((daddr-ICDISER_ST) >> 2 < 32);
-        pkt->set<uint32_t>(intEnabled[(daddr-ICDISER_ST)>>2]);
+    if (daddr >= GICD_ISENABLER_ST && daddr < GICD_ISENABLER_ED + 4) {
+        assert((daddr-GICD_ISENABLER_ST) >> 2 < 32);
+        pkt->set<uint32_t>(intEnabled[(daddr-GICD_ISENABLER_ST)>>2]);
         goto done;
     }
 
-    if (daddr >= ICDICER_ST && daddr < ICDICER_ED + 4) {
-        assert((daddr-ICDICER_ST) >> 2 < 32);
-        pkt->set<uint32_t>(intEnabled[(daddr-ICDICER_ST)>>2]);
+    if (daddr >= GICD_ICENABLER_ST && daddr < GICD_ICENABLER_ED + 4) {
+        assert((daddr-GICD_ICENABLER_ST) >> 2 < 32);
+        pkt->set<uint32_t>(intEnabled[(daddr-GICD_ICENABLER_ST)>>2]);
         goto done;
     }
 
-    if (daddr >= ICDISPR_ST && daddr < ICDISPR_ED + 4) {
-        assert((daddr-ICDISPR_ST) >> 2 < 32);
-        pkt->set<uint32_t>(pendingInt[(daddr-ICDISPR_ST)>>2]);
+    if (daddr >= GICD_ISPENDR_ST && daddr < GICD_ISPENDR_ED + 4) {
+        assert((daddr-GICD_ISPENDR_ST) >> 2 < 32);
+        pkt->set<uint32_t>(pendingInt[(daddr-GICD_ISPENDR_ST)>>2]);
         goto done;
     }
 
-    if (daddr >= ICDICPR_ST && daddr < ICDICPR_ED + 4) {
-        assert((daddr-ICDICPR_ST) >> 2 < 32);
-        pkt->set<uint32_t>(pendingInt[(daddr-ICDICPR_ST)>>2]);
+    if (daddr >= GICD_ICPENDR_ST && daddr < GICD_ICPENDR_ED + 4) {
+        assert((daddr-GICD_ICPENDR_ST) >> 2 < 32);
+        pkt->set<uint32_t>(pendingInt[(daddr-GICD_ICPENDR_ST)>>2]);
         goto done;
     }
 
-    if (daddr >= ICDABR_ST && daddr < ICDABR_ED + 4) {
-        assert((daddr-ICDABR_ST) >> 2 < 32);
-        pkt->set<uint32_t>(activeInt[(daddr-ICDABR_ST)>>2]);
+    if (daddr >= GICD_ISACTIVER_ST && daddr < GICD_ISACTIVER_ED + 4) {
+        assert((daddr-GICD_ISACTIVER_ST) >> 2 < 32);
+        pkt->set<uint32_t>(activeInt[(daddr-GICD_ISACTIVER_ST)>>2]);
         goto done;
     }
 
-    if (daddr >= ICDIPR_ST && daddr < ICDIPR_ED + 4) {
+    if (daddr >= GICD_IPRIORITYR_ST && daddr < GICD_IPRIORITYR_ED + 4) {
         Addr int_num;
-        int_num = daddr - ICDIPR_ST;
+        int_num = daddr - GICD_IPRIORITYR_ST;
         assert(int_num < INT_LINES_MAX);
         DPRINTF(Interrupt, "Reading interrupt priority at int# %#x \n",int_num);
 
@@ -209,9 +209,9 @@ Pl390::readDistributor(PacketPtr pkt)
         goto done;
     }
 
-    if (daddr >= ICDIPTR_ST && daddr < ICDIPTR_ED + 4) {
+    if (daddr >= GICD_ITARGETSR_ST && daddr < GICD_ITARGETSR_ED + 4) {
         Addr int_num;
-        int_num = (daddr-ICDIPTR_ST) ;
+        int_num = (daddr-GICD_ITARGETSR_ST) ;
         DPRINTF(GIC, "Reading processor target register for int# %#x \n",
                  int_num);
         assert(int_num < INT_LINES_MAX);
@@ -245,20 +245,20 @@ Pl390::readDistributor(PacketPtr pkt)
         goto done;
     }
 
-    if (daddr >= ICDICFR_ST && daddr < ICDICFR_ED + 4) {
-        assert((daddr-ICDICFR_ST) >> 2 < 64);
+    if (daddr >= GICD_ICFGR_ST && daddr < GICD_ICFGR_ED + 4) {
+        assert((daddr-GICD_ICFGR_ST) >> 2 < 64);
         /** @todo software generated interrutps and PPIs
          * can't be configured in some ways
          */
-        pkt->set<uint32_t>(intConfig[(daddr-ICDICFR_ST)>>2]);
+        pkt->set<uint32_t>(intConfig[(daddr-GICD_ICFGR_ST)>>2]);
         goto done;
     }
 
     switch(daddr) {
-      case ICDDCR:
+      case GICD_CTLR:
         pkt->set<uint32_t>(enabled);
         break;
-      case ICDICTR:
+      case GICD_TYPER:
         uint32_t tmp;
         tmp = ((sys->numRunningContexts() - 1) << 5) |
               (itLines/INT_BITS_MAX -1) |
@@ -291,19 +291,19 @@ Pl390::readCpu(PacketPtr pkt)
             ctx_id);
 
     switch(daddr) {
-      case ICCIIDR:
+      case GICC_IIDR:
         pkt->set<uint32_t>(0);
         break;
-      case ICCICR:
+      case GICC_CTLR:
         pkt->set<uint32_t>(cpuEnabled[ctx_id]);
         break;
-      case ICCPMR:
+      case GICC_PMR:
         pkt->set<uint32_t>(cpuPriority[ctx_id]);
         break;
-      case ICCBPR:
+      case GICC_BPR:
         pkt->set<uint32_t>(cpuBpr[ctx_id]);
         break;
-      case ICCIAR:
+      case GICC_IAR:
         if (enabled && cpuEnabled[ctx_id]) {
             int active_int = cpuHighestInt[ctx_id];
             IAR iar = 0;
@@ -356,10 +356,10 @@ Pl390::readCpu(PacketPtr pkt)
         }
 
         break;
-      case ICCRPR:
+      case GICC_RPR:
         pkt->set<uint32_t>(iccrpr[0]);
         break;
-      case ICCHPIR:
+      case GICC_HPPIR:
         pkt->set<uint32_t>(0);
         panic("Need to implement HPIR");
         break;
@@ -399,36 +399,36 @@ Pl390::writeDistributor(PacketPtr pkt)
     DPRINTF(GIC, "gic distributor write register %#x size %#x value %#x \n",
             daddr, pkt->getSize(), pkt_data);
 
-    if (daddr >= ICDISER_ST && daddr < ICDISER_ED + 4) {
-        assert((daddr-ICDISER_ST) >> 2 < 32);
-        intEnabled[(daddr-ICDISER_ST) >> 2] |= pkt->get<uint32_t>();
+    if (daddr >= GICD_ISENABLER_ST && daddr < GICD_ISENABLER_ED + 4) {
+        assert((daddr-GICD_ISENABLER_ST) >> 2 < 32);
+        intEnabled[(daddr-GICD_ISENABLER_ST) >> 2] |= pkt->get<uint32_t>();
         goto done;
     }
 
-    if (daddr >= ICDICER_ST && daddr < ICDICER_ED + 4) {
-        assert((daddr-ICDICER_ST) >> 2 < 32);
-        intEnabled[(daddr-ICDICER_ST) >> 2] &= ~pkt->get<uint32_t>();
+    if (daddr >= GICD_ICENABLER_ST && daddr < GICD_ICENABLER_ED + 4) {
+        assert((daddr-GICD_ICENABLER_ST) >> 2 < 32);
+        intEnabled[(daddr-GICD_ICENABLER_ST) >> 2] &= ~pkt->get<uint32_t>();
         goto done;
     }
 
-    if (daddr >= ICDISPR_ST && daddr < ICDISPR_ED + 4) {
-        assert((daddr-ICDISPR_ST) >> 2 < 32);
-        pendingInt[(daddr-ICDISPR_ST) >> 2] |= pkt->get<uint32_t>();
+    if (daddr >= GICD_ISPENDR_ST && daddr < GICD_ISPENDR_ED + 4) {
+        assert((daddr-GICD_ISPENDR_ST) >> 2 < 32);
+        pendingInt[(daddr-GICD_ISPENDR_ST) >> 2] |= pkt->get<uint32_t>();
         pendingInt[0] &= SGI_MASK; // Don't allow SGIs to be changed
-        updateIntState((daddr-ICDISPR_ST) >> 2);
+        updateIntState((daddr-GICD_ISPENDR_ST) >> 2);
         goto done;
     }
 
-    if (daddr >= ICDICPR_ST && daddr < ICDICPR_ED + 4) {
-        assert((daddr-ICDICPR_ST) >> 2 < 32);
-        pendingInt[(daddr-ICDICPR_ST) >> 2] &= ~pkt->get<uint32_t>();
+    if (daddr >= GICD_ICPENDR_ST && daddr < GICD_ICPENDR_ED + 4) {
+        assert((daddr-GICD_ICPENDR_ST) >> 2 < 32);
+        pendingInt[(daddr-GICD_ICPENDR_ST) >> 2] &= ~pkt->get<uint32_t>();
         pendingInt[0] &= SGI_MASK; // Don't allow SGIs to be changed
-        updateIntState((daddr-ICDICPR_ST) >> 2);
+        updateIntState((daddr-GICD_ICPENDR_ST) >> 2);
         goto done;
     }
 
-    if (daddr >= ICDIPR_ST && daddr < ICDIPR_ED + 4) {
-        Addr int_num = daddr - ICDIPR_ST;
+    if (daddr >= GICD_IPRIORITYR_ST && daddr < GICD_IPRIORITYR_ED + 4) {
+        Addr int_num = daddr - GICD_IPRIORITYR_ST;
         assert(int_num < INT_LINES_MAX);
         uint8_t* int_p;
         if (int_num < (SGI_MAX + PPI_MAX))
@@ -463,8 +463,8 @@ Pl390::writeDistributor(PacketPtr pkt)
         goto done;
     }
 
-    if (daddr >= ICDIPTR_ST && daddr < ICDIPTR_ED + 4) {
-        Addr int_num = (daddr-ICDIPTR_ST) ;
+    if (daddr >= GICD_ITARGETSR_ST && daddr < GICD_ITARGETSR_ED + 4) {
+        Addr int_num = (daddr-GICD_ITARGETSR_ST) ;
         assert(int_num < INT_LINES_MAX);
         // First 31 interrupts only target single processor
         if (int_num >= SGI_MAX) {
@@ -480,32 +480,32 @@ Pl390::writeDistributor(PacketPtr pkt)
                 cpuTarget[int_num+2] = bits(tmp, 23, 16);
                 cpuTarget[int_num+3] = bits(tmp, 31, 24);
             }
-            updateIntState((daddr-ICDIPTR_ST)>>2);
+            updateIntState((daddr-GICD_ITARGETSR_ST)>>2);
         }
         goto done;
     }
 
-    if (daddr >= ICDICFR_ST && daddr < ICDICFR_ED + 4) {
-        assert((daddr-ICDICFR_ST) >> 2 < 64);
-        intConfig[(daddr-ICDICFR_ST)>>2] = pkt->get<uint32_t>();
+    if (daddr >= GICD_ICFGR_ST && daddr < GICD_ICFGR_ED + 4) {
+        assert((daddr-GICD_ICFGR_ST) >> 2 < 64);
+        intConfig[(daddr-GICD_ICFGR_ST)>>2] = pkt->get<uint32_t>();
         if (pkt->get<uint32_t>() & NN_CONFIG_MASK)
             warn("GIC N:N mode selected and not supported at this time\n");
         goto done;
     }
 
     switch(daddr) {
-      case ICDDCR:
+      case GICD_CTLR:
         enabled = pkt->get<uint32_t>();
         DPRINTF(Interrupt, "Distributor enable flag set to = %d\n", enabled);
         break;
-      case ICDICTR:
+      case GICD_TYPER:
         /* 0x200 is a made-up flag to enable gem5 extension functionality.
          * This reg is not normally written.
          */
         gem5ExtensionsEnabled = !!(pkt->get<uint32_t>() & 0x200);
         DPRINTF(GIC, "gem5 extensions %s\n", gem5ExtensionsEnabled ? "enabled" : "disabled");
         break;
-      case ICDSGIR:
+      case GICD_SGIR:
         softInt(ctx_id, pkt->get<uint32_t>());
         break;
       default:
@@ -531,16 +531,16 @@ Pl390::writeCpu(PacketPtr pkt)
             ctx_id, daddr, pkt->get<uint32_t>());
 
     switch(daddr) {
-      case ICCICR:
+      case GICC_CTLR:
         cpuEnabled[ctx_id] = pkt->get<uint32_t>();
         break;
-      case ICCPMR:
+      case GICC_PMR:
         cpuPriority[ctx_id] = pkt->get<uint32_t>();
         break;
-      case ICCBPR:
+      case GICC_BPR:
         cpuBpr[ctx_id] = pkt->get<uint32_t>();
         break;
-      case ICCEOIR:
+      case GICC_EOIR:
         iar = pkt->get<uint32_t>();
         if (iar.ack_id < SGI_MAX) {
             // Clear out the bit that corrseponds to the cleared int
@@ -665,7 +665,7 @@ Pl390::updateIntState(int hint)
 
         /*@todo use hint to do less work. */
         int highest_int = SPURIOUS_INT;
-        // Priorities below that set in ICCPMR can be ignored
+        // Priorities below that set in GICC_PMR can be ignored
         uint8_t highest_pri = cpuPriority[cpu];
 
         // Check SGIs

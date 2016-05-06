@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -65,39 +65,45 @@ class Pl390 : public BaseGic
 {
   protected:
     // distributor memory addresses
-    static const int ICDDCR     = 0x000; // control register
-    static const int ICDICTR    = 0x004; // controller type
-    static const int ICDIIDR    = 0x008; // implementer id
-    static const int ICDISER_ST = 0x100; // interrupt set enable
-    static const int ICDISER_ED = 0x17c;
-    static const int ICDICER_ST = 0x180; // interrupt clear enable
-    static const int ICDICER_ED = 0x1fc;
-    static const int ICDISPR_ST = 0x200; // set pending interrupt
-    static const int ICDISPR_ED = 0x27c;
-    static const int ICDICPR_ST = 0x280; // clear pending interrupt
-    static const int ICDICPR_ED = 0x2fc;
-    static const int ICDABR_ST  = 0x300; // active bit registers
-    static const int ICDABR_ED  = 0x37c;
-    static const int ICDIPR_ST  = 0x400; // interrupt priority registers
-    static const int ICDIPR_ED  = 0x7f8;
-    static const int ICDIPTR_ST = 0x800; // processor target registers
-    static const int ICDIPTR_ED = 0xbf8;
-    static const int ICDICFR_ST = 0xc00; // interrupt config registers
-    static const int ICDICFR_ED = 0xcfc;
-    static const int ICDSGIR    = 0xf00; // software generated interrupt
-    static const int DIST_SIZE  = 0xfff;
+    enum {
+        GICD_CTLR          = 0x000, // control register
+        GICD_TYPER         = 0x004, // controller type
+        GICD_IIDR          = 0x008, // implementer id
+        GICD_ISENABLER_ST  = 0x100, // interrupt set enable
+        GICD_ISENABLER_ED  = 0x17c,
+        GICD_ICENABLER_ST  = 0x180, // interrupt clear enable
+        GICD_ICENABLER_ED  = 0x1fc,
+        GICD_ISPENDR_ST    = 0x200, // set pending interrupt
+        GICD_ISPENDR_ED    = 0x27c,
+        GICD_ICPENDR_ST    = 0x280, // clear pending interrupt
+        GICD_ICPENDR_ED    = 0x2fc,
+        GICD_ISACTIVER_ST  = 0x300, // active bit registers
+        GICD_ISACTIVER_ED  = 0x37c,
+        GICD_IPRIORITYR_ST = 0x400, // interrupt priority registers
+        GICD_IPRIORITYR_ED = 0x7f8,
+        GICD_ITARGETSR_ST  = 0x800, // processor target registers
+        GICD_ITARGETSR_ED  = 0xbf8,
+        GICD_ICFGR_ST      = 0xc00, // interrupt config registers
+        GICD_ICFGR_ED      = 0xcfc,
+        GICD_SGIR          = 0xf00, // software generated interrupt
+
+        DIST_SIZE          = 0xfff
+    };
 
     // cpu memory addressesa
-    static const int ICCICR  = 0x00; // CPU control register
-    static const int ICCPMR  = 0x04; // Interrupt priority mask
-    static const int ICCBPR  = 0x08; // binary point register
-    static const int ICCIAR  = 0x0C; // interrupt ack register
-    static const int ICCEOIR = 0x10; // end of interrupt
-    static const int ICCRPR  = 0x14; // runing priority
-    static const int ICCHPIR = 0x18; // highest pending interrupt
-    static const int ICCABPR = 0x1c; // aliased binary point
-    static const int ICCIIDR = 0xfc; // cpu interface id register
-    static const int CPU_SIZE  = 0xff;
+    enum {
+        GICC_CTLR  = 0x00, // CPU control register
+        GICC_PMR   = 0x04, // Interrupt priority mask
+        GICC_BPR   = 0x08, // binary point register
+        GICC_IAR   = 0x0C, // interrupt ack register
+        GICC_EOIR  = 0x10, // end of interrupt
+        GICC_RPR   = 0x14, // runing priority
+        GICC_HPPIR = 0x18, // highest pending interrupt
+        GICC_ABPR  = 0x1c, // aliased binary point
+        GICC_IIDR  = 0xfc, // cpu interface id register
+
+        CPU_SIZE   = 0xff
+    };
 
     static const int SGI_MAX = 16;  // Number of Software Gen Interrupts
     static const int PPI_MAX = 16;  // Number of Private Peripheral Interrupts
@@ -105,7 +111,7 @@ class Pl390 : public BaseGic
     /** Mask off SGI's when setting/clearing pending bits */
     static const int SGI_MASK = 0xFFFF0000;
 
-    /** Mask for bits that config N:N mode in ICDICFR's */
+    /** Mask for bits that config N:N mode in GICD_ICFGR's */
     static const int NN_CONFIG_MASK = 0x55555555;
 
     static const int CPU_MAX = 256;   // Max number of supported CPU interfaces
