@@ -4,11 +4,11 @@ sim_seconds                                  0.000734                       # Nu
 sim_ticks                                   733914500                       # Number of ticks simulated
 final_tick                                  733914500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 608165                       # Simulator instruction rate (inst/s)
-host_op_rate                                   608160                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              223170099                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 243400                       # Number of bytes of host memory used
-host_seconds                                     3.29                       # Real time elapsed on the host
+host_inst_rate                                 598517                       # Simulator instruction rate (inst/s)
+host_op_rate                                   598513                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              219630055                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 242608                       # Number of bytes of host memory used
+host_seconds                                     3.34                       # Real time elapsed on the host
 sim_insts                                     1999973                       # Number of instructions simulated
 sim_ops                                       1999973                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -221,8 +221,6 @@ system.cpu0.dcache.blocked::no_mshrs                0                       # nu
 system.cpu0.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu0.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu0.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu0.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu0.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu0.dcache.writebacks::total               29                       # number of writebacks
 system.cpu0.dcache.ReadReq_mshr_misses::cpu0.data          324                       # number of ReadReq MSHR misses
@@ -257,7 +255,6 @@ system.cpu0.dcache.demand_avg_mshr_miss_latency::cpu0.data 60058.315335         
 system.cpu0.dcache.demand_avg_mshr_miss_latency::total 60058.315335                       # average overall mshr miss latency
 system.cpu0.dcache.overall_avg_mshr_miss_latency::cpu0.data 60058.315335                       # average overall mshr miss latency
 system.cpu0.dcache.overall_avg_mshr_miss_latency::total 60058.315335                       # average overall mshr miss latency
-system.cpu0.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu0.icache.tags.replacements              152                       # number of replacements
 system.cpu0.icache.tags.tagsinuse          216.116668                       # Cycle average of tags in use
 system.cpu0.icache.tags.total_refs             499557                       # Total number of references to valid blocks.
@@ -314,8 +311,6 @@ system.cpu0.icache.blocked::no_mshrs                0                       # nu
 system.cpu0.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu0.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu0.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu0.icache.writebacks::total              152                       # number of writebacks
 system.cpu0.icache.ReadReq_mshr_misses::cpu0.inst          463                       # number of ReadReq MSHR misses
@@ -342,7 +337,6 @@ system.cpu0.icache.demand_avg_mshr_miss_latency::cpu0.inst 54672.786177         
 system.cpu0.icache.demand_avg_mshr_miss_latency::total 54672.786177                       # average overall mshr miss latency
 system.cpu0.icache.overall_avg_mshr_miss_latency::cpu0.inst 54672.786177                       # average overall mshr miss latency
 system.cpu0.icache.overall_avg_mshr_miss_latency::total 54672.786177                       # average overall mshr miss latency
-system.cpu0.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu1.dtb.fetch_hits                          0                       # ITB hits
 system.cpu1.dtb.fetch_misses                        0                       # ITB misses
 system.cpu1.dtb.fetch_acv                           0                       # ITB acv
@@ -504,8 +498,6 @@ system.cpu1.dcache.blocked::no_mshrs                0                       # nu
 system.cpu1.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu1.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu1.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu1.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu1.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu1.dcache.writebacks::total               29                       # number of writebacks
 system.cpu1.dcache.ReadReq_mshr_misses::cpu1.data          324                       # number of ReadReq MSHR misses
@@ -540,7 +532,6 @@ system.cpu1.dcache.demand_avg_mshr_miss_latency::cpu1.data 60059.395248         
 system.cpu1.dcache.demand_avg_mshr_miss_latency::total 60059.395248                       # average overall mshr miss latency
 system.cpu1.dcache.overall_avg_mshr_miss_latency::cpu1.data 60059.395248                       # average overall mshr miss latency
 system.cpu1.dcache.overall_avg_mshr_miss_latency::total 60059.395248                       # average overall mshr miss latency
-system.cpu1.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu1.icache.tags.replacements              152                       # number of replacements
 system.cpu1.icache.tags.tagsinuse          216.114546                       # Cycle average of tags in use
 system.cpu1.icache.tags.total_refs             499551                       # Total number of references to valid blocks.
@@ -597,8 +588,6 @@ system.cpu1.icache.blocked::no_mshrs                0                       # nu
 system.cpu1.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu1.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu1.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu1.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu1.icache.writebacks::total              152                       # number of writebacks
 system.cpu1.icache.ReadReq_mshr_misses::cpu1.inst          463                       # number of ReadReq MSHR misses
@@ -625,7 +614,6 @@ system.cpu1.icache.demand_avg_mshr_miss_latency::cpu1.inst 54686.825054         
 system.cpu1.icache.demand_avg_mshr_miss_latency::total 54686.825054                       # average overall mshr miss latency
 system.cpu1.icache.overall_avg_mshr_miss_latency::cpu1.inst 54686.825054                       # average overall mshr miss latency
 system.cpu1.icache.overall_avg_mshr_miss_latency::total 54686.825054                       # average overall mshr miss latency
-system.cpu1.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu2.dtb.fetch_hits                          0                       # ITB hits
 system.cpu2.dtb.fetch_misses                        0                       # ITB misses
 system.cpu2.dtb.fetch_acv                           0                       # ITB acv
@@ -787,8 +775,6 @@ system.cpu2.dcache.blocked::no_mshrs                0                       # nu
 system.cpu2.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu2.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu2.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu2.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu2.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu2.dcache.writebacks::total               29                       # number of writebacks
 system.cpu2.dcache.ReadReq_mshr_misses::cpu2.data          324                       # number of ReadReq MSHR misses
@@ -823,7 +809,6 @@ system.cpu2.dcache.demand_avg_mshr_miss_latency::cpu2.data 60058.315335         
 system.cpu2.dcache.demand_avg_mshr_miss_latency::total 60058.315335                       # average overall mshr miss latency
 system.cpu2.dcache.overall_avg_mshr_miss_latency::cpu2.data 60058.315335                       # average overall mshr miss latency
 system.cpu2.dcache.overall_avg_mshr_miss_latency::total 60058.315335                       # average overall mshr miss latency
-system.cpu2.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu2.icache.tags.replacements              152                       # number of replacements
 system.cpu2.icache.tags.tagsinuse          216.112416                       # Cycle average of tags in use
 system.cpu2.icache.tags.total_refs             499546                       # Total number of references to valid blocks.
@@ -880,8 +865,6 @@ system.cpu2.icache.blocked::no_mshrs                0                       # nu
 system.cpu2.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu2.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu2.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu2.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu2.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu2.icache.writebacks::total              152                       # number of writebacks
 system.cpu2.icache.ReadReq_mshr_misses::cpu2.inst          463                       # number of ReadReq MSHR misses
@@ -908,7 +891,6 @@ system.cpu2.icache.demand_avg_mshr_miss_latency::cpu2.inst 54698.704104         
 system.cpu2.icache.demand_avg_mshr_miss_latency::total 54698.704104                       # average overall mshr miss latency
 system.cpu2.icache.overall_avg_mshr_miss_latency::cpu2.inst 54698.704104                       # average overall mshr miss latency
 system.cpu2.icache.overall_avg_mshr_miss_latency::total 54698.704104                       # average overall mshr miss latency
-system.cpu2.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu3.dtb.fetch_hits                          0                       # ITB hits
 system.cpu3.dtb.fetch_misses                        0                       # ITB misses
 system.cpu3.dtb.fetch_acv                           0                       # ITB acv
@@ -1070,8 +1052,6 @@ system.cpu3.dcache.blocked::no_mshrs                0                       # nu
 system.cpu3.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu3.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu3.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu3.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu3.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu3.dcache.writebacks::total               29                       # number of writebacks
 system.cpu3.dcache.ReadReq_mshr_misses::cpu3.data          324                       # number of ReadReq MSHR misses
@@ -1106,7 +1086,6 @@ system.cpu3.dcache.demand_avg_mshr_miss_latency::cpu3.data 60059.395248         
 system.cpu3.dcache.demand_avg_mshr_miss_latency::total 60059.395248                       # average overall mshr miss latency
 system.cpu3.dcache.overall_avg_mshr_miss_latency::cpu3.data 60059.395248                       # average overall mshr miss latency
 system.cpu3.dcache.overall_avg_mshr_miss_latency::total 60059.395248                       # average overall mshr miss latency
-system.cpu3.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu3.icache.tags.replacements              152                       # number of replacements
 system.cpu3.icache.tags.tagsinuse          216.110261                       # Cycle average of tags in use
 system.cpu3.icache.tags.total_refs             499543                       # Total number of references to valid blocks.
@@ -1163,8 +1142,6 @@ system.cpu3.icache.blocked::no_mshrs                0                       # nu
 system.cpu3.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu3.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu3.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu3.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu3.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu3.icache.writebacks::total              152                       # number of writebacks
 system.cpu3.icache.ReadReq_mshr_misses::cpu3.inst          463                       # number of ReadReq MSHR misses
@@ -1191,7 +1168,6 @@ system.cpu3.icache.demand_avg_mshr_miss_latency::cpu3.inst 54708.423326         
 system.cpu3.icache.demand_avg_mshr_miss_latency::total 54708.423326                       # average overall mshr miss latency
 system.cpu3.icache.overall_avg_mshr_miss_latency::cpu3.inst 54708.423326                       # average overall mshr miss latency
 system.cpu3.icache.overall_avg_mshr_miss_latency::total 54708.423326                       # average overall mshr miss latency
-system.cpu3.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.l2c.tags.replacements                        0                       # number of replacements
 system.l2c.tags.tagsinuse                 1940.317854                       # Cycle average of tags in use
 system.l2c.tags.total_refs                       1068                       # Total number of references to valid blocks.
@@ -1431,8 +1407,6 @@ system.l2c.blocked::no_mshrs                        0                       # nu
 system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
 system.l2c.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
 system.l2c.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.l2c.fast_writes                              0                       # number of fast writes performed
-system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.ReadExReq_mshr_misses::cpu0.data          139                       # number of ReadExReq MSHR misses
 system.l2c.ReadExReq_mshr_misses::cpu1.data          139                       # number of ReadExReq MSHR misses
 system.l2c.ReadExReq_mshr_misses::cpu2.data          139                       # number of ReadExReq MSHR misses
@@ -1565,7 +1539,6 @@ system.l2c.overall_avg_mshr_miss_latency::cpu2.data 49505.506608                
 system.l2c.overall_avg_mshr_miss_latency::cpu3.inst 49555.831266                       # average overall mshr miss latency
 system.l2c.overall_avg_mshr_miss_latency::cpu3.data 49507.709251                       # average overall mshr miss latency
 system.l2c.overall_avg_mshr_miss_latency::total 49519.690782                       # average overall mshr miss latency
-system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate
 system.membus.trans_dist::ReadResp               2872                       # Transaction distribution
 system.membus.trans_dist::ReadExReq               556                       # Transaction distribution
 system.membus.trans_dist::ReadExResp              556                       # Transaction distribution

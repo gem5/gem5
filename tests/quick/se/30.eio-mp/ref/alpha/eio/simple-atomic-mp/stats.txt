@@ -4,11 +4,11 @@ sim_seconds                                  0.000250                       # Nu
 sim_ticks                                   250015500                       # Number of ticks simulated
 final_tick                                  250015500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1345479                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1345456                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              168189773                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 243396                       # Number of bytes of host memory used
-host_seconds                                     1.49                       # Real time elapsed on the host
+host_inst_rate                                1254205                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1254187                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              156780790                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 242604                       # Number of bytes of host memory used
+host_seconds                                     1.59                       # Real time elapsed on the host
 sim_insts                                     2000004                       # Number of instructions simulated
 sim_ops                                       2000004                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -205,11 +205,8 @@ system.cpu0.dcache.blocked::no_mshrs                0                       # nu
 system.cpu0.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu0.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu0.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu0.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu0.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu0.dcache.writebacks::total               29                       # number of writebacks
-system.cpu0.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu0.icache.tags.replacements              152                       # number of replacements
 system.cpu0.icache.tags.tagsinuse          218.086151                       # Cycle average of tags in use
 system.cpu0.icache.tags.total_refs             499556                       # Total number of references to valid blocks.
@@ -255,11 +252,8 @@ system.cpu0.icache.blocked::no_mshrs                0                       # nu
 system.cpu0.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu0.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu0.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu0.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu0.icache.writebacks::total              152                       # number of writebacks
-system.cpu0.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu1.dtb.fetch_hits                          0                       # ITB hits
 system.cpu1.dtb.fetch_misses                        0                       # ITB misses
 system.cpu1.dtb.fetch_acv                           0                       # ITB acv
@@ -405,11 +399,8 @@ system.cpu1.dcache.blocked::no_mshrs                0                       # nu
 system.cpu1.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu1.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu1.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu1.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu1.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu1.dcache.writebacks::total               29                       # number of writebacks
-system.cpu1.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu1.icache.tags.replacements              152                       # number of replacements
 system.cpu1.icache.tags.tagsinuse          218.086151                       # Cycle average of tags in use
 system.cpu1.icache.tags.total_refs             499556                       # Total number of references to valid blocks.
@@ -455,11 +446,8 @@ system.cpu1.icache.blocked::no_mshrs                0                       # nu
 system.cpu1.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu1.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu1.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu1.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu1.icache.writebacks::total              152                       # number of writebacks
-system.cpu1.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu2.dtb.fetch_hits                          0                       # ITB hits
 system.cpu2.dtb.fetch_misses                        0                       # ITB misses
 system.cpu2.dtb.fetch_acv                           0                       # ITB acv
@@ -605,11 +593,8 @@ system.cpu2.dcache.blocked::no_mshrs                0                       # nu
 system.cpu2.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu2.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu2.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu2.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu2.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu2.dcache.writebacks::total               29                       # number of writebacks
-system.cpu2.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu2.icache.tags.replacements              152                       # number of replacements
 system.cpu2.icache.tags.tagsinuse          218.086151                       # Cycle average of tags in use
 system.cpu2.icache.tags.total_refs             499556                       # Total number of references to valid blocks.
@@ -655,11 +640,8 @@ system.cpu2.icache.blocked::no_mshrs                0                       # nu
 system.cpu2.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu2.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu2.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu2.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu2.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu2.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu2.icache.writebacks::total              152                       # number of writebacks
-system.cpu2.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu3.dtb.fetch_hits                          0                       # ITB hits
 system.cpu3.dtb.fetch_misses                        0                       # ITB misses
 system.cpu3.dtb.fetch_acv                           0                       # ITB acv
@@ -805,11 +787,8 @@ system.cpu3.dcache.blocked::no_mshrs                0                       # nu
 system.cpu3.dcache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu3.dcache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu3.dcache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu3.dcache.fast_writes                      0                       # number of fast writes performed
-system.cpu3.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.dcache.writebacks::writebacks           29                       # number of writebacks
 system.cpu3.dcache.writebacks::total               29                       # number of writebacks
-system.cpu3.dcache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.cpu3.icache.tags.replacements              152                       # number of replacements
 system.cpu3.icache.tags.tagsinuse          218.086151                       # Cycle average of tags in use
 system.cpu3.icache.tags.total_refs             499556                       # Total number of references to valid blocks.
@@ -855,11 +834,8 @@ system.cpu3.icache.blocked::no_mshrs                0                       # nu
 system.cpu3.icache.blocked::no_targets              0                       # number of cycles access was blocked
 system.cpu3.icache.avg_blocked_cycles::no_mshrs          nan                       # average number of cycles each access was blocked
 system.cpu3.icache.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.cpu3.icache.fast_writes                      0                       # number of fast writes performed
-system.cpu3.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu3.icache.writebacks::writebacks          152                       # number of writebacks
 system.cpu3.icache.writebacks::total              152                       # number of writebacks
-system.cpu3.icache.no_allocate_misses               0                       # Number of misses that were no-allocate
 system.l2c.tags.replacements                        0                       # number of replacements
 system.l2c.tags.tagsinuse                 1962.780232                       # Cycle average of tags in use
 system.l2c.tags.total_refs                       1068                       # Total number of references to valid blocks.
@@ -1033,9 +1009,6 @@ system.l2c.blocked::no_mshrs                        0                       # nu
 system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
 system.l2c.avg_blocked_cycles::no_mshrs           nan                       # average number of cycles each access was blocked
 system.l2c.avg_blocked_cycles::no_targets          nan                       # average number of cycles each access was blocked
-system.l2c.fast_writes                              0                       # number of fast writes performed
-system.l2c.cache_copies                             0                       # number of cache copies performed
-system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate
 system.membus.trans_dist::ReadResp               2872                       # Transaction distribution
 system.membus.trans_dist::ReadExReq               556                       # Transaction distribution
 system.membus.trans_dist::ReadExResp              556                       # Transaction distribution

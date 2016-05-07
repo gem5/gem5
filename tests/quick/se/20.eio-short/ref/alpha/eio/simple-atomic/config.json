@@ -15,6 +15,7 @@
                 "role": "SLAVE"
             }, 
             "name": "membus", 
+            "point_of_coherency": true, 
             "snoop_filter": null, 
             "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
@@ -37,8 +38,10 @@
         }, 
         "symbolfile": "", 
         "readfile": "", 
+        "thermal_model": null, 
         "cxx_class": "System", 
         "load_offset": 0, 
+        "work_begin_exit_count": 0, 
         "work_end_ckpt_count": 0, 
         "memories": [
             "system.physmem"
@@ -105,7 +108,7 @@
             "in_addr_map": true
         }, 
         "work_cpus_ckpt_count": 0, 
-        "work_begin_exit_count": 0, 
+        "thermal_components": [], 
         "path": "system", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 

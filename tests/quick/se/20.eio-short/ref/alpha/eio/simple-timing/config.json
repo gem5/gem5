@@ -14,6 +14,7 @@
                 "role": "SLAVE"
             }, 
             "name": "membus", 
+            "point_of_coherency": true, 
             "snoop_filter": null, 
             "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
@@ -36,8 +37,10 @@
         }, 
         "symbolfile": "", 
         "readfile": "", 
+        "thermal_model": null, 
         "cxx_class": "System", 
         "load_offset": 0, 
+        "work_begin_exit_count": 0, 
         "work_end_ckpt_count": 0, 
         "memories": [
             "system.physmem"
@@ -104,7 +107,7 @@
             "in_addr_map": true
         }, 
         "work_cpus_ckpt_count": 0, 
-        "work_begin_exit_count": 0, 
+        "thermal_components": [], 
         "path": "system", 
         "cpu_clk_domain": {
             "name": "cpu_clk_domain", 
@@ -158,6 +161,7 @@
                         "role": "SLAVE"
                     }, 
                     "name": "toL2Bus", 
+                    "point_of_coherency": false, 
                     "snoop_filter": {
                         "name": "snoop_filter", 
                         "system": "system", 
@@ -227,11 +231,10 @@
                         "role": "MASTER"
                     }, 
                     "type": "Cache", 
-                    "forward_snoops": true, 
                     "writeback_clean": true, 
                     "hit_latency": 2, 
-                    "tgts_per_mshr": 20, 
                     "demand_mshr_reserve": 1, 
+                    "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -291,11 +294,10 @@
                         "role": "MASTER"
                     }, 
                     "type": "Cache", 
-                    "forward_snoops": true, 
                     "writeback_clean": false, 
                     "hit_latency": 20, 
-                    "tgts_per_mshr": 12, 
                     "demand_mshr_reserve": 1, 
+                    "tgts_per_mshr": 12, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
@@ -374,11 +376,10 @@
                         "role": "MASTER"
                     }, 
                     "type": "Cache", 
-                    "forward_snoops": true, 
                     "writeback_clean": false, 
                     "hit_latency": 2, 
-                    "tgts_per_mshr": 20, 
                     "demand_mshr_reserve": 1, 
+                    "tgts_per_mshr": 20, 
                     "addr_ranges": [
                         "0:18446744073709551615"
                     ], 
