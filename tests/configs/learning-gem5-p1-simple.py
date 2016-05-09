@@ -35,5 +35,10 @@ root = None
 def run_test(root):
         # Called from tests/run.py
 
+        # Set the working directory in case we are executing from
+        # outside gem5's source tree
+        import os
+        os.chdir(os.path.join(os.path.dirname(__file__), "../"))
+
         # Execute the script we are wrapping
-        execfile('configs/learning_gem5/part1/simple.py')
+        execfile(srcpath('configs/learning_gem5/part1/simple.py'))

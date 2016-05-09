@@ -37,6 +37,12 @@ import m5
 def run_test(root):
         # Called from tests/run.py
 
+
+        # Set the working directory in case we are executing from
+        # outside gem5's source tree
+        import os
+        os.chdir(os.path.join(os.path.dirname(__file__), "../"))
+
         # Add paths that we need
         m5.util.addToPath('../configs/learning_gem5/part1')
         m5.util.addToPath('../configs/common')
@@ -49,4 +55,4 @@ def run_test(root):
         # For instance, sys.argv.append('--l2_size=512kB')
 
         # Execute the script we are wrapping
-        execfile('configs/learning_gem5/part1/two_level.py')
+        execfile(srcpath('configs/learning_gem5/part1/two_level.py'))

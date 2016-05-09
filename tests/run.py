@@ -171,6 +171,10 @@ def inputpath(app, file=None):
         file = app
     return joinpath(test_progs, app, 'input', file)
 
+def srcpath(path):
+    """Path to file in gem5's source tree"""
+    return joinpath(os.path.dirname(__file__), "..", path)
+
 # build configuration
 sys.path.append(joinpath(tests_root, 'configs'))
 test_filename = config
