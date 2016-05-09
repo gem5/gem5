@@ -260,7 +260,6 @@ main.AppendENVPath('PYTHONPATH', extra_python_paths)
 ########################################################################
 
 hgdir = main.root.Dir(".hg")
-gitdir = main.root.Dir(".git")
 
 
 style_message = """
@@ -368,10 +367,20 @@ if not ignore_style and hgdir.exists():
             print "Error updating", hgrc_path
             sys.exit(1)
 
-# Try to wire up git to the style hooks
-git_pre_commit_hook = gitdir.File("hooks/pre-commit")
-if not ignore_style and gitdir.exists() and not git_pre_commit_hook.exists():
+def install_git_style_hooks():
+    try:
+        gitdir = Dir(readCommand(
+            ["git", "rev-parse", "--git-dir"]).strip("\n"))
+    except Exception, e:
+        print "Warning: Failed to find git repo directory: %s" % e
+        return
+
+    git_hooks = gitdir.Dir("hooks")
+    git_pre_commit_hook = git_hooks.File("pre-commit")
     git_style_script = File("util/git-pre-commit.py")
+
+    if git_pre_commit_hook.exists():
+        return
 
     print git_style_message,
     try:
@@ -380,15 +389,26 @@ if not ignore_style and gitdir.exists() and not git_pre_commit_hook.exists():
         print "Input exception, exiting scons.\n"
         sys.exit(1)
 
-    try:
-        rel_style_script = os.path.relpath(
+    if not git_hooks.exists():
+        mkdir(git_hooks.get_abspath())
+
+    # Use a relative symlink if the hooks live in the source directory
+    if git_pre_commit_hook.is_under(main.root):
+        script_path = os.path.relpath(
             git_style_script.get_abspath(),
             git_pre_commit_hook.Dir(".").get_abspath())
-        os.symlink(rel_style_script, git_pre_commit_hook.get_abspath())
+    else:
+        script_path = git_style_script.get_abspath()
+
+    try:
+        os.symlink(script_path, git_pre_commit_hook.get_abspath())
     except:
         print "Error updating git pre-commit hook"
         raise
-        sys.exit(1)
+
+# Try to wire up git to the style hooks
+if not ignore_style and main.root.Entry(".git").exists():
+    install_git_style_hooks()
 
 ###################################################
 #
