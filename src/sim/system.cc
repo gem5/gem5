@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2014,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -157,6 +157,14 @@ System::System(Params *p)
             kernelStart = kernel->textBase();
             kernelEnd = kernel->bssBase() + kernel->bssSize();
             kernelEntry = kernel->entryPoint();
+
+            // If load_addr_mask is set to 0x0, then auto-calculate
+            // the smallest mask to cover all kernel addresses so gem5
+            // can relocate the kernel to a new offset.
+            if (loadAddrMask == 0) {
+                Addr shift_amt = findMsbSet(kernelEnd - kernelStart) + 1;
+                loadAddrMask = ((Addr)1 << shift_amt) - 1;
+            }
 
             // load symbols
             if (!kernel->loadGlobalSymbols(kernelSymtab))

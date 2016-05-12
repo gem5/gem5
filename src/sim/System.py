@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # Copyright (c) 2011 Regents of the University of California
 # All rights reserved.
@@ -96,8 +108,10 @@ class System(MemObject):
     kernel_extras = VectorParam.String([],"Additional object files to load")
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")
-    load_addr_mask = Param.UInt64(0xffffffffff,
-            "Address to mask loading binaries with")
+    load_addr_mask = Param.UInt64(0xffffffffffffffff,
+            "Address to mask loading binaries with, if 0, system "
+            "auto-calculates the mask to be the most restrictive, "
+            "otherwise it obeys a custom mask.")
     load_offset = Param.UInt64(0, "Address to offset loading binaries with")
 
     multi_thread = Param.Bool(False,
