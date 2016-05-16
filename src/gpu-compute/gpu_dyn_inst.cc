@@ -84,7 +84,7 @@ GPUDynInst::isVectorRegister(int operandIdx)
 bool
 GPUDynInst::isScalarRegister(int operandIdx)
 {
-    return staticInst->isVectorRegister(operandIdx);
+    return staticInst->isScalarRegister(operandIdx);
 }
 
 int
