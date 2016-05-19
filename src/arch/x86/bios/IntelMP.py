@@ -115,7 +115,7 @@ class X86IntelMPBus(X86IntelMPBaseConfigEntry):
 
     bus_id = Param.UInt8(0, 'bus id assigned by the bios')
     bus_type = Param.String("", 'string that identify the bus type')
-    # Legal values for bus_type are:
+    # Legal values for bus_type are [space padded to 6 bytes]:
     #
     # "CBUS", "CBUSII", "EISA", "FUTURE", "INTERN", "ISA", "MBI", "MBII",
     # "MCA", "MPI", "MPSA", "NUBUS", "PCI", "PCMCIA", "TC", "VL", "VME",

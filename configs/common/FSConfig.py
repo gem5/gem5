@@ -553,9 +553,9 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     # In gem5 Pc::calcPciConfigAddr(), it required "assert(bus==0)",
     # but linux kernel cannot config PCI device if it was not connected to PCI bus,
     # so we fix PCI bus id to 0, and ISA bus id to 1.
-    pci_bus = X86IntelMPBus(bus_id = 0, bus_type='PCI')
+    pci_bus = X86IntelMPBus(bus_id = 0, bus_type='PCI   ')
     base_entries.append(pci_bus)
-    isa_bus = X86IntelMPBus(bus_id = 1, bus_type='ISA')
+    isa_bus = X86IntelMPBus(bus_id = 1, bus_type='ISA   ')
     base_entries.append(isa_bus)
     connect_busses = X86IntelMPBusHierarchy(bus_id=1,
             subtractive_decode=True, parent_bus=0)
