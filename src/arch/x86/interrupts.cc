@@ -112,58 +112,34 @@ decodeAddr(Addr paddr)
         regNum = APIC_SPURIOUS_INTERRUPT_VECTOR;
         break;
       case 0x100:
-      case 0x108:
       case 0x110:
-      case 0x118:
       case 0x120:
-      case 0x128:
       case 0x130:
-      case 0x138:
       case 0x140:
-      case 0x148:
       case 0x150:
-      case 0x158:
       case 0x160:
-      case 0x168:
       case 0x170:
-      case 0x178:
-        regNum = APIC_IN_SERVICE((paddr - 0x100) / 0x8);
+        regNum = APIC_IN_SERVICE((paddr - 0x100) / 0x10);
         break;
       case 0x180:
-      case 0x188:
       case 0x190:
-      case 0x198:
       case 0x1A0:
-      case 0x1A8:
       case 0x1B0:
-      case 0x1B8:
       case 0x1C0:
-      case 0x1C8:
       case 0x1D0:
-      case 0x1D8:
       case 0x1E0:
-      case 0x1E8:
       case 0x1F0:
-      case 0x1F8:
-        regNum = APIC_TRIGGER_MODE((paddr - 0x180) / 0x8);
+        regNum = APIC_TRIGGER_MODE((paddr - 0x180) / 0x10);
         break;
       case 0x200:
-      case 0x208:
       case 0x210:
-      case 0x218:
       case 0x220:
-      case 0x228:
       case 0x230:
-      case 0x238:
       case 0x240:
-      case 0x248:
       case 0x250:
-      case 0x258:
       case 0x260:
-      case 0x268:
       case 0x270:
-      case 0x278:
-        regNum = APIC_INTERRUPT_REQUEST((paddr - 0x200) / 0x8);
+        regNum = APIC_INTERRUPT_REQUEST((paddr - 0x200) / 0x10);
         break;
       case 0x280:
         regNum = APIC_ERROR_STATUS;
