@@ -65,7 +65,7 @@ class PciVirtIO(PciDevice):
 
     ClassCode = 0xff # Misc device
 
-    BAR0 = 0x00000000 # Anywhere in 32-bit space
+    BAR0 = 0x00000001 # Anywhere in 32-bit space; IOREG
     BAR0Size = '0B' # Overridden by the device model
 
     InterruptPin = 0x01 # Use #INTA
