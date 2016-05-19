@@ -91,7 +91,8 @@ Pl011::read(PacketPtr pkt)
       case UART_FR:
         data =
             UART_FR_CTS | // Clear To Send
-            (!term->dataAvailable() ? UART_FR_RXFE : 0) | // RX FIFO Empty
+            // Given we do not simulate a FIFO we are either empty or full.
+            (!term->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
             UART_FR_TXFE; // TX FIFO empty
 
         DPRINTF(Uart,

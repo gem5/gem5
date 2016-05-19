@@ -120,8 +120,10 @@ class Pl011 : public Uart, public AmbaDevice
     static const int UART_DR = 0x000;
     static const int UART_FR = 0x018;
     static const int UART_FR_CTS  = 0x001;
-    static const int UART_FR_TXFE = 0x080;
     static const int UART_FR_RXFE = 0x010;
+    static const int UART_FR_TXFF = 0x020;
+    static const int UART_FR_RXFF = 0x040;
+    static const int UART_FR_TXFE = 0x080;
     static const int UART_IBRD = 0x024;
     static const int UART_FBRD = 0x028;
     static const int UART_LCRH = 0x02C;
