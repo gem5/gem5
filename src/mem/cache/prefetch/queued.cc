@@ -117,14 +117,14 @@ QueuedPrefetcher::getPacket()
 
     if (pfq.empty()) {
         DPRINTF(HWPrefetch, "No hardware prefetches available.\n");
-        return NULL;
+        return nullptr;
     }
 
     PacketPtr pkt = pfq.begin()->pkt;
     pfq.pop_front();
 
     pfIssued++;
-    assert(pkt != NULL);
+    assert(pkt != nullptr);
     DPRINTF(HWPrefetch, "Generating prefetch for %#x.\n", pkt->getAddr());
     return pkt;
 }

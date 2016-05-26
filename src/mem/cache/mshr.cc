@@ -95,7 +95,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         // an MSHR entry. If we do, set the downstreamPending
         // flag. Otherwise, do nothing.
         MSHR *mshr = pkt->findNextSenderState<MSHR>();
-        if (mshr != NULL) {
+        if (mshr != nullptr) {
             assert(!mshr->downstreamPending);
             mshr->downstreamPending = true;
         } else {
@@ -166,7 +166,7 @@ MSHR::TargetList::clearDownstreamPending()
             // downstreamPending flag in all caches this packet has
             // passed through.
             MSHR *mshr = t.pkt->findNextSenderState<MSHR>();
-            if (mshr != NULL) {
+            if (mshr != nullptr) {
                 mshr->clearDownstreamPending();
             }
         }
@@ -491,7 +491,7 @@ MSHR::checkFunctional(PacketPtr pkt)
     // For other requests, we iterate over the individual targets
     // since that's where the actual data lies.
     if (pkt->isPrint()) {
-        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, NULL);
+        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, nullptr);
         return false;
     } else {
         return (targets.checkFunctional(pkt) ||

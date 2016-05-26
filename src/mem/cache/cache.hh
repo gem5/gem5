@@ -290,7 +290,7 @@ class Cache : public BaseCache
      * Find a block frame for new block at address addr targeting the
      * given security space, assuming that the block is not currently
      * in the cache.  Append writebacks if any to provided packet
-     * list.  Return free block frame.  May return NULL if there are
+     * list.  Return free block frame.  May return nullptr if there are
      * no replaceable blocks at the moment.
      */
     CacheBlk *allocateBlock(Addr addr, bool is_secure, PacketList &writebacks);
@@ -464,10 +464,10 @@ class Cache : public BaseCache
      * given parameters.
      * @param cpu_pkt  The miss that needs to be satisfied.
      * @param blk The block currently in the cache corresponding to
-     * cpu_pkt (NULL if none).
+     * cpu_pkt (nullptr if none).
      * @param needsWritable Indicates that the block must be writable
      * even if the request in cpu_pkt doesn't indicate that.
-     * @return A new Packet containing the request, or NULL if the
+     * @return A new Packet containing the request, or nullptr if the
      * current request in cpu_pkt should just be forwarded on.
      */
     PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,

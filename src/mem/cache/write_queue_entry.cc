@@ -132,7 +132,7 @@ WriteQueueEntry::checkFunctional(PacketPtr pkt)
     // entity. For other requests, we iterate over the individual
     // targets since that's where the actual data lies.
     if (pkt->isPrint()) {
-        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, NULL);
+        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, nullptr);
         return false;
     } else {
         return targets.checkFunctional(pkt);

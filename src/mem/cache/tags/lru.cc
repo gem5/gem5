@@ -59,7 +59,7 @@ LRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
 {
     CacheBlk *blk = BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
 
-    if (blk != NULL) {
+    if (blk != nullptr) {
         // move this block to head of the MRU list
         sets[blk->set].moveToHead(blk);
         DPRINTF(CacheRepl, "set %x: moving blk %x (%s) to MRU\n",
@@ -75,7 +75,7 @@ LRU::findVictim(Addr addr)
 {
     int set = extractSet(addr);
     // grab a replacement candidate
-    BlkType *blk = NULL;
+    BlkType *blk = nullptr;
     for (int i = assoc - 1; i >= 0; i--) {
         BlkType *b = sets[set].blks[i];
         if (b->way < allocAssoc) {

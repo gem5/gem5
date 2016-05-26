@@ -193,7 +193,7 @@ public:
 
     /**
      * Access block and update replacement data. May not succeed, in which case
-     * NULL pointer is returned. This has all the implications of a cache
+     * nullptr is returned. This has all the implications of a cache
      * access and should only be used as such. Returns the access latency as a
      * side effect.
      * @param addr The address to find.
@@ -215,14 +215,14 @@ public:
         // a hit.  Sequential access with a miss doesn't access data.
         tagAccesses += allocAssoc;
         if (sequentialAccess) {
-            if (blk != NULL) {
+            if (blk != nullptr) {
                 dataAccesses += 1;
             }
         } else {
             dataAccesses += allocAssoc;
         }
 
-        if (blk != NULL) {
+        if (blk != nullptr) {
             if (blk->whenReady > curTick()
                 && cache->ticksToCycles(blk->whenReady - curTick())
                 > accessLatency) {
@@ -253,7 +253,7 @@ public:
      */
     CacheBlk* findVictim(Addr addr) override
     {
-        BlkType *blk = NULL;
+        BlkType *blk = nullptr;
         int set = extractSet(addr);
 
         // prefer to evict an invalid block

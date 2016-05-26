@@ -206,7 +206,7 @@ class Queue : public Drainable
     Entry* getNext() const
     {
         if (readyList.empty() || readyList.front()->readyTime > curTick()) {
-            return NULL;
+            return nullptr;
         }
         return readyList.front();
     }

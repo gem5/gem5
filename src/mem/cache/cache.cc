@@ -322,7 +322,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             old_blk->invalidate();
         }
 
-        blk = NULL;
+        blk = nullptr;
         // lookupLatency is the latency in case the request is uncacheable.
         lat = lookupLatency;
         return false;
@@ -394,10 +394,10 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             return true;
         }
 
-        if (blk == NULL) {
+        if (blk == nullptr) {
             // need to do a replacement
             blk = allocateBlock(pkt->getAddr(), pkt->isSecure(), writebacks);
-            if (blk == NULL) {
+            if (blk == nullptr) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
                 return false;
@@ -427,7 +427,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         incHitCount(pkt);
         return true;
     } else if (pkt->cmd == MemCmd::CleanEvict) {
-        if (blk != NULL) {
+        if (blk != nullptr) {
             // Found the block in the tags, need to stop CleanEvict from
             // propagating further down the hierarchy. Returning true will
             // treat the CleanEvict like a satisfied write request and delete
@@ -439,7 +439,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // like a Writeback which could not find a replaceable block so has to
         // go to next level.
         return false;
-    } else if ((blk != NULL) &&
+    } else if ((blk != nullptr) &&
                (pkt->needsWritable() ? blk->isWritable() :
                 blk->isReadable())) {
         // OK to satisfy access
@@ -448,12 +448,12 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         return true;
     }
 
-    // Can't satisfy access normally... either no block (blk == NULL)
+    // Can't satisfy access normally... either no block (blk == nullptr)
     // or have block but need writable
 
     incMissCount(pkt);
 
-    if (blk == NULL && pkt->isLLSC() && pkt->isWrite()) {
+    if (blk == nullptr && pkt->isLLSC() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now
         pkt->req->setExtraData(0);
         return true;
@@ -674,7 +674,7 @@ Cache::recvTimingReq(PacketPtr pkt)
     // We use lookupLatency here because it is used to specify the latency
     // to access.
     Cycles lat = lookupLatency;
-    CacheBlk *blk = NULL;
+    CacheBlk *blk = nullptr;
     bool satisfied = false;
     {
         PacketList writebacks;
@@ -1013,7 +1013,7 @@ Cache::recvAtomic(PacketPtr pkt)
     // writebacks... that would mean that someone used an atomic
     // access in timing mode
 
-    CacheBlk *blk = NULL;
+    CacheBlk *blk = nullptr;
     PacketList writebacks;
     bool satisfied = access(pkt, blk, lat, writebacks);
 
@@ -1035,7 +1035,7 @@ Cache::recvAtomic(PacketPtr pkt)
 
         PacketPtr bus_pkt = createMissPacket(pkt, blk, pkt->needsWritable());
 
-        bool is_forward = (bus_pkt == NULL);
+        bool is_forward = (bus_pkt == nullptr);
 
         if (is_forward) {
             // just forwarding the same request to the next level
@@ -1275,7 +1275,7 @@ Cache::recvTimingResp(PacketPtr pkt)
     if (mshr == noTargetMSHR) {
         // we always clear at least one target
         clearBlocked(Blocked_NoTargets);
-        noTargetMSHR = NULL;
+        noTargetMSHR = nullptr;
     }
 
     // Initial target is used just for stats
@@ -1315,7 +1315,7 @@ Cache::recvTimingResp(PacketPtr pkt)
                 pkt->getAddr());
 
         blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill);
-        assert(blk != NULL);
+        assert(blk != nullptr);
     }
 
     // allow invalidation responses originating from write-line
@@ -1360,7 +1360,7 @@ Cache::recvTimingResp(PacketPtr pkt)
                 mshr->promoteWritable();
                 // NB: we use the original packet here and not the response!
                 blk = handleFill(tgt_pkt, blk, writebacks, mshr->allocOnFill);
-                assert(blk != NULL);
+                assert(blk != nullptr);
 
                 // treat as a fill, and discard the invalidation
                 // response
@@ -1660,7 +1660,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 {
     CacheBlk *blk = tags->findVictim(addr);
 
-    // It is valid to return NULL if there is no victim
+    // It is valid to return nullptr if there is no victim
     if (!blk)
         return nullptr;
 
@@ -1674,7 +1674,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
             assert(repl_mshr->needsWritable());
             // too hard to replace block with transient state
             // allocation failed, block not inserted
-            return NULL;
+            return nullptr;
         } else {
             DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx "
                     "(%s): %s\n", repl_addr, blk->isSecure() ? "s" : "ns",
@@ -1726,7 +1726,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     assert(addr == blockAlign(addr));
     assert(!writeBuffer.findMatch(addr, is_secure));
 
-    if (blk == NULL) {
+    if (blk == nullptr) {
         // better have read new data...
         assert(pkt->hasData());
 
@@ -1737,9 +1737,9 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
-        blk = allocate ? allocateBlock(addr, is_secure, writebacks) : NULL;
+        blk = allocate ? allocateBlock(addr, is_secure, writebacks) : nullptr;
 
-        if (blk == NULL) {
+        if (blk == nullptr) {
             // No replaceable block or a mostly exclusive
             // cache... just use temporary storage to complete the
             // current request and then get rid of it
@@ -2309,7 +2309,7 @@ Cache::isCachedAbove(PacketPtr pkt, bool is_timing) const
         // prefetch request because prefetch requests need an MSHR and may
         // generate a snoop response.
         assert(pkt->isEviction());
-        snoop_pkt.senderState = NULL;
+        snoop_pkt.senderState = nullptr;
         cpuSidePort->sendTimingSnoopReq(&snoop_pkt);
         // Writeback/CleanEvict snoops do not generate a snoop response.
         assert(!(snoop_pkt.cacheResponding()));
@@ -2353,7 +2353,7 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
     if (tgt_pkt->cmd == MemCmd::HardPFReq && forwardSnoops) {
         // we should never have hardware prefetches to allocated
         // blocks
-        assert(blk == NULL);
+        assert(blk == nullptr);
 
         // We need to check the caches above us to verify that
         // they don't have a copy of this block in the dirty state
@@ -2415,7 +2415,7 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
     // MSHR request, proceed to get the packet to send downstream
     PacketPtr pkt = createMissPacket(tgt_pkt, blk, mshr->needsWritable());
 
-    mshr->isForward = (pkt == NULL);
+    mshr->isForward = (pkt == nullptr);
 
     if (mshr->isForward) {
         // not a cache block request, but a response is expected

@@ -104,7 +104,7 @@ CacheSet<Blktype>::findBlk(Addr tag, bool is_secure, int& way_id) const
             return blks[i];
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 template <class Blktype>

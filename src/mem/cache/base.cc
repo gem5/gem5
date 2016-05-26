@@ -80,7 +80,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       isReadOnly(p->is_read_only),
       blocked(0),
       order(0),
-      noTargetMSHR(NULL),
+      noTargetMSHR(nullptr),
       missCount(p->max_miss_count),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
       system(p->system)
