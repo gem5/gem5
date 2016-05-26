@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -57,6 +57,8 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       masterID(system->getMasterId(name())),
       configFile(p->config_file),
       elasticReq(p->elastic_req),
+      progressCheck(p->progress_check),
+      noProgressEvent(this),
       nextTransitionTick(0),
       nextPacketTick(0),
       currState(0),
@@ -179,6 +181,9 @@ TrafficGen::unserialize(CheckpointIn &cp)
 void
 TrafficGen::update()
 {
+    // shift our progress-tracking event forward
+    reschedule(noProgressEvent, curTick() + progressCheck, true);
+
     // if we have reached the time for the next state transition, then
     // perform the transition
     if (curTick() >= nextTransitionTick) {
@@ -509,6 +514,13 @@ TrafficGen::recvReqRetry()
             signalDrainDone();
         }
     }
+}
+
+void
+TrafficGen::noProgress()
+{
+    fatal("TrafficGen %s spent %llu ticks without making progress",
+          name(), progressCheck);
 }
 
 void

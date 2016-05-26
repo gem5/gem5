@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,6 +94,11 @@ class TrafficGen : public MemObject
      */
     void recvReqRetry();
 
+    /**
+     * Method to inform the user we have made no progress.
+     */
+    void noProgress();
+
     /** Struct to represent a probabilistic transition during parsing. */
     struct Transition {
         uint32_t from;
@@ -122,6 +127,17 @@ class TrafficGen : public MemObject
      * thus responding to backpressure by slowing things down.
      */
     const bool elasticReq;
+
+    /**
+     * Time to tolerate waiting for retries (not making progress),
+     * until we declare things broken.
+     */
+    const Tick progressCheck;
+
+    /**
+     * Event to keep track of our progress, or lack thereof.
+     */
+    EventWrapper<TrafficGen, &TrafficGen::noProgress> noProgressEvent;
 
     /** Time of next transition */
     Tick nextTransitionTick;

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -77,3 +77,9 @@ class TrafficGen(MemObject):
     # are not immediately accepted
     elastic_req = Param.Bool(False,
                              "Slow down requests in case of backpressure")
+
+    # Let the user know if we have waited for a retry and not made any
+    # progress for a long period of time. The default value is
+    # somewhat arbitrary and may well have to be tuned.
+    progress_check = Param.Latency('1ms', "Time before exiting " \
+                                   "due to lack of progress")
