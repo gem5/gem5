@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 ARM Limited
+ * Copyright (c) 2011-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -95,6 +95,9 @@ MemCmd::commandInfo[] =
      * dirty. */
     { SET5(IsWrite, IsRequest, IsEviction, HasData, FromCache),
             InvalidCmd, "WritebackClean" },
+    /* WriteClean - This allows a cache to write a dirty block to a memory
+       below without evicting its copy. */
+    { SET4(IsWrite, IsRequest, HasData, FromCache), InvalidCmd, "WriteClean" },
     /* CleanEvict */
     { SET3(IsRequest, IsEviction, FromCache), InvalidCmd, "CleanEvict" },
     /* SoftPFReq */

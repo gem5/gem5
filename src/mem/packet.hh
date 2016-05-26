@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2016 ARM Limited
+ * Copyright (c) 2012-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -88,6 +88,7 @@ class MemCmd
         WriteResp,
         WritebackDirty,
         WritebackClean,
+        WriteClean,            // writes dirty data below without evicting
         CleanEvict,
         SoftPFReq,
         HardPFReq,
