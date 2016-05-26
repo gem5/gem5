@@ -383,7 +383,6 @@ FlashDevice::remap(uint64_t logic_page_addr)
             assert(block + count < pagesPerDisk);
             locationTable[block + count].page = (block + count) %
                 pagesPerBlock;
-            ++count;
         }
 
         blockEmptyEntries[locationTable[logic_page_addr].block] =
