@@ -55,7 +55,8 @@ Pl390::Pl390(const Params *p)
     : BaseGic(p), distAddr(p->dist_addr),
       cpuAddr(p->cpu_addr), distPioDelay(p->dist_pio_delay),
       cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
-      enabled(false), itLines(p->it_lines), irqEnable(false)
+      enabled(false), itLines(p->it_lines),
+      haveGem5Extensions(p->gem5_extensions), irqEnable(false)
 {
     itLinesLog2 = ceilLog2(itLines);
 
@@ -258,17 +259,16 @@ Pl390::readDistributor(PacketPtr pkt)
       case GICD_CTLR:
         pkt->set<uint32_t>(enabled);
         break;
-      case GICD_TYPER:
-        uint32_t tmp;
-        tmp = ((sys->numRunningContexts() - 1) << 5) |
-              (itLines/INT_BITS_MAX -1) |
-            0x100;
+      case GICD_TYPER: {
         /* The 0x100 is a made-up flag to show that gem5 extensions
          * are available,
          * write 0x200 to this register to enable it.
          */
+        uint32_t tmp = ((sys->numRunningContexts() - 1) << 5) |
+            (itLines/INT_BITS_MAX -1) |
+            (haveGem5Extensions ? 0x100 : 0x0);
         pkt->set<uint32_t>(tmp);
-        break;
+      } break;
       default:
         panic("Tried to read Gic distributor at offset %#x\n", daddr);
         break;
@@ -502,8 +502,10 @@ Pl390::writeDistributor(PacketPtr pkt)
         /* 0x200 is a made-up flag to enable gem5 extension functionality.
          * This reg is not normally written.
          */
-        gem5ExtensionsEnabled = !!(pkt->get<uint32_t>() & 0x200);
-        DPRINTF(GIC, "gem5 extensions %s\n", gem5ExtensionsEnabled ? "enabled" : "disabled");
+        gem5ExtensionsEnabled = (
+            (pkt->get<uint32_t>() & 0x200) && haveGem5Extensions);
+        DPRINTF(GIC, "gem5 extensions %s\n",
+                gem5ExtensionsEnabled ? "enabled" : "disabled");
         break;
       case GICD_SGIR:
         softInt(ctx_id, pkt->get<uint32_t>());

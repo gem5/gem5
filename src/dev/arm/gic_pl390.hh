@@ -157,6 +157,9 @@ class Pl390 : public BaseGic
 
     uint32_t itLinesLog2;
 
+    /** Are gem5 extensions available? */
+    const bool haveGem5Extensions;
+
     /** interrupt enable bits for all possible 1020 interupts.
      * one bit per interrupt, 32 bit per word = 32 words */
     uint32_t intEnabled[INT_BITS_MAX];
