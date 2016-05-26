@@ -219,13 +219,17 @@ ArmSystem::haveVirtualization(ThreadContext *tc)
 bool
 ArmSystem::highestELIs64(ThreadContext *tc)
 {
-    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestELIs64();
+    return FullSystem ?
+        dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestELIs64() :
+        true;
 }
 
 ExceptionLevel
 ArmSystem::highestEL(ThreadContext *tc)
 {
-    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestEL();
+    return FullSystem ?
+        dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestEL() :
+        EL1;
 }
 
 Addr
