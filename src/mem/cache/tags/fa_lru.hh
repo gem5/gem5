@@ -177,8 +177,8 @@ public:
     void invalidate(CacheBlk *blk) override;
 
     /**
-     * Access block and update replacement data.  May not succeed, in which case
-     * NULL pointer is returned.  This has all the implications of a cache
+     * Access block and update replacement data.  May not succeed, in which
+     * case NULL pointer is returned.  This has all the implications of a cache
      * access and should only be used as such.
      * Returns the access latency and inCache flags as a side effect.
      * @param addr The address to look for.

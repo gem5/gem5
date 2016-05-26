@@ -440,7 +440,8 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // go to next level.
         return false;
     } else if ((blk != NULL) &&
-               (pkt->needsWritable() ? blk->isWritable() : blk->isReadable())) {
+               (pkt->needsWritable() ? blk->isWritable() :
+                blk->isReadable())) {
         // OK to satisfy access
         incHitCount(pkt);
         satisfyCpuSideRequest(pkt, blk);
@@ -709,7 +710,8 @@ Cache::recvTimingReq(PacketPtr pkt)
 
         // hit (for all other request types)
 
-        if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
+        if (prefetcher && (prefetchOnAccess ||
+                           (blk && blk->wasPrefetched()))) {
             if (blk)
                 blk->status &= ~BlkHWPrefetched;
 
@@ -808,9 +810,9 @@ Cache::recvTimingReq(PacketPtr pkt)
                 if (pkt->cmd == MemCmd::CleanEvict) {
                     pendingDelete.reset(pkt);
                 } else {
-                    DPRINTF(Cache, "%s coalescing MSHR for %s addr %#llx size %d\n",
-                            __func__, pkt->cmdString(), pkt->getAddr(),
-                            pkt->getSize());
+                    DPRINTF(Cache, "%s coalescing MSHR for %s addr %#llx "
+                            "size %d\n", __func__, pkt->cmdString(),
+                            pkt->getAddr(), pkt->getSize());
 
                     assert(pkt->req->masterId() < system->maxMasters());
                     mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
@@ -833,12 +835,12 @@ Cache::recvTimingReq(PacketPtr pkt)
                     }
                 }
                 // We should call the prefetcher reguardless if the request is
-                // satisfied or not, reguardless if the request is in the MSHR or
-                // not.  The request could be a ReadReq hit, but still not
+                // satisfied or not, reguardless if the request is in the MSHR
+                // or not.  The request could be a ReadReq hit, but still not
                 // satisfied (potentially because of a prior write to the same
                 // cache line.  So, even when not satisfied, tehre is an MSHR
-                // already allocated for this, we need to let the prefetcher know
-                // about the request
+                // already allocated for this, we need to let the prefetcher
+                // know about the request
                 if (prefetcher) {
                     // Don't notify on SWPrefetch
                     if (!pkt->cmd.isSWPrefetch())
@@ -1054,8 +1056,8 @@ Cache::recvAtomic(PacketPtr pkt)
         bool is_invalidate = bus_pkt->isInvalidate();
 
         // We are now dealing with the response handling
-        DPRINTF(Cache, "Receive response: %s for addr %#llx (%s) in state %i\n",
-                bus_pkt->cmdString(), bus_pkt->getAddr(),
+        DPRINTF(Cache, "Receive response: %s for addr %#llx (%s) in "
+                "state %i\n", bus_pkt->cmdString(), bus_pkt->getAddr(),
                 bus_pkt->isSecure() ? "s" : "ns",
                 old_state);
 
@@ -1336,9 +1338,10 @@ Cache::recvTimingResp(PacketPtr pkt)
 
             // Software prefetch handling for cache closest to core
             if (tgt_pkt->cmd.isSWPrefetch()) {
-                // a software prefetch would have already been ack'd immediately
-                // with dummy data so the core would be able to retire it.
-                // this request completes right here, so we deallocate it.
+                // a software prefetch would have already been ack'd
+                // immediately with dummy data so the core would be able to
+                // retire it. This request completes right here, so we
+                // deallocate it.
                 delete tgt_pkt->req;
                 delete tgt_pkt;
                 break; // skip response
@@ -1673,8 +1676,8 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
             // allocation failed, block not inserted
             return NULL;
         } else {
-            DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx (%s): %s\n",
-                    repl_addr, blk->isSecure() ? "s" : "ns",
+            DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx "
+                    "(%s): %s\n", repl_addr, blk->isSecure() ? "s" : "ns",
                     addr, is_secure ? "s" : "ns",
                     blk->isDirty() ? "writeback" : "clean");
 
@@ -1978,8 +1981,8 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     // above and in it's own cache, a new MemCmd::ReadReq is created that
     // downstream caches observe.
     if (pkt->mustCheckAbove()) {
-        DPRINTF(Cache, "Found addr %#llx in upper level cache for snoop %s from"
-                " lower cache\n", pkt->getAddr(), pkt->cmdString());
+        DPRINTF(Cache, "Found addr %#llx in upper level cache for snoop %s "
+                "from lower cache\n", pkt->getAddr(), pkt->cmdString());
         pkt->setBlockCached();
         return snoop_delay;
     }
@@ -2487,8 +2490,8 @@ Cache::serialize(CheckpointOut &cp) const
     if (dirty) {
         warn("*** The cache still contains dirty data. ***\n");
         warn("    Make sure to drain the system using the correct flags.\n");
-        warn("    This checkpoint will not restore correctly and dirty data in "
-             "the cache will be lost!\n");
+        warn("    This checkpoint will not restore correctly and dirty data "
+             "    in the cache will be lost!\n");
     }
 
     // Since we don't checkpoint the data in the cache, any dirty data

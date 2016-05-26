@@ -599,7 +599,8 @@ BaseCache::regStats()
             .flags(total | nozero | nonan)
             ;
         for (int i = 0; i < system->maxMasters(); i++) {
-            mshr_uncacheable_lat[access_idx].subname(i, system->getMasterName(i));
+            mshr_uncacheable_lat[access_idx].subname(
+                i, system->getMasterName(i));
         }
     }
 
@@ -699,7 +700,8 @@ BaseCache::regStats()
             mshr_miss_latency[access_idx] / mshr_misses[access_idx];
 
         for (int i = 0; i < system->maxMasters(); i++) {
-            avgMshrMissLatency[access_idx].subname(i, system->getMasterName(i));
+            avgMshrMissLatency[access_idx].subname(
+                i, system->getMasterName(i));
         }
     }
 
@@ -737,7 +739,8 @@ BaseCache::regStats()
             mshr_uncacheable_lat[access_idx] / mshr_uncacheable[access_idx];
 
         for (int i = 0; i < system->maxMasters(); i++) {
-            avgMshrUncacheableLatency[access_idx].subname(i, system->getMasterName(i));
+            avgMshrUncacheableLatency[access_idx].subname(
+                i, system->getMasterName(i));
         }
     }
 
@@ -746,7 +749,8 @@ BaseCache::regStats()
         .desc("average overall mshr uncacheable latency")
         .flags(total | nozero | nonan)
         ;
-    overallAvgMshrUncacheableLatency = overallMshrUncacheableLatency / overallMshrUncacheable;
+    overallAvgMshrUncacheableLatency =
+        overallMshrUncacheableLatency / overallMshrUncacheable;
     for (int i = 0; i < system->maxMasters(); i++) {
         overallAvgMshrUncacheableLatency.subname(i, system->getMasterName(i));
     }

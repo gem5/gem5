@@ -328,14 +328,16 @@ class BaseCache : public MemObject
      * @{
      */
 
-    /** Number of hits per thread for each type of command. @sa Packet::Command */
+    /** Number of hits per thread for each type of command.
+        @sa Packet::Command */
     Stats::Vector hits[MemCmd::NUM_MEM_CMDS];
     /** Number of hits for demand accesses. */
     Stats::Formula demandHits;
     /** Number of hit for all accesses. */
     Stats::Formula overallHits;
 
-    /** Number of misses per thread for each type of command. @sa Packet::Command */
+    /** Number of misses per thread for each type of command.
+        @sa Packet::Command */
     Stats::Vector misses[MemCmd::NUM_MEM_CMDS];
     /** Number of misses for demand accesses. */
     Stats::Formula demandMisses;
