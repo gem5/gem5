@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -720,7 +720,7 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
     bool xn     = te->xn || (isWritable && sctlr.wxn) ||
                             (ap == 3    && sctlr.uwxn && is_priv);
     if (is_fetch && (abt || xn ||
-                     (te->longDescFormat && te->pxn && !is_priv) ||
+                     (te->longDescFormat && te->pxn && is_priv) ||
                      (isSecure && te->ns && scr.sif))) {
         permsFaults++;
         DPRINTF(TLB, "TLB Fault: Prefetch abort on permission check. AP:%d "
