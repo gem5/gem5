@@ -33,9 +33,10 @@
  * Definitions of a random replacement tag store.
  */
 
+#include "mem/cache/tags/random_repl.hh"
+
 #include "base/random.hh"
 #include "debug/CacheRepl.hh"
-#include "mem/cache/tags/random_repl.hh"
 #include "mem/cache/base.hh"
 
 RandomRepl::RandomRepl(const Params *p)

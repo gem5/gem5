@@ -45,10 +45,11 @@
  * Definitions of a base set associative tag store.
  */
 
+#include "mem/cache/tags/base_set_assoc.hh"
+
 #include <string>
 
 #include "base/intmath.hh"
-#include "mem/cache/tags/base_set_assoc.hh"
 #include "sim/core.hh"
 
 using namespace std;

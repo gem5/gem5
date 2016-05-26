@@ -50,7 +50,6 @@
 
 #include <cassert>
 
-
 /**
  * An associative set of cache blocks.
  */

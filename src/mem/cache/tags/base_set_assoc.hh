@@ -52,10 +52,10 @@
 #include <cstring>
 #include <list>
 
-#include "mem/cache/tags/base.hh"
-#include "mem/cache/tags/cacheset.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
+#include "mem/cache/tags/base.hh"
+#include "mem/cache/tags/cacheset.hh"
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 

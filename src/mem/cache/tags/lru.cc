@@ -45,8 +45,9 @@
  * Definitions of a LRU tag store.
  */
 
-#include "debug/CacheRepl.hh"
 #include "mem/cache/tags/lru.hh"
+
+#include "debug/CacheRepl.hh"
 #include "mem/cache/base.hh"
 
 LRU::LRU(const Params *p)

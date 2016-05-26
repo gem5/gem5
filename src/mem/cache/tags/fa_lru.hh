@@ -51,8 +51,8 @@
 #include <list>
 #include <unordered_map>
 
-#include "mem/cache/tags/base.hh"
 #include "mem/cache/blk.hh"
+#include "mem/cache/tags/base.hh"
 #include "mem/packet.hh"
 #include "params/FALRU.hh"
 

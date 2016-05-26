@@ -45,14 +45,15 @@
  * Definition of BaseCache functions.
  */
 
+#include "mem/cache/base.hh"
+
 #include "debug/Cache.hh"
 #include "debug/Drain.hh"
+#include "mem/cache/cache.hh"
+#include "mem/cache/mshr.hh"
 #include "mem/cache/tags/fa_lru.hh"
 #include "mem/cache/tags/lru.hh"
 #include "mem/cache/tags/random_repl.hh"
-#include "mem/cache/base.hh"
-#include "mem/cache/cache.hh"
-#include "mem/cache/mshr.hh"
 #include "sim/full_system.hh"
 
 using namespace std;

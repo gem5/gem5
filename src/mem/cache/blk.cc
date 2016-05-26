@@ -38,8 +38,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/cprintf.hh"
 #include "mem/cache/blk.hh"
+
+#include "base/cprintf.hh"
 
 void
 CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,

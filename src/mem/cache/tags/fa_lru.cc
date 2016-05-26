@@ -45,12 +45,13 @@
  * Definitions a fully associative LRU tagstore.
  */
 
+#include "mem/cache/tags/fa_lru.hh"
+
 #include <cassert>
 #include <sstream>
 
 #include "base/intmath.hh"
 #include "base/misc.hh"
-#include "mem/cache/tags/fa_lru.hh"
 
 using namespace std;
 

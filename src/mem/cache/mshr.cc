@@ -47,6 +47,8 @@
  * Miss Status and Handling Register (MSHR) definitions.
  */
 
+#include "mem/cache/mshr.hh"
+
 #include <algorithm>
 #include <cassert>
 #include <string>
@@ -56,7 +58,6 @@
 #include "base/types.hh"
 #include "debug/Cache.hh"
 #include "mem/cache/cache.hh"
-#include "mem/cache/mshr.hh"
 #include "sim/core.hh"
 
 using namespace std;
