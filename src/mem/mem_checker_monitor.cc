@@ -157,7 +157,7 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
     bool expects_response = pkt->needsResponse() && !pkt->cacheResponding();
-    std::unique_ptr<uint8_t> pkt_data;
+    std::unique_ptr<uint8_t[]> pkt_data;
     MemCheckerMonitorSenderState* state = NULL;
 
     if (expects_response && is_write) {
@@ -246,7 +246,7 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
     bool is_failed_LLSC = pkt->isLLSC() && pkt->req->getExtraData() == 0;
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
-    std::unique_ptr<uint8_t> pkt_data;
+    std::unique_ptr<uint8_t[]> pkt_data;
     MemCheckerMonitorSenderState* received_state = NULL;
 
     if (is_read) {
