@@ -400,7 +400,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         PacketPtr cp_pkt = will_respond ? new Packet(pkt, true, true) :
             new Packet(new Request(*pkt->req), pkt->cmd);
 
-        if (isPendingModified()) {
+        if (will_respond) {
             // we are the ordering point, and will consequently
             // respond, and depending on whether the packet
             // needsWritable or not we either pass a Shared line or a
