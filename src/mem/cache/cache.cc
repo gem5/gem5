@@ -1954,6 +1954,19 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     }
 
     if (!blk || !blk->isValid()) {
+        if (is_deferred) {
+            // we no longer have the block, and will not respond, but a
+            // packet was allocated in MSHR::handleSnoop and we have
+            // to delete it
+            assert(pkt->needsResponse());
+
+            // we have passed the block to a cache upstream, that
+            // cache should be responding
+            assert(pkt->cacheResponding());
+
+            delete pkt;
+        }
+
         DPRINTF(CacheVerbose, "%s snoop miss for %s addr %#llx size %d\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
         return snoop_delay;
@@ -2045,6 +2058,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // responding, then we've made a copy of both the request and
         // the packet, delete them here
         assert(pkt->needsResponse());
+        assert(!pkt->cacheResponding());
         delete pkt->req;
         delete pkt;
     }
