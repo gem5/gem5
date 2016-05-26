@@ -332,7 +332,8 @@ def template NeonLoadCompleteAcc64 {{
         %(op_decl)s;
         %(op_rd)s;
 
-        MemUnion &memUnion = *(MemUnion *)pkt->getPtr<uint8_t>();
+        MemUnion memUnion { { } };
+        memcpy(&memUnion, pkt->getPtr<uint8_t>(), pkt->getSize());
 
         if (fault == NoFault) {
             %(memacc_code)s;
