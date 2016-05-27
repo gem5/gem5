@@ -227,6 +227,11 @@ MinorCPU::signalDrainDone()
 void
 MinorCPU::drainResume()
 {
+    /* When taking over from another cpu make sure lastStopped
+     * is reset since it might have not been defined previously
+     * and might lead to a stats corruption */
+    pipeline->resetLastStopped();
+
     if (switchedOut()) {
         DPRINTF(Drain, "drainResume while switched out.  Ignoring\n");
         return;
@@ -268,8 +273,6 @@ MinorCPU::takeOverFrom(BaseCPU *old_cpu)
     DPRINTF(MinorCPU, "MinorCPU takeOverFrom\n");
 
     BaseCPU::takeOverFrom(old_cpu);
-
-    /* Don't think I need to do anything here */
 }
 
 void
