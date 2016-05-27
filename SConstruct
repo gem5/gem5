@@ -733,6 +733,10 @@ if main['GCC']:
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
+    # add option to check for undeclared overrides
+    if compareVersions(gcc_version, "5.0") > 0:
+        main.Append(CCFLAGS=['-Wno-error=suggest-override'])
+
 elif main['CLANG']:
     # Check for a supported version of clang, >= 3.1 is needed to
     # support similar features as gcc 4.7. See
