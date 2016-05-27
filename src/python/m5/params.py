@@ -1587,7 +1587,7 @@ class Clock(TickParamValue):
 class Voltage(float,ParamValue):
     cxx_type = 'double'
     ex_str = "1V"
-    cmd_line_settable = False
+    cmd_line_settable = True
 
     def __new__(cls, value):
         # convert to voltage
