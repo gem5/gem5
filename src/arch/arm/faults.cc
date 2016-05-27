@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014 ARM Limited
+ * Copyright (c) 2010, 2012-2014, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -948,7 +948,7 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // try to set hsr etc. and are based upon source!
     ArmFaultVals<T>::invoke(tc, inst);
 
-    if (cpsr.width) {  // AArch32
+    if (!this->to64) {  // AArch32
         if (cpsr.mode == MODE_HYP) {
             tc->setMiscReg(T::HFarIndex, faultAddr);
         } else if (stage2) {
