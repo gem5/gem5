@@ -153,6 +153,11 @@ def config_cache(options, system):
         else:
             system.cpu[i].connectAllPorts(system.membus)
 
+        # Add a snoop filter to the membus if there are caches above it
+        if (options.l2cache or options.caches) and \
+        (system.membus.snoop_filter == NULL):
+            system.membus.snoop_filter = SnoopFilter()
+
     return system
 
 # ExternalSlave provides a "port", but when that port connects to a cache,

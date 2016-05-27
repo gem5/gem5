@@ -126,6 +126,9 @@ class BaseSystem(object):
             cpu.createInterruptController()
             cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
                                 system.membus)
+            # System has caches before the membus -> add snoop filter
+            if sha_bus and system.membus.snoop_filter == NULL:
+                system.membus.snoop_filter = SnoopFilter()
 
     def init_kvm(self, system):
         """Do KVM-specific system initialization.
@@ -149,6 +152,9 @@ class BaseSystem(object):
             self.init_kvm(system)
 
         sha_bus = self.create_caches_shared(system)
+        # System has caches before the membus -> add snoop filter
+        if sha_bus and system.membus.snoop_filter == NULL:
+            system.membus.snoop_filter = SnoopFilter()
         for cpu in system.cpu:
             self.init_cpu(system, cpu, sha_bus)
 
