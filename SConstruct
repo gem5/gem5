@@ -675,12 +675,12 @@ else:
     Exit(1)
 
 if main['GCC']:
-    # Check for a supported version of gcc. >= 4.7 is chosen for its
+    # Check for a supported version of gcc. >= 4.8 is chosen for its
     # level of c++11 support. See
     # http://gcc.gnu.org/projects/cxx0x.html for details.
     gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
-    if compareVersions(gcc_version, "4.7") < 0:
-        print 'Error: gcc version 4.7 or newer required.'
+    if compareVersions(gcc_version, "4.8") < 0:
+        print 'Error: gcc version 4.8 or newer required.'
         print '       Installed version:', gcc_version
         Exit(1)
 
@@ -690,23 +690,21 @@ if main['GCC']:
     # to avoid performance penalties on certain AMD chips. Older
     # assemblers detect this as an error, "Error: expecting string
     # instruction after `rep'"
-    if compareVersions(gcc_version, "4.8") > 0:
-        as_version_raw = readCommand([main['AS'], '-v', '/dev/null'],
-                                     exception=False).split()
+    as_version_raw = readCommand([main['AS'], '-v', '/dev/null'],
+                                 exception=False).split()
 
-        # version strings may contain extra distro-specific
-        # qualifiers, so play it safe and keep only what comes before
-        # the first hyphen
-        as_version = as_version_raw[-1].split('-')[0] if as_version_raw \
-            else None
+    # version strings may contain extra distro-specific
+    # qualifiers, so play it safe and keep only what comes before
+    # the first hyphen
+    as_version = as_version_raw[-1].split('-')[0] if as_version_raw else None
 
-        if not as_version or compareVersions(as_version, "2.23") < 0:
-            print termcap.Yellow + termcap.Bold + \
-                'Warning: This combination of gcc and binutils have' + \
-                ' known incompatibilities.\n' + \
-                '         If you encounter build problems, please update ' + \
-                'binutils to 2.23.' + \
-                termcap.Normal
+    if not as_version or compareVersions(as_version, "2.23") < 0:
+        print termcap.Yellow + termcap.Bold + \
+            'Warning: This combination of gcc and binutils have' + \
+            ' known incompatibilities.\n' + \
+            '         If you encounter build problems, please update ' + \
+            'binutils to 2.23.' + \
+            termcap.Normal
 
     # Make sure we warn if the user has requested to compile with the
     # Undefined Benahvior Sanitizer and this version of gcc does not
@@ -739,7 +737,7 @@ if main['GCC']:
 
 elif main['CLANG']:
     # Check for a supported version of clang, >= 3.1 is needed to
-    # support similar features as gcc 4.7. See
+    # support similar features as gcc 4.8. See
     # http://clang.llvm.org/cxx_status.html for details
     clang_version_re = re.compile(".* version (\d+\.\d+)")
     clang_version_match = clang_version_re.search(CXX_version)
