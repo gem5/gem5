@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2015 ARM Limited
+# Copyright (c) 2012, 2015, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -106,6 +106,10 @@ class CoherentXBar(BaseXBar):
     point_of_coherency = Param.Bool(False, "Consider this crossbar the " \
                                     "point of coherency")
 
+    # Specify whether this crossbar is the point of unification.
+    point_of_unification = Param.Bool(False, "Consider this crossbar the " \
+                                      "point of unification")
+
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
 class SnoopFilter(SimObject):
@@ -139,6 +143,11 @@ class L2XBar(CoherentXBar):
     # the crossbar
     snoop_filter = SnoopFilter(lookup_latency = 0)
 
+    # This specialisation of the coherent crossbar is to be considered
+    # the point of unification, it connects the dcache and the icache
+    # to the first level of unified cache.
+    point_of_unification = True
+
 # One of the key coherent crossbar instances is the system
 # interconnect, tying together the CPU clusters, GPUs, and any I/O
 # coherent masters, and DRAM controllers.
@@ -160,6 +169,13 @@ class SystemXBar(CoherentXBar):
     # the point of coherency, as there are no (coherent) downstream
     # caches.
     point_of_coherency = True
+
+    # This specialisation of the coherent crossbar is to be considered
+    # the point of unification, it connects the dcache and the icache
+    # to the first level of unified cache. This is needed for systems
+    # without caches where the SystemXBar is also the point of
+    # unification.
+    point_of_unification = True
 
 # In addition to the system interconnect, we typically also have one
 # or more on-chip I/O crossbars. Note that at some point we might want

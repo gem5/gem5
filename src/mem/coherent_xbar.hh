@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 ARM Limited
+ * Copyright (c) 2011-2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -277,6 +277,9 @@ class CoherentXBar : public BaseXBar
 
     /** Is this crossbar the point of coherency? **/
     const bool pointOfCoherency;
+
+    /** Is this crossbar the point of unification? **/
+    const bool pointOfUnification;
 
     /**
      * Upstream caches need this packet until true is returned, so

@@ -58,7 +58,8 @@
 CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
     : BaseXBar(p), system(p->system), snoopFilter(p->snoop_filter),
       snoopResponseLatency(p->snoop_response_latency),
-      pointOfCoherency(p->point_of_coherency)
+      pointOfCoherency(p->point_of_coherency),
+      pointOfUnification(p->point_of_unification)
 {
     // create the ports based on the size of the master and slave
     // vector ports, and the presence of the default port, the ports
