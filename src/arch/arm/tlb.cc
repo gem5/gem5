@@ -1197,11 +1197,15 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
 
     DPRINTF(TLBVerbose, "TLB variables changed!\n");
     cpsr = tc->readMiscReg(MISCREG_CPSR);
+
     // Dependencies: SCR/SCR_EL3, CPSR
-    isSecure  = inSecureState(tc);
-    isSecure &= (tranType & HypMode)    == 0;
-    isSecure &= (tranType & S1S2NsTran) == 0;
-    aarch64 = !cpsr.width;
+    isSecure = inSecureState(tc) &&
+        !(tranType & HypMode) && !(tranType & S1S2NsTran);
+
+    const OperatingMode op_mode = (OperatingMode) (uint8_t)cpsr.mode;
+    aarch64 = opModeIs64(op_mode) ||
+        (opModeToEL(op_mode) == EL0 && ELIs64(tc, EL1));
+
     if (aarch64) {  // AArch64
         aarch64EL = (ExceptionLevel) (uint8_t) cpsr.el;
         switch (aarch64EL) {
