@@ -219,11 +219,19 @@ class Test(object):
         return self.test_name
 
 class ClassicTest(Test):
-    diff_ignore_files = [
-        # Stat files use a special stat differ, so don't include them
-        # here.
+    # The diff ignore list contains all files that shouldn't be diffed
+    # using DiffOutFile. These files typically use special-purpose
+    # diff tools (e.g., DiffStatFile).
+    diff_ignore_files = (
+        # Stat files use a special stat differ
         "stats.txt",
-    ]
+    )
+
+    # These files should never be included in the list of
+    # reference files. This list should include temporary files
+    # and other files that we don't care about.
+    ref_ignore_files = (
+    )
 
     def __init__(self, gem5, output_dir, config_tuple,
                  timeout=None,
@@ -251,7 +259,7 @@ class ClassicTest(Test):
         for root, dirs, files in os.walk(ref_dir, topdown=False):
             for f in files:
                 fpath = os.path.join(root[len(ref_dir) + 1:], f)
-                if fpath not in ClassicTest.diff_ignore_files:
+                if fpath not in ClassicTest.ref_ignore_files:
                     yield fpath
 
     def run_units(self):
