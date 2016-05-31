@@ -1,5 +1,17 @@
 # -*- mode:python -*-
-
+#
+# Copyright (c) 2016 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -28,157 +40,62 @@
 #
 # Authors: Steve Reinhardt
 #          Kevin Lim
+#          Andreas Sandberg
 
-import os, signal
-import sys, time
-import glob
 from SCons.Script.SConscript import SConsEnvironment
+import os
+import pickle
+import sys
+
+sys.path.insert(0, Dir(".").srcnode().abspath)
+import testing.tests as tests
+import testing.results as results
 
 Import('env')
-
-env['DIFFOUT'] = File('diff-out')
 
 # get the termcap from the environment
 termcap = env['TERMCAP']
 
 # Dict that accumulates lists of tests by category (quick, medium, long)
 env.Tests = {}
+gpu_isa = env['TARGET_GPU_ISA'] if env['BUILD_GPU'] else None
+for cat in tests.all_categories:
+    env.Tests[cat] = tuple(
+        tests.get_tests(env["TARGET_ISA"],
+                        categories=(cat, ),
+                        ruby_protocol=env["PROTOCOL"],
+                        gpu_isa=gpu_isa))
 
-def contents(node):
-    return file(str(node)).read()
-
-# functions to parse return value from scons Execute()... not the same
-# as wait() etc., so python built-in os funcs don't work.
-def signaled(status):
-    return (status & 0x80) != 0;
-
-def signum(status):
-    return (status & 0x7f);
-
-# List of signals that indicate that we should retry the test rather
-# than consider it failed.
-retry_signals = (signal.SIGTERM, signal.SIGKILL, signal.SIGINT,
-                 signal.SIGQUIT, signal.SIGHUP)
-
-# regular expressions of lines to ignore when diffing outputs
-output_ignore_regexes = (
-    '^command line:',		# for stdout file
-    '^gem5 compiled ',		# for stderr file
-    '^gem5 started ',		# for stderr file
-    '^gem5 executing on ',	# for stderr file
-    '^Simulation complete at',	# for stderr file
-    '^Listening for',		# for stderr file
-    'listening for remote gdb',	# for stderr file
-    )
-
-output_ignore_args = ' '.join(["-I '"+s+"'" for s in output_ignore_regexes])
-
-output_ignore_args += ' --exclude=stats.txt --exclude=outdiff'
+def color_message(color, msg):
+    return color + msg + termcap.Normal
 
 def run_test(target, source, env):
-    """Check output from running test.
+    """Run a test and produce results as a pickle file.
 
     Targets are as follows:
-    target[0] : status
+    target[0] : Pickle file
 
     Sources are:
     source[0] : gem5 binary
     source[1] : tests/run.py script
-    source[2] : reference stats file
+    source[2:] : reference files
 
     """
-    # make sure target files are all gone
-    for t in target:
-        if os.path.exists(t.abspath):
-            env.Execute(Delete(t.abspath))
-
     tgt_dir = os.path.dirname(str(target[0]))
+    config = tests.ClassicConfig(*tgt_dir.split('/')[-6:])
+    test = tests.ClassicTest(source[0].abspath, tgt_dir, config,
+                             timeout=5*60*60,
+                             skip_diff_out=True)
 
-    # Base command for running test.  We mess around with indirectly
-    # referring to files via SOURCES and TARGETS so that scons can mess
-    # with paths all it wants to and we still get the right files.
-    cmd = '${SOURCES[0]} -d %s -re ${SOURCES[1]} %s' % (tgt_dir, tgt_dir)
+    for ref in test.ref_files():
+        out_file = os.path.join(tgt_dir, ref)
+        if os.path.exists(out_file):
+            env.Execute(Delete(out_file))
 
-    # Prefix test run with batch job submission command if appropriate.
-    # Batch command also supports timeout arg (in seconds, not minutes).
-    timeout = 15 * 60 # used to be a param, probably should be again
-    if env['BATCH']:
-        cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
-    # The slowest regression (bzip2) requires ~4 hours;
-    # 5 hours was chosen to be conservative.
-    elif env['TIMEOUT']:
-        cmd = 'timeout --foreground 5h %s' % cmd
+    with open(target[0].abspath, "wb") as fout:
+        formatter = results.Pickle(fout=fout)
+        formatter.dump_suites([ test.run() ])
 
-    # Create a default value for the status string, changed as needed
-    # based on the status.
-    status_str = "passed."
-
-    pre_exec_time = time.time()
-    status = env.Execute(env.subst(cmd, target=target, source=source))
-    if status == 0:
-        # gem5 terminated normally.
-        # Run diff on output & ref directories to find differences.
-        # Exclude the stats file since we will use diff-out on that.
-
-        # NFS file systems can be annoying and not have updated yet
-        # wait until we see the file modified
-        statsdiff = os.path.join(tgt_dir, 'statsdiff')
-        m_time = 0
-        nap = 0
-        while m_time < pre_exec_time and nap < 10:
-            try:
-                m_time = os.stat(statsdiff).st_mtime
-            except OSError:
-                pass
-            time.sleep(1)
-            nap += 1
-
-        outdiff = os.path.join(tgt_dir, 'outdiff')
-        # tack 'true' on the end so scons doesn't report diff's
-        # non-zero exit code as a build error
-        diffcmd = 'diff -ubrs %s ${SOURCES[2].dir} %s > %s; true' \
-                  % (output_ignore_args, tgt_dir, outdiff)
-        env.Execute(env.subst(diffcmd, target=target, source=source))
-        print "===== Output differences ====="
-        print contents(outdiff)
-        # Run diff-out on stats.txt file
-        diffcmd = '$DIFFOUT ${SOURCES[2]} %s > %s' \
-                  % (os.path.join(tgt_dir, 'stats.txt'), statsdiff)
-        diffcmd = env.subst(diffcmd, target=target, source=source)
-        diff_status = env.Execute(diffcmd, strfunction=None)
-        # If there is a difference, change the status string to say so
-        if diff_status != 0:
-            status_str = "CHANGED!"
-        print "===== Statistics differences ====="
-        print contents(statsdiff)
-
-    else: # gem5 exit status != 0
-        # Consider it a failed test unless the exit status is 2
-        status_str = "FAILED!"
-        # gem5 did not terminate properly, so no need to check the output
-        if env['TIMEOUT'] and status == 124:
-            status_str = "TIMED-OUT!"
-        elif signaled(status):
-            print 'gem5 terminated with signal', signum(status)
-            if signum(status) in retry_signals:
-                # Consider the test incomplete; don't create a 'status' output.
-                # Hand the return status to scons and let scons decide what
-                # to do about it (typically terminate unless run with -k).
-                return status
-        elif status == 2:
-            # The test was skipped, change the status string to say so
-            status_str = "skipped."
-        else:
-            print 'gem5 exited with non-zero status', status
-        # complete but failed execution (call to exit() with non-zero
-        # status, SIGABORT due to assertion failure, etc.)... fall through
-        # and generate FAILED status as if output comparison had failed
-
-    # Generate status file contents based on exit status of gem5 and diff-out
-    f = file(str(target[0]), 'w')
-    print >>f, tgt_dir, status_str
-    f.close()
-    # done
     return 0
 
 def run_test_string(target, source, env):
@@ -188,197 +105,150 @@ def run_test_string(target, source, env):
 testAction = env.Action(run_test, run_test_string)
 
 def print_test(target, source, env):
-    # print the status with colours to make it easier to see what
-    # passed and what failed
-    line = contents(source[0])
+    """Run a test and produce results as a pickle file.
 
-    # split the line to words and get the last one
-    words = line.split()
-    status = words[-1]
+    Targets are as follows:
+    target[*] : Dummy targets
 
-    # if the test failed make it red, if it passed make it green, and
-    # skip the punctuation
-    if status == "FAILED!" or status == "TIMED-OUT!":
-        status = termcap.Red + status[:-1] + termcap.Normal + status[-1]
-    elif status == "CHANGED!":
-        status = termcap.Yellow + status[:-1] + termcap.Normal + status[-1]
-    elif status == "passed.":
-        status = termcap.Green + status[:-1] + termcap.Normal + status[-1]
-    elif status == "skipped.":
-        status = termcap.Cyan + status[:-1] + termcap.Normal + status[-1]
-
-    # put it back in the list and join with space
-    words[-1] = status
-    line = " ".join(words)
-
-    print '***** ' + line
-    return 0
-
-printAction = env.Action(print_test, strfunction = None)
-
-# Static vars for update_test:
-# - long-winded message about ignored sources
-ignore_msg = '''
-Note: The following file(s) will not be copied.  New non-standard
-      output files must be copied manually once before --update-ref will
-      recognize them as outputs.  Otherwise they are assumed to be
-      inputs and are ignored.
-'''
-# - reference files always needed
-needed_files = set(['simout', 'simerr', 'stats.txt', 'config.ini'])
-# - source files we always want to ignore
-known_ignores = set(['status', 'outdiff', 'statsdiff'])
-
-def update_test(target, source, env):
-    """Update reference test outputs.
-
-    Target is phony.  First two sources are the ref & new stats.txt file
-    files, respectively.  We actually copy everything in the
-    respective directories except the status & diff output files.
+    Sources are:
+    source[0] : Pickle file
 
     """
-    dest_dir = str(source[0].get_dir())
-    src_dir = str(source[1].get_dir())
-    dest_files = set(os.listdir(dest_dir))
-    src_files = set(os.listdir(src_dir))
-    # Copy all of the required files plus any existing dest files.
-    wanted_files = needed_files | dest_files
-    missing_files = wanted_files - src_files
-    if len(missing_files) > 0:
-        print "  WARNING: the following file(s) are missing " \
-              "and will not be updated:"
-        print "    ", " ,".join(missing_files)
-    copy_files = wanted_files - missing_files
-    warn_ignored_files = (src_files - copy_files) - known_ignores
-    if len(warn_ignored_files) > 0:
-        print ignore_msg,
-        print "       ", ", ".join(warn_ignored_files)
-    for f in copy_files:
-        if f in dest_files:
-            print "  Replacing file", f
-            dest_files.remove(f)
-        else:
-            print "  Creating new file", f
-        copyAction = Copy(os.path.join(dest_dir, f), os.path.join(src_dir, f))
-        copyAction.strfunction = None
-        env.Execute(copyAction)
+    with open(source[0].abspath, "rb") as fin:
+        result = pickle.load(fin)
+
+    assert len(result) == 1
+    result = result[0]
+
+    run = result.results[0]
+    assert run.name == "gem5"
+
+    formatter = None
+    if not run:
+        status = color_message(termcap.Red, "FAILED!")
+        formatter = results.Text()
+    elif run.skipped():
+        status = color_message(termcap.Cyan, "skipped.")
+    elif result:
+        status = color_message(termcap.Green, "passed.")
+    else:
+        status = color_message(termcap.Yellow, "CHANGED!")
+        formatter = results.Text()
+
+    if formatter:
+        formatter.dump_suites([result])
+
+    print "***** %s: %s" % (source[0].dir, status)
+    return 0
+
+printAction = env.Action(print_test, strfunction=None)
+
+def update_test(target, source, env):
+    """Update test reference data
+
+    Targets are as follows:
+    target[0] : Dummy file
+
+    Sources are:
+    source[0] : Pickle file
+    """
+
+    src_dir = os.path.dirname(str(source[0]))
+    config = tests.ClassicConfig(*src_dir.split('/')[-6:])
+    test = tests.ClassicTest(source[0].abspath, src_dir, config)
+    ref_dir = test.ref_dir
+
+    with open(source[0].abspath, "rb") as fin:
+        result = pickle.load(fin)
+
+    assert len(result) == 1
+    result = result[0]
+
+    run = result.results[0]
+    assert run.name == "gem5"
+
+    if run.skipped():
+        print "*** %s: %s: Test skipped, not updating." % (
+            source[0].dir, color_message(termcap.Yellow, "WARNING"), )
+        return 0
+    elif result:
+        print "*** %s: %s: Test successful, not updating." % (
+            source[0].dir, color_message(termcap.Green, "skipped"), )
+        return 0
+    elif not run.success():
+        print "*** %s: %s: Test failed, not updating." % (
+            source[0].dir, color_message(termcap.Red, "ERROR"), )
+        return 1
+
+    print "** Updating %s" % (test, )
+    test.update_ref()
+
     return 0
 
 def update_test_string(target, source, env):
-    return env.subst("Updating ${SOURCES[0].dir} from ${SOURCES[1].dir}",
+    return env.subst("Updating ${SOURCES[0].dir}",
                      target=target, source=source)
 
 updateAction = env.Action(update_test, update_test_string)
 
-def test_builder(env, ref_dir):
+def test_builder(test_tuple):
     """Define a test."""
 
-    path = list(ref_dir.split('/'))
+    out_dir = "/".join(test_tuple)
+    binary = env.M5Binary.abspath
+    test = tests.ClassicTest(binary, out_dir, test_tuple)
 
-    # target path (where test output goes) consists of category, mode,
-    # name, isa, opsys, and config (skips the 'ref' component)
-    assert(path.pop(-4) == 'ref')
-    tgt_dir = os.path.join(*path[-6:])
+    def tgt(name):
+        return os.path.join(out_dir, name)
 
-    # local closure for prepending target path to filename
-    def tgt(f):
-        return os.path.join(tgt_dir, f)
+    def ref(name):
+        return os.path.join(test.ref_dir, name)
 
-    ref_stats = os.path.join(ref_dir, 'stats.txt')
-    new_stats = tgt('stats.txt')
-    status_file = tgt('status')
+    pickle_file = tgt("status.pickle")
+    targets = [
+        pickle_file,
+    ]
 
-    env.Command([status_file, new_stats],
-                [env.M5Binary, 'run.py', ref_stats],
-                testAction)
+    sources = [
+        env.M5Binary,
+        "run.py",
+    ] + [ ref(f) for f in test.ref_files() ]
+
+    env.Command(targets, sources, testAction)
 
     # phony target to echo status
     if GetOption('update_ref'):
-        p = env.Command(tgt('_update'),
-                        [ref_stats, new_stats, status_file],
-                        updateAction)
+        p = env.Command(tgt("_update"), [pickle_file], updateAction)
     else:
-        p = env.Command(tgt('_print'), [status_file], printAction)
+        p = env.Command(tgt("_print"), [pickle_file], printAction)
 
     env.AlwaysBuild(p)
 
+def list_tests(target, source, env):
+    """Create a list of tests
 
-# Figure out applicable configs based on build type
-configs = []
-if env['TARGET_ISA'] == 'alpha':
-    configs += ['tsunami-simple-atomic',
-                'tsunami-simple-timing',
-                'tsunami-simple-atomic-dual',
-                'tsunami-simple-timing-dual',
-                'twosys-tsunami-simple-atomic',
-                'tsunami-o3', 'tsunami-o3-dual',
-                'tsunami-minor', 'tsunami-minor-dual',
-                'tsunami-switcheroo-full']
-if env['TARGET_ISA'] == 'sparc':
-    configs += ['t1000-simple-atomic',
-                't1000-simple-timing']
-if env['TARGET_ISA'] == 'arm':
-    configs += ['simple-atomic-dummychecker',
-                'o3-timing-checker',
-                'realview-simple-atomic',
-                'realview-simple-atomic-dual',
-                'realview-simple-atomic-checkpoint',
-                'realview-simple-timing',
-                'realview-simple-timing-dual',
-                'realview-o3',
-                'realview-o3-checker',
-                'realview-o3-dual',
-                'realview-minor',
-                'realview-minor-dual',
-                'realview-switcheroo-atomic',
-                'realview-switcheroo-timing',
-                'realview-switcheroo-o3',
-                'realview-switcheroo-full',
-                'realview64-simple-atomic',
-                'realview64-simple-atomic-checkpoint',
-                'realview64-simple-atomic-dual',
-                'realview64-simple-timing',
-                'realview64-simple-timing-dual',
-                'realview64-o3',
-                'realview64-o3-checker',
-                'realview64-o3-dual',
-                'realview64-minor',
-                'realview64-minor-dual',
-                'realview64-switcheroo-atomic',
-                'realview64-switcheroo-timing',
-                'realview64-switcheroo-o3',
-                'realview64-switcheroo-full']
-if env['TARGET_ISA'] == 'x86' and not env['BUILD_GPU']:
-    configs += ['pc-simple-atomic',
-                'pc-simple-timing',
-                'pc-o3-timing',
-                'pc-switcheroo-full']
+    Targets are as follows:
+    target[0] : List file (e.g., tests/opt/all.list,  tests/opt/quick.list)
 
-if env['TARGET_ISA'] == 'x86' and env['BUILD_GPU'] and \
-   env['TARGET_GPU_ISA'] == 'hsail':
-    configs += ['gpu']
-    if env['PROTOCOL'] == 'GPU_RfO':
-        configs += ['gpu-randomtest']
-else:
-    configs += ['simple-atomic', 'simple-atomic-mp',
-                'simple-timing', 'simple-timing-mp',
-                'minor-timing', 'minor-timing-mp',
-                'o3-timing', 'o3-timing-mt', 'o3-timing-mp',
-                'rubytest', 'memcheck', 'memtest', 'memtest-filter',
-                'tgen-simple-mem', 'tgen-dram-ctrl']
+    Sources are: -
 
-    configs += ['learning-gem5-p1-simple', 'learning-gem5-p1-two-level']
+    """
 
-if env['PROTOCOL'] != 'None':
-    if env['PROTOCOL'] == 'MI_example':
-        configs += [c + "-ruby" for c in configs]
-    else:
-        configs = [c + "-ruby-" + env['PROTOCOL'] for c in configs]
+    tgt_name = os.path.basename(str(target[0]))
+    base, ext = os.path.splitext(tgt_name)
+    categories = tests.all_categories if base == "all" else (base, )
 
-src = Dir('.').srcdir
-for config in configs:
-    dirs = src.glob('*/*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
-    for d in dirs:
-        d = str(d)
-        if not os.path.exists(os.path.join(d, 'skip')):
-            test_builder(env, d)
+    with open(target[0].abspath, "w") as fout:
+        for cat in categories:
+            for test in env.Tests[cat]:
+                print >> fout,"/".join(test)
+
+    return 0
+
+testListAction = env.Action(list_tests, strfunction=None)
+
+env.Command("all.list", tuple(), testListAction)
+for cat, test_list in env.Tests.items():
+    env.Command("%s.list" % cat, tuple(), testListAction)
+    for test in test_list:
+        test_builder(test)
