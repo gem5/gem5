@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -111,9 +111,10 @@ WriteQueueEntry::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
              "Write queue entry %#llx should never have more than one "
              "cacheable target", blkAddr);
     panic_if(!((target->isWrite() && _isUncacheable) ||
-               (target->isEviction() && !_isUncacheable)),
-             "Write queue entry %#llx should either be uncacheable write or "
-             "a cacheable eviction");
+               (target->isEviction() && !_isUncacheable) ||
+               target->cmd == MemCmd::WriteClean),
+             "Write queue entry %#llx should be an uncacheable write or "
+             "a cacheable eviction or a writeclean");
 
     targets.add(target, when_ready, _order);
 }

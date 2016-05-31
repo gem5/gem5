@@ -183,7 +183,9 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // determine how long to be crossbar layer is busy
     Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
-    if (!system->bypassCaches()) {
+    const bool snoop_caches = !system->bypassCaches() &&
+        pkt->cmd != MemCmd::WriteClean;
+    if (snoop_caches) {
         assert(pkt->snoopDelay == 0);
 
         // the packet is a memory-mapped request and should be
@@ -264,7 +266,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         }
     }
 
-    if (snoopFilter && !system->bypassCaches()) {
+    if (snoopFilter && snoop_caches) {
         // Let the snoop filter know about the success of the send operation
         snoopFilter->finishRequest(!success, addr, pkt->isSecure());
     }
@@ -644,7 +646,9 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
 
-    if (!system->bypassCaches()) {
+    const bool snoop_caches = !system->bypassCaches() &&
+        pkt->cmd != MemCmd::WriteClean;
+    if (snoop_caches) {
         // forward to all snoopers but the source
         std::pair<MemCmd, Tick> snoop_result;
         if (snoopFilter) {
