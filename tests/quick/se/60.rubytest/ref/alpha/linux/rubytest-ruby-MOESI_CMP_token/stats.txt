@@ -4,9 +4,9 @@ sim_seconds                                  0.000050                       # Nu
 sim_ticks                                       50141                       # Number of ticks simulated
 final_tick                                      50141                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 395128                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 389312                       # Number of bytes of host memory used
-host_seconds                                     0.13                       # Real time elapsed on the host
+host_tick_rate                                 969830                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 406616                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
 system.mem_ctrls.bytes_read::ruby.dir_cntrl0        50624                       # Number of bytes read from this memory
