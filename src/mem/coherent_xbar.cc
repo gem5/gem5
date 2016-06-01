@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2016 ARM Limited
+ * Copyright (c) 2011-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -661,8 +661,18 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
             // between and change the filter state
             snoopFilter->finishRequest(false, pkt->getAddr(), pkt->isSecure());
 
-            snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
-                                         sf_res.first);
+            if (pkt->isEviction()) {
+                // for block-evicting packets, i.e. writebacks and
+                // clean evictions, there is no need to snoop up, as
+                // all we do is determine if the block is cached or
+                // not, instead just set it here based on the snoop
+                // filter result
+                if (!sf_res.first.empty())
+                    pkt->setBlockCached();
+            } else {
+                snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
+                                             sf_res.first);
+            }
         } else {
             snoop_result = forwardAtomic(pkt, slave_port_id);
         }
