@@ -42,6 +42,7 @@
  *          Steve Reinhardt
  *          Ali Saidi
  *          Andreas Hansson
+ *          Nikos Nikoleris
  */
 
 /**
@@ -259,7 +260,7 @@ class Packet : public Printable
 
     enum : FlagsType {
         // Flags to transfer across when copying a packet
-        COPY_FLAGS             = 0x0000001F,
+        COPY_FLAGS             = 0x0000003F,
 
         // Does this packet have sharers (which means it should not be
         // considered writable) or not. See setHasSharers below.
@@ -281,6 +282,10 @@ class Packet : public Printable
         // The writeback/writeclean should be propagated further
         // downstream by the receiver
         WRITE_THROUGH          = 0x00000010,
+
+        // Response co-ordination flag for cache maintenance
+        // operations
+        SATISFIED              = 0x00000020,
 
         /// Are the 'addr' and 'size' fields valid?
         VALID_ADDR             = 0x00000100,
@@ -642,6 +647,19 @@ class Packet : public Printable
     }
     void clearWriteThrough() { flags.clear(WRITE_THROUGH); }
     bool writeThrough() const { return flags.isSet(WRITE_THROUGH); }
+
+    /**
+     * Set when a request hits in a cache and the cache is not going
+     * to respond. This is used by the crossbar to coordinate
+     * responses for cache maintenance operations.
+     */
+    void setSatisfied()
+    {
+        assert(cmd.isClean());
+        assert(!flags.isSet(SATISFIED));
+        flags.set(SATISFIED);
+    }
+    bool satisfied() const { return flags.isSet(SATISFIED); }
 
     void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
     bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }
