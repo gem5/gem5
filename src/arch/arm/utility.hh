@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -160,6 +160,16 @@ currEL(ThreadContext *tc)
 bool ELIs64(ThreadContext *tc, ExceptionLevel el);
 
 bool isBigEndian64(ThreadContext *tc);
+
+static inline uint8_t
+itState(CPSR psr)
+{
+    ITSTATE it = 0;
+    it.top6 = psr.it2;
+    it.bottom2 = psr.it1;
+
+    return (uint8_t)it;
+}
 
 /**
  * Removes the tag from tagged addresses if that mode is enabled.

@@ -727,4 +727,115 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
 }
 
 
+static uint8_t
+getRestoredITBits(ThreadContext *tc, CPSR spsr)
+{
+    // See: shared/functions/system/RestoredITBits in the ARM ARM
+
+    const ExceptionLevel el = opModeToEL((OperatingMode) (uint8_t)spsr.mode);
+    const uint8_t it = itState(spsr);
+
+    if (!spsr.t || spsr.il)
+        return 0;
+
+    // The IT bits are forced to zero when they are set to a reserved
+    // value.
+    if (bits(it, 7, 4) != 0 && bits(it, 3, 0) == 0)
+        return 0;
+
+    const bool itd = el == EL2 ?
+        ((SCTLR)tc->readMiscReg(MISCREG_HSCTLR)).itd :
+        ((SCTLR)tc->readMiscReg(MISCREG_SCTLR)).itd;
+
+    // The IT bits are forced to zero when returning to A32 state, or
+    // when returning to an EL with the ITD bit set to 1, and the IT
+    // bits are describing a multi-instruction block.
+    if (itd && bits(it, 2, 0) != 0)
+        return 0;
+
+    return it;
+}
+
+static bool
+illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
+{
+    const OperatingMode mode = (OperatingMode) (uint8_t)spsr.mode;
+    if (badMode(mode))
+        return true;
+
+    const OperatingMode cur_mode = (OperatingMode) (uint8_t)cpsr.mode;
+    const ExceptionLevel target_el = opModeToEL(mode);
+    if (target_el > opModeToEL(cur_mode))
+        return true;
+
+    if (target_el == EL3 && !ArmSystem::haveSecurity(tc))
+        return true;
+
+    if (target_el == EL2 && !ArmSystem::haveVirtualization(tc))
+        return true;
+
+    if (!spsr.width) {
+        // aarch64
+        if (!ArmSystem::highestELIs64(tc))
+            return true;
+
+        if (spsr & 0x2)
+            return true;
+        if (target_el == EL0 && spsr.sp)
+            return true;
+        if (target_el == EL2 && !((SCR)tc->readMiscReg(MISCREG_SCR_EL3)).ns)
+            return false;
+    } else {
+        return badMode32(mode);
+    }
+
+    return false;
+}
+
+CPSR
+ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
+{
+    CPSR new_cpsr = 0;
+
+    // gem5 doesn't implement single-stepping, so force the SS bit to
+    // 0.
+    new_cpsr.ss = 0;
+
+    if (illegalExceptionReturn(tc, cpsr, spsr)) {
+        new_cpsr.il = 1;
+    } else {
+        new_cpsr.il = spsr.il;
+        if (spsr.width && badMode32((OperatingMode)(uint8_t)spsr.mode)) {
+            new_cpsr.il = 1;
+        } else if (spsr.width) {
+            new_cpsr.mode = spsr.mode;
+        } else {
+            new_cpsr.el = spsr.el;
+            new_cpsr.sp = spsr.sp;
+        }
+    }
+
+    new_cpsr.nz = spsr.nz;
+    new_cpsr.c = spsr.c;
+    new_cpsr.v = spsr.v;
+    if (new_cpsr.width) {
+        // aarch32
+        const ITSTATE it = getRestoredITBits(tc, spsr);
+        new_cpsr.q = spsr.q;
+        new_cpsr.ge = spsr.ge;
+        new_cpsr.e = spsr.e;
+        new_cpsr.aif = spsr.aif;
+        new_cpsr.t = spsr.t;
+        new_cpsr.it2 = it.top6;
+        new_cpsr.it1 = it.bottom2;
+    } else {
+        // aarch64
+        new_cpsr.daif = spsr.daif;
+    }
+
+    return new_cpsr;
+}
+
+
+
 }

@@ -1376,6 +1376,7 @@ namespace ArmISA
         Bitfield<8> a;
         Bitfield<7> i;
         Bitfield<6> f;
+        Bitfield<8, 6> aif;
         Bitfield<9, 6> daif;    // AArch64
         Bitfield<5> t;
         Bitfield<4> width;      // AArch64

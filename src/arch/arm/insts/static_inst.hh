@@ -404,6 +404,15 @@ class ArmStaticInst : public StaticInst
                                     NSACR nsacr, FPEXC fpexc,
                                     bool fpexc_check, bool advsimd) const;
 
+    /**
+     * Get the new PSTATE from a SPSR register in preparation for an
+     * exception return.
+     *
+     * See shared/functions/system/SetPSTATEFromPSR in the ARM ARM
+     * psueodcode library.
+     */
+    CPSR getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const;
+
   public:
     virtual void
     annotateFault(ArmFault *fault) {}

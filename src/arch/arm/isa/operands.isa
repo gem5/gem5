@@ -440,6 +440,7 @@ def operands {{
     'NextJazelle': pcStateReg('nextJazelle', srtMode),
     'NextItState': pcStateReg('nextItstate', srtMode),
     'Itstate': pcStateReg('itstate', srtMode),
+    'NextAArch64': pcStateReg('nextAArch64', srtMode),
 
     #Register operands depending on a field in the instruction encoding. These
     #should be avoided since they may not be portable across different
