@@ -951,7 +951,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     bool is_fetch  = (mode == Execute);
     bool is_write  = (mode == Write);
-    bool long_desc_format = aarch64 || (haveLPAE && ttbcr.eae);
+    bool long_desc_format = aarch64 || longDescFormatInUse(tc);
     ArmFault::TranMethod tranMethod = long_desc_format ? ArmFault::LpaeTran
                                                        : ArmFault::VmsaTran;
 
@@ -1247,15 +1247,13 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
                                  !isSecure));
         scr    = tc->readMiscReg(MISCREG_SCR);
         isPriv = cpsr.mode != MODE_USER;
-        if (haveLPAE && ttbcr.eae) {
-            // Long-descriptor translation table format in use
+        if (longDescFormatInUse(tc)) {
             uint64_t ttbr_asid = tc->readMiscReg(
                 flattenMiscRegNsBanked(ttbcr.a1 ? MISCREG_TTBR1
                                                 : MISCREG_TTBR0,
                                        tc, !isSecure));
             asid = bits(ttbr_asid, 55, 48);
-        } else {
-            // Short-descriptor translation table format in use
+        } else { // Short-descriptor translation table format in use
             CONTEXTIDR context_id = tc->readMiscReg(flattenMiscRegNsBanked(
                 MISCREG_CONTEXTIDR, tc,!isSecure));
             asid = context_id.asid;

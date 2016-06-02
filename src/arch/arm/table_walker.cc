@@ -220,7 +220,11 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
 
     currState->startTime = curTick();
     currState->tc = _tc;
-    currState->aarch64 = opModeIs64(currOpMode(_tc));
+    // ARM DDI 0487A.f (ARMv8 ARM) pg J8-5672
+    // aarch32/translation/translation/AArch32.TranslateAddress dictates
+    // even AArch32 EL0 will use AArch64 translation if EL1 is in AArch64.
+    currState->aarch64 = opModeIs64(currOpMode(_tc)) ||
+                         ((currEL(_tc) == EL0) && ELIs64(_tc, EL1));
     currState->el = currEL(_tc);
     currState->transState = _trans;
     currState->req = _req;
@@ -290,9 +294,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     currState->stage2Req = !currState->aarch64 && currState->hcr.vm &&
                            !isStage2 && !currState->isSecure && !currState->isHyp;
 
-    bool long_desc_format = currState->aarch64 ||
-                            (_haveLPAE && currState->ttbcr.eae) ||
-                            _isHyp || isStage2;
+    bool long_desc_format = currState->aarch64 || _isHyp || isStage2 ||
+                            longDescFormatInUse(currState->tc);
 
     if (long_desc_format) {
         // Helper variables used for hierarchical permissions
@@ -377,7 +380,8 @@ TableWalker::processWalkWrapper()
         Fault f;
         if (currState->aarch64)
             f = processWalkAArch64();
-        else if ((_haveLPAE && currState->ttbcr.eae) || currState->isHyp || isStage2)
+        else if (longDescFormatInUse(currState->tc) ||
+                 currState->isHyp || isStage2)
             f = processWalkLPAE();
         else
             f = processWalk();
@@ -565,7 +569,7 @@ TableWalker::processWalkLPAE()
         ttbr = currState->tc->readMiscReg(MISCREG_HTTBR);
         tsz  = currState->htcr.t0sz;
     } else {
-        assert(_haveLPAE && currState->ttbcr.eae);
+        assert(longDescFormatInUse(currState->tc));
 
         // Determine boundaries of TTBR0/1 regions
         if (currState->ttbcr.t0sz)
