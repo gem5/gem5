@@ -260,7 +260,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmrsFpscrIop);
     exec_output += PredOpExecute.subst(vmrsFpscrIop);
 
-    vmrsApsrFpscrCode = vmrsApsrEnabledCheckCode + '''
+    vmrsApsrFpscrCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = FpCondCodes;
         CondCodesNZ = (fpscr.n << 1) | fpscr.z;
         CondCodesC = fpscr.c;

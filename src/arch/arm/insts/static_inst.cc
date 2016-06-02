@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2014, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -595,4 +595,136 @@ ArmStaticInst::generateDisassembly(Addr pc,
     printMnemonic(ss);
     return ss.str();
 }
+
+
+Fault
+ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
+{
+    switch (el) {
+      case EL1:
+        return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
+                                                EC_TRAPPED_SIMD_FP);
+      case EL2:
+        return std::make_shared<HypervisorTrap>(machInst, 0x1E00000,
+                                                EC_TRAPPED_SIMD_FP);
+      case EL3:
+        return std::make_shared<SecureMonitorTrap>(machInst, 0x1E00000,
+                                                   EC_TRAPPED_SIMD_FP);
+
+      default:
+        panic("Illegal EL in advSIMDFPAccessTrap64\n");
+    }
+}
+
+
+Fault
+ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
+{
+    const ExceptionLevel el = (ExceptionLevel) (uint8_t)cpsr.el;
+
+    if (ArmSystem::haveVirtualization(tc) && el <= EL2) {
+        HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL2);
+        if (cptrEnCheck.tfp)
+            return advSIMDFPAccessTrap64(EL2);
+    }
+
+    if (ArmSystem::haveSecurity(tc)) {
+        HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL3);
+        if (cptrEnCheck.tfp)
+            return advSIMDFPAccessTrap64(EL3);
+    }
+
+    return NoFault;
+}
+
+Fault
+ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc,
+                                       CPSR cpsr, CPACR cpacr) const
+{
+    const ExceptionLevel el = (ExceptionLevel) (uint8_t)cpsr.el;
+    if ((el == EL0 && cpacr.fpen != 0x3) ||
+        (el == EL1 && !(cpacr.fpen & 0x1)))
+        return advSIMDFPAccessTrap64(EL1);
+
+    return checkFPAdvSIMDTrap64(tc, cpsr);
+}
+
+Fault
+ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
+                                         CPSR cpsr, CPACR cpacr,
+                                         NSACR nsacr, FPEXC fpexc,
+                                         bool fpexc_check, bool advsimd) const
+{
+    const bool have_virtualization = ArmSystem::haveVirtualization(tc);
+    const bool have_security = ArmSystem::haveSecurity(tc);
+    const bool is_secure = inSecureState(tc);
+    const ExceptionLevel cur_el = opModeToEL(currOpMode(tc));
+
+    if (cur_el == EL0 && ELIs64(tc, EL1))
+        return checkFPAdvSIMDEnabled64(tc, cpsr, cpacr);
+
+    uint8_t cpacr_cp10 = cpacr.cp10;
+    bool cpacr_asedis = cpacr.asedis;
+
+    if (have_security && !ELIs64(tc, EL3) && !is_secure) {
+        if (nsacr.nsasedis)
+            cpacr_asedis = true;
+        if (nsacr.cp10 == 0)
+            cpacr_cp10 = 0;
+    }
+
+    if (cur_el != EL2) {
+        if (advsimd && cpacr_asedis)
+            return disabledFault();
+
+        if ((cur_el == EL0 && cpacr_cp10 != 0x3) ||
+            (cur_el != EL0 && !(cpacr_cp10 & 0x1)))
+            return disabledFault();
+    }
+
+    if (fpexc_check && !fpexc.en)
+        return disabledFault();
+
+    // -- aarch32/exceptions/traps/AArch32.CheckFPAdvSIMDTrap --
+
+    if (have_virtualization && !is_secure && ELIs64(tc, EL2))
+        return checkFPAdvSIMDTrap64(tc, cpsr);
+
+    if (have_virtualization && !is_secure) {
+        HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
+        bool hcptr_cp10 = hcptr.tcp10;
+        bool hcptr_tase = hcptr.tase;
+
+        if (have_security && !ELIs64(tc, EL3) && !is_secure) {
+            if (nsacr.nsasedis)
+                hcptr_tase = true;
+            if (nsacr.cp10)
+                hcptr_cp10 = true;
+        }
+
+        if ((advsimd && hcptr_tase) || hcptr_cp10) {
+            const uint32_t iss = advsimd ? (1 << 5) : 0xA;
+            if (cur_el == EL2) {
+                return std::make_shared<UndefinedInstruction>(
+                    machInst, iss,
+                    EC_TRAPPED_HCPTR, mnemonic);
+            } else {
+                return std::make_shared<HypervisorTrap>(
+                    machInst, iss,
+                    EC_TRAPPED_HCPTR);
+            }
+
+        }
+    }
+
+    if (have_security && ELIs64(tc, EL3)) {
+        HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL3);
+        if (cptrEnCheck.tfp)
+            return advSIMDFPAccessTrap64(EL3);
+    }
+
+    return NoFault;
+}
+
+
 }

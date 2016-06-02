@@ -260,20 +260,6 @@ bool msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead, CPTR cptr,
 bool msrMrs64TrapToMon(const MiscRegIndex miscReg, CPTR cptr,
                        ExceptionLevel el, bool * isVfpNeon);
 
-bool
-vfpNeonEnabled(uint32_t &seq, HCPTR hcptr, NSACR nsacr, CPACR cpacr, CPSR cpsr,
-               uint32_t &iss, bool &trap, ThreadContext *tc,
-               FPEXC fpexc = (1<<30), bool isSIMD = false);
-
-static inline bool
-vfpNeon64Enabled(CPACR cpacr, ExceptionLevel el)
-{
-    if ((el == EL0 && cpacr.fpen != 0x3) ||
-        (el == EL1 && !(cpacr.fpen & 0x1)))
-        return false;
-    return true;
-}
-
 bool SPAlignmentCheckEnabled(ThreadContext* tc);
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);

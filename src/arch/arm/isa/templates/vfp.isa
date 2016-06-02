@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013 ARM Limited
+// Copyright (c) 2010-2013, 2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -39,125 +39,61 @@
 
 let {{
     vfpEnabledCheckCode = '''
-        uint32_t issEnCheck;
-        bool trapEnCheck;
-        uint32_t seq;
-        if (!vfpNeonEnabled(seq,Hcptr, Nsacr, Cpacr, Cpsr, issEnCheck,
-                            trapEnCheck, xc->tcBase(), Fpexc))
-            {return disabledFault();}
-        if (trapEnCheck) {
-            CPSR cpsrEnCheck = Cpsr;
-            if (cpsrEnCheck.mode == MODE_HYP) {
-                return std::make_shared<UndefinedInstruction>(
-                                                machInst, issEnCheck,
-                                                EC_TRAPPED_HCPTR, mnemonic);
-            } else {
-                if (!inSecureState(Scr, Cpsr)) {
-                    return std::make_shared<HypervisorTrap>(
-                                              machInst, issEnCheck,
-                                              EC_TRAPPED_HCPTR);
-                }
-            }
-        }
+    {
+        Fault fault = checkAdvSIMDOrFPEnabled32(xc->tcBase(),
+                                                Cpsr, Cpacr, Nsacr, Fpexc,
+                                                true, false);
+        if (fault != NoFault)
+            return fault;
+    }
     '''
 
     vfp64EnabledCheckCode = '''
-        CPSR cpsrEnCheck = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsrEnCheck.el;
-        if (!vfpNeon64Enabled(Cpacr64, el))
-             return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
-                                       EC_TRAPPED_SIMD_FP);
-
-        if (ArmSystem::haveVirtualization(xc->tcBase()) && el <= EL2) {
-            HCPTR cptrEnCheck = xc->tcBase()->readMiscReg(MISCREG_CPTR_EL2);
-            if (cptrEnCheck.tfp)
-                return std::make_shared<HypervisorTrap>(machInst, 0x1E00000,
-                                          EC_TRAPPED_SIMD_FP);
-        }
-
-        if (ArmSystem::haveSecurity(xc->tcBase())) {
-            HCPTR cptrEnCheck = xc->tcBase()->readMiscReg(MISCREG_CPTR_EL3);
-            if (cptrEnCheck.tfp)
-                return std::make_shared<SecureMonitorTrap>(machInst, 0x1E00000,
-                                             EC_TRAPPED_SIMD_FP);
-        }
+    {
+        Fault fault = checkFPAdvSIMDEnabled64(xc->tcBase(), Cpsr, Cpacr64);
+        if (fault != NoFault)
+             return fault;
+    }
     '''
 
     vmsrEnabledCheckCode = '''
-        uint32_t issEnCheck;
-        bool trapEnCheck;
-        uint32_t seq;
-        if (!vfpNeonEnabled(seq,Hcptr, Nsacr, Cpacr, Cpsr, issEnCheck,
-                            trapEnCheck, xc->tcBase()))
-            if (dest != (int)MISCREG_FPEXC && dest != (int)MISCREG_FPSID)
-                {return disabledFault();}
-        if (!inPrivilegedMode(Cpsr))
-            if (dest != (int)MISCREG_FPSCR)
-                return disabledFault();
-        if (trapEnCheck) {
-            CPSR cpsrEnCheck = Cpsr;
-            if (cpsrEnCheck.mode == MODE_HYP) {
-                return std::make_shared<UndefinedInstruction>(
-                                                machInst, issEnCheck,
-                                                EC_TRAPPED_HCPTR, mnemonic);
-            } else {
-                if (!inSecureState(Scr, Cpsr)) {
-                    return std::make_shared<HypervisorTrap>(
-                                              machInst, issEnCheck,
-                                              EC_TRAPPED_HCPTR);
-                }
-            }
+    {
+        Fault fault = NoFault;
+        if (dest == (int)MISCREG_FPSCR) {
+            fault = checkAdvSIMDOrFPEnabled32(xc->tcBase(),
+                                              Cpsr, Cpacr, Nsacr, Fpexc,
+                                              true, false);
+        } else if (!inPrivilegedMode(Cpsr)) {
+            fault = disabledFault();
+        } else {
+            fault = checkAdvSIMDOrFPEnabled32(xc->tcBase(),
+                                              Cpsr, Cpacr, Nsacr, Fpexc,
+                                              false, false);
         }
+
+        if (fault != NoFault)
+            return fault;
+    }
     '''
 
     vmrsEnabledCheckCode = '''
-        uint32_t issEnCheck;
-        bool trapEnCheck;
-        uint32_t seq;
-        if (!vfpNeonEnabled(seq,Hcptr, Nsacr, Cpacr, Cpsr, issEnCheck,
-                            trapEnCheck, xc->tcBase()))
-            if (op1 != (int)MISCREG_FPEXC && op1 != (int)MISCREG_FPSID &&
-                op1 != (int)MISCREG_MVFR0 && op1 != (int)MISCREG_MVFR1)
-                {return disabledFault();}
-        if (!inPrivilegedMode(Cpsr))
-            if (op1 != (int)MISCREG_FPSCR)
-                return disabledFault();
-        if (trapEnCheck) {
-            CPSR cpsrEnCheck = Cpsr;
-            if (cpsrEnCheck.mode == MODE_HYP) {
-                return std::make_shared<UndefinedInstruction>(
-                                                machInst, issEnCheck,
-                                                EC_TRAPPED_HCPTR, mnemonic);
-            } else {
-                if (!inSecureState(Scr, Cpsr)) {
-                    return std::make_shared<HypervisorTrap>(
-                                              machInst, issEnCheck,
-                                              EC_TRAPPED_HCPTR);
-                }
-            }
+    {
+        Fault fault = NoFault;
+        if (op1 == (int)MISCREG_FPSCR) {
+            fault = checkAdvSIMDOrFPEnabled32(xc->tcBase(),
+                                              Cpsr, Cpacr, Nsacr, Fpexc,
+                                              true, false);
+        } else if (!inPrivilegedMode(Cpsr)) {
+            fault = disabledFault();
+        } else {
+            fault = checkAdvSIMDOrFPEnabled32(xc->tcBase(),
+                                              Cpsr, Cpacr, Nsacr, Fpexc,
+                                              false, false);
         }
-    '''
-    vmrsApsrEnabledCheckCode = '''
-        uint32_t issEnCheck;
-        bool trapEnCheck;
-        uint32_t seq;
-        if (!vfpNeonEnabled(seq,Hcptr, Nsacr, Cpacr, Cpsr, issEnCheck,
-                            trapEnCheck, xc->tcBase()))
-            {return disabledFault();}
-        if (trapEnCheck) {
-            CPSR cpsrEnCheck = Cpsr;
-            if (cpsrEnCheck.mode == MODE_HYP) {
-                return std::make_shared<UndefinedInstruction>(
-                                                machInst, issEnCheck,
-                                                EC_TRAPPED_HCPTR, mnemonic);
-            } else {
-                if (!inSecureState(Scr, Cpsr)) {
-                    return std::make_shared<HypervisorTrap>(
-                                              machInst, issEnCheck,
-                                              EC_TRAPPED_HCPTR);
-                }
-            }
-        }
+
+        if (fault != NoFault)
+            return fault;
+    }
     '''
 }};
 

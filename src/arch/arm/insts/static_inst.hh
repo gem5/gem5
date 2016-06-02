@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -362,6 +362,47 @@ class ArmStaticInst : public StaticInst
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic, true);
     }
+
+    /**
+     * Trap an access to Advanced SIMD or FP registers due to access
+     * control bits.
+     *
+     * See aarch64/exceptions/traps/AArch64.AdvSIMDFPAccessTrap in the
+     * ARM ARM psueodcode library.
+     *
+     * @param el Target EL for the trap
+     */
+    Fault advSIMDFPAccessTrap64(ExceptionLevel el) const;
+
+
+    /**
+     * Check an Advaned SIMD access against CPTR_EL2 and CPTR_EL3.
+     *
+     * See aarch64/exceptions/traps/AArch64.CheckFPAdvSIMDTrap in the
+     * ARM ARM psueodcode library.
+     */
+    Fault checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const;
+
+    /**
+     * Check an Advaned SIMD access against CPACR_EL1, CPTR_EL2, and
+     * CPTR_EL3.
+     *
+     * See aarch64/exceptions/traps/AArch64.CheckFPAdvSIMDEnabled in the
+     * ARM ARM psueodcode library.
+     */
+    Fault checkFPAdvSIMDEnabled64(ThreadContext *tc,
+                                  CPSR cpsr, CPACR cpacr) const;
+
+    /**
+     * Check if a VFP/SIMD access from aarch32 should be allowed.
+     *
+     * See aarch32/exceptions/traps/AArch32.CheckAdvSIMDOrFPEnabled in the
+     * ARM ARM psueodcode library.
+     */
+    Fault checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
+                                    CPSR cpsr, CPACR cpacr,
+                                    NSACR nsacr, FPEXC fpexc,
+                                    bool fpexc_check, bool advsimd) const;
 
   public:
     virtual void
