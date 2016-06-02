@@ -67,7 +67,7 @@
         "thermal_model": null, 
         "phys_addr_range_64": 40, 
         "work_begin_exit_count": 0, 
-        "have_lpae": false, 
+        "have_lpae": true, 
         "cxx_class": "LinuxArmSystem", 
         "load_offset": 2147483648, 
         "vncserver": {
@@ -338,6 +338,7 @@
                 "type": "GenericTimer"
             }, 
             "gic": {
+                "gem5_extensions": true, 
                 "it_lines": 128, 
                 "name": "gic", 
                 "dist_addr": 738201600, 

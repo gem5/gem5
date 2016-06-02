@@ -1,3 +1,5 @@
+Redirecting stdout to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic/simout
+Redirecting stderr to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
@@ -27,4 +29,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2783867052000 because m5_exit instruction encountered
+Exiting @ tick 2783854535000 because m5_exit instruction encountered

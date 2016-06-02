@@ -1,3 +1,4 @@
+warn: Sockets disabled, not accepting gdb connections
 getting pixel output filename pixels_out.cook
 opening control file chair.control.cook
 opening camera file chair.camera

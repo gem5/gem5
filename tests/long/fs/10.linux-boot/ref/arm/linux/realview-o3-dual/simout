@@ -29,4 +29,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2837474672000 because m5_exit instruction encountered
+Exiting @ tick 2825959731500 because m5_exit instruction encountered

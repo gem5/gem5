@@ -16,4 +16,4 @@ info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 OO-style eon Time= 0.110000
-Exiting @ tick 116576497500 because target called exit()
+Exiting @ tick 111753553500 because target called exit()

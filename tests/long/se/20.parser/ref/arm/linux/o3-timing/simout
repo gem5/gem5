@@ -70,4 +70,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 234067145000 because target called exit()
+Exiting @ tick 232864525000 because target called exit()

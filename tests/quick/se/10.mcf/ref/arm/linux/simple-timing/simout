@@ -1,3 +1,5 @@
+Redirecting stdout to build/ARM/tests/opt/quick/se/10.mcf/arm/linux/simple-timing/simout
+Redirecting stderr to build/ARM/tests/opt/quick/se/10.mcf/arm/linux/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 

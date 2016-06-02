@@ -27,4 +27,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 767851412000 because target called exit()
+Exiting @ tick 767803843500 because target called exit()

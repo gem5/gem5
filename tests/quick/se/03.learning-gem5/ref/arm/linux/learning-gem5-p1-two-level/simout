@@ -1,3 +1,5 @@
+Redirecting stdout to build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-two-level/simout
+Redirecting stderr to build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-two-level/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 

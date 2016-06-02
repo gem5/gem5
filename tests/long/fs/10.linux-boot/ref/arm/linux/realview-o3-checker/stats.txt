@@ -4,11 +4,11 @@ sim_seconds                                  2.832863                       # Nu
 sim_ticks                                2832862976500                       # Number of ticks simulated
 final_tick                               2832862976500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  63021                       # Simulator instruction rate (inst/s)
-host_op_rate                                    76439                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1578508192                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 579360                       # Number of bytes of host memory used
-host_seconds                                  1794.65                       # Real time elapsed on the host
+host_inst_rate                                 104475                       # Simulator instruction rate (inst/s)
+host_op_rate                                   126719                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2616817312                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 625044                       # Number of bytes of host memory used
+host_seconds                                  1082.56                       # Real time elapsed on the host
 sim_insts                                   113100501                       # Number of instructions simulated
 sim_ops                                     137180951                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -740,7 +740,7 @@ system.cpu.rename.IQFullEvents                  65507                       # Nu
 system.cpu.rename.LQFullEvents                  18530                       # Number of times rename has blocked due to LQ full
 system.cpu.rename.SQFullEvents               30752508                       # Number of times rename has blocked due to SQ full
 system.cpu.rename.RenamedOperands           150221263                       # Number of destination operands rename has renamed
-system.cpu.rename.RenameLookups             676972712                       # Number of register rename lookups that rename has made
+system.cpu.rename.RenameLookups             676943612                       # Number of register rename lookups that rename has made
 system.cpu.rename.int_rename_lookups        163957736                       # Number of integer rename lookups
 system.cpu.rename.fp_rename_lookups             10899                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps             141737618                       # Number of HB maps that are committed
@@ -757,7 +757,7 @@ system.cpu.iq.iqNonSpecInstsAdded             2117732                       # Nu
 system.cpu.iq.iqInstsIssued                 143038678                       # Number of instructions issued
 system.cpu.iq.iqSquashedInstsIssued            260968                       # Number of squashed instructions issued
 system.cpu.iq.iqSquashedInstsExamined         8155598                       # Number of squashed instructions iterated over during squash; mainly for profiling
-system.cpu.iq.iqSquashedOperandsExamined     14296072                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu.iq.iqSquashedOperandsExamined     14294324                       # Number of squashed operands that are examined and possibly removed from graph
 system.cpu.iq.iqSquashedNonSpecRemoved         121861                       # Number of squashed non-spec instructions that were removed
 system.cpu.iq.issued_per_cycle::samples     270560621                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::mean         0.528675                       # Number of insts issued each cycle
@@ -979,7 +979,7 @@ system.cpu.fp_regfile_reads                      9529                       # nu
 system.cpu.fp_regfile_writes                     2716                       # number of floating regfile writes
 system.cpu.cc_regfile_reads                 502156067                       # number of cc regfile reads
 system.cpu.cc_regfile_writes                 53129749                       # number of cc regfile writes
-system.cpu.misc_regfile_reads               347863701                       # number of misc regfile reads
+system.cpu.misc_regfile_reads               347855567                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                1521708                       # number of misc regfile writes
 system.cpu.dcache.tags.replacements            838747                       # number of replacements
 system.cpu.dcache.tags.tagsinuse           511.925928                       # Cycle average of tags in use

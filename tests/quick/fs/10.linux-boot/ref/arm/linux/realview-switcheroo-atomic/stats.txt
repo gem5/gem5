@@ -4,11 +4,11 @@ sim_seconds                                  2.783854                       # Nu
 sim_ticks                                2783853866500                       # Number of ticks simulated
 final_tick                               2783853866500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 760140                       # Simulator instruction rate (inst/s)
-host_op_rate                                   925348                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            14821821018                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 577060                       # Number of bytes of host memory used
-host_seconds                                   187.82                       # Real time elapsed on the host
+host_inst_rate                                1657563                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2017817                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            32320507686                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 622988                       # Number of bytes of host memory used
+host_seconds                                    86.13                       # Real time elapsed on the host
 sim_insts                                   142770436                       # Number of instructions simulated
 sim_ops                                     173800089                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -236,7 +236,7 @@ system.cpu0.num_func_calls                    8694385                       # nu
 system.cpu0.num_conditional_control_insts      9459738                       # number of instructions that are conditional controls
 system.cpu0.num_int_insts                    77491639                       # number of integer instructions
 system.cpu0.num_fp_insts                         5273                       # number of float instructions
-system.cpu0.num_int_register_reads          144069521                       # number of times the integer registers were read
+system.cpu0.num_int_register_reads          144056693                       # number of times the integer registers were read
 system.cpu0.num_int_register_writes          54447639                       # number of times the integer registers were written
 system.cpu0.num_fp_register_reads                4051                       # number of times the floating registers were read
 system.cpu0.num_fp_register_writes               1224                       # number of times the floating registers were written
@@ -605,7 +605,7 @@ system.cpu1.num_func_calls                    8179291                       # nu
 system.cpu1.num_conditional_control_insts      9270395                       # number of instructions that are conditional controls
 system.cpu1.num_int_insts                    75668279                       # number of integer instructions
 system.cpu1.num_fp_insts                         6211                       # number of float instructions
-system.cpu1.num_int_register_reads          140985352                       # number of times the integer registers were read
+system.cpu1.num_int_register_reads          140970750                       # number of times the integer registers were read
 system.cpu1.num_int_register_writes          52729833                       # number of times the integer registers were written
 system.cpu1.num_fp_register_reads                4721                       # number of times the floating registers were read
 system.cpu1.num_fp_register_writes               1492                       # number of times the floating registers were written

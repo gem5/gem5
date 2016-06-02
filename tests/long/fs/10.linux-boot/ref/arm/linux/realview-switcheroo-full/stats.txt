@@ -4,11 +4,11 @@ sim_seconds                                  2.823729                       # Nu
 sim_ticks                                2823728611500                       # Number of ticks simulated
 final_tick                               2823728611500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 192143                       # Simulator instruction rate (inst/s)
-host_op_rate                                   233071                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             4415299854                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 584992                       # Number of bytes of host memory used
-host_seconds                                   639.53                       # Real time elapsed on the host
+host_inst_rate                                 406612                       # Simulator instruction rate (inst/s)
+host_op_rate                                   493225                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             9343639540                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 632204                       # Number of bytes of host memory used
+host_seconds                                   302.21                       # Real time elapsed on the host
 sim_insts                                   122881667                       # Number of instructions simulated
 sim_ops                                     149056790                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -534,7 +534,7 @@ system.cpu0.num_func_calls                    5787158                       # nu
 system.cpu0.num_conditional_control_insts      7357632                       # number of instructions that are conditional controls
 system.cpu0.num_int_insts                    58995481                       # number of integer instructions
 system.cpu0.num_fp_insts                         4380                       # number of float instructions
-system.cpu0.num_int_register_reads          108779991                       # number of times the integer registers were read
+system.cpu0.num_int_register_reads          108769217                       # number of times the integer registers were read
 system.cpu0.num_int_register_writes          41129875                       # number of times the integer registers were written
 system.cpu0.num_fp_register_reads                3339                       # number of times the floating registers were read
 system.cpu0.num_fp_register_writes               1042                       # number of times the floating registers were written
@@ -1292,7 +1292,7 @@ system.cpu1.num_func_calls                    1992181                       # nu
 system.cpu1.num_conditional_control_insts      2177842                       # number of instructions that are conditional controls
 system.cpu1.num_int_insts                    18584422                       # number of integer instructions
 system.cpu1.num_fp_insts                         1582                       # number of float instructions
-system.cpu1.num_int_register_reads           34435383                       # number of times the integer registers were read
+system.cpu1.num_int_register_reads           34431709                       # number of times the integer registers were read
 system.cpu1.num_int_register_writes          13029372                       # number of times the integer registers were written
 system.cpu1.num_fp_register_reads                1129                       # number of times the floating registers were read
 system.cpu1.num_fp_register_writes                454                       # number of times the floating registers were written
@@ -1852,7 +1852,7 @@ system.cpu3.rename.IQFullEvents               1185922                       # Nu
 system.cpu3.rename.LQFullEvents                108960                       # Number of times rename has blocked due to LQ full
 system.cpu3.rename.SQFullEvents               3941702                       # Number of times rename has blocked due to SQ full
 system.cpu3.rename.RenamedOperands           46859897                       # Number of destination operands rename has renamed
-system.cpu3.rename.RenameLookups            206328923                       # Number of register rename lookups that rename has made
+system.cpu3.rename.RenameLookups            206319121                       # Number of register rename lookups that rename has made
 system.cpu3.rename.int_rename_lookups        50493322                       # Number of integer rename lookups
 system.cpu3.rename.fp_rename_lookups             4028                       # Number of floating rename lookups
 system.cpu3.rename.CommittedMaps             39227152                       # Number of HB maps that are committed
@@ -1869,7 +1869,7 @@ system.cpu3.iq.iqNonSpecInstsAdded             518690                       # Nu
 system.cpu3.iq.iqInstsIssued                 41211343                       # Number of instructions issued
 system.cpu3.iq.iqSquashedInstsIssued            55539                       # Number of squashed instructions issued
 system.cpu3.iq.iqSquashedInstsExamined        6082671                       # Number of squashed instructions iterated over during squash; mainly for profiling
-system.cpu3.iq.iqSquashedOperandsExamined     14073441                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu3.iq.iqSquashedOperandsExamined     14072351                       # Number of squashed operands that are examined and possibly removed from graph
 system.cpu3.iq.iqSquashedNonSpecRemoved         54569                       # Number of squashed non-spec instructions that were removed
 system.cpu3.iq.issued_per_cycle::samples     54325621                       # Number of insts issued each cycle
 system.cpu3.iq.issued_per_cycle::mean        0.758599                       # Number of insts issued each cycle
@@ -2091,7 +2091,7 @@ system.cpu3.fp_regfile_reads                    14550                       # nu
 system.cpu3.fp_regfile_writes                   12084                       # number of floating regfile writes
 system.cpu3.cc_regfile_reads                144202792                       # number of cc regfile reads
 system.cpu3.cc_regfile_writes                15932581                       # number of cc regfile writes
-system.cpu3.misc_regfile_reads               74870960                       # number of misc regfile reads
+system.cpu3.misc_regfile_reads               74868210                       # number of misc regfile reads
 system.cpu3.misc_regfile_writes                343753                       # number of misc regfile writes
 system.iobus.trans_dist::ReadReq                30152                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               30152                       # Transaction distribution
