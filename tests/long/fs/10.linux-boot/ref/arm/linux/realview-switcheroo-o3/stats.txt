@@ -878,7 +878,7 @@ system.cpu0.fp_regfile_reads                    17106                       # nu
 system.cpu0.fp_regfile_writes                   13230                       # number of floating regfile writes
 system.cpu0.cc_regfile_reads                262463335                       # number of cc regfile reads
 system.cpu0.cc_regfile_writes                27226302                       # number of cc regfile writes
-system.cpu0.misc_regfile_reads              143945708                       # number of misc regfile reads
+system.cpu0.misc_regfile_reads              188101438                       # number of misc regfile reads
 system.cpu0.misc_regfile_writes                725062                       # number of misc regfile writes
 system.cpu0.dcache.tags.replacements           852281                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.984445                       # Cycle average of tags in use
@@ -1810,7 +1810,7 @@ system.cpu1.fp_regfile_reads                    16634                       # nu
 system.cpu1.fp_regfile_writes                   13036                       # number of floating regfile writes
 system.cpu1.cc_regfile_reads                280643076                       # number of cc regfile reads
 system.cpu1.cc_regfile_writes                29716175                       # number of cc regfile writes
-system.cpu1.misc_regfile_reads              149724890                       # number of misc regfile reads
+system.cpu1.misc_regfile_reads              196047925                       # number of misc regfile reads
 system.cpu1.misc_regfile_writes                794523                       # number of misc regfile writes
 system.iobus.trans_dist::ReadReq                30198                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               30198                       # Transaction distribution

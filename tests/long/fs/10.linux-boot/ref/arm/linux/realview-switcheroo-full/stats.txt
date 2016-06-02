@@ -2091,7 +2091,7 @@ system.cpu3.fp_regfile_reads                    14550                       # nu
 system.cpu3.fp_regfile_writes                   12084                       # number of floating regfile writes
 system.cpu3.cc_regfile_reads                144202792                       # number of cc regfile reads
 system.cpu3.cc_regfile_writes                15932581                       # number of cc regfile writes
-system.cpu3.misc_regfile_reads               74868210                       # number of misc regfile reads
+system.cpu3.misc_regfile_reads               98044086                       # number of misc regfile reads
 system.cpu3.misc_regfile_writes                343753                       # number of misc regfile writes
 system.iobus.trans_dist::ReadReq                30152                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               30152                       # Transaction distribution
