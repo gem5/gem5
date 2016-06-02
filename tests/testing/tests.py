@@ -326,7 +326,11 @@ def get_tests(isa,
     if ruby_protocol == 'MI_example':
         configs += [ "%s-ruby" % (c, ) for c in configs ]
     elif ruby_protocol is not None:
-        configs += [ "%s-ruby-%s" % (c, ruby_protocol) for c in configs ]
+        # Override generic ISA configs when using Ruby (excluding
+        # MI_example which is included in all ISAs by default). This
+        # reduces the number of generic tests we re-run for when
+        # compiling Ruby targets.
+        configs = [ "%s-ruby-%s" % (c, ruby_protocol) for c in configs ]
 
     # /(quick|long)/(fs|se)/workload/ref/arch/guest/config/
     for conf_script in configs:
