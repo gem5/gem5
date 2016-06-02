@@ -115,6 +115,9 @@ class TestResult(object):
     def skipped(self):
         return all([ r.skipped() for r in self.results])
 
+    def changed(self):
+        return self.results[0].success() and self.failed()
+
     def failed(self):
         return any([ not r for r in self.results])
 
@@ -178,11 +181,20 @@ class TextSummary(ResultFormatter):
     def __init__(self, **kwargs):
         super(TextSummary, self).__init__(**kwargs)
 
+    def test_status(self, suite):
+        if suite.skipped():
+            return "SKIPPED"
+        elif suite.changed():
+            return "CHANGED"
+        elif suite:
+            return "OK"
+        else:
+            return "FAILED"
+
     def dump_suites(self, suites):
         fout = self.fout
         for suite in suites:
-            status = "SKIPPED" if suite.skipped() else \
-                     ("OK" if suite else "FAILED")
+            status = self.test_status(suite)
             print >> fout, "%s: %s" % (suite.name, status)
 
 class JUnit(ResultFormatter):
