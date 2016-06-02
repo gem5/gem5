@@ -75,7 +75,7 @@ for status, fname in git.status(filter="MA", cached=True):
 
     verifiers = [ v(ui, opts, base=repo_base) for v in all_verifiers ]
     for v in verifiers:
-        if v.check(fname, regions):
+        if not v.skip(fname) and v.check(fname, regions):
             failing_files.add(fname)
 
 if failing_files:
