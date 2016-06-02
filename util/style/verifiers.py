@@ -264,7 +264,7 @@ class Whitespace(LineVerifier):
 
             line = newline
 
-        return line.rstrip() + '\n'
+        return line.rstrip()
 
 
 class SortedIncludes(Verifier):
