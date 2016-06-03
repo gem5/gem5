@@ -139,7 +139,7 @@ GlobalMemPipeline::exec()
         } else {
             if (inflightStores >= gmQueueSize) {
                 return;
-            } else {
+            } else if (mp->m_op == Enums::MO_ST) {
                 ++inflightStores;
             }
         }
