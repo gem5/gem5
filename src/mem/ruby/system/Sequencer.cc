@@ -478,6 +478,16 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                    data.getData(getOffset(request_address), pkt->getSize()),
                    pkt->getSize());
             DPRINTF(RubySequencer, "read data %s\n", data);
+        } else if (pkt->req->isSwap()) {
+            std::vector<uint8_t> overwrite_val(pkt->getSize());
+            memcpy(&overwrite_val[0], pkt->getConstPtr<uint8_t>(),
+                   pkt->getSize());
+            memcpy(pkt->getPtr<uint8_t>(),
+                   data.getData(getOffset(request_address), pkt->getSize()),
+                   pkt->getSize());
+            data.setData(&overwrite_val[0],
+                         getOffset(request_address), pkt->getSize());
+            DPRINTF(RubySequencer, "swap data %s\n", data);
         } else {
             data.setData(pkt->getConstPtr<uint8_t>(),
                          getOffset(request_address), pkt->getSize());
@@ -565,7 +575,17 @@ Sequencer::makeRequest(PacketPtr pkt)
         }
         secondary_type = RubyRequestType_ST;
     } else {
-        if (pkt->isRead()) {
+        //
+        // To support SwapReq, we need to check isWrite() first: a SwapReq
+        // should always be treated like a write, but since a SwapReq implies
+        // both isWrite() and isRead() are true, check isWrite() first here.
+        //
+        if (pkt->isWrite()) {
+            //
+            // Note: M5 packets do not differentiate ST from RMW_Write
+            //
+            primary_type = secondary_type = RubyRequestType_ST;
+        } else if (pkt->isRead()) {
             if (pkt->req->isInstFetch()) {
                 primary_type = secondary_type = RubyRequestType_IFETCH;
             } else {
@@ -583,11 +603,6 @@ Sequencer::makeRequest(PacketPtr pkt)
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }
-        } else if (pkt->isWrite()) {
-            //
-            // Note: M5 packets do not differentiate ST from RMW_Write
-            //
-            primary_type = secondary_type = RubyRequestType_ST;
         } else if (pkt->isFlush()) {
           primary_type = secondary_type = RubyRequestType_FLUSH;
         } else {
