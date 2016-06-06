@@ -1,10 +1,12 @@
+Redirecting stdout to build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing/simout
+Redirecting stderr to build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled May  7 2016 13:41:33
-gem5 started May  7 2016 13:42:14
-gem5 executing on zizzer, pid 51342
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing -re /z/stever/hg/gem5/tests/run.py build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing
+gem5 compiled Jun  5 2016 19:50:43
+gem5 started Jun  5 2016 20:04:44
+gem5 executing on zizzer, pid 54380
+command line: /z/stever/hg/gem5/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-timing -re /z/stever/hg/gem5/tests/testing/../run.py quick/se/20.eio-short/alpha/eio/simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

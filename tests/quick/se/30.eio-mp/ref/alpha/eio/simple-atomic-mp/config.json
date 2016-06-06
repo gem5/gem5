@@ -15,7 +15,16 @@
             }, 
             "name": "membus", 
             "point_of_coherency": true, 
-            "snoop_filter": null, 
+            "snoop_filter": {
+                "name": "snoop_filter", 
+                "system": "system", 
+                "max_capacity": 8388608, 
+                "eventq_index": 0, 
+                "cxx_class": "SnoopFilter", 
+                "path": "system.membus.snoop_filter", 
+                "type": "SnoopFilter", 
+                "lookup_latency": 1
+            }, 
             "forward_latency": 4, 
             "clk_domain": "system.clk_domain", 
             "system": "system", 
