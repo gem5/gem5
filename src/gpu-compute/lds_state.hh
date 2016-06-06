@@ -390,9 +390,6 @@ class LdsState: public MemObject
     void
     setParent(ComputeUnit *x_parent);
 
-    void
-    regStats();
-
     // accessors
     ComputeUnit *
     getParent() const

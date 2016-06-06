@@ -331,11 +331,3 @@ LdsState::TickEvent::process()
 {
     ldsState->process();
 }
-
-/**
- *
- */
-void
-LdsState::regStats()
-{
-}

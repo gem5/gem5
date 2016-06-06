@@ -870,6 +870,8 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
 
 void
 ElasticTrace::regStats() {
+    ProbeListenerObject::regStats();
+
     using namespace Stats;
     numRegDep
         .name(name() + ".numRegDep")

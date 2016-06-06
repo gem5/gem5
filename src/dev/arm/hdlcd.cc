@@ -97,6 +97,8 @@ HDLcd::~HDLcd()
 void
 HDLcd::regStats()
 {
+    AmbaDmaDevice::regStats();
+
     using namespace Stats;
 
     stats.underruns

@@ -80,6 +80,8 @@ BPredUnit::BPredUnit(const Params *params)
 void
 BPredUnit::regStats()
 {
+    SimObject::regStats();
+
     lookups
         .name(name() + ".lookups")
         .desc("Number of BP lookups")

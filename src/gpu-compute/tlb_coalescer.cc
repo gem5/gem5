@@ -546,6 +546,8 @@ TLBCoalescer::CleanupEvent::process()
 void
 TLBCoalescer::regStats()
 {
+    MemObject::regStats();
+
     uncoalescedAccesses
         .name(name() + ".uncoalesced_accesses")
         .desc("Number of uncoalesced TLB accesses")

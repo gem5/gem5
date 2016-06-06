@@ -128,6 +128,8 @@ VoltageDomain::startup() {
 void
 VoltageDomain::regStats()
 {
+    SimObject::regStats();
+
     currentVoltage
         .method(this, &VoltageDomain::voltage)
         .name(params()->name + ".voltage")

@@ -72,6 +72,8 @@ ThermalDomain::setSubSystem(SubSystem * ss)
 void
 ThermalDomain::regStats()
 {
+    SimObject::regStats();
+
     currentTemp
         .method(this, &ThermalDomain::currentTemperature)
         .name(params()->name + ".temp")

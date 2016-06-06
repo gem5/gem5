@@ -56,6 +56,8 @@
 void
 ClockDomain::regStats()
 {
+    SimObject::regStats();
+
     using namespace Stats;
 
     // Expose the current clock period as a stat for observability in

@@ -86,6 +86,8 @@ Prefetcher::~Prefetcher()
 void
 Prefetcher::regStats()
 {
+    SimObject::regStats();
+
     numMissObserved
         .name(name() + ".miss_observed")
         .desc("number of misses observed")

@@ -958,6 +958,8 @@ namespace X86ISA
     void
     GpuTLB::regStats()
     {
+        MemObject::regStats();
+
         localNumTLBAccesses
             .name(name() + ".local_TLB_accesses")
             .desc("Number of TLB accesses")

@@ -1447,6 +1447,8 @@ ComputeUnit::ITLBPort::recvReqRetry()
 void
 ComputeUnit::regStats()
 {
+    MemObject::regStats();
+
     tlbCycles
         .name(name() + ".tlb_cycles")
         .desc("total number of cycles for all uncoalesced requests")

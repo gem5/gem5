@@ -88,6 +88,8 @@ Wavefront::Wavefront(const Params *p)
 void
 Wavefront::regStats()
 {
+    SimObject::regStats();
+
     srcRegOpDist
         .init(0, 4, 2)
         .name(name() + ".src_reg_operand_dist")

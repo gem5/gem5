@@ -1284,6 +1284,8 @@ GPUCoalescer::recordMissLatency(GPUCoalescerRequest* srequest,
 void
 GPUCoalescer::regStats()
 {
+    RubyPort::regStats();
+
     // These statistical variables are not for display.
     // The profiler will collate these across different
     // coalescers and display those collated statistics.

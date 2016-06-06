@@ -89,7 +89,10 @@ class RubySystem : public ClockedObject
         return m_profiler;
     }
 
-    void regStats() override { m_profiler->regStats(name()); }
+    void regStats() override {
+        ClockedObject::regStats();
+        m_profiler->regStats(name());
+    }
     void collateStats() { m_profiler->collateStats(); }
     void resetStats() override;
 
