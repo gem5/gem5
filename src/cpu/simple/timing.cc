@@ -218,6 +218,8 @@ TimingSimpleCPU::activateContext(ThreadID thread_num)
          == activeThreads.end()) {
         activeThreads.push_back(thread_num);
     }
+
+    BaseCPU::activateContext(thread_num);
 }
 
 
@@ -243,6 +245,8 @@ TimingSimpleCPU::suspendContext(ThreadID thread_num)
             deschedule(fetchEvent);
         }
     }
+
+    BaseCPU::suspendContext(thread_num);
 }
 
 bool

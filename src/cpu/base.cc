@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012,2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -64,6 +64,7 @@
 #include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
 #include "params/BaseCPU.hh"
+#include "sim/clocked_object.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
@@ -355,6 +356,11 @@ BaseCPU::startup()
     if (params()->progress_interval) {
         new CPUProgressEvent(this, params()->progress_interval);
     }
+
+    // Assumption CPU start to operate instantaneously without any latency
+    if (ClockedObject::pwrState() == Enums::PwrState::UNDEFINED)
+        ClockedObject::pwrState(Enums::PwrState::ON);
+
 }
 
 ProbePoints::PMUUPtr
@@ -472,6 +478,27 @@ BaseCPU::findContext(ThreadContext *tc)
             return tid;
     }
     return 0;
+}
+
+void
+BaseCPU::activateContext(ThreadID thread_num)
+{
+    // For any active thread running, update CPU power state to active (ON)
+    ClockedObject::pwrState(Enums::PwrState::ON);
+}
+
+void
+BaseCPU::suspendContext(ThreadID thread_num)
+{
+    // Check if all threads are suspended
+    for (auto t : threadContexts) {
+        if (t->status() != ThreadContext::Suspended) {
+            return;
+        }
+    }
+
+    // All CPU threads suspended, enter lower power state for the CPU
+    ClockedObject::pwrState(Enums::PwrState::CLK_GATED);
 }
 
 void

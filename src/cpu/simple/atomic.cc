@@ -247,6 +247,8 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num)
         == activeThreads.end()) {
         activeThreads.push_back(thread_num);
     }
+
+    BaseCPU::activateContext(thread_num);
 }
 
 
@@ -273,6 +275,7 @@ AtomicSimpleCPU::suspendContext(ThreadID thread_num)
         }
     }
 
+    BaseCPU::suspendContext(thread_num);
 }
 
 
