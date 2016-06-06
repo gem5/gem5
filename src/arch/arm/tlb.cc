@@ -417,6 +417,7 @@ TLB::unserialize(CheckpointIn &cp)
 void
 TLB::regStats()
 {
+    BaseTLB::regStats();
     instHits
         .name(name() + ".inst_hits")
         .desc("ITB inst hits")

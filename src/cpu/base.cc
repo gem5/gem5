@@ -397,6 +397,8 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst)
 void
 BaseCPU::regStats()
 {
+    MemObject::regStats();
+
     using namespace Stats;
 
     numCycles

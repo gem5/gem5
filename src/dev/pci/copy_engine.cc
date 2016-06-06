@@ -425,6 +425,8 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
 void
 CopyEngine::regStats()
 {
+    PciDevice::regStats();
+
     using namespace Stats;
     bytesCopied
         .init(regs.chanCount)

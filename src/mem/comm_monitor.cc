@@ -384,6 +384,8 @@ CommMonitor::recvRangeChange()
 void
 CommMonitor::regStats()
 {
+    MemObject::regStats();
+
     // Initialise all the monitor stats
     using namespace Stats;
 

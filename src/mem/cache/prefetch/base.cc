@@ -74,6 +74,8 @@ BasePrefetcher::setCache(BaseCache *_cache)
 void
 BasePrefetcher::regStats()
 {
+    ClockedObject::regStats();
+
     pfIssued
         .name(name() + ".num_hwpf_issued")
         .desc("number of hwpf issued")

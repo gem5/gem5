@@ -526,6 +526,8 @@ TrafficGen::noProgress()
 void
 TrafficGen::regStats()
 {
+    ClockedObject::regStats();
+
     // Initialise all the stats
     using namespace Stats;
 

@@ -176,6 +176,8 @@ BaseCache::inRange(Addr addr) const
 void
 BaseCache::regStats()
 {
+    MemObject::regStats();
+
     using namespace Stats;
 
     // Hit statistics

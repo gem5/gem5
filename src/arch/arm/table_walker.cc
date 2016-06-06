@@ -2122,6 +2122,8 @@ TableWalker::pageSizeNtoStatBin(uint8_t N)
 void
 TableWalker::regStats()
 {
+    ClockedObject::regStats();
+
     statWalks
         .name(name() + ".walks")
         .desc("Table walker walks requested")

@@ -71,7 +71,10 @@ BaseTags::setCache(BaseCache *_cache)
 void
 BaseTags::regStats()
 {
+    ClockedObject::regStats();
+
     using namespace Stats;
+
     replacements
         .init(maxThreadsPerCPU)
         .name(name() + ".replacements")

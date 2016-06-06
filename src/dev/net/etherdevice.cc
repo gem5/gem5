@@ -36,6 +36,8 @@
 void
 EtherDevice::regStats()
 {
+    PciDevice::regStats();
+
     txBytes
         .name(name() + ".txBytes")
         .desc("Bytes Transmitted")

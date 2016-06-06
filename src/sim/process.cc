@@ -191,6 +191,8 @@ Process::Process(ProcessParams * params)
 void
 Process::regStats()
 {
+    SimObject::regStats();
+
     using namespace Stats;
 
     num_syscalls

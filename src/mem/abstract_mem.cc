@@ -79,6 +79,8 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 void
 AbstractMemory::regStats()
 {
+    MemObject::regStats();
+
     using namespace Stats;
 
     assert(system());

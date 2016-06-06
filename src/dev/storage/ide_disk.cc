@@ -392,6 +392,8 @@ IdeDisk::doDmaDataRead()
 void
 IdeDisk::regStats()
 {
+    SimObject::regStats();
+
     using namespace Stats;
     dmaReadFullPages
         .name(name() + ".dma_read_full_pages")

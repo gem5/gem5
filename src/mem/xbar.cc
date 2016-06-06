@@ -541,6 +541,8 @@ BaseXBar::getAddrRanges() const
 void
 BaseXBar::regStats()
 {
+    ClockedObject::regStats();
+
     using namespace Stats;
 
     transDist

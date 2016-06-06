@@ -393,6 +393,8 @@ System::unserialize(CheckpointIn &cp)
 void
 System::regStats()
 {
+    MemObject::regStats();
+
     for (uint32_t j = 0; j < numWorkIds ; j++) {
         workItemStats[j] = new Stats::Histogram();
         stringstream namestr;
