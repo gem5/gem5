@@ -4,11 +4,12 @@ sim_seconds                                  0.010000                       # Nu
 sim_ticks                                 10000000000                       # Number of ticks simulated
 final_tick                                10000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                              621801419                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1442452                       # Number of bytes of host memory used
-host_seconds                                    16.08                       # Real time elapsed on the host
+host_tick_rate                              757790256                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1498684                       # Number of bytes of host memory used
+host_seconds                                    13.20                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::l0subsys0.tester0      2151552                       # Number of bytes read from this memory
 system.physmem.bytes_read::l0subsys0.tester1      2168960                       # Number of bytes read from this memory
 system.physmem.bytes_read::l0subsys1.tester0      2107520                       # Number of bytes read from this memory
@@ -307,9 +308,14 @@ system.physmem_1.memoryStateTime::REF       333840000                       # Ti
 system.physmem_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT      9620586338                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys0.checkers0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys0.checkers1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys0.tester0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys0.tester0.numPackets             67424                       # Number of packets generated
 system.l0subsys0.tester0.numRetries              2732                       # Number of retries
 system.l0subsys0.tester0.retryTicks          71787172                       # Time spent waiting due to back-pressure (ticks)
+system.l0subsys0.tester1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys0.tester1.numPackets             67451                       # Number of packets generated
 system.l0subsys0.tester1.numRetries              2817                       # Number of retries
 system.l0subsys0.tester1.retryTicks          69161680                       # Time spent waiting due to back-pressure (ticks)
@@ -319,6 +325,7 @@ system.l0subsys0.xbar.snoop_filter.hit_multi_requests            0              
 system.l0subsys0.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l0subsys0.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l0subsys0.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l0subsys0.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys0.xbar.trans_dist::ReadReq        86409                       # Transaction distribution
 system.l0subsys0.xbar.trans_dist::ReadResp        82049                       # Transaction distribution
 system.l0subsys0.xbar.trans_dist::ReadRespWithInvalidate         4359                       # Transaction distribution
@@ -351,9 +358,13 @@ system.l0subsys0.xbar.respLayer0.occupancy    116989147                       # 
 system.l0subsys0.xbar.respLayer0.utilization          1.2                       # Layer utilization (%)
 system.l0subsys0.xbar.respLayer1.occupancy    116411811                       # Layer occupancy (ticks)
 system.l0subsys0.xbar.respLayer1.utilization          1.2                       # Layer utilization (%)
+system.l0subsys1.checkers0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys1.checkers1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys1.tester0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys1.tester0.numPackets             65180                       # Number of packets generated
 system.l0subsys1.tester0.numRetries              2851                       # Number of retries
 system.l0subsys1.tester0.retryTicks          74729692                       # Time spent waiting due to back-pressure (ticks)
+system.l0subsys1.tester1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys1.tester1.numPackets             68174                       # Number of packets generated
 system.l0subsys1.tester1.numRetries              2790                       # Number of retries
 system.l0subsys1.tester1.retryTicks          74335880                       # Time spent waiting due to back-pressure (ticks)
@@ -363,6 +374,7 @@ system.l0subsys1.xbar.snoop_filter.hit_multi_requests            0              
 system.l0subsys1.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l0subsys1.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l0subsys1.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l0subsys1.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys1.xbar.trans_dist::ReadReq        85972                       # Transaction distribution
 system.l0subsys1.xbar.trans_dist::ReadResp        82000                       # Transaction distribution
 system.l0subsys1.xbar.trans_dist::ReadRespWithInvalidate         3972                       # Transaction distribution
@@ -395,9 +407,13 @@ system.l0subsys1.xbar.respLayer0.occupancy    113396564                       # 
 system.l0subsys1.xbar.respLayer0.utilization          1.1                       # Layer utilization (%)
 system.l0subsys1.xbar.respLayer1.occupancy    118377078                       # Layer occupancy (ticks)
 system.l0subsys1.xbar.respLayer1.utilization          1.2                       # Layer utilization (%)
+system.l0subsys2.checkers0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys2.checkers1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys2.tester0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys2.tester0.numPackets             65223                       # Number of packets generated
 system.l0subsys2.tester0.numRetries              2584                       # Number of retries
 system.l0subsys2.tester0.retryTicks          64900705                       # Time spent waiting due to back-pressure (ticks)
+system.l0subsys2.tester1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys2.tester1.numPackets             65256                       # Number of packets generated
 system.l0subsys2.tester1.numRetries              2558                       # Number of retries
 system.l0subsys2.tester1.retryTicks          64249844                       # Time spent waiting due to back-pressure (ticks)
@@ -407,6 +423,7 @@ system.l0subsys2.xbar.snoop_filter.hit_multi_requests            0              
 system.l0subsys2.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l0subsys2.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l0subsys2.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l0subsys2.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys2.xbar.trans_dist::ReadReq        84127                       # Transaction distribution
 system.l0subsys2.xbar.trans_dist::ReadResp        80122                       # Transaction distribution
 system.l0subsys2.xbar.trans_dist::ReadRespWithInvalidate         4004                       # Transaction distribution
@@ -439,9 +456,13 @@ system.l0subsys2.xbar.respLayer0.occupancy    113755357                       # 
 system.l0subsys2.xbar.respLayer0.utilization          1.1                       # Layer utilization (%)
 system.l0subsys2.xbar.respLayer1.occupancy    113314488                       # Layer occupancy (ticks)
 system.l0subsys2.xbar.respLayer1.utilization          1.1                       # Layer utilization (%)
+system.l0subsys3.checkers0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys3.checkers1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys3.tester0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys3.tester0.numPackets             66015                       # Number of packets generated
 system.l0subsys3.tester0.numRetries              2474                       # Number of retries
 system.l0subsys3.tester0.retryTicks          61325178                       # Time spent waiting due to back-pressure (ticks)
+system.l0subsys3.tester1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys3.tester1.numPackets             63774                       # Number of packets generated
 system.l0subsys3.tester1.numRetries              2406                       # Number of retries
 system.l0subsys3.tester1.retryTicks          60532485                       # Time spent waiting due to back-pressure (ticks)
@@ -451,6 +472,7 @@ system.l0subsys3.xbar.snoop_filter.hit_multi_requests            0              
 system.l0subsys3.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l0subsys3.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l0subsys3.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l0subsys3.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys3.xbar.trans_dist::ReadReq        83355                       # Transaction distribution
 system.l0subsys3.xbar.trans_dist::ReadResp        78973                       # Transaction distribution
 system.l0subsys3.xbar.trans_dist::ReadRespWithInvalidate         4382                       # Transaction distribution
@@ -483,9 +505,13 @@ system.l0subsys3.xbar.respLayer0.occupancy    114100947                       # 
 system.l0subsys3.xbar.respLayer0.utilization          1.1                       # Layer utilization (%)
 system.l0subsys3.xbar.respLayer1.occupancy    110374985                       # Layer occupancy (ticks)
 system.l0subsys3.xbar.respLayer1.utilization          1.1                       # Layer utilization (%)
+system.l0subsys4.checkers0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys4.checkers1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys4.tester0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys4.tester0.numPackets             67184                       # Number of packets generated
 system.l0subsys4.tester0.numRetries              2523                       # Number of retries
 system.l0subsys4.tester0.retryTicks          66430147                       # Time spent waiting due to back-pressure (ticks)
+system.l0subsys4.tester1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys4.tester1.numPackets             65756                       # Number of packets generated
 system.l0subsys4.tester1.numRetries              2580                       # Number of retries
 system.l0subsys4.tester1.retryTicks          67683660                       # Time spent waiting due to back-pressure (ticks)
@@ -495,6 +521,7 @@ system.l0subsys4.xbar.snoop_filter.hit_multi_requests            0              
 system.l0subsys4.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l0subsys4.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l0subsys4.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l0subsys4.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys4.xbar.trans_dist::ReadReq        85507                       # Transaction distribution
 system.l0subsys4.xbar.trans_dist::ReadResp        81442                       # Transaction distribution
 system.l0subsys4.xbar.trans_dist::ReadRespWithInvalidate         4064                       # Transaction distribution
@@ -527,9 +554,13 @@ system.l0subsys4.xbar.respLayer0.occupancy    116964811                       # 
 system.l0subsys4.xbar.respLayer0.utilization          1.2                       # Layer utilization (%)
 system.l0subsys4.xbar.respLayer1.occupancy    114597175                       # Layer occupancy (ticks)
 system.l0subsys4.xbar.respLayer1.utilization          1.1                       # Layer utilization (%)
+system.l0subsys5.checkers0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys5.checkers1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l0subsys5.tester0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys5.tester0.numPackets             67119                       # Number of packets generated
 system.l0subsys5.tester0.numRetries              2560                       # Number of retries
 system.l0subsys5.tester0.retryTicks          65403498                       # Time spent waiting due to back-pressure (ticks)
+system.l0subsys5.tester1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys5.tester1.numPackets             65308                       # Number of packets generated
 system.l0subsys5.tester1.numRetries              2642                       # Number of retries
 system.l0subsys5.tester1.retryTicks          65659220                       # Time spent waiting due to back-pressure (ticks)
@@ -539,6 +570,7 @@ system.l0subsys5.xbar.snoop_filter.hit_multi_requests            0              
 system.l0subsys5.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l0subsys5.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l0subsys5.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l0subsys5.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l0subsys5.xbar.trans_dist::ReadReq        85511                       # Transaction distribution
 system.l0subsys5.xbar.trans_dist::ReadResp        81276                       # Transaction distribution
 system.l0subsys5.xbar.trans_dist::ReadRespWithInvalidate         4233                       # Transaction distribution
@@ -571,6 +603,7 @@ system.l0subsys5.xbar.respLayer0.occupancy    116426882                       # 
 system.l0subsys5.xbar.respLayer0.utilization          1.2                       # Layer utilization (%)
 system.l0subsys5.xbar.respLayer1.occupancy    112976792                       # Layer occupancy (ticks)
 system.l0subsys5.xbar.respLayer1.utilization          1.1                       # Layer utilization (%)
+system.l1subsys0.cache0.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys0.cache0.tags.replacements        67551                       # number of replacements
 system.l1subsys0.cache0.tags.tagsinuse     502.758409                       # Cycle average of tags in use
 system.l1subsys0.cache0.tags.total_refs         31003                       # Total number of references to valid blocks.
@@ -589,6 +622,7 @@ system.l1subsys0.cache0.tags.age_task_id_blocks_1024::2           63            
 system.l1subsys0.cache0.tags.occ_task_id_percent::1024     0.990234                       # Percentage of cache occupancy per task id
 system.l1subsys0.cache0.tags.tag_accesses       641417                       # Number of tag accesses
 system.l1subsys0.cache0.tags.data_accesses       641417                       # Number of data accesses
+system.l1subsys0.cache0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys0.cache0.ReadReq_hits::l0subsys0.tester0         9938                       # number of ReadReq hits
 system.l1subsys0.cache0.ReadReq_hits::l0subsys0.tester1         9361                       # number of ReadReq hits
 system.l1subsys0.cache0.ReadReq_hits::total        19299                       # number of ReadReq hits
@@ -729,6 +763,7 @@ system.l1subsys0.cache0.demand_avg_mshr_miss_latency::total 90055.037917        
 system.l1subsys0.cache0.overall_avg_mshr_miss_latency::l0subsys0.tester0 90387.265234                       # average overall mshr miss latency
 system.l1subsys0.cache0.overall_avg_mshr_miss_latency::l0subsys0.tester1 89727.019386                       # average overall mshr miss latency
 system.l1subsys0.cache0.overall_avg_mshr_miss_latency::total 90055.037917                       # average overall mshr miss latency
+system.l1subsys0.cache1.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys0.cache1.tags.replacements        68848                       # number of replacements
 system.l1subsys0.cache1.tags.tagsinuse     504.594743                       # Cycle average of tags in use
 system.l1subsys0.cache1.tags.total_refs         31105                       # Total number of references to valid blocks.
@@ -747,6 +782,7 @@ system.l1subsys0.cache1.tags.age_task_id_blocks_1024::2           90            
 system.l1subsys0.cache1.tags.occ_task_id_percent::1024     0.976562                       # Percentage of cache occupancy per task id
 system.l1subsys0.cache1.tags.tag_accesses       633805                       # Number of tag accesses
 system.l1subsys0.cache1.tags.data_accesses       633805                       # Number of data accesses
+system.l1subsys0.cache1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys0.cache1.ReadReq_hits::l0subsys1.tester0         9817                       # number of ReadReq hits
 system.l1subsys0.cache1.ReadReq_hits::l0subsys1.tester1         9861                       # number of ReadReq hits
 system.l1subsys0.cache1.ReadReq_hits::total        19678                       # number of ReadReq hits
@@ -893,6 +929,7 @@ system.l1subsys0.xbar.snoop_filter.hit_multi_requests         8556              
 system.l1subsys0.xbar.snoop_filter.tot_snoops       114062                       # Total number of snoops made to the snoop filter.
 system.l1subsys0.xbar.snoop_filter.hit_single_snoops        98725                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l1subsys0.xbar.snoop_filter.hit_multi_snoops        15337                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l1subsys0.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys0.xbar.trans_dist::ReadResp       154200                       # Transaction distribution
 system.l1subsys0.xbar.trans_dist::ReadRespWithInvalidate         3741                       # Transaction distribution
 system.l1subsys0.xbar.trans_dist::WritebackDirty        97097                       # Transaction distribution
@@ -928,6 +965,7 @@ system.l1subsys0.xbar.respLayer0.occupancy    318997409                       # 
 system.l1subsys0.xbar.respLayer0.utilization          3.2                       # Layer utilization (%)
 system.l1subsys0.xbar.respLayer1.occupancy    314273952                       # Layer occupancy (ticks)
 system.l1subsys0.xbar.respLayer1.utilization          3.1                       # Layer utilization (%)
+system.l1subsys1.cache0.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys1.cache0.tags.replacements        64055                       # number of replacements
 system.l1subsys1.cache0.tags.tagsinuse     501.915078                       # Cycle average of tags in use
 system.l1subsys1.cache0.tags.total_refs         31614                       # Total number of references to valid blocks.
@@ -946,6 +984,7 @@ system.l1subsys1.cache0.tags.age_task_id_blocks_1024::2           23            
 system.l1subsys1.cache0.tags.occ_task_id_percent::1024     0.998047                       # Percentage of cache occupancy per task id
 system.l1subsys1.cache0.tags.tag_accesses       619158                       # Number of tag accesses
 system.l1subsys1.cache0.tags.data_accesses       619158                       # Number of data accesses
+system.l1subsys1.cache0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys1.cache0.ReadReq_hits::l0subsys2.tester0        10039                       # number of ReadReq hits
 system.l1subsys1.cache0.ReadReq_hits::l0subsys2.tester1         9798                       # number of ReadReq hits
 system.l1subsys1.cache0.ReadReq_hits::total        19837                       # number of ReadReq hits
@@ -1086,6 +1125,7 @@ system.l1subsys1.cache0.demand_avg_mshr_miss_latency::total 89695.571963        
 system.l1subsys1.cache0.overall_avg_mshr_miss_latency::l0subsys2.tester0 90126.933848                       # average overall mshr miss latency
 system.l1subsys1.cache0.overall_avg_mshr_miss_latency::l0subsys2.tester1 89266.884167                       # average overall mshr miss latency
 system.l1subsys1.cache0.overall_avg_mshr_miss_latency::total 89695.571963                       # average overall mshr miss latency
+system.l1subsys1.cache1.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys1.cache1.tags.replacements        63731                       # number of replacements
 system.l1subsys1.cache1.tags.tagsinuse     503.303418                       # Cycle average of tags in use
 system.l1subsys1.cache1.tags.total_refs         29004                       # Total number of references to valid blocks.
@@ -1104,6 +1144,7 @@ system.l1subsys1.cache1.tags.age_task_id_blocks_1024::2           93            
 system.l1subsys1.cache1.tags.occ_task_id_percent::1024     0.982422                       # Percentage of cache occupancy per task id
 system.l1subsys1.cache1.tags.tag_accesses       617940                       # Number of tag accesses
 system.l1subsys1.cache1.tags.data_accesses       617940                       # Number of data accesses
+system.l1subsys1.cache1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys1.cache1.ReadReq_hits::l0subsys3.tester0         9182                       # number of ReadReq hits
 system.l1subsys1.cache1.ReadReq_hits::l0subsys3.tester1         9019                       # number of ReadReq hits
 system.l1subsys1.cache1.ReadReq_hits::total        18201                       # number of ReadReq hits
@@ -1250,6 +1291,7 @@ system.l1subsys1.xbar.snoop_filter.hit_multi_requests         8795              
 system.l1subsys1.xbar.snoop_filter.tot_snoops       114270                       # Total number of snoops made to the snoop filter.
 system.l1subsys1.xbar.snoop_filter.hit_single_snoops        97861                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l1subsys1.xbar.snoop_filter.hit_multi_snoops        16409                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l1subsys1.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys1.xbar.trans_dist::ReadResp       151000                       # Transaction distribution
 system.l1subsys1.xbar.trans_dist::ReadRespWithInvalidate         3767                       # Transaction distribution
 system.l1subsys1.xbar.trans_dist::WritebackDirty        90510                       # Transaction distribution
@@ -1285,6 +1327,7 @@ system.l1subsys1.xbar.respLayer0.occupancy    305008955                       # 
 system.l1subsys1.xbar.respLayer0.utilization          3.1                       # Layer utilization (%)
 system.l1subsys1.xbar.respLayer1.occupancy    309946184                       # Layer occupancy (ticks)
 system.l1subsys1.xbar.respLayer1.utilization          3.1                       # Layer utilization (%)
+system.l1subsys2.cache0.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys2.cache0.tags.replacements        65353                       # number of replacements
 system.l1subsys2.cache0.tags.tagsinuse     504.458871                       # Cycle average of tags in use
 system.l1subsys2.cache0.tags.total_refs         33188                       # Total number of references to valid blocks.
@@ -1303,6 +1346,7 @@ system.l1subsys2.cache0.tags.age_task_id_blocks_1024::2           28            
 system.l1subsys2.cache0.tags.occ_task_id_percent::1024     0.986328                       # Percentage of cache occupancy per task id
 system.l1subsys2.cache0.tags.tag_accesses       629863                       # Number of tag accesses
 system.l1subsys2.cache0.tags.data_accesses       629863                       # Number of data accesses
+system.l1subsys2.cache0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys2.cache0.ReadReq_hits::l0subsys4.tester0        10527                       # number of ReadReq hits
 system.l1subsys2.cache0.ReadReq_hits::l0subsys4.tester1        10271                       # number of ReadReq hits
 system.l1subsys2.cache0.ReadReq_hits::total        20798                       # number of ReadReq hits
@@ -1443,6 +1487,7 @@ system.l1subsys2.cache0.demand_avg_mshr_miss_latency::total 90569.637316        
 system.l1subsys2.cache0.overall_avg_mshr_miss_latency::l0subsys4.tester0 91822.941718                       # average overall mshr miss latency
 system.l1subsys2.cache0.overall_avg_mshr_miss_latency::l0subsys4.tester1 89290.677324                       # average overall mshr miss latency
 system.l1subsys2.cache0.overall_avg_mshr_miss_latency::total 90569.637316                       # average overall mshr miss latency
+system.l1subsys2.cache1.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys2.cache1.tags.replacements        67065                       # number of replacements
 system.l1subsys2.cache1.tags.tagsinuse     502.741649                       # Cycle average of tags in use
 system.l1subsys2.cache1.tags.total_refs         30001                       # Total number of references to valid blocks.
@@ -1461,6 +1506,7 @@ system.l1subsys2.cache1.tags.age_task_id_blocks_1024::2           70            
 system.l1subsys2.cache1.tags.occ_task_id_percent::1024     0.994141                       # Percentage of cache occupancy per task id
 system.l1subsys2.cache1.tags.tag_accesses       630788                       # Number of tag accesses
 system.l1subsys2.cache1.tags.data_accesses       630788                       # Number of data accesses
+system.l1subsys2.cache1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys2.cache1.ReadReq_hits::l0subsys5.tester0         9835                       # number of ReadReq hits
 system.l1subsys2.cache1.ReadReq_hits::l0subsys5.tester1         9033                       # number of ReadReq hits
 system.l1subsys2.cache1.ReadReq_hits::total        18868                       # number of ReadReq hits
@@ -1607,6 +1653,7 @@ system.l1subsys2.xbar.snoop_filter.hit_multi_requests         8459              
 system.l1subsys2.xbar.snoop_filter.tot_snoops       114014                       # Total number of snoops made to the snoop filter.
 system.l1subsys2.xbar.snoop_filter.hit_single_snoops        99574                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l1subsys2.xbar.snoop_filter.hit_multi_snoops        14440                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l1subsys2.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l1subsys2.xbar.trans_dist::ReadResp       152712                       # Transaction distribution
 system.l1subsys2.xbar.trans_dist::ReadRespWithInvalidate         3827                       # Transaction distribution
 system.l1subsys2.xbar.trans_dist::WritebackDirty        93911                       # Transaction distribution
@@ -1642,6 +1689,7 @@ system.l1subsys2.xbar.respLayer0.occupancy    307826729                       # 
 system.l1subsys2.xbar.respLayer0.utilization          3.1                       # Layer utilization (%)
 system.l1subsys2.xbar.respLayer1.occupancy    316356652                       # Layer occupancy (ticks)
 system.l1subsys2.xbar.respLayer1.utilization          3.2                       # Layer utilization (%)
+system.l2subsys0.cache0.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache0.tags.replacements        33571                       # number of replacements
 system.l2subsys0.cache0.tags.tagsinuse     498.351113                       # Cycle average of tags in use
 system.l2subsys0.cache0.tags.total_refs         14579                       # Total number of references to valid blocks.
@@ -1658,6 +1706,7 @@ system.l2subsys0.cache0.tags.age_task_id_blocks_1024::2          218            
 system.l2subsys0.cache0.tags.occ_task_id_percent::1024     0.990234                       # Percentage of cache occupancy per task id
 system.l2subsys0.cache0.tags.tag_accesses       327999                       # Number of tag accesses
 system.l2subsys0.cache0.tags.data_accesses       327999                       # Number of data accesses
+system.l2subsys0.cache0.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache0.ReadReq_hits::l2subsys0.tester         9421                       # number of ReadReq hits
 system.l2subsys0.cache0.ReadReq_hits::total         9421                       # number of ReadReq hits
 system.l2subsys0.cache0.WriteReq_hits::l2subsys0.tester         1165                       # number of WriteReq hits
@@ -1754,6 +1803,7 @@ system.l2subsys0.cache0.demand_avg_mshr_miss_latency::l2subsys0.tester 65232.365
 system.l2subsys0.cache0.demand_avg_mshr_miss_latency::total 65232.365364                       # average overall mshr miss latency
 system.l2subsys0.cache0.overall_avg_mshr_miss_latency::l2subsys0.tester 65232.365364                       # average overall mshr miss latency
 system.l2subsys0.cache0.overall_avg_mshr_miss_latency::total 65232.365364                       # average overall mshr miss latency
+system.l2subsys0.cache1.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache1.tags.replacements       134581                       # number of replacements
 system.l2subsys0.cache1.tags.tagsinuse    1490.708088                       # Cycle average of tags in use
 system.l2subsys0.cache1.tags.total_refs         68619                       # Total number of references to valid blocks.
@@ -1778,6 +1828,7 @@ system.l2subsys0.cache1.tags.age_task_id_blocks_1024::2          462            
 system.l2subsys0.cache1.tags.occ_task_id_percent::1024     0.977214                       # Percentage of cache occupancy per task id
 system.l2subsys0.cache1.tags.tag_accesses      4309680                       # Number of tag accesses
 system.l2subsys0.cache1.tags.data_accesses      4309680                       # Number of data accesses
+system.l2subsys0.cache1.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache1.WritebackDirty_hits::writebacks        48994                       # number of WritebackDirty hits
 system.l2subsys0.cache1.WritebackDirty_hits::total        48994                       # number of WritebackDirty hits
 system.l2subsys0.cache1.ReadExReq_hits::l0subsys0.tester0           45                       # number of ReadExReq hits
@@ -2059,6 +2110,7 @@ system.l2subsys0.cache1.overall_avg_mshr_miss_latency::l0subsys0.tester1 86901.8
 system.l2subsys0.cache1.overall_avg_mshr_miss_latency::l0subsys1.tester0 88785.081065                       # average overall mshr miss latency
 system.l2subsys0.cache1.overall_avg_mshr_miss_latency::l0subsys1.tester1 90884.489838                       # average overall mshr miss latency
 system.l2subsys0.cache1.overall_avg_mshr_miss_latency::total 88472.037304                       # average overall mshr miss latency
+system.l2subsys0.cache2.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache2.tags.replacements       126032                       # number of replacements
 system.l2subsys0.cache2.tags.tagsinuse    1489.728979                       # Cycle average of tags in use
 system.l2subsys0.cache2.tags.total_refs         65365                       # Total number of references to valid blocks.
@@ -2083,6 +2135,7 @@ system.l2subsys0.cache2.tags.age_task_id_blocks_1024::2          358            
 system.l2subsys0.cache2.tags.occ_task_id_percent::1024     0.974609                       # Percentage of cache occupancy per task id
 system.l2subsys0.cache2.tags.tag_accesses      4109673                       # Number of tag accesses
 system.l2subsys0.cache2.tags.data_accesses      4109673                       # Number of data accesses
+system.l2subsys0.cache2.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache2.WritebackDirty_hits::writebacks        45683                       # number of WritebackDirty hits
 system.l2subsys0.cache2.WritebackDirty_hits::total        45683                       # number of WritebackDirty hits
 system.l2subsys0.cache2.ReadExReq_hits::l0subsys2.tester0           37                       # number of ReadExReq hits
@@ -2364,6 +2417,7 @@ system.l2subsys0.cache2.overall_avg_mshr_miss_latency::l0subsys2.tester1 87967.7
 system.l2subsys0.cache2.overall_avg_mshr_miss_latency::l0subsys3.tester0 86634.785961                       # average overall mshr miss latency
 system.l2subsys0.cache2.overall_avg_mshr_miss_latency::l0subsys3.tester1 86857.574211                       # average overall mshr miss latency
 system.l2subsys0.cache2.overall_avg_mshr_miss_latency::total 87244.093661                       # average overall mshr miss latency
+system.l2subsys0.cache3.tags.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache3.tags.replacements       130662                       # number of replacements
 system.l2subsys0.cache3.tags.tagsinuse    1489.946036                       # Cycle average of tags in use
 system.l2subsys0.cache3.tags.total_refs         67604                       # Total number of references to valid blocks.
@@ -2388,6 +2442,7 @@ system.l2subsys0.cache3.tags.age_task_id_blocks_1024::2          316            
 system.l2subsys0.cache3.tags.occ_task_id_percent::1024     0.975911                       # Percentage of cache occupancy per task id
 system.l2subsys0.cache3.tags.tag_accesses      4225473                       # Number of tag accesses
 system.l2subsys0.cache3.tags.data_accesses      4225473                       # Number of data accesses
+system.l2subsys0.cache3.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.cache3.WritebackDirty_hits::writebacks        47372                       # number of WritebackDirty hits
 system.l2subsys0.cache3.WritebackDirty_hits::total        47372                       # number of WritebackDirty hits
 system.l2subsys0.cache3.ReadExReq_hits::l0subsys4.tester0           45                       # number of ReadExReq hits
@@ -2669,6 +2724,8 @@ system.l2subsys0.cache3.overall_avg_mshr_miss_latency::l0subsys4.tester1 87375.7
 system.l2subsys0.cache3.overall_avg_mshr_miss_latency::l0subsys5.tester0 86334.880792                       # average overall mshr miss latency
 system.l2subsys0.cache3.overall_avg_mshr_miss_latency::l0subsys5.tester1 87645.156672                       # average overall mshr miss latency
 system.l2subsys0.cache3.overall_avg_mshr_miss_latency::total 87740.882016                       # average overall mshr miss latency
+system.l2subsys0.checkers.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
+system.l2subsys0.tester.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.tester.numPackets              68517                       # Number of packets generated
 system.l2subsys0.tester.numRetries                121                       # Number of retries
 system.l2subsys0.tester.retryTicks            5829034                       # Time spent waiting due to back-pressure (ticks)
@@ -2678,6 +2735,7 @@ system.l2subsys0.xbar.snoop_filter.hit_multi_requests       120892              
 system.l2subsys0.xbar.snoop_filter.tot_snoops            0                       # Total number of snoops made to the snoop filter.
 system.l2subsys0.xbar.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.l2subsys0.xbar.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.l2subsys0.xbar.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
 system.l2subsys0.xbar.trans_dist::ReadResp       374921                       # Transaction distribution
 system.l2subsys0.xbar.trans_dist::ReadRespWithInvalidate         1348                       # Transaction distribution
 system.l2subsys0.xbar.trans_dist::WritebackDirty       151339                       # Transaction distribution

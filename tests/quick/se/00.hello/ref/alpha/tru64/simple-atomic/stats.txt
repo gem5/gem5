@@ -4,15 +4,16 @@ sim_seconds                                  0.000001                       # Nu
 sim_ticks                                     1297500                       # Number of ticks simulated
 final_tick                                    1297500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 461545                       # Simulator instruction rate (inst/s)
-host_op_rate                                   460635                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              231518490                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 237472                       # Number of bytes of host memory used
-host_seconds                                     0.01                       # Real time elapsed on the host
+host_inst_rate                                 615280                       # Simulator instruction rate (inst/s)
+host_op_rate                                   613973                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              308554926                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 281160                       # Number of bytes of host memory used
+host_seconds                                     0.00                       # Real time elapsed on the host
 sim_insts                                        2577                       # Number of instructions simulated
 sim_ops                                          2577                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED      1297500                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::cpu.inst             10340                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.data              3016                       # Number of bytes read from this memory
 system.physmem.bytes_read::total                13356                       # Number of bytes read from this memory
@@ -35,6 +36,7 @@ system.physmem.bw_write::total             1586127168                       # Wr
 system.physmem.bw_total::cpu.inst          7969171484                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data          3910597303                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total            11879768786                       # Total bandwidth to/from this memory (bytes/s)
+system.pwrStateResidencyTicks::UNDEFINED      1297500                       # Cumulative time (in ticks) in various power states
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
@@ -69,6 +71,7 @@ system.cpu.itb.data_misses                          0                       # DT
 system.cpu.itb.data_acv                             0                       # DTB access violations
 system.cpu.itb.data_accesses                        0                       # DTB accesses
 system.cpu.workload.num_syscalls                    4                       # Number of system calls
+system.cpu.pwrStateResidencyTicks::ON         1297500                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                             2596                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
@@ -127,6 +130,7 @@ system.cpu.op_class::MemWrite                     298     11.53%    100.00% # Cl
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::total                       2585                       # Class of executed instruction
+system.membus.pwrStateResidencyTicks::UNDEFINED      1297500                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq                3000                       # Transaction distribution
 system.membus.trans_dist::ReadResp               3000                       # Transaction distribution
 system.membus.trans_dist::WriteReq                294                       # Transaction distribution

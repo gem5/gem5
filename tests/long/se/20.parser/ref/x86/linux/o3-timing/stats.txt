@@ -4,15 +4,16 @@ sim_seconds                                  0.481958                       # Nu
 sim_ticks                                481957625500                       # Number of ticks simulated
 final_tick                               481957625500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  86883                       # Simulator instruction rate (inst/s)
-host_op_rate                                   160778                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               50643012                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 314272                       # Number of bytes of host memory used
-host_seconds                                  9516.76                       # Real time elapsed on the host
+host_inst_rate                                 134289                       # Simulator instruction rate (inst/s)
+host_op_rate                                   248503                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               78275315                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 362988                       # Number of bytes of host memory used
+host_seconds                                  6157.21                       # Real time elapsed on the host
 sim_insts                                   826847303                       # Number of instructions simulated
 sim_ops                                    1530082520                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::cpu.inst            154624                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.data          24604096                       # Number of bytes read from this memory
 system.physmem.bytes_read::total             24758720                       # Number of bytes read from this memory
@@ -284,6 +285,7 @@ system.physmem_1.memoryStateTime::REF     16093480000                       # Ti
 system.physmem_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT     84631916750                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.branchPred.lookups               297786504                       # Number of BP lookups
 system.cpu.branchPred.condPredicted         297786504                       # Number of conditional branches predicted
 system.cpu.branchPred.condIncorrect          23596621                       # Number of conditional branches incorrect
@@ -298,8 +300,12 @@ system.cpu.branchPred.indirectHits          119907455                       # Nu
 system.cpu.branchPred.indirectMisses        109794733                       # Number of indirect misses.
 system.cpu.branchPredindirectMispredicted     11576014                       # Number of mispredicted indirect branches.
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
+system.cpu.dtb.walker.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.apic_clk_domain.clock                 8000                       # Clock period in ticks
+system.cpu.interrupts.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
+system.cpu.itb.walker.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.workload.num_syscalls                  551                       # Number of system calls
+system.cpu.pwrStateResidencyTicks::ON    481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                        963915252                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
@@ -594,6 +600,7 @@ system.cpu.cc_regfile_reads                 617820038                       # nu
 system.cpu.cc_regfile_writes                419954937                       # number of cc regfile writes
 system.cpu.misc_regfile_reads              1064369445                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                      1                       # number of misc regfile writes
+system.cpu.dcache.tags.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.dcache.tags.replacements           2545945                       # number of replacements
 system.cpu.dcache.tags.tagsinuse          4088.303608                       # Cycle average of tags in use
 system.cpu.dcache.tags.total_refs           421067815                       # Total number of references to valid blocks.
@@ -611,6 +618,7 @@ system.cpu.dcache.tags.age_task_id_blocks_1024::3         3418                  
 system.cpu.dcache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
 system.cpu.dcache.tags.tag_accesses         851394195                       # Number of tag accesses
 system.cpu.dcache.tags.data_accesses        851394195                       # Number of data accesses
+system.cpu.dcache.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.dcache.ReadReq_hits::cpu.data    272697526                       # number of ReadReq hits
 system.cpu.dcache.ReadReq_hits::total       272697526                       # number of ReadReq hits
 system.cpu.dcache.WriteReq_hits::cpu.data    148366944                       # number of WriteReq hits
@@ -707,6 +715,7 @@ system.cpu.dcache.demand_avg_mshr_miss_latency::cpu.data 22452.333150           
 system.cpu.dcache.demand_avg_mshr_miss_latency::total 22452.333150                       # average overall mshr miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency::cpu.data 22452.333150                       # average overall mshr miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency::total 22452.333150                       # average overall mshr miss latency
+system.cpu.icache.tags.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.icache.tags.replacements              4014                       # number of replacements
 system.cpu.icache.tags.tagsinuse          1083.903563                       # Cycle average of tags in use
 system.cpu.icache.tags.total_refs           216343916                       # Total number of references to valid blocks.
@@ -725,6 +734,7 @@ system.cpu.icache.tags.age_task_id_blocks_1024::4         1566                  
 system.cpu.icache.tags.occ_task_id_percent::1024     0.841797                       # Percentage of cache occupancy per task id
 system.cpu.icache.tags.tag_accesses         432715084                       # Number of tag accesses
 system.cpu.icache.tags.data_accesses        432715084                       # Number of data accesses
+system.cpu.icache.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.icache.ReadReq_hits::cpu.inst    216344175                       # number of ReadReq hits
 system.cpu.icache.ReadReq_hits::total       216344175                       # number of ReadReq hits
 system.cpu.icache.demand_hits::cpu.inst     216344175                       # number of demand (read+write) hits
@@ -799,6 +809,7 @@ system.cpu.icache.demand_avg_mshr_miss_latency::cpu.inst 32980.378890           
 system.cpu.icache.demand_avg_mshr_miss_latency::total 32980.378890                       # average overall mshr miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency::cpu.inst 32980.378890                       # average overall mshr miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency::total 32980.378890                       # average overall mshr miss latency
+system.cpu.l2cache.tags.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.l2cache.tags.replacements           355161                       # number of replacements
 system.cpu.l2cache.tags.tagsinuse        29604.694298                       # Cycle average of tags in use
 system.cpu.l2cache.tags.total_refs            3909300                       # Total number of references to valid blocks.
@@ -821,6 +832,7 @@ system.cpu.l2cache.tags.age_task_id_blocks_1024::4        20752                 
 system.cpu.l2cache.tags.occ_task_id_percent::1024     0.987732                       # Percentage of cache occupancy per task id
 system.cpu.l2cache.tags.tag_accesses         41979246                       # Number of tag accesses
 system.cpu.l2cache.tags.data_accesses        41979246                       # Number of data accesses
+system.cpu.l2cache.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.l2cache.WritebackDirty_hits::writebacks      2337968                       # number of WritebackDirty hits
 system.cpu.l2cache.WritebackDirty_hits::total      2337968                       # number of WritebackDirty hits
 system.cpu.l2cache.WritebackClean_hits::writebacks         3923                       # number of WritebackClean hits
@@ -987,6 +999,7 @@ system.cpu.toL2Bus.snoop_filter.hit_multi_requests         8246                 
 system.cpu.toL2Bus.snoop_filter.tot_snoops         2834                       # Total number of snoops made to the snoop filter.
 system.cpu.toL2Bus.snoop_filter.hit_single_snoops         2829                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.cpu.toL2Bus.snoop_filter.hit_multi_snoops            5                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.cpu.toL2Bus.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.cpu.toL2Bus.trans_dist::ReadResp       1773348                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WritebackDirty      2632888                       # Transaction distribution
 system.cpu.toL2Bus.trans_dist::WritebackClean         4014                       # Transaction distribution
@@ -1021,6 +1034,7 @@ system.cpu.toL2Bus.respLayer0.occupancy      11087994                       # La
 system.cpu.toL2Bus.respLayer0.utilization          0.0                       # Layer utilization (%)
 system.cpu.toL2Bus.respLayer1.occupancy    3825891006                       # Layer occupancy (ticks)
 system.cpu.toL2Bus.respLayer1.utilization          0.8                       # Layer utilization (%)
+system.membus.pwrStateResidencyTicks::UNDEFINED 481957625500                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadResp             180179                       # Transaction distribution
 system.membus.trans_dist::WritebackDirty       294920                       # Transaction distribution
 system.membus.trans_dist::CleanEvict            57436                       # Transaction distribution

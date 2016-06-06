@@ -4,11 +4,12 @@ sim_seconds                                  0.000500                       # Nu
 sim_ticks                                   500337000                       # Number of ticks simulated
 final_tick                                  500337000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                               90464630                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 231728                       # Number of bytes of host memory used
-host_seconds                                     5.53                       # Real time elapsed on the host
+host_tick_rate                              117513072                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 278328                       # Number of bytes of host memory used
+host_seconds                                     4.26                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::cpu0                 75919                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu1                 81043                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu2                 80577                       # Number of bytes read from this memory
@@ -76,9 +77,12 @@ system.physmem.bw_total::cpu5               163601732                       # To
 system.physmem.bw_total::cpu6               177978043                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu7               166783588                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total             2162126727                       # Total bandwidth to/from this memory (bytes/s)
+system.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
+system.cpu0.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu0.num_reads                           99905                       # number of read accesses completed
 system.cpu0.num_writes                          55400                       # number of write accesses completed
+system.cpu0.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu0.l1c.tags.replacements               22463                       # number of replacements
 system.cpu0.l1c.tags.tagsinuse             391.153981                       # Cycle average of tags in use
 system.cpu0.l1c.tags.total_refs                 13877                       # Total number of references to valid blocks.
@@ -94,6 +98,7 @@ system.cpu0.l1c.tags.age_task_id_blocks_1024::1           10                    
 system.cpu0.l1c.tags.occ_task_id_percent::1024     0.779297                       # Percentage of cache occupancy per task id
 system.cpu0.l1c.tags.tag_accesses              340651                       # Number of tag accesses
 system.cpu0.l1c.tags.data_accesses             340651                       # Number of data accesses
+system.cpu0.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu0.l1c.ReadReq_hits::cpu0               8894                       # number of ReadReq hits
 system.cpu0.l1c.ReadReq_hits::total              8894                       # number of ReadReq hits
 system.cpu0.l1c.WriteReq_hits::cpu0              1261                       # number of WriteReq hits
@@ -196,8 +201,10 @@ system.cpu0.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu0 75003.675562         
 system.cpu0.l1c.ReadReq_avg_mshr_uncacheable_latency::total 75003.675562                       # average ReadReq mshr uncacheable latency
 system.cpu0.l1c.overall_avg_mshr_uncacheable_latency::cpu0 48257.334148                       # average overall mshr uncacheable latency
 system.cpu0.l1c.overall_avg_mshr_uncacheable_latency::total 48257.334148                       # average overall mshr uncacheable latency
+system.cpu1.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu1.num_reads                           99552                       # number of read accesses completed
 system.cpu1.num_writes                          55243                       # number of write accesses completed
+system.cpu1.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu1.l1c.tags.replacements               22440                       # number of replacements
 system.cpu1.l1c.tags.tagsinuse             392.475962                       # Cycle average of tags in use
 system.cpu1.l1c.tags.total_refs                 13641                       # Total number of references to valid blocks.
@@ -213,6 +220,7 @@ system.cpu1.l1c.tags.age_task_id_blocks_1024::1           12                    
 system.cpu1.l1c.tags.occ_task_id_percent::1024     0.802734                       # Percentage of cache occupancy per task id
 system.cpu1.l1c.tags.tag_accesses              339640                       # Number of tag accesses
 system.cpu1.l1c.tags.data_accesses             339640                       # Number of data accesses
+system.cpu1.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu1.l1c.ReadReq_hits::cpu1               8906                       # number of ReadReq hits
 system.cpu1.l1c.ReadReq_hits::total              8906                       # number of ReadReq hits
 system.cpu1.l1c.WriteReq_hits::cpu1              1136                       # number of WriteReq hits
@@ -315,8 +323,10 @@ system.cpu1.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu1 74878.985934         
 system.cpu1.l1c.ReadReq_avg_mshr_uncacheable_latency::total 74878.985934                       # average ReadReq mshr uncacheable latency
 system.cpu1.l1c.overall_avg_mshr_uncacheable_latency::cpu1 48081.532234                       # average overall mshr uncacheable latency
 system.cpu1.l1c.overall_avg_mshr_uncacheable_latency::total 48081.532234                       # average overall mshr uncacheable latency
+system.cpu2.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu2.num_reads                          100001                       # number of read accesses completed
 system.cpu2.num_writes                          55556                       # number of write accesses completed
+system.cpu2.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu2.l1c.tags.replacements               22129                       # number of replacements
 system.cpu2.l1c.tags.tagsinuse             390.469202                       # Cycle average of tags in use
 system.cpu2.l1c.tags.total_refs                 13617                       # Total number of references to valid blocks.
@@ -332,6 +342,7 @@ system.cpu2.l1c.tags.age_task_id_blocks_1024::1            8                    
 system.cpu2.l1c.tags.occ_task_id_percent::1024     0.777344                       # Percentage of cache occupancy per task id
 system.cpu2.l1c.tags.tag_accesses              339163                       # Number of tag accesses
 system.cpu2.l1c.tags.data_accesses             339163                       # Number of data accesses
+system.cpu2.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu2.l1c.ReadReq_hits::cpu2               8741                       # number of ReadReq hits
 system.cpu2.l1c.ReadReq_hits::total              8741                       # number of ReadReq hits
 system.cpu2.l1c.WriteReq_hits::cpu2              1177                       # number of WriteReq hits
@@ -434,8 +445,10 @@ system.cpu2.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu2 74755.242364         
 system.cpu2.l1c.ReadReq_avg_mshr_uncacheable_latency::total 74755.242364                       # average ReadReq mshr uncacheable latency
 system.cpu2.l1c.overall_avg_mshr_uncacheable_latency::cpu2 48431.812549                       # average overall mshr uncacheable latency
 system.cpu2.l1c.overall_avg_mshr_uncacheable_latency::total 48431.812549                       # average overall mshr uncacheable latency
+system.cpu3.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu3.num_reads                           99831                       # number of read accesses completed
 system.cpu3.num_writes                          55461                       # number of write accesses completed
+system.cpu3.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu3.l1c.tags.replacements               22291                       # number of replacements
 system.cpu3.l1c.tags.tagsinuse             391.006782                       # Cycle average of tags in use
 system.cpu3.l1c.tags.total_refs                 13350                       # Total number of references to valid blocks.
@@ -451,6 +464,7 @@ system.cpu3.l1c.tags.age_task_id_blocks_1024::1           11                    
 system.cpu3.l1c.tags.occ_task_id_percent::1024     0.761719                       # Percentage of cache occupancy per task id
 system.cpu3.l1c.tags.tag_accesses              338050                       # Number of tag accesses
 system.cpu3.l1c.tags.data_accesses             338050                       # Number of data accesses
+system.cpu3.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu3.l1c.ReadReq_hits::cpu3               8529                       # number of ReadReq hits
 system.cpu3.l1c.ReadReq_hits::total              8529                       # number of ReadReq hits
 system.cpu3.l1c.WriteReq_hits::cpu3              1176                       # number of WriteReq hits
@@ -553,8 +567,10 @@ system.cpu3.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu3 75018.386537         
 system.cpu3.l1c.ReadReq_avg_mshr_uncacheable_latency::total 75018.386537                       # average ReadReq mshr uncacheable latency
 system.cpu3.l1c.overall_avg_mshr_uncacheable_latency::cpu3 47881.283715                       # average overall mshr uncacheable latency
 system.cpu3.l1c.overall_avg_mshr_uncacheable_latency::total 47881.283715                       # average overall mshr uncacheable latency
+system.cpu4.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu4.num_reads                           99911                       # number of read accesses completed
 system.cpu4.num_writes                          55300                       # number of write accesses completed
+system.cpu4.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu4.l1c.tags.replacements               22364                       # number of replacements
 system.cpu4.l1c.tags.tagsinuse             391.705900                       # Cycle average of tags in use
 system.cpu4.l1c.tags.total_refs                 13535                       # Total number of references to valid blocks.
@@ -570,6 +586,7 @@ system.cpu4.l1c.tags.age_task_id_blocks_1024::1            8                    
 system.cpu4.l1c.tags.occ_task_id_percent::1024     0.798828                       # Percentage of cache occupancy per task id
 system.cpu4.l1c.tags.tag_accesses              339861                       # Number of tag accesses
 system.cpu4.l1c.tags.data_accesses             339861                       # Number of data accesses
+system.cpu4.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu4.l1c.ReadReq_hits::cpu4               8886                       # number of ReadReq hits
 system.cpu4.l1c.ReadReq_hits::total              8886                       # number of ReadReq hits
 system.cpu4.l1c.WriteReq_hits::cpu4              1168                       # number of WriteReq hits
@@ -672,8 +689,10 @@ system.cpu4.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu4 74866.678445         
 system.cpu4.l1c.ReadReq_avg_mshr_uncacheable_latency::total 74866.678445                       # average ReadReq mshr uncacheable latency
 system.cpu4.l1c.overall_avg_mshr_uncacheable_latency::cpu4 48019.883304                       # average overall mshr uncacheable latency
 system.cpu4.l1c.overall_avg_mshr_uncacheable_latency::total 48019.883304                       # average overall mshr uncacheable latency
+system.cpu5.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu5.num_reads                           99665                       # number of read accesses completed
 system.cpu5.num_writes                          55439                       # number of write accesses completed
+system.cpu5.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu5.l1c.tags.replacements               22286                       # number of replacements
 system.cpu5.l1c.tags.tagsinuse             391.859990                       # Cycle average of tags in use
 system.cpu5.l1c.tags.total_refs                 13458                       # Total number of references to valid blocks.
@@ -689,6 +708,7 @@ system.cpu5.l1c.tags.age_task_id_blocks_1024::1           10                    
 system.cpu5.l1c.tags.occ_task_id_percent::1024     0.814453                       # Percentage of cache occupancy per task id
 system.cpu5.l1c.tags.tag_accesses              338594                       # Number of tag accesses
 system.cpu5.l1c.tags.data_accesses             338594                       # Number of data accesses
+system.cpu5.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu5.l1c.ReadReq_hits::cpu5               8649                       # number of ReadReq hits
 system.cpu5.l1c.ReadReq_hits::total              8649                       # number of ReadReq hits
 system.cpu5.l1c.WriteReq_hits::cpu5              1196                       # number of WriteReq hits
@@ -791,8 +811,10 @@ system.cpu5.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu5 74875.790313         
 system.cpu5.l1c.ReadReq_avg_mshr_uncacheable_latency::total 74875.790313                       # average ReadReq mshr uncacheable latency
 system.cpu5.l1c.overall_avg_mshr_uncacheable_latency::cpu5 48305.389102                       # average overall mshr uncacheable latency
 system.cpu5.l1c.overall_avg_mshr_uncacheable_latency::total 48305.389102                       # average overall mshr uncacheable latency
+system.cpu6.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu6.num_reads                           99712                       # number of read accesses completed
 system.cpu6.num_writes                          55282                       # number of write accesses completed
+system.cpu6.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu6.l1c.tags.replacements               22239                       # number of replacements
 system.cpu6.l1c.tags.tagsinuse             392.046110                       # Cycle average of tags in use
 system.cpu6.l1c.tags.total_refs                 13503                       # Total number of references to valid blocks.
@@ -808,6 +830,7 @@ system.cpu6.l1c.tags.age_task_id_blocks_1024::1           16                    
 system.cpu6.l1c.tags.occ_task_id_percent::1024     0.777344                       # Percentage of cache occupancy per task id
 system.cpu6.l1c.tags.tag_accesses              338073                       # Number of tag accesses
 system.cpu6.l1c.tags.data_accesses             338073                       # Number of data accesses
+system.cpu6.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu6.l1c.ReadReq_hits::cpu6               8758                       # number of ReadReq hits
 system.cpu6.l1c.ReadReq_hits::total              8758                       # number of ReadReq hits
 system.cpu6.l1c.WriteReq_hits::cpu6              1067                       # number of WriteReq hits
@@ -910,8 +933,10 @@ system.cpu6.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu6 74822.857824         
 system.cpu6.l1c.ReadReq_avg_mshr_uncacheable_latency::total 74822.857824                       # average ReadReq mshr uncacheable latency
 system.cpu6.l1c.overall_avg_mshr_uncacheable_latency::cpu6 47746.599431                       # average overall mshr uncacheable latency
 system.cpu6.l1c.overall_avg_mshr_uncacheable_latency::total 47746.599431                       # average overall mshr uncacheable latency
+system.cpu7.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu7.num_reads                           99031                       # number of read accesses completed
 system.cpu7.num_writes                          54931                       # number of write accesses completed
+system.cpu7.l1c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu7.l1c.tags.replacements               22638                       # number of replacements
 system.cpu7.l1c.tags.tagsinuse             391.993848                       # Cycle average of tags in use
 system.cpu7.l1c.tags.total_refs                 13556                       # Total number of references to valid blocks.
@@ -927,6 +952,7 @@ system.cpu7.l1c.tags.age_task_id_blocks_1024::1           14                    
 system.cpu7.l1c.tags.occ_task_id_percent::1024     0.781250                       # Percentage of cache occupancy per task id
 system.cpu7.l1c.tags.tag_accesses              339734                       # Number of tag accesses
 system.cpu7.l1c.tags.data_accesses             339734                       # Number of data accesses
+system.cpu7.l1c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.cpu7.l1c.ReadReq_hits::cpu7               8818                       # number of ReadReq hits
 system.cpu7.l1c.ReadReq_hits::total              8818                       # number of ReadReq hits
 system.cpu7.l1c.WriteReq_hits::cpu7              1148                       # number of WriteReq hits
@@ -1029,6 +1055,7 @@ system.cpu7.l1c.ReadReq_avg_mshr_uncacheable_latency::cpu7 75003.057084         
 system.cpu7.l1c.ReadReq_avg_mshr_uncacheable_latency::total 75003.057084                       # average ReadReq mshr uncacheable latency
 system.cpu7.l1c.overall_avg_mshr_uncacheable_latency::cpu7 48382.659514                       # average overall mshr uncacheable latency
 system.cpu7.l1c.overall_avg_mshr_uncacheable_latency::total 48382.659514                       # average overall mshr uncacheable latency
+system.l2c.tags.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.l2c.tags.replacements                    13688                       # number of replacements
 system.l2c.tags.tagsinuse                  782.559938                       # Cycle average of tags in use
 system.l2c.tags.total_refs                     164623                       # Total number of references to valid blocks.
@@ -1060,6 +1087,7 @@ system.l2c.tags.age_task_id_blocks_1024::1          126                       # 
 system.l2c.tags.occ_task_id_percent::1024     0.771484                       # Percentage of cache occupancy per task id
 system.l2c.tags.tag_accesses                  2107372                       # Number of tag accesses
 system.l2c.tags.data_accesses                 2107372                       # Number of data accesses
+system.l2c.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.l2c.WritebackDirty_hits::writebacks        77671                       # number of WritebackDirty hits
 system.l2c.WritebackDirty_hits::total           77671                       # number of WritebackDirty hits
 system.l2c.UpgradeReq_hits::cpu0                  272                       # number of UpgradeReq hits
@@ -1628,6 +1656,7 @@ system.l2c.overall_avg_mshr_uncacheable_latency::cpu5 33504.118091              
 system.l2c.overall_avg_mshr_uncacheable_latency::cpu6 33149.271115                       # average overall mshr uncacheable latency
 system.l2c.overall_avg_mshr_uncacheable_latency::cpu7 33500.900238                       # average overall mshr uncacheable latency
 system.l2c.overall_avg_mshr_uncacheable_latency::total 33381.197903                       # average overall mshr uncacheable latency
+system.membus.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq               78773                       # Transaction distribution
 system.membus.trans_dist::ReadResp              84410                       # Transaction distribution
 system.membus.trans_dist::WriteReq              43787                       # Transaction distribution
@@ -1663,6 +1692,7 @@ system.toL2Bus.snoop_filter.hit_multi_requests       332740                     
 system.toL2Bus.snoop_filter.tot_snoops          12293                       # Total number of snoops made to the snoop filter.
 system.toL2Bus.snoop_filter.hit_single_snoops         5765                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.toL2Bus.snoop_filter.hit_multi_snoops         6528                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.toL2Bus.pwrStateResidencyTicks::UNDEFINED    500337000                       # Cumulative time (in ticks) in various power states
 system.toL2Bus.trans_dist::ReadReq              78775                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadResp            371396                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadRespWithInvalidate            3                       # Transaction distribution

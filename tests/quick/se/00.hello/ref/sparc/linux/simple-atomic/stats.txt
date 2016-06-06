@@ -4,15 +4,16 @@ sim_seconds                                  0.000003                       # Nu
 sim_ticks                                     2694500                       # Number of ticks simulated
 final_tick                                    2694500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 633206                       # Simulator instruction rate (inst/s)
-host_op_rate                                   631372                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              318532177                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 236156                       # Number of bytes of host memory used
+host_inst_rate                                 770174                       # Simulator instruction rate (inst/s)
+host_op_rate                                   769174                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              388618840                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 281084                       # Number of bytes of host memory used
 host_seconds                                     0.01                       # Real time elapsed on the host
 sim_insts                                        5327                       # Number of instructions simulated
 sim_ops                                          5327                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED      2694500                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::cpu.inst             21480                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu.data              4602                       # Number of bytes read from this memory
 system.physmem.bytes_read::total                26082                       # Number of bytes read from this memory
@@ -35,8 +36,10 @@ system.physmem.bw_write::total             1879755057                       # Wr
 system.physmem.bw_total::cpu.inst          7971794396                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::cpu.data          3587678605                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem.bw_total::total            11559473001                       # Total bandwidth to/from this memory (bytes/s)
+system.pwrStateResidencyTicks::UNDEFINED      2694500                       # Cumulative time (in ticks) in various power states
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
+system.cpu.pwrStateResidencyTicks::ON         2694500                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                             5390                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
@@ -95,6 +98,7 @@ system.cpu.op_class::MemWrite                     678     12.63%    100.00% # Cl
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::total                       5370                       # Class of executed instruction
+system.membus.pwrStateResidencyTicks::UNDEFINED      2694500                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq                6085                       # Transaction distribution
 system.membus.trans_dist::ReadResp               6085                       # Transaction distribution
 system.membus.trans_dist::WriteReq                673                       # Transaction distribution

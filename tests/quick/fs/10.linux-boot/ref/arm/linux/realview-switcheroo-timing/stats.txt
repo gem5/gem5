@@ -4,15 +4,16 @@ sim_seconds                                  2.903880                       # Nu
 sim_ticks                                2903879904500                       # Number of ticks simulated
 final_tick                               2903879904500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1077958                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1299696                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            27831365956                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 624164                       # Number of bytes of host memory used
-host_seconds                                   104.34                       # Real time elapsed on the host
+host_inst_rate                                 952808                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1148802                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            24600165137                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 624836                       # Number of bytes of host memory used
+host_seconds                                   118.04                       # Real time elapsed on the host
 sim_insts                                   112472358                       # Number of instructions simulated
 sim_ops                                     135608167                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::cpu0.dtb.walker          192                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.itb.walker           64                       # Number of bytes read from this memory
 system.physmem.bytes_read::cpu0.inst           557092                       # Number of bytes read from this memory
@@ -341,6 +342,7 @@ system.physmem_1.memoryStateTime::REF     96966740000                       # Ti
 system.physmem_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT     33450042500                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.realview.nvmem.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.realview.nvmem.bytes_read::cpu0.inst           20                       # Number of bytes read from this memory
 system.realview.nvmem.bytes_read::total            20                       # Number of bytes read from this memory
 system.realview.nvmem.bytes_inst_read::cpu0.inst           20                       # Number of instructions bytes read from this memory
@@ -353,6 +355,9 @@ system.realview.nvmem.bw_inst_read::cpu0.inst            7                      
 system.realview.nvmem.bw_inst_read::total            7                       # Instruction read bandwidth from this memory (bytes/s)
 system.realview.nvmem.bw_total::cpu0.inst            7                       # Total bandwidth to/from this memory (bytes/s)
 system.realview.nvmem.bw_total::total               7                       # Total bandwidth to/from this memory (bytes/s)
+system.realview.vram.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.bridge.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cf0.dma_read_full_pages                      0                       # Number of full page size DMA reads (not PRD).
 system.cf0.dma_read_bytes                        1024                       # Number of bytes transfered via DMA reads (not PRD).
 system.cf0.dma_read_txs                             1                       # Number of DMA read transactions (not PRD).
@@ -360,6 +365,7 @@ system.cf0.dma_write_full_pages                   540                       # Nu
 system.cf0.dma_write_bytes                    2318336                       # Number of bytes transfered via DMA writes.
 system.cf0.dma_write_txs                          631                       # Number of DMA write transactions.
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
+system.cpu0.dstage2_mmu.stage2_tlb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.dstage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
 system.cpu0.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
 system.cpu0.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
@@ -389,6 +395,7 @@ system.cpu0.dstage2_mmu.stage2_tlb.inst_accesses            0                   
 system.cpu0.dstage2_mmu.stage2_tlb.hits             0                       # DTB hits
 system.cpu0.dstage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu0.dstage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu0.dtb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.dtb.walker.walks                     6844                       # Table walker walks requested
 system.cpu0.dtb.walker.walksShort                6844                       # Table walker walks initiated with short descriptors
 system.cpu0.dtb.walker.walksShortTerminationLevel::Level1         2237                       # Level at which table walker walks with short descriptors terminate
@@ -440,6 +447,7 @@ system.cpu0.dtb.inst_accesses                       0                       # IT
 system.cpu0.dtb.hits                         21854325                       # DTB hits
 system.cpu0.dtb.misses                           6844                       # DTB misses
 system.cpu0.dtb.accesses                     21861169                       # DTB accesses
+system.cpu0.istage2_mmu.stage2_tlb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.istage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
 system.cpu0.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
 system.cpu0.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
@@ -469,6 +477,7 @@ system.cpu0.istage2_mmu.stage2_tlb.inst_accesses            0                   
 system.cpu0.istage2_mmu.stage2_tlb.hits             0                       # DTB hits
 system.cpu0.istage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu0.istage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu0.itb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.itb.walker.walks                     3527                       # Table walker walks requested
 system.cpu0.itb.walker.walksShort                3527                       # Table walker walks initiated with short descriptors
 system.cpu0.itb.walker.walksShortTerminationLevel::Level1          843                       # Level at which table walker walks with short descriptors terminate
@@ -520,6 +529,20 @@ system.cpu0.itb.inst_accesses                57470097                       # IT
 system.cpu0.itb.hits                         57466570                       # DTB hits
 system.cpu0.itb.misses                           3527                       # DTB misses
 system.cpu0.itb.accesses                     57470097                       # DTB accesses
+system.cpu0.numPwrStateTransitions               3088                       # Number of power state transitions
+system.cpu0.pwrStateClkGateDist::samples         1544                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::mean    1559165456.796632                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::stdev   23913437415.201466                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::underflows         1498     97.02%     97.02% # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::1000-5e+10           41      2.66%     99.68% # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::2e+11-2.5e+11            1      0.06%     99.74% # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::2.5e+11-3e+11            1      0.06%     99.81% # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::4.5e+11-5e+11            3      0.19%    100.00% # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::min_value            1                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::max_value 499963862372                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::total           1544                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateResidencyTicks::ON   496528439206                       # Cumulative time (in ticks) in various power states
+system.cpu0.pwrStateResidencyTicks::CLK_GATED 2407351465294                       # Cumulative time (in ticks) in various power states
 system.cpu0.numCycles                      2904046767                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
@@ -582,6 +605,7 @@ system.cpu0.op_class::MemWrite               10143442     14.73%    100.00% # Cl
 system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                  68839780                       # Class of executed instruction
+system.cpu0.dcache.tags.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.dcache.tags.replacements           819212                       # number of replacements
 system.cpu0.dcache.tags.tagsinuse          511.827217                       # Cycle average of tags in use
 system.cpu0.dcache.tags.total_refs           43241768                       # Total number of references to valid blocks.
@@ -601,6 +625,7 @@ system.cpu0.dcache.tags.age_task_id_blocks_1024::3            2                 
 system.cpu0.dcache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
 system.cpu0.dcache.tags.tag_accesses        177132717                       # Number of tag accesses
 system.cpu0.dcache.tags.data_accesses       177132717                       # Number of data accesses
+system.cpu0.dcache.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.dcache.ReadReq_hits::cpu0.data     11490299                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::cpu1.data     11626240                       # number of ReadReq hits
 system.cpu0.dcache.ReadReq_hits::total       23116539                       # number of ReadReq hits
@@ -840,6 +865,7 @@ system.cpu0.dcache.ReadReq_avg_mshr_uncacheable_latency::total 201722.220438    
 system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu0.data 95931.651267                       # average overall mshr uncacheable latency
 system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::cpu1.data 118119.739548                       # average overall mshr uncacheable latency
 system.cpu0.dcache.overall_avg_mshr_uncacheable_latency::total 106956.365896                       # average overall mshr uncacheable latency
+system.cpu0.icache.tags.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.icache.tags.replacements          1697986                       # number of replacements
 system.cpu0.icache.tags.tagsinuse          510.728403                       # Cycle average of tags in use
 system.cpu0.icache.tags.total_refs          113871932                       # Total number of references to valid blocks.
@@ -859,6 +885,7 @@ system.cpu0.icache.tags.age_task_id_blocks_1024::3            5                 
 system.cpu0.icache.tags.occ_task_id_percent::1024            1                       # Percentage of cache occupancy per task id
 system.cpu0.icache.tags.tag_accesses        117268940                       # Number of tag accesses
 system.cpu0.icache.tags.data_accesses       117268940                       # Number of data accesses
+system.cpu0.icache.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu0.icache.ReadReq_hits::cpu0.inst     56612158                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::cpu1.inst     57259774                       # number of ReadReq hits
 system.cpu0.icache.ReadReq_hits::total      113871932                       # number of ReadReq hits
@@ -969,6 +996,7 @@ system.cpu0.icache.ReadReq_avg_mshr_uncacheable_latency::cpu0.inst 76179.006872 
 system.cpu0.icache.ReadReq_avg_mshr_uncacheable_latency::total 76179.006872                       # average ReadReq mshr uncacheable latency
 system.cpu0.icache.overall_avg_mshr_uncacheable_latency::cpu0.inst 76179.006872                       # average overall mshr uncacheable latency
 system.cpu0.icache.overall_avg_mshr_uncacheable_latency::total 76179.006872                       # average overall mshr uncacheable latency
+system.cpu1.dstage2_mmu.stage2_tlb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu1.dstage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
 system.cpu1.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
 system.cpu1.dstage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
@@ -998,6 +1026,7 @@ system.cpu1.dstage2_mmu.stage2_tlb.inst_accesses            0                   
 system.cpu1.dstage2_mmu.stage2_tlb.hits             0                       # DTB hits
 system.cpu1.dstage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu1.dstage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu1.dtb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu1.dtb.walker.walks                     6555                       # Table walker walks requested
 system.cpu1.dtb.walker.walksShort                6555                       # Table walker walks initiated with short descriptors
 system.cpu1.dtb.walker.walksShortTerminationLevel::Level1         1891                       # Level at which table walker walks with short descriptors terminate
@@ -1053,6 +1082,7 @@ system.cpu1.dtb.inst_accesses                       0                       # IT
 system.cpu1.dtb.hits                         22278160                       # DTB hits
 system.cpu1.dtb.misses                           6555                       # DTB misses
 system.cpu1.dtb.accesses                     22284715                       # DTB accesses
+system.cpu1.istage2_mmu.stage2_tlb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu1.istage2_mmu.stage2_tlb.walker.walks            0                       # Table walker walks requested
 system.cpu1.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Data            0                       # Table walker requests started/completed, data/inst
 system.cpu1.istage2_mmu.stage2_tlb.walker.walkRequestOrigin_Requested::Inst            0                       # Table walker requests started/completed, data/inst
@@ -1082,6 +1112,7 @@ system.cpu1.istage2_mmu.stage2_tlb.inst_accesses            0                   
 system.cpu1.istage2_mmu.stage2_tlb.hits             0                       # DTB hits
 system.cpu1.istage2_mmu.stage2_tlb.misses            0                       # DTB misses
 system.cpu1.istage2_mmu.stage2_tlb.accesses            0                       # DTB accesses
+system.cpu1.itb.walker.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.cpu1.itb.walker.walks                     3197                       # Table walker walks requested
 system.cpu1.itb.walker.walksShort                3197                       # Table walker walks initiated with short descriptors
 system.cpu1.itb.walker.walksShortTerminationLevel::Level1          694                       # Level at which table walker walks with short descriptors terminate
@@ -1133,6 +1164,20 @@ system.cpu1.itb.inst_accesses                58107063                       # IT
 system.cpu1.itb.hits                         58103866                       # DTB hits
 system.cpu1.itb.misses                           3197                       # DTB misses
 system.cpu1.itb.accesses                     58107063                       # DTB accesses
+system.cpu1.numPwrStateTransitions               2958                       # Number of power state transitions
+system.cpu1.pwrStateClkGateDist::samples         1479                       # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::mean    1717670727.160244                       # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::stdev   49232811122.635986                       # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::underflows         1466     99.12%     99.12% # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::1000-5e+10           10      0.68%     99.80% # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::1.5e+11-2e+11            1      0.07%     99.86% # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::5.5e+11-6e+11            1      0.07%     99.93% # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::overflows            1      0.07%    100.00% # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::min_value            1                       # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::max_value 1799694071001                       # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateClkGateDist::total           1479                       # Distribution of time spent in the clock gated state
+system.cpu1.pwrStateResidencyTicks::ON   363444899030                       # Cumulative time (in ticks) in various power states
+system.cpu1.pwrStateResidencyTicks::CLK_GATED 2540435005470                       # Cumulative time (in ticks) in various power states
 system.cpu1.numCycles                      2903713042                       # number of cpu cycles simulated
 system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
@@ -1195,6 +1240,7 @@ system.cpu1.op_class::MemWrite               10423128     14.91%    100.00% # Cl
 system.cpu1.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::total                  69889494                       # Class of executed instruction
+system.iobus.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.iobus.trans_dist::ReadReq                30183                       # Transaction distribution
 system.iobus.trans_dist::ReadResp               30183                       # Transaction distribution
 system.iobus.trans_dist::WriteReq               59014                       # Transaction distribution
@@ -1289,6 +1335,7 @@ system.iobus.respLayer0.occupancy            82688000                       # La
 system.iobus.respLayer0.utilization               0.0                       # Layer utilization (%)
 system.iobus.respLayer3.occupancy            36740000                       # Layer occupancy (ticks)
 system.iobus.respLayer3.utilization               0.0                       # Layer utilization (%)
+system.iocache.tags.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.iocache.tags.replacements                36424                       # number of replacements
 system.iocache.tags.tagsinuse                1.079319                       # Cycle average of tags in use
 system.iocache.tags.total_refs                      0                       # Total number of references to valid blocks.
@@ -1303,6 +1350,7 @@ system.iocache.tags.age_task_id_blocks_1023::3           16                     
 system.iocache.tags.occ_task_id_percent::1023            1                       # Percentage of cache occupancy per task id
 system.iocache.tags.tag_accesses               328122                       # Number of tag accesses
 system.iocache.tags.data_accesses              328122                       # Number of data accesses
+system.iocache.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.iocache.ReadReq_misses::realview.ide          234                       # number of ReadReq misses
 system.iocache.ReadReq_misses::total              234                       # number of ReadReq misses
 system.iocache.WriteLineReq_misses::realview.ide        36224                       # number of WriteLineReq misses
@@ -1383,6 +1431,7 @@ system.iocache.demand_avg_mshr_miss_latency::realview.ide 68070.398952          
 system.iocache.demand_avg_mshr_miss_latency::total 68070.398952                       # average overall mshr miss latency
 system.iocache.overall_avg_mshr_miss_latency::realview.ide 68070.398952                       # average overall mshr miss latency
 system.iocache.overall_avg_mshr_miss_latency::total 68070.398952                       # average overall mshr miss latency
+system.l2c.tags.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.l2c.tags.replacements                    88930                       # number of replacements
 system.l2c.tags.tagsinuse                64921.564367                       # Cycle average of tags in use
 system.l2c.tags.total_refs                    4554585                       # Total number of references to valid blocks.
@@ -1420,6 +1469,7 @@ system.l2c.tags.occ_task_id_percent::1023     0.000092                       # P
 system.l2c.tags.occ_task_id_percent::1024     0.995682                       # Percentage of cache occupancy per task id
 system.l2c.tags.tag_accesses                 40592424                       # Number of tag accesses
 system.l2c.tags.data_accesses                40592424                       # Number of data accesses
+system.l2c.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.l2c.ReadReq_hits::cpu0.dtb.walker         6056                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu0.itb.walker         3327                       # number of ReadReq hits
 system.l2c.ReadReq_hits::cpu1.dtb.walker         5249                       # number of ReadReq hits
@@ -1837,6 +1887,7 @@ system.membus.snoop_filter.hit_multi_requests          482                      
 system.membus.snoop_filter.tot_snoops               0                       # Total number of snoops made to the snoop filter.
 system.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.membus.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq               40160                       # Transaction distribution
 system.membus.trans_dist::ReadResp              70472                       # Transaction distribution
 system.membus.trans_dist::WriteReq              27589                       # Transaction distribution
@@ -1890,12 +1941,21 @@ system.membus.respLayer2.occupancy          950845250                       # La
 system.membus.respLayer2.utilization              0.0                       # Layer utilization (%)
 system.membus.respLayer3.occupancy            1219623                       # Layer occupancy (ticks)
 system.membus.respLayer3.utilization              0.0                       # Layer utilization (%)
+system.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.aaci_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.pci_host.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.cf_ctrl.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.gic.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.clcd.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.realview_io.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.realview.dcc.osc_cpu.clock               16667                       # Clock period in ticks
 system.realview.dcc.osc_ddr.clock               25000                       # Clock period in ticks
 system.realview.dcc.osc_hsbm.clock              25000                       # Clock period in ticks
 system.realview.dcc.osc_pxl.clock               42105                       # Clock period in ticks
 system.realview.dcc.osc_smb.clock               20000                       # Clock period in ticks
 system.realview.dcc.osc_sys.clock               16667                       # Clock period in ticks
+system.realview.energy_ctrl.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.ethernet.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.realview.ethernet.descDMAReads               0                       # Number of descriptors the device read w/ DMA
 system.realview.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
 system.realview.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
@@ -1927,16 +1987,36 @@ system.realview.ethernet.totalRxOrn                 0                       # to
 system.realview.ethernet.coalescedTotal           nan                       # average number of interrupts coalesced into each post
 system.realview.ethernet.postedInterrupts            0                       # number of posts to CPU
 system.realview.ethernet.droppedPackets             0                       # number of packets dropped
+system.realview.hdlcd.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.ide.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.kmi0.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.kmi1.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.l2x0_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.lan_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.local_cpu_timer.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.realview.mcc.osc_clcd.clock              42105                       # Clock period in ticks
 system.realview.mcc.osc_mcc.clock               20000                       # Clock period in ticks
 system.realview.mcc.osc_peripheral.clock        41667                       # Clock period in ticks
 system.realview.mcc.osc_system_bus.clock        41667                       # Clock period in ticks
+system.realview.mmc_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.rtc.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.sp810_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.timer0.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.timer1.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.uart.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.uart1_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.uart2_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.uart3_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.usb_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.vgic.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
+system.realview.watchdog_fake.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.toL2Bus.snoop_filter.tot_requests      5058603                       # Total number of requests made to the snoop filter.
 system.toL2Bus.snoop_filter.hit_single_requests      2540370                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
 system.toL2Bus.snoop_filter.hit_multi_requests        38310                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.toL2Bus.snoop_filter.tot_snoops            250                       # Total number of snoops made to the snoop filter.
 system.toL2Bus.snoop_filter.hit_single_snoops          250                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.toL2Bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.toL2Bus.pwrStateResidencyTicks::UNDEFINED 2903879904500                       # Cumulative time (in ticks) in various power states
 system.toL2Bus.trans_dist::ReadReq              74739                       # Transaction distribution
 system.toL2Bus.trans_dist::ReadResp           2297326                       # Transaction distribution
 system.toL2Bus.trans_dist::WriteReq             27589                       # Transaction distribution

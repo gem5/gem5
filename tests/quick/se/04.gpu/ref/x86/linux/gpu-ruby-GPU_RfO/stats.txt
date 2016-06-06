@@ -4,15 +4,16 @@ sim_seconds                                  0.000663                       # Nu
 sim_ticks                                   663454500                       # Number of ticks simulated
 final_tick                                  663454500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 153021                       # Simulator instruction rate (inst/s)
-host_op_rate                                   314663                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1515963159                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1308268                       # Number of bytes of host memory used
-host_seconds                                     0.44                       # Real time elapsed on the host
+host_inst_rate                                 237471                       # Simulator instruction rate (inst/s)
+host_op_rate                                   488329                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2352682974                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1358064                       # Number of bytes of host memory used
+host_seconds                                     0.28                       # Real time elapsed on the host
 sim_insts                                       66963                       # Number of instructions simulated
 sim_ops                                        137705                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.mem_ctrls.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.mem_ctrls.bytes_read::dir_cntrl0         99264                       # Number of bytes read from this memory
 system.mem_ctrls.bytes_read::total              99264                       # Number of bytes read from this memory
 system.mem_ctrls.num_reads::dir_cntrl0           1551                       # Number of read requests responded to by this memory
@@ -243,6 +244,7 @@ system.mem_ctrls_1.memoryStateTime::PRE_PDN            0                       #
 system.mem_ctrls_1.memoryStateTime::ACT     524145250                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
 system.ruby.clk_domain.clock                      500                       # Clock period in ticks
+system.ruby.phys_mem.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.phys_mem.bytes_read::cpu0.inst       696760                       # Number of bytes read from this memory
 system.ruby.phys_mem.bytes_read::cpu0.data       119832                       # Number of bytes read from this memory
 system.ruby.phys_mem.bytes_read::cpu1.CUs0.ComputeUnit         3280                       # Number of bytes read from this memory
@@ -283,6 +285,8 @@ system.ruby.phys_mem.bw_total::cpu0.data    290297225                       # To
 system.ruby.phys_mem.bw_total::cpu1.CUs0.ComputeUnit      5329680                       # Total bandwidth to/from this memory (bytes/s)
 system.ruby.phys_mem.bw_total::cpu1.CUs1.ComputeUnit      5329680                       # Total bandwidth to/from this memory (bytes/s)
 system.ruby.phys_mem.bw_total::total       1351156711                       # Total bandwidth to/from this memory (bytes/s)
+system.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.ruby.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.outstanding_req_hist_seqr::bucket_size            1                      
 system.ruby.outstanding_req_hist_seqr::max_bucket            9                      
 system.ruby.outstanding_req_hist_seqr::samples       114203                      
@@ -365,9 +369,24 @@ system.cp_cntrl0.L2cache.num_data_array_reads          120                      
 system.cp_cntrl0.L2cache.num_data_array_writes        11982                       # number of data array writes
 system.cp_cntrl0.L2cache.num_tag_array_reads        12059                       # number of tag array reads
 system.cp_cntrl0.L2cache.num_tag_array_writes         1649                       # number of tag array writes
+system.cp_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.cp_cntrl0.sequencer1.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.cp_cntrl0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu0.clk_domain.clock                      500                       # Clock period in ticks
+system.cpu0.dtb.walker.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu0.apic_clk_domain.clock                8000                       # Clock period in ticks
+system.cpu0.interrupts.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.cpu0.itb.walker.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu0.workload.num_syscalls                  21                       # Number of system calls
+system.cpu0.numPwrStateTransitions                  2                       # Number of power state transitions
+system.cpu0.pwrStateClkGateDist::samples            1                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::mean         2615501                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::1000-5e+10            1    100.00%    100.00% # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::min_value      2615501                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::max_value      2615501                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateClkGateDist::total              1                       # Distribution of time spent in the clock gated state
+system.cpu0.pwrStateResidencyTicks::ON      660838999                       # Cumulative time (in ticks) in various power states
+system.cpu0.pwrStateResidencyTicks::CLK_GATED      2615501                       # Cumulative time (in ticks) in various power states
 system.cpu0.numCycles                         1326909                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
@@ -430,6 +449,7 @@ system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Cl
 system.cpu0.op_class::total                    137705                       # Class of executed instruction
 system.cpu1.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.cpu1.clk_domain.clock                     1000                       # Clock period in ticks
+system.cpu1.CUs0.localDataStore.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu1.CUs0.wavefronts00.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs0.wavefronts00.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
 system.cpu1.CUs0.wavefronts00.timesBlockedDueRAWDependencies          307                       # number of times the wf's instructions are blocked due to RAW dependencies
@@ -1198,6 +1218,7 @@ system.cpu1.CUs0.wavefronts31.dst_reg_operand_dist::overflows            0      
 system.cpu1.CUs0.wavefronts31.dst_reg_operand_dist::min_value            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs0.wavefronts31.dst_reg_operand_dist::max_value            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs0.wavefronts31.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
+system.cpu1.CUs0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::samples           43                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::mean     5.813953                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs0.FetchStage.inst_fetch_instr_returned::stdev     2.683777                       # For each instruction fetch request recieved record how many instructions you got from it
@@ -1466,6 +1487,7 @@ system.cpu1.CUs0.times_wg_blocked_due_vgpr_alloc            0                   
 system.cpu1.CUs0.num_CAS_ops                        0                       # number of compare and swap operations
 system.cpu1.CUs0.num_failed_CAS_ops                 0                       # number of compare and swap operations that failed
 system.cpu1.CUs0.num_completed_wfs                  4                       # number of completed wavefronts
+system.cpu1.CUs1.localDataStore.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu1.CUs1.wavefronts00.timesBlockedDueVrfPortAvail            0                       # number of times instructions are blocked due to VRF port availability
 system.cpu1.CUs1.wavefronts00.timesBlockedDueWAXDependencies            0                       # number of times the wf's instructions are blocked due to WAW or WAR dependencies
 system.cpu1.CUs1.wavefronts00.timesBlockedDueRAWDependencies          401                       # number of times the wf's instructions are blocked due to RAW dependencies
@@ -2234,6 +2256,7 @@ system.cpu1.CUs1.wavefronts31.dst_reg_operand_dist::overflows            0      
 system.cpu1.CUs1.wavefronts31.dst_reg_operand_dist::min_value            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs1.wavefronts31.dst_reg_operand_dist::max_value            0                       # number of executed instructions with N destination register operands
 system.cpu1.CUs1.wavefronts31.dst_reg_operand_dist::total            0                       # number of executed instructions with N destination register operands
+system.cpu1.CUs1.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::samples           43                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::mean     5.813953                       # For each instruction fetch request recieved record how many instructions you got from it
 system.cpu1.CUs1.FetchStage.inst_fetch_instr_returned::stdev     2.683777                       # For each instruction fetch request recieved record how many instructions you got from it
@@ -2502,6 +2525,9 @@ system.cpu1.CUs1.times_wg_blocked_due_vgpr_alloc            0                   
 system.cpu1.CUs1.num_CAS_ops                        0                       # number of compare and swap operations
 system.cpu1.CUs1.num_failed_CAS_ops                 0                       # number of compare and swap operations that failed
 system.cpu1.CUs1.num_completed_wfs                  4                       # number of completed wavefronts
+system.cpu1.CUs0.ldsBus.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.cpu1.CUs1.ldsBus.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.cpu2.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.cpu2.num_kernel_launched                     1                       # number of kernel launched
 system.dir_cntrl0.L3CacheMemory.demand_hits            0                       # Number of cache demand hits
 system.dir_cntrl0.L3CacheMemory.demand_misses            0                       # Number of cache demand misses
@@ -2509,8 +2535,10 @@ system.dir_cntrl0.L3CacheMemory.demand_accesses            0                    
 system.dir_cntrl0.L3CacheMemory.num_data_array_writes         1551                       # number of data array writes
 system.dir_cntrl0.L3CacheMemory.num_tag_array_reads         1551                       # number of tag array reads
 system.dir_cntrl0.L3CacheMemory.num_tag_array_writes         1551                       # number of tag array writes
+system.dir_cntrl0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.dispatcher_coalescer.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.dispatcher_coalescer.clk_domain.clock         1000                       # Clock period in ticks
+system.dispatcher_coalescer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.dispatcher_coalescer.uncoalesced_accesses            0                       # Number of uncoalesced TLB accesses
 system.dispatcher_coalescer.coalesced_accesses            0                       # Number of coalesced TLB accesses
 system.dispatcher_coalescer.queuing_cycles            0                       # Number of cycles spent in queue
@@ -2518,6 +2546,7 @@ system.dispatcher_coalescer.local_queuing_cycles            0                   
 system.dispatcher_coalescer.local_latency          nan                       # Avg. latency over all incoming pkts
 system.dispatcher_tlb.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.dispatcher_tlb.clk_domain.clock           1000                       # Clock period in ticks
+system.dispatcher_tlb.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.dispatcher_tlb.local_TLB_accesses            0                       # Number of TLB accesses
 system.dispatcher_tlb.local_TLB_hits                0                       # Number of TLB hits
 system.dispatcher_tlb.local_TLB_misses              0                       # Number of TLB misses
@@ -2534,6 +2563,7 @@ system.dispatcher_tlb.local_latency               nan                       # Av
 system.dispatcher_tlb.avg_reuse_distance            0                       # avg. reuse distance over all pages (in ticks)
 system.l1_coalescer0.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l1_coalescer0.clk_domain.clock            1000                       # Clock period in ticks
+system.l1_coalescer0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l1_coalescer0.uncoalesced_accesses          778                       # Number of uncoalesced TLB accesses
 system.l1_coalescer0.coalesced_accesses             0                       # Number of coalesced TLB accesses
 system.l1_coalescer0.queuing_cycles                 0                       # Number of cycles spent in queue
@@ -2541,6 +2571,7 @@ system.l1_coalescer0.local_queuing_cycles            0                       # N
 system.l1_coalescer0.local_latency                  0                       # Avg. latency over all incoming pkts
 system.l1_coalescer1.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l1_coalescer1.clk_domain.clock            1000                       # Clock period in ticks
+system.l1_coalescer1.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l1_coalescer1.uncoalesced_accesses          769                       # Number of uncoalesced TLB accesses
 system.l1_coalescer1.coalesced_accesses             0                       # Number of coalesced TLB accesses
 system.l1_coalescer1.queuing_cycles                 0                       # Number of cycles spent in queue
@@ -2548,6 +2579,7 @@ system.l1_coalescer1.local_queuing_cycles            0                       # N
 system.l1_coalescer1.local_latency                  0                       # Avg. latency over all incoming pkts
 system.l1_tlb0.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l1_tlb0.clk_domain.clock                  1000                       # Clock period in ticks
+system.l1_tlb0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l1_tlb0.local_TLB_accesses                 778                       # Number of TLB accesses
 system.l1_tlb0.local_TLB_hits                     774                       # Number of TLB hits
 system.l1_tlb0.local_TLB_misses                     4                       # Number of TLB misses
@@ -2564,6 +2596,7 @@ system.l1_tlb0.local_latency                        0                       # Av
 system.l1_tlb0.avg_reuse_distance                   0                       # avg. reuse distance over all pages (in ticks)
 system.l1_tlb1.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l1_tlb1.clk_domain.clock                  1000                       # Clock period in ticks
+system.l1_tlb1.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l1_tlb1.local_TLB_accesses                 769                       # Number of TLB accesses
 system.l1_tlb1.local_TLB_hits                     766                       # Number of TLB hits
 system.l1_tlb1.local_TLB_misses                     3                       # Number of TLB misses
@@ -2580,6 +2613,7 @@ system.l1_tlb1.local_latency                        0                       # Av
 system.l1_tlb1.avg_reuse_distance                   0                       # avg. reuse distance over all pages (in ticks)
 system.l2_coalescer.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l2_coalescer.clk_domain.clock             1000                       # Clock period in ticks
+system.l2_coalescer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l2_coalescer.uncoalesced_accesses            8                       # Number of uncoalesced TLB accesses
 system.l2_coalescer.coalesced_accesses              1                       # Number of coalesced TLB accesses
 system.l2_coalescer.queuing_cycles               8000                       # Number of cycles spent in queue
@@ -2587,6 +2621,7 @@ system.l2_coalescer.local_queuing_cycles         1000                       # Nu
 system.l2_coalescer.local_latency                 125                       # Avg. latency over all incoming pkts
 system.l2_tlb.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l2_tlb.clk_domain.clock                   1000                       # Clock period in ticks
+system.l2_tlb.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l2_tlb.local_TLB_accesses                    8                       # Number of TLB accesses
 system.l2_tlb.local_TLB_hits                        3                       # Number of TLB hits
 system.l2_tlb.local_TLB_misses                      5                       # Number of TLB misses
@@ -2603,6 +2638,7 @@ system.l2_tlb.local_latency               8625.125000                       # Av
 system.l2_tlb.avg_reuse_distance                    0                       # avg. reuse distance over all pages (in ticks)
 system.l3_coalescer.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l3_coalescer.clk_domain.clock             1000                       # Clock period in ticks
+system.l3_coalescer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l3_coalescer.uncoalesced_accesses            5                       # Number of uncoalesced TLB accesses
 system.l3_coalescer.coalesced_accesses              1                       # Number of coalesced TLB accesses
 system.l3_coalescer.queuing_cycles               8000                       # Number of cycles spent in queue
@@ -2610,6 +2646,7 @@ system.l3_coalescer.local_queuing_cycles         1000                       # Nu
 system.l3_coalescer.local_latency                 200                       # Avg. latency over all incoming pkts
 system.l3_tlb.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.l3_tlb.clk_domain.clock                   1000                       # Clock period in ticks
+system.l3_tlb.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.l3_tlb.local_TLB_accesses                    5                       # Number of TLB accesses
 system.l3_tlb.local_TLB_hits                        0                       # Number of TLB hits
 system.l3_tlb.local_TLB_misses                      5                       # Number of TLB misses
@@ -2624,6 +2661,7 @@ system.l3_tlb.unique_pages                          5                       # Nu
 system.l3_tlb.local_cycles                     150000                       # Number of cycles spent in queue for all incoming reqs
 system.l3_tlb.local_latency                     30000                       # Avg. latency over incoming coalesced reqs
 system.l3_tlb.avg_reuse_distance                    0                       # avg. reuse distance over all pages (in ticks)
+system.piobus.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.piobus.trans_dist::WriteReq                 94                       # Transaction distribution
 system.piobus.trans_dist::WriteResp                94                       # Transaction distribution
 system.piobus.pkt_count_system.cp_cntrl0.sequencer.mem-master-port::system.cpu2.pio          188                       # Packet count per connected master and slave (bytes)
@@ -2634,6 +2672,7 @@ system.piobus.reqLayer0.occupancy              188000                       # La
 system.piobus.reqLayer0.utilization               0.0                       # Layer utilization (%)
 system.piobus.respLayer0.occupancy              94000                       # Layer occupancy (ticks)
 system.piobus.respLayer0.utilization              0.0                       # Layer utilization (%)
+system.ruby.network.ext_links0.int_node.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links0.int_node.percent_links_utilized     0.007952                      
 system.ruby.network.ext_links0.int_node.msg_count.Control::0         1551                      
 system.ruby.network.ext_links0.int_node.msg_count.Request_Control::0         1551                      
@@ -2645,6 +2684,7 @@ system.ruby.network.ext_links0.int_node.msg_bytes.Request_Control::0        1240
 system.ruby.network.ext_links0.int_node.msg_bytes.Response_Data::2       112536                      
 system.ruby.network.ext_links0.int_node.msg_bytes.Response_Control::2        12312                      
 system.ruby.network.ext_links0.int_node.msg_bytes.Unblock_Control::4        12408                      
+system.ruby.network.ext_links1.int_node.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links1.int_node.percent_links_utilized     0.009970                      
 system.ruby.network.ext_links1.int_node.msg_count.Control::0           16                      
 system.ruby.network.ext_links1.int_node.msg_count.Request_Control::0         1535                      
@@ -2664,6 +2704,7 @@ system.tcp_cntrl0.L1cache.num_data_array_writes           11                    
 system.tcp_cntrl0.L1cache.num_tag_array_reads           26                       # number of tag array reads
 system.tcp_cntrl0.L1cache.num_tag_array_writes           18                       # number of tag array writes
 system.tcp_cntrl0.L1cache.num_data_array_stalls            2                       # number of stalls caused by data array
+system.tcp_cntrl0.coalescer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl0.coalescer.gpu_tcp_ld_hits            2                       # loads that hit in the TCP
 system.tcp_cntrl0.coalescer.gpu_tcp_ld_transfers            0                       # TCP to TCP load transfers
 system.tcp_cntrl0.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -2680,6 +2721,9 @@ system.tcp_cntrl0.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl0.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl0.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl0.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.ruby.network.ext_links2.int_node.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links2.int_node.percent_links_utilized     0.000721                      
 system.ruby.network.ext_links2.int_node.msg_count.Control::0         1535                      
 system.ruby.network.ext_links2.int_node.msg_count.Control::1           14                      
@@ -2708,6 +2752,7 @@ system.tcp_cntrl1.L1cache.num_tag_array_reads           25                      
 system.tcp_cntrl1.L1cache.num_tag_array_writes           18                       # number of tag array writes
 system.tcp_cntrl1.L1cache.num_tag_array_stalls            2                       # number of stalls caused by tag array
 system.tcp_cntrl1.L1cache.num_data_array_stalls            2                       # number of stalls caused by data array
+system.tcp_cntrl1.coalescer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl1.coalescer.gpu_tcp_ld_hits            3                       # loads that hit in the TCP
 system.tcp_cntrl1.coalescer.gpu_tcp_ld_transfers            2                       # TCP to TCP load transfers
 system.tcp_cntrl1.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -2724,6 +2769,8 @@ system.tcp_cntrl1.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl1.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl1.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl1.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl1.sequencer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl1.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.sqc_cntrl0.L1cache.demand_hits               0                       # Number of cache demand hits
 system.sqc_cntrl0.L1cache.demand_misses             0                       # Number of cache demand misses
 system.sqc_cntrl0.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -2732,15 +2779,20 @@ system.sqc_cntrl0.L1cache.num_data_array_writes            5                    
 system.sqc_cntrl0.L1cache.num_tag_array_reads           86                       # number of tag array reads
 system.sqc_cntrl0.L1cache.num_tag_array_writes            5                       # number of tag array writes
 system.sqc_cntrl0.L1cache.num_data_array_stalls           47                       # number of stalls caused by data array
+system.sqc_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.sqc_cntrl0.sequencer.load_waiting_on_load          120                       # Number of times a load aliased with a pending load
+system.sqc_cntrl0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.tcc_cntrl0.L2cache.demand_hits               0                       # Number of cache demand hits
 system.tcc_cntrl0.L2cache.demand_misses             0                       # Number of cache demand misses
 system.tcc_cntrl0.L2cache.demand_accesses            0                       # Number of cache demand accesses
+system.tcc_cntrl0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.tccdir_cntrl0.directory.demand_hits            0                       # Number of cache demand hits
 system.tccdir_cntrl0.directory.demand_misses            0                       # Number of cache demand misses
 system.tccdir_cntrl0.directory.demand_accesses            0                       # Number of cache demand accesses
 system.tccdir_cntrl0.directory.num_tag_array_reads         1554                       # number of tag array reads
 system.tccdir_cntrl0.directory.num_tag_array_writes           27                       # number of tag array writes
+system.tccdir_cntrl0.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
+system.ruby.network.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.msg_count.Control            3116                      
 system.ruby.network.msg_count.Request_Control         3121                      
 system.ruby.network.msg_count.Response_Data         3159                      
@@ -2753,6 +2805,7 @@ system.ruby.network.msg_byte.Response_Control        24624
 system.ruby.network.msg_byte.Unblock_Control        24968                      
 system.sqc_coalescer.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.sqc_coalescer.clk_domain.clock            1000                       # Clock period in ticks
+system.sqc_coalescer.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.sqc_coalescer.uncoalesced_accesses           86                       # Number of uncoalesced TLB accesses
 system.sqc_coalescer.coalesced_accesses            60                       # Number of coalesced TLB accesses
 system.sqc_coalescer.queuing_cycles            108000                       # Number of cycles spent in queue
@@ -2760,6 +2813,7 @@ system.sqc_coalescer.local_queuing_cycles       108000                       # N
 system.sqc_coalescer.local_latency        1255.813953                       # Avg. latency over all incoming pkts
 system.sqc_tlb.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.sqc_tlb.clk_domain.clock                  1000                       # Clock period in ticks
+system.sqc_tlb.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.sqc_tlb.local_TLB_accesses                  60                       # Number of TLB accesses
 system.sqc_tlb.local_TLB_hits                      59                       # Number of TLB hits
 system.sqc_tlb.local_TLB_misses                     1                       # Number of TLB misses
@@ -2774,6 +2828,7 @@ system.sqc_tlb.unique_pages                         1                       # Nu
 system.sqc_tlb.local_cycles                     60001                       # Number of cycles spent in queue for all incoming reqs
 system.sqc_tlb.local_latency              1000.016667                       # Avg. latency over incoming coalesced reqs
 system.sqc_tlb.avg_reuse_distance                   0                       # avg. reuse distance over all pages (in ticks)
+system.sys_port_proxy.pwrStateResidencyTicks::UNDEFINED    663454500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links0.int_node.throttle0.link_utilization     0.005592                      
 system.ruby.network.ext_links0.int_node.throttle0.msg_count.Request_Control::0         1551                      
 system.ruby.network.ext_links0.int_node.throttle0.msg_count.Response_Data::2           12                      

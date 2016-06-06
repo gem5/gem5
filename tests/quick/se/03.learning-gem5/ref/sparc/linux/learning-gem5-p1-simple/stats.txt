@@ -4,15 +4,16 @@ sim_seconds                                  0.000333                       # Nu
 sim_ticks                                   333033000                       # Number of ticks simulated
 final_tick                                  333033000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 348800                       # Simulator instruction rate (inst/s)
-host_op_rate                                   348537                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            20908249754                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 629116                       # Number of bytes of host memory used
+host_inst_rate                                 352196                       # Simulator instruction rate (inst/s)
+host_op_rate                                   351993                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            21118670028                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 673252                       # Number of bytes of host memory used
 host_seconds                                     0.02                       # Real time elapsed on the host
 sim_insts                                        5548                       # Number of instructions simulated
 sim_ops                                          5548                       # Number of ops (including micro ops) simulated
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.mem_ctrl.pwrStateResidencyTicks::UNDEFINED    333033000                       # Cumulative time (in ticks) in various power states
 system.mem_ctrl.bytes_read::cpu.inst            22364                       # Number of bytes read from this memory
 system.mem_ctrl.bytes_read::cpu.data             4640                       # Number of bytes read from this memory
 system.mem_ctrl.bytes_read::total               27004                       # Number of bytes read from this memory
@@ -271,7 +272,9 @@ system.mem_ctrl_1.memoryStateTime::REF       10920000                       # Ti
 system.mem_ctrl_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.mem_ctrl_1.memoryStateTime::ACT      229634250                       # Time in different power states
 system.mem_ctrl_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.pwrStateResidencyTicks::UNDEFINED    333033000                       # Cumulative time (in ticks) in various power states
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
+system.cpu.pwrStateResidencyTicks::ON       333033000                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                           333033                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
@@ -330,6 +333,7 @@ system.cpu.op_class::MemWrite                     678     12.13%    100.00% # Cl
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::total                       5591                       # Class of executed instruction
+system.membus.pwrStateResidencyTicks::UNDEFINED    333033000                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq                6310                       # Transaction distribution
 system.membus.trans_dist::ReadResp               6309                       # Transaction distribution
 system.membus.trans_dist::WriteReq                673                       # Transaction distribution

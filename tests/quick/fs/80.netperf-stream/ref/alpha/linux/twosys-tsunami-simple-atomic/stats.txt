@@ -4,15 +4,16 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409271000                       # Number of ticks simulated
 final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               17114164                       # Simulator instruction rate (inst/s)
-host_op_rate                                 17114158                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6548224120                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 490760                       # Number of bytes of host memory used
-host_seconds                                    30.61                       # Real time elapsed on the host
+host_inst_rate                               21345619                       # Simulator instruction rate (inst/s)
+host_op_rate                                 21345611                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8167264006                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 541036                       # Number of bytes of host memory used
+host_seconds                                    24.54                       # Real time elapsed on the host
 sim_insts                                   523780905                       # Number of instructions simulated
 sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
 drivesys.clk_domain.clock                        1000                       # Clock period in ticks
+drivesys.physmem.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.physmem.bytes_read::cpu.inst        76205572                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::cpu.data        26284292                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::tsunami.ethernet     57260550                       # Number of bytes read from this memory
@@ -42,6 +43,8 @@ drivesys.physmem.bw_total::cpu.inst         380249734                       # To
 drivesys.physmem.bw_total::cpu.data         204101955                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::tsunami.ethernet    285723379                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::total            870075068                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.bridge.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.cpu.clk_domain.clock                     250                       # Clock period in ticks
 drivesys.cpu.dtb.fetch_hits                         0                       # ITB hits
 drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
@@ -75,6 +78,16 @@ drivesys.cpu.itb.data_hits                          0                       # DT
 drivesys.cpu.itb.data_misses                        0                       # DTB misses
 drivesys.cpu.itb.data_acv                           0                       # DTB access violations
 drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
+drivesys.cpu.numPwrStateTransitions             39752                       # Number of power state transitions
+drivesys.cpu.pwrStateClkGateDist::samples        19877                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::mean   9843365.409770                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::stdev  830979.613808                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::1000-5e+10        19877    100.00%    100.00% # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::min_value        25500                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::max_value      9947500                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::total         19877                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateResidencyTicks::ON    4757933250                       # Cumulative time (in ticks) in various power states
+drivesys.cpu.pwrStateResidencyTicks::CLK_GATED 195656574250                       # Cumulative time (in ticks) in various power states
 drivesys.cpu.numCycles                      801651324                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
@@ -204,6 +217,8 @@ drivesys.disk2.dma_read_txs                         0                       # Nu
 drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
 drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
 drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.iobridge.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.iobus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.iobus.trans_dist::ReadReq            2484469                       # Transaction distribution
 drivesys.iobus.trans_dist::ReadResp           2484469                       # Transaction distribution
 drivesys.iobus.trans_dist::WriteReq             39723                       # Transaction distribution
@@ -220,6 +235,7 @@ drivesys.iobus.pkt_size_drivesys.bridge.master::total       948604              
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size::total               58210218                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.membus.trans_dist::ReadReq          25081955                       # Transaction distribution
 drivesys.membus.trans_dist::ReadResp         25182911                       # Transaction distribution
 drivesys.membus.trans_dist::WriteReq          1963575                       # Transaction distribution
@@ -254,7 +270,12 @@ drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Re
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
 drivesys.membus.snoop_fanout::total          27247410                       # Request fanout histogram
+drivesys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.cchip.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
+drivesys.tsunami.pchip.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.ethernet.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.ethernet.txBytes                 798                       # Bytes Transmitted
 drivesys.tsunami.ethernet.rxBytes                 960                       # Bytes Received
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
@@ -304,8 +325,32 @@ drivesys.tsunami.ethernet.totalRxOrn                0                       # to
 drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
 drivesys.tsunami.ethernet.postedInterrupts      2385831                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
+drivesys.tsunami.fake_OROM.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_ata0.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_ata1.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_addr.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read0.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read1.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read2.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read3.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read4.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read5.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read6.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read7.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_write.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_ppc.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_sm_chip.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart1.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart2.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart3.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart4.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fb.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.ide.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.io.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.uart.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
 testsys.clk_domain.clock                         1000                       # Clock period in ticks
+testsys.physmem.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.physmem.bytes_read::cpu.inst         81044080                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::cpu.data         27825116                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::tsunami.ethernet     57260496                       # Number of bytes read from this memory
@@ -335,6 +380,8 @@ testsys.physmem.bw_total::cpu.inst          404392869                       # To
 testsys.physmem.bw_total::cpu.data          221698925                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::tsunami.ethernet    285722301                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::total             911814095                       # Total bandwidth to/from this memory (bytes/s)
+testsys.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.bridge.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.cpu.clk_domain.clock                      500                       # Clock period in ticks
 testsys.cpu.dtb.fetch_hits                          0                       # ITB hits
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
@@ -368,6 +415,16 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
+testsys.cpu.numPwrStateTransitions              39159                       # Number of power state transitions
+testsys.cpu.pwrStateClkGateDist::samples        19580                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::mean    9718476.378958                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::stdev   783559.874332                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::1000-5e+10        19580    100.00%    100.00% # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::min_value       105000                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::max_value      9815000                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::total          19580                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateResidencyTicks::ON    11102310500                       # Cumulative time (in ticks) in various power states
+testsys.cpu.pwrStateResidencyTicks::CLK_GATED 190287767500                       # Cumulative time (in ticks) in various power states
 testsys.cpu.numCycles                       400825859                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
@@ -507,6 +564,8 @@ testsys.disk2.dma_read_txs                          0                       # Nu
 testsys.disk2.dma_write_full_pages                  0                       # Number of full page size DMA writes.
 testsys.disk2.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
 testsys.disk2.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.iobridge.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.iobus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.iobus.trans_dist::ReadReq             2483943                       # Transaction distribution
 testsys.iobus.trans_dist::ReadResp            2483943                       # Transaction distribution
 testsys.iobus.trans_dist::WriteReq              39573                       # Transaction distribution
@@ -527,6 +586,7 @@ testsys.iobus.pkt_size_testsys.bridge.master::total       942152                
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size::total                58203550                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.membus.trans_dist::ReadReq           26478762                       # Transaction distribution
 testsys.membus.trans_dist::ReadResp          26587372                       # Transaction distribution
 testsys.membus.trans_dist::WriteReq           2189273                       # Transaction distribution
@@ -561,7 +621,12 @@ testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Re
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
 testsys.membus.snoop_fanout::total           28885173                       # Request fanout histogram
+testsys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.cchip.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
+testsys.tsunami.pchip.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.ethernet.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
 testsys.tsunami.ethernet.rxBytes                  798                       # Bytes Received
 testsys.tsunami.ethernet.txPackets                  8                       # Number of Packets Transmitted
@@ -611,6 +676,29 @@ testsys.tsunami.ethernet.totalRxOrn                 0                       # to
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
 testsys.tsunami.ethernet.postedInterrupts      2385819                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
+testsys.tsunami.fake_OROM.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_ata0.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_ata1.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_addr.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read0.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read1.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read2.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read3.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read4.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read5.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read6.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read7.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_write.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_ppc.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_sm_chip.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart1.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart2.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart3.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart4.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fb.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.ide.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.io.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.uart.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 
 ---------- End Simulation Statistics   ----------
 
@@ -619,15 +707,16 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                             9054438128                       # Simulator instruction rate (inst/s)
-host_op_rate                               9052667837                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             7037972394                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 490760                       # Number of bytes of host memory used
-host_seconds                                     0.06                       # Real time elapsed on the host
+host_inst_rate                            10808376500                       # Simulator instruction rate (inst/s)
+host_op_rate                              10806472833                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             8401634086                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 541036                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                   523853183                       # Number of instructions simulated
 sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
 drivesys.clk_domain.clock                        1000                       # Clock period in ticks
+drivesys.physmem.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.physmem.bytes_read::cpu.inst          144608                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::cpu.data           49952                       # Number of bytes read from this memory
 drivesys.physmem.bytes_read::tsunami.ethernet       116400                       # Number of bytes read from this memory
@@ -654,6 +743,8 @@ drivesys.physmem.bw_total::cpu.inst         355004339                       # To
 drivesys.physmem.bw_total::cpu.data         190601743                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::tsunami.ethernet    285755318                       # Total bandwidth to/from this memory (bytes/s)
 drivesys.physmem.bw_total::total            831361401                       # Total bandwidth to/from this memory (bytes/s)
+drivesys.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.bridge.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.cpu.clk_domain.clock                     250                       # Clock period in ticks
 drivesys.cpu.dtb.fetch_hits                         0                       # ITB hits
 drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
@@ -687,6 +778,16 @@ drivesys.cpu.itb.data_hits                          0                       # DT
 drivesys.cpu.itb.data_misses                        0                       # DTB misses
 drivesys.cpu.itb.data_acv                           0                       # DTB access violations
 drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
+drivesys.cpu.numPwrStateTransitions                82                       # Number of power state transitions
+drivesys.cpu.pwrStateClkGateDist::samples           42                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::mean   9483660.714286                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::stdev  1743513.957554                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::1000-5e+10           42    100.00%    100.00% # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::min_value       920000                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::max_value      9947500                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateClkGateDist::total            42                       # Distribution of time spent in the clock gated state
+drivesys.cpu.pwrStateResidencyTicks::ON       9027750                       # Cumulative time (in ticks) in various power states
+drivesys.cpu.pwrStateResidencyTicks::CLK_GATED    398313750                       # Cumulative time (in ticks) in various power states
 drivesys.cpu.numCycles                        1626281                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
@@ -798,6 +899,8 @@ drivesys.disk2.dma_read_txs                         0                       # Nu
 drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
 drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
 drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.iobridge.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.iobus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.iobus.trans_dist::ReadReq               5050                       # Transaction distribution
 drivesys.iobus.trans_dist::ReadResp              5050                       # Transaction distribution
 drivesys.iobus.trans_dist::WriteReq                81                       # Transaction distribution
@@ -814,6 +917,7 @@ drivesys.iobus.pkt_size_drivesys.bridge.master::total         1928              
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size::total                 118328                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.membus.trans_dist::ReadReq             47907                       # Transaction distribution
 drivesys.membus.trans_dist::ReadResp            48111                       # Transaction distribution
 drivesys.membus.trans_dist::WriteReq             3689                       # Transaction distribution
@@ -848,7 +952,12 @@ drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Re
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
 drivesys.membus.snoop_fanout::total             52004                       # Request fanout histogram
+drivesys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.cchip.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
+drivesys.tsunami.pchip.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.ethernet.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.ethernet.descDMAReads           4850                       # Number of descriptors the device read w/ DMA
 drivesys.tsunami.ethernet.descDMAWrites             0                       # Number of descriptors the device wrote w/ DMA
 drivesys.tsunami.ethernet.descDmaReadBytes       116400                       # number of descriptor bytes read w/ DMA
@@ -880,8 +989,32 @@ drivesys.tsunami.ethernet.totalRxOrn                0                       # to
 drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
 drivesys.tsunami.ethernet.postedInterrupts         4850                       # number of posts to CPU
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
+drivesys.tsunami.fake_OROM.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_ata0.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_ata1.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_addr.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read0.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read1.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read2.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read3.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read4.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read5.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read6.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_read7.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_pnp_write.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_ppc.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_sm_chip.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart1.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart2.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart3.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fake_uart4.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.fb.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.ide.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.io.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+drivesys.tsunami.uart.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.voltage_domain.voltage                      1                       # Voltage in Volts
 testsys.clk_domain.clock                         1000                       # Clock period in ticks
+testsys.physmem.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.physmem.bytes_read::cpu.inst           144504                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::cpu.data            49936                       # Number of bytes read from this memory
 testsys.physmem.bytes_read::tsunami.ethernet       116376                       # Number of bytes read from this memory
@@ -908,6 +1041,8 @@ testsys.physmem.bw_total::cpu.inst          354749025                       # To
 testsys.physmem.bw_total::cpu.data          190601743                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::tsunami.ethernet    285696400                       # Total bandwidth to/from this memory (bytes/s)
 testsys.physmem.bw_total::total             831047168                       # Total bandwidth to/from this memory (bytes/s)
+testsys.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.bridge.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.cpu.clk_domain.clock                      500                       # Clock period in ticks
 testsys.cpu.dtb.fetch_hits                          0                       # ITB hits
 testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
@@ -941,6 +1076,16 @@ testsys.cpu.itb.data_hits                           0                       # DT
 testsys.cpu.itb.data_misses                         0                       # DTB misses
 testsys.cpu.itb.data_acv                            0                       # DTB access violations
 testsys.cpu.itb.data_accesses                       0                       # DTB accesses
+testsys.cpu.numPwrStateTransitions                 80                       # Number of power state transitions
+testsys.cpu.pwrStateClkGateDist::samples           41                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::mean    9495085.365854                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::stdev   1417220.659876                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::1000-5e+10           41    100.00%    100.00% # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::min_value      2964500                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::max_value      9815000                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateClkGateDist::total             41                       # Distribution of time spent in the clock gated state
+testsys.cpu.pwrStateResidencyTicks::ON       18043000                       # Cumulative time (in ticks) in various power states
+testsys.cpu.pwrStateResidencyTicks::CLK_GATED    389298500                       # Cumulative time (in ticks) in various power states
 testsys.cpu.numCycles                          821056                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
@@ -1052,6 +1197,8 @@ testsys.disk2.dma_read_txs                          0                       # Nu
 testsys.disk2.dma_write_full_pages                  0                       # Number of full page size DMA writes.
 testsys.disk2.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
 testsys.disk2.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.iobridge.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.iobus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.iobus.trans_dist::ReadReq                5049                       # Transaction distribution
 testsys.iobus.trans_dist::ReadResp               5049                       # Transaction distribution
 testsys.iobus.trans_dist::WriteReq                 81                       # Transaction distribution
@@ -1068,6 +1215,7 @@ testsys.iobus.pkt_size_testsys.bridge.master::total         1928                
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size::total                  118304                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.membus.trans_dist::ReadReq              47876                       # Transaction distribution
 testsys.membus.trans_dist::ReadResp             48080                       # Transaction distribution
 testsys.membus.trans_dist::WriteReq              3691                       # Transaction distribution
@@ -1102,7 +1250,12 @@ testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Re
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
 testsys.membus.snoop_fanout::total              51975                       # Request fanout histogram
+testsys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.cchip.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.ethernet.clk_domain.clock         2000                       # Clock period in ticks
+testsys.tsunami.pchip.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.ethernet.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.ethernet.descDMAReads            4849                       # Number of descriptors the device read w/ DMA
 testsys.tsunami.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
 testsys.tsunami.ethernet.descDmaReadBytes       116376                       # number of descriptor bytes read w/ DMA
@@ -1134,5 +1287,28 @@ testsys.tsunami.ethernet.totalRxOrn                 0                       # to
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
 testsys.tsunami.ethernet.postedInterrupts         4849                       # number of posts to CPU
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
+testsys.tsunami.fake_OROM.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_ata0.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_ata1.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_addr.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read0.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read1.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read2.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read3.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read4.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read5.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read6.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_read7.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_pnp_write.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_ppc.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_sm_chip.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart1.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart2.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart3.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fake_uart4.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.fb.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.ide.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.io.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
+testsys.tsunami.uart.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 
 ---------- End Simulation Statistics   ----------

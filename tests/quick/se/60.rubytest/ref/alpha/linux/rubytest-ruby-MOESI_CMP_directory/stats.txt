@@ -4,11 +4,12 @@ sim_seconds                                  0.000054                       # Nu
 sim_ticks                                       54211                       # Number of ticks simulated
 final_tick                                      54211                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 538772                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 406688                       # Number of bytes of host memory used
+host_tick_rate                                 528623                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 452196                       # Number of bytes of host memory used
 host_seconds                                     0.10                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
+system.mem_ctrls.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.mem_ctrls.bytes_read::ruby.dir_cntrl0        54016                       # Number of bytes read from this memory
 system.mem_ctrls.bytes_read::total              54016                       # Number of bytes read from this memory
 system.mem_ctrls.bytes_written::ruby.dir_cntrl0        48256                       # Number of bytes written to this memory
@@ -265,7 +266,10 @@ system.mem_ctrls_1.memoryStateTime::REF          1560                       # Ti
 system.mem_ctrls_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::ACT             0                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
+system.ruby.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.outstanding_req_hist_seqr::bucket_size            2                      
 system.ruby.outstanding_req_hist_seqr::max_bucket           19                      
 system.ruby.outstanding_req_hist_seqr::samples          985                      
@@ -297,19 +301,24 @@ system.ruby.miss_latency_hist_seqr::gmean   862.901849
 system.ruby.miss_latency_hist_seqr::stdev   251.425992                      
 system.ruby.miss_latency_hist_seqr       |          54      6.15%      6.15% |           6      0.68%      6.83% |           4      0.46%      7.29% |         388     44.19%     51.48% |         418     47.61%     99.09% |           8      0.91%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
 system.ruby.miss_latency_hist_seqr::total          878                      
+system.ruby.dir_cntrl0.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.l1_cntrl0.L1Dcache.demand_hits           90                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Dcache.demand_misses          836                       # Number of cache demand misses
 system.ruby.l1_cntrl0.L1Dcache.demand_accesses          926                       # Number of cache demand accesses
 system.ruby.l1_cntrl0.L1Icache.demand_hits            2                       # Number of cache demand hits
 system.ruby.l1_cntrl0.L1Icache.demand_misses           44                       # Number of cache demand misses
 system.ruby.l1_cntrl0.L1Icache.demand_accesses           46                       # Number of cache demand accesses
+system.ruby.l1_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.l1_cntrl0.sequencer.store_waiting_on_load            7                       # Number of times a store aliased with a pending load
 system.ruby.l1_cntrl0.sequencer.store_waiting_on_store           75                       # Number of times a store aliased with a pending store
 system.ruby.l1_cntrl0.sequencer.load_waiting_on_store            2                       # Number of times a load aliased with a pending store
+system.ruby.l1_cntrl0.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.l2_cntrl0.L2cache.demand_hits           36                       # Number of cache demand hits
 system.ruby.l2_cntrl0.L2cache.demand_misses          844                       # Number of cache demand misses
 system.ruby.l2_cntrl0.L2cache.demand_accesses          880                       # Number of cache demand accesses
+system.ruby.l2_cntrl0.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.memctrl_clk_domain.clock                3                       # Clock period in ticks
+system.ruby.network.routers0.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.network.routers0.percent_links_utilized     8.888879                      
 system.ruby.network.routers0.msg_count.Request_Control::0          880                      
 system.ruby.network.routers0.msg_count.Response_Data::2          843                      
@@ -323,6 +332,7 @@ system.ruby.network.routers0.msg_bytes.ResponseL2hit_Data::2         2520
 system.ruby.network.routers0.msg_bytes.Writeback_Data::2        62928                      
 system.ruby.network.routers0.msg_bytes.Writeback_Control::0        13992                      
 system.ruby.network.routers0.msg_bytes.Unblock_Control::2         7024                      
+system.ruby.network.routers1.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.network.routers1.percent_links_utilized    16.994245                      
 system.ruby.network.routers1.msg_count.Request_Control::0          880                      
 system.ruby.network.routers1.msg_count.Request_Control::1          844                      
@@ -340,6 +350,7 @@ system.ruby.network.routers1.msg_bytes.Writeback_Data::2       117216
 system.ruby.network.routers1.msg_bytes.Writeback_Control::0        13992                      
 system.ruby.network.routers1.msg_bytes.Writeback_Control::1        12072                      
 system.ruby.network.routers1.msg_bytes.Unblock_Control::2        13760                      
+system.ruby.network.routers2.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.network.routers2.percent_links_utilized     8.101677                      
 system.ruby.network.routers2.msg_count.Request_Control::1          844                      
 system.ruby.network.routers2.msg_count.Response_Data::2          843                      
@@ -351,6 +362,7 @@ system.ruby.network.routers2.msg_bytes.Response_Data::2        60696
 system.ruby.network.routers2.msg_bytes.Writeback_Data::2        54288                      
 system.ruby.network.routers2.msg_bytes.Writeback_Control::1        12072                      
 system.ruby.network.routers2.msg_bytes.Unblock_Control::2         6736                      
+system.ruby.network.routers3.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.network.routers3.percent_links_utilized    11.328267                      
 system.ruby.network.routers3.msg_count.Request_Control::0          880                      
 system.ruby.network.routers3.msg_count.Request_Control::1          844                      
@@ -368,6 +380,7 @@ system.ruby.network.routers3.msg_bytes.Writeback_Data::2       117216
 system.ruby.network.routers3.msg_bytes.Writeback_Control::0        13992                      
 system.ruby.network.routers3.msg_bytes.Writeback_Control::1        12072                      
 system.ruby.network.routers3.msg_bytes.Unblock_Control::2        13760                      
+system.ruby.network.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.network.msg_count.Request_Control         5172                      
 system.ruby.network.msg_count.Response_Data         5058                      
 system.ruby.network.msg_count.ResponseL2hit_Data          107                      
@@ -380,6 +393,7 @@ system.ruby.network.msg_byte.ResponseL2hit_Data         7704
 system.ruby.network.msg_byte.Writeback_Data       351648                      
 system.ruby.network.msg_byte.Writeback_Control        78192                      
 system.ruby.network.msg_byte.Unblock_Control        41280                      
+system.sys_port_proxy.pwrStateResidencyTicks::UNDEFINED        54211                       # Cumulative time (in ticks) in various power states
 system.ruby.network.routers0.throttle0.link_utilization     8.094298                      
 system.ruby.network.routers0.throttle0.msg_count.Response_Data::2          843                      
 system.ruby.network.routers0.throttle0.msg_count.ResponseL2hit_Data::2           35                      

@@ -4,11 +4,12 @@ sim_seconds                                  0.000014                       # Nu
 sim_ticks                                       14181                       # Number of ticks simulated
 final_tick                                      14181                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                 154609                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 480252                       # Number of bytes of host memory used
-host_seconds                                     0.09                       # Real time elapsed on the host
+host_tick_rate                                 238683                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 530468                       # Number of bytes of host memory used
+host_seconds                                     0.06                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             1                       # Clock period in ticks
+system.mem_ctrls.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.mem_ctrls.bytes_read::dir_cntrl0         16576                       # Number of bytes read from this memory
 system.mem_ctrls.bytes_read::total              16576                       # Number of bytes read from this memory
 system.mem_ctrls.bytes_written::dir_cntrl0          576                       # Number of bytes written to this memory
@@ -238,7 +239,9 @@ system.mem_ctrls_1.memoryStateTime::REF           260                       # Ti
 system.mem_ctrls_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::ACT             0                       # Time in different power states
 system.mem_ctrls_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.clk_domain.clock                        1                       # Clock period in ticks
+system.ruby.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.outstanding_req_hist_seqr::bucket_size            2                      
 system.ruby.outstanding_req_hist_seqr::max_bucket           19                      
 system.ruby.outstanding_req_hist_seqr::samples           63                      
@@ -319,11 +322,15 @@ system.cp_cntrl0.L2cache.num_data_array_reads           81                      
 system.cp_cntrl0.L2cache.num_data_array_writes           84                       # number of data array writes
 system.cp_cntrl0.L2cache.num_tag_array_reads          380                       # number of tag array reads
 system.cp_cntrl0.L2cache.num_tag_array_writes          371                       # number of tag array writes
+system.cp_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.cp_cntrl0.sequencer.store_waiting_on_load            2                       # Number of times a store aliased with a pending load
 system.cp_cntrl0.sequencer.store_waiting_on_store            3                       # Number of times a store aliased with a pending store
+system.cp_cntrl0.sequencer1.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.cp_cntrl0.sequencer1.store_waiting_on_load            1                       # Number of times a store aliased with a pending load
 system.cp_cntrl0.sequencer1.store_waiting_on_store            4                       # Number of times a store aliased with a pending store
+system.cp_cntrl0.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.cp_cntrl0.fully_busy_cycles                  2                       # cycles for which number of transistions == max transitions
+system.cpu.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.dir_cntrl0.L3CacheMemory.demand_hits            0                       # Number of cache demand hits
 system.dir_cntrl0.L3CacheMemory.demand_misses            0                       # Number of cache demand misses
 system.dir_cntrl0.L3CacheMemory.demand_accesses            0                       # Number of cache demand accesses
@@ -332,6 +339,8 @@ system.dir_cntrl0.L3CacheMemory.num_tag_array_reads          378                
 system.dir_cntrl0.L3CacheMemory.num_tag_array_writes          378                       # number of tag array writes
 system.dir_cntrl0.L3CacheMemory.num_tag_array_stalls        10169                       # number of stalls caused by tag array
 system.dir_cntrl0.L3CacheMemory.num_data_array_stalls         5502                       # number of stalls caused by data array
+system.dir_cntrl0.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.ruby.network.ext_links00.int_node.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links00.int_node.percent_links_utilized     0.199210                      
 system.ruby.network.ext_links00.int_node.msg_count.Control::0          308                      
 system.ruby.network.ext_links00.int_node.msg_count.Request_Control::0          385                      
@@ -347,6 +356,7 @@ system.ruby.network.ext_links00.int_node.msg_bytes.Response_Control::2         1
 system.ruby.network.ext_links00.int_node.msg_bytes.Writeback_Data::2         4752                      
 system.ruby.network.ext_links00.int_node.msg_bytes.Writeback_Control::2          560                      
 system.ruby.network.ext_links00.int_node.msg_bytes.Unblock_Control::4         2424                      
+system.ruby.network.ext_links01.int_node.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links01.int_node.percent_links_utilized     0.120981                      
 system.ruby.network.ext_links01.int_node.msg_count.Control::0          227                      
 system.ruby.network.ext_links01.int_node.msg_count.Request_Control::0          153                      
@@ -370,6 +380,7 @@ system.tcp_cntrl0.L1cache.num_data_array_writes          116                    
 system.tcp_cntrl0.L1cache.num_tag_array_reads          314                       # number of tag array reads
 system.tcp_cntrl0.L1cache.num_tag_array_writes          305                       # number of tag array writes
 system.tcp_cntrl0.L1cache.num_tag_array_stalls           38                       # number of stalls caused by tag array
+system.tcp_cntrl0.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl0.coalescer.gpu_tcp_ld_hits            0                       # loads that hit in the TCP
 system.tcp_cntrl0.coalescer.gpu_tcp_ld_transfers            5                       # TCP to TCP load transfers
 system.tcp_cntrl0.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -386,6 +397,9 @@ system.tcp_cntrl0.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl0.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl0.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl0.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl0.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.ruby.network.ext_links02.int_node.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links02.int_node.percent_links_utilized     0.173894                      
 system.ruby.network.ext_links02.int_node.msg_count.Control::0           81                      
 system.ruby.network.ext_links02.int_node.msg_count.Control::1          814                      
@@ -415,6 +429,7 @@ system.tcp_cntrl1.L1cache.num_data_array_writes          108                    
 system.tcp_cntrl1.L1cache.num_tag_array_reads          300                       # number of tag array reads
 system.tcp_cntrl1.L1cache.num_tag_array_writes          289                       # number of tag array writes
 system.tcp_cntrl1.L1cache.num_tag_array_stalls           44                       # number of stalls caused by tag array
+system.tcp_cntrl1.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl1.coalescer.gpu_tcp_ld_hits            1                       # loads that hit in the TCP
 system.tcp_cntrl1.coalescer.gpu_tcp_ld_transfers            4                       # TCP to TCP load transfers
 system.tcp_cntrl1.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -431,6 +446,8 @@ system.tcp_cntrl1.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl1.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl1.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl1.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl1.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl1.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl2.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl2.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl2.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -440,6 +457,7 @@ system.tcp_cntrl2.L1cache.num_tag_array_reads          302                      
 system.tcp_cntrl2.L1cache.num_tag_array_writes          292                       # number of tag array writes
 system.tcp_cntrl2.L1cache.num_tag_array_stalls           36                       # number of stalls caused by tag array
 system.tcp_cntrl2.L1cache.num_data_array_stalls            3                       # number of stalls caused by data array
+system.tcp_cntrl2.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl2.coalescer.gpu_tcp_ld_hits            1                       # loads that hit in the TCP
 system.tcp_cntrl2.coalescer.gpu_tcp_ld_transfers            9                       # TCP to TCP load transfers
 system.tcp_cntrl2.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -456,6 +474,8 @@ system.tcp_cntrl2.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl2.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl2.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl2.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl2.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl2.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl3.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl3.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl3.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -465,6 +485,7 @@ system.tcp_cntrl3.L1cache.num_tag_array_reads          272                      
 system.tcp_cntrl3.L1cache.num_tag_array_writes          262                       # number of tag array writes
 system.tcp_cntrl3.L1cache.num_tag_array_stalls           16                       # number of stalls caused by tag array
 system.tcp_cntrl3.L1cache.num_data_array_stalls            3                       # number of stalls caused by data array
+system.tcp_cntrl3.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl3.coalescer.gpu_tcp_ld_hits            0                       # loads that hit in the TCP
 system.tcp_cntrl3.coalescer.gpu_tcp_ld_transfers           13                       # TCP to TCP load transfers
 system.tcp_cntrl3.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -481,6 +502,8 @@ system.tcp_cntrl3.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl3.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl3.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl3.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl3.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl3.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl4.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl4.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl4.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -489,6 +512,7 @@ system.tcp_cntrl4.L1cache.num_data_array_writes          115                    
 system.tcp_cntrl4.L1cache.num_tag_array_reads          317                       # number of tag array reads
 system.tcp_cntrl4.L1cache.num_tag_array_writes          309                       # number of tag array writes
 system.tcp_cntrl4.L1cache.num_tag_array_stalls           29                       # number of stalls caused by tag array
+system.tcp_cntrl4.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl4.coalescer.gpu_tcp_ld_hits            0                       # loads that hit in the TCP
 system.tcp_cntrl4.coalescer.gpu_tcp_ld_transfers            4                       # TCP to TCP load transfers
 system.tcp_cntrl4.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -505,6 +529,8 @@ system.tcp_cntrl4.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl4.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl4.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl4.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl4.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl4.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl5.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl5.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl5.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -513,6 +539,7 @@ system.tcp_cntrl5.L1cache.num_data_array_writes          107                    
 system.tcp_cntrl5.L1cache.num_tag_array_reads          295                       # number of tag array reads
 system.tcp_cntrl5.L1cache.num_tag_array_writes          287                       # number of tag array writes
 system.tcp_cntrl5.L1cache.num_tag_array_stalls           31                       # number of stalls caused by tag array
+system.tcp_cntrl5.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl5.coalescer.gpu_tcp_ld_hits            0                       # loads that hit in the TCP
 system.tcp_cntrl5.coalescer.gpu_tcp_ld_transfers            6                       # TCP to TCP load transfers
 system.tcp_cntrl5.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -529,6 +556,8 @@ system.tcp_cntrl5.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl5.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl5.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl5.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl5.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl5.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl6.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl6.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl6.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -537,6 +566,7 @@ system.tcp_cntrl6.L1cache.num_data_array_writes          123                    
 system.tcp_cntrl6.L1cache.num_tag_array_reads          342                       # number of tag array reads
 system.tcp_cntrl6.L1cache.num_tag_array_writes          335                       # number of tag array writes
 system.tcp_cntrl6.L1cache.num_tag_array_stalls           49                       # number of stalls caused by tag array
+system.tcp_cntrl6.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl6.coalescer.gpu_tcp_ld_hits            1                       # loads that hit in the TCP
 system.tcp_cntrl6.coalescer.gpu_tcp_ld_transfers           11                       # TCP to TCP load transfers
 system.tcp_cntrl6.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -553,6 +583,8 @@ system.tcp_cntrl6.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl6.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl6.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl6.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl6.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl6.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl7.L1cache.demand_hits               0                       # Number of cache demand hits
 system.tcp_cntrl7.L1cache.demand_misses             0                       # Number of cache demand misses
 system.tcp_cntrl7.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -561,6 +593,7 @@ system.tcp_cntrl7.L1cache.num_data_array_writes           97                    
 system.tcp_cntrl7.L1cache.num_tag_array_reads          263                       # number of tag array reads
 system.tcp_cntrl7.L1cache.num_tag_array_writes          256                       # number of tag array writes
 system.tcp_cntrl7.L1cache.num_tag_array_stalls           11                       # number of stalls caused by tag array
+system.tcp_cntrl7.coalescer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcp_cntrl7.coalescer.gpu_tcp_ld_hits            1                       # loads that hit in the TCP
 system.tcp_cntrl7.coalescer.gpu_tcp_ld_transfers           10                       # TCP to TCP load transfers
 system.tcp_cntrl7.coalescer.gpu_tcc_ld_hits            0                       # loads that hit in the TCC
@@ -577,6 +610,8 @@ system.tcp_cntrl7.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl7.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl7.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl7.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl7.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl7.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.sqc_cntrl0.L1cache.demand_hits               0                       # Number of cache demand hits
 system.sqc_cntrl0.L1cache.demand_misses             0                       # Number of cache demand misses
 system.sqc_cntrl0.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -584,6 +619,8 @@ system.sqc_cntrl0.L1cache.num_data_array_reads           12                     
 system.sqc_cntrl0.L1cache.num_data_array_writes           12                       # number of data array writes
 system.sqc_cntrl0.L1cache.num_tag_array_reads           22                       # number of tag array reads
 system.sqc_cntrl0.L1cache.num_tag_array_writes           22                       # number of tag array writes
+system.sqc_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.sqc_cntrl0.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.sqc_cntrl1.L1cache.demand_hits               0                       # Number of cache demand hits
 system.sqc_cntrl1.L1cache.demand_misses             0                       # Number of cache demand misses
 system.sqc_cntrl1.L1cache.demand_accesses            0                       # Number of cache demand accesses
@@ -591,14 +628,19 @@ system.sqc_cntrl1.L1cache.num_data_array_reads           15                     
 system.sqc_cntrl1.L1cache.num_data_array_writes           15                       # number of data array writes
 system.sqc_cntrl1.L1cache.num_tag_array_reads           29                       # number of tag array reads
 system.sqc_cntrl1.L1cache.num_tag_array_writes           29                       # number of tag array writes
+system.sqc_cntrl1.sequencer.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.sqc_cntrl1.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tcc_cntrl0.L2cache.demand_hits               0                       # Number of cache demand hits
 system.tcc_cntrl0.L2cache.demand_misses             0                       # Number of cache demand misses
 system.tcc_cntrl0.L2cache.demand_accesses            0                       # Number of cache demand accesses
+system.tcc_cntrl0.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.tccdir_cntrl0.directory.demand_hits            0                       # Number of cache demand hits
 system.tccdir_cntrl0.directory.demand_misses            0                       # Number of cache demand misses
 system.tccdir_cntrl0.directory.demand_accesses            0                       # Number of cache demand accesses
 system.tccdir_cntrl0.directory.num_tag_array_reads          917                       # number of tag array reads
 system.tccdir_cntrl0.directory.num_tag_array_writes          902                       # number of tag array writes
+system.tccdir_cntrl0.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
+system.ruby.network.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.network.msg_count.Control            1430                      
 system.ruby.network.msg_count.Request_Control         1616                      
 system.ruby.network.msg_count.Response_Data         2430                      
@@ -613,6 +655,7 @@ system.ruby.network.msg_byte.Response_Control         3648
 system.ruby.network.msg_byte.Writeback_Data         9504                      
 system.ruby.network.msg_byte.Writeback_Control         1120                      
 system.ruby.network.msg_byte.Unblock_Control        11496                      
+system.sys_port_proxy.pwrStateResidencyTicks::UNDEFINED        14181                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links00.int_node.throttle0.link_utilization     0.250555                      
 system.ruby.network.ext_links00.int_node.throttle0.msg_count.Request_Control::0          385                      
 system.ruby.network.ext_links00.int_node.throttle0.msg_count.Response_Data::2           85                      

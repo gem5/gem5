@@ -4,11 +4,12 @@ sim_seconds                                  0.100000                       # Nu
 sim_ticks                                100000000000                       # Number of ticks simulated
 final_tick                               100000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                             9064709748                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 219696                       # Number of bytes of host memory used
-host_seconds                                    11.03                       # Real time elapsed on the host
+host_tick_rate                            10668065661                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 263968                       # Number of bytes of host memory used
+host_seconds                                     9.37                       # Real time elapsed on the host
 system.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
+system.physmem.pwrStateResidencyTicks::UNDEFINED 100000000000                       # Cumulative time (in ticks) in various power states
 system.physmem.bytes_read::cpu              106649408                       # Number of bytes read from this memory
 system.physmem.bytes_read::total            106649408                       # Number of bytes read from this memory
 system.physmem.bytes_written::cpu           106680256                       # Number of bytes written to this memory
@@ -272,9 +273,12 @@ system.physmem_1.memoryStateTime::REF      3339180000                       # Ti
 system.physmem_1.memoryStateTime::PRE_PDN            0                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT     96120321460                       # Time in different power states
 system.physmem_1.memoryStateTime::ACT_PDN            0                       # Time in different power states
+system.pwrStateResidencyTicks::UNDEFINED 100000000000                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::UNDEFINED 100000000000                       # Cumulative time (in ticks) in various power states
 system.cpu.numPackets                         3333276                       # Number of packets generated
 system.cpu.numRetries                               0                       # Number of retries
 system.cpu.retryTicks                               0                       # Time spent waiting due to back-pressure (ticks)
+system.membus.pwrStateResidencyTicks::UNDEFINED 100000000000                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq             1666397                       # Transaction distribution
 system.membus.trans_dist::ReadResp            1666397                       # Transaction distribution
 system.membus.trans_dist::WriteReq            1666879                       # Transaction distribution
@@ -287,6 +291,7 @@ system.membus.reqLayer0.occupancy         11679751447                       # La
 system.membus.reqLayer0.utilization              11.7                       # Layer utilization (%)
 system.membus.respLayer0.occupancy        11025969759                       # Layer occupancy (ticks)
 system.membus.respLayer0.utilization             11.0                       # Layer utilization (%)
+system.monitor.pwrStateResidencyTicks::UNDEFINED 100000000000                       # Cumulative time (in ticks) in various power states
 system.monitor.readBurstLengthHist::samples      1666397                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::mean           64                       # Histogram of burst lengths of transmitted packets
 system.monitor.readBurstLengthHist::gmean    64.000000                       # Histogram of burst lengths of transmitted packets
