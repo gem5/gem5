@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,8 +37,11 @@
  * Authors: Geoffrey Blake
  */
 
+#include "sim/sub_system.hh"
+
 #include "params/SubSystem.hh"
 #include "sim/sub_system.hh"
+#include "sim/power/power_model.hh"
 #include "sim/power/thermal_domain.hh"
 
 SubSystem::SubSystem(const Params *p)
@@ -47,6 +50,24 @@ SubSystem::SubSystem(const Params *p)
     // Link thermalDomain <-> SubSystem
     if (p->thermal_domain)
         p->thermal_domain->setSubSystem(this);
+}
+
+double
+SubSystem::getDynamicPower() const
+{
+    double ret = 0.0f;
+    for (auto &obj: powerProducers)
+        ret += obj->getDynamicPower();
+    return ret;
+}
+
+double
+SubSystem::getStaticPower() const
+{
+    double ret = 0.0f;
+    for (auto &obj: powerProducers)
+        ret += obj->getStaticPower();
+    return ret;
 }
 
 SubSystem *

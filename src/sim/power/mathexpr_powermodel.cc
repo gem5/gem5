@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 ARM Limited
+ * Copyright (c) 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,45 +34,69 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
 
-/**
- * @file
- * SubSystem declarations.
- */
+#include "sim/power/mathexpr_powermodel.hh"
 
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
-
-#include <vector>
-
-#include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
+#include "base/statistics.hh"
+#include "params/MathExprPowerModel.hh"
+#include "sim/mathexpr.hh"
+#include "sim/power/thermal_model.hh"
 #include "sim/sim_object.hh"
 
-class PowerModel;
-
-/**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
- */
-class SubSystem : public SimObject
+MathExprPowerModel::MathExprPowerModel(const Params *p)
+    : PowerModelState(p), dyn_expr(p->dyn), st_expr(p->st)
 {
-  public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
+    // Calculate the name of the object we belong to
+    std::vector<std::string> path;
+    tokenize(path, name(), '.', true);
+    // It's something like xyz.power_model.pm2
+    assert(path.size() > 2);
+    for (unsigned i = 0; i < path.size() - 2; i++)
+        basename += path[i] + ".";
+}
 
-    double getDynamicPower() const;
+void
+MathExprPowerModel::startup()
+{
+    // Create a map with stats and pointers for quick access
+    // Has to be done here, since we need access to the statsList
+    for (auto & i: Stats::statsList())
+        if (i->name.find(basename) == 0)
+            stats_map[i->name.substr(basename.size())] = i;
+}
 
-    double getStaticPower() const;
+double
+MathExprPowerModel::getStatValue(const std::string &name) const
+{
+    using namespace Stats;
 
-    void registerPowerProducer(PowerModel *pm) {
-        powerProducers.push_back(pm);
-    }
+    // Automatic variables:
+    if (name == "temp")
+        return _temp;
 
-  protected:
-    std::vector<PowerModel*> powerProducers;
-};
+    // Try to cast the stat, only these are supported right now
+    Info *info = stats_map.at(name);
 
-#endif
+    ScalarInfo *si = dynamic_cast<ScalarInfo*>(info);
+    if (si)
+        return si->value();
+    FormulaInfo *fi = dynamic_cast<FormulaInfo*>(info);
+    if (fi)
+        return fi->total();
+
+    panic("Unknown stat type!\n");
+}
+
+void
+MathExprPowerModel::regStats()
+{
+    PowerModelState::regStats();
+}
+
+MathExprPowerModel*
+MathExprPowerModelParams::create()
+{
+    return new MathExprPowerModel(this);
+}

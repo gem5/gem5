@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 ARM Limited
+ * Copyright (c) 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,45 +34,93 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
 
-/**
- * @file
- * SubSystem declarations.
- */
+#ifndef __SIM_MATHEXPR_HH__
+#define __SIM_MATHEXPR_HH__
 
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
+#include <algorithm>
+#include <string>
 
-#include <vector>
-
-#include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
-#include "sim/sim_object.hh"
-
-class PowerModel;
-
-/**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
- */
-class SubSystem : public SimObject
-{
+class MathExpr {
   public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
 
-    double getDynamicPower() const;
+    MathExpr(std::string expr);
 
-    double getStaticPower() const;
+    typedef std::function<double(std::string)> EvalCallback;
 
-    void registerPowerProducer(PowerModel *pm) {
-        powerProducers.push_back(pm);
-    }
+    /**
+     * Prints an ASCII representation of the expression tree
+     *
+     * @return A string containing the ASCII representation of the expression
+     */
+    std::string toStr() const { return toStr(root, ""); }
 
-  protected:
-    std::vector<PowerModel*> powerProducers;
+    /**
+     * Evaluates the expression
+     *
+     * @param fn A callback funcion to evaluate variables
+     *
+     * @return The value for this expression
+     */
+    double eval(EvalCallback fn) const { return eval(root, fn); }
+
+  private:
+    enum Operator {
+        bAdd, bSub, bMul, bDiv, bPow, uNeg, sValue, sVariable, nInvalid
+    };
+
+    // Match operators
+    const int MAX_PRIO = 4;
+    typedef double (*binOp)(double, double);
+    struct OpSearch {
+        bool binary;
+        Operator op;
+        int priority;
+        char c;
+        binOp fn;
+    };
+
+    /** Operator list */
+    std::array<OpSearch, uNeg + 1> ops;
+
+    class Node {
+      public:
+        Node() : op(nInvalid), l(0), r(0), value(0) {}
+        std::string toStr() const {
+            const char opStr[] = {'+', '-', '*', '/', '^', '-'};
+            switch (op) {
+              case nInvalid:
+                return "INVALID";
+              case sVariable:
+                return variable;
+              case sValue:
+                return std::to_string(value);
+              default:
+                return std::string(1, opStr[op]);
+            };
+        }
+
+        Operator op;
+        Node *l, *r;
+        double value;
+        std::string variable;
+    };
+
+    /** Root node */
+    Node * root;
+
+    /** Parse and create nodes from string */
+    Node *parse(std::string expr);
+
+    /** Print tree as string */
+    std::string toStr(Node *n, std::string prefix) const;
+
+    /** Eval a node */
+    double eval(const Node *n, EvalCallback fn) const;
 };
 
 #endif
+
+

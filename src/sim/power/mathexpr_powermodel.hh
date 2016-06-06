@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 ARM Limited
+ * Copyright (c) 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,45 +34,78 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Geoffrey Blake
+ * Authors: David Guillen Fandos
  */
 
-/**
- * @file
- * SubSystem declarations.
- */
+#ifndef __SIM_MATHEXPR_POWERMODEL_PM_HH__
+#define __SIM_MATHEXPR_POWERMODEL_PM_HH__
 
-#ifndef __SIM_SUB_SYSTEM_HH__
-#define __SIM_SUB_SYSTEM_HH__
+#include <unordered_map>
 
-#include <vector>
-
-#include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
+#include "base/statistics.hh"
+#include "params/MathExprPowerModel.hh"
+#include "sim/mathexpr.hh"
+#include "sim/power/power_model.hh"
 #include "sim/sim_object.hh"
 
-class PowerModel;
-
 /**
- * The SubSystem simobject does nothing, it is just a container for
- * other simobjects used by the configuration system
+ * A Equation power model. The power is represented as a combination
+ * of some stats and automatic variables (like temperature).
  */
-class SubSystem : public SimObject
+class MathExprPowerModel : public PowerModelState
 {
   public:
-    typedef SubSystemParams Params;
-    SubSystem(const Params *p);
 
-    double getDynamicPower() const;
+    typedef MathExprPowerModelParams Params;
+    MathExprPowerModel(const Params *p);
 
-    double getStaticPower() const;
-
-    void registerPowerProducer(PowerModel *pm) {
-        powerProducers.push_back(pm);
+    /**
+     * Get the dynamic power consumption.
+     *
+     * @return Power (Watts) consumed by this object (dynamic component)
+     */
+    double getDynamicPower() const {
+        return dyn_expr.eval(
+            std::bind(&MathExprPowerModel::getStatValue,
+                this, std::placeholders::_1)
+        );
     }
 
-  protected:
-    std::vector<PowerModel*> powerProducers;
+    /**
+     * Get the static power consumption.
+     *
+     * @return Power (Watts) consumed by this object (static component)
+     */
+    double getStaticPower() const {
+        return st_expr.eval(
+            std::bind(&MathExprPowerModel::getStatValue,
+                this, std::placeholders::_1)
+        );
+    }
+
+    /**
+     * Get the value for a variable (maps to a stat)
+     *
+     * @param name Name of the variable to retrieve the value from
+     *
+     * @return Power (Watts) consumed by this object (static component)
+     */
+    double getStatValue(const std::string & name) const;
+
+    void startup();
+
+    void regStats();
+
+  private:
+
+    // Math expressions for dynamic and static power
+    MathExpr dyn_expr, st_expr;
+
+    // Basename of the object in the gem5 stats hierachy
+    std::string basename;
+
+    // Map that contains relevant stats for this power model
+    std::unordered_map<std::string, Stats::Info*> stats_map;
 };
 
 #endif
