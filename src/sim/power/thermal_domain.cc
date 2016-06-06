@@ -110,7 +110,8 @@ LinearEquation
 ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
 {
     LinearEquation eq(n);
+    double power = subsystem->getDynamicPower() + subsystem->getStaticPower();
     if (tn == node)
-        eq[eq.cnt()] = 1.75f; // Fake 1.75 Watts for now, to be changed to PM
+        eq[eq.cnt()] = power;
     return eq;
 }
