@@ -142,6 +142,7 @@ ClockedObject::regStats()
     numPwrStateTransitions
         .name(params()->name + ".numPwrStateTransitions")
         .desc("Number of power state transitions")
+        .flags(nozero)
         ;
 
     // Each sample is time in ticks
@@ -151,13 +152,14 @@ ClockedObject::regStats()
           (params()->p_state_clk_gate_max / num_bins))
         .name(params()->name + ".pwrStateClkGateDist")
         .desc("Distribution of time spent in the clock gated state")
-        .flags(pdf)
+        .flags(pdf | nozero | nonan)
         ;
 
     pwrStateResidencyTicks
         .init(Enums::PwrState::Num_PwrState)
         .name(params()->name + ".pwrStateResidencyTicks")
         .desc("Cumulative time (in ticks) in various power states")
+        .flags(nozero)
         ;
     for (int i = 0; i < Enums::PwrState::Num_PwrState; i++) {
         pwrStateResidencyTicks.subname(i, Enums::PwrStateStrings[i]);
