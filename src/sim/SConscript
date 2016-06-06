@@ -69,6 +69,7 @@ Source('voltage_domain.cc')
 Source('linear_solver.cc')
 Source('system.cc')
 Source('dvfs_handler.cc')
+Source('clocked_object.cc')
 
 if env['TARGET_ISA'] != 'null':
     SimObject('InstTracer.py')
