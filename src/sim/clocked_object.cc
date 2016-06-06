@@ -78,8 +78,8 @@ ClockedObject::pwrState(Enums::PwrState p)
 {
     // Function should ideally be called only when there is a state change
     if (_currPwrState == p) {
-        warn("ClockedObject: Already in the requested power state, request "\
-             "ignored");
+        warn_once("ClockedObject: Already in the requested power state, " \
+                  "request ignored");
         return;
     }
 
