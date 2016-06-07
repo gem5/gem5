@@ -40,6 +40,7 @@
 #include "sim/mathexpr.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <regex>
 #include <string>
 
@@ -47,7 +48,7 @@
 
 MathExpr::MathExpr(std::string expr)
  : ops(
-    std::array<OpSearch, uNeg + 1> {
+     std::array<OpSearch, uNeg + 1> {{
       OpSearch {true, bAdd, 0, '+', [](double a, double b) { return a + b; }},
       OpSearch {true, bSub, 0, '-', [](double a, double b) { return a - b; }},
       OpSearch {true, bMul, 1, '*', [](double a, double b) { return a * b; }},
@@ -55,7 +56,7 @@ MathExpr::MathExpr(std::string expr)
       OpSearch {false,uNeg, 2, '-', [](double a, double b) { return -b; }},
       OpSearch {true, bPow, 3, '^', [](double a, double b) {
                  return std::pow(a,b); }
-      },
+      }},
     })
 {
     // Cleanup

@@ -264,7 +264,7 @@ class ClockedObject
     void computeStats();
 
     void pwrState(Enums::PwrState);
-    void regStats();
+    void regStats() override;
 
   protected:
 
