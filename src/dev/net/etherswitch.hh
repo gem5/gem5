@@ -36,7 +36,8 @@
 #ifndef __DEV_ETHERSWITCH_HH__
 #define __DEV_ETHERSWITCH_HH__
 
-#include <unordered_map>
+#include <map>
+#include <set>
 
 #include "base/inet.hh"
 #include "dev/net/etherint.hh"
@@ -66,12 +67,12 @@ class EtherSwitch : public EtherObject
     /**
      * Model for an Ethernet switch port
      */
-    class Interface : public EtherInt
+    class Interface : public EtherInt, public Serializable
     {
       public:
         Interface(const std::string &name, EtherSwitch *_etherSwitch,
                   uint64_t outputBufferSize, Tick delay, Tick delay_var,
-                  double rate);
+                  double rate, unsigned id);
         /**
          * When a packet is received from a device, route it
          * through an (several) output queue(s)
@@ -80,25 +81,96 @@ class EtherSwitch : public EtherObject
         /**
          * enqueue packet to the outputFifo
          */
-        void enqueue(EthPacketPtr packet);
+        void enqueue(EthPacketPtr packet, unsigned senderId);
         void sendDone() {}
         Tick switchingDelay();
 
         Interface* lookupDestPort(Net::EthAddr destAddr);
         void learnSenderAddr(Net::EthAddr srcMacAddr, Interface *sender);
 
-        void serialize(const std::string &base, CheckpointOut &cp) const;
-        void unserialize(const std::string &base, CheckpointIn &cp);
+        void serialize(CheckpointOut &cp) const;
+        void unserialize(CheckpointIn &cp);
 
       private:
         const double ticksPerByte;
         const Tick switchDelay;
         const Tick delayVar;
+        const unsigned interfaceId;
+
         EtherSwitch *parent;
+      protected:
+        struct PortFifoEntry : public Serializable
+        {
+            PortFifoEntry(EthPacketPtr pkt, Tick recv_tick, unsigned id)
+                : packet(pkt), recvTick(recv_tick), srcId(id) {}
+
+            EthPacketPtr packet;
+            Tick recvTick;
+            // id of the port that the packet has been received from
+            unsigned srcId;
+            ~PortFifoEntry()
+            {
+                packet = nullptr;
+                recvTick = 0;
+                srcId = 0;
+            }
+            void serialize(CheckpointOut &cp) const;
+            void unserialize(CheckpointIn &cp);
+        };
+
+        class PortFifo : public Serializable
+        {
+          protected:
+            struct EntryOrder {
+                bool operator() (const PortFifoEntry& lhs,
+                                 const PortFifoEntry& rhs) const
+                {
+                    if (lhs.recvTick == rhs.recvTick)
+                        return lhs.srcId < rhs.srcId;
+                    else
+                        return lhs.recvTick < rhs.recvTick;
+                }
+            };
+            std::set<PortFifoEntry, EntryOrder> fifo;
+
+            const std::string objName;
+            const unsigned _maxsize;
+            unsigned _size;
+
+          public:
+            PortFifo(const std::string &name, int max)
+                :objName(name), _maxsize(max), _size(0) {}
+            ~PortFifo() {}
+
+            const std::string name() { return objName; }
+            // Returns the available capacity of the fifo.
+            // It can return a negative value because in "push" function
+            // we first push the received packet into the fifo and then
+            // check if we exceed the available capacity (if avail() < 0)
+            // and remove packets from the end of fifo
+            int avail() const { return _maxsize - _size; }
+
+            EthPacketPtr front() { return fifo.begin()->packet; }
+            bool empty() const { return _size == 0; }
+            unsigned size() const { return _size; }
+
+            /**
+             * Push a packet into the fifo
+             * and sort the packets with same recv tick by port id
+             */
+            bool push(EthPacketPtr ptr, unsigned senderId);
+            void pop();
+            void clear();
+            /**
+             * Serialization stuff
+             */
+            void serialize(CheckpointOut &cp) const;
+            void unserialize(CheckpointIn &cp);
+        };
         /**
          * output fifo at each interface
          */
-        PacketFifo outputFifo;
+        PortFifo outputFifo;
         void transmit();
         EventWrapper<Interface, &Interface::transmit> txEvent;
     };

@@ -47,7 +47,7 @@ EtherSwitch::EtherSwitch(const Params *p)
         std::string interfaceName = csprintf("%s.interface%d", name(), i);
         Interface *interface = new Interface(interfaceName, this,
                                         p->output_buffer_size, p->delay,
-                                        p->delay_var, p->fabric_speed);
+                                        p->delay_var, p->fabric_speed, i);
         interfaces.push_back(interface);
     }
 }
@@ -72,13 +72,64 @@ EtherSwitch::getEthPort(const std::string &if_name, int idx)
     return interface;
 }
 
+bool
+EtherSwitch::Interface::PortFifo::push(EthPacketPtr ptr, unsigned senderId)
+{
+    assert(ptr->length);
+
+    _size += ptr->length;
+    fifo.emplace_hint(fifo.end(), ptr, curTick(), senderId);
+
+    // Drop the extra pushed packets from end of the fifo
+    while (avail() < 0) {
+        DPRINTF(Ethernet, "Fifo is full. Drop packet: len=%d\n",
+                std::prev(fifo.end())->packet->length);
+
+        _size -= std::prev(fifo.end())->packet->length;
+        fifo.erase(std::prev(fifo.end()));
+    }
+
+    if (empty()) {
+        warn("EtherSwitch: Packet length (%d) exceeds the maximum storage "
+             "capacity of port fifo (%d)", ptr->length, _maxsize);
+    }
+
+    // Return true if the newly pushed packet gets inserted
+    // at the head of the queue, otherwise return false
+    // We need this information to deschedule the event that has been
+    // scheduled for the old head of queue packet and schedule a new one
+    if (!empty() && fifo.begin()->packet == ptr) {
+        return true;
+    }
+    return false;
+}
+
+void
+EtherSwitch::Interface::PortFifo::pop()
+{
+    if (empty())
+        return;
+
+    assert(_size >= fifo.begin()->packet->length);
+    // Erase the packet at the head of the queue
+    _size -= fifo.begin()->packet->length;
+    fifo.erase(fifo.begin());
+}
+
+void
+EtherSwitch::Interface::PortFifo::clear()
+{
+    fifo.clear();
+    _size = 0;
+}
+
 EtherSwitch::Interface::Interface(const std::string &name,
                                   EtherSwitch *etherSwitch,
                                   uint64_t outputBufferSize, Tick delay,
-                                  Tick delay_var, double rate)
+                                  Tick delay_var, double rate, unsigned id)
     : EtherInt(name), ticksPerByte(rate), switchDelay(delay),
-      delayVar(delay_var), parent(etherSwitch),
-      outputFifo(outputBufferSize), txEvent(this)
+      delayVar(delay_var), interfaceId(id), parent(etherSwitch),
+      outputFifo(name + ".outputFifo", outputBufferSize), txEvent(this)
 {
 }
 
@@ -94,13 +145,13 @@ EtherSwitch::Interface::recvPacket(EthPacketPtr packet)
     if (!receiver || destMacAddr.multicast() || destMacAddr.broadcast()) {
         for (auto it : parent->interfaces)
             if (it != this)
-                it->enqueue(packet);
+                it->enqueue(packet, interfaceId);
     } else {
         DPRINTF(Ethernet, "sending packet from MAC %x on port "
                 "%s to MAC %x on port %s\n", uint64_t(srcMacAddr),
                 this->name(), uint64_t(destMacAddr), receiver->name());
 
-        receiver->enqueue(packet);
+        receiver->enqueue(packet, interfaceId);
     }
     // At the output port, we either have buffer space (no drop) or
     // don't (drop packet); in both cases packet is received on
@@ -110,21 +161,18 @@ EtherSwitch::Interface::recvPacket(EthPacketPtr packet)
 }
 
 void
-EtherSwitch::Interface::enqueue(EthPacketPtr packet)
+EtherSwitch::Interface::enqueue(EthPacketPtr packet, unsigned senderId)
 {
-    if (!outputFifo.push(packet)) {
-        // output buffer full, drop packet
-        DPRINTF(Ethernet, "output buffer full, drop packet\n");
-        return;
-    }
-
     // assuming per-interface transmission events,
-    // if there was nothing in the Fifo before push the
-    // current packet, then we need to schedule an event at
-    // curTick + switchingDelay to send this packet out the external link
+    // if the newly push packet gets inserted at the head of the queue
+    // (either there was nothing in the queue or the priority of the new
+    // packet was higher than the packets already in the fifo)
+    // then we need to schedule an event at
+    // "curTick" + "switchingDelay of the packet at the head of the fifo"
+    // to send this packet out the external link
     // otherwise, there is already a txEvent scheduled
-    if (!txEvent.scheduled()) {
-        parent->schedule(txEvent, curTick() + switchingDelay());
+    if (outputFifo.push(packet, senderId)) {
+        parent->reschedule(txEvent, curTick() + switchingDelay());
     }
 }
 
@@ -211,42 +259,92 @@ void
 EtherSwitch::serialize(CheckpointOut &cp) const
 {
     for (auto it : interfaces)
-        it->serialize(it->name(), cp);
+        it->serializeSection(cp, it->name());
+
 }
 
 void
 EtherSwitch::unserialize(CheckpointIn &cp)
 {
     for (auto it : interfaces)
-        it->unserialize(it->name(), cp);
+        it->unserializeSection(cp, it->name());
+
 }
 
 void
-EtherSwitch::Interface::serialize(const std::string &base, CheckpointOut &cp)
-const
+EtherSwitch::Interface::serialize(CheckpointOut &cp) const
 {
     bool event_scheduled = txEvent.scheduled();
-    paramOut(cp, base + ".event_scheduled", event_scheduled);
+    SERIALIZE_SCALAR(event_scheduled);
+
     if (event_scheduled) {
         Tick event_time = txEvent.when();
-        paramOut(cp, base + ".event_time", event_time);
+        SERIALIZE_SCALAR(event_time);
     }
-
-    outputFifo.serialize(base + "outputFifo", cp);
+    outputFifo.serializeSection(cp, "outputFifo");
 }
 
 void
-EtherSwitch::Interface::unserialize(const std::string &base, CheckpointIn &cp)
+EtherSwitch::Interface::unserialize(CheckpointIn &cp)
 {
     bool event_scheduled;
-    paramIn(cp, base + ".event_scheduled", event_scheduled);
+    UNSERIALIZE_SCALAR(event_scheduled);
+
     if (event_scheduled) {
         Tick event_time;
-        paramIn(cp, base + ".event_time", event_time);
+        UNSERIALIZE_SCALAR(event_time);
         parent->schedule(txEvent, event_time);
     }
+    outputFifo.unserializeSection(cp, "outputFifo");
+}
 
-    outputFifo.unserialize(base + "outputFifo", cp);
+void
+EtherSwitch::Interface::PortFifoEntry::serialize(CheckpointOut &cp) const
+{
+    packet->serialize("packet", cp);
+    SERIALIZE_SCALAR(recvTick);
+    SERIALIZE_SCALAR(srcId);
+}
+
+void
+EtherSwitch::Interface::PortFifoEntry::unserialize(CheckpointIn &cp)
+{
+    packet = make_shared<EthPacketData>(16384);
+    packet->unserialize("packet", cp);
+    UNSERIALIZE_SCALAR(recvTick);
+    UNSERIALIZE_SCALAR(srcId);
+}
+
+void
+EtherSwitch::Interface::PortFifo::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(_size);
+    int fifosize = fifo.size();
+
+    SERIALIZE_SCALAR(fifosize);
+
+    int i = 0;
+    for (const auto &entry : fifo)
+        entry.serializeSection(cp, csprintf("entry%d", i++));
+}
+
+void
+EtherSwitch::Interface::PortFifo::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(_size);
+    int fifosize;
+
+    UNSERIALIZE_SCALAR(fifosize);
+    fifo.clear();
+
+    for (int i = 0; i < fifosize; ++i) {
+        PortFifoEntry entry(nullptr, 0, 0);
+
+        entry.unserializeSection(cp, csprintf("entry%d", i));
+
+        fifo.insert(entry);
+
+    }
 }
 
 EtherSwitch *
