@@ -457,7 +457,7 @@ namespace HsailISA
             gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
 
             if (num_dest_operands > 1) {
-                for (int i = 0; i < VSZ; ++i)
+                for (int i = 0; i < gpuDynInst->computeUnit()->wfSize(); ++i)
                     if (gpuDynInst->exec_mask[i])
                         gpuDynInst->statusVector.push_back(num_dest_operands);
                     else
@@ -466,9 +466,10 @@ namespace HsailISA
 
             for (int k = 0; k < num_dest_operands; ++k) {
 
-                c0 *d = &((c0*)gpuDynInst->d_data)[k * VSZ];
+                c0 *d = &((c0*)gpuDynInst->d_data)
+                    [k * gpuDynInst->computeUnit()->wfSize()];
 
-                for (int i = 0; i < VSZ; ++i) {
+                for (int i = 0; i < gpuDynInst->computeUnit()->wfSize(); ++i) {
                     if (gpuDynInst->exec_mask[i]) {
                         Addr vaddr = gpuDynInst->addr[i] + k * sizeof(c0);
 
@@ -1004,7 +1005,7 @@ namespace HsailISA
             gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
 
             if (num_src_operands > 1) {
-                for (int i = 0; i < VSZ; ++i)
+                for (int i = 0; i < gpuDynInst->computeUnit()->wfSize(); ++i)
                     if (gpuDynInst->exec_mask[i])
                         gpuDynInst->statusVector.push_back(num_src_operands);
                     else
@@ -1012,9 +1013,10 @@ namespace HsailISA
             }
 
             for (int k = 0; k < num_src_operands; ++k) {
-                c0 *d = &((c0*)gpuDynInst->d_data)[k * VSZ];
+                c0 *d = &((c0*)gpuDynInst->d_data)
+                    [k * gpuDynInst->computeUnit()->wfSize()];
 
-                for (int i = 0; i < VSZ; ++i) {
+                for (int i = 0; i < gpuDynInst->computeUnit()->wfSize(); ++i) {
                     if (gpuDynInst->exec_mask[i]) {
                         Addr vaddr = gpuDynInst->addr[i] + k * sizeof(c0);
 
@@ -1402,7 +1404,7 @@ namespace HsailISA
             c0 *e = &((c0*) gpuDynInst->a_data)[0];
             c0 *f = &((c0*) gpuDynInst->x_data)[0];
 
-            for (int i = 0; i < VSZ; ++i) {
+            for (int i = 0; i < gpuDynInst->computeUnit()->wfSize(); ++i) {
                 if (gpuDynInst->exec_mask[i]) {
                     Addr vaddr = gpuDynInst->addr[i];
 

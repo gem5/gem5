@@ -100,7 +100,7 @@ struct WFContext
 {
     // 32 bit values
     // barrier state
-    int bar_cnt[VSZ];
+    std::vector<int> bar_cnt;
 
     // id (which WF in the WG)
     int cnt;

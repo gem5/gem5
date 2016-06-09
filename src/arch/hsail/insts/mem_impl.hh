@@ -60,14 +60,16 @@ namespace HsailISA
 
         typedef typename DestDataType::CType CType M5_VAR_USED;
         const VectorMask &mask = w->get_pred();
-        uint64_t addr_vec[VSZ];
+        std::vector<Addr> addr_vec;
+        addr_vec.resize(w->computeUnit->wfSize(), (Addr)0);
         this->addr.calcVector(w, addr_vec);
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 this->dest.set(w, lane, addr_vec[lane]);
             }
         }
+        addr_vec.clear();
     }
 
     template<typename MemDataType, typename DestDataType,
@@ -121,8 +123,8 @@ namespace HsailISA
             i->parent->findSymbol(Brig::BrigPrivateSpace, addr);
         assert(se);
 
-        return w->wfSlotId * w->privSizePerItem * VSZ +
-            se->offset * VSZ +
+        return w->wfSlotId * w->privSizePerItem * w->computeUnit->wfSize() +
+            se->offset * w->computeUnit->wfSize() +
             lane * se->size;
         */
 
@@ -139,9 +141,11 @@ namespace HsailISA
         Addr addr_div8 = addr / 8;
         Addr addr_mod8 = addr % 8;
 
-        Addr ret = addr_div8 * 8 * VSZ + lane * 8 + addr_mod8 + w->privBase;
+        Addr ret = addr_div8 * 8 * w->computeUnit->wfSize() + lane * 8 +
+            addr_mod8 + w->privBase;
 
-        assert(ret < w->privBase + (w->privSizePerItem * VSZ));
+        assert(ret < w->privBase +
+               (w->privSizePerItem * w->computeUnit->wfSize()));
 
         return ret;
     }
@@ -175,7 +179,7 @@ namespace HsailISA
 
             DPRINTF(HSAIL, "ld_kernarg [%d] -> %d\n", address, val);
 
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (mask[lane]) {
                     this->dest.set(w, lane, val);
                 }
@@ -184,7 +188,7 @@ namespace HsailISA
             return;
         } else if (this->segment == Brig::BRIG_SEGMENT_ARG) {
             uint64_t address = this->addr.calcUniform();
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (mask[lane]) {
                     MemCType val = w->readCallArgMem<MemCType>(lane, address);
 
@@ -239,7 +243,7 @@ namespace HsailISA
             // this is a complete hack to get around a compiler bug
             // (the compiler currently generates global access for private
             //  addresses (starting from 0). We need to add the private offset)
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (m->addr[lane] < w->privSizePerItem) {
                     if (mask[lane]) {
                         // what is the size of the object we are accessing?
@@ -267,7 +271,7 @@ namespace HsailISA
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
-                for (int lane = 0; lane < VSZ; ++lane) {
+                for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                     //  note: this calculation will NOT WORK if the compiler
                     //  ever generates loads/stores to the same address with
                     //  different widths (e.g., a ld_u32 addr and a ld_u16 addr)
@@ -301,7 +305,7 @@ namespace HsailISA
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
 
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (mask[lane]) {
                     assert(m->addr[lane] + sizeof(MemCType) <= w->roSize);
                     m->addr[lane] += w->roBase;
@@ -318,7 +322,7 @@ namespace HsailISA
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
-                for (int lane = 0; lane < VSZ; ++lane) {
+                for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                     if (mask[lane]) {
                         assert(m->addr[lane] < w->privSizePerItem);
 
@@ -360,7 +364,7 @@ namespace HsailISA
         if (this->segment == Brig::BRIG_SEGMENT_ARG) {
             uint64_t address = this->addr.calcUniform();
 
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (mask[lane]) {
                     CType data = this->src.template get<CType>(w, lane);
                     DPRINTF(HSAIL, "st_arg [%d] <- %d\n", address, data);
@@ -378,7 +382,7 @@ namespace HsailISA
         this->addr.calcVector(w, m->addr);
 
         if (num_src_operands == 1) {
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (mask[lane]) {
                     ((CType*)m->d_data)[lane] =
                         this->src.template get<CType>(w, lane);
@@ -386,9 +390,9 @@ namespace HsailISA
             }
         } else {
             for (int k= 0; k < num_src_operands; ++k) {
-                for (int lane = 0; lane < VSZ; ++lane) {
+                for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                     if (mask[lane]) {
-                        ((CType*)m->d_data)[k * VSZ + lane] =
+                        ((CType*)m->d_data)[k * w->computeUnit->wfSize() + lane] =
                             this->src_vect[k].template get<CType>(w, lane);
                     }
                 }
@@ -428,7 +432,7 @@ namespace HsailISA
             // this is a complete hack to get around a compiler bug
             // (the compiler currently generates global access for private
             //  addresses (starting from 0). We need to add the private offset)
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 if (mask[lane]) {
                     if (m->addr[lane] < w->privSizePerItem) {
 
@@ -454,7 +458,7 @@ namespace HsailISA
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
-                for (int lane = 0; lane < VSZ; ++lane) {
+                for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                     if (mask[lane]) {
                         assert(m->addr[lane] < w->spillSizePerItem);
 
@@ -483,7 +487,7 @@ namespace HsailISA
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
-                for (int lane = 0; lane < VSZ; ++lane) {
+                for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                     if (mask[lane]) {
                         assert(m->addr[lane] < w->privSizePerItem);
                         m->addr[lane] = m->addr[lane] + lane *
@@ -558,14 +562,14 @@ namespace HsailISA
 
         this->addr.calcVector(w, m->addr);
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             ((CType *)m->a_data)[lane] =
                 this->src[0].template get<CType>(w, lane);
         }
 
         // load second source operand for CAS
         if (NumSrcOperands > 1) {
-            for (int lane = 0; lane < VSZ; ++lane) {
+            for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
                 ((CType*)m->x_data)[lane] =
                     this->src[1].template get<CType>(w, lane);
             }

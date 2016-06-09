@@ -134,7 +134,7 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
 
         // mask off completed work-items
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 w->init_mask[lane] = 0;
             }

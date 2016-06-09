@@ -84,7 +84,7 @@ namespace HsailISA
         int op = 0;
         bool got_op = false;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val0 = src1.get<int>(w, lane, 0);
                 if (got_op) {
@@ -182,7 +182,7 @@ namespace HsailISA
     {
     #if TRACING_ON
         const VectorMask &mask = w->get_pred();
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
                 int src_val2 = src1.get<int>(w, lane, 2);
@@ -205,7 +205,7 @@ namespace HsailISA
     {
     #if TRACING_ON
         const VectorMask &mask = w->get_pred();
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int64_t src_val1 = src1.get<int64_t>(w, lane, 1);
                 int src_val2 = src1.get<int>(w, lane, 2);
@@ -231,7 +231,7 @@ namespace HsailISA
         std::string res_str;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (!(lane & 7)) {
                 res_str += csprintf("DB%03d: ", (int)w->wfDynId);
             }
@@ -270,7 +270,7 @@ namespace HsailISA
         int src_val3 = -1;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (!(lane & 7)) {
                 res_str += csprintf("DB%03d: ", (int)w->wfDynId);
             }
@@ -311,7 +311,7 @@ namespace HsailISA
         std::string res_str;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (!(lane & 3)) {
                 res_str += csprintf("DB%03d: ", (int)w->wfDynId);
             }
@@ -350,7 +350,7 @@ namespace HsailISA
         int src_val3 = -1;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (!(lane & 3)) {
                 res_str += csprintf("DB%03d: ", (int)w->wfDynId);
             }
@@ -391,7 +391,7 @@ namespace HsailISA
         std::string res_str;
         res_str = csprintf("krl_prt (%s)\n", disassemble());
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (!(lane & 7)) {
                 res_str += csprintf("DB%03d: ", (int)w->wfDynId);
             }
@@ -430,7 +430,7 @@ namespace HsailISA
         res_str += csprintf("  Executing on CU #%i\n", w->computeUnit->cu_id);
         res_str += csprintf("  Exec mask: ");
 
-        for (int i = VSZ - 1; i >= 0; --i) {
+        for (int i = w->computeUnit->wfSize() - 1; i >= 0; --i) {
             if (w->execMask(i))
                 res_str += "1";
             else
@@ -458,7 +458,7 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         int res = 0;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
                 dest.set<int>(w, lane, res);
@@ -477,14 +477,14 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         int res = 0;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
                 res += src_val1;
             }
         }
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 dest.set<int>(w, lane, res);
             }
@@ -497,19 +497,19 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         int res = 0;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
 
                 if (src_val1) {
-                    if (lane < (VSZ/2)) {
+                    if (lane < (w->computeUnit->wfSize()/2)) {
                         res = res | ((uint32_t)(1) << lane);
                     }
                 }
             }
         }
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 dest.set<int>(w, lane, res);
             }
@@ -521,19 +521,20 @@ namespace HsailISA
     {
         const VectorMask &mask = w->get_pred();
         int res = 0;
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
 
                 if (src_val1) {
-                    if (lane >= (VSZ/2)) {
-                        res = res | ((uint32_t)(1) << (lane - (VSZ/2)));
+                    if (lane >= (w->computeUnit->wfSize()/2)) {
+                        res = res | ((uint32_t)(1) <<
+                                     (lane - (w->computeUnit->wfSize()/2)));
                     }
                 }
             }
         }
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 dest.set<int>(w, lane, res);
             }
@@ -546,7 +547,7 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         int max_cnt = 0;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 w->bar_cnt[lane]++;
 
@@ -567,7 +568,7 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         int max_cnt = 0;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 w->bar_cnt[lane]--;
             }
@@ -592,7 +593,7 @@ namespace HsailISA
     {
         const VectorMask &mask = w->get_pred();
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 int src_val1 = src1.get<int>(w, lane, 1);
                 panic("OpenCL Code failed assertion #%d. Triggered by lane %s",
@@ -605,7 +606,7 @@ namespace HsailISA
     Call::calcAddr(Wavefront *w, GPUDynInstPtr m)
     {
         // the address is in src1 | src2
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             int src_val1 = src1.get<int>(w, lane, 1);
             int src_val2 = src1.get<int>(w, lane, 2);
             Addr addr = (((Addr) src_val1) << 32) | ((Addr) src_val2);
@@ -622,7 +623,7 @@ namespace HsailISA
 
         calcAddr(w, m);
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             ((int*)m->a_data)[lane] = src1.get<int>(w, lane, 3);
         }
 
@@ -661,7 +662,7 @@ namespace HsailISA
         GPUDynInstPtr m = gpuDynInst;
         calcAddr(w, m);
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             ((int*)m->a_data)[lane] = src1.get<int>(w, lane, 1);
         }
 
@@ -736,7 +737,7 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         int src_val1 = 0;
 
-        for (int lane = 0; lane < VSZ; ++lane) {
+        for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 src_val1 = src1.get<int>(w, lane, 1);
                 break;
@@ -758,7 +759,7 @@ namespace HsailISA
         const VectorMask &mask = w->get_pred();
         unsigned mst = true;
 
-        for (int lane = VSZ - 1; lane >= 0; --lane) {
+        for (int lane = w->computeUnit->wfSize() - 1; lane >= 0; --lane) {
             if (mask[lane]) {
                 dest.set<int>(w, lane, mst);
                 mst = false;
@@ -773,7 +774,7 @@ namespace HsailISA
         int res = 0;
         bool got_res = false;
 
-        for (int lane = VSZ - 1; lane >= 0; --lane) {
+        for (int lane = w->computeUnit->wfSize() - 1; lane >= 0; --lane) {
             if (mask[lane]) {
                 if (!got_res) {
                     res = src1.get<int>(w, lane, 1);

@@ -157,6 +157,7 @@ class GpuDispatcher : public DmaDevice
 
         // helper functions to retrieve/set GPU attributes
         int getNumCUs();
+        int wfSize() const;
         void setFuncargsSize(int funcargs_size);
 };
 

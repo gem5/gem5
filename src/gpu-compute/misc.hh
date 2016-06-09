@@ -37,28 +37,14 @@
 #define __MISC_HH__
 
 #include <bitset>
+#include <limits>
 #include <memory>
 
 #include "base/misc.hh"
 
 class GPUDynInst;
 
-// wavefront size of the machine
-static const int VSZ = 64;
-
-/*
- This check is necessary because std::bitset only provides conversion to
- unsigned long or unsigned long long via to_ulong() or to_ullong(). there are
- a few places in the code where to_ullong() is used, however if VSZ is larger
- than a value the host can support then bitset will throw a runtime exception.
-
- we should remove all use of to_long() or to_ullong() so we can have VSZ
- greater than 64b, however until that is done this assert is required.
- */
-static_assert(VSZ <= sizeof(unsigned long long) * 8,
-              "VSZ is larger than the host can support");
-
-typedef std::bitset<VSZ> VectorMask;
+typedef std::bitset<std::numeric_limits<unsigned long long>::digits> VectorMask;
 typedef std::shared_ptr<GPUDynInst> GPUDynInstPtr;
 
 class WaitClass

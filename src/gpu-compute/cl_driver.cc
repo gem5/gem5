@@ -238,7 +238,7 @@ ClDriver::ioctl(LiveProcess *process, ThreadContext *tc, unsigned req)
       case HSA_GET_VSZ:
         {
             BufferArg buf(buf_addr, sizeof(uint32_t));
-            *((uint32_t*)buf.bufferPtr()) = VSZ;
+            *((uint32_t*)buf.bufferPtr()) = dispatcher->wfSize();
             buf.copyOut(tc->getMemProxy());
         }
         break;

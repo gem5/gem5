@@ -148,9 +148,9 @@ LocalMemPipeline::doSmReturn(GPUDynInstPtr m)
             int physVgpr = w->remap(dst,sizeof(c0),1);
             // save the physical VGPR index
             regVec.push_back(physVgpr);
-            c1 *p1 = &((c1*)m->d_data)[k * VSZ];
+            c1 *p1 = &((c1 *)m->d_data)[k * w->computeUnit->wfSize()];
 
-            for (int i = 0; i < VSZ; ++i) {
+            for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
                 if (m->exec_mask[i]) {
                     // write the value into the physical VGPR. This is a purely
                     // functional operation. No timing is modeled.

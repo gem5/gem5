@@ -42,6 +42,7 @@
  *  Defines classes encapsulating HSAIL instruction operands.
  */
 
+#include <limits>
 #include <string>
 
 #include "arch/hsail/Brig.h"
@@ -346,6 +347,8 @@ class CRegOperand : public BaseRegOperand
 template<typename T>
 class ImmOperand : public BaseOperand
 {
+  private:
+    uint16_t kind;
   public:
     T bits;
 
@@ -355,11 +358,21 @@ class ImmOperand : public BaseOperand
 
     template<typename OperandType>
     OperandType
-    get()
+    get(Wavefront *w)
     {
         assert(sizeof(OperandType) <= sizeof(T));
+        panic_if(w == nullptr, "WF pointer needs to be set");
 
-        return *(OperandType*)&bits;
+        switch (kind) {
+          // immediate operand is WF size
+          case Brig::BRIG_KIND_OPERAND_WAVESIZE:
+            return (OperandType)w->computeUnit->wfSize();
+            break;
+
+          default:
+            return *(OperandType*)&bits;
+            break;
+        }
     }
 
     // This version of get() takes a WF* and a lane id for
@@ -368,7 +381,7 @@ class ImmOperand : public BaseOperand
     OperandType
     get(Wavefront *w, int lane)
     {
-        return get<OperandType>();
+        return get<OperandType>(w);
     }
 };
 
@@ -388,16 +401,18 @@ ImmOperand<T>::init(unsigned opOffset, const BrigObject *obj)
             auto cbptr = (Brig::BrigOperandConstantBytes*)brigOp;
 
             bits = *((T*)(obj->getData(cbptr->bytes + 4)));
-
+            kind = brigOp->kind;
             return true;
         }
         break;
 
       case Brig::BRIG_KIND_OPERAND_WAVESIZE:
-        bits = VSZ;
+        kind = brigOp->kind;
+        bits = std::numeric_limits<unsigned long long>::digits;
         return true;
 
       default:
+        kind = Brig::BRIG_KIND_NONE;
         return false;
     }
 }
@@ -409,6 +424,7 @@ ImmOperand<T>::init_from_vect(unsigned opOffset, const BrigObject *obj, int at)
     const Brig::BrigOperand *brigOp = obj->getOperand(opOffset);
 
     if (brigOp->kind != Brig::BRIG_KIND_OPERAND_OPERAND_LIST) {
+        kind = Brig::BRIG_KIND_NONE;
         return false;
     }
 
@@ -423,6 +439,7 @@ ImmOperand<T>::init_from_vect(unsigned opOffset, const BrigObject *obj, int at)
         (const Brig::BrigOperand *)obj->getOperand(*data_offset);
 
     if (p->kind != Brig::BRIG_KIND_OPERAND_CONSTANT_BYTES) {
+        kind = Brig::BRIG_KIND_NONE;
         return false;
     }
 
@@ -456,7 +473,7 @@ class RegOrImmOperand : public BaseOperand
     OperandType
     get(Wavefront *w, int lane)
     {
-        return is_imm ?  imm_op.template get<OperandType>() :
+        return is_imm ?  imm_op.template get<OperandType>(w) :
                          reg_op.template get<OperandType>(w, lane);
     }
 
@@ -571,7 +588,7 @@ class AddrOperandBase : public BaseOperand
     uint64_t calcUniformBase();
 
   public:
-    virtual void calcVector(Wavefront *w, uint64_t *addrVec) = 0;
+    virtual void calcVector(Wavefront *w, std::vector<Addr> &addrVec) = 0;
     virtual uint64_t calcLane(Wavefront *w, int lane=0) = 0;
 
     uint64_t offset;
@@ -586,7 +603,7 @@ class RegAddrOperand : public AddrOperandBase
     RegOperandType reg;
     void init(unsigned opOffset, const BrigObject *obj);
     uint64_t calcUniform();
-    void calcVector(Wavefront *w, uint64_t *addrVec);
+    void calcVector(Wavefront *w, std::vector<Addr> &addrVec);
     uint64_t calcLane(Wavefront *w, int lane=0);
     uint32_t opSize() { return reg.opSize(); }
     bool isVectorRegister() { return reg.registerType == Enums::RT_VECTOR; }
@@ -641,11 +658,12 @@ RegAddrOperand<RegOperandType>::calcUniform()
 
 template<typename RegOperandType>
 void
-RegAddrOperand<RegOperandType>::calcVector(Wavefront *w, uint64_t *addrVec)
+RegAddrOperand<RegOperandType>::calcVector(Wavefront *w,
+                                           std::vector<Addr> &addrVec)
 {
     Addr address = calcUniformBase();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (w->execMask(lane)) {
             if (reg.regFileChar == 's') {
                 addrVec[lane] = address + reg.template get<uint32_t>(w, lane);
@@ -680,7 +698,7 @@ class NoRegAddrOperand : public AddrOperandBase
   public:
     void init(unsigned opOffset, const BrigObject *obj);
     uint64_t calcUniform();
-    void calcVector(Wavefront *w, uint64_t *addrVec);
+    void calcVector(Wavefront *w, std::vector<Addr> &addrVec);
     uint64_t calcLane(Wavefront *w, int lane=0);
     std::string disassemble();
 };
@@ -698,11 +716,11 @@ NoRegAddrOperand::calcLane(Wavefront *w, int lane)
 }
 
 inline void
-NoRegAddrOperand::calcVector(Wavefront *w, uint64_t *addrVec)
+NoRegAddrOperand::calcVector(Wavefront *w, std::vector<Addr> &addrVec)
 {
     uint64_t address = calcUniformBase();
 
-    for (int lane = 0; lane < VSZ; ++lane)
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane)
         addrVec[lane] = address;
 }
 

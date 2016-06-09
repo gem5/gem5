@@ -59,6 +59,7 @@ class VectorRegisterFile(SimObject):
 
     simd_id = Param.Int(0, 'SIMD ID associated with this VRF')
     num_regs_per_simd = Param.Int(2048, 'number of vector registers per SIMD')
+    wfSize = Param.Int(64, 'Wavefront size (in work items)')
     min_alloc = Param.Int(4, 'min number of VGPRs allocated per WF')
 
 class Wavefront(SimObject):
@@ -68,6 +69,7 @@ class Wavefront(SimObject):
 
     simdId = Param.Int('SIMD id (0-ComputeUnit.num_SIMDs)')
     wf_slot_id = Param.Int('wavefront id (0-ComputeUnit.max_wfs)')
+    wfSize = Param.Int(64, 'Wavefront size (in work items)')
 
 class ComputeUnit(MemObject):
     type = 'ComputeUnit'

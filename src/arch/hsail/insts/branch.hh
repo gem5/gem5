@@ -279,7 +279,7 @@ namespace HsailISA
         // taken branch
         const uint32_t true_pc = getTargetPc();
         VectorMask true_mask;
-        for (unsigned int lane = 0; lane < VSZ; ++lane) {
+        for (unsigned int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
             true_mask[lane] = cond.get<bool>(w, lane) & curr_mask[lane];
         }
 

@@ -51,7 +51,7 @@ class VecRegisterState
 {
   public:
     VecRegisterState();
-    void init(uint32_t _size);
+    void init(uint32_t _size, uint32_t wf_size);
 
     const std::string& name() const { return _name; }
     void setParent(ComputeUnit *_computeUnit);
@@ -93,9 +93,9 @@ class VecRegisterState
     ComputeUnit *computeUnit;
     std::string _name;
     // 32-bit Single Precision Vector Register State
-    std::vector<std::array<uint32_t, VSZ>> s_reg;
+    std::vector<std::vector<uint32_t>> s_reg;
     // 64-bit Double Precision Vector Register State
-    std::vector<std::array<uint64_t, VSZ>> d_reg;
+    std::vector<std::vector<uint64_t>> d_reg;
 };
 
 #endif // __VECTOR_REGISTER_STATE_HH__

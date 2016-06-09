@@ -63,7 +63,7 @@ VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams *p)
     nxtBusy.clear();
     nxtBusy.resize(numRegsPerSimd, 0);
 
-    vgprState->init(numRegsPerSimd);
+    vgprState->init(numRegsPerSimd, p->wfSize);
 }
 
 void

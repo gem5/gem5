@@ -42,11 +42,29 @@
 
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
                        GPUStaticInst *_staticInst, uint64_t instSeqNum)
-    : GPUExecContext(_cu, _wf), m_op(Enums::MO_UNDEF),
+    : GPUExecContext(_cu, _wf), addr(computeUnit()->wfSize(), (Addr)0),
+      m_op(Enums::MO_UNDEF),
       memoryOrder(Enums::MEMORY_ORDER_NONE), n_reg(0), useContinuation(false),
       statusBitVector(0), staticInst(_staticInst), _seqNum(instSeqNum)
 {
-    tlbHitLevel.assign(VSZ, -1);
+    tlbHitLevel.assign(computeUnit()->wfSize(), -1);
+    d_data = new uint8_t[computeUnit()->wfSize() * 16];
+    a_data = new uint8_t[computeUnit()->wfSize() * 8];
+    x_data = new uint8_t[computeUnit()->wfSize() * 8];
+    for (int i = 0; i < (computeUnit()->wfSize() * 8); ++i) {
+        a_data[i] = 0;
+        x_data[i] = 0;
+    }
+    for (int i = 0; i < (computeUnit()->wfSize() * 16); ++i) {
+        d_data[i] = 0;
+    }
+}
+
+GPUDynInst::~GPUDynInst()
+{
+    delete[] d_data;
+    delete[] a_data;
+    delete[] x_data;
 }
 
 void

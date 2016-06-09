@@ -55,7 +55,6 @@ Wavefront::Wavefront(const Params *p)
     last_trace = 0;
     simdId = p->simdId;
     wfSlotId = p->wf_slot_id;
-
     status = S_STOPPED;
     reservedVectorRegs = 0;
     startVgprIndex = 0;
@@ -77,12 +76,20 @@ Wavefront::Wavefront(const Params *p)
     mem_trace_busy = 0;
     old_vgpr_tcnt = 0xffffffffffffffffll;
     old_dgpr_tcnt = 0xffffffffffffffffll;
+    old_vgpr.resize(p->wfSize);
 
     pendingFetch = false;
     dropFetch = false;
     condRegState = new ConditionRegisterState();
     maxSpVgprs = 0;
     maxDpVgprs = 0;
+    last_addr.resize(p->wfSize);
+    workitemFlatId.resize(p->wfSize);
+    old_dgpr.resize(p->wfSize);
+    bar_cnt.resize(p->wfSize);
+    for (int i = 0; i < 3; ++i) {
+        workitemid[i].resize(p->wfSize);
+    }
 }
 
 void
@@ -144,6 +151,7 @@ Wavefront::~Wavefront()
 {
     if (callArgMem)
         delete callArgMem;
+    delete condRegState;
 }
 
 void

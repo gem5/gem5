@@ -235,7 +235,7 @@ $class_name::execute(GPUDynInstPtr gpuDynInst)
 
     const VectorMask &mask = w->get_pred();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             DestCType dest_val = $expr;
             this->dest.set(w, lane, dest_val);
@@ -256,7 +256,7 @@ $class_name::execute(GPUDynInstPtr gpuDynInst)
 
     const VectorMask &mask = w->get_pred();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             SrcCType src_val0 = this->src0.get<SrcCType>(w, lane);
             DestCType dest_val = $expr;
@@ -277,7 +277,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 
     const VectorMask &mask = w->get_pred();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             CType dest_val;
             if ($dest_is_src_flag) {
@@ -312,7 +312,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 
     const VectorMask &mask = w->get_pred();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             CType dest_val;
 
@@ -346,7 +346,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 
     const VectorMask &mask = w->get_pred();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             DestT dest_val;
             if ($dest_is_src_flag) {
@@ -372,7 +372,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
     Wavefront *w = gpuDynInst->wavefront();
 
     const VectorMask &mask = w->get_pred();
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             CType dest_val;
 
@@ -401,7 +401,7 @@ $class_name<DestDataType, SrcDataType>::execute(GPUDynInstPtr gpuDynInst)
 
     const VectorMask &mask = w->get_pred();
 
-    for (int lane = 0; lane < VSZ; ++lane) {
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             DestCType dest_val;
             SrcCType src_val[$num_srcs];

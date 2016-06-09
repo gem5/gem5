@@ -161,22 +161,8 @@ class ComputeUnit : public MemObject
     // if fixed-stride prefetching, this is the stride.
     int prefetchStride;
 
-    class LastVaddrWave
-    {
-      public:
-        Addr vaddrs[VSZ];
-        Addr& operator[](int idx) {
-            return vaddrs[idx];
-        }
-
-        LastVaddrWave() {
-            for (int i = 0; i < VSZ; ++i)
-                vaddrs[i] = 0;
-        }
-    };
-
-    LastVaddrWave lastVaddrCU;
-    std::vector<LastVaddrWave> lastVaddrPhase;
+    std::vector<Addr> lastVaddrCU;
+    std::vector<std::vector<Addr>> lastVaddrSimd;
     std::vector<std::vector<std::vector<Addr>>> lastVaddrWF;
     Enums::PrefetchType prefetchType;
     EXEC_POLICY exec_policy;

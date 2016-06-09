@@ -250,7 +250,8 @@ for i in xrange(n_cu):
     vrfs = []
     for j in xrange(options.simds_per_cu):
         for k in xrange(shader.n_wf):
-            wavefronts.append(Wavefront(simdId = j, wf_slot_id = k))
+            wavefronts.append(Wavefront(simdId = j, wf_slot_id = k,
+                                        wfSize = options.wf_size))
         vrfs.append(VectorRegisterFile(simd_id=j,
                               num_regs_per_simd=options.vreg_file_size))
     compute_units[-1].wavefronts = wavefronts

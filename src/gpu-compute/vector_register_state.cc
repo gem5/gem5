@@ -35,6 +35,8 @@
 
 #include "gpu-compute/vector_register_state.hh"
 
+#include <limits>
+
 #include "gpu-compute/compute_unit.hh"
 
 VecRegisterState::VecRegisterState() : computeUnit(nullptr)
@@ -51,8 +53,19 @@ VecRegisterState::setParent(ComputeUnit *_computeUnit)
 }
 
 void
-VecRegisterState::init(uint32_t _size)
+VecRegisterState::init(uint32_t _size, uint32_t wf_size)
 {
     s_reg.resize(_size);
+    fatal_if(wf_size > std::numeric_limits<unsigned long long>::digits ||
+             wf_size <= 0,
+             "WF size is larger than the host can support or is zero");
+    fatal_if((wf_size & (wf_size - 1)) != 0,
+             "Wavefront size should be a power of 2");
+    for (int i = 0; i < s_reg.size(); ++i) {
+        s_reg[i].resize(wf_size, 0);
+    }
     d_reg.resize(_size);
+    for (int i = 0; i < d_reg.size(); ++i) {
+        d_reg[i].resize(wf_size, 0);
+    }
 }

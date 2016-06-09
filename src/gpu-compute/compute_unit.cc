@@ -32,8 +32,9 @@
  *
  * Author: John Kalamatianos, Anthony Gutierrez
  */
-
 #include "gpu-compute/compute_unit.hh"
+
+#include <limits>
 
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"
@@ -76,14 +77,27 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
     _masterId(p->system->getMasterId(name() + ".ComputeUnit")),
     lds(*p->localDataStore), globalSeqNum(0),  wavefrontSize(p->wfSize)
 {
-    // this check will be eliminated once we have wavefront size support added
-    fatal_if(p->wfSize != VSZ, "Wavefront size parameter does not match VSZ");
+    /**
+     * This check is necessary because std::bitset only provides conversion
+     * to unsigned long or unsigned long long via to_ulong() or to_ullong().
+     * there are * a few places in the code where to_ullong() is used, however
+     * if VSZ is larger than a value the host can support then bitset will
+     * throw a runtime exception. we should remove all use of to_long() or
+     * to_ullong() so we can have VSZ greater than 64b, however until that is
+     * done this assert is required.
+     */
+    fatal_if(p->wfSize > std::numeric_limits<unsigned long long>::digits ||
+             p->wfSize <= 0,
+             "WF size is larger than the host can support");
+    fatal_if(!isPowerOf2(wavefrontSize),
+             "Wavefront size should be a power of 2");
     // calculate how many cycles a vector load or store will need to transfer
     // its data over the corresponding buses
-    numCyclesPerStoreTransfer = (uint32_t)ceil((double)(VSZ * sizeof(uint32_t))
-                                / (double)vrfToCoalescerBusWidth);
+    numCyclesPerStoreTransfer =
+        (uint32_t)ceil((double)(wfSize() * sizeof(uint32_t)) /
+                (double)vrfToCoalescerBusWidth);
 
-    numCyclesPerLoadTransfer = (VSZ * sizeof(uint32_t))
+    numCyclesPerLoadTransfer = (wfSize() * sizeof(uint32_t))
                                / coalescerToVrfBusWidth;
 
     lastVaddrWF.resize(numSIMDs);
@@ -93,24 +107,24 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
         lastVaddrWF[j].resize(p->n_wf);
 
         for (int i = 0; i < p->n_wf; ++i) {
-            lastVaddrWF[j][i].resize(VSZ);
+            lastVaddrWF[j][i].resize(wfSize());
 
             wfList[j].push_back(p->wavefronts[j * p->n_wf + i]);
             wfList[j][i]->setParent(this);
 
-            for (int k = 0; k < VSZ; ++k) {
+            for (int k = 0; k < wfSize(); ++k) {
                 lastVaddrWF[j][i][k] = 0;
             }
         }
     }
 
-    lastVaddrPhase.resize(numSIMDs);
+    lastVaddrSimd.resize(numSIMDs);
 
     for (int i = 0; i < numSIMDs; ++i) {
-        lastVaddrPhase[i] = LastVaddrWave();
+        lastVaddrSimd[i].resize(wfSize(), 0);
     }
 
-    lastVaddrCU = LastVaddrWave();
+    lastVaddrCU.resize(wfSize());
 
     lds.setParent(this);
 
@@ -122,10 +136,10 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
         fatal("Invalid WF execution policy (CU)\n");
     }
 
-    memPort.resize(VSZ);
+    memPort.resize(wfSize());
 
     // resize the tlbPort vectorArray
-    int tlbPort_width = perLaneTLB ? VSZ : 1;
+    int tlbPort_width = perLaneTLB ? wfSize() : 1;
     tlbPort.resize(tlbPort_width);
 
     cuExitCallback = new CUExitCallback(this);
@@ -144,12 +158,13 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
 ComputeUnit::~ComputeUnit()
 {
     // Delete wavefront slots
-
-    for (int j = 0; j < numSIMDs; ++j)
+    for (int j = 0; j < numSIMDs; ++j) {
         for (int i = 0; i < shader->n_wf; ++i) {
             delete wfList[j][i];
         }
-
+        lastVaddrSimd[j].clear();
+    }
+    lastVaddrCU.clear();
     readyList.clear();
     waveStatusList.clear();
     dispatchList.clear();
@@ -187,27 +202,25 @@ ComputeUnit::InitializeWFContext(WFContext *wfCtx, NDRange *ndr, int cnt,
     VectorMask init_mask;
     init_mask.reset();
 
-    for (int k = 0; k < VSZ; ++k) {
-        if (k + cnt * VSZ < trueWgSizeTotal)
+    for (int k = 0; k < wfSize(); ++k) {
+        if (k + cnt * wfSize() < trueWgSizeTotal)
             init_mask[k] = 1;
     }
 
     wfCtx->init_mask = init_mask.to_ullong();
     wfCtx->exec_mask = init_mask.to_ullong();
 
-    for (int i = 0; i < VSZ; ++i) {
-        wfCtx->bar_cnt[i] = 0;
-    }
+    wfCtx->bar_cnt.resize(wfSize(), 0);
 
     wfCtx->max_bar_cnt = 0;
     wfCtx->old_barrier_cnt = 0;
     wfCtx->barrier_cnt = 0;
 
     wfCtx->privBase = ndr->q.privMemStart;
-    ndr->q.privMemStart += ndr->q.privMemPerItem * VSZ;
+    ndr->q.privMemStart += ndr->q.privMemPerItem * wfSize();
 
     wfCtx->spillBase = ndr->q.spillMemStart;
-    ndr->q.spillMemStart += ndr->q.spillMemPerItem * VSZ;
+    ndr->q.spillMemStart += ndr->q.spillMemPerItem * wfSize();
 
     wfCtx->pc = 0;
     wfCtx->rpc = UINT32_MAX;
@@ -265,10 +278,12 @@ ComputeUnit::StartWF(Wavefront *w, WFContext *wfCtx, int trueWgSize[],
     w->dynwaveid = cnt;
     w->init_mask = wfCtx->init_mask;
 
-    for (int k = 0; k < VSZ; ++k) {
-        w->workitemid[0][k] = (k+cnt*VSZ) % trueWgSize[0];
-        w->workitemid[1][k] = ((k + cnt * VSZ) / trueWgSize[0]) % trueWgSize[1];
-        w->workitemid[2][k] = (k + cnt * VSZ) / (trueWgSize[0] * trueWgSize[1]);
+    for (int k = 0; k < wfSize(); ++k) {
+        w->workitemid[0][k] = (k+cnt*wfSize()) % trueWgSize[0];
+        w->workitemid[1][k] =
+            ((k + cnt * wfSize()) / trueWgSize[0]) % trueWgSize[1];
+        w->workitemid[2][k] =
+            (k + cnt * wfSize()) / (trueWgSize[0] * trueWgSize[1]);
 
         w->workitemFlatId[k] = w->workitemid[2][k] * trueWgSize[0] *
             trueWgSize[1] + w->workitemid[1][k] * trueWgSize[0] +
@@ -277,9 +292,9 @@ ComputeUnit::StartWF(Wavefront *w, WFContext *wfCtx, int trueWgSize[],
 
     w->old_barrier_cnt = wfCtx->old_barrier_cnt;
     w->barrier_cnt = wfCtx->barrier_cnt;
-    w->barrier_slots = divCeil(trueWgSizeTotal, VSZ);
+    w->barrier_slots = divCeil(trueWgSizeTotal, wfSize());
 
-    for (int i = 0; i < VSZ; ++i) {
+    for (int i = 0; i < wfSize(); ++i) {
         w->bar_cnt[i] = wfCtx->bar_cnt[i];
     }
 
@@ -315,16 +330,17 @@ ComputeUnit::StartWF(Wavefront *w, WFContext *wfCtx, int trueWgSize[],
     // is this the last wavefront in the workgroup
     // if set the spillWidth to be the remaining work-items
     // so that the vector access is correct
-    if ((cnt + 1) * VSZ >= trueWgSizeTotal) {
-        w->spillWidth = trueWgSizeTotal - (cnt * VSZ);
+    if ((cnt + 1) * wfSize() >= trueWgSizeTotal) {
+        w->spillWidth = trueWgSizeTotal - (cnt * wfSize());
     } else {
-        w->spillWidth = VSZ;
+        w->spillWidth = wfSize();
     }
 
     DPRINTF(GPUDisp, "Scheduling wfDynId/barrier_id %d/%d on CU%d: "
             "WF[%d][%d]\n", _n_wave, barrier_id, cu_id, w->simdId, w->wfSlotId);
 
     w->start(++_n_wave, ndr->q.code_ptr);
+    wfCtx->bar_cnt.clear();
 }
 
 void
@@ -339,7 +355,7 @@ ComputeUnit::StartWorkgroup(NDRange *ndr)
     // Send L1 cache acquire
     // isKernel + isAcquire = Kernel Begin
     if (shader->impl_kern_boundary_sync) {
-        GPUDynInstPtr gpuDynInst = std::make_shared<GPUDynInst>(nullptr,
+        GPUDynInstPtr gpuDynInst = std::make_shared<GPUDynInst>(this,
                                                                 nullptr,
                                                                 nullptr, 0);
 
@@ -374,7 +390,7 @@ ComputeUnit::StartWorkgroup(NDRange *ndr)
         if (w->status == Wavefront::S_STOPPED) {
             // if we have scheduled all work items then stop
             // scheduling wavefronts
-            if (cnt * VSZ >= trueWgSizeTotal)
+            if (cnt * wfSize() >= trueWgSizeTotal)
                 break;
 
             // reserve vector registers for the scheduled wavefront
@@ -420,7 +436,7 @@ ComputeUnit::ReadyWorkgroup(NDRange *ndr)
     // work item of the work group
     int vregDemandPerWI = ndr->q.sRegCount + (2 * ndr->q.dRegCount);
     bool vregAvail = true;
-    int numWfs = (trueWgSizeTotal + VSZ - 1) / VSZ;
+    int numWfs = (trueWgSizeTotal + wfSize() - 1) / wfSize();
     int freeWfSlots = 0;
     // check if the total number of VGPRs required by all WFs of the WG
     // fit in the VRFs of all SIMD units
@@ -623,7 +639,7 @@ ComputeUnit::init()
     // Setup space for call args
     for (int j = 0; j < numSIMDs; ++j) {
         for (int i = 0; i < shader->n_wf; ++i) {
-            wfList[j][i]->initCallArgMem(shader->funcargs_size);
+            wfList[j][i]->initCallArgMem(shader->funcargs_size, wavefrontSize);
         }
     }
 
@@ -1193,15 +1209,15 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         Addr last = 0;
 
         switch(computeUnit->prefetchType) {
-          case Enums::PF_CU:
+        case Enums::PF_CU:
             last = computeUnit->lastVaddrCU[mp_index];
             break;
-          case Enums::PF_PHASE:
-            last = computeUnit->lastVaddrPhase[simdId][mp_index];
+        case Enums::PF_PHASE:
+            last = computeUnit->lastVaddrSimd[simdId][mp_index];
             break;
-          case Enums::PF_WF:
+        case Enums::PF_WF:
             last = computeUnit->lastVaddrWF[simdId][wfSlotId][mp_index];
-          default:
+        default:
             break;
         }
 
@@ -1215,7 +1231,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         DPRINTF(GPUPrefetch, "Stride is %d\n", stride);
 
         computeUnit->lastVaddrCU[mp_index] = vaddr;
-        computeUnit->lastVaddrPhase[simdId][mp_index] = vaddr;
+        computeUnit->lastVaddrSimd[simdId][mp_index] = vaddr;
         computeUnit->lastVaddrWF[simdId][wfSlotId][mp_index] = vaddr;
 
         stride = (computeUnit->prefetchType == Enums::PF_STRIDE) ?
@@ -1488,7 +1504,7 @@ ComputeUnit::regStats()
         ;
 
     ldsBankConflictDist
-       .init(0, VSZ, 2)
+       .init(0, wfSize(), 2)
        .name(name() + ".lds_bank_conflicts")
        .desc("Number of bank conflicts per LDS memory packet")
        ;
@@ -1499,27 +1515,28 @@ ComputeUnit::regStats()
         ;
 
     pageDivergenceDist
-       // A wavefront can touch 1 to VSZ pages per memory instruction.
-       // The number of pages per bin can be configured (here it's 4).
-       .init(1, VSZ, 4)
+        // A wavefront can touch up to N pages per memory instruction where
+        // N is equal to the wavefront size
+        // The number of pages per bin can be configured (here it's 4).
+       .init(1, wfSize(), 4)
        .name(name() + ".page_divergence_dist")
        .desc("pages touched per wf (over all mem. instr.)")
        ;
 
     controlFlowDivergenceDist
-        .init(1, VSZ, 4)
+        .init(1, wfSize(), 4)
         .name(name() + ".warp_execution_dist")
         .desc("number of lanes active per instruction (oval all instructions)")
         ;
 
     activeLanesPerGMemInstrDist
-        .init(1, VSZ, 4)
+        .init(1, wfSize(), 4)
         .name(name() + ".gmem_lanes_execution_dist")
         .desc("number of active lanes per global memory instruction")
         ;
 
     activeLanesPerLMemInstrDist
-        .init(1, VSZ, 4)
+        .init(1, wfSize(), 4)
         .name(name() + ".lmem_lanes_execution_dist")
         .desc("number of active lanes per local memory instruction")
         ;
@@ -1531,7 +1548,7 @@ ComputeUnit::regStats()
 
     numVecOpsExecuted
         .name(name() + ".num_vec_ops_executed")
-        .desc("number of vec ops executed (e.g. VSZ/inst)")
+        .desc("number of vec ops executed (e.g. WF size/inst)")
         ;
 
     totalCycles

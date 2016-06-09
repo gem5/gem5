@@ -83,6 +83,7 @@ class CallArgMem
   public:
     // pointer to buffer for storing function arguments
     uint8_t *mem;
+    int wfSize;
     // size of function args
     int funcArgsSizePerItem;
 
@@ -90,13 +91,13 @@ class CallArgMem
     int
     getLaneOffset(int lane, int addr)
     {
-        return addr * VSZ + sizeof(CType) * lane;
+        return addr * wfSize + sizeof(CType) * lane;
     }
 
-    CallArgMem(int func_args_size_per_item)
-      : funcArgsSizePerItem(func_args_size_per_item)
+    CallArgMem(int func_args_size_per_item, int wf_size)
+        : wfSize(wf_size), funcArgsSizePerItem(func_args_size_per_item)
     {
-        mem = (uint8_t*)malloc(funcArgsSizePerItem * VSZ);
+        mem = (uint8_t*)malloc(funcArgsSizePerItem * wfSize);
     }
 
     ~CallArgMem()
@@ -192,9 +193,9 @@ class Wavefront : public SimObject
     bool isOldestInstALU();
     bool isOldestInstBarrier();
     // used for passing spill address to DDInstGPU
-    uint64_t last_addr[VSZ];
-    uint32_t workitemid[3][VSZ];
-    uint32_t workitemFlatId[VSZ];
+    std::vector<Addr> last_addr;
+    std::vector<uint32_t> workitemid[3];
+    std::vector<uint32_t> workitemFlatId;
     uint32_t workgroupid[3];
     uint32_t workgroupsz[3];
     uint32_t gridsz[3];
@@ -230,14 +231,14 @@ class Wavefront : public SimObject
     uint32_t startVgprIndex;
 
     // Old value of destination gpr (for trace)
-    uint32_t old_vgpr[VSZ];
+    std::vector<uint32_t> old_vgpr;
     // Id of destination gpr (for trace)
     uint32_t old_vgpr_id;
     // Tick count of last old_vgpr copy
     uint64_t old_vgpr_tcnt;
 
     // Old value of destination gpr (for trace)
-    uint64_t old_dgpr[VSZ];
+    std::vector<uint64_t> old_dgpr;
     // Id of destination gpr (for trace)
     uint32_t old_dgpr_id;
     // Tick count of last old_vgpr copy
@@ -247,7 +248,7 @@ class Wavefront : public SimObject
     VectorMask init_mask;
 
     // number of barriers this WF has joined
-    int bar_cnt[VSZ];
+    std::vector<int> bar_cnt;
     int max_bar_cnt;
     // Flag to stall a wave on barrier
     bool stalledAtBarrier;
@@ -296,9 +297,9 @@ class Wavefront : public SimObject
     // argument memory for hsail call instruction
     CallArgMem *callArgMem;
     void
-    initCallArgMem(int func_args_size_per_item)
+    initCallArgMem(int func_args_size_per_item, int wf_size)
     {
-        callArgMem = new CallArgMem(func_args_size_per_item);
+        callArgMem = new CallArgMem(func_args_size_per_item, wf_size);
     }
 
     template<typename CType>
@@ -327,7 +328,6 @@ class Wavefront : public SimObject
     }
 
     void start(uint64_t _wfDynId, uint64_t _base_ptr);
-
     void exec();
     void updateResources();
     int ready(itype_e type);

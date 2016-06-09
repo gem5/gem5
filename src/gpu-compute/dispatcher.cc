@@ -387,6 +387,12 @@ GpuDispatcher::getNumCUs()
     return shader->cuList.size();
 }
 
+int
+GpuDispatcher::wfSize() const
+{
+    return shader->cuList[0]->wfSize();
+}
+
 void
 GpuDispatcher::setFuncargsSize(int funcargs_size)
 {

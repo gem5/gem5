@@ -205,7 +205,7 @@ class GPUDynInst : public GPUExecContext
   public:
     GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *_staticInst,
                uint64_t instSeqNum);
-
+    ~GPUDynInst();
     void execute();
     int numSrcRegOperands();
     int numDstRegOperands();
@@ -226,15 +226,15 @@ class GPUDynInst : public GPUExecContext
     Enums::StorageClassType executedAs();
 
     // The address of the memory operation
-    Addr addr[VSZ];
+    std::vector<Addr> addr;
     Addr pAddr;
 
     // The data to get written
-    uint8_t d_data[VSZ * 16];
+    uint8_t *d_data;
     // Additional data (for atomics)
-    uint8_t a_data[VSZ * 8];
+    uint8_t *a_data;
     // Additional data (for atomics)
-    uint8_t x_data[VSZ * 8];
+    uint8_t *x_data;
     // The execution mask
     VectorMask exec_mask;
 
