@@ -3,9 +3,9 @@ Redirecting stderr to build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simp
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun  5 2016 19:50:43
-gem5 started Jun  5 2016 20:05:34
-gem5 executing on zizzer, pid 54386
+gem5 compiled Jun 12 2016 19:14:13
+gem5 started Jun 12 2016 19:14:37
+gem5 executing on zizzer, pid 29746
 command line: /z/stever/hg/gem5/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/quick/se/20.eio-short/alpha/eio/simple-atomic -re /z/stever/hg/gem5/tests/testing/../run.py quick/se/20.eio-short/alpha/eio/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second

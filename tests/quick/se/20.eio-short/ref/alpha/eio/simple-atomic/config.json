@@ -6,6 +6,24 @@
         "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "membus": {
+            "point_of_coherency": true, 
+            "system": "system", 
+            "response_latency": 2, 
+            "cxx_class": "CoherentXBar", 
+            "forward_latency": 4, 
+            "clk_domain": "system.clk_domain", 
+            "width": 16, 
+            "eventq_index": 0, 
+            "default_p_state": "UNDEFINED", 
+            "p_state_clk_gate_max": 1000000000000, 
+            "master": {
+                "peer": [
+                    "system.physmem.port"
+                ], 
+                "role": "MASTER"
+            }, 
+            "type": "CoherentXBar", 
+            "frontend_latency": 3, 
             "slave": {
                 "peer": [
                     "system.system_port", 
@@ -14,35 +32,23 @@
                 ], 
                 "role": "SLAVE"
             }, 
-            "name": "membus", 
-            "point_of_coherency": true, 
+            "p_state_clk_gate_min": 1000, 
             "snoop_filter": null, 
-            "forward_latency": 4, 
-            "clk_domain": "system.clk_domain", 
-            "system": "system", 
-            "width": 16, 
-            "eventq_index": 0, 
-            "master": {
-                "peer": [
-                    "system.physmem.port"
-                ], 
-                "role": "MASTER"
-            }, 
-            "response_latency": 2, 
-            "cxx_class": "CoherentXBar", 
+            "power_model": null, 
             "path": "system.membus", 
             "snoop_response_latency": 4, 
-            "type": "CoherentXBar", 
-            "use_default_range": false, 
-            "frontend_latency": 3
+            "name": "membus", 
+            "p_state_clk_gate_bins": 20, 
+            "use_default_range": false
         }, 
         "symbolfile": "", 
         "readfile": "", 
         "thermal_model": null, 
         "cxx_class": "System", 
+        "work_begin_cpu_id_exit": -1, 
         "load_offset": 0, 
         "work_begin_exit_count": 0, 
-        "work_end_ckpt_count": 0, 
+        "p_state_clk_gate_min": 1000, 
         "memories": [
             "system.physmem"
         ], 
@@ -62,7 +68,8 @@
         }, 
         "mem_ranges": [], 
         "eventq_index": 0, 
-        "work_begin_cpu_id_exit": -1, 
+        "default_p_state": "UNDEFINED", 
+        "p_state_clk_gate_max": 1000000000000, 
         "dvfs_handler": {
             "enable": false, 
             "name": "dvfs_handler", 
@@ -88,16 +95,25 @@
         }, 
         "cache_line_size": 64, 
         "boot_osflags": "a", 
+        "system_port": {
+            "peer": "system.membus.slave[0]", 
+            "role": "MASTER"
+        }, 
         "physmem": {
             "range": "0:134217727", 
             "latency": 30000, 
             "name": "physmem", 
+            "p_state_clk_gate_min": 1000, 
             "eventq_index": 0, 
+            "p_state_clk_gate_bins": 20, 
+            "default_p_state": "UNDEFINED", 
             "clk_domain": "system.clk_domain", 
+            "power_model": null, 
             "latency_var": 0, 
             "bandwidth": "73.000000", 
             "conf_table_reported": true, 
             "cxx_class": "SimpleMemory", 
+            "p_state_clk_gate_max": 1000000000000, 
             "path": "system.physmem", 
             "null": false, 
             "type": "SimpleMemory", 
@@ -107,6 +123,7 @@
             }, 
             "in_addr_map": true
         }, 
+        "power_model": null, 
         "work_cpus_ckpt_count": 0, 
         "thermal_components": [], 
         "path": "system", 
@@ -123,13 +140,11 @@
             "type": "SrcClockDomain", 
             "domain_id": -1
         }, 
+        "work_end_ckpt_count": 0, 
         "mem_mode": "atomic", 
         "name": "system", 
         "init_param": 0, 
-        "system_port": {
-            "peer": "system.membus.slave[0]", 
-            "role": "MASTER"
-        }, 
+        "p_state_clk_gate_bins": 20, 
         "load_addr_mask": 1099511627775, 
         "cpu": [
             {
@@ -155,6 +170,8 @@
                 "width": 1, 
                 "checker": null, 
                 "eventq_index": 0, 
+                "default_p_state": "UNDEFINED", 
+                "p_state_clk_gate_max": 1000000000000, 
                 "do_quiesce": true, 
                 "type": "AtomicSimpleCPU", 
                 "fastmem": false, 
@@ -163,6 +180,8 @@
                     "peer": "system.membus.slave[1]", 
                     "role": "MASTER"
                 }, 
+                "p_state_clk_gate_bins": 20, 
+                "p_state_clk_gate_min": 1000, 
                 "interrupts": [
                     {
                         "eventq_index": 0, 
@@ -177,6 +196,7 @@
                     "role": "MASTER"
                 }, 
                 "socket_id": 0, 
+                "power_model": null, 
                 "max_insts_all_threads": 0, 
                 "path": "system.cpu", 
                 "max_loads_any_thread": 0, 
