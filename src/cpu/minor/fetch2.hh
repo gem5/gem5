@@ -165,6 +165,13 @@ class Fetch2 : public Named
     std::vector<Fetch2ThreadInfo> fetchInfo;
     ThreadID threadPriority;
 
+    /** Stats */
+    Stats::Scalar intInstructions;
+    Stats::Scalar fpInstructions;
+    Stats::Scalar vecInstructions;
+    Stats::Scalar loadInstructions;
+    Stats::Scalar storeInstructions;
+
   protected:
     /** Get a piece of data to work on from the inputBuffer, or 0 if there
      *  is no data. */
@@ -205,6 +212,8 @@ class Fetch2 : public Named
     void evaluate();
 
     void minorTrace() const;
+
+    void regStats();
 
     /** Is this stage drained?  For Fetch2, draining is initiated by
      *  Execute halting Fetch1 causing Fetch2 to naturally drain.
