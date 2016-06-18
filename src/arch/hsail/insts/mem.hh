@@ -1556,11 +1556,11 @@ namespace HsailISA
               case Brig::BRIG_TYPE_B8:
                 return decodeSt<S8,S8>(ib, obj);
               case Brig::BRIG_TYPE_B16:
-                return decodeSt<S8,S16>(ib, obj);
+                return decodeSt<S16,S16>(ib, obj);
               case Brig::BRIG_TYPE_B32:
-                return decodeSt<S8,S32>(ib, obj);
+                return decodeSt<S32,S32>(ib, obj);
               case Brig::BRIG_TYPE_B64:
-                return decodeSt<S8,S64>(ib, obj);
+                return decodeSt<S64,S64>(ib, obj);
               default: fatal("AtomicSt: Operand type mismatch %d\n", ib->type);
             }
         } else {
