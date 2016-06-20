@@ -41,6 +41,7 @@
 #define __SIM_MATHEXPR_HH__
 
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <string>
 
