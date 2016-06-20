@@ -185,21 +185,28 @@ class LineVerifier(Verifier):
     def check(self, filename, regions=all_regions):
         f = self.open(filename, 'r')
 
+        lang = lang_type(filename)
+        assert lang in self.languages
+
         errors = 0
         for num,line in enumerate(f):
             if num not in regions:
                 continue
             line = line.rstrip('\n')
-            if not self.check_line(line):
+            if not self.check_line(line, language=lang):
                 self.ui.write("invalid %s in %s:%d\n" % \
                               (self.test_name, filename, num + 1))
                 if self.ui.verbose:
                     self.ui.write(">>%s<<\n" % line[:-1])
                 errors += 1
+        f.close()
         return errors
 
     def fix(self, filename, regions=all_regions):
         f = self.open(filename, 'r+')
+
+        lang = lang_type(filename)
+        assert lang in self.languages
 
         lines = list(f)
 
@@ -209,19 +216,19 @@ class LineVerifier(Verifier):
         for i,line in enumerate(lines):
             line = line.rstrip('\n')
             if i in regions:
-                line = self.fix_line(line)
+                line = self.fix_line(line, language=lang)
 
             f.write(line)
             f.write("\n")
         f.close()
-
+        self.current_language = None
 
     @abstractmethod
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         pass
 
     @abstractmethod
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         pass
 
 class Whitespace(LineVerifier):
@@ -232,17 +239,25 @@ class Whitespace(LineVerifier):
     - No trailing whitespace
     """
 
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons',
+                     'make', 'dts'))
+    trail_only = set(('make', 'dts'))
+
     test_name = 'whitespace'
     opt_name = 'white'
 
     _lead = re.compile(r'^([ \t]+)')
     _trail = re.compile(r'([ \t]+)$')
 
-    def check_line(self, line):
-        match = Whitespace._lead.search(line)
-        if match and match.group(1).find('\t') != -1:
-            return False
+
+    def skip_lead(self, language):
+        return language in Whitespace.trail_only
+
+    def check_line(self, line, language):
+        if not self.skip_lead(language):
+            match = Whitespace._lead.search(line)
+            if match and match.group(1).find('\t') != -1:
+                return False
 
         match = Whitespace._trail.search(line)
         if match:
@@ -250,8 +265,8 @@ class Whitespace(LineVerifier):
 
         return True
 
-    def fix_line(self, line):
-        if Whitespace._lead.search(line):
+    def fix_line(self, line, language):
+        if not self.skip_lead(language) and Whitespace._lead.search(line):
             newline = ''
             for i,c in enumerate(line):
                 if c == ' ':
@@ -329,11 +344,11 @@ class ControlSpace(LineVerifier):
 
     _any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         match = ControlSpace._any_control.search(line)
         return not (match and match.group(2) != " ")
 
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         new_line = _any_control.sub(r'\1 (', line)
         return new_line
 
@@ -343,10 +358,10 @@ class LineLength(LineVerifier):
     test_name = 'line length'
     opt_name = 'length'
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         return style.normalized_len(line) <= 79
 
-    def fix(self, filename, regions=all_regions):
+    def fix(self, filename, regions=all_regions, **kwargs):
         self.ui.write("Warning: cannot automatically fix overly long lines.\n")
 
     def fix_line(self, line):
@@ -360,10 +375,10 @@ class ControlCharacters(LineVerifier):
     valid = ('\n', '\t')
     invalid = "".join([chr(i) for i in range(0, 0x20) if chr(i) not in valid])
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         return self.fix_line(line) == line
 
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         return line.translate(None, ControlCharacters.invalid)
 
 class BoolCompare(LineVerifier):
@@ -373,10 +388,10 @@ class BoolCompare(LineVerifier):
 
     regex = re.compile(r'\s*==\s*([Tt]rue|[Ff]alse)\b')
 
-    def check_line(self, line):
+    def check_line(self, line, **kwargs):
         return self.regex.search(line) == None
 
-    def fix_line(self, line):
+    def fix_line(self, line, **kwargs):
         match = self.regex.search(line)
         if match:
             if match.group(1) in ('true', 'True'):
