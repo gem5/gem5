@@ -241,10 +241,52 @@ def _show(args):
     suites = sum([ pickle.load(f) for f in args.result ], [])
     formatter.dump_suites(suites)
 
+def _test_args(subparsers):
+    parser = subparsers.add_parser(
+        "test",
+        formatter_class=ParagraphHelpFormatter,
+        help='Probe test results and set exit code',
+        epilog="""
+
+        Load one or more pickled test file and return an exit code
+        corresponding to the test outcome. The following exit codes
+        can be returned:
+
+        0: All tests were successful or skipped.
+
+        1: General fault in the script such as incorrect parameters or
+        failing to parse a pickle file.
+
+        2: At least one test failed to run. This is what the summary
+        formatter usually shows as a 'FAILED'.
+
+        3: All tests ran correctly, but at least one failed to
+        verify its output. When displaying test output using the
+        summary formatter, such a test would show up as 'CHANGED'.
+        """)
+
+    _add_format_args(parser)
+
+    parser.add_argument("result", type=argparse.FileType("rb"), nargs="*",
+                        help="Pickled test results")
+
+def _test(args):
+    suites = sum([ pickle.load(f) for f in args.result ], [])
+
+    if all(s for s in suites):
+        sys.exit(0)
+    elif any([ s.failed_run() for s in suites ]):
+        sys.exit(2)
+    elif any([ s.changed() for s in suites ]):
+        sys.exit(3)
+    else:
+        assert False, "Unexpected return status from test"
+
 _commands = {
     "list" : (_list_tests, _list_tests_args),
     "run" : (_run_tests, _run_tests_args),
     "show" : (_show, _show_args),
+    "test" : (_test, _test_args),
 }
 
 def main():
