@@ -76,6 +76,21 @@ class TrafficGen : public MemObject
     void enterState(uint32_t newState);
 
     /**
+     * Resolve a file path in the configuration file.
+     *
+     * This method resolves a relative path to a file that has been
+     * referenced in the configuration file. It first tries to resolve
+     * the file relative to the configuration file's path. If that
+     * fails, it falls back to constructing a path relative to the
+     * current working directory.
+     *
+     * Absolute paths are returned unmodified.
+     *
+     * @param name Path to resolve
+     */
+    std::string resolveFile(const std::string &name);
+
+    /**
      * Parse the config file and build the state map and
      * transition matrix.
      */

@@ -38,12 +38,15 @@
  *          Andreas Hansson
  *          Sascha Bischoff
  */
+#include "cpu/testers/traffic_gen/traffic_gen.hh"
+
+#include <libgen.h>
+#include <unistd.h>
 
 #include <sstream>
 
 #include "base/intmath.hh"
 #include "base/random.hh"
-#include "cpu/testers/traffic_gen/traffic_gen.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/TrafficGen.hh"
 #include "sim/stats.hh"
@@ -229,6 +232,27 @@ TrafficGen::update()
     }
 }
 
+std::string
+TrafficGen::resolveFile(const std::string &name)
+{
+    // Do nothing for empty and absolute file names
+    if (name.empty() || name[0] == '/')
+        return name;
+
+    char *config_path = strdup(configFile.c_str());
+    char *config_dir = dirname(config_path);
+    const std::string config_rel = csprintf("%s/%s", config_dir, name);
+    free(config_path);
+
+    // Check the path relative to the config file first
+    if (access(config_rel.c_str(), R_OK) == 0)
+        return config_rel;
+
+    // Fall back to the old behavior and search relative to the
+    // current working directory.
+    return name;
+}
+
 void
 TrafficGen::parseConfig()
 {
@@ -273,6 +297,7 @@ TrafficGen::parseConfig()
                     Addr addrOffset;
 
                     is >> traceFile >> addrOffset;
+                    traceFile = resolveFile(traceFile);
 
                     states[id] = new TraceGen(name(), masterID, duration,
                                               traceFile, addrOffset);
