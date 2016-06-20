@@ -115,7 +115,6 @@ CoherentXBar::~CoherentXBar()
 void
 CoherentXBar::init()
 {
-    // the base class is responsible for determining the block size
     BaseXBar::init();
 
     // iterate over our slave ports and determine which of our
@@ -233,7 +232,9 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     // in certain cases the crossbar is responsible for responding
     bool respond_directly = false;
-
+    // store the original address as an address mapper could possibly
+    // modify the address upon a sendTimingRequest
+    const Addr addr(pkt->getAddr());
     if (sink_packet) {
         DPRINTF(CoherentXBar, "Not forwarding %s to %#llx\n",
                 pkt->cmdString(), pkt->getAddr());
@@ -265,7 +266,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
 
     if (snoopFilter && !system->bypassCaches()) {
         // Let the snoop filter know about the success of the send operation
-        snoopFilter->finishRequest(!success, pkt);
+        snoopFilter->finishRequest(!success, addr);
     }
 
     // check if we were successful in sending the packet onwards
@@ -660,7 +661,7 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
             // operation, and do it even before sending it onwards to
             // avoid situations where atomic upward snoops sneak in
             // between and change the filter state
-            snoopFilter->finishRequest(false, pkt);
+            snoopFilter->finishRequest(false, pkt->getAddr());
 
             snoop_result = forwardAtomic(pkt, slave_port_id, InvalidPortID,
                                          sf_res.first);

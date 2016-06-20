@@ -141,9 +141,9 @@ class SnoopFilter : public SimObject {
      * reqLookupResult.
      *
      * @param will_retry    This request will retry on this bus / snoop filter
-     * @param cpkt          Request packet, merely for sanity checking
+     * @param addr          Packet address, merely for sanity checking
      */
-    void finishRequest(bool will_retry, const Packet* cpkt);
+    void finishRequest(bool will_retry, const Addr addr);
 
     /**
      * Handle an incoming snoop from below (the master port). These

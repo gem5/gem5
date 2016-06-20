@@ -146,12 +146,12 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
 }
 
 void
-SnoopFilter::finishRequest(bool will_retry, const Packet* cpkt)
+SnoopFilter::finishRequest(bool will_retry, const Addr addr)
 {
     if (reqLookupResult != cachedLocations.end()) {
         // since we rely on the caller, do a basic check to ensure
         // that finishRequest is being called following lookupRequest
-        assert(reqLookupResult->first == cpkt->getBlockAddr(linesize));
+        assert(reqLookupResult->first == (addr & ~(Addr(linesize - 1))));
         if (will_retry) {
             // Undo any changes made in lookupRequest to the snoop filter
             // entry if the request will come again. retryItem holds
