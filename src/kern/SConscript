@@ -36,6 +36,7 @@ if env['TARGET_ISA'] == 'null':
 Source('kernel_stats.cc')
 Source('linux/events.cc')
 Source('linux/linux.cc')
+Source('linux/helpers.cc')
 Source('linux/printk.cc')
 Source('freebsd/events.cc')
 Source('operatingsystem.cc')

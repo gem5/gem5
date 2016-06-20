@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,13 +41,17 @@
  *          Ali Saidi
  */
 
+#include "kern/linux/events.hh"
+
 #include <sstream>
 
 #include "arch/utility.hh"
+#include "base/output.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/DebugPrintf.hh"
-#include "kern/linux/events.hh"
+#include "kern/linux/helpers.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 #include "sim/arguments.hh"
@@ -94,5 +98,30 @@ UDelayEvent::process(ThreadContext *tc)
     }
 }
 
+void
+DmesgDumpEvent::process(ThreadContext *tc)
+{
+    StringWrap name(tc->getCpuPtr()->name() + ".dmesg_dump_event");
+
+    inform("Dumping kernel dmesg buffer to %s...\n", fname);
+    OutputStream *os = simout.create(fname);
+    dumpDmesg(tc, *os->stream());
+    simout.close(os);
+
+    warn(descr());
+}
+
+void
+KernelPanicEvent::process(ThreadContext *tc)
+{
+    StringWrap name(tc->getCpuPtr()->name() + ".dmesg_dump_event");
+
+    inform("Dumping kernel dmesg buffer to %s...\n", fname);
+    OutputStream *os = simout.create(fname);
+    dumpDmesg(tc, *os->stream());
+    simout.close(os);
+
+    panic(descr());
+}
 
 } // namespace linux

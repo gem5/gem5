@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2016 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -41,6 +53,46 @@ class DebugPrintkEvent : public SkipFuncEvent
   public:
     DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : SkipFuncEvent(q, desc, addr) {}
+    virtual void process(ThreadContext *xc);
+};
+
+/**
+ * Dump the guest kernel's dmesg buffer to a file in gem5's output
+ * directory and print a warning.
+ *
+ * @warn This event uses Linux::dumpDmesg() and comes with the same
+ * limitations. Most importantly, the kernel's address mappings must
+ * be available to the translating proxy.
+ */
+class DmesgDumpEvent : public PCEvent
+{
+  protected:
+    std::string fname;
+
+  public:
+    DmesgDumpEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                   const std::string &_fname)
+        : PCEvent(q, desc, addr), fname(_fname) {}
+    virtual void process(ThreadContext *xc);
+};
+
+/**
+ * Dump the guest kernel's dmesg buffer to a file in gem5's output
+ * directory and panic.
+ *
+ * @warn This event uses Linux::dumpDmesg() and comes with the same
+ * limitations. Most importantly, the kernel's address mappings must
+ * be available to the translating proxy.
+ */
+class KernelPanicEvent : public PCEvent
+{
+  protected:
+    std::string fname;
+
+  public:
+    KernelPanicEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+               const std::string &_fname)
+        : PCEvent(q, desc, addr), fname(_fname) {}
     virtual void process(ThreadContext *xc);
 };
 

@@ -95,6 +95,12 @@ class LinuxArmSystem : public GenericArmSystem
      * @param tc thread context that is currentyl executing  */
     void mapPid(ThreadContext* tc, uint32_t pid);
 
+  public: // Exported Python methods
+    /**
+     * Dump the kernel's dmesg buffer to stdout
+     */
+    void dumpDmesg();
+
   private:
     /** Event to halt the simulator if the kernel calls panic()  */
     PCEvent *kernelPanicEvent;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,6 +53,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "kern/linux/events.hh"
+#include "kern/linux/helpers.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 #include "sim/stat_control.hh"
@@ -65,14 +66,21 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
       taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
 {
+    const std::string dmesg_output = name() + ".dmesg";
     if (p->panic_on_panic) {
-        kernelPanicEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
-            "panic", "Kernel panic in simulated kernel");
+        kernelPanicEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
+            "panic", "Kernel panic in simulated kernel", dmesg_output);
+    } else {
+        kernelPanicEvent = addKernelFuncEventOrPanic<Linux::DmesgDumpEvent>(
+            "panic", "Kernel panic in simulated kernel", dmesg_output);
     }
 
     if (p->panic_on_oops) {
-        kernelOopsEvent = addKernelFuncEventOrPanic<PanicPCEvent>(
-            "oops_exit", "Kernel oops in guest");
+        kernelOopsEvent = addKernelFuncEventOrPanic<Linux::KernelPanicEvent>(
+            "oops_exit", "Kernel oops in guest", dmesg_output);
+    } else {
+        kernelOopsEvent = addKernelFuncEventOrPanic<Linux::DmesgDumpEvent>(
+            "oops_exit", "Kernel oops in guest", dmesg_output);
     }
 
     // With ARM udelay() is #defined to __udelay
@@ -259,6 +267,12 @@ LinuxArmSystem::mapPid(ThreadContext *tc, uint32_t pid)
             taskMap[pid] = map_size;
         }
     }
+}
+
+void
+LinuxArmSystem::dumpDmesg()
+{
+    Linux::dumpDmesg(getThreadContext(0), std::cout);
 }
 
 /** This function is called whenever the the kernel function

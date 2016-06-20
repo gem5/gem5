@@ -98,6 +98,14 @@ class LinuxArmSystem(GenericArmSystem):
     type = 'LinuxArmSystem'
     cxx_header = "arch/arm/linux/system.hh"
 
+    @classmethod
+    def export_method_cxx_predecls(cls, code):
+        code('#include "arch/arm/linux/system.hh"')
+
+    @classmethod
+    def export_methods(cls, code):
+        code('''void dumpDmesg();''')
+
 class FreebsdArmSystem(GenericArmSystem):
     type = 'FreebsdArmSystem'
     cxx_header = "arch/arm/freebsd/system.hh"
