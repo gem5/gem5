@@ -213,7 +213,9 @@ class Test(object):
             for u in self.verify_units()
         ]
 
-        return TestResult(self.test_name, run_results + verify_results)
+        return TestResult(self.test_name,
+                          run_results=run_results,
+                          verify_results=verify_results)
 
     def __str__(self):
         return self.test_name

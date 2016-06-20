@@ -120,19 +120,16 @@ def print_test(target, source, env):
     assert len(result) == 1
     result = result[0]
 
-    run = result.results[0]
-    assert run.name == "gem5"
-
     formatter = None
-    if not run:
-        status = color_message(termcap.Red, "FAILED!")
-        formatter = results.Text()
-    elif run.skipped():
+    if result.skipped():
         status = color_message(termcap.Cyan, "skipped.")
+    elif result.changed():
+        status = color_message(termcap.Yellow, "CHANGED!")
+        formatter = results.Text()
     elif result:
         status = color_message(termcap.Green, "passed.")
     else:
-        status = color_message(termcap.Yellow, "CHANGED!")
+        status = color_message(termcap.Red, "FAILED!")
         formatter = results.Text()
 
     if formatter:
@@ -164,10 +161,7 @@ def update_test(target, source, env):
     assert len(result) == 1
     result = result[0]
 
-    run = result.results[0]
-    assert run.name == "gem5"
-
-    if run.skipped():
+    if result.skipped():
         print "*** %s: %s: Test skipped, not updating." % (
             source[0].dir, color_message(termcap.Yellow, "WARNING"), )
         return 0
@@ -175,7 +169,7 @@ def update_test(target, source, env):
         print "*** %s: %s: Test successful, not updating." % (
             source[0].dir, color_message(termcap.Green, "skipped"), )
         return 0
-    elif not run.success():
+    elif result.failed_run():
         print "*** %s: %s: Test failed, not updating." % (
             source[0].dir, color_message(termcap.Red, "ERROR"), )
         return 1
