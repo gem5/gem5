@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015 ARM Limited
+# Copyright (c) 2012-2013, 2015-2016 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -60,11 +60,15 @@ def config_cache(options, system):
             print "arm_detailed is unavailable. Did you compile the O3 model?"
             sys.exit(1)
 
-        dcache_class, icache_class, l2_cache_class = \
-            O3_ARM_v7a_DCache, O3_ARM_v7a_ICache, O3_ARM_v7aL2
+        dcache_class, icache_class, l2_cache_class, walk_cache_class = \
+            O3_ARM_v7a_DCache, O3_ARM_v7a_ICache, O3_ARM_v7aL2, \
+            O3_ARM_v7aWalkCache
     else:
-        dcache_class, icache_class, l2_cache_class = \
-            L1_DCache, L1_ICache, L2Cache
+        dcache_class, icache_class, l2_cache_class, walk_cache_class = \
+            L1_DCache, L1_ICache, L2Cache, None
+
+        if buildEnv['TARGET_ISA'] == 'x86':
+            walk_cache_class = PageTableWalkerCache
 
     # Set the cache line size of the system
     system.cache_line_size = options.cacheline_size
@@ -98,6 +102,15 @@ def config_cache(options, system):
             dcache = dcache_class(size=options.l1d_size,
                                   assoc=options.l1d_assoc)
 
+            # If we have a walker cache specified, instantiate two
+            # instances here
+            if walk_cache_class:
+                iwalkcache = walk_cache_class()
+                dwalkcache = walk_cache_class()
+            else:
+                iwalkcache = None
+                dwalkcache = None
+
             if options.memchecker:
                 dcache_mon = MemCheckerMonitor(warn_only=True)
                 dcache_real = dcache
@@ -115,12 +128,8 @@ def config_cache(options, system):
 
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
-            if buildEnv['TARGET_ISA'] == 'x86':
-                system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
-                                                      PageTableWalkerCache(),
-                                                      PageTableWalkerCache())
-            else:
-                system.cpu[i].addPrivateSplitL1Caches(icache, dcache)
+            system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
+                                                  iwalkcache, dwalkcache)
 
             if options.memchecker:
                 # The mem_side ports of the caches haven't been connected yet.
