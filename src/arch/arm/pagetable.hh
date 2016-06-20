@@ -168,7 +168,7 @@ struct TlbEntry : public Serializable
          pfn(0), size(0), vpn(0), attributes(0), lookupLevel(L1), asid(0),
          vmid(0), N(0), innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
-         longDescFormat(false), isHyp(false), global(false), valid(true),
+         longDescFormat(false), isHyp(false), global(false), valid(false),
          ns(true), nstid(true), el(0), nonCacheable(false),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
