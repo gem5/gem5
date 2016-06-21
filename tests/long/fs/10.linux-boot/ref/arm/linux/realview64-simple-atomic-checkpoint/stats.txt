@@ -4,11 +4,11 @@ sim_seconds                                 51.111167                       # Nu
 sim_ticks                                51111167216500                       # Number of ticks simulated
 final_tick                               51111167216500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1565564                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1839875                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            81467630636                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 722252                       # Number of bytes of host memory used
-host_seconds                                   627.38                       # Real time elapsed on the host
+host_inst_rate                                 974606                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1145373                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            50715816566                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 678940                       # Number of bytes of host memory used
+host_seconds                                  1007.80                       # Real time elapsed on the host
 sim_insts                                   982203438                       # Number of instructions simulated
 sim_ops                                    1154301153                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -138,7 +138,7 @@ system.cpu.dtb.flush_tlb                           11                       # Nu
 system.cpu.dtb.flush_tlb_mva                        0                       # Number of times TLB was flushed by MVA
 system.cpu.dtb.flush_tlb_mva_asid               49771                       # Number of times TLB was flushed by MVA & ASID
 system.cpu.dtb.flush_tlb_asid                    1139                       # Number of times TLB was flushed by ASID
-system.cpu.dtb.flush_entries                    82503                       # Number of entries that have been flushed from TLB
+system.cpu.dtb.flush_entries                    82439                       # Number of entries that have been flushed from TLB
 system.cpu.dtb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
 system.cpu.dtb.prefetch_faults                   9079                       # Number of TLB faults due to prefetch
 system.cpu.dtb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
@@ -208,7 +208,7 @@ system.cpu.itb.flush_tlb                           11                       # Nu
 system.cpu.itb.flush_tlb_mva                        0                       # Number of times TLB was flushed by MVA
 system.cpu.itb.flush_tlb_mva_asid               49771                       # Number of times TLB was flushed by MVA & ASID
 system.cpu.itb.flush_tlb_asid                    1139                       # Number of times TLB was flushed by ASID
-system.cpu.itb.flush_entries                    58073                       # Number of entries that have been flushed from TLB
+system.cpu.itb.flush_entries                    58009                       # Number of entries that have been flushed from TLB
 system.cpu.itb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
 system.cpu.itb.prefetch_faults                      0                       # Number of TLB faults due to prefetch
 system.cpu.itb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
