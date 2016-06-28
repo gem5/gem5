@@ -236,6 +236,7 @@ class SwigSource(SourceFile):
         modname,ext = self.extname
         assert ext == 'i'
 
+        self.package = package
         self.module = modname
         cc_file = joinpath(self.dirname, modname + '_wrap.cc')
         py_file = joinpath(self.dirname, modname + '.py')
@@ -816,19 +817,27 @@ for name,simobj in sorted(sim_objects.iteritems()):
     SwigSource('m5.internal', i_file)
 
 # Generate the main swig init file
-def makeEmbeddedSwigInit(target, source, env):
-    code = code_formatter()
-    module = source[0].get_contents()
-    code('''\
-#include "sim/init.hh"
+def makeEmbeddedSwigInit(package):
+    def body(target, source, env):
+        assert len(target) == 1 and len(source) == 1
 
-extern "C" {
-    void init_${module}();
-}
+        code = code_formatter()
+        module = source[0].get_contents()
+        # Provide the full context so that the swig-generated call to
+        # Py_InitModule ends up placing the embedded module in the
+        # right package.
+        context = str(package) + "._" + str(module)
+        code('''\
+        #include "sim/init.hh"
 
-EmbeddedSwig embed_swig_${module}(init_${module});
-''')
-    code.write(str(target[0]))
+        extern "C" {
+            void init_${module}();
+        }
+
+        EmbeddedSwig embed_swig_${module}(init_${module}, "${context}");
+        ''')
+        code.write(str(target[0]))
+    return body
 
 # Build all swig modules
 for swig in SwigSource.all:
@@ -838,7 +847,8 @@ for swig in SwigSource.all:
     cc_file = str(swig.tnode)
     init_file = '%s/%s_init.cc' % (dirname(cc_file), basename(cc_file))
     env.Command(init_file, Value(swig.module),
-                MakeAction(makeEmbeddedSwigInit, Transform("EMBED SW")))
+                MakeAction(makeEmbeddedSwigInit(swig.package),
+                           Transform("EMBED SW")))
     env.Depends(SWIG, init_file)
     Source(init_file, **swig.guards)
 

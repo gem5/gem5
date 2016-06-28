@@ -33,10 +33,8 @@
 
 #include <Python.h>
 
-/*
- * Data structure describing an embedded python file.
- */
 #include <list>
+#include <string>
 
 #include <inttypes.h>
 
@@ -45,6 +43,9 @@ struct _object;
 typedef _object PyObject;
 #endif
 
+/*
+ * Data structure describing an embedded python file.
+ */
 struct EmbeddedPython
 {
     const char *filename;
@@ -70,7 +71,9 @@ struct EmbeddedSwig
 {
     void (*initFunc)();
 
-    EmbeddedSwig(void (*init_func)());
+    std::string context;
+
+    EmbeddedSwig(void (*init_func)(), const std::string& _context);
 
     static std::list<EmbeddedSwig *> &getList();
     static void initAll();
