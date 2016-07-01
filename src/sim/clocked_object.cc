@@ -49,8 +49,8 @@ ClockedObject::ClockedObject(const ClockedObjectParams *p) :
     prvEvalTick(0)
 {
     // Register the power_model with the object
-    if (p->power_model)
-        p->power_model->setClockedObject(this);
+    for (auto & power_model: p->power_model)
+        power_model->setClockedObject(this);
 }
 
 void
