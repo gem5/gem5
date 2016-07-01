@@ -35,6 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andrew Bardsley
+ *          Matthias Jung
+ *          Abdul Mutaal Ahmad
  */
 
 /**
@@ -47,6 +49,8 @@
 
 #ifndef __UTIL_CXX_CONFIG_STATS_H__
 #define __UTIL_CXX_CONFIG_STATS_H__
+
+extern std::string filename;
 
 namespace CxxConfig
 {

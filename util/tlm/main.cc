@@ -30,6 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Matthias Jung
+ *          Abdul Mutaal Ahmad
  */
 
 /**
@@ -66,6 +67,9 @@
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
 #include "stats.hh"
+
+// Defining global string variable decalred in stats.hh
+std::string filename;
 
 void usage(const std::string &prog_name)
 {
@@ -296,6 +300,8 @@ sc_main(int argc, char **argv)
     SimControl sim_control("gem5", argc, argv);
     Target *memory;
 
+    filename = "m5out/stats-tlm.txt";
+
     tlm::tlm_initiator_socket <> *mem_port =
         dynamic_cast<tlm::tlm_initiator_socket<> *>(
                     sc_core::sc_find_object("gem5.memory")
@@ -318,6 +324,8 @@ sc_main(int argc, char **argv)
     sc_core::sc_start();
 
     SC_REPORT_INFO("sc_main", "End of Simulation");
+
+    CxxConfig::statsDump();
 
     return EXIT_SUCCESS;
 }

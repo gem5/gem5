@@ -74,6 +74,9 @@
 #include "sc_module.hh"
 #include "stats.hh"
 
+// Defining global string variable decalred in stats.hh
+std::string filename;
+
 void
 usage(const std::string &prog_name)
 {
@@ -383,7 +386,11 @@ sc_main(int argc, char **argv)
 {
     SimControl sim_control("gem5", argc, argv);
 
+    filename = "m5out/stats-systemc.txt";
+
     sc_core::sc_start();
+
+    CxxConfig::statsDump();
 
     return EXIT_SUCCESS;
 }
