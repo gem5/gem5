@@ -153,9 +153,10 @@ def config_mem(options, system):
     """
 
     if ( options.mem_type == "HMC_2500_x32"):
-        HMC.config_hmc(options, system)
-        subsystem = system.hmc
-        xbar = system.hmc.xbar
+        HMChost = HMC.config_host_hmc(options, system)
+        HMC.config_hmc(options, system, HMChost.hmc_host)
+        subsystem = system.hmc_dev
+        xbar = system.hmc_dev.xbar
     else:
         subsystem = system
         xbar = system.membus
@@ -222,4 +223,7 @@ def config_mem(options, system):
 
     # Connect the controllers to the membus
     for i in xrange(len(subsystem.mem_ctrls)):
-        subsystem.mem_ctrls[i].port = xbar.master
+        if (options.mem_type == "HMC_2500_x32"):
+            subsystem.mem_ctrls[i].port = xbar[i/4].master
+        else:
+            subsystem.mem_ctrls[i].port = xbar.master

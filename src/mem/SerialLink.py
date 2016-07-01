@@ -61,3 +61,5 @@ class SerialLink(MemObject):
     #  link belongs to and the number of lanes:
     num_lanes = Param.Unsigned(1, "Number of parallel lanes inside the serial"
         "link. (aka. lane width)")
+    link_speed = Param.UInt64(1, "Gb/s Speed of each parallel lane inside the"
+        "serial link. (aka. lane speed)")

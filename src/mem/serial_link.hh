@@ -312,6 +312,9 @@ class SerialLink : public MemObject
     /** Number of parallel lanes in this serial link */
     unsigned num_lanes;
 
+    /** Speed of each link (Gb/s) in this serial link */
+    uint64_t link_speed;
+
   public:
 
     virtual BaseMasterPort& getMasterPort(const std::string& if_name,
