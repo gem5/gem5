@@ -53,19 +53,20 @@ class GarnetIntLink_d(BasicIntLink):
     cxx_header = "mem/ruby/network/garnet/fixed-pipeline/GarnetLink_d.hh"
     # The detailed fixed pipeline bi-directional link include two main
     # forward links and two backward flow-control links, one per direction
-    nls = []
+    _nls = []
     # In uni-directional link
-    nls.append(NetworkLink_d());
+    _nls.append(NetworkLink_d());
     # Out uni-directional link
-    nls.append(NetworkLink_d());
-    network_links = VectorParam.NetworkLink_d(nls, "forward links")
+    _nls.append(NetworkLink_d());
+    network_links = VectorParam.NetworkLink_d(_nls, "forward links")
 
-    cls = []
+    _cls = []
     # In uni-directional link
-    cls.append(CreditLink_d());
+    _cls.append(CreditLink_d());
     # Out uni-directional link
-    cls.append(CreditLink_d());
-    credit_links = VectorParam.CreditLink_d(cls, "backward flow-control links")
+    _cls.append(CreditLink_d());
+    credit_links = VectorParam.CreditLink_d(_cls,
+                                            "backward flow-control links")
 
 # Exterior fixed pipeline links between a router and a controller
 class GarnetExtLink_d(BasicExtLink):
@@ -73,16 +74,17 @@ class GarnetExtLink_d(BasicExtLink):
     cxx_header = "mem/ruby/network/garnet/fixed-pipeline/GarnetLink_d.hh"
     # The detailed fixed pipeline bi-directional link include two main
     # forward links and two backward flow-control links, one per direction
-    nls = []
+    _nls = []
     # In uni-directional link
-    nls.append(NetworkLink_d());
+    _nls.append(NetworkLink_d());
     # Out uni-directional link
-    nls.append(NetworkLink_d());
-    network_links = VectorParam.NetworkLink_d(nls, "forward links")
+    _nls.append(NetworkLink_d());
+    network_links = VectorParam.NetworkLink_d(_nls, "forward links")
 
-    cls = []
+    _cls = []
     # In uni-directional link
-    cls.append(CreditLink_d());
+    _cls.append(CreditLink_d());
     # Out uni-directional link
-    cls.append(CreditLink_d());
-    credit_links = VectorParam.CreditLink_d(cls, "backward flow-control links")
+    _cls.append(CreditLink_d());
+    credit_links = VectorParam.CreditLink_d(_cls,
+                                            "backward flow-control links")
