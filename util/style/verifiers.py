@@ -272,7 +272,8 @@ class Whitespace(LineVerifier):
                 if c == ' ':
                     newline += ' '
                 elif c == '\t':
-                    newline += ' ' * (tabsize - len(newline) % tabsize)
+                    newline += ' ' * (style.tabsize - \
+                                      len(newline) % style.tabsize)
                 else:
                     newline += line[i:]
                     break
@@ -349,7 +350,7 @@ class ControlSpace(LineVerifier):
         return not (match and match.group(2) != " ")
 
     def fix_line(self, line, **kwargs):
-        new_line = _any_control.sub(r'\1 (', line)
+        new_line = ControlSpace._any_control.sub(r'\1 (', line)
         return new_line
 
 
