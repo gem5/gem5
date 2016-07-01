@@ -292,7 +292,7 @@ void SimControl::run()
 
                 std::cerr << "Waiting for " << wait_period << "ps for"
                     " SystemC to catch up to gem5\n";
-                wait(sc_core::sc_time(wait_period, sc_core::SC_PS));
+                wait(sc_core::sc_time::from_value(wait_period));
             }
 
             config_manager->loadState(*checkpoint);
