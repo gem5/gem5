@@ -58,10 +58,8 @@ class CommandAnalysis {
     MS_PDN_S_PRE = 13, MS_SREF = 14
   };
 
-  CommandAnalysis();
-
   // Returns number of reads, writes, acts, pres and refs in the trace
-  CommandAnalysis(const int nbrofBanks);
+  CommandAnalysis(const int64_t nbrofBanks);
 
   // Number of activate commands
   int64_t numberofacts;
@@ -117,28 +115,24 @@ class CommandAnalysis {
   // Number of precharged auto-refresh cycles during self-refresh exit
   int64_t spup_ref_pre_cycles;
 
+  // function for clearing counters
+  void clearStats(const int64_t timestamp);
+
   // function for clearing arrays
   void clear();
 
   // To identify auto-precharges
   void getCommands(const MemorySpecification& memSpec,
-                   const int
-                   nbrofBanks,
                    std::vector<MemCommand>&   list,
                    bool                       lastupdate);
 
  private:
-  unsigned init;
   int64_t  zero;
-  unsigned pop;
   // Cached last read command from the file
   std::vector<MemCommand> cached_cmd;
 
   // Stores the memory commands for analysis
   std::vector<MemCommand> cmd_list;
-
-  // Stores all memory commands for analysis
-  std::vector<MemCommand> full_cmd_list;
 
   // To save states of the different banks, before entering active
   // power-down mode (slow/fast-exit).
@@ -171,26 +165,20 @@ class CommandAnalysis {
 
   // Memory State
   unsigned mem_state;
+  unsigned num_active_banks;
 
   // Clock cycle of first activate command when memory state changes to ACT
   int64_t first_act_cycle;
 
   // Clock cycle of last precharge command when memory state changes to PRE
   int64_t last_pre_cycle;
-  // To collect and analyse all commands including auto-precharges
-  void analyse_commands(const int nbrofBanks,
-                        Data::MemorySpecification
-                        memSpec,
-                        int64_t    nCommands,
-                        int64_t    nCached,
-                        bool      lastupdate);
+
   // To perform timing analysis of a given set of commands and update command counters
   void evaluate(const MemorySpecification& memSpec,
-                std::vector<MemCommand>&   cmd_list,
-                int                        nbrofBanks);
+                std::vector<MemCommand>&   cmd_list);
 
   // To calculate time of completion of any issued command
-  int timeToCompletion(const MemorySpecification& memSpec,
+  int64_t timeToCompletion(const MemorySpecification& memSpec,
                        MemCommand::cmds           type);
 
   // To update idle period information whenever active cycles may be idle
@@ -207,6 +195,7 @@ class CommandAnalysis {
 
   void printWarningIfActive(const std::string& warning, int type, int64_t timestamp, int bank);
   void printWarningIfNotActive(const std::string& warning, int type, int64_t timestamp, int bank);
+  void printWarningIfPoweredDown(const std::string& warning, int type, int64_t timestamp, int bank);
   void printWarning(const std::string& warning, int type, int64_t timestamp, int bank);
 };
 }

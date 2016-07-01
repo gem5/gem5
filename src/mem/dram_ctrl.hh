@@ -41,6 +41,7 @@
  *          Ani Udipi
  *          Neha Agarwal
  *          Omar Naji
+ *          Matthias Jung
  */
 
 /**
@@ -862,7 +863,7 @@ class DRAMCtrl : public AbstractMemory
      */
     static bool sortTime(const Data::MemCommand& m1,
                          const Data::MemCommand& m2) {
-        return m1.getTime() < m2.getTime();
+        return m1.getTimeInt64() < m2.getTimeInt64();
     };
 
 

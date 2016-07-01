@@ -31,9 +31,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Karthik Chandrasekar
+ * Authors: Karthik Chandrasekar, Sven Goossens
  *
  */
+
+#include <stdint.h>
 
 #include "Parametrisable.h"
 
@@ -44,35 +46,35 @@ class MemTimingSpec : public virtual Parametrisable {
   void processParameters();
 
   double clkMhz;
-  unsigned RC;
-  unsigned RCD;
-  unsigned CCD;
-  unsigned CCD_S;
-  unsigned CCD_L;
-  unsigned RRD;
-  unsigned RRD_S;
-  unsigned RRD_L;
-  unsigned FAW;
-  unsigned TAW;
-  unsigned WTR;
-  unsigned WTR_S;
-  unsigned WTR_L;
-  unsigned REFI;
-  unsigned RL;
-  unsigned RP;
-  unsigned RFC;
-  unsigned RAS;
-  unsigned WL;
-  unsigned AL;
-  unsigned DQSCK;
-  unsigned RTP;
-  unsigned WR;
-  unsigned XP;
-  unsigned XPDLL;
-  unsigned XS;
-  unsigned XSDLL;
-  unsigned CKE;
-  unsigned CKESR;
+  int64_t RC;
+  int64_t RCD;
+  int64_t CCD;
+  int64_t CCD_S;
+  int64_t CCD_L;
+  int64_t RRD;
+  int64_t RRD_S;
+  int64_t RRD_L;
+  int64_t FAW;
+  int64_t TAW;
+  int64_t WTR;
+  int64_t WTR_S;
+  int64_t WTR_L;
+  int64_t REFI;
+  int64_t RL;
+  int64_t RP;
+  int64_t RFC;
+  int64_t RAS;
+  int64_t WL;
+  int64_t AL;
+  int64_t DQSCK;
+  int64_t RTP;
+  int64_t WR;
+  int64_t XP;
+  int64_t XPDLL;
+  int64_t XS;
+  int64_t XSDLL;
+  int64_t CKE;
+  int64_t CKESR;
   double   clkPeriod;
 };
 }

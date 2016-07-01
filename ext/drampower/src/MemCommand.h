@@ -86,17 +86,18 @@ class MemCommand {
     PUP_ACT   = 14,
     SREN      = 15,
     SREX      = 16,
-    NOP       = 17
+    NOP       = 17,
+    UNINITIALIZED = 18
   };
 
-  MemCommand();
+//  MemCommand();
   MemCommand(
     // Command Type
-    MemCommand::cmds type,
+    MemCommand::cmds type = UNINITIALIZED,
     // Target Bank
     unsigned         bank = 0,
     // Command Issue Timestamp (in cc)
-    double           timestamp = 0);
+    int64_t          timestamp = 0L);
 
   // Get command type
   cmds getType() const;
@@ -111,16 +112,15 @@ class MemCommand {
   unsigned getBank() const;
 
   // Set timestamp
-  void setTime(double _timestamp);
+  void setTime(int64_t _timestamp);
 
   // Get timestamp
-  double getTime() const;
   int64_t getTimeInt64() const;
 
   cmds typeWithoutAutoPrechargeFlag() const;
 
   // To calculate precharge offset after read or write with auto-precharge
-  int getPrechargeOffset(const MemorySpecification& memSpec,
+  int64_t getPrechargeOffset(const MemorySpecification& memSpec,
                          MemCommand::cmds           type) const;
 
   // To check for equivalence
@@ -136,19 +136,35 @@ class MemCommand {
     }
   }
 
-  static const unsigned int nCommands = 18;
+  static const unsigned int nCommands = 19;
 
   static std::string* getCommandTypeStrings()
   {
-    static std::string type_map[nCommands] = { "ACT",       "RD",      "WR",      "PRE",  "REF",
-                                               "END",       "RDA",     "WRA",     "PREA", "PDN_F_PRE","PDN_S_PRE",  "PDN_F_ACT",
-                                               "PDN_S_ACT", "PUP_PRE", "PUP_ACT", "SREN", "SREX",     "NOP" };
+    static std::string type_map[nCommands] = { "ACT",
+                                               "RD",
+                                               "WR",
+                                               "PRE",
+                                               "REF",
+                                               "END",
+                                               "RDA",
+                                               "WRA",
+                                               "PREA",
+                                               "PDN_F_PRE",
+                                               "PDN_S_PRE",
+                                               "PDN_F_ACT",
+                                               "PDN_S_ACT",
+                                               "PUP_PRE",
+                                               "PUP_ACT",
+                                               "SREN",
+                                               "SREX",
+                                               "NOP",
+                                               "UNINITIALIZED" };
 
     return type_map;
   }
 
   // To identify command type from name
-  static cmds getTypeFromName(const std::string name)
+  static cmds getTypeFromName(const std::string& name)
   {
     std::string* typeStrings = getCommandTypeStrings();
 
@@ -165,7 +181,7 @@ class MemCommand {
  private:
   MemCommand::cmds type;
   unsigned bank;
-  double timestamp;
+  int64_t timestamp;
 };
 }
 #endif // ifndef MEMCOMMAND_H

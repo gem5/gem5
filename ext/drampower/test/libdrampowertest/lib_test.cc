@@ -79,7 +79,8 @@ int main(int argc, char* argv[])
         test.doCommand(MemCommand::RDA,0,210);
         test.doCommand(MemCommand::ACT,4,232);
         test.doCommand(MemCommand::WRA,4,247);
-        test.doCommand(MemCommand::PDN_F_ACT,3,248);
+        // Need at least tWRAPDEN = AL + CWL + BL/2 + WR + 1 cycles between WR and PDN_F_PRE
+        test.doCommand(MemCommand::PDN_F_PRE,3,265);
 
         //set bool to true when this is the last update of the counters
         test.updateCounters(true);
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
         //test.getEnergy().act_stdby_energy
         std::cout << "ACT Std Energy" << "\t" << test.getEnergy().act_stdby_energy << endl;
         //total active standby energy for both ranks
-        std::cout << "ACT Std Energy total ranks" << "\t" << memSpec.memArchSpec.nbrOfRanks *
+        std::cout << "ACT Std Energy total ranks" << "\t" << static_cast<double>(memSpec.memArchSpec.nbrOfRanks) *
         test.getEnergy().act_stdby_energy << "\n" ;
         std::cout << "PRE Std Energy" << "\t" << test.getEnergy().pre_stdby_energy << endl;
         std::cout << "Total Energy" << "\t" << test.getEnergy().total_energy << endl;

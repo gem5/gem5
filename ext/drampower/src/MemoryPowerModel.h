@@ -46,9 +46,9 @@ class MemoryPowerModel {
  public:
   // Calculate energy and average power consumption for the given memory
   // command trace
-  void power_calc(MemorySpecification    memSpec,
-                  const CommandAnalysis& counters,
-                  int                    term);
+  void power_calc(const MemorySpecification& memSpec,
+                  const CommandAnalysis& c,
+                  int term);
 
   // Used to calculate self-refresh active energy
   static double engy_sref(double idd6,
@@ -145,12 +145,12 @@ class MemoryPowerModel {
   };
 
   // Print the power and energy
-  void power_print(MemorySpecification memSpec,
+  void power_print(const MemorySpecification& memSpec,
                    int                 term,
-                   const CommandAnalysis& counters) const;
+                   const CommandAnalysis& c) const;
 
   // To derive IO and Termination Power measures using DRAM specification
-  void io_term_power(MemorySpecification memSpec);
+  void io_term_power(const MemorySpecification& memSpec);
 
   Energy energy;
   Power  power;

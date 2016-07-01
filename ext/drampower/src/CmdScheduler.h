@@ -59,9 +59,9 @@ class cmdScheduler {
   // the format of a transaction.
   class trans {
    public:
-    int type;
-    double timeStamp;
-    unsigned logicalAddress;
+    int64_t type;
+    int64_t timeStamp;
+    uint64_t logicalAddress;
   };
 
   std::vector<trans> transTrace; // to store the transactions.
@@ -69,18 +69,18 @@ class cmdScheduler {
   // the format of physical address.
   class physicalAddr {
    public:
-    unsigned rowAddr;
-    unsigned bankAddr;
-    unsigned bankGroupAddr;
-    unsigned colAddr;
+    uint64_t rowAddr;
+    uint64_t bankAddr;
+    uint64_t bankGroupAddr;
+    uint64_t colAddr;
   };
 
   // the format of a command.
   class commandItem {
    public:
-    int Type;
-    int bank;
-    double time;
+    int64_t Type;
+    int64_t bank;
+    int64_t time;
     std::string  name;
     physicalAddr PhysicalAddr;
     // sorting the commands according to their scheduling time.
@@ -107,11 +107,11 @@ class cmdScheduler {
   std::vector<commandItem> cmdScheduling;
   std::vector<commandItem> cmdList;
   unsigned elements;
-  int BI, BC, BGI;
+  int64_t BI, BC, BGI;
 
   // the function used to translate a transaction into a sequence of
   // commands which are scheduled to the memory.
-  void transTranslation(Data::MemorySpecification memSpec,
+  void transTranslation(const MemorySpecification& memSpec,
                         std::ifstream&            trans_trace,
                         int                       grouping,
                         int                       interleaving,
@@ -119,45 +119,47 @@ class cmdScheduler {
                         int                       powerdown);
   // get the transactions by reading the traces.
   void getTrans(std::ifstream&      pwr_trace,
-                MemorySpecification memSpec);
+                const MemorySpecification& memSpec);
   // the initialization function for scheduling.
-  void schedulingInitialization(MemorySpecification memSpec);
+  void schedulingInitialization(const MemorySpecification& memSpec);
   // the function used to schedule commands according to the timing constraints.
-  void analyticalScheduling(MemorySpecification memSpec);
+  void analyticalScheduling(const MemorySpecification& memSpec);
   // translate the logical address into physical address.
   physicalAddr memoryMap(trans               Trans,
-                         MemorySpecification memSpec);
+                         const MemorySpecification& memSpec);
   // the power down and power up are scheduled by pdScheduling
-  void pdScheduling(double              endTime,
-                    double              timer,
-                    MemorySpecification memSpec);
+  void pdScheduling(int64_t endTime,
+                    int64_t timer,
+                    const MemorySpecification& memSpec);
   // get the timings for scheduling a precharge since a read or write command
   // is scheduled.
-  int getRWTP(int                 transType,
-              MemorySpecification memSpec);
+  int64_t getRWTP(int64_t transType,
+              const MemorySpecification& memSpec);
   // get different kind of timing constraints according to the used memory.
   void getTimingConstraints(bool                BGSwitch,
-                            MemorySpecification memSpec,
-                            int                 PreType,
-                            int                 CurrentType);
+                            const MemorySpecification& memSpec,
+                            int64_t                 PreType,
+                            int64_t                 CurrentType);
 
-  double transTime;
+  uint64_t uintLog2(uint64_t in);
+
+  int64_t transTime;
   // the flag for power down.
-  int    power_down;
-  int    Inselfrefresh;
-  int    tRRD_init;
-  int    tCCD_init;
-  int    tWTR_init;
-  double tREF;
-  double tSwitch_init;
-  double tRWTP;
-  int    bankaccess;
-  unsigned nBanks;
-  unsigned nColumns;
-  unsigned burstLength;
-  unsigned nbrOfBankGroups;
+  int64_t power_down;
+  int64_t Inselfrefresh;
+  int64_t tRRD_init;
+  int64_t tCCD_init;
+  int64_t tWTR_init;
+  int64_t tREF;
+  int64_t tSwitch_init;
+  int64_t tRWTP;
+  int64_t bankaccess;
+  int64_t nBanks;
+  int64_t nColumns;
+  int64_t burstLength;
+  int64_t nbrOfBankGroups;
   bool timingsGet;
-  double   startTime;
+  int64_t startTime;
 
   // the scheduling results for all the transactions are written into
   // commands which will be used by the power analysis part.

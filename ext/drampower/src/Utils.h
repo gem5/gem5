@@ -41,9 +41,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
-#include <typeinfo>
 
-#define MILLION 1000000
 
 template<typename T>
 T fromString(const std::string& s,
@@ -54,7 +52,7 @@ throw(std::runtime_error)
   T t;
 
   if (!(is >> f >> t)) {
-    throw std::runtime_error("fromString cannot convert " + s);
+    throw std::runtime_error("Cannot convert string");
   }
 
   return t;

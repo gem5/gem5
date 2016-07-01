@@ -31,7 +31,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Karthik Chandrasekar
+ * Authors: Karthik Chandrasekar, Yonghui Li, Sven Goossens
  *
  */
 #include "CmdScheduler.h"
@@ -42,17 +42,20 @@
 #include <algorithm>  // For max
 
 
+#define MILLION 1000000
+
+
 using namespace std;
 using namespace Data;
 
 // Read the traces and get the transaction. Each transaction is executed by
 // scheduling a number of commands to the memory. Hence, the transactions are
 // translated into a sequence of commands which will be used for power analysis.
-void cmdScheduler::transTranslation(MemorySpecification memSpec,
+void cmdScheduler::transTranslation(const MemorySpecification& memSpec,
                                     ifstream& trans_trace, int grouping, int interleaving, int burst, int powerdown)
 {
   commands.open("commands.trace", ifstream::out);
-  MemArchitectureSpec& memArchSpec = memSpec.memArchSpec;
+  const MemArchitectureSpec& memArchSpec = memSpec.memArchSpec;
   nBanks          = memArchSpec.nbrOfBanks;
   nColumns        = memArchSpec.nbrOfColumns;
   burstLength     = memArchSpec.burstLength;
@@ -77,13 +80,14 @@ void cmdScheduler::transTranslation(MemorySpecification memSpec,
 } // cmdScheduler::transTranslation
 
 // initialize the variables and vectors for starting command scheduling.
-void cmdScheduler::schedulingInitialization(MemorySpecification memSpec)
+void cmdScheduler::schedulingInitialization(const MemorySpecification& memSpec)
 {
-  MemTimingSpec& memTimingSpec = memSpec.memTimingSpec;
+  const MemTimingSpec& memTimingSpec = memSpec.memTimingSpec;
 
-  ACT.resize(2 * memSpec.memArchSpec.nbrOfBanks);
-  RDWR.resize(2 * memSpec.memArchSpec.nbrOfBanks);
-  PRE.resize(memSpec.memArchSpec.nbrOfBanks);
+  const size_t numBanks = static_cast<size_t>(memSpec.memArchSpec.nbrOfBanks);
+  ACT.resize(2 * numBanks);
+  RDWR.resize(2 * numBanks);
+  PRE.resize(numBanks);
   bankaccess = memSpec.memArchSpec.nbrOfBanks;
   if (!ACT.empty()) {
     ACT.erase(ACT.begin(), ACT.end());
@@ -96,14 +100,15 @@ void cmdScheduler::schedulingInitialization(MemorySpecification memSpec)
   }
 
   ///////////////initialization//////////////
-  for (unsigned i = 0; i < memSpec.memArchSpec.nbrOfBanks; i++) {
+  for (int64_t i = 0; i < memSpec.memArchSpec.nbrOfBanks; i++) {
     cmd.Type = PRECHARGE;
-    cmd.bank = i;
+    cmd.bank = static_cast<unsigned>(i);
     cmd.name = "PRE";
-    if (memSpec.id == "WIDEIO_SDR")
-      cmd.time = 1 - static_cast<double>(memSpec.memTimingSpec.TAW);
-    else
-      cmd.time = 1 - static_cast<double>(memSpec.memTimingSpec.FAW);
+    if (memSpec.id == "WIDEIO_SDR") {
+      cmd.time = 1 - memSpec.memTimingSpec.TAW;
+    } else {
+      cmd.time = 1 - memSpec.memTimingSpec.FAW;
+    }
 
     PRE.push_back(cmd);
 
@@ -114,7 +119,7 @@ void cmdScheduler::schedulingInitialization(MemorySpecification memSpec)
     cmd.Type = WRITE;
     cmd.name = "WRITE";
     cmd.time = -1;
-    RDWR[i].push_back(cmd);
+    RDWR[static_cast<size_t>(i)].push_back(cmd);
   }
   tREF             = memTimingSpec.REFI;
   transFinish.time = 0;
@@ -130,14 +135,14 @@ void cmdScheduler::schedulingInitialization(MemorySpecification memSpec)
 // transactions are generated according to the information read from the traces.
 // Then the command scheduling function is triggered to generate commands and
 // schedule them to the memory according to the timing constraints.
-void cmdScheduler::getTrans(std::ifstream& trans_trace, MemorySpecification memSpec)
+void cmdScheduler::getTrans(std::ifstream& trans_trace, const MemorySpecification& memSpec)
 {
   std::string line;
 
   transTime = 0;
-  unsigned newtranstime;
-  unsigned transAddr;
-  unsigned transType = 1;
+  uint64_t newtranstime;
+  uint64_t transAddr;
+  int64_t transType = 1;
   trans    TransItem;
 
   if (!transTrace.empty()) {
@@ -147,12 +152,12 @@ void cmdScheduler::getTrans(std::ifstream& trans_trace, MemorySpecification memS
   while (getline(trans_trace, line)) {
     istringstream linestream(line);
     string item;
-    unsigned itemnum = 0;
+    uint64_t itemnum = 0;
     while (getline(linestream, item, ',')) {
       if (itemnum == 0) {
         stringstream timestamp(item);
         timestamp >> newtranstime;
-        transTime = transTime + newtranstime;
+        transTime = transTime + static_cast<int64_t>(newtranstime);
       } else if (itemnum == 1) {
         if (item  == "write" || item == "WRITE") {
           transType = WRITE;
@@ -191,33 +196,35 @@ void cmdScheduler::getTrans(std::ifstream& trans_trace, MemorySpecification memS
 // be scheduled until all the commands for the current one are scheduled.
 // After the scheduling, a sequence of commands are obtained and they are written
 // into commands.txt which will be used for power analysis.
-void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
+void cmdScheduler::analyticalScheduling(const MemorySpecification& memSpec)
 {
-  int  Bs               = -1;
-  int  transType        = -1;
-  double timer          = 0;
-  int  bankGroupPointer = 0;
-  int  bankGroupAddr    = 0;
+  int64_t  transType        = -1;
+  int64_t timer          = 0;
+  uint64_t  bankGroupPointer = 0;
+  uint64_t  bankGroupAddr    = 0;
   bool collisionFound;
   physicalAddr PhysicalAddress;
   bool bankGroupSwitch  = false;
-  std::vector<unsigned> bankPointer(nbrOfBankGroups, 0);
-  std::vector<int>  bankAccessNum(nBanks, -1);
-  std::vector<bool> ACTSchedule(nBanks, false);
-  int bankAddr       = -1;
-  double endTime     = 0;
-  double tComing_REF = 0;
+  std::vector<uint64_t> bankPointer(static_cast<size_t>(nbrOfBankGroups), 0);
+  std::vector<int64_t>  bankAccessNum(static_cast<size_t>(nBanks), -1);
+  std::vector<bool> ACTSchedule(static_cast<size_t>(nBanks), false);
+  uint64_t bankAddr   = 0;
+  int64_t endTime     = 0;
+  int64_t tComing_REF = 0;
 
   Inselfrefresh = 0;
 
-  MemTimingSpec& memTimingSpec = memSpec.memTimingSpec;
+  const MemTimingSpec& memTimingSpec = memSpec.memTimingSpec;
 
-  for (unsigned t = 0; t < transTrace.size(); t++) {
+  for (uint64_t t = 0; t < transTrace.size(); t++) {
     cmdScheduling.erase(cmdScheduling.begin(), cmdScheduling.end());
 
-    for (unsigned i = 0; i < nBanks; i++) {
-      ACTSchedule[i]   = false;
-      bankAccessNum[i] = -1;
+    for (auto a : ACTSchedule) {
+      a = false;
+    }
+
+    for (auto& b : bankAccessNum) {
+      b = -1;
     }
 
     timingsGet      = false;
@@ -225,13 +232,13 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
 
     PhysicalAddress = memoryMap(transTrace[t], memSpec);
 
-    for (unsigned i = 0; i < nbrOfBankGroups; i++) {
-      bankPointer[i] = PhysicalAddress.bankAddr; // the bank pointer per group.
+    for (auto& b : bankPointer) {
+      b = PhysicalAddress.bankAddr; // the bank pointer per group.
     }
     bankGroupPointer = PhysicalAddress.bankGroupAddr;
 
-    endTime          = max(transFinish.time, PRE[transFinish.bank].time +
-                           static_cast<int>(memTimingSpec.RP));
+    endTime = max(transFinish.time, PRE[static_cast<size_t>(transFinish.bank)].time +
+                                    static_cast<int>(memTimingSpec.RP));
 
     // Before starting the scheduling for the next transaction, it has to
     // check whether it is necessary for implementing power down.
@@ -244,14 +251,12 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
 
     ///////////////Scheduling Refresh////////////////////////
     if (((transFinish.time >= tREF) || (timer >= tREF))) {
-      for (double i = 0; i <= ((timer - tComing_REF) > 0 ? (timer - tComing_REF) /
+      for (int64_t i = 0; i <= ((timer - tComing_REF) > 0 ? (timer - tComing_REF) /
                                memTimingSpec.REFI : 0); i++) {
         cmd.bank = 0;
         cmd.name = "REF";
-        cmd.time = max(max(max(transFinish.time, PRE[transFinish.bank].time
-                               + static_cast<int>(memTimingSpec.RP)), tREF), startTime);
-        if (((power_down == SELF_REFRESH) && !Inselfrefresh) ||
-            (power_down != SELF_REFRESH)) {
+        cmd.time = max(max(max(transFinish.time, PRE[static_cast<size_t>(transFinish.bank)].time + memTimingSpec.RP), tREF), startTime);
+        if ((power_down == SELF_REFRESH && !Inselfrefresh) || power_down != SELF_REFRESH) {
           cmdScheduling.push_back(cmd);
           startTime = cmd.time + memTimingSpec.RFC;
         }
@@ -262,7 +267,7 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
       }
     }
     ///////////////Execution Transactions///////////////////
-    Bs        = PhysicalAddress.bankAddr;
+    uint64_t Bs = PhysicalAddress.bankAddr;
     transType = transTrace[t].type;
 
     tRWTP     = getRWTP(transType, memSpec);
@@ -280,9 +285,8 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
               bankGroupSwitch = true;
             }
             // update to the current bank group address.
-            bankGroupAddr = PhysicalAddress.bankGroupAddr + j;
-            bankAddr      = bankGroupAddr * nBanks / nbrOfBankGroups +
-                            bankPointer[bankGroupAddr];
+            bankGroupAddr = PhysicalAddress.bankGroupAddr + static_cast<uint64_t>(j);
+            bankAddr = bankGroupAddr * static_cast<uint64_t>(nBanks) / nbrOfBankGroups + bankPointer[bankGroupAddr];
           } else   {
             bankAddr = Bs + i;
           }
@@ -312,7 +316,7 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
                              static_cast<int>(memTimingSpec.TAW));
             }
 
-            if ((i == 0) && (j == 0)) {
+            if (i == 0 && j == 0) {
               cmd.time = max(cmd.time, PreRDWR.time + 1);
               cmd.time = max(cmd.time, timer);
               cmd.time = max(startTime, cmd.time);
@@ -358,7 +362,7 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
           }
           for (int ACTBank = static_cast<int>(ACT.size() - 1);
                ACTBank >= 0; ACTBank--) {
-            if (ACT[ACTBank].bank == bankAddr) {
+            if (ACT[ACTBank].bank == static_cast<int64_t>(bankAddr)) {
               cmd.time = max(PreRDWR.time + tSwitch_init, ACT.back().time
                              + static_cast<int>(memTimingSpec.RCD));
               break;
@@ -392,7 +396,7 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
             PRE[bankAddr].name = "PRE";
             for (int ACTBank = static_cast<int>(ACT.size() - 1);
                  ACTBank >= 0; ACTBank--) {
-              if (ACT[ACTBank].bank == bankAddr) {
+              if (ACT[ACTBank].bank == static_cast<int64_t>(bankAddr)) {
                 PRE[bankAddr].time = max(ACT.back().time +
                                          static_cast<int>(memTimingSpec.RAS),
                                          PreRDWR.time + tRWTP);
@@ -419,7 +423,7 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
     /////////////Update Vector Length/////////////////
     // the vector length is reduced so that less memory is used for running
     // this tool.
-    if (ACT.size() >= memSpec.memArchSpec.nbrOfBanks) {
+    if (ACT.size() >= static_cast<size_t>(memSpec.memArchSpec.nbrOfBanks)) {
       for (int m = 0; m < BI * BGI; m++) {
         ACT.erase(ACT.begin());
         RDWR[0].erase(RDWR[0].begin(), RDWR[0].end());
@@ -443,14 +447,14 @@ void cmdScheduler::analyticalScheduling(MemorySpecification memSpec)
 // to add the power down/up during the command scheduling for transactions.
 // It is called when the command scheduling for a transaction is finished, and it
 // is also called if there is a refresh.
-void cmdScheduler::pdScheduling(double endTime, double timer,
-                                MemorySpecification memSpec)
+void cmdScheduler::pdScheduling(int64_t endTime, int64_t timer,
+                                const MemorySpecification& memSpec)
 {
-  double ZERO = 0;
-  MemTimingSpec& memTimingSpec = memSpec.memTimingSpec;
+  int64_t ZERO = 0;
+  const MemTimingSpec& memTimingSpec = memSpec.memTimingSpec;
 
   endTime = max(endTime, startTime);
-  double pdTime = max(ZERO, timer - endTime);
+  int64_t pdTime = max(ZERO, timer - endTime);
 
   if ((timer > (endTime + memTimingSpec.CKE)) && (power_down == POWER_DOWN)) {
     cmd.bank = 0;
@@ -490,11 +494,11 @@ void cmdScheduler::pdScheduling(double endTime, double timer,
 
 // get the time when a precharge occurs after a read/write command is scheduled.
 // In addition, it copes with different kind of memories.
-int cmdScheduler::getRWTP(int transType, MemorySpecification memSpec)
+int64_t cmdScheduler::getRWTP(int64_t transType, const MemorySpecification& memSpec)
 {
-  int tRWTP_init = 0;
-  MemTimingSpec& memTimingSpec     = memSpec.memTimingSpec;
-  MemArchitectureSpec& memArchSpec = memSpec.memArchSpec;
+  int64_t tRWTP_init = 0;
+  const MemTimingSpec& memTimingSpec     = memSpec.memTimingSpec;
+  const MemArchitectureSpec& memArchSpec = memSpec.memArchSpec;
 
   if (transType == READ) {
     switch (memSpec.memoryType) {
@@ -506,13 +510,13 @@ int cmdScheduler::getRWTP(int transType, MemorySpecification memSpec)
     case MemoryType::LPDDR2:
     case MemoryType::LPDDR3:
       tRWTP_init = memArchSpec.burstLength / memArchSpec.dataRate +
-                   max(0, static_cast<int>(memTimingSpec.RTP - 2));
+                   max(int64_t(0), memTimingSpec.RTP - 2);
       break;
 
     case MemoryType::DDR2:
       tRWTP_init = memTimingSpec.AL + memArchSpec.burstLength /
                    memArchSpec.dataRate +
-                   max(static_cast<int>(memTimingSpec.RTP), 2) - 2;
+                   max(memTimingSpec.RTP, int64_t(2)) - 2;
       break;
 
     case MemoryType::DDR3:
@@ -525,10 +529,10 @@ int cmdScheduler::getRWTP(int transType, MemorySpecification memSpec)
   } else if (transType == WRITE)    {
     if (memSpec.memoryType == MemoryType::WIDEIO_SDR) {
       tRWTP_init = memTimingSpec.WL + memArchSpec.burstLength /
-                   memArchSpec.dataRate - 1 + memSpec.memTimingSpec.WR;
+                   memArchSpec.dataRate - 1 + memTimingSpec.WR;
     } else   {
       tRWTP_init = memTimingSpec.WL + memArchSpec.burstLength /
-                   memArchSpec.dataRate + memSpec.memTimingSpec.WR;
+                   memArchSpec.dataRate + memTimingSpec.WR;
     }
     if ((memSpec.memoryType == MemoryType::LPDDR2) ||
         (memSpec.memoryType == MemoryType::LPDDR3)) {
@@ -543,11 +547,11 @@ int cmdScheduler::getRWTP(int transType, MemorySpecification memSpec)
 // In particular, tSwitch_init is generally used to provide the timings for
 // scheduling a read/write command after a read/write command which have been
 // scheduled to any possible banks within any possible bank groups (DDR4).
-void cmdScheduler::getTimingConstraints(bool BGSwitch, MemorySpecification memSpec,
-                                        int PreType, int CurrentType)
+void cmdScheduler::getTimingConstraints(bool BGSwitch, const MemorySpecification& memSpec,
+                                        int64_t PreType, int64_t CurrentType)
 {
-  MemTimingSpec& memTimingSpec     = memSpec.memTimingSpec;
-  MemArchitectureSpec& memArchSpec = memSpec.memArchSpec;
+  const MemTimingSpec& memTimingSpec     = memSpec.memTimingSpec;
+  const MemArchitectureSpec& memArchSpec = memSpec.memArchSpec;
 
   if (memSpec.memoryType != MemoryType::DDR4) {
     tRRD_init = memTimingSpec.RRD;
@@ -586,7 +590,7 @@ void cmdScheduler::getTimingConstraints(bool BGSwitch, MemorySpecification memSp
     if (PreType == CurrentType) {
       tSwitch_init = tCCD_init;
       timingsGet   = true;
-    } else if ((PreType == WRITE) && (CurrentType == READ)) {
+    } else if (PreType == WRITE && CurrentType == READ) {
       tSwitch_init = memTimingSpec.WL + memArchSpec.burstLength /
                      memArchSpec.dataRate + tWTR_init;
     }
@@ -601,59 +605,55 @@ void cmdScheduler::getTimingConstraints(bool BGSwitch, MemorySpecification memSp
 // The logical address of each transaction is translated into a physical address
 // which consists of bank group (for DDR4), bank, row and column addresses.
 cmdScheduler::physicalAddr cmdScheduler::memoryMap(trans               Trans,
-                                                   MemorySpecification memSpec)
+                                                   const MemorySpecification& memSpec)
 {
-  int DecLogic;
+  int64_t DecLogic;
   physicalAddr PhysicalAddr;
 
   DecLogic = Trans.logicalAddress;
 
   // row-bank-column-BI-BC-BGI-BL
-  if ((BGI > 1) && (memSpec.memoryType == MemoryType::DDR4)) {
-    unsigned colBits   = static_cast<unsigned>(log2(nColumns));
-    unsigned bankShift = static_cast<unsigned>(colBits + ((BI > 1) ? log2(BI) : 0)
-                                               + ((BGI > 1) ? log2(BGI) : 0));
-    unsigned bankMask  = static_cast<unsigned>(nBanks / (BI * nbrOfBankGroups) - 1)
-                        << bankShift;
-    unsigned bankAddr  = (DecLogic & bankMask) >>
-                         static_cast<unsigned>(colBits + ((BGI > 1) ? log2(BGI) : 0));
+  if (BGI > 1 && memSpec.memoryType == MemoryType::DDR4) {
+    uint64_t colBits   = uintLog2(nColumns);
+    uint64_t bankShift = colBits + ((BI > 1) ? uintLog2(BI) : 0)  + ((BGI > 1) ? uintLog2(BGI) : 0);
+    uint64_t bankMask  = (nBanks / (BI * nbrOfBankGroups) - 1) << bankShift;
+    uint64_t bankAddr  = (DecLogic & bankMask) >> (colBits + ((BGI > 1) ? uintLog2(BGI) : 0));
     PhysicalAddr.bankAddr = bankAddr;
 
-    unsigned bankGroupShift = static_cast<unsigned>(log2(burstLength));
-    unsigned bankGroupMask  = (nbrOfBankGroups / BGI - 1) << bankGroupShift;
-    unsigned bankGroupAddr  = (DecLogic & bankGroupMask) >> bankGroupShift;
+    uint64_t bankGroupShift = uintLog2(burstLength);
+    uint64_t bankGroupMask  = (nbrOfBankGroups / BGI - 1) << bankGroupShift;
+    uint64_t bankGroupAddr  = (DecLogic & bankGroupMask) >> bankGroupShift;
     PhysicalAddr.bankGroupAddr = bankGroupAddr;
 
-    unsigned colShift       = static_cast<unsigned>(log2(BC * burstLength) +
-                                                    ((BI > 1) ? log2(BI) : 0) + ((BGI > 1) ? log2(BGI) : 0));
-    unsigned colMask        = static_cast<unsigned>(nColumns / (BC * burstLength) - 1)
-                       << colShift;
-    unsigned colAddr        = (DecLogic & colMask) >>
-                              static_cast<unsigned>((colShift - log2(static_cast<unsigned>(BC) * burstLength)));
+    uint64_t colShift       = uintLog2(BC * burstLength) +
+                                                    ((BI > 1) ? uintLog2(BI) : 0) + ((BGI > 1) ? uintLog2(BGI) : 0);
+    uint64_t colMask        = (nColumns / (BC * burstLength) - 1) << colShift;
+    uint64_t colAddr        = (DecLogic & colMask) >> (colShift - uintLog2(static_cast<uint64_t>(BC) * burstLength));
     PhysicalAddr.colAddr = colAddr;
   } else   {
-    unsigned colBits   = static_cast<unsigned>(log2(nColumns));
-    unsigned bankShift = static_cast<unsigned>(colBits + ((BI > 1) ? log2(BI) : 0));
-    unsigned bankMask  = static_cast<unsigned>(nBanks / BI - 1) << bankShift;
-    unsigned bankAddr  = (DecLogic & bankMask) >> colBits;
+    uint64_t colBits   = uintLog2(nColumns);
+    uint64_t bankShift = colBits + ((BI > 1) ? uintLog2(BI) : 0);
+    uint64_t bankMask  = (nBanks / BI - 1) << bankShift;
+    uint64_t bankAddr  = (DecLogic & bankMask) >> colBits;
     PhysicalAddr.bankAddr = bankAddr;
 
-    unsigned colShift  = static_cast<unsigned>(log2(BC * burstLength) +
-                                               ((BI > 1) ? log2(BI) : 0));
-    unsigned colMask   = static_cast<unsigned>(nColumns / (BC * burstLength) - 1)
-                       << colShift;
-    unsigned colAddr   = (DecLogic & colMask) >>
-                         static_cast<unsigned>((colShift - log2(static_cast<unsigned>(BC) * burstLength)));
+    uint64_t colShift  = (uintLog2(BC * burstLength) + ((BI > 1) ? uintLog2(BI) : 0));
+    uint64_t colMask   = (nColumns / (BC * burstLength) - 1) << colShift;
+    uint64_t colAddr   = (DecLogic & colMask) >> (colShift - uintLog2(BC * burstLength));
     PhysicalAddr.colAddr       = colAddr;
 
     PhysicalAddr.bankGroupAddr = 0;
   }
 
-  unsigned rowShift = static_cast<unsigned>(log2(nColumns * nBanks));
-  unsigned rowMask  = static_cast<unsigned>(memSpec.memArchSpec.nbrOfRows - 1)
-                     << rowShift;
-  unsigned rowAddr  = (DecLogic & rowMask) >> rowShift;
+  uint64_t rowShift = uintLog2(nColumns * nBanks);
+  uint64_t rowMask  = (memSpec.memArchSpec.nbrOfRows - 1) << rowShift;
+  uint64_t rowAddr  = (DecLogic & rowMask) >> rowShift;
   PhysicalAddr.rowAddr = rowAddr;
 
   return PhysicalAddr;
 } // cmdScheduler::memoryMap
+
+uint64_t cmdScheduler::uintLog2(uint64_t in)
+{
+  return static_cast<uint64_t>(log2(in));
+}

@@ -252,8 +252,8 @@ The tool is based on the DRAM power model developed jointly by the Computer Engi
 
 **To cite the DRAMPower Tool:**
 ```
-[1] "DRAMPower: Open-source DRAM power & energy estimation tool"
-Karthik Chandrasekar, Christian Weis, Yonghui Li, Benny Akesson, Norbert Wehn, and Kees Goossens
+[1] DRAMPower: Open-source DRAM Power & Energy Estimation Tool
+Karthik Chandrasekar, Christian Weis, Yonghui Li, Sven Goossens, Matthias Jung, Omar Naji, Benny Akesson, Norbert Wehn, and Kees Goossens
 URL: http://www.drampower.info
 ```
 

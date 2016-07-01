@@ -42,14 +42,19 @@
 using namespace Data;
 using namespace std;
 
+TraceParser::TraceParser(int64_t nbrOfBanks) :
+  counters(nbrOfBanks)
+{
+}
+
+
 Data::MemCommand TraceParser::parseLine(std::string line)
 {
-  MemCommand memcmd;
+  MemCommand memcmd(MemCommand::UNINITIALIZED, 0, 0);
   istringstream linestream(line);
   string item;
-  double item_val;
+  int64_t item_val;
   unsigned itemnum = 0;
-  MemCommand::cmds type = MemCommand::NOP; // Initialized to prevent warning
 
   while (getline(linestream, item, ',')) {
     if (itemnum == 0) {
@@ -62,10 +67,8 @@ Data::MemCommand TraceParser::parseLine(std::string line)
     } else if (itemnum == 2) {
       stringstream bank(item);
       bank >> item_val;
-      memcmd.setType(type);
       memcmd.setBank(static_cast<unsigned>(item_val));
     }
-    type = memcmd.getType();
     itemnum++;
   }
   return memcmd;
@@ -90,13 +93,13 @@ void TraceParser::parseFile(MemorySpecification memSpec, std::ifstream& trace,
       cmd_list.push_back(cmdline);
       nCommands++;
       if (nCommands == window) {
-        counters.getCommands(memSpec, memSpec.memArchSpec.nbrOfBanks, cmd_list, lastupdate);
+        counters.getCommands(memSpec, cmd_list, lastupdate);
         nCommands = 0;
         cmd_list.clear();
       }
     }
     lastupdate = true;
-    counters.getCommands(memSpec, memSpec.memArchSpec.nbrOfBanks, cmd_list, lastupdate);
+    counters.getCommands(memSpec, cmd_list, lastupdate);
     cmd_list.clear();
     pwr_trace.close();
   } else   {
@@ -106,13 +109,13 @@ void TraceParser::parseFile(MemorySpecification memSpec, std::ifstream& trace,
       cmd_list.push_back(cmdline);
       nCommands++;
       if (nCommands == window) {
-        counters.getCommands(memSpec, memSpec.memArchSpec.nbrOfBanks, cmd_list, lastupdate);
+        counters.getCommands(memSpec, cmd_list, lastupdate);
         nCommands = 0;
         cmd_list.clear();
       }
     }
     lastupdate = true;
-    counters.getCommands(memSpec, memSpec.memArchSpec.nbrOfBanks, cmd_list, lastupdate);
+    counters.getCommands(memSpec, cmd_list, lastupdate);
     cmd_list.clear();
   }
   counters.clear();

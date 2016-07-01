@@ -56,6 +56,8 @@ class libDRAMPower {
 
   void updateCounters(bool lastUpdate);
 
+  void clearCounters(int64_t timestamp);
+
   void clearState();
 
   void calcEnergy();

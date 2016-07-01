@@ -48,6 +48,7 @@
 
 class TraceParser {
  public:
+  TraceParser(int64_t nbrOfBanks);
   // list of parsed commands
   std::vector<Data::MemCommand> cmd_list;
 

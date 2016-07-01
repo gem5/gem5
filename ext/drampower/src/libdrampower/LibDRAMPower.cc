@@ -52,13 +52,13 @@ libDRAMPower::~libDRAMPower()
 
 void libDRAMPower::doCommand(MemCommand::cmds type, int bank, int64_t timestamp)
 {
-  MemCommand cmd(type, static_cast<unsigned>(bank), static_cast<double>(timestamp));
+  MemCommand cmd(type, static_cast<unsigned>(bank), timestamp);
   cmdList.push_back(cmd);
 }
 
 void libDRAMPower::updateCounters(bool lastUpdate)
 {
-  counters.getCommands(memSpec, memSpec.memArchSpec.nbrOfBanks, cmdList, lastUpdate);
+  counters.getCommands(memSpec, cmdList, lastUpdate);
   cmdList.clear();
 }
 
@@ -70,6 +70,11 @@ void libDRAMPower::calcEnergy()
 void libDRAMPower::clearState()
 {
   counters.clear();
+}
+
+void libDRAMPower::clearCounters(int64_t timestamp)
+{
+  counters.clearStats(timestamp);
 }
 
 const Data::MemoryPowerModel::Energy& libDRAMPower::getEnergy() const
