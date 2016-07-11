@@ -383,7 +383,9 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
     }
 
     // should have found at least one loadable segment
-    assert(text.size != 0);
+    warn_if(text.size != 0,
+            "Empty .text segment in '%s'. ELF file corrupted?\n",
+            filename);
 
     DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
              text.baseAddr, text.size, data.baseAddr, data.size,
