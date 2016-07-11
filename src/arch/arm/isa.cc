@@ -1520,7 +1520,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
               // can't be an atomic translation because that causes problems
               // with unexpected atomic snoop requests.
               warn("Translating via MISCREG(%d) in functional mode! Fix Me!\n", misc_reg);
-              Request req(0, val, 1, flags,  Request::funcMasterId,
+              Request req(0, val, 0, flags,  Request::funcMasterId,
                           tc->pcState().pc(), tc->contextId());
               fault = tc->getDTBPtr()->translateFunctional(&req, tc, mode, tranType);
               TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
@@ -1765,7 +1765,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 // can't be an atomic translation because that causes problems
                 // with unexpected atomic snoop requests.
                 warn("Translating via MISCREG(%d) in functional mode! Fix Me!\n", misc_reg);
-                req->setVirt(0, val, 1, flags,  Request::funcMasterId,
+                req->setVirt(0, val, 0, flags,  Request::funcMasterId,
                                tc->pcState().pc());
                 req->setContext(tc->contextId());
                 fault = tc->getDTBPtr()->translateFunctional(req, tc, mode,

@@ -1423,7 +1423,7 @@ TLB::setTestInterface(SimObject *_ti)
 Fault
 TLB::testTranslation(RequestPtr req, Mode mode, TlbEntry::DomainType domain)
 {
-    if (!test) {
+    if (!test || !req->hasSize() || req->getSize() == 0) {
         return NoFault;
     } else {
         return test->translationCheck(req, isPriv, mode, domain);
