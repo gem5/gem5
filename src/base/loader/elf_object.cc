@@ -383,7 +383,7 @@ ElfObject::ElfObject(const std::string &_filename, size_t _len,
     }
 
     // should have found at least one loadable segment
-    warn_if(text.size != 0,
+    warn_if(text.size == 0,
             "Empty .text segment in '%s'. ELF file corrupted?\n",
             filename);
 
