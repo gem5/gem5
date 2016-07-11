@@ -733,8 +733,7 @@ Cache::recvTimingReq(PacketPtr pkt)
             cpuSidePort->schedTimingResp(pkt, request_time, true);
         } else {
             DPRINTF(Cache, "%s satisfied %s addr %#llx, no response needed\n",
-                    __func__, pkt->cmdString(), pkt->getAddr(),
-                    pkt->getSize());
+                    __func__, pkt->cmdString(), pkt->getAddr());
 
             // queue the packet for deletion, as the sending cache is
             // still relying on it; if the block is found in access(),
