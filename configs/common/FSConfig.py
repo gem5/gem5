@@ -169,7 +169,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
     self.partition_desc.port = self.membus.master
     self.intrctrl = IntrControl()
     self.disk0 = CowMmDisk()
-    self.disk0.childImage(disk('disk.s10hw2'))
+    self.disk0.childImage(mdesc.disk())
     self.disk0.pio = self.iobus.master
 
     # The puart0 and hvuart are placed on the IO bus, so create ranges
