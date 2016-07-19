@@ -172,7 +172,7 @@ EtherSwitch::Interface::enqueue(EthPacketPtr packet, unsigned senderId)
     // to send this packet out the external link
     // otherwise, there is already a txEvent scheduled
     if (outputFifo.push(packet, senderId)) {
-        parent->reschedule(txEvent, curTick() + switchingDelay());
+        parent->reschedule(txEvent, curTick() + switchingDelay(), true);
     }
 }
 
