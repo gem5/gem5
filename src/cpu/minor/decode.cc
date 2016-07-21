@@ -313,8 +313,7 @@ Decode::getScheduledThread()
     }
 
     for (auto tid : priority_list) {
-        if (cpu.getContext(tid)->status() == ThreadContext::Active &&
-            getInput(tid) && !decodeInfo[tid].blocked) {
+        if (getInput(tid) && !decodeInfo[tid].blocked) {
             threadPriority = tid;
             return tid;
         }

@@ -559,10 +559,11 @@ Execute::issue(ThreadID thread_id)
         } else if (cpu.getContext(thread_id)->status() ==
             ThreadContext::Suspended)
         {
-            DPRINTF(MinorExecute, "Not issuing inst: %s from suspended"
+            DPRINTF(MinorExecute, "Discarding inst: %s from suspended"
                 " thread\n", *inst);
 
-            issued = false;
+            issued = true;
+            discarded = true;
         } else if (inst->id.streamSeqNum != thread.streamSeqNum) {
             DPRINTF(MinorExecute, "Discarding inst: %s as its stream"
                 " state was unexpected, expected: %d\n",
@@ -880,9 +881,8 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
     if (thread->status() == ThreadContext::Suspended &&
         !isInterrupted(thread_id))
     {
-        DPRINTF(MinorExecute, "Not committing inst from suspended thread"
-            " inst: %s\n", *inst);
-        completed_inst = false;
+        panic("We should never hit the case where we try to commit from a "
+              "suspended thread as the streamSeqNum should not match");
     } else if (inst->isFault()) {
         ExecContext context(cpu, *cpu.threads[thread_id], *this, inst);
 
@@ -1485,9 +1485,7 @@ Execute::evaluate()
             if (inst->isFault()) {
                 can_issue_next = true;
             } else if (!inst->isBubble()) {
-                if (cpu.getContext(tid)->status() != ThreadContext::Suspended) {
-                    next_issuable_insts.push_back(inst);
-                }
+                next_issuable_insts.push_back(inst);
             }
         }
     }
@@ -1741,8 +1739,7 @@ Execute::getIssuingThread()
     }
 
     for (auto tid : priority_list) {
-        if (cpu.getContext(tid)->status() == ThreadContext::Active &&
-            getInput(tid)) {
+        if (getInput(tid)) {
             issuePriority = tid;
             return tid;
         }
@@ -1823,8 +1820,7 @@ Execute::isDrained()
         return false;
 
     for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
-        if (executeInfo[tid].drainState != DrainAllInsts ||
-            !inputBuffer[tid].empty() ||
+        if (!inputBuffer[tid].empty() ||
             !executeInfo[tid].inFlightInsts->empty()) {
 
             return false;

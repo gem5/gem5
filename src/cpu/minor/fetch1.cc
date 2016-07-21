@@ -734,7 +734,7 @@ Fetch1::isDrained()
                 (numInFlightFetches() == 0 ? "" : "inFlightFetches "),
                 ((*out.inputWire).isBubble() ? "" : "outputtingLine"));
 
-        drained = drained && thread.state == FetchHalted;
+        drained = drained && (thread.state != FetchRunning);
     }
 
     return drained;
