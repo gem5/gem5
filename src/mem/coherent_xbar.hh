@@ -394,6 +394,7 @@ class CoherentXBar : public BaseXBar
     bool sinkPacket(const PacketPtr pkt) const;
 
     Stats::Scalar snoops;
+    Stats::Scalar snoopTraffic;
     Stats::Distribution snoopFanout;
 
   public:

@@ -317,8 +317,10 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         pktSize[slave_port_id][master_port_id] += pkt_size;
         transDist[pkt_cmd]++;
 
-        if (is_express_snoop)
+        if (is_express_snoop) {
             snoops++;
+            snoopTraffic += pkt_size;
+        }
     }
 
     if (sink_packet)
@@ -415,8 +417,10 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id)
             pkt->getAddr());
 
     // update stats here as we know the forwarding will succeed
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     transDist[pkt->cmdToIndex()]++;
     snoops++;
+    snoopTraffic += pkt_size;
 
     // we should only see express snoops from caches
     assert(pkt->isExpressSnoop());
@@ -588,6 +592,7 @@ CoherentXBar::recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id)
     // stats updates
     transDist[pkt_cmd]++;
     snoops++;
+    snoopTraffic += pkt_size;
 
     return true;
 }
@@ -739,7 +744,9 @@ CoherentXBar::recvAtomicSnoop(PacketPtr pkt, PortID master_port_id)
             pkt->cmdString());
 
     // add the request snoop data
+    unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     snoops++;
+    snoopTraffic += pkt_size;
 
     // forward to all snoopers
     std::pair<MemCmd, Tick> snoop_result;
@@ -963,6 +970,11 @@ CoherentXBar::regStats()
     snoops
         .name(name() + ".snoops")
         .desc("Total snoops (count)")
+    ;
+
+    snoopTraffic
+        .name(name() + ".snoopTraffic")
+        .desc("Total snoop traffic (bytes)")
     ;
 
     snoopFanout
