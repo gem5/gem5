@@ -187,9 +187,9 @@ Pipeline::getDataPort()
 }
 
 void
-Pipeline::wakeupFetch()
+Pipeline::wakeupFetch(ThreadID tid)
 {
-    execute.wakeupFetch();
+    fetch1.wakeupFetch(tid);
 }
 
 bool
@@ -212,6 +212,11 @@ void
 Pipeline::drainResume()
 {
     DPRINTF(Drain, "Drain resume\n");
+
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
+        fetch1.wakeupFetch(tid);
+    }
+
     execute.drainResume();
 }
 

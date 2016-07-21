@@ -71,7 +71,7 @@ class Decode : public Named
     Latch<ForwardInstData>::Input out;
 
     /** Interface to reserve space in the next stage */
-    Reservable &nextStageReserve;
+    std::vector<InputBuffer<ForwardInstData>> &nextStageReserve;
 
     /** Width of output of this stage/input of next in instructions */
     unsigned int outputWidth;
@@ -82,43 +82,68 @@ class Decode : public Named
 
   public:
     /* Public for Pipeline to be able to pass it to Fetch2 */
-    InputBuffer<ForwardInstData> inputBuffer;
+    std::vector<InputBuffer<ForwardInstData>> inputBuffer;
 
   protected:
     /** Data members after this line are cycle-to-cycle state */
 
-    /** Index into the inputBuffer's head marking the start of unhandled
-     *  instructions */
-    unsigned int inputIndex;
+    struct DecodeThreadInfo {
 
-    /** True when we're in the process of decomposing a micro-op and
-     *  microopPC will be valid.  This is only the case when there isn't
-     *  sufficient space in Executes input buffer to take the whole of a
-     *  decomposed instruction and some of that instructions micro-ops must
-     *  be generated in a later cycle */
-    bool inMacroop;
-    TheISA::PCState microopPC;
+        /** Default Constructor */
+        DecodeThreadInfo() :
+            inputIndex(0),
+            inMacroop(false),
+            execSeqNum(InstId::firstExecSeqNum),
+            blocked(false)
+        { }
 
-    /** Source of execSeqNums to number instructions. */
-    InstSeqNum execSeqNum;
+        DecodeThreadInfo(const DecodeThreadInfo& other) :
+            inputIndex(other.inputIndex),
+            inMacroop(other.inMacroop),
+            execSeqNum(other.execSeqNum),
+            blocked(other.blocked)
+        { }
 
-    /** Blocked indication for report */
-    bool blocked;
+
+        /** Index into the inputBuffer's head marking the start of unhandled
+         *  instructions */
+        unsigned int inputIndex;
+
+        /** True when we're in the process of decomposing a micro-op and
+         *  microopPC will be valid.  This is only the case when there isn't
+         *  sufficient space in Executes input buffer to take the whole of a
+         *  decomposed instruction and some of that instructions micro-ops must
+         *  be generated in a later cycle */
+        bool inMacroop;
+        TheISA::PCState microopPC;
+
+        /** Source of execSeqNums to number instructions. */
+        InstSeqNum execSeqNum;
+
+        /** Blocked indication for report */
+        bool blocked;
+    };
+
+    std::vector<DecodeThreadInfo> decodeInfo;
+    ThreadID threadPriority;
 
   protected:
     /** Get a piece of data to work on, or 0 if there is no data. */
-    const ForwardInstData *getInput();
+    const ForwardInstData *getInput(ThreadID tid);
 
     /** Pop an element off the input buffer, if there are any */
-    void popInput();
+    void popInput(ThreadID tid);
 
+    /** Use the current threading policy to determine the next thread to
+     *  decode from. */
+    ThreadID getScheduledThread();
   public:
     Decode(const std::string &name,
         MinorCPU &cpu_,
         MinorCPUParams &params,
         Latch<ForwardInstData>::Output inp_,
         Latch<ForwardInstData>::Input out_,
-        Reservable &next_stage_input_buffer);
+        std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
 
   public:
     /** Pass on input/buffer data to the output if you can */

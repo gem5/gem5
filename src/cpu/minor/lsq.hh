@@ -537,7 +537,7 @@ class LSQ : public Named
     /** Most recent execSeqNum of a memory barrier instruction or
      *  0 if there are no in-flight barriers.  Useful as a
      *  dependency for early-issued memory operations */
-    InstSeqNum lastMemBarrier;
+    std::vector<InstSeqNum> lastMemBarrier;
 
   public:
     /** Retry state of last issued memory transfer */
@@ -640,6 +640,9 @@ class LSQ : public Named
     /** Can a request be sent to the memory system */
     bool canSendToMemorySystem();
 
+    /** Snoop other threads monitors on memory system accesses */
+    void threadSnoop(LSQRequestPtr request);
+
   public:
     LSQ(std::string name_, std::string dcache_port_name_,
         MinorCPU &cpu_, Execute &execute_,
@@ -691,7 +694,8 @@ class LSQ : public Named
     void issuedMemBarrierInst(MinorDynInstPtr inst);
 
     /** Get the execSeqNum of the last issued memory barrier */
-    InstSeqNum getLastMemBarrier() const { return lastMemBarrier; }
+    InstSeqNum getLastMemBarrier(ThreadID thread_id) const
+    { return lastMemBarrier[thread_id]; }
 
     /** Is there nothing left in the LSQ */
     bool isDrained();

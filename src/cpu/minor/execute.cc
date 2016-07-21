@@ -86,15 +86,10 @@ Execute::Execute(const std::string &name_,
         params.executeLSQTransfersQueueSize,
         params.executeLSQStoreBufferSize,
         params.executeLSQMaxStoreBufferStoresPerCycle),
-    scoreboard(name_ + ".scoreboard"),
-    inputBuffer(name_ + ".inputBuffer", "insts",
-        params.executeInputBufferSize),
-    inputIndex(0),
-    lastCommitWasEndOfMacroop(true),
-    instsBeingCommitted(params.executeCommitLimit),
-    streamSeqNum(InstId::firstStreamSeqNum),
-    lastPredictionSeqNum(InstId::firstPredictionSeqNum),
-    drainState(NotDraining)
+    executeInfo(params.numThreads, ExecuteThreadInfo(params.executeCommitLimit)),
+    interruptPriority(0),
+    issuePriority(0),
+    commitPriority(0)
 {
     if (commitLimit < 1) {
         fatal("%s: executeCommitLimit must be >= 1 (%d)\n", name_,
@@ -170,35 +165,50 @@ Execute::Execute(const std::string &name_,
         }
     }
 
-    inFlightInsts = new Queue<QueuedInst,
-        ReportTraitsAdaptor<QueuedInst> >(
-        name_ + ".inFlightInsts", "insts", total_slots);
+    /* Per-thread structures */
+    for (ThreadID tid = 0; tid < params.numThreads; tid++) {
+        std::string tid_str = std::to_string(tid);
 
-    inFUMemInsts = new Queue<QueuedInst,
-        ReportTraitsAdaptor<QueuedInst> >(
-        name_ + ".inFUMemInsts", "insts", total_slots);
+        /* Input Buffers */
+        inputBuffer.push_back(
+            InputBuffer<ForwardInstData>(
+                name_ + ".inputBuffer" + tid_str, "insts",
+                params.executeInputBufferSize));
+
+        /* Scoreboards */
+        scoreboard.push_back(Scoreboard(name_ + ".scoreboard" + tid_str));
+
+        /* In-flight instruction records */
+        executeInfo[tid].inFlightInsts =  new Queue<QueuedInst,
+            ReportTraitsAdaptor<QueuedInst> >(
+            name_ + ".inFlightInsts" + tid_str, "insts", total_slots);
+
+        executeInfo[tid].inFUMemInsts = new Queue<QueuedInst,
+            ReportTraitsAdaptor<QueuedInst> >(
+            name_ + ".inFUMemInsts" + tid_str, "insts", total_slots);
+    }
 }
 
 const ForwardInstData *
-Execute::getInput()
+Execute::getInput(ThreadID tid)
 {
     /* Get a line from the inputBuffer to work with */
-    if (!inputBuffer.empty()) {
-        const ForwardInstData &head = inputBuffer.front();
+    if (!inputBuffer[tid].empty()) {
+        const ForwardInstData &head = inputBuffer[tid].front();
 
-        return (head.isBubble() ? NULL : &(inputBuffer.front()));
+        return (head.isBubble() ? NULL : &(inputBuffer[tid].front()));
     } else {
         return NULL;
     }
 }
 
 void
-Execute::popInput()
+Execute::popInput(ThreadID tid)
 {
-    if (!inputBuffer.empty())
-        inputBuffer.pop();
+    if (!inputBuffer[tid].empty())
+        inputBuffer[tid].pop();
 
-    inputIndex = 0;
+    executeInfo[tid].inputIndex = 0;
 }
 
 void
@@ -276,11 +286,12 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
         reason = BranchData::NoBranch;
     }
 
-    updateBranchData(reason, inst, target, branch);
+    updateBranchData(inst->id.threadId, reason, inst, target, branch);
 }
 
 void
 Execute::updateBranchData(
+    ThreadID tid,
     BranchData::Reason reason,
     MinorDynInstPtr inst, const TheISA::PCState &target,
     BranchData &branch)
@@ -288,14 +299,15 @@ Execute::updateBranchData(
     if (reason != BranchData::NoBranch) {
         /* Bump up the stream sequence number on a real branch*/
         if (BranchData::isStreamChange(reason))
-            streamSeqNum++;
+            executeInfo[tid].streamSeqNum++;
 
         /* Branches (even mis-predictions) don't change the predictionSeqNum,
          *  just the streamSeqNum */
-        branch = BranchData(reason, streamSeqNum,
+        branch = BranchData(reason, tid,
+            executeInfo[tid].streamSeqNum,
             /* Maintaining predictionSeqNum if there's no inst is just a
              * courtesy and looks better on minorview */
-            (inst->isBubble() ? lastPredictionSeqNum
+            (inst->isBubble() ? executeInfo[tid].lastPredictionSeqNum
                 : inst->id.predictionSeqNum),
             target, inst);
 
@@ -419,8 +431,9 @@ Execute::takeInterrupt(ThreadID thread_id, BranchData &branch)
 
         /* Assume that an interrupt *must* cause a branch.  Assert this? */
 
-        updateBranchData(BranchData::Interrupt, MinorDynInst::bubble(),
-            cpu.getContext(thread_id)->pcState(), branch);
+        updateBranchData(thread_id, BranchData::Interrupt,
+            MinorDynInst::bubble(), cpu.getContext(thread_id)->pcState(),
+            branch);
     }
 
     return interrupt != NoFault;
@@ -506,9 +519,10 @@ cyclicIndexDec(unsigned int index, unsigned int cycle_size)
 }
 
 unsigned int
-Execute::issue(bool only_issue_microops)
+Execute::issue(ThreadID thread_id)
 {
-    const ForwardInstData *insts_in = getInput();
+    const ForwardInstData *insts_in = getInput(thread_id);
+    ExecuteThreadInfo &thread = executeInfo[thread_id];
 
     /* Early termination if we have no instructions */
     if (!insts_in)
@@ -534,8 +548,7 @@ Execute::issue(bool only_issue_microops)
     unsigned num_insts_discarded = 0;
 
     do {
-        MinorDynInstPtr inst = insts_in->insts[inputIndex];
-        ThreadID thread_id = inst->id.threadId;
+        MinorDynInstPtr inst = insts_in->insts[thread.inputIndex];
         Fault fault = inst->fault;
         bool discarded = false;
         bool issued_mem_ref = false;
@@ -550,21 +563,12 @@ Execute::issue(bool only_issue_microops)
                 " thread\n", *inst);
 
             issued = false;
-        } else if (inst->id.streamSeqNum != streamSeqNum) {
+        } else if (inst->id.streamSeqNum != thread.streamSeqNum) {
             DPRINTF(MinorExecute, "Discarding inst: %s as its stream"
                 " state was unexpected, expected: %d\n",
-                *inst, streamSeqNum);
+                *inst, thread.streamSeqNum);
             issued = true;
             discarded = true;
-        } else if (fault == NoFault && only_issue_microops &&
-            /* Is this anything other than a non-first microop */
-            (!inst->staticInst->isMicroop() ||
-                !inst->staticInst->isFirstMicroop()))
-        {
-            DPRINTF(MinorExecute, "Not issuing new non-microop inst: %s\n",
-                *inst);
-
-            issued = false;
         } else {
             /* Try and issue an instruction into an FU, assume we didn't and
              * fix that in the loop */
@@ -598,9 +602,10 @@ Execute::issue(bool only_issue_microops)
 
                     /* Mark the destinations for this instruction as
                      *  busy */
-                    scoreboard.markupInstDests(inst, cpu.curCycle() +
+                    scoreboard[thread_id].markupInstDests(inst, cpu.curCycle() +
                         Cycles(0), cpu.getContext(thread_id), false);
 
+                    DPRINTF(MinorExecute, "Issuing %s to %d\n", inst->id, noCostFUIndex);
                     inst->fuIndex = noCostFUIndex;
                     inst->extraCommitDelay = Cycles(0);
                     inst->extraCommitDelayExpr = NULL;
@@ -608,7 +613,7 @@ Execute::issue(bool only_issue_microops)
                     /* Push the instruction onto the inFlight queue so
                      *  it can be committed in order */
                     QueuedInst fu_inst(inst);
-                    inFlightInsts->push(fu_inst);
+                    thread.inFlightInsts->push(fu_inst);
 
                     issued = true;
 
@@ -644,8 +649,8 @@ Execute::issue(bool only_issue_microops)
                         DPRINTF(MinorExecute, "Can't issue inst: %s as extra"
                             " decoding is suppressing it\n",
                             *inst);
-                    } else if (!scoreboard.canInstIssue(inst, src_latencies,
-                        cant_forward_from_fu_indices,
+                    } else if (!scoreboard[thread_id].canInstIssue(inst,
+                        src_latencies, cant_forward_from_fu_indices,
                         cpu.curCycle(), cpu.getContext(thread_id)))
                     {
                         DPRINTF(MinorExecute, "Can't issue inst: %s yet\n",
@@ -687,20 +692,20 @@ Execute::issue(bool only_issue_microops)
                              *  early */
                             if (allowEarlyMemIssue) {
                                 inst->instToWaitFor =
-                                    scoreboard.execSeqNumToWaitFor(inst,
+                                    scoreboard[thread_id].execSeqNumToWaitFor(inst,
                                         cpu.getContext(thread_id));
 
-                                if (lsq.getLastMemBarrier() >
+                                if (lsq.getLastMemBarrier(thread_id) >
                                     inst->instToWaitFor)
                                 {
                                     DPRINTF(MinorExecute, "A barrier will"
                                         " cause a delay in mem ref issue of"
                                         " inst: %s until after inst"
                                         " %d(exec)\n", *inst,
-                                        lsq.getLastMemBarrier());
+                                        lsq.getLastMemBarrier(thread_id));
 
                                     inst->instToWaitFor =
-                                        lsq.getLastMemBarrier();
+                                        lsq.getLastMemBarrier(thread_id);
                                 } else {
                                     DPRINTF(MinorExecute, "Memory ref inst:"
                                         " %s must wait for inst %d(exec)"
@@ -714,7 +719,7 @@ Execute::issue(bool only_issue_microops)
                              *  queue to ensure in-order issue to the LSQ */
                             DPRINTF(MinorExecute, "Pushing mem inst: %s\n",
                                 *inst);
-                            inFUMemInsts->push(fu_inst);
+                            thread.inFUMemInsts->push(fu_inst);
                         }
 
                         /* Issue to FU */
@@ -725,7 +730,7 @@ Execute::issue(bool only_issue_microops)
 
                         /* Mark the destinations for this instruction as
                          *  busy */
-                        scoreboard.markupInstDests(inst, cpu.curCycle() +
+                        scoreboard[thread_id].markupInstDests(inst, cpu.curCycle() +
                             fu->description.opLat +
                             extra_dest_retire_lat +
                             extra_assumed_lat,
@@ -734,7 +739,7 @@ Execute::issue(bool only_issue_microops)
 
                         /* Push the instruction onto the inFlight queue so
                          *  it can be committed in order */
-                        inFlightInsts->push(fu_inst);
+                        thread.inFlightInsts->push(fu_inst);
 
                         issued = true;
                     }
@@ -777,24 +782,24 @@ Execute::issue(bool only_issue_microops)
                     DPRINTF(MinorExecute, "Reached inst issue limit\n");
             }
 
-            inputIndex++;
+            thread.inputIndex++;
             DPRINTF(MinorExecute, "Stepping to next inst inputIndex: %d\n",
-                inputIndex);
+                thread.inputIndex);
         }
 
         /* Got to the end of a line */
-        if (inputIndex == insts_in->width()) {
-            popInput();
+        if (thread.inputIndex == insts_in->width()) {
+            popInput(thread_id);
             /* Set insts_in to null to force us to leave the surrounding
              *  loop */
             insts_in = NULL;
 
             if (processMoreThanOneInput) {
                 DPRINTF(MinorExecute, "Wrapping\n");
-                insts_in = getInput();
+                insts_in = getInput(thread_id);
             }
         }
-    } while (insts_in && inputIndex < insts_in->width() &&
+    } while (insts_in && thread.inputIndex < insts_in->width() &&
         /* We still have instructions */
         fu_index != numFuncUnits && /* Not visited all FUs */
         issued && /* We've not yet failed to issue an instruction */
@@ -805,9 +810,9 @@ Execute::issue(bool only_issue_microops)
 }
 
 bool
-Execute::tryPCEvents()
+Execute::tryPCEvents(ThreadID thread_id)
 {
-    ThreadContext *thread = cpu.getContext(0);
+    ThreadContext *thread = cpu.getContext(thread_id);
     unsigned int num_pc_event_checks = 0;
 
     /* Handle PC events on instructions */
@@ -934,6 +939,11 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
             " there isn't space in the store buffer\n", *inst);
 
         completed_inst = false;
+    } else if (inst->isInst() && inst->staticInst->isQuiesce()
+            && !branch.isBubble()){
+        /* This instruction can suspend, need to be able to communicate
+         * backwards, so no other branches may evaluate this cycle*/
+        completed_inst = false;
     } else {
         ExecContext context(cpu, *cpu.threads[thread_id], *this, inst);
 
@@ -962,7 +972,7 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
         /* Keep a copy of this instruction's predictionSeqNum just in case
          * we need to issue a branch without an instruction (such as an
          * interrupt) */
-        lastPredictionSeqNum = inst->id.predictionSeqNum;
+        executeInfo[thread_id].lastPredictionSeqNum = inst->id.predictionSeqNum;
 
         /* Check to see if this instruction suspended the current thread. */
         if (!inst->isFault() &&
@@ -971,17 +981,17 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
             !isInterrupted(thread_id)) /* Don't suspend if we have
                 interrupts */
         {
-            TheISA::PCState resume_pc = cpu.getContext(0)->pcState();
+            TheISA::PCState resume_pc = cpu.getContext(thread_id)->pcState();
 
             assert(resume_pc.microPC() == 0);
 
             DPRINTF(MinorInterrupt, "Suspending thread: %d from Execute"
-                " inst: %s\n", inst->id.threadId, *inst);
+                " inst: %s\n", thread_id, *inst);
 
             cpu.stats.numFetchSuspends++;
 
-            updateBranchData(BranchData::SuspendThread, inst, resume_pc,
-                branch);
+            updateBranchData(thread_id, BranchData::SuspendThread, inst,
+                resume_pc, branch);
         }
     }
 
@@ -989,10 +999,12 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
 }
 
 void
-Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
+Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
+    BranchData &branch)
 {
     Fault fault = NoFault;
     Cycles now = cpu.curCycle();
+    ExecuteThreadInfo &ex_info = executeInfo[thread_id];
 
     /**
      * Try and execute as many instructions from the end of FU pipelines as
@@ -1030,13 +1042,13 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
      *  memCommitLimit */
     unsigned int num_mem_refs_committed = 0;
 
-    if (only_commit_microops && !inFlightInsts->empty()) {
+    if (only_commit_microops && !ex_info.inFlightInsts->empty()) {
         DPRINTF(MinorInterrupt, "Only commit microops %s %d\n",
-            *(inFlightInsts->front().inst),
-            lastCommitWasEndOfMacroop);
+            *(ex_info.inFlightInsts->front().inst),
+            ex_info.lastCommitWasEndOfMacroop);
     }
 
-    while (!inFlightInsts->empty() && /* Some more instructions to process */
+    while (!ex_info.inFlightInsts->empty() && /* Some more instructions to process */
         !branch.isStreamChange() && /* No real branch */
         fault == NoFault && /* No faults */
         completed_inst && /* Still finding instructions to execute */
@@ -1046,10 +1058,10 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
         if (only_commit_microops) {
             DPRINTF(MinorInterrupt, "Committing tail of insts before"
                 " interrupt: %s\n",
-                *(inFlightInsts->front().inst));
+                *(ex_info.inFlightInsts->front().inst));
         }
 
-        QueuedInst *head_inflight_inst = &(inFlightInsts->front());
+        QueuedInst *head_inflight_inst = &(ex_info.inFlightInsts->front());
 
         InstSeqNum head_exec_seq_num =
             head_inflight_inst->inst->id.execSeqNum;
@@ -1071,8 +1083,8 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
         /* If we're just completing a macroop before an interrupt or drain,
          *  can we stil commit another microop (rather than a memory response)
          *  without crosing into the next full instruction? */
-        bool can_commit_insts = !inFlightInsts->empty() &&
-            !(only_commit_microops && lastCommitWasEndOfMacroop);
+        bool can_commit_insts = !ex_info.inFlightInsts->empty() &&
+            !(only_commit_microops && ex_info.lastCommitWasEndOfMacroop);
 
         /* Can we find a mem response for this inst */
         LSQ::LSQRequestPtr mem_response =
@@ -1082,18 +1094,18 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
             can_commit_insts);
 
         /* Test for PC events after every instruction */
-        if (isInbetweenInsts() && tryPCEvents()) {
-            ThreadContext *thread = cpu.getContext(0);
+        if (isInbetweenInsts(thread_id) && tryPCEvents(thread_id)) {
+            ThreadContext *thread = cpu.getContext(thread_id);
 
             /* Branch as there was a change in PC */
-            updateBranchData(BranchData::UnpredictedBranch,
+            updateBranchData(thread_id, BranchData::UnpredictedBranch,
                 MinorDynInst::bubble(), thread->pcState(), branch);
         } else if (mem_response &&
             num_mem_refs_committed < memoryCommitLimit)
         {
             /* Try to commit from the memory responses next */
-            discard_inst = inst->id.streamSeqNum != streamSeqNum ||
-                discard;
+            discard_inst = inst->id.streamSeqNum !=
+                           ex_info.streamSeqNum || discard;
 
             DPRINTF(MinorExecute, "Trying to commit mem response: %s\n",
                 *inst);
@@ -1102,7 +1114,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
             if (discard_inst) {
                 DPRINTF(MinorExecute, "Discarding mem inst: %s as its"
                     " stream state was unexpected, expected: %d\n",
-                    *inst, streamSeqNum);
+                    *inst, ex_info.streamSeqNum);
 
                 lsq.popResponse(mem_response);
             } else {
@@ -1128,11 +1140,11 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
              *  For any other case, leave it to the normal instruction
              *  issue below to handle them.
              */
-            if (!inFUMemInsts->empty() && lsq.canRequest()) {
+            if (!ex_info.inFUMemInsts->empty() && lsq.canRequest()) {
                 DPRINTF(MinorExecute, "Trying to commit from mem FUs\n");
 
                 const MinorDynInstPtr head_mem_ref_inst =
-                    inFUMemInsts->front().inst;
+                    ex_info.inFUMemInsts->front().inst;
                 FUPipeline *fu = funcUnits[head_mem_ref_inst->fuIndex];
                 const MinorDynInstPtr &fu_inst = fu->front().inst;
 
@@ -1141,7 +1153,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
                 if (!fu_inst->isBubble() &&
                     !fu_inst->inLSQ &&
                     fu_inst->canEarlyIssue &&
-                    streamSeqNum == fu_inst->id.streamSeqNum &&
+                    ex_info.streamSeqNum == fu_inst->id.streamSeqNum &&
                     head_exec_seq_num > fu_inst->instToWaitFor)
                 {
                     DPRINTF(MinorExecute, "Issuing mem ref early"
@@ -1184,7 +1196,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
                      * actually at the end of its pipeline
                      * Future instruction: handled above and only for
                      * mem refs on their way to the LSQ */
-                } else /* if (fu_inst_seq_num == head_exec_seq_num) */ {
+                } else if (fu_inst.inst->id == inst->id)  {
                     /* All instructions can be committed if they have the
                      *  right execSeqNum and there are no in-flight
                      *  mem insts before us */
@@ -1194,8 +1206,8 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
             }
 
             if (try_to_commit) {
-                discard_inst = inst->id.streamSeqNum != streamSeqNum ||
-                    discard;
+                discard_inst = inst->id.streamSeqNum !=
+                    ex_info.streamSeqNum || discard;
 
                 /* Is this instruction discardable as its streamSeqNum
                  *  doesn't match? */
@@ -1209,8 +1221,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
                         DPRINTF(MinorExecute, "Evaluating expression for"
                             " extra commit delay inst: %s\n", *inst);
 
-                        ThreadContext *thread =
-                            cpu.getContext(inst->id.threadId);
+                        ThreadContext *thread = cpu.getContext(thread_id);
 
                         TimingExprEvalContext context(inst->staticInst,
                             thread, NULL);
@@ -1241,9 +1252,9 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
                     /* @todo Think about making lastMemBarrier be
                      *  MAX_UINT_64 to avoid using 0 as a marker value */
                     if (!inst->isFault() && inst->isMemRef() &&
-                        lsq.getLastMemBarrier() <
+                        lsq.getLastMemBarrier(thread_id) <
                             inst->id.execSeqNum &&
-                        lsq.getLastMemBarrier() != 0)
+                        lsq.getLastMemBarrier(thread_id) != 0)
                     {
                         DPRINTF(MinorExecute, "Not committing inst: %s yet"
                             " as there are incomplete barriers in flight\n",
@@ -1269,8 +1280,10 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
                      *  instruction wasn't the inFlightInsts head
                      *  but had already been committed, it would have
                      *  unstalled the pipeline before here */
-                    if (inst->fuIndex != noCostFUIndex)
+                    if (inst->fuIndex != noCostFUIndex) {
+                        DPRINTF(MinorExecute, "Unstalling %d for inst %s\n", inst->fuIndex, inst->id);
                         funcUnits[inst->fuIndex]->stalled = false;
+                    }
                 }
             }
         } else {
@@ -1286,7 +1299,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
         if (discard_inst) {
             DPRINTF(MinorExecute, "Discarding inst: %s as its stream"
                 " state was unexpected, expected: %d\n",
-                *inst, streamSeqNum);
+                *inst, ex_info.streamSeqNum);
 
             if (fault == NoFault)
                 cpu.stats.numDiscardedOps++;
@@ -1303,10 +1316,10 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
         if (completed_inst && inst->isMemRef()) {
             /* The MemRef could have been discarded from the FU or the memory
              *  queue, so just check an FU instruction */
-            if (!inFUMemInsts->empty() &&
-                inFUMemInsts->front().inst == inst)
+            if (!ex_info.inFUMemInsts->empty() &&
+                ex_info.inFUMemInsts->front().inst == inst)
             {
-                inFUMemInsts->pop();
+                ex_info.inFUMemInsts->pop();
             }
         }
 
@@ -1315,16 +1328,16 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
             DPRINTF(MinorExecute, "Completed inst: %s\n", *inst);
 
             /* Got to the end of a full instruction? */
-            lastCommitWasEndOfMacroop = inst->isFault() ||
+            ex_info.lastCommitWasEndOfMacroop = inst->isFault() ||
                 inst->isLastOpInInst();
 
             /* lastPredictionSeqNum is kept as a convenience to prevent its
              *  value from changing too much on the minorview display */
-            lastPredictionSeqNum = inst->id.predictionSeqNum;
+            ex_info.lastPredictionSeqNum = inst->id.predictionSeqNum;
 
             /* Finished with the inst, remove it from the inst queue and
              *  clear its dependencies */
-            inFlightInsts->pop();
+            ex_info.inFlightInsts->pop();
 
             /* Complete barriers in the LSQ/move to store buffer */
             if (inst->isInst() && inst->staticInst->isMemBarrier()) {
@@ -1333,7 +1346,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
                 lsq.completeMemBarrierInst(inst, committed_inst);
             }
 
-            scoreboard.clearInstDests(inst, inst->isMemRef());
+            scoreboard[thread_id].clearInstDests(inst, inst->isMemRef());
         }
 
         /* Handle per-cycle instruction counting */
@@ -1343,7 +1356,7 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
             /* Don't show no cost instructions as having taken a commit
              *  slot */
             if (DTRACE(MinorTrace) && !is_no_cost_inst)
-                instsBeingCommitted.insts[num_insts_committed] = inst;
+                ex_info.instsBeingCommitted.insts[num_insts_committed] = inst;
 
             if (!is_no_cost_inst)
                 num_insts_committed++;
@@ -1369,124 +1382,112 @@ Execute::commit(bool only_commit_microops, bool discard, BranchData &branch)
 }
 
 bool
-Execute::isInbetweenInsts() const
+Execute::isInbetweenInsts(ThreadID thread_id) const
 {
-    return lastCommitWasEndOfMacroop &&
+    return executeInfo[thread_id].lastCommitWasEndOfMacroop &&
         !lsq.accessesInFlight();
 }
 
 void
 Execute::evaluate()
 {
-    inputBuffer.setTail(*inp.outputWire);
+    if (!inp.outputWire->isBubble())
+        inputBuffer[inp.outputWire->threadId].setTail(*inp.outputWire);
+
     BranchData &branch = *out.inputWire;
 
-    const ForwardInstData *insts_in = getInput();
+    unsigned int num_issued = 0;
 
     /* Do all the cycle-wise activities for dcachePort here to potentially
      *  free up input spaces in the LSQ's requests queue */
     lsq.step();
 
-    /* Has an interrupt been signalled?  This may not be acted on
-     *  straighaway so this is different from took_interrupt below */
+    /* Check interrupts first.  Will halt commit if interrupt found */
     bool interrupted = false;
-    /* If there was an interrupt signalled, was it acted on now? */
-    bool took_interrupt = false;
+    ThreadID interrupt_tid = checkInterrupts(branch, interrupted);
 
-    if (cpu.getInterruptController(0)) {
-        /* This is here because it seems that after drainResume the
-         * interrupt controller isn't always set */
-        interrupted = drainState == NotDraining && isInterrupted(0);
-    } else {
-        DPRINTF(MinorInterrupt, "No interrupt controller\n");
-    }
-
-    unsigned int num_issued = 0;
-
-    if (DTRACE(MinorTrace)) {
-        /* Empty the instsBeingCommitted for MinorTrace */
-        instsBeingCommitted.bubbleFill();
-    }
-
-    /* THREAD threadId on isInterrupted */
-    /* Act on interrupts */
-    if (interrupted && isInbetweenInsts()) {
-        took_interrupt = takeInterrupt(0, branch);
-        /* Clear interrupted if no interrupt was actually waiting */
-        interrupted = took_interrupt;
-    }
-
-    if (took_interrupt) {
-        /* Do no commit/issue this cycle */
+    if (interrupt_tid != InvalidThreadID) {
+        /* Signalling an interrupt this cycle, not issuing/committing from
+         * any other threads */
     } else if (!branch.isBubble()) {
         /* It's important that this is here to carry Fetch1 wakeups to Fetch1
          *  without overwriting them */
         DPRINTF(MinorInterrupt, "Execute skipping a cycle to allow old"
             " branch to complete\n");
     } else {
-        if (interrupted) {
-            if (inFlightInsts->empty()) {
-                DPRINTF(MinorInterrupt, "Waiting but no insts\n");
+        ThreadID commit_tid = getCommittingThread();
+
+        if (commit_tid != InvalidThreadID) {
+            ExecuteThreadInfo& commit_info = executeInfo[commit_tid];
+
+            DPRINTF(MinorExecute, "Attempting to commit [tid:%d]\n",
+                    commit_tid);
+            /* commit can set stalled flags observable to issue and so *must* be
+             *  called first */
+            if (commit_info.drainState != NotDraining) {
+                if (commit_info.drainState == DrainCurrentInst) {
+                    /* Commit only micro-ops, don't kill anything else */
+                    commit(commit_tid, true, false, branch);
+
+                    if (isInbetweenInsts(commit_tid))
+                        setDrainState(commit_tid, DrainHaltFetch);
+
+                    /* Discard any generated branch */
+                    branch = BranchData::bubble();
+                } else if (commit_info.drainState == DrainAllInsts) {
+                    /* Kill all instructions */
+                    while (getInput(commit_tid))
+                        popInput(commit_tid);
+                    commit(commit_tid, false, true, branch);
+                }
             } else {
-                DPRINTF(MinorInterrupt, "Waiting for end of inst before"
-                 " signalling interrupt\n");
+                /* Commit micro-ops only if interrupted.  Otherwise, commit
+                 *  anything you like */
+                DPRINTF(MinorExecute, "Committing micro-ops for interrupt[tid:%d]\n",
+                        commit_tid);
+                bool only_commit_microops = interrupted &&
+                                            hasInterrupt(commit_tid);
+                commit(commit_tid, only_commit_microops, false, branch);
+            }
+
+            /* Halt fetch, but don't do it until we have the current instruction in
+             *  the bag */
+            if (commit_info.drainState == DrainHaltFetch) {
+                updateBranchData(commit_tid, BranchData::HaltFetch,
+                        MinorDynInst::bubble(), TheISA::PCState(0), branch);
+
+                cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
+                setDrainState(commit_tid, DrainAllInsts);
             }
         }
-
-        /* commit can set stalled flags observable to issue and so *must* be
-         *  called first */
-        if (drainState != NotDraining) {
-            if (drainState == DrainCurrentInst) {
-                /* Commit only micro-ops, don't kill anything else */
-                commit(true, false, branch);
-
-                if (isInbetweenInsts())
-                    setDrainState(DrainHaltFetch);
-
-                /* Discard any generated branch */
-                branch = BranchData::bubble();
-            } else if (drainState == DrainAllInsts) {
-                /* Kill all instructions */
-                while (getInput())
-                    popInput();
-                commit(false, true, branch);
-            }
-        } else {
-            /* Commit micro-ops only if interrupted.  Otherwise, commit
-             *  anything you like */
-            commit(interrupted, false, branch);
-        }
-
+        ThreadID issue_tid = getIssuingThread();
         /* This will issue merrily even when interrupted in the sure and
          *  certain knowledge that the interrupt with change the stream */
-        if (insts_in)
-            num_issued = issue(false);
+        if (issue_tid != InvalidThreadID) {
+            DPRINTF(MinorExecute, "Attempting to issue [tid:%d]\n",
+                    issue_tid);
+            num_issued = issue(issue_tid);
+        }
+
     }
 
-    /* Halt fetch, but don't do it until we have the current instruction in
-     *  the bag */
-    if (drainState == DrainHaltFetch) {
-        updateBranchData(BranchData::HaltFetch, MinorDynInst::bubble(),
-            TheISA::PCState(0), branch);
-
-        cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
-        setDrainState(DrainAllInsts);
-    }
-
-    MinorDynInstPtr next_issuable_inst = NULL;
+    /* Run logic to step functional units + decide if we are active on the next
+     * clock cycle */
+    std::vector<MinorDynInstPtr> next_issuable_insts;
     bool can_issue_next = false;
 
-    /* Find the next issuable instruction and see if it can be issued */
-    if (getInput()) {
-        MinorDynInstPtr inst = getInput()->insts[inputIndex];
-
-        if (inst->isFault()) {
-            can_issue_next = true;
-        } else if (!inst->isBubble()) {
-            if (cpu.getContext(inst->id.threadId)->status() !=
-                ThreadContext::Suspended)
-            {
-                next_issuable_inst = inst;
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
+        /* Find the next issuable instruction for each thread and see if it can
+           be issued */
+        if (getInput(tid)) {
+            unsigned int input_index = executeInfo[tid].inputIndex;
+            MinorDynInstPtr inst = getInput(tid)->insts[input_index];
+            if (inst->isFault()) {
+                can_issue_next = true;
+            } else if (!inst->isBubble()) {
+                if (cpu.getContext(tid)->status() != ThreadContext::Suspended) {
+                    next_issuable_insts.push_back(inst);
+                }
             }
         }
     }
@@ -1494,53 +1495,56 @@ Execute::evaluate()
     bool becoming_stalled = true;
 
     /* Advance the pipelines and note whether they still need to be
-     *  advanced */
+     * advanced */
     for (unsigned int i = 0; i < numFuncUnits; i++) {
         FUPipeline *fu = funcUnits[i];
-
         fu->advance();
 
-        /* If we need to go again, the pipeline will have been left or set
-         *  to be unstalled */
-        if (fu->occupancy != 0 && !fu->stalled)
+        /* If we need to tick again, the pipeline will have been left or set
+         * to be unstalled */
+        if (fu->occupancy !=0 && !fu->stalled)
             becoming_stalled = false;
 
-        /* Could we possibly issue the next instruction?  This is quite
-         *  an expensive test */
-        if (next_issuable_inst && !fu->stalled &&
-            scoreboard.canInstIssue(next_issuable_inst,
-                NULL, NULL, cpu.curCycle() + Cycles(1),
-                cpu.getContext(next_issuable_inst->id.threadId)) &&
-            fu->provides(next_issuable_inst->staticInst->opClass()))
-        {
-            can_issue_next = true;
+        /* Could we possibly issue the next instruction from any thread?
+         * This is quite an expensive test and is only used to determine
+         * if the CPU should remain active, only run it if we aren't sure
+         * we are active next cycle yet */
+        for (auto inst : next_issuable_insts) {
+            if (!fu->stalled && fu->provides(inst->staticInst->opClass()) &&
+                scoreboard[inst->id.threadId].canInstIssue(inst,
+                    NULL, NULL, cpu.curCycle() + Cycles(1),
+                    cpu.getContext(inst->id.threadId))) {
+                can_issue_next = true;
+                break;
+            }
         }
     }
 
     bool head_inst_might_commit = false;
 
     /* Could the head in flight insts be committed */
-    if (!inFlightInsts->empty()) {
-        const QueuedInst &head_inst = inFlightInsts->front();
+    for (auto const &info : executeInfo) {
+        if (!info.inFlightInsts->empty()) {
+            const QueuedInst &head_inst = info.inFlightInsts->front();
 
-        if (head_inst.inst->isNoCostInst()) {
-            head_inst_might_commit = true;
-        } else {
-            FUPipeline *fu = funcUnits[head_inst.inst->fuIndex];
-
-            /* Head inst is commitable */
-            if ((fu->stalled &&
-                fu->front().inst->id == head_inst.inst->id) ||
-                lsq.findResponse(head_inst.inst))
-            {
+            if (head_inst.inst->isNoCostInst()) {
                 head_inst_might_commit = true;
+            } else {
+                FUPipeline *fu = funcUnits[head_inst.inst->fuIndex];
+                if ((fu->stalled &&
+                     fu->front().inst->id == head_inst.inst->id) ||
+                     lsq.findResponse(head_inst.inst))
+                {
+                    head_inst_might_commit = true;
+                    break;
+                }
             }
         }
     }
 
     DPRINTF(Activity, "Need to tick num issued insts: %s%s%s%s%s%s\n",
        (num_issued != 0 ? " (issued some insts)" : ""),
-       (becoming_stalled ? " (becoming stalled)" : "(not becoming stalled)"),
+       (becoming_stalled ? "(becoming stalled)" : "(not becoming stalled)"),
        (can_issue_next ? " (can issued next inst)" : ""),
        (head_inst_might_commit ? "(head inst might commit)" : ""),
        (lsq.needsToTick() ? " (LSQ needs to tick)" : ""),
@@ -1568,36 +1572,54 @@ Execute::evaluate()
         cpu.activityRecorder->activity();
 
     /* Make sure the input (if any left) is pushed */
-    inputBuffer.pushTail();
+    if (!inp.outputWire->isBubble())
+        inputBuffer[inp.outputWire->threadId].pushTail();
 }
 
-void
-Execute::wakeupFetch(BranchData::Reason reason)
+ThreadID
+Execute::checkInterrupts(BranchData& branch, bool& interrupted)
 {
-    BranchData branch;
-    assert(branch.isBubble());
+    ThreadID tid = interruptPriority;
+    /* Evaluate interrupts in round-robin based upon service */
+    do {
+        /* Has an interrupt been signalled?  This may not be acted on
+         *  straighaway so this is different from took_interrupt */
+        bool thread_interrupted = false;
 
-    /* THREAD thread id */
-    ThreadContext *thread = cpu.getContext(0);
+        if (FullSystem && cpu.getInterruptController(tid)) {
+            /* This is here because it seems that after drainResume the
+             * interrupt controller isn't always set */
+            thread_interrupted = executeInfo[tid].drainState == NotDraining &&
+                isInterrupted(tid);
+            interrupted = interrupted || thread_interrupted;
+        } else {
+            DPRINTF(MinorInterrupt, "No interrupt controller\n");
+        }
+        DPRINTF(MinorInterrupt, "[tid:%d] thread_interrupted?=%d isInbetweenInsts?=%d\n",
+                tid, thread_interrupted, isInbetweenInsts(tid));
+        /* Act on interrupts */
+        if (thread_interrupted && isInbetweenInsts(tid)) {
+            if (takeInterrupt(tid, branch)) {
+                interruptPriority = tid;
+                return tid;
+            }
+        } else {
+            tid = (tid + 1) % cpu.numThreads;
+        }
+    } while (tid != interruptPriority);
 
-    /* Force a branch to the current PC (which should be the next inst.) to
-     *  wake up Fetch1 */
-    if (!branch.isStreamChange() /* No real branch already happened */) {
-        DPRINTF(MinorInterrupt, "Waking up Fetch (via Execute) by issuing"
-            " a branch: %s\n", thread->pcState());
+    return InvalidThreadID;
+}
 
-        assert(thread->pcState().microPC() == 0);
-
-        updateBranchData(reason,
-            MinorDynInst::bubble(), thread->pcState(), branch);
-    } else {
-        DPRINTF(MinorInterrupt, "Already branching, no need for wakeup\n");
+bool
+Execute::hasInterrupt(ThreadID thread_id)
+{
+    if (FullSystem && cpu.getInterruptController(thread_id)) {
+        return executeInfo[thread_id].drainState == NotDraining &&
+               isInterrupted(thread_id);
     }
 
-    *out.inputWire = branch;
-
-    /* Make sure we get ticked */
-    cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
+    return false;
 }
 
 void
@@ -1606,10 +1628,10 @@ Execute::minorTrace() const
     std::ostringstream insts;
     std::ostringstream stalled;
 
-    instsBeingCommitted.reportData(insts);
+    executeInfo[0].instsBeingCommitted.reportData(insts);
     lsq.minorTrace();
-    inputBuffer.minorTrace();
-    scoreboard.minorTrace();
+    inputBuffer[0].minorTrace();
+    scoreboard[0].minorTrace();
 
     /* Report functional unit stalling in one string */
     unsigned int i = 0;
@@ -1623,14 +1645,110 @@ Execute::minorTrace() const
 
     MINORTRACE("insts=%s inputIndex=%d streamSeqNum=%d"
         " stalled=%s drainState=%d isInbetweenInsts=%d\n",
-        insts.str(), inputIndex, streamSeqNum, stalled.str(), drainState,
-        isInbetweenInsts());
+        insts.str(), executeInfo[0].inputIndex, executeInfo[0].streamSeqNum,
+        stalled.str(), executeInfo[0].drainState, isInbetweenInsts(0));
 
     std::for_each(funcUnits.begin(), funcUnits.end(),
         std::mem_fun(&FUPipeline::minorTrace));
 
-    inFlightInsts->minorTrace();
-    inFUMemInsts->minorTrace();
+    executeInfo[0].inFlightInsts->minorTrace();
+    executeInfo[0].inFUMemInsts->minorTrace();
+}
+
+inline ThreadID
+Execute::getCommittingThread()
+{
+    std::vector<ThreadID> priority_list;
+
+    switch (cpu.threadPolicy) {
+      case Enums::SingleThreaded:
+          return 0;
+      case Enums::RoundRobin:
+          priority_list = cpu.roundRobinPriority(commitPriority);
+          break;
+      case Enums::Random:
+          priority_list = cpu.randomPriority();
+          break;
+      default:
+          panic("Invalid thread policy");
+    }
+
+    for (auto tid : priority_list) {
+        ExecuteThreadInfo &ex_info = executeInfo[tid];
+        bool can_commit_insts = !ex_info.inFlightInsts->empty();
+        if (can_commit_insts) {
+            QueuedInst *head_inflight_inst = &(ex_info.inFlightInsts->front());
+            MinorDynInstPtr inst = head_inflight_inst->inst;
+
+            can_commit_insts = can_commit_insts &&
+                (!inst->inLSQ || (lsq.findResponse(inst) != NULL));
+
+            if (!inst->inLSQ) {
+                bool can_transfer_mem_inst = false;
+                if (!ex_info.inFUMemInsts->empty() && lsq.canRequest()) {
+                    const MinorDynInstPtr head_mem_ref_inst =
+                        ex_info.inFUMemInsts->front().inst;
+                    FUPipeline *fu = funcUnits[head_mem_ref_inst->fuIndex];
+                    const MinorDynInstPtr &fu_inst = fu->front().inst;
+                    can_transfer_mem_inst =
+                        !fu_inst->isBubble() &&
+                         fu_inst->id.threadId == tid &&
+                         !fu_inst->inLSQ &&
+                         fu_inst->canEarlyIssue &&
+                         inst->id.execSeqNum > fu_inst->instToWaitFor;
+                }
+
+                bool can_execute_fu_inst = inst->fuIndex == noCostFUIndex;
+                if (can_commit_insts && !can_transfer_mem_inst &&
+                        inst->fuIndex != noCostFUIndex)
+                {
+                    QueuedInst& fu_inst = funcUnits[inst->fuIndex]->front();
+                    can_execute_fu_inst = !fu_inst.inst->isBubble() &&
+                        fu_inst.inst->id == inst->id;
+                }
+
+                can_commit_insts = can_commit_insts &&
+                    (can_transfer_mem_inst || can_execute_fu_inst);
+            }
+        }
+
+
+        if (can_commit_insts) {
+            commitPriority = tid;
+            return tid;
+        }
+    }
+
+    return InvalidThreadID;
+}
+
+inline ThreadID
+Execute::getIssuingThread()
+{
+    std::vector<ThreadID> priority_list;
+
+    switch (cpu.threadPolicy) {
+      case Enums::SingleThreaded:
+          return 0;
+      case Enums::RoundRobin:
+          priority_list = cpu.roundRobinPriority(issuePriority);
+          break;
+      case Enums::Random:
+          priority_list = cpu.randomPriority();
+          break;
+      default:
+          panic("Invalid thread scheduling policy.");
+    }
+
+    for (auto tid : priority_list) {
+        if (cpu.getContext(tid)->status() == ThreadContext::Active &&
+            getInput(tid)) {
+            issuePriority = tid;
+            return tid;
+        }
+    }
+
+    return InvalidThreadID;
 }
 
 void
@@ -1638,11 +1756,10 @@ Execute::drainResume()
 {
     DPRINTF(Drain, "MinorExecute drainResume\n");
 
-    setDrainState(NotDraining);
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
+        setDrainState(tid, NotDraining);
+    }
 
-    /* Wakeup fetch and keep the pipeline running until that branch takes
-     *  effect */
-    wakeupFetch(BranchData::WakeupFetch);
     cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
 }
 
@@ -1671,10 +1788,10 @@ std::ostream &operator <<(std::ostream &os, Execute::DrainState state)
 }
 
 void
-Execute::setDrainState(DrainState state)
+Execute::setDrainState(ThreadID thread_id, DrainState state)
 {
-    DPRINTF(Drain, "setDrainState: %s\n", state);
-    drainState = state;
+    DPRINTF(Drain, "setDrainState[%d]: %s\n", thread_id, state);
+    executeInfo[thread_id].drainState = state;
 }
 
 unsigned int
@@ -1682,29 +1799,39 @@ Execute::drain()
 {
     DPRINTF(Drain, "MinorExecute drain\n");
 
-    if (drainState == NotDraining) {
-        cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
+        if (executeInfo[tid].drainState == NotDraining) {
+            cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
 
-        /* Go to DrainCurrentInst if we're between microops
-         * or waiting on an unbufferable memory operation.
-         * Otherwise we can go straight to DrainHaltFetch
-         */
-        if (isInbetweenInsts())
-            setDrainState(DrainHaltFetch);
-        else
-            setDrainState(DrainCurrentInst);
+            /* Go to DrainCurrentInst if we're between microops
+             * or waiting on an unbufferable memory operation.
+             * Otherwise we can go straight to DrainHaltFetch
+             */
+            if (isInbetweenInsts(tid))
+                setDrainState(tid, DrainHaltFetch);
+            else
+                setDrainState(tid, DrainCurrentInst);
+        }
     }
-
     return (isDrained() ? 0 : 1);
 }
 
 bool
 Execute::isDrained()
 {
-    return drainState == DrainAllInsts &&
-        inputBuffer.empty() &&
-        inFlightInsts->empty() &&
-        lsq.isDrained();
+    if (!lsq.isDrained())
+        return false;
+
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
+        if (executeInfo[tid].drainState != DrainAllInsts ||
+            !inputBuffer[tid].empty() ||
+            !executeInfo[tid].inFlightInsts->empty()) {
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 Execute::~Execute()
@@ -1712,13 +1839,14 @@ Execute::~Execute()
     for (unsigned int i = 0; i < numFuncUnits; i++)
         delete funcUnits[i];
 
-    delete inFlightInsts;
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++)
+        delete executeInfo[tid].inFlightInsts;
 }
 
 bool
 Execute::instIsRightStream(MinorDynInstPtr inst)
 {
-    return inst->id.streamSeqNum == streamSeqNum;
+    return inst->id.streamSeqNum == executeInfo[inst->id.threadId].streamSeqNum;
 }
 
 bool
@@ -1726,8 +1854,8 @@ Execute::instIsHeadInst(MinorDynInstPtr inst)
 {
     bool ret = false;
 
-    if (!inFlightInsts->empty())
-        ret = inFlightInsts->front().inst->id == inst->id;
+    if (!executeInfo[inst->id.threadId].inFlightInsts->empty())
+        ret = executeInfo[inst->id.threadId].inFlightInsts->front().inst->id == inst->id;
 
     return ret;
 }

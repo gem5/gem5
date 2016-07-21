@@ -169,6 +169,8 @@ class MinorDefaultFUPool(MinorFUPool):
         MinorDefaultFloatSimdFU(), MinorDefaultMemFU(),
         MinorDefaultMiscFU()]
 
+class ThreadPolicy(Enum): vals = ['SingleThreaded', 'RoundRobin', 'Random']
+
 class MinorCPU(BaseCPU):
     type = 'MinorCPU'
     cxx_header = "cpu/minor/cpu.hh"
@@ -185,6 +187,8 @@ class MinorCPU(BaseCPU):
     def support_take_over(cls):
         return True
 
+    threadPolicy = Param.ThreadPolicy('RoundRobin',
+            "Thread scheduling policy")
     fetch1FetchLimit = Param.Unsigned(1,
         "Number of line fetches allowable in flight at once")
     fetch1LineSnapWidth = Param.Unsigned(0,

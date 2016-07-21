@@ -50,6 +50,7 @@
 #include "cpu/minor/stats.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
+#include "enums/ThreadPolicy.hh"
 #include "params/MinorCPU.hh"
 
 namespace Minor
@@ -109,6 +110,8 @@ class MinorCPU : public BaseCPU
 
     };
 
+    /** Thread Scheduling Policy (RoundRobin, Random, etc) */
+    Enums::ThreadPolicy threadPolicy;
   protected:
      /** Return a reference to the data port. */
     MasterPort &getDataPort() override;
@@ -161,6 +164,26 @@ class MinorCPU : public BaseCPU
     /** Thread activation interface from BaseCPU. */
     void activateContext(ThreadID thread_id) override;
     void suspendContext(ThreadID thread_id) override;
+
+    /** Thread scheduling utility functions */
+    std::vector<ThreadID> roundRobinPriority(ThreadID priority)
+    {
+        std::vector<ThreadID> prio_list;
+        for (ThreadID i = 1; i <= numThreads; i++) {
+            prio_list.push_back((priority + i) % numThreads);
+        }
+        return prio_list;
+    }
+
+    std::vector<ThreadID> randomPriority()
+    {
+        std::vector<ThreadID> prio_list;
+        for (ThreadID i = 0; i < numThreads; i++) {
+            prio_list.push_back(i);
+        }
+        std::random_shuffle(prio_list.begin(), prio_list.end());
+        return prio_list;
+    }
 
     /** Interface for stages to signal that they have become active after
      *  a callback or eventq event where the pipeline itself may have

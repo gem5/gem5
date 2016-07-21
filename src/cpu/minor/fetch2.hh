@@ -78,7 +78,7 @@ class Fetch2 : public Named
     Latch<ForwardInstData>::Input out;
 
     /** Interface to reserve space in the next stage */
-    Reservable &nextStageReserve;
+    std::vector<InputBuffer<ForwardInstData>> &nextStageReserve;
 
     /** Width of output of this stage/input of next in instructions */
     unsigned int outputWidth;
@@ -92,61 +92,90 @@ class Fetch2 : public Named
 
   public:
     /* Public so that Pipeline can pass it to Fetch1 */
-    InputBuffer<ForwardLineData> inputBuffer;
+    std::vector<InputBuffer<ForwardLineData>> inputBuffer;
 
   protected:
     /** Data members after this line are cycle-to-cycle state */
 
-    /** Index into an incompletely processed input line that instructions
-     *  are to be extracted from */
-    unsigned int inputIndex;
+    struct Fetch2ThreadInfo {
 
-    /** Remembered program counter value.  Between contiguous lines, this
-     *  is just updated with advancePC.  For lines following changes of
-     *  stream, a new PC must be loaded and havePC be set.
-     *  havePC is needed to accomodate instructions which span across
-     *  lines meaning that Fetch2 and the decoder need to remember a PC
-     *  value and a partially-offered instruction from the previous line */
-    TheISA::PCState pc;
+        /** Default constructor */
+        Fetch2ThreadInfo() :
+            inputIndex(0),
+            pc(TheISA::PCState(0)),
+            havePC(false),
+            lastStreamSeqNum(InstId::firstStreamSeqNum),
+            fetchSeqNum(InstId::firstFetchSeqNum),
+            expectedStreamSeqNum(InstId::firstStreamSeqNum),
+            predictionSeqNum(InstId::firstPredictionSeqNum),
+            blocked(false)
+        { }
 
-    /** PC is currently valid.  Initially false, gets set to true when a
-     *  change-of-stream line is received and false again when lines are
-     *  discarded for any reason */
-    bool havePC;
+        Fetch2ThreadInfo(const Fetch2ThreadInfo& other) :
+            inputIndex(other.inputIndex),
+            pc(other.pc),
+            havePC(other.havePC),
+            lastStreamSeqNum(other.lastStreamSeqNum),
+            expectedStreamSeqNum(other.expectedStreamSeqNum),
+            predictionSeqNum(other.predictionSeqNum),
+            blocked(other.blocked)
+        { }
 
-    /** Stream sequence number of the last seen line used to identify changes
-     *  of instruction stream */
-    InstSeqNum lastStreamSeqNum;
+        /** Index into an incompletely processed input line that instructions
+         *  are to be extracted from */
+        unsigned int inputIndex;
 
-    /** Fetch2 is the source of fetch sequence numbers.  These represent the
-     *  sequence that instructions were extracted from fetched lines. */
-    InstSeqNum fetchSeqNum;
 
-    /** Stream sequence number remembered from last time the predictionSeqNum
-     *  changed.  Lines should only be discarded when their predictionSeqNums
-     *  disagree with Fetch2::predictionSeqNum *and* they are from the same
-     *  stream that bore that prediction number */
-    InstSeqNum expectedStreamSeqNum;
+        /** Remembered program counter value.  Between contiguous lines, this
+         *  is just updated with advancePC.  For lines following changes of
+         *  stream, a new PC must be loaded and havePC be set.
+         *  havePC is needed to accomodate instructions which span across
+         *  lines meaning that Fetch2 and the decoder need to remember a PC
+         *  value and a partially-offered instruction from the previous line */
+        TheISA::PCState pc;
 
-    /** Fetch2 is the source of prediction sequence numbers.  These represent
-     *  predicted changes of control flow sources from branch prediction in
-     *  Fetch2. */
-    InstSeqNum predictionSeqNum;
+        /** PC is currently valid.  Initially false, gets set to true when a
+         *  change-of-stream line is received and false again when lines are
+         *  discarded for any reason */
+        bool havePC;
 
-    /** Blocked indication for report */
-    bool blocked;
+        /** Stream sequence number of the last seen line used to identify
+         *  changes of instruction stream */
+        InstSeqNum lastStreamSeqNum;
+
+        /** Fetch2 is the source of fetch sequence numbers.  These represent the
+         *  sequence that instructions were extracted from fetched lines. */
+        InstSeqNum fetchSeqNum;
+
+        /** Stream sequence number remembered from last time the
+         *  predictionSeqNum changed.  Lines should only be discarded when their
+         *  predictionSeqNums disagree with Fetch2::predictionSeqNum *and* they
+         *  are from the same stream that bore that prediction number */
+        InstSeqNum expectedStreamSeqNum;
+
+        /** Fetch2 is the source of prediction sequence numbers.  These
+         *  represent predicted changes of control flow sources from branch
+         *  prediction in Fetch2. */
+        InstSeqNum predictionSeqNum;
+
+        /** Blocked indication for report */
+        bool blocked;
+    };
+
+    std::vector<Fetch2ThreadInfo> fetchInfo;
+    ThreadID threadPriority;
 
   protected:
     /** Get a piece of data to work on from the inputBuffer, or 0 if there
      *  is no data. */
-    const ForwardLineData *getInput();
+    const ForwardLineData *getInput(ThreadID tid);
 
     /** Pop an element off the input buffer, if there are any */
-    void popInput();
+    void popInput(ThreadID tid);
 
     /** Dump the whole contents of the input buffer.  Useful after a
      *  prediction changes control flow */
-    void dumpAllInput();
+    void dumpAllInput(ThreadID tid);
 
     /** Update local branch prediction structures from feedback from
      *  Execute. */
@@ -157,6 +186,10 @@ class Fetch2 : public Named
      *  carries the prediction to Fetch1 */
     void predictBranch(MinorDynInstPtr inst, BranchData &branch);
 
+    /** Use the current threading policy to determine the next thread to
+     *  fetch from. */
+    ThreadID getScheduledThread();
+
   public:
     Fetch2(const std::string &name,
         MinorCPU &cpu_,
@@ -165,7 +198,7 @@ class Fetch2 : public Named
         Latch<BranchData>::Output branchInp_,
         Latch<BranchData>::Input predictionOut_,
         Latch<ForwardInstData>::Input out_,
-        Reservable &next_stage_input_buffer);
+        std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
 
   public:
     /** Pass on input/buffer data to the output if you can */

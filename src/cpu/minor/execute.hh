@@ -116,13 +116,13 @@ class Execute : public Named
     LSQ lsq;
 
     /** Scoreboard of instruction dependencies */
-    Scoreboard scoreboard;
+    std::vector<Scoreboard> scoreboard;
 
     /** The execution functional units */
     std::vector<FUPipeline *> funcUnits;
 
   public: /* Public for Pipeline to be able to pass it to Decode */
-    InputBuffer<ForwardInstData> inputBuffer;
+    std::vector<InputBuffer<ForwardInstData>> inputBuffer;
 
   protected:
     /** Stage cycle-by-cycle state */
@@ -143,48 +143,75 @@ class Execute : public Named
         DrainAllInsts /* Discarding all remaining insts */
     };
 
-    /** In-order instructions either in FUs or the LSQ */
-    Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst> > *inFlightInsts;
+    struct ExecuteThreadInfo {
+        /** Constructor */
+        ExecuteThreadInfo(unsigned int insts_committed) :
+            inputIndex(0),
+            lastCommitWasEndOfMacroop(true),
+            instsBeingCommitted(insts_committed),
+            streamSeqNum(InstId::firstStreamSeqNum),
+            lastPredictionSeqNum(InstId::firstPredictionSeqNum),
+            drainState(NotDraining)
+        { }
 
-    /** Memory ref instructions still in the FUs */
-    Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst> > *inFUMemInsts;
+        ExecuteThreadInfo(const ExecuteThreadInfo& other) :
+            inputIndex(other.inputIndex),
+            lastCommitWasEndOfMacroop(other.lastCommitWasEndOfMacroop),
+            instsBeingCommitted(other.instsBeingCommitted),
+            streamSeqNum(other.streamSeqNum),
+            lastPredictionSeqNum(other.lastPredictionSeqNum),
+            drainState(other.drainState)
+        { }
 
-    /** Index that we've completed upto in getInput data.  We can say we're
-     *  popInput when this equals getInput()->width() */
-    unsigned int inputIndex;
+        /** In-order instructions either in FUs or the LSQ */
+        Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst> > *inFlightInsts;
 
-    /** The last commit was the end of a full instruction so an interrupt
-     *  can safely happen */
-    bool lastCommitWasEndOfMacroop;
+        /** Memory ref instructions still in the FUs */
+        Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst> > *inFUMemInsts;
 
-    /** Structure for reporting insts currently being processed/retired
-     *  for MinorTrace */
-    ForwardInstData instsBeingCommitted;
+        /** Index that we've completed upto in getInput data.  We can say we're
+         *  popInput when this equals getInput()->width() */
+        unsigned int inputIndex;
 
-    /** Source of sequence number for instuction streams.  Increment this and
-     *  pass to fetch whenever an instruction stream needs to be changed.
-     *  For any more complicated behaviour (e.g. speculation) there'll need
-     *  to be another plan. THREAD, need one for each thread */
-    InstSeqNum streamSeqNum;
+        /** The last commit was the end of a full instruction so an interrupt
+         *  can safely happen */
+        bool lastCommitWasEndOfMacroop;
 
-    /** A prediction number for use where one isn't available from an
-     *  instruction.  This is harvested from committed instructions.
-     *  This isn't really needed as the streamSeqNum will change on
-     *  a branch, but it minimises disruption in stream identification */
-    InstSeqNum lastPredictionSeqNum;
+        /** Structure for reporting insts currently being processed/retired
+         *  for MinorTrace */
+        ForwardInstData instsBeingCommitted;
 
-    /** State progression for draining NotDraining -> ... -> DrainAllInsts */
-    DrainState drainState;
+        /** Source of sequence number for instuction streams.  Increment this and
+         *  pass to fetch whenever an instruction stream needs to be changed.
+         *  For any more complicated behaviour (e.g. speculation) there'll need
+         *  to be another plan. */
+        InstSeqNum streamSeqNum;
+
+        /** A prediction number for use where one isn't available from an
+         *  instruction.  This is harvested from committed instructions.
+         *  This isn't really needed as the streamSeqNum will change on
+         *  a branch, but it minimises disruption in stream identification */
+        InstSeqNum lastPredictionSeqNum;
+
+        /** State progression for draining NotDraining -> ... -> DrainAllInsts */
+        DrainState drainState;
+    };
+
+    std::vector<ExecuteThreadInfo> executeInfo;
+
+    ThreadID interruptPriority;
+    ThreadID issuePriority;
+    ThreadID commitPriority;
 
   protected:
     friend std::ostream &operator <<(std::ostream &os, DrainState state);
 
     /** Get a piece of data to work on from the inputBuffer, or 0 if there
      *  is no data. */
-    const ForwardInstData *getInput();
+    const ForwardInstData *getInput(ThreadID tid);
 
     /** Pop an element off the input buffer, if there are any */
-    void popInput();
+    void popInput(ThreadID tid);
 
     /** Generate Branch data based (into branch) on an observed (or not)
      *  change in PC while executing an instruction.
@@ -193,7 +220,7 @@ class Execute : public Named
 
     /** Actually create a branch to communicate to Fetch1/Fetch2 and,
      *  if that is a stream-changing branch update the streamSeqNum */
-    void updateBranchData(BranchData::Reason reason,
+    void updateBranchData(ThreadID tid, BranchData::Reason reason,
         MinorDynInstPtr inst, const TheISA::PCState &target,
         BranchData &branch);
 
@@ -224,22 +251,31 @@ class Execute : public Named
     bool isInterrupted(ThreadID thread_id) const;
 
     /** Are we between instructions?  Can we be interrupted? */
-    bool isInbetweenInsts() const;
+    bool isInbetweenInsts(ThreadID thread_id) const;
 
     /** Act on an interrupt.  Returns true if an interrupt was actually
      *  signalled and invoked */
     bool takeInterrupt(ThreadID thread_id, BranchData &branch);
 
     /** Try and issue instructions from the inputBuffer */
-    unsigned int issue(bool only_issue_microops);
+    unsigned int issue(ThreadID thread_id);
 
     /** Try to act on PC-related events.  Returns true if any were
      *  executed */
-    bool tryPCEvents();
+    bool tryPCEvents(ThreadID thread_id);
 
     /** Do the stats handling and instruction count and PC event events
      *  related to the new instruction/op counts */
     void doInstCommitAccounting(MinorDynInstPtr inst);
+
+    /** Check all threads for possible interrupts. If interrupt is taken,
+     *  returns the tid of the thread.  interrupted is set if any thread
+     *  has an interrupt, irrespective of if it is taken */
+    ThreadID checkInterrupts(BranchData& branch, bool& interrupted);
+
+    /** Checks if a specific thread has an interrupt.  No action is taken.
+     *  this is used for determining if a thread should only commit microops */
+    bool hasInterrupt(ThreadID thread_id);
 
     /** Commit a single instruction.  Returns true if the instruction being
      *  examined was completed (fully executed, discarded, or initiated a
@@ -266,10 +302,16 @@ class Execute : public Named
      *  If discard is true then discard all instructions rather than
      *  committing.
      *  branch is set to any branch raised during commit. */
-    void commit(bool only_commit_microops, bool discard, BranchData &branch);
+    void commit(ThreadID thread_id, bool only_commit_microops, bool discard,
+        BranchData &branch);
 
     /** Set the drain state (with useful debugging messages) */
-    void setDrainState(DrainState state);
+    void setDrainState(ThreadID thread_id, DrainState state);
+
+    /** Use the current threading policy to determine the next thread to
+     *  decode from. */
+    ThreadID getCommittingThread();
+    ThreadID getIssuingThread();
 
   public:
     Execute(const std::string &name_,
@@ -281,12 +323,6 @@ class Execute : public Named
     ~Execute();
 
   public:
-
-    /** Cause Execute to issue an UnpredictedBranch (or WakeupFetch if
-     *  that was passed as the reason) to Fetch1 to wake the
-     *  system up (using the PC from the thread context). */
-    void wakeupFetch(BranchData::Reason reason =
-        BranchData::UnpredictedBranch);
 
     /** Returns the DcachePort owned by this Execute to pass upwards */
     MinorCPU::MinorCPUPort &getDcachePort();

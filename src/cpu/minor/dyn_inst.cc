@@ -52,6 +52,12 @@
 namespace Minor
 {
 
+const InstSeqNum InstId::firstStreamSeqNum;
+const InstSeqNum InstId::firstPredictionSeqNum;
+const InstSeqNum InstId::firstLineSeqNum;
+const InstSeqNum InstId::firstFetchSeqNum;
+const InstSeqNum InstId::firstExecSeqNum;
+
 std::ostream &
 operator <<(std::ostream &os, const InstId &id)
 {

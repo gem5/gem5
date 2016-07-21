@@ -112,7 +112,7 @@ class Pipeline : public Ticked
   public:
     /** Wake up the Fetch unit.  This is needed on thread activation esp.
      *  after quiesce wakeup */
-    void wakeupFetch();
+    void wakeupFetch(ThreadID tid);
 
     /** Try to drain the CPU */
     bool drain();

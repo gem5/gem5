@@ -261,7 +261,7 @@ quiesceSkip(ThreadContext *tc)
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick() + 1;
+    Tick resume = cpu->nextCycle() + 1;
 
     cpu->reschedule(quiesceEvent, resume, true);
 

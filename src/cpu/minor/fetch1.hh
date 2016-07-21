@@ -197,7 +197,7 @@ class Fetch1 : public Named
     Latch<BranchData>::Output prediction;
 
     /** Interface to reserve space in the next stage */
-    Reservable &nextStageReserve;
+    std::vector<InputBuffer<ForwardLineData>> &nextStageReserve;
 
     /** IcachePort to pass to the CPU.  Fetch1 is the only module that uses
      *  it. */
@@ -233,26 +233,53 @@ class Fetch1 : public Named
 
     /** Stage cycle-by-cycle state */
 
-    FetchState state;
+    struct Fetch1ThreadInfo {
 
-    /** Fetch PC value. This is updated by branches from Execute, branch
-     *  prediction targets from Fetch2 and by incrementing it as we fetch
-     *  lines subsequent to those two sources. */
-    TheISA::PCState pc;
+        /** Consturctor to initialize all fields. */
+        Fetch1ThreadInfo() :
+            state(FetchWaitingForPC),
+            pc(TheISA::PCState(0)),
+            streamSeqNum(InstId::firstStreamSeqNum),
+            predictionSeqNum(InstId::firstPredictionSeqNum),
+            blocked(false),
+            wakeupGuard(false)
+        { }
 
-    /** Stream sequence number.  This changes on request from Execute and is
-     *  used to tag instructions by the fetch stream to which they belong.
-     *  Execute originates new prediction sequence numbers. */
-    InstSeqNum streamSeqNum;
+        Fetch1ThreadInfo(const Fetch1ThreadInfo& other) :
+            state(other.state),
+            pc(other.pc),
+            streamSeqNum(other.streamSeqNum),
+            predictionSeqNum(other.predictionSeqNum),
+            blocked(other.blocked)
+        { }
 
-    /** Prediction sequence number.  This changes when requests from Execute
-     *  or Fetch2 ask for a change of fetch address and is used to tag lines
-     *  by the prediction to which they belong.  Fetch2 originates
-     *  prediction sequence numbers. */
-    InstSeqNum predictionSeqNum;
+        FetchState state;
 
-    /** Blocked indication for report */
-    bool blocked;
+        /** Fetch PC value. This is updated by branches from Execute, branch
+         *  prediction targets from Fetch2 and by incrementing it as we fetch
+         *  lines subsequent to those two sources. */
+        TheISA::PCState pc;
+
+        /** Stream sequence number.  This changes on request from Execute and is
+         *  used to tag instructions by the fetch stream to which they belong.
+         *  Execute originates new prediction sequence numbers. */
+        InstSeqNum streamSeqNum;
+
+        /** Prediction sequence number.  This changes when requests from Execute
+         *  or Fetch2 ask for a change of fetch address and is used to tag lines
+         *  by the prediction to which they belong.  Fetch2 originates
+         *  prediction sequence numbers. */
+        InstSeqNum predictionSeqNum;
+
+        /** Blocked indication for report */
+        bool blocked;
+
+        /** Signal to guard against sleeping first cycle of wakeup */
+        bool wakeupGuard;
+    };
+
+    std::vector<Fetch1ThreadInfo> fetchInfo;
+    ThreadID threadPriority;
 
     /** State of memory access for head instruction fetch */
     enum IcacheState
@@ -307,10 +334,15 @@ class Fetch1 : public Named
     friend std::ostream &operator <<(std::ostream &os,
         IcacheState state);
 
+
+    /** Use the current threading policy to determine the next thread to
+     *  fetch from. */
+    ThreadID getScheduledThread();
+
     /** Insert a line fetch into the requests.  This can be a partial
      *  line request where the given address has a non-0 offset into a
      *  line. */
-    void fetchLine();
+    void fetchLine(ThreadID tid);
 
     /** Try and issue a fetch for a translated request at the
      *  head of the requests queue.  Also tries to move the request
@@ -354,7 +386,7 @@ class Fetch1 : public Named
         Latch<BranchData>::Output inp_,
         Latch<ForwardLineData>::Input out_,
         Latch<BranchData>::Output prediction_,
-        Reservable &next_stage_input_buffer);
+        std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer);
 
   public:
     /** Returns the IcachePort owned by this Fetch1 */
@@ -362,6 +394,9 @@ class Fetch1 : public Named
 
     /** Pass on input/buffer data to the output if you can */
     void evaluate();
+
+    /** Initiate fetch1 fetching */
+    void wakeupFetch(ThreadID tid);
 
     void minorTrace() const;
 

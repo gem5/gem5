@@ -49,7 +49,7 @@ Decode::Decode(const std::string &name,
     MinorCPUParams &params,
     Latch<ForwardInstData>::Output inp_,
     Latch<ForwardInstData>::Input out_,
-    Reservable &next_stage_input_buffer) :
+    std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer) :
     Named(name),
     cpu(cpu_),
     inp(inp_),
@@ -57,11 +57,8 @@ Decode::Decode(const std::string &name,
     nextStageReserve(next_stage_input_buffer),
     outputWidth(params.executeInputWidth),
     processMoreThanOneInput(params.decodeCycleInput),
-    inputBuffer(name + ".inputBuffer", "insts", params.decodeInputBufferSize),
-    inputIndex(0),
-    inMacroop(false),
-    execSeqNum(InstId::firstExecSeqNum),
-    blocked(false)
+    decodeInfo(params.numThreads),
+    threadPriority(0)
 {
     if (outputWidth < 1)
         fatal("%s: executeInputWidth must be >= 1 (%d)\n", name, outputWidth);
@@ -70,29 +67,37 @@ Decode::Decode(const std::string &name,
         fatal("%s: decodeInputBufferSize must be >= 1 (%d)\n", name,
         params.decodeInputBufferSize);
     }
+
+    /* Per-thread input buffers */
+    for (ThreadID tid = 0; tid < params.numThreads; tid++) {
+        inputBuffer.push_back(
+            InputBuffer<ForwardInstData>(
+                name + ".inputBuffer" + std::to_string(tid), "insts",
+                params.decodeInputBufferSize));
+    }
 }
 
 const ForwardInstData *
-Decode::getInput()
+Decode::getInput(ThreadID tid)
 {
     /* Get insts from the inputBuffer to work with */
-    if (!inputBuffer.empty()) {
-        const ForwardInstData &head = inputBuffer.front();
+    if (!inputBuffer[tid].empty()) {
+        const ForwardInstData &head = inputBuffer[tid].front();
 
-        return (head.isBubble() ? NULL : &(inputBuffer.front()));
+        return (head.isBubble() ? NULL : &(inputBuffer[tid].front()));
     } else {
         return NULL;
     }
 }
 
 void
-Decode::popInput()
+Decode::popInput(ThreadID tid)
 {
-    if (!inputBuffer.empty())
-        inputBuffer.pop();
+    if (!inputBuffer[tid].empty())
+        inputBuffer[tid].pop();
 
-    inputIndex = 0;
-    inMacroop = false;
+    decodeInfo[tid].inputIndex = 0;
+    decodeInfo[tid].inMacroop = false;
 }
 
 #if TRACING_ON
@@ -117,32 +122,37 @@ dynInstAddTracing(MinorDynInstPtr inst, StaticInstPtr static_inst,
 void
 Decode::evaluate()
 {
-    inputBuffer.setTail(*inp.outputWire);
+    /* Push input onto appropriate input buffer */
+    if (!inp.outputWire->isBubble())
+        inputBuffer[inp.outputWire->threadId].setTail(*inp.outputWire);
+
     ForwardInstData &insts_out = *out.inputWire;
 
     assert(insts_out.isBubble());
 
-    blocked = false;
+    for (ThreadID tid = 0; tid < cpu.numThreads; tid++)
+        decodeInfo[tid].blocked = !nextStageReserve[tid].canReserve();
 
-    if (!nextStageReserve.canReserve()) {
-        blocked = true;
-    } else {
-        const ForwardInstData *insts_in = getInput();
+    ThreadID tid = getScheduledThread();
+
+    if (tid != InvalidThreadID) {
+        DecodeThreadInfo &decode_info = decodeInfo[tid];
+        const ForwardInstData *insts_in = getInput(tid);
 
         unsigned int output_index = 0;
 
         /* Pack instructions into the output while we can.  This may involve
          * using more than one input line */
         while (insts_in &&
-           inputIndex < insts_in->width() && /* Still more input */
+           decode_info.inputIndex < insts_in->width() && /* Still more input */
            output_index < outputWidth /* Still more output to fill */)
         {
-            MinorDynInstPtr inst = insts_in->insts[inputIndex];
+            MinorDynInstPtr inst = insts_in->insts[decode_info.inputIndex];
 
             if (inst->isBubble()) {
                 /* Skip */
-                inputIndex++;
-                inMacroop = false;
+                decode_info.inputIndex++;
+                decode_info.inMacroop = false;
             } else {
                 StaticInstPtr static_inst = inst->staticInst;
                 /* Static inst of a macro-op above the output_inst */
@@ -153,25 +163,26 @@ Decode::evaluate()
                     DPRINTF(Decode, "Fault being passed: %d\n",
                         inst->fault->name());
 
-                    inputIndex++;
-                    inMacroop = false;
+                    decode_info.inputIndex++;
+                    decode_info.inMacroop = false;
                 } else if (static_inst->isMacroop()) {
                     /* Generate a new micro-op */
                     StaticInstPtr static_micro_inst;
 
                     /* Set up PC for the next micro-op emitted */
-                    if (!inMacroop) {
-                        microopPC = inst->pc;
-                        inMacroop = true;
+                    if (!decode_info.inMacroop) {
+                        decode_info.microopPC = inst->pc;
+                        decode_info.inMacroop = true;
                     }
 
                     /* Get the micro-op static instruction from the
                      * static_inst. */
                     static_micro_inst =
-                        static_inst->fetchMicroop(microopPC.microPC());
+                        static_inst->fetchMicroop(
+                                decode_info.microopPC.microPC());
 
                     output_inst = new MinorDynInst(inst->id);
-                    output_inst->pc = microopPC;
+                    output_inst->pc = decode_info.microopPC;
                     output_inst->staticInst = static_micro_inst;
                     output_inst->fault = NoFault;
 
@@ -185,45 +196,46 @@ Decode::evaluate()
                     DPRINTF(Decode, "Microop decomposition inputIndex:"
                         " %d output_index: %d lastMicroop: %s microopPC:"
                         " %d.%d inst: %d\n",
-                        inputIndex, output_index,
+                        decode_info.inputIndex, output_index,
                         (static_micro_inst->isLastMicroop() ?
                             "true" : "false"),
-                        microopPC.instAddr(), microopPC.microPC(),
+                        decode_info.microopPC.instAddr(),
+                        decode_info.microopPC.microPC(),
                         *output_inst);
 
                     /* Acknowledge that the static_inst isn't mine, it's my
                      * parent macro-op's */
                     parent_static_inst = static_inst;
 
-                    static_micro_inst->advancePC(microopPC);
+                    static_micro_inst->advancePC(decode_info.microopPC);
 
                     /* Step input if this is the last micro-op */
                     if (static_micro_inst->isLastMicroop()) {
-                        inputIndex++;
-                        inMacroop = false;
+                        decode_info.inputIndex++;
+                        decode_info.inMacroop = false;
                     }
                 } else {
                     /* Doesn't need decomposing, pass on instruction */
                     DPRINTF(Decode, "Passing on inst: %s inputIndex:"
                         " %d output_index: %d\n",
-                        *output_inst, inputIndex, output_index);
+                        *output_inst, decode_info.inputIndex, output_index);
 
                     parent_static_inst = static_inst;
 
                     /* Step input */
-                    inputIndex++;
-                    inMacroop = false;
+                    decode_info.inputIndex++;
+                    decode_info.inMacroop = false;
                 }
 
                 /* Set execSeqNum of output_inst */
-                output_inst->id.execSeqNum = execSeqNum;
+                output_inst->id.execSeqNum = decode_info.execSeqNum;
                 /* Add tracing */
 #if TRACING_ON
                 dynInstAddTracing(output_inst, parent_static_inst, cpu);
 #endif
 
                 /* Step to next sequence number */
-                execSeqNum++;
+                decode_info.execSeqNum++;
 
                 /* Correctly size the output before writing */
                 if (output_index == 0) insts_out.resize(outputWidth);
@@ -233,17 +245,17 @@ Decode::evaluate()
             }
 
             /* Have we finished with the input? */
-            if (inputIndex == insts_in->width()) {
+            if (decode_info.inputIndex == insts_in->width()) {
                 /* If we have just been producing micro-ops, we *must* have
                  * got to the end of that for inputIndex to be pushed past
                  * insts_in->width() */
-                assert(!inMacroop);
-                popInput();
+                assert(!decode_info.inMacroop);
+                popInput(tid);
                 insts_in = NULL;
 
                 if (processMoreThanOneInput) {
                     DPRINTF(Decode, "Wrapping\n");
-                    insts_in = getInput();
+                    insts_in = getInput(tid);
                 }
             }
         }
@@ -261,22 +273,65 @@ Decode::evaluate()
     if (!insts_out.isBubble()) {
         /* Note activity of following buffer */
         cpu.activityRecorder->activity();
-        nextStageReserve.reserve();
+        insts_out.threadId = tid;
+        nextStageReserve[tid].reserve();
     }
 
     /* If we still have input to process and somewhere to put it,
      *  mark stage as active */
-    if (getInput() && nextStageReserve.canReserve())
-        cpu.activityRecorder->activateStage(Pipeline::DecodeStageId);
+    for (ThreadID i = 0; i < cpu.numThreads; i++)
+    {
+        if (getInput(i) && nextStageReserve[i].canReserve()) {
+            cpu.activityRecorder->activateStage(Pipeline::DecodeStageId);
+            break;
+        }
+    }
 
     /* Make sure the input (if any left) is pushed */
-    inputBuffer.pushTail();
+    if (!inp.outputWire->isBubble())
+        inputBuffer[inp.outputWire->threadId].pushTail();
+}
+
+inline ThreadID
+Decode::getScheduledThread()
+{
+    /* Select thread via policy. */
+    std::vector<ThreadID> priority_list;
+
+    switch (cpu.threadPolicy) {
+      case Enums::SingleThreaded:
+        priority_list.push_back(0);
+        break;
+      case Enums::RoundRobin:
+        priority_list = cpu.roundRobinPriority(threadPriority);
+        break;
+      case Enums::Random:
+        priority_list = cpu.randomPriority();
+        break;
+      default:
+        panic("Unknown fetch policy");
+    }
+
+    for (auto tid : priority_list) {
+        if (cpu.getContext(tid)->status() == ThreadContext::Active &&
+            getInput(tid) && !decodeInfo[tid].blocked) {
+            threadPriority = tid;
+            return tid;
+        }
+    }
+
+   return InvalidThreadID;
 }
 
 bool
 Decode::isDrained()
 {
-    return inputBuffer.empty() && (*inp.outputWire).isBubble();
+    for (const auto &buffer : inputBuffer) {
+        if (!buffer.empty())
+            return false;
+    }
+
+    return (*inp.outputWire).isBubble();
 }
 
 void
@@ -284,13 +339,13 @@ Decode::minorTrace() const
 {
     std::ostringstream data;
 
-    if (blocked)
+    if (decodeInfo[0].blocked)
         data << 'B';
     else
         (*out.inputWire).reportData(data);
 
     MINORTRACE("insts=%s\n", data.str());
-    inputBuffer.minorTrace();
+    inputBuffer[0].minorTrace();
 }
 
 }
