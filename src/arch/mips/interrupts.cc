@@ -105,11 +105,11 @@ Interrupts::clearAll()
 }
 
 
-
-Fault
-Interrupts::getInterrupt(ThreadContext * tc)
+bool
+Interrupts::checkInterrupts(ThreadContext *tc) const
 {
-    DPRINTF(Interrupt, "Interrupts getInterrupt\n");
+    if (!interruptsPending(tc))
+        return false;
 
     //Check if there are any outstanding interrupts
     StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
@@ -120,14 +120,25 @@ Interrupts::getInterrupt(ThreadContext * tc)
         // So if any interrupt that isn't masked is detected, jump to interrupt
         // handler
         CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
-        if (status.im && cause.ip) {
-            DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
-                    (unsigned)status.im, (unsigned)cause.ip);
-            return std::make_shared<InterruptFault>();
-        }
+        if (status.im && cause.ip)
+            return true;
+
     }
 
-    return NoFault;
+    return false;
+}
+
+Fault
+Interrupts::getInterrupt(ThreadContext * tc)
+{
+    assert(checkInterrupts(tc));
+
+    StatusReg M5_VAR_USED status = tc->readMiscRegNoEffect(MISCREG_STATUS);
+    CauseReg M5_VAR_USED cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+    DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
+            (unsigned)status.im, (unsigned)cause.ip);
+
+    return std::make_shared<InterruptFault>();
 }
 
 bool

@@ -149,6 +149,10 @@ class Interrupts : public SimObject
         bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
 
+        if ( !(intStatus || (hcr.vi && allowVIrq) || (hcr.vf && allowVFiq) ||
+               (hcr.va && allowVAbort)) )
+            return false;
+
         bool take_irq = takeInt(tc, INT_IRQ);
         bool take_fiq = takeInt(tc, INT_FIQ);
         bool take_ea =  takeInt(tc, INT_ABT);
@@ -221,6 +225,8 @@ class Interrupts : public SimObject
     Fault
     getInterrupt(ThreadContext *tc)
     {
+        assert(checkInterrupts(tc));
+
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
         SCR  scr  = tc->readMiscReg(MISCREG_SCR);
@@ -234,14 +240,9 @@ class Interrupts : public SimObject
         bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
 
-        if ( !(intStatus || (hcr.vi && allowVIrq) || (hcr.vf && allowVFiq) ||
-               (hcr.va && allowVAbort)) )
-            return NoFault;
-
         bool take_irq = takeInt(tc, INT_IRQ);
         bool take_fiq = takeInt(tc, INT_FIQ);
         bool take_ea =  takeInt(tc, INT_ABT);
-
 
         if (interrupts[INT_IRQ] && take_irq)
             return std::make_shared<Interrupt>();

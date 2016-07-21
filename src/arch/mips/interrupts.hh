@@ -107,13 +107,7 @@ class Interrupts : public SimObject
     void updateIntrInfo(ThreadContext *tc) const;
     bool interruptsPending(ThreadContext *tc) const;
     bool onCpuTimerInterrupt(ThreadContext *tc) const;
-
-    bool
-    checkInterrupts(ThreadContext *tc) const
-    {
-        return interruptsPending(tc);
-    }
-
+    bool checkInterrupts(ThreadContext *tc) const;
 
     void
     serialize(CheckpointOut &cp) const override

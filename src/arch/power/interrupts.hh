@@ -89,6 +89,7 @@ class Interrupts : public SimObject
     Fault
     getInterrupt(ThreadContext *tc)
     {
+        assert(checkInterrupts(tc));
         panic("Interrupts::getInterrupt not implemented.\n");
     }
 

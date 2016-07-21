@@ -137,17 +137,17 @@ class Interrupts : public SimObject
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return (intstatus != 0) && !(tc->pcState().pc() & 0x3);
-    }
+        if (intstatus == 0)
+            return false;
 
-    Fault
-    getInterrupt(ThreadContext *tc)
-    {
-        uint64_t ipl = 0;
-        uint64_t summary = 0;
+        if (tc->pcState().pc() & 0x3)
+            return false;
 
         if (tc->readMiscRegNoEffect(IPR_ASTRR))
             panic("asynchronous traps not implemented\n");
+
+        uint64_t ipl = 0;
+        uint64_t summary = 0;
 
         if (tc->readMiscRegNoEffect(IPR_SIRR)) {
             for (uint64_t i = INTLEVEL_SOFTWARE_MIN;
@@ -160,28 +160,52 @@ class Interrupts : public SimObject
             }
         }
 
-        if (intstatus) {
-            for (uint64_t i = INTLEVEL_EXTERNAL_MIN;
-                 i < INTLEVEL_EXTERNAL_MAX; i++) {
-                if (intstatus & (ULL(1) << i)) {
+        for (uint64_t i = INTLEVEL_EXTERNAL_MIN; i < INTLEVEL_EXTERNAL_MAX;
+             i++) {
+            if (intstatus & (ULL(1) << i)) {
+                // See table 4-19 of 21164 hardware reference
+                ipl = i;
+                summary |= (ULL(1) << i);
+            }
+        }
+
+        return ipl && ipl > tc->readMiscRegNoEffect(IPR_IPLR);
+    }
+
+    Fault
+    getInterrupt(ThreadContext *tc)
+    {
+        assert(checkInterrupts(tc));
+
+        uint64_t ipl = 0;
+        uint64_t summary = 0;
+        if (tc->readMiscRegNoEffect(IPR_SIRR)) {
+            for (uint64_t i = INTLEVEL_SOFTWARE_MIN;
+                 i < INTLEVEL_SOFTWARE_MAX; i++) {
+                if (tc->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
                     // See table 4-19 of 21164 hardware reference
-                    ipl = i;
+                    ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                     summary |= (ULL(1) << i);
                 }
             }
         }
 
-        if (ipl && ipl > tc->readMiscRegNoEffect(IPR_IPLR)) {
-            newIpl = ipl;
-            newSummary = summary;
-            newInfoSet = true;
-            DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                    tc->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
-
-            return std::make_shared<InterruptFault>();
-        } else {
-            return NoFault;
+        for (uint64_t i = INTLEVEL_EXTERNAL_MIN; i < INTLEVEL_EXTERNAL_MAX;
+             i++) {
+            if (intstatus & (ULL(1) << i)) {
+                // See table 4-19 of 21164 hardware reference
+                ipl = i;
+                summary |= (ULL(1) << i);
+            }
         }
+
+        newIpl = ipl;
+        newSummary = summary;
+        newInfoSet = true;
+        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
+                tc->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
+
+        return std::make_shared<InterruptFault>();
     }
 
     void
