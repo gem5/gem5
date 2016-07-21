@@ -1,10 +1,13 @@
+Redirecting stdout to build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic/simout
+Redirecting stderr to build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 22 2014 17:10:34
-gem5 started Jan 22 2014 21:14:55
-gem5 executing on u200540-lin
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic -re tests/run.py build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic
+gem5 compiled Jul 21 2016 14:35:23
+gem5 started Jul 21 2016 14:36:17
+gem5 executing on e108600-lin, pid 18539
+command line: /work/curdun01/gem5-external.hg/build/X86/gem5.opt -d build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/60.bzip2/x86/linux/simple-atomic
+
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init

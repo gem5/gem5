@@ -4,9 +4,9 @@ sim_seconds                                  0.010000                       # Nu
 sim_ticks                                 10000000000                       # Number of ticks simulated
 final_tick                                10000000000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_tick_rate                              757790256                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1498684                       # Number of bytes of host memory used
-host_seconds                                    13.20                       # Real time elapsed on the host
+host_tick_rate                              494870114                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1444260                       # Number of bytes of host memory used
+host_seconds                                    20.21                       # Real time elapsed on the host
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                          1000                       # Clock period in ticks
 system.physmem.pwrStateResidencyTicks::UNDEFINED  10000000000                       # Cumulative time (in ticks) in various power states
@@ -343,6 +343,7 @@ system.l0subsys0.xbar.pkt_size_system.l0subsys0.checkers0-master::system.l1subsy
 system.l0subsys0.xbar.pkt_size_system.l0subsys0.checkers1-master::system.l1subsys0.cache0.cpu_side       539600                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys0.xbar.pkt_size::total         1078992                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys0.xbar.snoops                   144671                       # Total snoops (count)
+system.l0subsys0.xbar.snoopTraffic            1556096                       # Total snoop traffic (bytes)
 system.l0subsys0.xbar.snoop_fanout::samples       282356                       # Request fanout histogram
 system.l0subsys0.xbar.snoop_fanout::mean            0                       # Request fanout histogram
 system.l0subsys0.xbar.snoop_fanout::stdev            0                       # Request fanout histogram
@@ -392,6 +393,7 @@ system.l0subsys1.xbar.pkt_size_system.l0subsys1.checkers0-master::system.l1subsy
 system.l0subsys1.xbar.pkt_size_system.l0subsys1.checkers1-master::system.l1subsys0.cache1.cpu_side       545392                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys1.xbar.pkt_size::total         1066832                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys1.xbar.snoops                   140058                       # Total snoops (count)
+system.l0subsys1.xbar.snoopTraffic            1579904                       # Total snoop traffic (bytes)
 system.l0subsys1.xbar.snoop_fanout::samples       276384                       # Request fanout histogram
 system.l0subsys1.xbar.snoop_fanout::mean            0                       # Request fanout histogram
 system.l0subsys1.xbar.snoop_fanout::stdev            0                       # Request fanout histogram
@@ -441,6 +443,7 @@ system.l0subsys2.xbar.pkt_size_system.l0subsys2.checkers0-master::system.l1subsy
 system.l0subsys2.xbar.pkt_size_system.l0subsys2.checkers1-master::system.l1subsys1.cache0.cpu_side       522048                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys2.xbar.pkt_size::total         1043824                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys2.xbar.snoops                   138132                       # Total snoops (count)
+system.l0subsys2.xbar.snoopTraffic            1465472                       # Total snoop traffic (bytes)
 system.l0subsys2.xbar.snoop_fanout::samples       271270                       # Request fanout histogram
 system.l0subsys2.xbar.snoop_fanout::mean            0                       # Request fanout histogram
 system.l0subsys2.xbar.snoop_fanout::stdev            0                       # Request fanout histogram
@@ -490,6 +493,7 @@ system.l0subsys3.xbar.pkt_size_system.l0subsys3.checkers0-master::system.l1subsy
 system.l0subsys3.xbar.pkt_size_system.l0subsys3.checkers1-master::system.l1subsys1.cache1.cpu_side       510192                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys3.xbar.pkt_size::total         1038312                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys3.xbar.snoops                   140587                       # Total snoops (count)
+system.l0subsys3.xbar.snoopTraffic            1458624                       # Total snoop traffic (bytes)
 system.l0subsys3.xbar.snoop_fanout::samples       272839                       # Request fanout histogram
 system.l0subsys3.xbar.snoop_fanout::mean            0                       # Request fanout histogram
 system.l0subsys3.xbar.snoop_fanout::stdev            0                       # Request fanout histogram
@@ -539,6 +543,7 @@ system.l0subsys4.xbar.pkt_size_system.l0subsys4.checkers0-master::system.l1subsy
 system.l0subsys4.xbar.pkt_size_system.l0subsys4.checkers1-master::system.l1subsys2.cache0.cpu_side       526040                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys4.xbar.pkt_size::total         1063512                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys4.xbar.snoops                   137978                       # Total snoops (count)
+system.l0subsys4.xbar.snoopTraffic            1507200                       # Total snoop traffic (bytes)
 system.l0subsys4.xbar.snoop_fanout::samples       273585                       # Request fanout histogram
 system.l0subsys4.xbar.snoop_fanout::mean            0                       # Request fanout histogram
 system.l0subsys4.xbar.snoop_fanout::stdev            0                       # Request fanout histogram
@@ -588,6 +593,7 @@ system.l0subsys5.xbar.pkt_size_system.l0subsys5.checkers0-master::system.l1subsy
 system.l0subsys5.xbar.pkt_size_system.l0subsys5.checkers1-master::system.l1subsys2.cache1.cpu_side       522456                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys5.xbar.pkt_size::total         1059400                       # Cumulative packet size per connected master and slave (bytes)
 system.l0subsys5.xbar.snoops                   141834                       # Total snoops (count)
+system.l0subsys5.xbar.snoopTraffic            1525248                       # Total snoop traffic (bytes)
 system.l0subsys5.xbar.snoop_fanout::samples       276831                       # Request fanout histogram
 system.l0subsys5.xbar.snoop_fanout::mean            0                       # Request fanout histogram
 system.l0subsys5.xbar.snoop_fanout::stdev            0                       # Request fanout histogram
@@ -946,6 +952,7 @@ system.l1subsys0.xbar.pkt_size_system.l1subsys0.cache0.mem_side::system.l2subsys
 system.l1subsys0.xbar.pkt_size_system.l1subsys0.cache1.mem_side::system.l2subsys0.cache1.cpu_side      9043712                       # Cumulative packet size per connected master and slave (bytes)
 system.l1subsys0.xbar.pkt_size::total        18352320                       # Cumulative packet size per connected master and slave (bytes)
 system.l1subsys0.xbar.snoops                   293338                       # Total snoops (count)
+system.l1subsys0.xbar.snoopTraffic            6950656                       # Total snoop traffic (bytes)
 system.l1subsys0.xbar.snoop_fanout::samples       440460                       # Request fanout histogram
 system.l1subsys0.xbar.snoop_fanout::mean     0.353033                       # Request fanout histogram
 system.l1subsys0.xbar.snoop_fanout::stdev     0.545932                       # Request fanout histogram
@@ -1308,6 +1315,7 @@ system.l1subsys1.xbar.pkt_size_system.l1subsys1.cache0.mem_side::system.l2subsys
 system.l1subsys1.xbar.pkt_size_system.l1subsys1.cache1.mem_side::system.l2subsys0.cache2.cpu_side      8958272                       # Cumulative packet size per connected master and slave (bytes)
 system.l1subsys1.xbar.pkt_size::total        17742848                       # Cumulative packet size per connected master and slave (bytes)
 system.l1subsys1.xbar.snoops                   288962                       # Total snoops (count)
+system.l1subsys1.xbar.snoopTraffic            6862464                       # Total snoop traffic (bytes)
 system.l1subsys1.xbar.snoop_fanout::samples       427858                       # Request fanout histogram
 system.l1subsys1.xbar.snoop_fanout::mean     0.369602                       # Request fanout histogram
 system.l1subsys1.xbar.snoop_fanout::stdev     0.556507                       # Request fanout histogram
@@ -1670,6 +1678,7 @@ system.l1subsys2.xbar.pkt_size_system.l1subsys2.cache0.mem_side::system.l2subsys
 system.l1subsys2.xbar.pkt_size_system.l1subsys2.cache1.mem_side::system.l2subsys0.cache3.cpu_side      9148608                       # Cumulative packet size per connected master and slave (bytes)
 system.l1subsys2.xbar.pkt_size::total        18051584                       # Cumulative packet size per connected master and slave (bytes)
 system.l1subsys2.xbar.snoops                   290665                       # Total snoops (count)
+system.l1subsys2.xbar.snoopTraffic            6825600                       # Total snoop traffic (bytes)
 system.l1subsys2.xbar.snoop_fanout::samples       435074                       # Request fanout histogram
 system.l1subsys2.xbar.snoop_fanout::mean     0.354188                       # Request fanout histogram
 system.l1subsys2.xbar.snoop_fanout::stdev     0.543249                       # Request fanout histogram
@@ -2756,6 +2765,7 @@ system.l2subsys0.xbar.pkt_size_system.l2subsys0.cache3.mem_side::system.physmem.
 system.l2subsys0.xbar.pkt_size_system.l2subsys0.cache0.mem_side::system.physmem.port      2937216                       # Cumulative packet size per connected master and slave (bytes)
 system.l2subsys0.xbar.pkt_size::total        37220160                       # Cumulative packet size per connected master and slave (bytes)
 system.l2subsys0.xbar.snoops                   200506                       # Total snoops (count)
+system.l2subsys0.xbar.snoopTraffic           10418304                       # Total snoop traffic (bytes)
 system.l2subsys0.xbar.snoop_fanout::samples       652264                       # Request fanout histogram
 system.l2subsys0.xbar.snoop_fanout::mean     0.480016                       # Request fanout histogram
 system.l2subsys0.xbar.snoop_fanout::stdev     0.745912                       # Request fanout histogram

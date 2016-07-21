@@ -3,10 +3,10 @@ Redirecting stderr to build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 14 2016 22:04:10
-gem5 started Mar 14 2016 22:06:34
-gem5 executing on phenom, pid 29863
-command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level
+gem5 compiled Jul 21 2016 14:23:13
+gem5 started Jul 21 2016 14:23:48
+gem5 executing on e108600-lin, pid 13287
+command line: /work/curdun01/gem5-external.hg/build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/03.learning-gem5/mips/linux/learning-gem5-p1-two-level
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!

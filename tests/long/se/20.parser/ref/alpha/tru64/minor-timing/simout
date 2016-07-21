@@ -3,10 +3,10 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/20.parser/alpha/tru64/minor-
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 20:54:01
-gem5 started Sep 14 2015 21:15:04
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/20.parser/alpha/tru64/minor-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/long/se/20.parser/alpha/tru64/minor-timing
+gem5 compiled Jul 19 2016 12:23:51
+gem5 started Jul 21 2016 14:09:28
+gem5 executing on e108600-lin, pid 4298
+command line: /work/curdun01/gem5-external.hg/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/20.parser/alpha/tru64/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/20.parser/alpha/tru64/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -69,4 +69,4 @@ Echoing of input sentence turned on.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 412080064500 because target called exit()
+Exiting @ tick 417309765500 because target called exit()

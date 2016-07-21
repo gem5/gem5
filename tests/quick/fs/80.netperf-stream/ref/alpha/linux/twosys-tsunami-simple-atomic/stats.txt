@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409271000                       # Number of ticks simulated
 final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               21345619                       # Simulator instruction rate (inst/s)
-host_op_rate                                 21345611                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8167264006                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 541036                       # Number of bytes of host memory used
-host_seconds                                    24.54                       # Real time elapsed on the host
+host_inst_rate                               17965406                       # Simulator instruction rate (inst/s)
+host_op_rate                                 17965399                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             6873925677                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 491760                       # Number of bytes of host memory used
+host_seconds                                    29.16                       # Real time elapsed on the host
 sim_insts                                   523780905                       # Number of instructions simulated
 sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -260,6 +260,7 @@ drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port     572
 drivesys.membus.pkt_size_drivesys.iobridge.master::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.pkt_size::total             175319714                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.snoops                              0                       # Total snoops (count)
+drivesys.membus.snoopTraffic                        0                       # Total snoop traffic (bytes)
 drivesys.membus.snoop_fanout::samples        27247410                       # Request fanout histogram
 drivesys.membus.snoop_fanout::mean           0.786764                       # Request fanout histogram
 drivesys.membus.snoop_fanout::stdev          0.409593                       # Request fanout histogram
@@ -611,6 +612,7 @@ testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port     572613
 testsys.membus.pkt_size_testsys.iobridge.master::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.pkt_size::total              183678150                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.snoops                               0                       # Total snoops (count)
+testsys.membus.snoopTraffic                         0                       # Total snoop traffic (bytes)
 testsys.membus.snoop_fanout::samples         28885173                       # Request fanout histogram
 testsys.membus.snoop_fanout::mean            0.784032                       # Request fanout histogram
 testsys.membus.snoop_fanout::stdev           0.411493                       # Request fanout histogram
@@ -707,11 +709,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                            10808376500                       # Simulator instruction rate (inst/s)
-host_op_rate                              10806472833                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             8401634086                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 541036                       # Number of bytes of host memory used
-host_seconds                                     0.05                       # Real time elapsed on the host
+host_inst_rate                             9196187733                       # Simulator instruction rate (inst/s)
+host_op_rate                               9194395313                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             7148094141                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 491760                       # Number of bytes of host memory used
+host_seconds                                     0.06                       # Real time elapsed on the host
 sim_insts                                   523853183                       # Number of instructions simulated
 sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -942,6 +944,7 @@ drivesys.membus.pkt_size_drivesys.iobridge.master::drivesys.physmem.port       1
 drivesys.membus.pkt_size_drivesys.iobridge.master::total       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.pkt_size::total                340576                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.membus.snoops                              0                       # Total snoops (count)
+drivesys.membus.snoopTraffic                        0                       # Total snoop traffic (bytes)
 drivesys.membus.snoop_fanout::samples           52004                       # Request fanout histogram
 drivesys.membus.snoop_fanout::mean           0.788439                       # Request fanout histogram
 drivesys.membus.snoop_fanout::stdev          0.408419                       # Request fanout histogram
@@ -1240,6 +1243,7 @@ testsys.membus.pkt_size_testsys.iobridge.master::testsys.physmem.port       1163
 testsys.membus.pkt_size_testsys.iobridge.master::total       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.pkt_size::total                 340448                       # Cumulative packet size per connected master and slave (bytes)
 testsys.membus.snoops                               0                       # Total snoops (count)
+testsys.membus.snoopTraffic                         0                       # Total snoop traffic (bytes)
 testsys.membus.snoop_fanout::samples            51975                       # Request fanout histogram
 testsys.membus.snoop_fanout::mean            0.788360                       # Request fanout histogram
 testsys.membus.snoop_fanout::stdev           0.408475                       # Request fanout histogram

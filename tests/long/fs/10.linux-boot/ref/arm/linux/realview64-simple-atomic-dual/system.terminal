@@ -91,7 +91,7 @@
 [    2.143447] pci-host-generic 30000000.pci: PCI host bridge to bus 0000:00
 [    2.143448] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
 [    2.143450] pci_bus 0000:00: root bus resource [mem 0x40000000-0x4fffffff]
-[    2.143451] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    2.143452] pci_bus 0000:00: root bus resource [bus 00-ff]
 [    2.143453] pci_bus 0000:00: scanning bus
 [    2.143455] pci 0000:00:00.0: [8086:1075] type 00 class 0x020000
 [    2.143457] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
@@ -100,7 +100,7 @@
 [    2.143477] pci 0000:00:01.0: reg 0x10: [io  0x0000-0x0007]
 [    2.143479] pci 0000:00:01.0: reg 0x14: [io  0x0000-0x0003]
 [    2.143481] pci 0000:00:01.0: reg 0x18: [io  0x0000-0x0007]
-[    2.143482] pci 0000:00:01.0: reg 0x1c: [io  0x0000-0x0003]
+[    2.143483] pci 0000:00:01.0: reg 0x1c: [io  0x0000-0x0003]
 [    2.143484] pci 0000:00:01.0: reg 0x20: [io  0x0000-0x000f]
 [    2.143486] pci 0000:00:01.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
 [    2.143503] pci_bus 0000:00: fixups for bus
@@ -130,17 +130,17 @@
 [    2.144377] e1000: Copyright (c) 1999-2006 Intel Corporation.
 [    2.144381] e1000 0000:00:00.0: enabling device (0000 -> 0002)
 [    2.144382] e1000 0000:00:00.0: enabling bus mastering
-[    2.290388] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
-[    2.290389] ata1.00: 2096640 sectors, multi 0: LBA 
+[    2.290387] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
+[    2.290388] ata1.00: 2096640 sectors, multi 0: LBA 
 [    2.290395] ata1.00: configured for UDMA/33
-[    2.290412] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
-[    2.290466] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
-[    2.290469] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    2.290411] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
+[    2.290465] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
+[    2.290468] sd 0:0:0:0: Attached scsi generic sg0 type 0
 [    2.290484] sd 0:0:0:0: [sda] Write Protect is off
-[    2.290486] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[    2.290493] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-[    2.290548]  sda: sda1
-[    2.290610] sd 0:0:0:0: [sda] Attached SCSI disk
+[    2.290485] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    2.290492] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[    2.290547]  sda: sda1
+[    2.290609] sd 0:0:0:0: [sda] Attached SCSI disk
 [    2.410644] e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01
 [    2.410646] e1000 0000:00:00.0 eth0: Intel(R) PRO/1000 Network Connection
 [    2.410652] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
@@ -158,9 +158,9 @@
 [    2.411057] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
   INIT:  version 2.88 booting 
  Starting udev
-[    2.446371] udevd[609]: starting version 182
+[    2.446370] udevd[609]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    2.521978] random: dd urandom read with 17 bits of entropy available
+[    2.521984] random: dd urandom read with 17 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -169,7 +169,7 @@ Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
 Configuring network interfaces... udhcpc (v1.21.1) started
-[    2.620600] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+[    2.620646] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
 Sending discover...
 Sending discover...
 Sending discover...

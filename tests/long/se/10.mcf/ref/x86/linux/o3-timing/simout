@@ -3,10 +3,10 @@ Redirecting stderr to build/X86/tests/opt/long/se/10.mcf/x86/linux/o3-timing/sim
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 16 2016 15:38:19
-gem5 started Mar 16 2016 15:38:47
-gem5 executing on dinar2c11, pid 14352
-command line: build/X86/gem5.opt -d build/X86/tests/opt/long/se/10.mcf/x86/linux/o3-timing -re /home/stever/gem5-public/tests/run.py build/X86/tests/opt/long/se/10.mcf/x86/linux/o3-timing
+gem5 compiled Jul 21 2016 14:35:23
+gem5 started Jul 21 2016 14:36:18
+gem5 executing on e108600-lin, pid 18558
+command line: /work/curdun01/gem5-external.hg/build/X86/gem5.opt -d build/X86/tests/opt/long/se/10.mcf/x86/linux/o3-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/10.mcf/x86/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -23,8 +23,9 @@ info: Increasing stack size by one page.
 flow value                 : 4990014995
 new implicit arcs          : 23867
 active arcs                : 25772
+info: Increasing stack size by one page.
 simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 61602281500 because target called exit()
+Exiting @ tick 65986743500 because target called exit()

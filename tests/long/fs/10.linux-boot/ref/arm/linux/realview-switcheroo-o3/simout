@@ -3,9 +3,9 @@ Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realvi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 15 2016 21:26:42
-gem5 started Mar 15 2016 21:34:31
-gem5 executing on phenom, pid 15967
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3 -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 15:03:28
+gem5 executing on e108600-lin, pid 24169
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3 -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/fs/10.linux-boot/arm/linux/realview-switcheroo-o3
 
 Global frequency set at 1000000000000 ticks per second

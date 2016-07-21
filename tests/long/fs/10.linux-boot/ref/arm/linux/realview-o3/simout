@@ -3,16 +3,16 @@ Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realvi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 15 2016 21:26:42
-gem5 started Mar 15 2016 21:34:35
-gem5 executing on phenom, pid 15973
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3 -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 14:38:25
+gem5 executing on e108600-lin, pid 23094
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3 -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/fs/10.linux-boot/arm/linux/realview-o3
 
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /home/stever/m5/aarch-system-2014-10/binaries/vmlinux.aarch32.ll_20131205.0-gem5
+info: kernel located at: /arm/projectscratch/randd/systems/dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80008000
-info: Loading DTB file: /home/stever/m5/aarch-system-2014-10/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
+info: Loading DTB file: /arm/projectscratch/randd/systems/dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
@@ -29,4 +29,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2832862976500 because m5_exit instruction encountered
+Exiting @ tick 2832894126500 because m5_exit instruction encountered

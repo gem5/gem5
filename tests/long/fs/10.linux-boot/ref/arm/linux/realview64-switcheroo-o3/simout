@@ -1,10 +1,12 @@
+Redirecting stdout to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3/simout
+Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Dec  4 2015 11:13:17
-gem5 started Dec  4 2015 14:20:09
-gem5 executing on e104799-lin, pid 15456
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3 -re /work/gem5/outgoing/gem5_2/tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 14:38:23
+gem5 executing on e108600-lin, pid 23086
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3 -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/fs/10.linux-boot/arm/linux/realview64-switcheroo-o3
 
 Selected 64-bit ARM architecture, updating default disk image...
 Global frequency set at 1000000000000 ticks per second

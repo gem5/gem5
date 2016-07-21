@@ -3,10 +3,10 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simpl
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  3 2015 14:54:12
-gem5 started Jul  3 2015 15:04:10
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simple-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simple-timing
+gem5 compiled Jul 19 2016 12:23:51
+gem5 started Jul 21 2016 14:09:29
+gem5 executing on e108600-lin, pid 4305
+command line: /work/curdun01/gem5-external.hg/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simple-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/40.perlbmk/alpha/tru64/simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -650,4 +650,4 @@ info: Increasing stack size by one page.
 2000: 2845746745
 1000: 2068042552
 0: 290958364
-Exiting @ tick 1286278511500 because target called exit()
+Exiting @ tick 1288319411500 because target called exit()

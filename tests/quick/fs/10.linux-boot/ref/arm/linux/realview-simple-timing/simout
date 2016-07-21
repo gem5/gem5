@@ -1,16 +1,18 @@
+Redirecting stdout to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing/simout
+Redirecting stderr to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:45:42
-gem5 started Jan 21 2016 14:47:16
-gem5 executing on zizzer, pid 20794
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 14:45:51
+gem5 executing on e108600-lin, pid 23181
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/fs/10.linux-boot/arm/linux/realview-simple-timing
 
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux.aarch32.ll_20131205.0-gem5
+info: kernel located at: /arm/projectscratch/randd/systems/dist/binaries/vmlinux.aarch32.ll_20131205.0-gem5
 info: Using bootloader at address 0x10
 info: Using kernel entry physical address at 0x80008000
-info: Loading DTB file: /dist/m5/system/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
+info: Loading DTB file: /arm/projectscratch/randd/systems/dist/binaries/vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb at address 0x88000000
 info: Entering event queue @ 0.  Starting simulation...
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
@@ -27,4 +29,4 @@ info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
 info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2909586837500 because m5_exit instruction encountered
+Exiting @ tick 2909582799500 because m5_exit instruction encountered

@@ -3,10 +3,10 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simpl
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  3 2015 14:54:12
-gem5 started Jul  3 2015 15:11:16
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simple-atomic -re /scratch/nilay/GEM5/gem5/tests/run.py build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simple-atomic
+gem5 compiled Jul 19 2016 12:23:51
+gem5 started Jul 21 2016 14:09:28
+gem5 executing on e108600-lin, pid 4304
+command line: /work/curdun01/gem5-external.hg/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/40.perlbmk/alpha/tru64/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

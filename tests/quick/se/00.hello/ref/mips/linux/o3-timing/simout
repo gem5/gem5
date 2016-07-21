@@ -3,13 +3,13 @@ Redirecting stderr to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timin
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 14 2016 22:04:10
-gem5 started Mar 14 2016 22:06:34
-gem5 executing on phenom, pid 29859
-command line: build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing
+gem5 compiled Jul 21 2016 14:23:13
+gem5 started Jul 21 2016 14:23:47
+gem5 executing on e108600-lin, pid 13281
+command line: /work/curdun01/gem5-external.hg/build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/mips/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 22454000 because target called exit()
+Exiting @ tick 22532000 because target called exit()

@@ -4,11 +4,11 @@ sim_seconds                                  0.111754                       # Nu
 sim_ticks                                111753553500                       # Number of ticks simulated
 final_tick                               111753553500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 201687                       # Simulator instruction rate (inst/s)
-host_op_rate                                   242148                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                               82550264                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 334820                       # Number of bytes of host memory used
-host_seconds                                  1353.76                       # Real time elapsed on the host
+host_inst_rate                                 162111                       # Simulator instruction rate (inst/s)
+host_op_rate                                   194632                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               66351635                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 287668                       # Number of bytes of host memory used
+host_seconds                                  1684.26                       # Real time elapsed on the host
 sim_insts                                   273037220                       # Number of instructions simulated
 sim_ops                                     327811602                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -1165,6 +1165,7 @@ system.cpu.toL2Bus.pkt_size_system.cpu.icache.mem_side::system.cpu.l2cache.cpu_s
 system.cpu.toL2Bus.pkt_size_system.cpu.dcache.mem_side::system.cpu.l2cache.cpu_side    197531008                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.pkt_size::total          290513216                       # Cumulative packet size per connected master and slave (bytes)
 system.cpu.toL2Bus.snoops                      134350                       # Total snoops (count)
+system.cpu.toL2Bus.snoopTraffic                  5056                       # Total snoop traffic (bytes)
 system.cpu.toL2Bus.snoop_fanout::samples      2404477                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::mean        0.192237                       # Request fanout histogram
 system.cpu.toL2Bus.snoop_fanout::stdev       0.468638                       # Request fanout histogram
@@ -1193,6 +1194,7 @@ system.membus.pkt_count::total                 169247                       # Pa
 system.membus.pkt_size_system.cpu.l2cache.mem_side::system.physmem.port      5415488                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size::total                 5415488                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
+system.membus.snoopTraffic                          0                       # Total snoop traffic (bytes)
 system.membus.snoop_fanout::samples             84630                       # Request fanout histogram
 system.membus.snoop_fanout::mean                    0                       # Request fanout histogram
 system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram

@@ -2,6 +2,8 @@ warn: DRAM device capacity (8192 Mbytes) does not match the address range assign
 warn: Sockets disabled, not accepting vnc client connections
 warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
 warn: Existing EnergyCtrl, but no enabled DVFSHandler found.
 warn: Not doing anything for miscreg ACTLR
 warn: Not doing anything for write of miscreg ACTLR

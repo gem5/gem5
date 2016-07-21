@@ -4,11 +4,11 @@ sim_seconds                                  0.199332                       # Nu
 sim_ticks                                199332411500                       # Number of ticks simulated
 final_tick                               199332411500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                3079687                       # Simulator instruction rate (inst/s)
-host_op_rate                                  3079687                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             1539844146                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 290224                       # Number of bytes of host memory used
-host_seconds                                   129.45                       # Real time elapsed on the host
+host_inst_rate                                1645472                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1645472                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              822736272                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 245476                       # Number of bytes of host memory used
+host_seconds                                   242.28                       # Real time elapsed on the host
 sim_insts                                   398664595                       # Number of instructions simulated
 sim_ops                                     398664595                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -142,6 +142,7 @@ system.membus.pkt_size_system.cpu.icache_port::system.physmem.port   1594658604 
 system.membus.pkt_size_system.cpu.dcache_port::system.physmem.port   1154806069                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.pkt_size::total              2749464673                       # Cumulative packet size per connected master and slave (bytes)
 system.membus.snoops                                0                       # Total snoops (count)
+system.membus.snoopTraffic                          0                       # Total snoop traffic (bytes)
 system.membus.snoop_fanout::samples         566939869                       # Request fanout histogram
 system.membus.snoop_fanout::mean             0.703187                       # Request fanout histogram
 system.membus.snoop_fanout::stdev            0.456853                       # Request fanout histogram

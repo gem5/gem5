@@ -2,6 +2,8 @@ warn: DRAM device capacity (8192 Mbytes) does not match the address range assign
 warn: Sockets disabled, not accepting vnc client connections
 warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
 warn: Existing EnergyCtrl, but no enabled DVFSHandler found.
 warn: Not doing anything for miscreg ACTLR
 warn: Not doing anything for miscreg ACTLR
@@ -42,6 +44,5 @@ warn: Ignoring write to miscreg pmovsr
 warn: Ignoring write to miscreg pmovsr
 warn: Ignoring write to miscreg pmcr
 warn: Ignoring write to miscreg pmcr
-warn: 409343110000: Instruction results do not match! (Values may not actually be integers) Inst: 0x80000001, checker: 0x80000000
 warn: 	instruction 'mcr dcisw' unimplemented
 warn: 	instruction 'mcr bpiall' unimplemented

@@ -1,10 +1,12 @@
+Redirecting stdout to build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic/simout
+Redirecting stderr to build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:25:19
-gem5 started Jan 21 2016 14:25:54
-gem5 executing on zizzer, pid 3347
-command line: build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic -re /z/atgutier/gem5/gem5-commit/tests/run.py build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic
+gem5 compiled Jul 21 2016 14:27:08
+gem5 started Jul 21 2016 14:27:33
+gem5 executing on e108600-lin, pid 28000
+command line: /work/curdun01/gem5-external.hg/build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/power/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

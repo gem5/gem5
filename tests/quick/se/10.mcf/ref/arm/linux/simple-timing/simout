@@ -3,10 +3,10 @@ Redirecting stderr to build/ARM/tests/opt/quick/se/10.mcf/arm/linux/simple-timin
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:45:42
-gem5 started Jan 21 2016 14:46:47
-gem5 executing on zizzer, pid 20773
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/10.mcf/arm/linux/simple-timing -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ARM/tests/opt/quick/se/10.mcf/arm/linux/simple-timing
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 14:58:41
+gem5 executing on e108600-lin, pid 24094
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/10.mcf/arm/linux/simple-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/10.mcf/arm/linux/simple-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

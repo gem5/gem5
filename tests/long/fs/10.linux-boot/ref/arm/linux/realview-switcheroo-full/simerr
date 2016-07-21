@@ -2,6 +2,10 @@ warn: DRAM device capacity (8192 Mbytes) does not match the address range assign
 warn: Sockets disabled, not accepting vnc client connections
 warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
 warn: Existing EnergyCtrl, but no enabled DVFSHandler found.
 warn: Not doing anything for miscreg ACTLR
 warn: Not doing anything for write of miscreg ACTLR
@@ -31,6 +35,9 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+warn: ClockedObject: Already in the requested power state, request ignored
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 warn: CP14 unimplemented crn[1], opc1[0], crm[1], opc2[4]
@@ -38,22 +45,22 @@ warn: CP14 unimplemented crn[1], opc1[0], crm[3], opc2[4]
 warn: CP14 unimplemented crn[1], opc1[0], crm[0], opc2[4]
 warn: CP14 unimplemented crn[0], opc1[0], crm[7], opc2[0]
 warn: CP14 unimplemented crn[1], opc1[0], crm[5], opc2[4]
+WARNING: Bank is already active!
+Command: 0, Timestamp: 10945, Bank: 2
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
+WARNING: One or more banks are active! REF requires all banks to be precharged.
+Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: Bank is already active!
-Command: 0, Timestamp: 10462, Bank: 2
-warn: CP14 unimplemented crn[5], opc1[4], crm[0], opc2[0]
+Command: 0, Timestamp: 11030, Bank: 2
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: CP14 unimplemented crn[5], opc1[4], crm[12], opc2[4]
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: Bank is already active!
-Command: 0, Timestamp: 10621, Bank: 7
-WARNING: Bank is already active!
-Command: 0, Timestamp: 11318, Bank: 7
 warn: Returning zero for read from miscreg pmcr
 warn: Ignoring write to miscreg pmcntenclr
 warn: Ignoring write to miscreg pmintenclr
@@ -65,8 +72,8 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+WARNING: Bank is already active!
+Command: 0, Timestamp: 8588, Bank: 0
 warn: CP14 unimplemented crn[10], opc1[0], crm[4], opc2[3]
 warn: CP14 unimplemented crn[0], opc1[4], crm[12], opc2[2]
 WARNING: One or more banks are active! REF requires all banks to be precharged.
@@ -86,22 +93,11 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: CP14 unimplemented crn[2], opc1[2], crm[0], opc2[2]
 warn: 	instruction 'mcr bpiall' unimplemented
 warn: CP14 unimplemented crn[14], opc1[7], crm[1], opc2[0]
 warn: CP14 unimplemented crn[14], opc1[7], crm[14], opc2[7]
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-warn: User mode does not have SPSR
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
@@ -112,8 +108,14 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
-WARNING: One or more banks are active! REF requires all banks to be precharged.
-Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 warn: User mode does not have SPSR
@@ -124,3 +126,11 @@ WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
 WARNING: One or more banks are active! REF requires all banks to be precharged.
 Command: 4, Timestamp: 12458, Bank: 0
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR
+warn: User mode does not have SPSR

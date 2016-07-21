@@ -3,10 +3,10 @@ Redirecting stderr to build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/le
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:45:42
-gem5 started Jan 21 2016 14:47:24
-gem5 executing on zizzer, pid 20809
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 15:05:26
+gem5 executing on e108600-lin, pid 24207
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-simple
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!

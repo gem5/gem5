@@ -32,135 +32,135 @@
 [    0.000000] NR_IRQS:64 nr_irqs:64 0
 [    0.000000] Architected cp15 timer(s) running at 100.00MHz (phys).
 [    0.000001] sched_clock: 56 bits at 100MHz, resolution 10ns, wraps every 2748779069440ns
-[    0.000045] Console: colour dummy device 80x25
-[    0.000049] Calibrating delay loop (skipped) preset value.. 3997.69 BogoMIPS (lpj=19988480)
-[    0.000051] pid_max: default: 32768 minimum: 301
-[    0.000075] Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
-[    0.000077] Mountpoint-cache hash table entries: 512 (order: 0, 4096 bytes)
-[    0.000352] hw perfevents: no hardware support available
-[    1.060142] CPU1: failed to come online
-[    2.080279] CPU2: failed to come online
-[    3.100417] CPU3: failed to come online
-[    3.100422] Brought up 1 CPUs
-[    3.100424] SMP: Total of 1 processors activated.
-[    3.100540] devtmpfs: initialized
-[    3.101655] atomic64_test: passed
-[    3.101743] regulator-dummy: no parameters
-[    3.102586] NET: Registered protocol family 16
-[    3.102876] vdso: 2 pages (1 code, 1 data) at base ffffffc0006cd000
-[    3.102889] hw-breakpoint: found 2 breakpoint and 2 watchpoint registers.
-[    3.105209] software IO TLB [mem 0x8d400000-0x8d800000] (4MB) mapped at [ffffffc00d400000-ffffffc00d7fffff]
-[    3.105217] Serial: AMBA PL011 UART driver
-[    3.105613] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/sysctl@020000
-[    3.105686] 1c090000.uart: ttyAMA0 at MMIO 0x1c090000 (irq = 37, base_baud = 0) is a PL011 rev3
-[    3.106271] console [ttyAMA0] enabled
-[    3.106418] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/uart@0a0000
-[    3.106468] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/uart@0b0000
-[    3.106518] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/uart@0c0000
-[    3.106564] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/wdt@0f0000
-[    3.130865] 3V3: 3300 mV 
-[    3.130952] vgaarb: loaded
-[    3.131049] SCSI subsystem initialized
-[    3.131123] libata version 3.00 loaded.
-[    3.131214] usbcore: registered new interface driver usbfs
-[    3.131242] usbcore: registered new interface driver hub
-[    3.131299] usbcore: registered new device driver usb
-[    3.131346] pps_core: LinuxPPS API ver. 1 registered
-[    3.131356] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
-[    3.131380] PTP clock support registered
-[    3.131622] Switched to clocksource arch_sys_counter
-[    3.133833] NET: Registered protocol family 2
-[    3.133999] TCP established hash table entries: 2048 (order: 2, 16384 bytes)
-[    3.134032] TCP bind hash table entries: 2048 (order: 3, 32768 bytes)
-[    3.134072] TCP: Hash tables configured (established 2048 bind 2048)
-[    3.134126] TCP: reno registered
-[    3.134134] UDP hash table entries: 256 (order: 1, 8192 bytes)
-[    3.134154] UDP-Lite hash table entries: 256 (order: 1, 8192 bytes)
-[    3.134230] NET: Registered protocol family 1
-[    3.134310] RPC: Registered named UNIX socket transport module.
-[    3.134320] RPC: Registered udp transport module.
-[    3.134329] RPC: Registered tcp transport module.
-[    3.134338] RPC: Registered tcp NFSv4.1 backchannel transport module.
-[    3.134352] PCI: CLS 0 bytes, default 64
-[    3.134697] futex hash table entries: 1024 (order: 4, 65536 bytes)
-[    3.134933] HugeTLB registered 2 MB page size, pre-allocated 0 pages
-[    3.138705] fuse init (API version 7.23)
-[    3.138877] msgmni has been set to 469
-[    3.143640] io scheduler noop registered
-[    3.143737] io scheduler cfq registered (default)
-[    3.144797] pci-host-generic 30000000.pci: PCI host bridge to bus 0000:00
-[    3.144812] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    3.144825] pci_bus 0000:00: root bus resource [mem 0x40000000-0x4fffffff]
-[    3.144839] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    3.144850] pci_bus 0000:00: scanning bus
-[    3.144865] pci 0000:00:00.0: [8086:1075] type 00 class 0x020000
-[    3.144880] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
-[    3.144898] pci 0000:00:00.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
-[    3.144963] pci 0000:00:01.0: [8086:7111] type 00 class 0x010185
-[    3.144977] pci 0000:00:01.0: reg 0x10: [io  0x0000-0x0007]
-[    3.144989] pci 0000:00:01.0: reg 0x14: [io  0x0000-0x0003]
-[    3.145002] pci 0000:00:01.0: reg 0x18: [io  0x0000-0x0007]
-[    3.145014] pci 0000:00:01.0: reg 0x1c: [io  0x0000-0x0003]
-[    3.145027] pci 0000:00:01.0: reg 0x20: [io  0x0000-0x000f]
-[    3.145041] pci 0000:00:01.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
-[    3.145103] pci_bus 0000:00: fixups for bus
-[    3.145112] pci_bus 0000:00: bus scan returning with max=00
-[    3.145127] pci 0000:00:00.0: calling quirk_e100_interrupt+0x0/0x1cc
-[    3.145154] pci 0000:00:00.0: fixup irq: got 33
-[    3.145164] pci 0000:00:00.0: assigning IRQ 33
-[    3.145178] pci 0000:00:01.0: fixup irq: got 34
-[    3.145188] pci 0000:00:01.0: assigning IRQ 34
-[    3.145202] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
-[    3.145217] pci 0000:00:00.0: BAR 6: assigned [mem 0x40020000-0x400207ff pref]
-[    3.145232] pci 0000:00:01.0: BAR 6: assigned [mem 0x40020800-0x40020fff pref]
-[    3.145246] pci 0000:00:01.0: BAR 4: assigned [io  0x1000-0x100f]
-[    3.145260] pci 0000:00:01.0: BAR 0: assigned [io  0x1010-0x1017]
-[    3.145273] pci 0000:00:01.0: BAR 2: assigned [io  0x1018-0x101f]
-[    3.145286] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
-[    3.145300] pci 0000:00:01.0: BAR 3: assigned [io  0x1024-0x1027]
-[    3.146216] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-[    3.146745] ata_piix 0000:00:01.0: version 2.13
-[    3.146757] ata_piix 0000:00:01.0: enabling device (0000 -> 0001)
-[    3.146801] ata_piix 0000:00:01.0: enabling bus mastering
-[    3.147406] scsi0 : ata_piix
-[    3.147592] scsi1 : ata_piix
-[    3.147648] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
-[    3.147661] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
-[    3.147864] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
-[    3.147877] e1000: Copyright (c) 1999-2006 Intel Corporation.
-[    3.147899] e1000 0000:00:00.0: enabling device (0000 -> 0002)
-[    3.147912] e1000 0000:00:00.0: enabling bus mastering
-[    3.301659] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
-[    3.301670] ata1.00: 2096640 sectors, multi 0: LBA 
-[    3.301706] ata1.00: configured for UDMA/33
-[    3.301793] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
-[    3.301991] sd 0:0:0:0: Attached scsi generic sg0 type 0
-[    3.302026] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
-[    3.302084] sd 0:0:0:0: [sda] Write Protect is off
-[    3.302095] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[    3.302124] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-[    3.302327]  sda: sda1
-[    3.302534] sd 0:0:0:0: [sda] Attached SCSI disk
-[    3.421985] e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01
-[    3.422000] e1000 0000:00:00.0 eth0: Intel(R) PRO/1000 Network Connection
-[    3.422029] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
-[    3.422040] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
-[    3.422072] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
-[    3.422084] igb: Copyright (c) 2007-2014 Intel Corporation.
-[    3.422216] usbcore: registered new interface driver usb-storage
-[    3.422310] mousedev: PS/2 mouse device common for all mice
-[    3.422604] usbcore: registered new interface driver usbhid
-[    3.422615] usbhid: USB HID core driver
-[    3.422670] TCP: cubic registered
-[    3.422680] NET: Registered protocol family 17
- [    3.423312] VFS: Mounted root (ext2 filesystem) on device 8:1.
-[    3.423358] devtmpfs: mounted
-[    3.423483] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
+[    0.000039] Console: colour dummy device 80x25
+[    0.000042] Calibrating delay loop (skipped) preset value.. 3997.69 BogoMIPS (lpj=19988480)
+[    0.000044] pid_max: default: 32768 minimum: 301
+[    0.000065] Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
+[    0.000067] Mountpoint-cache hash table entries: 512 (order: 0, 4096 bytes)
+[    0.000247] hw perfevents: no hardware support available
+[    1.060141] CPU1: failed to come online
+[    2.080278] CPU2: failed to come online
+[    3.100415] CPU3: failed to come online
+[    3.100420] Brought up 1 CPUs
+[    3.100422] SMP: Total of 1 processors activated.
+[    3.100519] devtmpfs: initialized
+[    3.101579] atomic64_test: passed
+[    3.101653] regulator-dummy: no parameters
+[    3.102392] NET: Registered protocol family 16
+[    3.102653] vdso: 2 pages (1 code, 1 data) at base ffffffc0006cd000
+[    3.102663] hw-breakpoint: found 2 breakpoint and 2 watchpoint registers.
+[    3.103271] software IO TLB [mem 0x8d400000-0x8d800000] (4MB) mapped at [ffffffc00d400000-ffffffc00d7fffff]
+[    3.103277] Serial: AMBA PL011 UART driver
+[    3.103628] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/sysctl@020000
+[    3.103692] 1c090000.uart: ttyAMA0 at MMIO 0x1c090000 (irq = 37, base_baud = 0) is a PL011 rev3
+[    3.104278] console [ttyAMA0] enabled
+[    3.104379] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/uart@0a0000
+[    3.104429] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/uart@0b0000
+[    3.104479] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/uart@0c0000
+[    3.104525] of_amba_device_create(): amba_device_add() failed (-19) for /smb/motherboard/iofpga@3,00000000/wdt@0f0000
+[    3.131020] 3V3: 3300 mV 
+[    3.131093] vgaarb: loaded
+[    3.131183] SCSI subsystem initialized
+[    3.131252] libata version 3.00 loaded.
+[    3.131332] usbcore: registered new interface driver usbfs
+[    3.131358] usbcore: registered new interface driver hub
+[    3.131413] usbcore: registered new device driver usb
+[    3.131456] pps_core: LinuxPPS API ver. 1 registered
+[    3.131466] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    3.131488] PTP clock support registered
+[    3.131706] Switched to clocksource arch_sys_counter
+[    3.133706] NET: Registered protocol family 2
+[    3.133856] TCP established hash table entries: 2048 (order: 2, 16384 bytes)
+[    3.133884] TCP bind hash table entries: 2048 (order: 3, 32768 bytes)
+[    3.133918] TCP: Hash tables configured (established 2048 bind 2048)
+[    3.133940] TCP: reno registered
+[    3.133948] UDP hash table entries: 256 (order: 1, 8192 bytes)
+[    3.133966] UDP-Lite hash table entries: 256 (order: 1, 8192 bytes)
+[    3.134029] NET: Registered protocol family 1
+[    3.134094] RPC: Registered named UNIX socket transport module.
+[    3.134105] RPC: Registered udp transport module.
+[    3.134113] RPC: Registered tcp transport module.
+[    3.134122] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    3.134136] PCI: CLS 0 bytes, default 64
+[    3.134445] futex hash table entries: 1024 (order: 4, 65536 bytes)
+[    3.134644] HugeTLB registered 2 MB page size, pre-allocated 0 pages
+[    3.138048] fuse init (API version 7.23)
+[    3.138207] msgmni has been set to 469
+[    3.142619] io scheduler noop registered
+[    3.142717] io scheduler cfq registered (default)
+[    3.143500] pci-host-generic 30000000.pci: PCI host bridge to bus 0000:00
+[    3.143514] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    3.143527] pci_bus 0000:00: root bus resource [mem 0x40000000-0x4fffffff]
+[    3.143541] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    3.143553] pci_bus 0000:00: scanning bus
+[    3.143566] pci 0000:00:00.0: [8086:1075] type 00 class 0x020000
+[    3.143581] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
+[    3.143598] pci 0000:00:00.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
+[    3.143658] pci 0000:00:01.0: [8086:7111] type 00 class 0x010185
+[    3.143672] pci 0000:00:01.0: reg 0x10: [io  0x0000-0x0007]
+[    3.143684] pci 0000:00:01.0: reg 0x14: [io  0x0000-0x0003]
+[    3.143697] pci 0000:00:01.0: reg 0x18: [io  0x0000-0x0007]
+[    3.143710] pci 0000:00:01.0: reg 0x1c: [io  0x0000-0x0003]
+[    3.143722] pci 0000:00:01.0: reg 0x20: [io  0x0000-0x000f]
+[    3.143736] pci 0000:00:01.0: reg 0x30: [mem 0x00000000-0x000007ff pref]
+[    3.143793] pci_bus 0000:00: fixups for bus
+[    3.143803] pci_bus 0000:00: bus scan returning with max=00
+[    3.143817] pci 0000:00:00.0: calling quirk_e100_interrupt+0x0/0x1cc
+[    3.143842] pci 0000:00:00.0: fixup irq: got 33
+[    3.143852] pci 0000:00:00.0: assigning IRQ 33
+[    3.143866] pci 0000:00:01.0: fixup irq: got 34
+[    3.143875] pci 0000:00:01.0: assigning IRQ 34
+[    3.143889] pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x4001ffff]
+[    3.143904] pci 0000:00:00.0: BAR 6: assigned [mem 0x40020000-0x400207ff pref]
+[    3.143919] pci 0000:00:01.0: BAR 6: assigned [mem 0x40020800-0x40020fff pref]
+[    3.143933] pci 0000:00:01.0: BAR 4: assigned [io  0x1000-0x100f]
+[    3.143946] pci 0000:00:01.0: BAR 0: assigned [io  0x1010-0x1017]
+[    3.143960] pci 0000:00:01.0: BAR 2: assigned [io  0x1018-0x101f]
+[    3.143973] pci 0000:00:01.0: BAR 1: assigned [io  0x1020-0x1023]
+[    3.143986] pci 0000:00:01.0: BAR 3: assigned [io  0x1024-0x1027]
+[    3.144848] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+[    3.145335] ata_piix 0000:00:01.0: version 2.13
+[    3.145347] ata_piix 0000:00:01.0: enabling device (0000 -> 0001)
+[    3.145377] ata_piix 0000:00:01.0: enabling bus mastering
+[    3.145943] scsi0 : ata_piix
+[    3.146120] scsi1 : ata_piix
+[    3.146172] ata1: PATA max UDMA/33 cmd 0x1010 ctl 0x1020 bmdma 0x1000 irq 34
+[    3.146185] ata2: PATA max UDMA/33 cmd 0x1018 ctl 0x1024 bmdma 0x1008 irq 34
+[    3.146369] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21-k8-NAPI
+[    3.146383] e1000: Copyright (c) 1999-2006 Intel Corporation.
+[    3.146404] e1000 0000:00:00.0: enabling device (0000 -> 0002)
+[    3.146418] e1000 0000:00:00.0: enabling bus mastering
+[    3.301739] ata1.00: ATA-7: M5 IDE Disk, , max UDMA/66
+[    3.301750] ata1.00: 2096640 sectors, multi 0: LBA 
+[    3.301784] ata1.00: configured for UDMA/33
+[    3.301855] scsi 0:0:0:0: Direct-Access     ATA      M5 IDE Disk      n/a  PQ: 0 ANSI: 5
+[    3.302047] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    3.302082] sd 0:0:0:0: [sda] 2096640 512-byte logical blocks: (1.07 GB/1023 MiB)
+[    3.302139] sd 0:0:0:0: [sda] Write Protect is off
+[    3.302150] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    3.302179] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[    3.302375]  sda: sda1
+[    3.302573] sd 0:0:0:0: [sda] Attached SCSI disk
+[    3.422060] e1000 0000:00:00.0 eth0: (PCI:33MHz:32-bit) 00:90:00:00:00:01
+[    3.422074] e1000 0000:00:00.0 eth0: Intel(R) PRO/1000 Network Connection
+[    3.422104] e1000e: Intel(R) PRO/1000 Network Driver - 2.3.2-k
+[    3.422115] e1000e: Copyright(c) 1999 - 2014 Intel Corporation.
+[    3.422145] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.0.5-k
+[    3.422158] igb: Copyright (c) 2007-2014 Intel Corporation.
+[    3.422288] usbcore: registered new interface driver usb-storage
+[    3.422377] mousedev: PS/2 mouse device common for all mice
+[    3.422663] usbcore: registered new interface driver usbhid
+[    3.422673] usbhid: USB HID core driver
+[    3.422723] TCP: cubic registered
+[    3.422732] NET: Registered protocol family 17
+ [    3.423311] VFS: Mounted root (ext2 filesystem) on device 8:1.
+[    3.423356] devtmpfs: mounted
+[    3.423405] Freeing unused kernel memory: 208K (ffffffc000692000 - ffffffc0006c6000)
   INIT:  version 2.88 booting 
  Starting udev
-[    3.470485] udevd[607]: starting version 182
+[    3.470207] udevd[607]: starting version 182
 Starting Bootlog daemon: bootlogd.
-[    3.586582] random: dd urandom read with 21 bits of entropy available
+[    3.606569] random: dd urandom read with 21 bits of entropy available
 Populating dev cache
 net.ipv4.conf.default.rp_filter = 1
 net.ipv4.conf.all.rp_filter = 1
@@ -168,8 +168,8 @@ hwclock: can't open '/dev/misc/rtc': No such file or directory
 Mon Jan 27 08:00:00 UTC 2014
 hwclock: can't open '/dev/misc/rtc': No such file or directory
 INIT: Entering runlevel: 5
-Configuring network interfaces... udhcpc (v1.21.1) started
-[    3.781859] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+Configuring network interfaces... [    3.791940] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: None
+udhcpc (v1.21.1) started
 Sending discover...
 Sending discover...
 Sending discover...

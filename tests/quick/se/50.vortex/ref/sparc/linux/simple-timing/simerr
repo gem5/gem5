@@ -1,4 +1,5 @@
 warn: Sockets disabled, not accepting gdb connections
+warn: ClockedObject: More than one power state change request encountered within the same simulation tick
 warn: ignoring syscall time(4026527848, ...)
 warn: ignoring syscall time(4026527400, ...)
 warn: ignoring syscall time(4026527312, ...)

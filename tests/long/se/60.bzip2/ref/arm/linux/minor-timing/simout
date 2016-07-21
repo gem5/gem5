@@ -3,10 +3,10 @@ Redirecting stderr to build/ARM/tests/opt/long/se/60.bzip2/arm/linux/minor-timin
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 14 2015 23:29:19
-gem5 started Sep 15 2015 02:59:16
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/60.bzip2/arm/linux/minor-timing -re /scratch/nilay/GEM5/gem5/tests/run.py build/ARM/tests/opt/long/se/60.bzip2/arm/linux/minor-timing
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 14:58:37
+gem5 executing on e108600-lin, pid 24092
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/60.bzip2/arm/linux/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/60.bzip2/arm/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -27,4 +27,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 1116876142500 because target called exit()
+Exiting @ tick 1128033563500 because target called exit()

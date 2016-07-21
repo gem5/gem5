@@ -1,10 +1,12 @@
+Redirecting stdout to build/ARM/tests/opt/quick/se/00.hello/arm/linux/simple-atomic-dummychecker/simout
+Redirecting stderr to build/ARM/tests/opt/quick/se/00.hello/arm/linux/simple-atomic-dummychecker/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:45:42
-gem5 started Jan 21 2016 14:47:11
-gem5 executing on zizzer, pid 20787
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/00.hello/arm/linux/simple-atomic-dummychecker -re /z/atgutier/gem5/gem5-commit/tests/run.py build/ARM/tests/opt/quick/se/00.hello/arm/linux/simple-atomic-dummychecker
+gem5 compiled Jul 21 2016 14:37:41
+gem5 started Jul 21 2016 14:49:47
+gem5 executing on e108600-lin, pid 23301
+command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/00.hello/arm/linux/simple-atomic-dummychecker -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/arm/linux/simple-atomic-dummychecker
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
