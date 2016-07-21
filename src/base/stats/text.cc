@@ -588,7 +588,6 @@ Text::visit(const Vector2dInfo &info)
     }
 
     VResult tot_vec(info.y);
-    VResult super_total(1, 0.0);
     for (off_type i = 0; i < info.x; ++i) {
         if (havesub && (i >= info.subnames.size() || info.subnames[i].empty()))
             continue;
@@ -601,7 +600,6 @@ Text::visit(const Vector2dInfo &info)
             yvec[j] = info.cvec[iy + j];
             tot_vec[j] += yvec[j];
             total += yvec[j];
-            super_total[0] += yvec[j];
         }
 
         print.name = info.name + "_" +
@@ -620,7 +618,7 @@ Text::visit(const Vector2dInfo &info)
         print.name = info.name;
         print.subnames = total_subname;
         print.desc = info.desc;
-        print.vec = super_total;
+        print.vec = VResult(1, info.total());
         print.flags = print.flags & ~total;
         print(*stream);
     }

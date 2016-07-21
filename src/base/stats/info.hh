@@ -229,6 +229,8 @@ class Vector2dInfo : public Info
     mutable VCounter cvec;
 
     void enable();
+
+    virtual Result total() const = 0;
 };
 
 class FormulaInfo : public VectorInfo

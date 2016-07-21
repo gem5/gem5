@@ -159,6 +159,8 @@ class Vector2dInfoProxy : public InfoProxy<Stat, Vector2dInfo>
 {
   public:
     Vector2dInfoProxy(Stat &stat) : InfoProxy<Stat, Vector2dInfo>(stat) {}
+
+    Result total() const { return this->s.total(); }
 };
 
 struct StorageParams
@@ -1296,6 +1298,19 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
                 return false;
         return true;
 #endif
+    }
+
+    /**
+     * Return a total of all entries in this vector.
+     * @return The total of all vector entries.
+     */
+    Result
+    total() const
+    {
+        Result total = 0.0;
+        for (off_type i = 0; i < size(); ++i)
+            total += data(i)->result();
+        return total;
     }
 
     void
