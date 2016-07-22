@@ -224,16 +224,23 @@ class ClassicTest(Test):
     # The diff ignore list contains all files that shouldn't be diffed
     # using DiffOutFile. These files typically use special-purpose
     # diff tools (e.g., DiffStatFile).
-    diff_ignore_files = (
-        # Stat files use a special stat differ
-        "stats.txt",
-    )
+    diff_ignore_files = FileIgnoreList(
+        names=(
+            # Stat files use a special stat differ
+            "stats.txt",
+        ), rex=(
+        ))
 
     # These files should never be included in the list of
     # reference files. This list should include temporary files
     # and other files that we don't care about.
-    ref_ignore_files = (
-    )
+    ref_ignore_files = FileIgnoreList(
+        names=(
+        ), rex=(
+            # Mercurial sometimes leaves backups when applying MQ patches
+            r"\.orig$",
+            r"\.rej$",
+        ))
 
     def __init__(self, gem5, output_dir, config_tuple,
                  timeout=None,
