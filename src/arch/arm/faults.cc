@@ -439,6 +439,8 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // Determine target exception level
         if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc))
             toEL = EL3;
+        else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc))
+            toEL = EL2;
         else
             toEL = opModeToEL(nextMode());
         if (fromEL > toEL)
