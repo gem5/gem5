@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014,2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -182,21 +182,40 @@ WarnUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 
 
 
-FlushPipeInst::FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst)
+McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
+                             uint64_t _iss, MiscRegIndex _miscReg)
     : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
 {
     flags[IsNonSpeculative] = true;
+    iss = _iss;
+    miscReg = _miscReg;
 }
 
 Fault
-FlushPipeInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+McrMrcMiscInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    Fault fault = std::make_shared<FlushPipe>();
-    return fault;
+    uint32_t cpsr = xc->readMiscReg(MISCREG_CPSR);
+    uint32_t hcr = xc->readMiscReg(MISCREG_HCR);
+    uint32_t scr = xc->readMiscReg(MISCREG_SCR);
+    uint32_t hdcr = xc->readMiscReg(MISCREG_HDCR);
+    uint32_t hstr = xc->readMiscReg(MISCREG_HSTR);
+    uint32_t hcptr = xc->readMiscReg(MISCREG_HCPTR);
+
+    bool hypTrap  = mcrMrc15TrapToHyp(miscReg, hcr, cpsr, scr, hdcr, hstr,
+                                      hcptr, iss);
+    if (hypTrap) {
+        return std::make_shared<HypervisorTrap>(machInst, iss,
+                                                EC_TRAPPED_CP15_MCR_MRC);
+    }
+
+    if (miscReg == MISCREG_DCCMVAC)
+        return std::make_shared<FlushPipe>();
+    else
+        return NoFault;
 }
 
 std::string
-FlushPipeInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+McrMrcMiscInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     return csprintf("%-10s (pipe flush)", mnemonic);
 }

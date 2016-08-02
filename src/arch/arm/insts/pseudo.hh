@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014,2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -115,10 +115,21 @@ class WarnUnimplemented : public ArmStaticInst
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-class FlushPipeInst : public ArmStaticInst
+/**
+ * Certain mrc/mcr instructions act as nops or flush the pipe based on what
+ * register the instruction is trying to access. This inst/class exists so that
+ * we can still check for hyp traps, as the normal nop instruction
+ * does not.
+ */
+class McrMrcMiscInst : public ArmStaticInst
 {
+  private:
+    uint64_t iss;
+    MiscRegIndex miscReg;
+
   public:
-    FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst);
+    McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
+                   uint64_t _iss, MiscRegIndex _miscReg);
 
     Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
 
@@ -126,6 +137,5 @@ class FlushPipeInst : public ArmStaticInst
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
 };
-
 
 #endif
