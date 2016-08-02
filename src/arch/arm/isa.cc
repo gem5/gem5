@@ -359,9 +359,8 @@ ISA::clear64(const ArmISAParams *p)
     if (haveSecurity) {
         miscRegs[MISCREG_SCTLR_EL3] = 0x30c50870;
         miscRegs[MISCREG_SCR_EL3]   = 0x00000030;  // RES1 fields
-    // @todo: uncomment this to enable Virtualization
-    // } else if (haveVirtualization) {
-    //     miscRegs[MISCREG_SCTLR_EL2] = 0x30c50870;
+    } else if (haveVirtualization) {
+        miscRegs[MISCREG_SCTLR_EL2] = 0x30c50870;
     } else {
         miscRegs[MISCREG_SCTLR_EL1] = 0x30c50870;
         // Always non-secure
@@ -391,15 +390,13 @@ ISA::clear64(const ArmISAParams *p)
     // Enforce consistency with system-level settings...
 
     // EL3
-    // (no AArch32/64 interprocessing support for now)
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 15, 12,
-        haveSecurity ? 0x1 : 0x0);
+        haveSecurity ? 0x2 : 0x0);
     // EL2
-    // (no AArch32/64 interprocessing support for now)
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 11, 8,
-        haveVirtualization ? 0x1 : 0x0);
+        haveVirtualization ? 0x2 : 0x0);
     // Large ASID support
     miscRegs[MISCREG_ID_AA64MMFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR0_EL1], 7, 4,

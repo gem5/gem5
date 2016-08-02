@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2015 ARM Limited
+ * Copyright (c) 2010, 2012-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -223,7 +223,7 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     // ARM DDI 0487A.f (ARMv8 ARM) pg J8-5672
     // aarch32/translation/translation/AArch32.TranslateAddress dictates
     // even AArch32 EL0 will use AArch64 translation if EL1 is in AArch64.
-    currState->aarch64 = opModeIs64(currOpMode(_tc)) ||
+    currState->aarch64 = isStage2 || opModeIs64(currOpMode(_tc)) ||
                          ((currEL(_tc) == EL0) && ELIs64(_tc, EL1));
     currState->el = currEL(_tc);
     currState->transState = _trans;
@@ -255,12 +255,11 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
             break;
-          // @todo: uncomment this to enable Virtualization
-          // case EL2:
-          //   assert(haveVirtualization);
-          //   currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
-          //   currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
-          //   break;
+          case EL2:
+            assert(_haveVirtualization);
+            currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
+            currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
+            break;
           case EL3:
             assert(haveSecurity);
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL3);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2015 ARM Limited
+ * Copyright (c) 2010, 2012-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -261,9 +261,8 @@ namespace ArmISA
                 switch (el) {
                   case EL3:
                     return INTREG_SP3;
-                  // @todo: uncomment this to enable Virtualization
-                  // case EL2:
-                  //   return INTREG_SP2;
+                  case EL2:
+                    return INTREG_SP2;
                   case EL1:
                     return INTREG_SP1;
                   case EL0:

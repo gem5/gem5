@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -184,9 +184,8 @@ class ArmSystem : public System
     {
         if (_haveSecurity)
             return EL3;
-        // @todo: uncomment this to enable Virtualization
-        // if (_haveVirtualization)
-        //     return EL2;
+        if (_haveVirtualization)
+            return EL2;
         return EL1;
     }
 

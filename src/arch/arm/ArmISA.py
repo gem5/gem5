@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015 ARM Limited
+# Copyright (c) 2012-2013, 2015-2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -117,8 +117,7 @@ class ArmISA(SimObject):
         "AArch64 Memory Model Feature Register 1")
 
     # !GICv3 CP15 | AdvSIMD | FP | !EL3 | !EL2 | EL1 (AArch64) | EL0 (AArch64)
-    # (no AArch32/64 interprocessing support for now)
-    id_aa64pfr0_el1 = Param.UInt64(0x0000000000000011,
+    id_aa64pfr0_el1 = Param.UInt64(0x0000000000000022,
         "AArch64 Processor Feature Register 0")
     # Reserved for future expansion
     id_aa64pfr1_el1 = Param.UInt64(0x0000000000000000,

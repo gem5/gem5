@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014 ARM Limited
+ * Copyright (c) 2009-2014, 2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -235,14 +235,14 @@ ELIs64(ThreadContext *tc, ExceptionLevel el)
         return opModeIs64(currOpMode(tc));
       case EL1:
         {
-            // @todo: uncomment this to enable Virtualization
-            // if (ArmSystem::haveVirtualization(tc)) {
-            //     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            //     return hcr.rw;
-            // }
-            assert(ArmSystem::haveSecurity(tc));
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            return scr.rw;
+            if (ArmSystem::haveVirtualization(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                return hcr.rw;
+            } else if (ArmSystem::haveSecurity(tc)) {
+                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+                return scr.rw;
+            }
+            panic("must haveSecurity(tc)");
         }
       case EL2:
         {
@@ -286,13 +286,12 @@ purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
         else if (!bits(addr, 55, 48) && tcr.tbi0)
             return bits(addr,55, 0);
         break;
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   assert(ArmSystem::haveVirtualization());
-      //   tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-      //   if (tcr.tbi)
-      //       return addr & mask(56);
-      //   break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        tcr = tc->readMiscReg(MISCREG_TCR_EL2);
+        if (tcr.tbi)
+            return addr & mask(56);
+        break;
       case EL3:
         assert(ArmSystem::haveSecurity(tc));
         if (tcr.tbi)
@@ -320,13 +319,12 @@ purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el)
         else if (!bits(addr, 55, 48) && tcr.tbi0)
             return bits(addr,55, 0);
         break;
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   assert(ArmSystem::haveVirtualization());
-      //   tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-      //   if (tcr.tbi)
-      //       return addr & mask(56);
-      //   break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        tcr = tc->readMiscReg(MISCREG_TCR_EL2);
+        if (tcr.tbi)
+            return addr & mask(56);
+        break;
       case EL3:
         assert(ArmSystem::haveSecurity(tc));
         tcr = tc->readMiscReg(MISCREG_TCR_EL3);

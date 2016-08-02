@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2118,9 +2118,8 @@ canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
       case EL1:
         return secure ? miscRegInfo[reg][MISCREG_PRI_S_RD] :
             miscRegInfo[reg][MISCREG_PRI_NS_RD];
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   return miscRegInfo[reg][MISCREG_HYP_RD];
+      case EL2:
+        return miscRegInfo[reg][MISCREG_HYP_RD];
       case EL3:
         return secure ? miscRegInfo[reg][MISCREG_MON_NS0_RD] :
             miscRegInfo[reg][MISCREG_MON_NS1_RD];
@@ -2163,9 +2162,8 @@ canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
       case EL1:
         return secure ? miscRegInfo[reg][MISCREG_PRI_S_WR] :
             miscRegInfo[reg][MISCREG_PRI_NS_WR];
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   return miscRegInfo[reg][MISCREG_HYP_WR];
+      case EL2:
+        return miscRegInfo[reg][MISCREG_HYP_WR];
       case EL3:
         return secure ? miscRegInfo[reg][MISCREG_MON_NS0_WR] :
             miscRegInfo[reg][MISCREG_MON_NS1_WR];

@@ -338,11 +338,10 @@ ArmFault::getVector64(ThreadContext *tc)
         assert(ArmSystem::haveSecurity(tc));
         vbar = tc->readMiscReg(MISCREG_VBAR_EL3);
         break;
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   assert(ArmSystem::haveVirtualization(tc));
-      //   vbar = tc->readMiscReg(MISCREG_VBAR_EL2);
-      //   break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        vbar = tc->readMiscReg(MISCREG_VBAR_EL2);
+        break;
       case EL1:
         vbar = tc->readMiscReg(MISCREG_VBAR_EL1);
         break;
@@ -596,12 +595,11 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         elr_idx = MISCREG_ELR_EL1;
         spsr_idx = MISCREG_SPSR_EL1;
         break;
-      // @todo: uncomment this to enable Virtualization
-      // case EL2:
-      //   assert(ArmSystem::haveVirtualization());
-      //   elr_idx = MISCREG_ELR_EL2;
-      //   spsr_idx = MISCREG_SPSR_EL2;
-      //   break;
+      case EL2:
+        assert(ArmSystem::haveVirtualization(tc));
+        elr_idx = MISCREG_ELR_EL2;
+        spsr_idx = MISCREG_SPSR_EL2;
+        break;
       case EL3:
         assert(ArmSystem::haveSecurity(tc));
         elr_idx = MISCREG_ELR_EL3;
