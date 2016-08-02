@@ -992,20 +992,10 @@ TableWalker::processWalkAArch64()
                 stateQueues[start_lookup_level].size());
         stateQueues[start_lookup_level].push_back(currState);
         currState = NULL;
-    } else if (!currState->functional) {
+    } else {
         fetchDescriptor(desc_addr, (uint8_t*)&currState->longDesc.data,
                         sizeof(uint64_t), flag, -1, NULL,
                         &TableWalker::doLongDescriptor);
-        f = currState->fault;
-    } else {
-        RequestPtr req = new Request(desc_addr, sizeof(uint64_t), flag,
-                                     masterId);
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-        pkt->dataStatic((uint8_t*) &currState->longDesc.data);
-        port->sendFunctional(pkt);
-        doLongDescriptor();
-        delete req;
-        delete pkt;
         f = currState->fault;
     }
 
