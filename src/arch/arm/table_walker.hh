@@ -911,8 +911,8 @@ class TableWalker : public MemObject
                   uint8_t texcb, bool s);
     void memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
                       LongDescriptor &lDescriptor);
-    void memAttrsAArch64(ThreadContext *tc, TlbEntry &te, uint8_t attrIndx,
-                         uint8_t sh);
+    void memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
+                         LongDescriptor &lDescriptor);
 
     static LookupLevel toLookupLevel(uint8_t lookup_level_as_int);
 

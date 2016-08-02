@@ -1337,52 +1337,82 @@ TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
 }
 
 void
-TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te, uint8_t attrIndx,
-                             uint8_t sh)
+TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
+                             LongDescriptor &lDescriptor)
 {
-    DPRINTF(TLBVerbose, "memAttrsAArch64 AttrIndx:%#x sh:%#x\n", attrIndx, sh);
+    uint8_t attr;
+    uint8_t attr_hi;
+    uint8_t attr_lo;
+    uint8_t sh = lDescriptor.sh();
 
-    // Select MAIR
-    uint64_t mair;
-    switch (currState->el) {
-      case EL0:
-      case EL1:
-        mair = tc->readMiscReg(MISCREG_MAIR_EL1);
-        break;
-      case EL2:
-        mair = tc->readMiscReg(MISCREG_MAIR_EL2);
-        break;
-      case EL3:
-        mair = tc->readMiscReg(MISCREG_MAIR_EL3);
-        break;
-      default:
-        panic("Invalid exception level");
-        break;
+    if (isStage2) {
+        attr = lDescriptor.memAttr();
+        uint8_t attr_hi = (attr >> 2) & 0x3;
+        uint8_t attr_lo =  attr       & 0x3;
+
+        DPRINTF(TLBVerbose, "memAttrsAArch64 MemAttr:%#x sh:%#x\n", attr, sh);
+
+        if (attr_hi == 0) {
+            te.mtype        = attr_lo == 0 ? TlbEntry::MemoryType::StronglyOrdered
+                                            : TlbEntry::MemoryType::Device;
+            te.outerAttrs   = 0;
+            te.innerAttrs   = attr_lo == 0 ? 1 : 3;
+            te.nonCacheable = true;
+        } else {
+            te.mtype        = TlbEntry::MemoryType::Normal;
+            te.outerAttrs   = attr_hi == 1 ? 0 :
+                              attr_hi == 2 ? 2 : 1;
+            te.innerAttrs   = attr_lo == 1 ? 0 :
+                              attr_lo == 2 ? 6 : 5;
+            te.nonCacheable = (attr_hi == 1) || (attr_lo == 1);
+        }
+    } else {
+        uint8_t attrIndx = lDescriptor.attrIndx();
+
+        DPRINTF(TLBVerbose, "memAttrsAArch64 AttrIndx:%#x sh:%#x\n", attrIndx, sh);
+
+        // Select MAIR
+        uint64_t mair;
+        switch (currState->el) {
+          case EL0:
+          case EL1:
+            mair = tc->readMiscReg(MISCREG_MAIR_EL1);
+            break;
+          case EL2:
+            mair = tc->readMiscReg(MISCREG_MAIR_EL2);
+            break;
+          case EL3:
+            mair = tc->readMiscReg(MISCREG_MAIR_EL3);
+            break;
+          default:
+            panic("Invalid exception level");
+            break;
+        }
+
+        // Select attributes
+        attr = bits(mair, 8 * attrIndx + 7, 8 * attrIndx);
+        attr_lo = bits(attr, 3, 0);
+        attr_hi = bits(attr, 7, 4);
+
+        // Memory type
+        te.mtype = attr_hi == 0 ? TlbEntry::MemoryType::Device : TlbEntry::MemoryType::Normal;
+
+        // Cacheability
+        te.nonCacheable = false;
+        if (te.mtype == TlbEntry::MemoryType::Device ||  // Device memory
+            attr_hi == 0x8 ||  // Normal memory, Outer Non-cacheable
+            attr_lo == 0x8) {  // Normal memory, Inner Non-cacheable
+            te.nonCacheable = true;
+        }
+
+        te.shareable       = sh == 2;
+        te.outerShareable = (sh & 0x2) ? true : false;
+        // Attributes formatted according to the 64-bit PAR
+        te.attributes = ((uint64_t) attr << 56) |
+            (1 << 11) |     // LPAE bit
+            (te.ns << 9) |  // NS bit
+            (sh << 7);
     }
-
-    // Select attributes
-    uint8_t attr = bits(mair, 8 * attrIndx + 7, 8 * attrIndx);
-    uint8_t attr_lo = bits(attr, 3, 0);
-    uint8_t attr_hi = bits(attr, 7, 4);
-
-    // Memory type
-    te.mtype = attr_hi == 0 ? TlbEntry::MemoryType::Device : TlbEntry::MemoryType::Normal;
-
-    // Cacheability
-    te.nonCacheable = false;
-    if (te.mtype == TlbEntry::MemoryType::Device ||  // Device memory
-        attr_hi == 0x8 ||  // Normal memory, Outer Non-cacheable
-        attr_lo == 0x8) {  // Normal memory, Inner Non-cacheable
-        te.nonCacheable = true;
-    }
-
-    te.shareable       = sh == 2;
-    te.outerShareable = (sh & 0x2) ? true : false;
-    // Attributes formatted according to the 64-bit PAR
-    te.attributes = ((uint64_t) attr << 56) |
-        (1 << 11) |     // LPAE bit
-        (te.ns << 9) |  // NS bit
-        (sh << 7);
 }
 
 void
@@ -2038,8 +2068,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
                (currState->userTable && (descriptor.ap() & 0x1));
         }
         if (currState->aarch64)
-            memAttrsAArch64(currState->tc, te, currState->longDesc.attrIndx(),
-                            currState->longDesc.sh());
+            memAttrsAArch64(currState->tc, te, lDescriptor);
         else
             memAttrsLPAE(currState->tc, te, lDescriptor);
     } else {
