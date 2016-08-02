@@ -841,6 +841,12 @@ HypervisorCall::HypervisorCall(ExtMachInst _machInst, uint32_t _imm) :
 {}
 
 ExceptionClass
+HypervisorCall::ec(ThreadContext *tc) const
+{
+    return from64 ? EC_HVC_64 : vals.ec;
+}
+
+ExceptionClass
 HypervisorTrap::ec(ThreadContext *tc) const
 {
     return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
