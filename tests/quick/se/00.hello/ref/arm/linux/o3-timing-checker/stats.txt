@@ -4,11 +4,11 @@ sim_seconds                                  0.000017                       # Nu
 sim_ticks                                    17232500                       # Number of ticks simulated
 final_tick                                   17232500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  43349                       # Simulator instruction rate (inst/s)
-host_op_rate                                    50759                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              162616088                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 265888                       # Number of bytes of host memory used
-host_seconds                                     0.11                       # Real time elapsed on the host
+host_inst_rate                                  74373                       # Simulator instruction rate (inst/s)
+host_op_rate                                    87086                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              279001739                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 265896                       # Number of bytes of host memory used
+host_seconds                                     0.06                       # Real time elapsed on the host
 sim_insts                                        4592                       # Number of instructions simulated
 sim_ops                                          5378                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -803,7 +803,7 @@ system.cpu.int_regfile_writes                    4270                       # nu
 system.cpu.fp_regfile_reads                        32                       # number of floating regfile reads
 system.cpu.cc_regfile_reads                     27801                       # number of cc regfile reads
 system.cpu.cc_regfile_writes                     3276                       # number of cc regfile writes
-system.cpu.misc_regfile_reads                    2978                       # number of misc regfile reads
+system.cpu.misc_regfile_reads                    2980                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                     24                       # number of misc regfile writes
 system.cpu.dcache.tags.pwrStateResidencyTicks::UNDEFINED     17232500                       # Cumulative time (in ticks) in various power states
 system.cpu.dcache.tags.replacements                 0                       # number of replacements

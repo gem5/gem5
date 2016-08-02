@@ -3,9 +3,9 @@ Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realvi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:37:41
-gem5 started Jul 21 2016 14:38:21
-gem5 executing on e108600-lin, pid 23069
+gem5 compiled Aug  1 2016 17:10:05
+gem5 started Aug  1 2016 17:10:34
+gem5 executing on e108600-lin, pid 12238
 command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview64-switcheroo-full -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/fs/10.linux-boot/arm/linux/realview64-switcheroo-full
 
 Selected 64-bit ARM architecture, updating default disk image...
