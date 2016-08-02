@@ -123,49 +123,49 @@ Pl390::readDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
 
-    ContextID ctx_id = pkt->req->contextId();
+    ContextID ctx = pkt->req->contextId();
 
     DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
     if (GICD_ISENABLER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISENABLER.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getIntEnabled(ctx_id, ix));
+        pkt->set<uint32_t>(getIntEnabled(ctx, ix));
         goto done;
     }
 
     if (GICD_ICENABLER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICENABLER.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getIntEnabled(ctx_id, ix));
+        pkt->set<uint32_t>(getIntEnabled(ctx, ix));
         goto done;
     }
 
     if (GICD_ISPENDR.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISPENDR.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
+        pkt->set<uint32_t>(getPendingInt(ctx, ix));
         goto done;
     }
 
     if (GICD_ICPENDR.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICPENDR.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
+        pkt->set<uint32_t>(getPendingInt(ctx, ix));
         goto done;
     }
 
     if (GICD_ISACTIVER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISACTIVER.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
+        pkt->set<uint32_t>(getPendingInt(ctx, ix));
         goto done;
     }
 
     if (GICD_ICACTIVER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICACTIVER.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
+        pkt->set<uint32_t>(getPendingInt(ctx, ix));
         goto done;
     }
 
@@ -176,19 +176,19 @@ Pl390::readDistributor(PacketPtr pkt)
 
         switch (pkt->getSize()) {
           case 1:
-            pkt->set<uint8_t>(getIntPriority(ctx_id, int_num));
+            pkt->set<uint8_t>(getIntPriority(ctx, int_num));
             break;
           case 2:
             assert((int_num + 1) < INT_LINES_MAX);
-            pkt->set<uint16_t>(getIntPriority(ctx_id, int_num) |
-                               getIntPriority(ctx_id, int_num+1) << 8);
+            pkt->set<uint16_t>(getIntPriority(ctx, int_num) |
+                               getIntPriority(ctx, int_num+1) << 8);
             break;
           case 4:
             assert((int_num + 3) < INT_LINES_MAX);
-            pkt->set<uint32_t>(getIntPriority(ctx_id, int_num) |
-                               getIntPriority(ctx_id, int_num+1) << 8 |
-                               getIntPriority(ctx_id, int_num+2) << 16 |
-                               getIntPriority(ctx_id, int_num+3) << 24);
+            pkt->set<uint32_t>(getIntPriority(ctx, int_num) |
+                               getIntPriority(ctx, int_num+1) << 8 |
+                               getIntPriority(ctx, int_num+2) << 16 |
+                               getIntPriority(ctx, int_num+3) << 24);
             break;
           default:
             panic("Invalid size while reading priority regs in GIC: %d\n",
@@ -216,13 +216,13 @@ Pl390::readDistributor(PacketPtr pkt)
                                    cpuTarget[int_num+3] << 24) ;
             }
         } else {
-            assert(ctx_id < sys->numRunningContexts());
+            assert(ctx < sys->numRunningContexts());
             uint32_t ctx_mask;
             if (gem5ExtensionsEnabled) {
-                ctx_mask = ctx_id;
+                ctx_mask = ctx;
             } else {
             // convert the CPU id number into a bit mask
-                ctx_mask = power(2, ctx_id);
+                ctx_mask = power(2, ctx);
             }
             // replicate the 8-bit mask 4 times in a 32-bit word
             ctx_mask |= ctx_mask << 8;
@@ -269,28 +269,28 @@ Pl390::readCpu(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - cpuAddr;
 
     assert(pkt->req->hasContextId());
-    ContextID ctx_id = pkt->req->contextId();
-    assert(ctx_id < sys->numRunningContexts());
+    ContextID ctx = pkt->req->contextId();
+    assert(ctx < sys->numRunningContexts());
 
     DPRINTF(GIC, "gic cpu read register %#x cpu context: %d\n", daddr,
-            ctx_id);
+            ctx);
 
     switch(daddr) {
       case GICC_IIDR:
         pkt->set<uint32_t>(0);
         break;
       case GICC_CTLR:
-        pkt->set<uint32_t>(cpuEnabled[ctx_id]);
+        pkt->set<uint32_t>(cpuEnabled[ctx]);
         break;
       case GICC_PMR:
-        pkt->set<uint32_t>(cpuPriority[ctx_id]);
+        pkt->set<uint32_t>(cpuPriority[ctx]);
         break;
       case GICC_BPR:
-        pkt->set<uint32_t>(cpuBpr[ctx_id]);
+        pkt->set<uint32_t>(cpuBpr[ctx]);
         break;
       case GICC_IAR:
-        if (enabled && cpuEnabled[ctx_id]) {
-            int active_int = cpuHighestInt[ctx_id];
+        if (enabled && cpuEnabled[ctx]) {
+            int active_int = cpuHighestInt[ctx];
             IAR iar = 0;
             iar.ack_id = active_int;
             iar.cpu_id = 0;
@@ -304,39 +304,39 @@ Pl390::readCpu(PacketPtr pkt)
                         // See which CPU generated the interrupt
                         uint8_t cpugen =
                             bits(cpuSgiPending[active_int], 7 + 8 * x, 8 * x);
-                        if (cpugen & (1 << ctx_id)) {
+                        if (cpugen & (1 << ctx)) {
                             iar.cpu_id = x;
                             break;
                         }
                     }
-                    uint64_t sgi_num = ULL(1) << (ctx_id + 8 * iar.cpu_id);
+                    uint64_t sgi_num = ULL(1) << (ctx + 8 * iar.cpu_id);
                     cpuSgiActive[iar.ack_id] |= sgi_num;
                     cpuSgiPending[iar.ack_id] &= ~sgi_num;
                 } else {
                     uint64_t sgi_num = ULL(1) << iar.ack_id;
-                    cpuSgiActiveExt[ctx_id] |= sgi_num;
-                    cpuSgiPendingExt[ctx_id] &= ~sgi_num;
+                    cpuSgiActiveExt[ctx] |= sgi_num;
+                    cpuSgiPendingExt[ctx] &= ~sgi_num;
                 }
             } else if (active_int < (SGI_MAX + PPI_MAX) ) {
-                uint32_t int_num = 1 << (cpuHighestInt[ctx_id] - SGI_MAX);
-                cpuPpiActive[ctx_id] |= int_num;
+                uint32_t int_num = 1 << (cpuHighestInt[ctx] - SGI_MAX);
+                cpuPpiActive[ctx] |= int_num;
                 updateRunPri();
-                cpuPpiPending[ctx_id] &= ~int_num;
+                cpuPpiPending[ctx] &= ~int_num;
 
             } else {
-                uint32_t int_num = 1 << intNumToBit(cpuHighestInt[ctx_id]);
-                activeInt[intNumToWord(cpuHighestInt[ctx_id])] |= int_num;
+                uint32_t int_num = 1 << intNumToBit(cpuHighestInt[ctx]);
+                getActiveInt(ctx, intNumToWord(cpuHighestInt[ctx])) |= int_num;
                 updateRunPri();
-                getPendingInt(ctx_id, intNumToWord(cpuHighestInt[ctx_id]))
+                getPendingInt(ctx, intNumToWord(cpuHighestInt[ctx]))
                   &= ~int_num;
             }
 
             DPRINTF(Interrupt,"CPU %d reading IAR.id=%d IAR.cpu=%d, iar=0x%x\n",
-                    ctx_id, iar.ack_id, iar.cpu_id, iar);
-            cpuHighestInt[ctx_id] = SPURIOUS_INT;
+                    ctx, iar.ack_id, iar.cpu_id, iar);
+            cpuHighestInt[ctx] = SPURIOUS_INT;
             updateIntState(-1);
             pkt->set<uint32_t>(iar);
-            platform->intrctrl->clear(ctx_id, ArmISA::INT_IRQ, 0);
+            platform->intrctrl->clear(ctx, ArmISA::INT_IRQ, 0);
         } else {
              pkt->set<uint32_t>(SPURIOUS_INT);
         }
@@ -363,7 +363,7 @@ Pl390::writeDistributor(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - distAddr;
 
     assert(pkt->req->hasContextId());
-    ContextID ctx_id = pkt->req->contextId();
+    ContextID ctx = pkt->req->contextId();
 
     uint32_t pkt_data M5_VAR_USED;
     switch (pkt->getSize())
@@ -388,14 +388,14 @@ Pl390::writeDistributor(PacketPtr pkt)
     if (GICD_ISENABLER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISENABLER.start()) >> 2;
         assert(ix < 32);
-        getIntEnabled(ctx_id, ix) |= pkt->get<uint32_t>();
+        getIntEnabled(ctx, ix) |= pkt->get<uint32_t>();
         goto done;
     }
 
     if (GICD_ICENABLER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICENABLER.start()) >> 2;
         assert(ix < 32);
-        getIntEnabled(ctx_id, ix) &= ~pkt->get<uint32_t>();
+        getIntEnabled(ctx, ix) &= ~pkt->get<uint32_t>();
         goto done;
     }
 
@@ -403,7 +403,7 @@ Pl390::writeDistributor(PacketPtr pkt)
         uint32_t ix = (daddr - GICD_ISPENDR.start()) >> 2;
         auto mask = pkt->get<uint32_t>();
         if (ix == 0) mask &= SGI_MASK; // Don't allow SGIs to be changed
-        getPendingInt(ctx_id, ix) |= mask;
+        getPendingInt(ctx, ix) |= mask;
         updateIntState(ix);
         goto done;
     }
@@ -412,20 +412,20 @@ Pl390::writeDistributor(PacketPtr pkt)
         uint32_t ix = (daddr - GICD_ICPENDR.start()) >> 2;
         auto mask = pkt->get<uint32_t>();
         if (ix == 0) mask &= SGI_MASK; // Don't allow SGIs to be changed
-        getPendingInt(ctx_id, ix) &= ~mask;
+        getPendingInt(ctx, ix) &= ~mask;
         updateIntState(ix);
         goto done;
     }
 
     if (GICD_ISACTIVER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISACTIVER.start()) >> 2;
-        getActiveInt(ctx_id, ix) |= pkt->get<uint32_t>();
+        getActiveInt(ctx, ix) |= pkt->get<uint32_t>();
         goto done;
     }
 
     if (GICD_ICACTIVER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICACTIVER.start()) >> 2;
-        getActiveInt(ctx_id, ix) &= ~pkt->get<uint32_t>();
+        getActiveInt(ctx, ix) &= ~pkt->get<uint32_t>();
         goto done;
     }
 
@@ -433,20 +433,20 @@ Pl390::writeDistributor(PacketPtr pkt)
         Addr int_num = daddr - GICD_IPRIORITYR.start();
         switch(pkt->getSize()) {
           case 1:
-            getIntPriority(ctx_id, int_num) = pkt->get<uint8_t>();
+            getIntPriority(ctx, int_num) = pkt->get<uint8_t>();
             break;
           case 2: {
             auto tmp16 = pkt->get<uint16_t>();
-            getIntPriority(ctx_id, int_num) = bits(tmp16, 7, 0);
-            getIntPriority(ctx_id, int_num + 1) = bits(tmp16, 15, 8);
+            getIntPriority(ctx, int_num) = bits(tmp16, 7, 0);
+            getIntPriority(ctx, int_num + 1) = bits(tmp16, 15, 8);
             break;
           }
           case 4: {
             auto tmp32 = pkt->get<uint32_t>();
-            getIntPriority(ctx_id, int_num) = bits(tmp32, 7, 0);
-            getIntPriority(ctx_id, int_num + 1) = bits(tmp32, 15, 8);
-            getIntPriority(ctx_id, int_num + 2) = bits(tmp32, 23, 16);
-            getIntPriority(ctx_id, int_num + 3) = bits(tmp32, 31, 24);
+            getIntPriority(ctx, int_num) = bits(tmp32, 7, 0);
+            getIntPriority(ctx, int_num + 1) = bits(tmp32, 15, 8);
+            getIntPriority(ctx, int_num + 2) = bits(tmp32, 23, 16);
+            getIntPriority(ctx, int_num + 3) = bits(tmp32, 31, 24);
             break;
           }
           default:
@@ -504,7 +504,7 @@ Pl390::writeDistributor(PacketPtr pkt)
                 gem5ExtensionsEnabled ? "enabled" : "disabled");
         break;
       case GICD_SGIR:
-        softInt(ctx_id, pkt->get<uint32_t>());
+        softInt(ctx, pkt->get<uint32_t>());
         break;
       default:
         panic("Tried to write Gic distributor at offset %#x\n", daddr);
@@ -522,72 +522,72 @@ Pl390::writeCpu(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - cpuAddr;
 
     assert(pkt->req->hasContextId());
-    ContextID ctx_id = pkt->req->contextId();
+    ContextID ctx = pkt->req->contextId();
     IAR iar;
 
     DPRINTF(GIC, "gic cpu write register cpu:%d %#x val: %#x\n",
-            ctx_id, daddr, pkt->get<uint32_t>());
+            ctx, daddr, pkt->get<uint32_t>());
 
     switch(daddr) {
       case GICC_CTLR:
-        cpuEnabled[ctx_id] = pkt->get<uint32_t>();
+        cpuEnabled[ctx] = pkt->get<uint32_t>();
         break;
       case GICC_PMR:
-        cpuPriority[ctx_id] = pkt->get<uint32_t>();
+        cpuPriority[ctx] = pkt->get<uint32_t>();
         break;
       case GICC_BPR:
-        cpuBpr[ctx_id] = pkt->get<uint32_t>();
+        cpuBpr[ctx] = pkt->get<uint32_t>();
         break;
       case GICC_EOIR:
         iar = pkt->get<uint32_t>();
         if (iar.ack_id < SGI_MAX) {
             // Clear out the bit that corrseponds to the cleared int
-            uint64_t clr_int = ULL(1) << (ctx_id + 8 * iar.cpu_id);
+            uint64_t clr_int = ULL(1) << (ctx + 8 * iar.cpu_id);
             if (!(cpuSgiActive[iar.ack_id] & clr_int) &&
-                !(cpuSgiActiveExt[ctx_id] & (1 << iar.ack_id)))
+                !(cpuSgiActiveExt[ctx] & (1 << iar.ack_id)))
                 panic("Done handling a SGI that isn't active?\n");
             if (gem5ExtensionsEnabled)
-                cpuSgiActiveExt[ctx_id] &= ~(1 << iar.ack_id);
+                cpuSgiActiveExt[ctx] &= ~(1 << iar.ack_id);
             else
                 cpuSgiActive[iar.ack_id] &= ~clr_int;
         } else if (iar.ack_id < (SGI_MAX + PPI_MAX) ) {
             uint32_t int_num = 1 << (iar.ack_id - SGI_MAX);
-            if (!(cpuPpiActive[ctx_id] & int_num))
+            if (!(cpuPpiActive[ctx] & int_num))
                 panic("CPU %d Done handling a PPI interrupt "
-                      "that isn't active?\n", ctx_id);
-            cpuPpiActive[ctx_id] &= ~int_num;
+                      "that isn't active?\n", ctx);
+            cpuPpiActive[ctx] &= ~int_num;
         } else {
             uint32_t int_num = 1 << intNumToBit(iar.ack_id);
-            if (!(getActiveInt(ctx_id, intNumToWord(iar.ack_id)) & int_num))
+            if (!(getActiveInt(ctx, intNumToWord(iar.ack_id)) & int_num))
                 warn("Done handling interrupt that isn't active: %d\n",
                       intNumToBit(iar.ack_id));
-            getActiveInt(ctx_id, intNumToWord(iar.ack_id)) &= ~int_num;
+            getActiveInt(ctx, intNumToWord(iar.ack_id)) &= ~int_num;
         }
         updateRunPri();
         DPRINTF(Interrupt, "CPU %d done handling intr IAR = %d from cpu %d\n",
-                ctx_id, iar.ack_id, iar.cpu_id);
+                ctx, iar.ack_id, iar.cpu_id);
         break;
       default:
         panic("Tried to write Gic cpu at offset %#x\n", daddr);
         break;
     }
-    if (cpuEnabled[ctx_id]) updateIntState(-1);
+    if (cpuEnabled[ctx]) updateIntState(-1);
     pkt->makeAtomicResponse();
     return cpuPioDelay;
 }
 
 Pl390::BankedRegs&
-Pl390::getBankedRegs(ContextID ctx_id) {
-    if (bankedRegs.size() <= ctx_id)
-        bankedRegs.resize(ctx_id + 1);
+Pl390::getBankedRegs(ContextID ctx) {
+    if (bankedRegs.size() <= ctx)
+        bankedRegs.resize(ctx + 1);
 
-    if (!bankedRegs[ctx_id])
-        bankedRegs[ctx_id] = new BankedRegs;
-    return *bankedRegs[ctx_id];
+    if (!bankedRegs[ctx])
+        bankedRegs[ctx] = new BankedRegs;
+    return *bankedRegs[ctx];
 }
 
 void
-Pl390::softInt(ContextID ctx_id, SWI swi)
+Pl390::softInt(ContextID ctx, SWI swi)
 {
     if (gem5ExtensionsEnabled) {
         switch (swi.list_type) {
@@ -595,7 +595,7 @@ Pl390::softInt(ContextID ctx_id, SWI swi)
              // interrupt cpus specified
              int dest = swi.cpu_list;
              DPRINTF(IPI, "Generating softIRQ from CPU %d for CPU %d\n",
-                    ctx_id, dest);
+                    ctx, dest);
              if (cpuEnabled[dest]) {
                  cpuSgiPendingExt[dest] |= (1 << swi.sgi_id);
                  DPRINTF(IPI, "SGI[%d]=%#x\n", dest,
@@ -616,11 +616,11 @@ Pl390::softInt(ContextID ctx_id, SWI swi)
           case 2: {
             // Interrupt requesting cpu only
             DPRINTF(IPI, "Generating softIRQ from CPU %d for CPU %d\n",
-                    ctx_id, ctx_id);
-            if (cpuEnabled[ctx_id]) {
-                cpuSgiPendingExt[ctx_id] |= (1 << swi.sgi_id);
-                DPRINTF(IPI, "SGI[%d]=%#x\n", ctx_id,
-                        cpuSgiPendingExt[ctx_id]);
+                    ctx, ctx);
+            if (cpuEnabled[ctx]) {
+                cpuSgiPendingExt[ctx] |= (1 << swi.sgi_id);
+                DPRINTF(IPI, "SGI[%d]=%#x\n", ctx,
+                        cpuSgiPendingExt[ctx]);
             }
           } break;
         }
@@ -636,19 +636,19 @@ Pl390::softInt(ContextID ctx_id, SWI swi)
             break;
           case 2:
             // interrupt requesting cpu only
-            swi.cpu_list = 1 << ctx_id;
+            swi.cpu_list = 1 << ctx;
             break;
             // else interrupt cpus specified
         }
 
-        DPRINTF(IPI, "Generating softIRQ from CPU %d for %#x\n", ctx_id,
+        DPRINTF(IPI, "Generating softIRQ from CPU %d for %#x\n", ctx,
                 swi.cpu_list);
         for (int i = 0; i < sys->numContexts(); i++) {
             DPRINTF(IPI, "Processing CPU %d\n", i);
             if (!cpuEnabled[i])
                 continue;
             if (swi.cpu_list & (1 << i))
-                cpuSgiPending[swi.sgi_id] |= (1 << i) << (8 * ctx_id);
+                cpuSgiPending[swi.sgi_id] |= (1 << i) << (8 * ctx);
             DPRINTF(IPI, "SGI[%d]=%#x\n", swi.sgi_id,
                     cpuSgiPending[swi.sgi_id]);
         }

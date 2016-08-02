@@ -189,9 +189,9 @@ class Pl390 : public BaseGic
      * 1b per interrupt, 32 bits per word, 31 words */
     uint32_t intEnabled[INT_BITS_MAX-1];
 
-    uint32_t& getIntEnabled(ContextID ctx_id, uint32_t ix) {
+    uint32_t& getIntEnabled(ContextID ctx, uint32_t ix) {
         if (ix == 0) {
-            return getBankedRegs(ctx_id).intEnabled;
+            return getBankedRegs(ctx).intEnabled;
         } else {
             return intEnabled[ix - 1];
         }
@@ -202,10 +202,10 @@ class Pl390 : public BaseGic
      * 1b per interrupt, 32 bits per word, 31 words */
     uint32_t pendingInt[INT_BITS_MAX-1];
 
-    uint32_t& getPendingInt(ContextID ctx_id, uint32_t ix) {
+    uint32_t& getPendingInt(ContextID ctx, uint32_t ix) {
         assert(ix < INT_BITS_MAX);
         if (ix == 0) {
-            return getBankedRegs(ctx_id).pendingInt;
+            return getBankedRegs(ctx).pendingInt;
         } else {
             return pendingInt[ix - 1];
         }
@@ -216,10 +216,10 @@ class Pl390 : public BaseGic
      * 1b per interrupt, 32 bits per word, 31 words */
     uint32_t activeInt[INT_BITS_MAX-1];
 
-    uint32_t& getActiveInt(ContextID ctx_id, uint32_t ix) {
+    uint32_t& getActiveInt(ContextID ctx, uint32_t ix) {
         assert(ix < INT_BITS_MAX);
         if (ix == 0) {
-            return getBankedRegs(ctx_id).activeInt;
+            return getBankedRegs(ctx).activeInt;
         } else {
             return activeInt[ix - 1];
         }
@@ -234,10 +234,10 @@ class Pl390 : public BaseGic
      */
     uint8_t intPriority[GLOBAL_INT_LINES];
 
-    uint8_t& getIntPriority(ContextID ctx_id, uint32_t ix) {
+    uint8_t& getIntPriority(ContextID ctx, uint32_t ix) {
         assert(ix < INT_LINES_MAX);
         if (ix < SGI_MAX + PPI_MAX) {
-            return getBankedRegs(ctx_id).intPriority[ix];
+            return getBankedRegs(ctx).intPriority[ix];
         } else {
             return intPriority[ix - (SGI_MAX + PPI_MAX)];
         }
@@ -248,10 +248,10 @@ class Pl390 : public BaseGic
      */
     uint8_t cpuTarget[GLOBAL_INT_LINES];
 
-    uint8_t& getCpuTarget(ContextID ctx_id, uint32_t ix) {
+    uint8_t& getCpuTarget(ContextID ctx, uint32_t ix) {
         assert(ix < INT_LINES_MAX);
         if (ix < SGI_MAX + PPI_MAX) {
-            return getBankedRegs(ctx_id).cpuTarget[ix];
+            return getBankedRegs(ctx).cpuTarget[ix];
         } else {
             return cpuTarget[ix - (SGI_MAX + PPI_MAX)];
         }
@@ -297,7 +297,7 @@ class Pl390 : public BaseGic
     /** software generated interrupt
      * @param data data to decode that indicates which cpus to interrupt
      */
-    void softInt(ContextID ctx_id, SWI swi);
+    void softInt(ContextID ctx, SWI swi);
 
     /** See if some processor interrupt flags need to be enabled/disabled
      * @param hint which set of interrupts needs to be checked
