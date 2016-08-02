@@ -51,15 +51,29 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+const AddrRange Pl390::GICD_ISENABLER (0x100, 0x17f);
+const AddrRange Pl390::GICD_ICENABLER (0x180, 0x1ff);
+const AddrRange Pl390::GICD_ISPENDR   (0x200, 0x27f);
+const AddrRange Pl390::GICD_ICPENDR   (0x280, 0x2ff);
+const AddrRange Pl390::GICD_ISACTIVER (0x300, 0x37f);
+const AddrRange Pl390::GICD_ICACTIVER (0x380, 0x3ff);
+const AddrRange Pl390::GICD_IPRIORITYR(0x400, 0x7ff);
+const AddrRange Pl390::GICD_ITARGETSR (0x800, 0xbff);
+const AddrRange Pl390::GICD_ICFGR     (0xc00, 0xcff);
+
 Pl390::Pl390(const Params *p)
     : BaseGic(p), distAddr(p->dist_addr),
       cpuAddr(p->cpu_addr), distPioDelay(p->dist_pio_delay),
       cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
-      enabled(false), itLines(p->it_lines),
-      haveGem5Extensions(p->gem5_extensions), irqEnable(false)
+      enabled(false), haveGem5Extensions(p->gem5_extensions),
+      itLines(p->it_lines),
+      intEnabled {}, pendingInt {}, activeInt {},
+      intPriority {}, cpuTarget {}, intConfig {},
+      cpuSgiPending {}, cpuSgiActive {},
+      cpuSgiPendingExt {}, cpuSgiActiveExt {},
+      cpuPpiPending {}, cpuPpiActive {},
+      irqEnable(false)
 {
-    itLinesLog2 = ceilLog2(itLines);
-
     for (int x = 0; x < CPU_MAX; x++) {
         iccrpr[x] = 0xff;
         cpuEnabled[x] = false;
@@ -71,38 +85,6 @@ Pl390::Pl390(const Params *p)
     }
     DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled[0],
             cpuEnabled[1]);
-
-    for (int x = 0; x < INT_BITS_MAX; x++) {
-        intEnabled[x] = 0;
-        pendingInt[x] = 0;
-        activeInt[x] = 0;
-    }
-
-    for (int x = 0; x < INT_LINES_MAX; x++) {
-        intPriority[x] = 0;
-        cpuTarget[x] = 0;
-    }
-
-    for (int x = 0; x < INT_BITS_MAX*2; x++) {
-        intConfig[x] = 0;
-    }
-
-    for (int x = 0; x < SGI_MAX; x++) {
-        cpuSgiActive[x] = 0;
-        cpuSgiPending[x] = 0;
-    }
-    for (int x = 0; x < CPU_MAX; x++) {
-        cpuPpiActive[x] = 0;
-        cpuPpiPending[x] = 0;
-        cpuSgiActiveExt[x] = 0;
-        cpuSgiPendingExt[x] = 0;
-    }
-
-    for (int i = 0; i < CPU_MAX; i++) {
-        for (int j = 0; j < (SGI_MAX + PPI_MAX); j++) {
-            bankedIntPriority[i][j] = 0;
-        }
-    }
 
     gem5ExtensionsEnabled = false;
 }
@@ -145,63 +127,68 @@ Pl390::readDistributor(PacketPtr pkt)
 
     DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
-    if (daddr >= GICD_ISENABLER_ST && daddr < GICD_ISENABLER_ED + 4) {
-        assert((daddr-GICD_ISENABLER_ST) >> 2 < 32);
-        pkt->set<uint32_t>(intEnabled[(daddr-GICD_ISENABLER_ST)>>2]);
+    if (GICD_ISENABLER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ISENABLER.start()) >> 2;
+        assert(ix < 32);
+        pkt->set<uint32_t>(getIntEnabled(ctx_id, ix));
         goto done;
     }
 
-    if (daddr >= GICD_ICENABLER_ST && daddr < GICD_ICENABLER_ED + 4) {
-        assert((daddr-GICD_ICENABLER_ST) >> 2 < 32);
-        pkt->set<uint32_t>(intEnabled[(daddr-GICD_ICENABLER_ST)>>2]);
+    if (GICD_ICENABLER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICENABLER.start()) >> 2;
+        assert(ix < 32);
+        pkt->set<uint32_t>(getIntEnabled(ctx_id, ix));
         goto done;
     }
 
-    if (daddr >= GICD_ISPENDR_ST && daddr < GICD_ISPENDR_ED + 4) {
-        assert((daddr-GICD_ISPENDR_ST) >> 2 < 32);
-        pkt->set<uint32_t>(pendingInt[(daddr-GICD_ISPENDR_ST)>>2]);
+    if (GICD_ISPENDR.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ISPENDR.start()) >> 2;
+        assert(ix < 32);
+        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
         goto done;
     }
 
-    if (daddr >= GICD_ICPENDR_ST && daddr < GICD_ICPENDR_ED + 4) {
-        assert((daddr-GICD_ICPENDR_ST) >> 2 < 32);
-        pkt->set<uint32_t>(pendingInt[(daddr-GICD_ICPENDR_ST)>>2]);
+    if (GICD_ICPENDR.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICPENDR.start()) >> 2;
+        assert(ix < 32);
+        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
         goto done;
     }
 
-    if (daddr >= GICD_ISACTIVER_ST && daddr < GICD_ISACTIVER_ED + 4) {
-        assert((daddr-GICD_ISACTIVER_ST) >> 2 < 32);
-        pkt->set<uint32_t>(activeInt[(daddr-GICD_ISACTIVER_ST)>>2]);
+    if (GICD_ISACTIVER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ISACTIVER.start()) >> 2;
+        assert(ix < 32);
+        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
         goto done;
     }
 
-    if (daddr >= GICD_IPRIORITYR_ST && daddr < GICD_IPRIORITYR_ED + 4) {
-        Addr int_num;
-        int_num = daddr - GICD_IPRIORITYR_ST;
+    if (GICD_ICACTIVER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICACTIVER.start()) >> 2;
+        assert(ix < 32);
+        pkt->set<uint32_t>(getPendingInt(ctx_id, ix));
+        goto done;
+    }
+
+    if (GICD_IPRIORITYR.contains(daddr)) {
+        Addr int_num = daddr - GICD_IPRIORITYR.start();
         assert(int_num < INT_LINES_MAX);
         DPRINTF(Interrupt, "Reading interrupt priority at int# %#x \n",int_num);
 
-        uint8_t* int_p;
-        if (int_num < (SGI_MAX + PPI_MAX))
-            int_p = bankedIntPriority[ctx_id];
-        else
-            int_p = intPriority;
-
         switch (pkt->getSize()) {
           case 1:
-            pkt->set<uint8_t>(int_p[int_num]);
+            pkt->set<uint8_t>(getIntPriority(ctx_id, int_num));
             break;
           case 2:
             assert((int_num + 1) < INT_LINES_MAX);
-            pkt->set<uint16_t>(int_p[int_num] |
-                               int_p[int_num+1] << 8);
+            pkt->set<uint16_t>(getIntPriority(ctx_id, int_num) |
+                               getIntPriority(ctx_id, int_num+1) << 8);
             break;
           case 4:
             assert((int_num + 3) < INT_LINES_MAX);
-            pkt->set<uint32_t>(int_p[int_num] |
-                               int_p[int_num+1] << 8 |
-                               int_p[int_num+2] << 16 |
-                               int_p[int_num+3] << 24);
+            pkt->set<uint32_t>(getIntPriority(ctx_id, int_num) |
+                               getIntPriority(ctx_id, int_num+1) << 8 |
+                               getIntPriority(ctx_id, int_num+2) << 16 |
+                               getIntPriority(ctx_id, int_num+3) << 24);
             break;
           default:
             panic("Invalid size while reading priority regs in GIC: %d\n",
@@ -210,9 +197,8 @@ Pl390::readDistributor(PacketPtr pkt)
         goto done;
     }
 
-    if (daddr >= GICD_ITARGETSR_ST && daddr < GICD_ITARGETSR_ED + 4) {
-        Addr int_num;
-        int_num = (daddr-GICD_ITARGETSR_ST) ;
+    if (GICD_ITARGETSR.contains(daddr)) {
+        Addr int_num = daddr - GICD_ITARGETSR.start();
         DPRINTF(GIC, "Reading processor target register for int# %#x \n",
                  int_num);
         assert(int_num < INT_LINES_MAX);
@@ -246,12 +232,12 @@ Pl390::readDistributor(PacketPtr pkt)
         goto done;
     }
 
-    if (daddr >= GICD_ICFGR_ST && daddr < GICD_ICFGR_ED + 4) {
-        assert((daddr-GICD_ICFGR_ST) >> 2 < 64);
-        /** @todo software generated interrutps and PPIs
-         * can't be configured in some ways
-         */
-        pkt->set<uint32_t>(intConfig[(daddr-GICD_ICFGR_ST)>>2]);
+    if (GICD_ICFGR.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICFGR.start()) >> 2;
+        assert(ix < 64);
+        /** @todo software generated interrupts and PPIs
+         * can't be configured in some ways */
+        pkt->set<uint32_t>(intConfig[ix]);
         goto done;
     }
 
@@ -262,8 +248,7 @@ Pl390::readDistributor(PacketPtr pkt)
       case GICD_TYPER: {
         /* The 0x100 is a made-up flag to show that gem5 extensions
          * are available,
-         * write 0x200 to this register to enable it.
-         */
+         * write 0x200 to this register to enable it.  */
         uint32_t tmp = ((sys->numRunningContexts() - 1) << 5) |
             (itLines/INT_BITS_MAX -1) |
             (haveGem5Extensions ? 0x100 : 0x0);
@@ -342,7 +327,8 @@ Pl390::readCpu(PacketPtr pkt)
                 uint32_t int_num = 1 << intNumToBit(cpuHighestInt[ctx_id]);
                 activeInt[intNumToWord(cpuHighestInt[ctx_id])] |= int_num;
                 updateRunPri();
-                pendingInt[intNumToWord(cpuHighestInt[ctx_id])] &= ~int_num;
+                getPendingInt(ctx_id, intNumToWord(cpuHighestInt[ctx_id]))
+                  &= ~int_num;
             }
 
             DPRINTF(Interrupt,"CPU %d reading IAR.id=%d IAR.cpu=%d, iar=0x%x\n",
@@ -399,60 +385,70 @@ Pl390::writeDistributor(PacketPtr pkt)
     DPRINTF(GIC, "gic distributor write register %#x size %#x value %#x \n",
             daddr, pkt->getSize(), pkt_data);
 
-    if (daddr >= GICD_ISENABLER_ST && daddr < GICD_ISENABLER_ED + 4) {
-        assert((daddr-GICD_ISENABLER_ST) >> 2 < 32);
-        intEnabled[(daddr-GICD_ISENABLER_ST) >> 2] |= pkt->get<uint32_t>();
+    if (GICD_ISENABLER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ISENABLER.start()) >> 2;
+        assert(ix < 32);
+        getIntEnabled(ctx_id, ix) |= pkt->get<uint32_t>();
         goto done;
     }
 
-    if (daddr >= GICD_ICENABLER_ST && daddr < GICD_ICENABLER_ED + 4) {
-        assert((daddr-GICD_ICENABLER_ST) >> 2 < 32);
-        intEnabled[(daddr-GICD_ICENABLER_ST) >> 2] &= ~pkt->get<uint32_t>();
+    if (GICD_ICENABLER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICENABLER.start()) >> 2;
+        assert(ix < 32);
+        getIntEnabled(ctx_id, ix) &= ~pkt->get<uint32_t>();
         goto done;
     }
 
-    if (daddr >= GICD_ISPENDR_ST && daddr < GICD_ISPENDR_ED + 4) {
-        assert((daddr-GICD_ISPENDR_ST) >> 2 < 32);
-        pendingInt[(daddr-GICD_ISPENDR_ST) >> 2] |= pkt->get<uint32_t>();
-        pendingInt[0] &= SGI_MASK; // Don't allow SGIs to be changed
-        updateIntState((daddr-GICD_ISPENDR_ST) >> 2);
+    if (GICD_ISPENDR.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ISPENDR.start()) >> 2;
+        auto mask = pkt->get<uint32_t>();
+        if (ix == 0) mask &= SGI_MASK; // Don't allow SGIs to be changed
+        getPendingInt(ctx_id, ix) |= mask;
+        updateIntState(ix);
         goto done;
     }
 
-    if (daddr >= GICD_ICPENDR_ST && daddr < GICD_ICPENDR_ED + 4) {
-        assert((daddr-GICD_ICPENDR_ST) >> 2 < 32);
-        pendingInt[(daddr-GICD_ICPENDR_ST) >> 2] &= ~pkt->get<uint32_t>();
-        pendingInt[0] &= SGI_MASK; // Don't allow SGIs to be changed
-        updateIntState((daddr-GICD_ICPENDR_ST) >> 2);
+    if (GICD_ICPENDR.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICPENDR.start()) >> 2;
+        auto mask = pkt->get<uint32_t>();
+        if (ix == 0) mask &= SGI_MASK; // Don't allow SGIs to be changed
+        getPendingInt(ctx_id, ix) &= ~mask;
+        updateIntState(ix);
         goto done;
     }
 
-    if (daddr >= GICD_IPRIORITYR_ST && daddr < GICD_IPRIORITYR_ED + 4) {
-        Addr int_num = daddr - GICD_IPRIORITYR_ST;
-        assert(int_num < INT_LINES_MAX);
-        uint8_t* int_p;
-        if (int_num < (SGI_MAX + PPI_MAX))
-            int_p = bankedIntPriority[ctx_id];
-        else
-            int_p = intPriority;
-        uint32_t tmp;
+    if (GICD_ISACTIVER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ISACTIVER.start()) >> 2;
+        getActiveInt(ctx_id, ix) |= pkt->get<uint32_t>();
+        goto done;
+    }
+
+    if (GICD_ICACTIVER.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICACTIVER.start()) >> 2;
+        getActiveInt(ctx_id, ix) &= ~pkt->get<uint32_t>();
+        goto done;
+    }
+
+    if (GICD_IPRIORITYR.contains(daddr)) {
+        Addr int_num = daddr - GICD_IPRIORITYR.start();
         switch(pkt->getSize()) {
           case 1:
-            tmp = pkt->get<uint8_t>();
-            int_p[int_num] = bits(tmp, 7, 0);
+            getIntPriority(ctx_id, int_num) = pkt->get<uint8_t>();
             break;
-          case 2:
-            tmp = pkt->get<uint16_t>();
-            int_p[int_num] = bits(tmp, 7, 0);
-            int_p[int_num + 1] = bits(tmp, 15, 8);
+          case 2: {
+            auto tmp16 = pkt->get<uint16_t>();
+            getIntPriority(ctx_id, int_num) = bits(tmp16, 7, 0);
+            getIntPriority(ctx_id, int_num + 1) = bits(tmp16, 15, 8);
             break;
-          case 4:
-            tmp = pkt->get<uint32_t>();
-            int_p[int_num] = bits(tmp, 7, 0);
-            int_p[int_num + 1] = bits(tmp, 15, 8);
-            int_p[int_num + 2] = bits(tmp, 23, 16);
-            int_p[int_num + 3] = bits(tmp, 31, 24);
+          }
+          case 4: {
+            auto tmp32 = pkt->get<uint32_t>();
+            getIntPriority(ctx_id, int_num) = bits(tmp32, 7, 0);
+            getIntPriority(ctx_id, int_num + 1) = bits(tmp32, 15, 8);
+            getIntPriority(ctx_id, int_num + 2) = bits(tmp32, 23, 16);
+            getIntPriority(ctx_id, int_num + 3) = bits(tmp32, 31, 24);
             break;
+          }
           default:
             panic("Invalid size when writing to priority regs in Gic: %d\n",
                    pkt->getSize());
@@ -463,9 +459,8 @@ Pl390::writeDistributor(PacketPtr pkt)
         goto done;
     }
 
-    if (daddr >= GICD_ITARGETSR_ST && daddr < GICD_ITARGETSR_ED + 4) {
-        Addr int_num = (daddr-GICD_ITARGETSR_ST) ;
-        assert(int_num < INT_LINES_MAX);
+    if (GICD_ITARGETSR.contains(daddr)) {
+        Addr int_num = daddr - GICD_ITARGETSR.start();
         // First 31 interrupts only target single processor
         if (int_num >= SGI_MAX) {
             if (pkt->getSize() == 1) {
@@ -480,14 +475,15 @@ Pl390::writeDistributor(PacketPtr pkt)
                 cpuTarget[int_num+2] = bits(tmp, 23, 16);
                 cpuTarget[int_num+3] = bits(tmp, 31, 24);
             }
-            updateIntState((daddr-GICD_ITARGETSR_ST)>>2);
+            updateIntState(int_num >> 2);
         }
         goto done;
     }
 
-    if (daddr >= GICD_ICFGR_ST && daddr < GICD_ICFGR_ED + 4) {
-        assert((daddr-GICD_ICFGR_ST) >> 2 < 64);
-        intConfig[(daddr-GICD_ICFGR_ST)>>2] = pkt->get<uint32_t>();
+    if (GICD_ICFGR.contains(daddr)) {
+        uint32_t ix = (daddr - GICD_ICFGR.start()) >> 2;
+        assert(ix < INT_BITS_MAX*2);
+        intConfig[ix] = pkt->get<uint32_t>();
         if (pkt->get<uint32_t>() & NN_CONFIG_MASK)
             warn("GIC N:N mode selected and not supported at this time\n");
         goto done;
@@ -562,10 +558,10 @@ Pl390::writeCpu(PacketPtr pkt)
             cpuPpiActive[ctx_id] &= ~int_num;
         } else {
             uint32_t int_num = 1 << intNumToBit(iar.ack_id);
-            if (!(activeInt[intNumToWord(iar.ack_id)] & int_num))
+            if (!(getActiveInt(ctx_id, intNumToWord(iar.ack_id)) & int_num))
                 warn("Done handling interrupt that isn't active: %d\n",
                       intNumToBit(iar.ack_id));
-            activeInt[intNumToWord(iar.ack_id)] &= ~int_num;
+            getActiveInt(ctx_id, intNumToWord(iar.ack_id)) &= ~int_num;
         }
         updateRunPri();
         DPRINTF(Interrupt, "CPU %d done handling intr IAR = %d from cpu %d\n",
@@ -578,6 +574,16 @@ Pl390::writeCpu(PacketPtr pkt)
     if (cpuEnabled[ctx_id]) updateIntState(-1);
     pkt->makeAtomicResponse();
     return cpuPioDelay;
+}
+
+Pl390::BankedRegs&
+Pl390::getBankedRegs(ContextID ctx_id) {
+    if (bankedRegs.size() <= ctx_id)
+        bankedRegs.resize(ctx_id + 1);
+
+    if (!bankedRegs[ctx_id])
+        bankedRegs[ctx_id] = new BankedRegs;
+    return *bankedRegs[ctx_id];
 }
 
 void
@@ -676,8 +682,8 @@ Pl390::updateIntState(int hint)
                 continue;
             if ((cpuSgiPending[swi] & genSwiMask(cpu)) ||
                 (cpuSgiPendingExt[cpu] & (1 << swi)))
-                if (highest_pri > bankedIntPriority[cpu][swi]) {
-                    highest_pri = bankedIntPriority[cpu][swi];
+                if (highest_pri > getIntPriority(cpu, swi)) {
+                    highest_pri = getIntPriority(cpu, swi);
                     highest_int = swi;
                 }
         }
@@ -686,8 +692,8 @@ Pl390::updateIntState(int hint)
         if (cpuPpiPending[cpu]) {
         for (int ppi = 0; ppi < PPI_MAX; ppi++) {
             if (cpuPpiPending[cpu] & (1 << ppi))
-                if (highest_pri > bankedIntPriority[cpu][SGI_MAX + ppi]) {
-                    highest_pri = bankedIntPriority[cpu][SGI_MAX + ppi];
+                if (highest_pri > getIntPriority(cpu, SGI_MAX + ppi)) {
+                    highest_pri = getIntPriority(cpu, SGI_MAX + ppi);
                     highest_int = SGI_MAX + ppi;
                 }
             }
@@ -696,21 +702,22 @@ Pl390::updateIntState(int hint)
         bool mp_sys = sys->numRunningContexts() > 1;
         // Check other ints
         for (int x = 0; x < (itLines/INT_BITS_MAX); x++) {
-            if (intEnabled[x] & pendingInt[x]) {
+            if (getIntEnabled(cpu, x) & getPendingInt(cpu, x)) {
                 for (int y = 0; y < INT_BITS_MAX; y++) {
                    uint32_t int_nm = x * INT_BITS_MAX + y;
                    DPRINTF(GIC, "Checking for interrupt# %d \n",int_nm);
                     /* Set current pending int as highest int for current cpu
-                       if the interrupt's priority higher than current prioirty
+                       if the interrupt's priority higher than current priority
                        and if currrent cpu is the target (for mp configs only)
                      */
-                    if ((bits(intEnabled[x], y) & bits(pendingInt[x], y)) &&
-                        (intPriority[int_nm] < highest_pri))
-                        if ( (!mp_sys) ||
-                             (!gem5ExtensionsEnabled && (cpuTarget[int_nm] & (1 << cpu))) ||
-                             (gem5ExtensionsEnabled && (cpuTarget[int_nm] == cpu))
-                            ) {
-                            highest_pri = intPriority[int_nm];
+                    if ((bits(getIntEnabled(cpu, x), y)
+                        &bits(getPendingInt(cpu, x), y)) &&
+                        (getIntPriority(cpu, int_nm) < highest_pri))
+                        if ((!mp_sys) ||
+                            (gem5ExtensionsEnabled
+                               ? (cpuTarget[int_nm] == cpu)
+                               : (cpuTarget[int_nm] & (1 << cpu)))) {
+                            highest_pri = getIntPriority(cpu, int_nm);
                             highest_int = int_nm;
                         }
                 }
@@ -725,8 +732,8 @@ Pl390::updateIntState(int hint)
         /* @todo make this work for more than one cpu, need to handle 1:N, N:N
          * models */
         if (enabled && cpuEnabled[cpu] && (highest_pri < cpuPriority[cpu]) &&
-            !(activeInt[intNumToWord(highest_int)]
-            & (1 << intNumToBit(highest_int)))) {
+            !(getActiveInt(cpu, intNumToWord(highest_int))
+              & (1 << intNumToBit(highest_int)))) {
 
             DPRINTF(Interrupt, "Posting interrupt %d to cpu%d\n", highest_int,
                     cpu);
@@ -742,21 +749,22 @@ Pl390::updateRunPri()
         if (!cpuEnabled[cpu])
             continue;
         uint8_t maxPriority = 0xff;
-        for (int i = 0; i < itLines; i++){
+        for (int i = 0; i < itLines; i++) {
             if (i < SGI_MAX) {
                 if (((cpuSgiActive[i] & genSwiMask(cpu)) ||
                      (cpuSgiActiveExt[cpu] & (1 << i))) &&
-                        (bankedIntPriority[cpu][i] < maxPriority))
-                    maxPriority = bankedIntPriority[cpu][i];
+                        (getIntPriority(cpu, i) < maxPriority))
+                    maxPriority = getIntPriority(cpu, i);
             } else if (i < (SGI_MAX + PPI_MAX)) {
                 if ((cpuPpiActive[cpu] & ( 1 << (i - SGI_MAX))) &&
-                        (bankedIntPriority[cpu][i] < maxPriority))
-                    maxPriority = bankedIntPriority[cpu][i];
+                        (getIntPriority(cpu, i) < maxPriority))
+                    maxPriority = getIntPriority(cpu, i);
 
             } else {
-                if (activeInt[intNumToWord(i)] & (1 << intNumToBit(i)))
-                    if (intPriority[i] < maxPriority)
-                        maxPriority = intPriority[i];
+                if (getActiveInt(cpu, intNumToWord(i))
+                    & (1 << intNumToBit(i)))
+                    if (getIntPriority(cpu, i) < maxPriority)
+                        maxPriority = getIntPriority(cpu, i);
             }
         }
         iccrpr[cpu] = maxPriority;
@@ -770,9 +778,10 @@ Pl390::sendInt(uint32_t num)
             num, cpuTarget[num]);
     if ((cpuTarget[num] & (cpuTarget[num] - 1)) && !gem5ExtensionsEnabled)
         panic("Multiple targets for peripheral interrupts is not supported\n");
-    pendingInt[intNumToWord(num)] |= 1 << intNumToBit(num);
+    panic_if(num < SGI_MAX + PPI_MAX,
+             "sentInt() must only be used for interrupts 32 and higher");
+    getPendingInt(cpuTarget[num], intNumToWord(num)) |= 1 << intNumToBit(num);
     updateIntState(intNumToWord(num));
-
 }
 
 void
@@ -827,13 +836,12 @@ Pl390::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(cpuPioDelay);
     SERIALIZE_SCALAR(enabled);
     SERIALIZE_SCALAR(itLines);
-    SERIALIZE_SCALAR(itLinesLog2);
-    SERIALIZE_ARRAY(intEnabled, INT_BITS_MAX);
-    SERIALIZE_ARRAY(pendingInt, INT_BITS_MAX);
-    SERIALIZE_ARRAY(activeInt, INT_BITS_MAX);
+    SERIALIZE_ARRAY(intEnabled, INT_BITS_MAX-1);
+    SERIALIZE_ARRAY(pendingInt, INT_BITS_MAX-1);
+    SERIALIZE_ARRAY(activeInt, INT_BITS_MAX-1);
     SERIALIZE_ARRAY(iccrpr, CPU_MAX);
-    SERIALIZE_ARRAY(intPriority, INT_LINES_MAX);
-    SERIALIZE_ARRAY(cpuTarget, INT_LINES_MAX);
+    SERIALIZE_ARRAY(intPriority, GLOBAL_INT_LINES);
+    SERIALIZE_ARRAY(cpuTarget, GLOBAL_INT_LINES);
     SERIALIZE_ARRAY(intConfig, INT_BITS_MAX * 2);
     SERIALIZE_ARRAY(cpuEnabled, CPU_MAX);
     SERIALIZE_ARRAY(cpuPriority, CPU_MAX);
@@ -845,7 +853,6 @@ Pl390::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(cpuSgiPendingExt, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
-    SERIALIZE_ARRAY(*bankedIntPriority, CPU_MAX * (SGI_MAX + PPI_MAX));
     SERIALIZE_SCALAR(irqEnable);
     Tick interrupt_time[CPU_MAX];
     for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
@@ -856,6 +863,22 @@ Pl390::serialize(CheckpointOut &cp) const
     }
     SERIALIZE_ARRAY(interrupt_time, CPU_MAX);
     SERIALIZE_SCALAR(gem5ExtensionsEnabled);
+
+    for (uint32_t i=0; i < bankedRegs.size(); ++i) {
+        if (!bankedRegs[i])
+            continue;
+        bankedRegs[i]->serializeSection(cp, csprintf("bankedRegs%i", i));
+    }
+}
+
+void
+Pl390::BankedRegs::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(intEnabled);
+    SERIALIZE_SCALAR(pendingInt);
+    SERIALIZE_SCALAR(activeInt);
+    SERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
+    SERIALIZE_ARRAY(cpuTarget, SGI_MAX + PPI_MAX);
 }
 
 void
@@ -869,13 +892,12 @@ Pl390::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(cpuPioDelay);
     UNSERIALIZE_SCALAR(enabled);
     UNSERIALIZE_SCALAR(itLines);
-    UNSERIALIZE_SCALAR(itLinesLog2);
-    UNSERIALIZE_ARRAY(intEnabled, INT_BITS_MAX);
-    UNSERIALIZE_ARRAY(pendingInt, INT_BITS_MAX);
-    UNSERIALIZE_ARRAY(activeInt, INT_BITS_MAX);
+    UNSERIALIZE_ARRAY(intEnabled, INT_BITS_MAX-1);
+    UNSERIALIZE_ARRAY(pendingInt, INT_BITS_MAX-1);
+    UNSERIALIZE_ARRAY(activeInt, INT_BITS_MAX-1);
     UNSERIALIZE_ARRAY(iccrpr, CPU_MAX);
-    UNSERIALIZE_ARRAY(intPriority, INT_LINES_MAX);
-    UNSERIALIZE_ARRAY(cpuTarget, INT_LINES_MAX);
+    UNSERIALIZE_ARRAY(intPriority, GLOBAL_INT_LINES);
+    UNSERIALIZE_ARRAY(cpuTarget, GLOBAL_INT_LINES);
     UNSERIALIZE_ARRAY(intConfig, INT_BITS_MAX * 2);
     UNSERIALIZE_ARRAY(cpuEnabled, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPriority, CPU_MAX);
@@ -887,7 +909,6 @@ Pl390::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(cpuSgiPendingExt, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
-    UNSERIALIZE_ARRAY(*bankedIntPriority, CPU_MAX * (SGI_MAX + PPI_MAX));
     UNSERIALIZE_SCALAR(irqEnable);
 
     Tick interrupt_time[CPU_MAX];
@@ -899,6 +920,23 @@ Pl390::unserialize(CheckpointIn &cp)
     }
     if (!UNSERIALIZE_OPT_SCALAR(gem5ExtensionsEnabled))
         gem5ExtensionsEnabled = false;
+
+    for (uint32_t i=0; i < CPU_MAX; ++i) {
+        ScopedCheckpointSection sec(cp, csprintf("bankedRegs%i", i));
+        if (cp.sectionExists(Serializable::currentSection())) {
+            getBankedRegs(i).unserialize(cp);
+        }
+    }
+}
+
+void
+Pl390::BankedRegs::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(intEnabled);
+    UNSERIALIZE_SCALAR(pendingInt);
+    UNSERIALIZE_SCALAR(activeInt);
+    UNSERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
+    UNSERIALIZE_ARRAY(cpuTarget, SGI_MAX + PPI_MAX);
 }
 
 Pl390 *
@@ -909,10 +947,10 @@ Pl390Params::create()
 
 /* Functions for debugging and testing */
 void
-Pl390::driveSPI(unsigned int spiVect)
+Pl390::driveSPI(uint32_t spiVect)
 {
     DPRINTF(GIC, "Received SPI Vector:%x Enable: %d\n", spiVect, irqEnable);
-    pendingInt[1] |= spiVect;
+    getPendingInt(0, 1) |= spiVect;
     if (irqEnable && enabled) {
         updateIntState(-1);
     }

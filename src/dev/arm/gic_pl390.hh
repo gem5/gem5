@@ -42,24 +42,21 @@
 
 
 /** @file
- * Implementiation of a PL390 GIC
+ * Implementation of a PL390 GIC
  */
 
 #ifndef __DEV_ARM_GIC_PL390_H__
 #define __DEV_ARM_GIC_PL390_H__
 
+#include <vector>
+
+#include "base/addr_range.hh"
 #include "base/bitunion.hh"
 #include "cpu/intr_control.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"
 #include "params/Pl390.hh"
-
-/** @todo this code only assumes one processor for now. Low word
- * of intEnabled and pendingInt need to be replicated per CPU.
- * bottom 31 interrupts (7 words) need to be replicated for
- * for interrupt priority register, processor target registers
- * interrupt config registers  */
 
 class Pl390 : public BaseGic
 {
@@ -69,28 +66,22 @@ class Pl390 : public BaseGic
         GICD_CTLR          = 0x000, // control register
         GICD_TYPER         = 0x004, // controller type
         GICD_IIDR          = 0x008, // implementer id
-        GICD_ISENABLER_ST  = 0x100, // interrupt set enable
-        GICD_ISENABLER_ED  = 0x17c,
-        GICD_ICENABLER_ST  = 0x180, // interrupt clear enable
-        GICD_ICENABLER_ED  = 0x1fc,
-        GICD_ISPENDR_ST    = 0x200, // set pending interrupt
-        GICD_ISPENDR_ED    = 0x27c,
-        GICD_ICPENDR_ST    = 0x280, // clear pending interrupt
-        GICD_ICPENDR_ED    = 0x2fc,
-        GICD_ISACTIVER_ST  = 0x300, // active bit registers
-        GICD_ISACTIVER_ED  = 0x37c,
-        GICD_IPRIORITYR_ST = 0x400, // interrupt priority registers
-        GICD_IPRIORITYR_ED = 0x7f8,
-        GICD_ITARGETSR_ST  = 0x800, // processor target registers
-        GICD_ITARGETSR_ED  = 0xbf8,
-        GICD_ICFGR_ST      = 0xc00, // interrupt config registers
-        GICD_ICFGR_ED      = 0xcfc,
         GICD_SGIR          = 0xf00, // software generated interrupt
 
         DIST_SIZE          = 0xfff
     };
 
-    // cpu memory addressesa
+    static const AddrRange GICD_ISENABLER;  // interrupt set enable
+    static const AddrRange GICD_ICENABLER;  // interrupt clear enable
+    static const AddrRange GICD_ISPENDR;    // set pending interrupt
+    static const AddrRange GICD_ICPENDR;    // clear pending interrupt
+    static const AddrRange GICD_ISACTIVER;  // active bit registers
+    static const AddrRange GICD_ICACTIVER;  // clear bit registers
+    static const AddrRange GICD_IPRIORITYR; // interrupt priority registers
+    static const AddrRange GICD_ITARGETSR;  // processor target registers
+    static const AddrRange GICD_ICFGR;      // interrupt config registers
+
+    // cpu memory addresses
     enum {
         GICC_CTLR  = 0x00, // CPU control register
         GICC_PMR   = 0x04, // Interrupt priority mask
@@ -118,6 +109,7 @@ class Pl390 : public BaseGic
     static const int SPURIOUS_INT = 1023;
     static const int INT_BITS_MAX = 32;
     static const int INT_LINES_MAX = 1020;
+    static const int GLOBAL_INT_LINES = INT_LINES_MAX - SGI_MAX - PPI_MAX;
 
     BitUnion32(SWI)
         Bitfield<3,0> sgi_id;
@@ -149,41 +141,121 @@ class Pl390 : public BaseGic
     /** Gic enabled */
     bool enabled;
 
+    /** Are gem5 extensions available? */
+    const bool haveGem5Extensions;
+
     /** gem5 many-core extension enabled by driver */
     bool gem5ExtensionsEnabled;
 
     /** Number of itLines enabled */
     uint32_t itLines;
 
-    uint32_t itLinesLog2;
+    /** Registers "banked for each connected processor" per ARM IHI0048B */
+    struct BankedRegs : public Serializable {
+        /** GICD_I{S,C}ENABLER0
+         * interrupt enable bits for first 32 interrupts, 1b per interrupt */
+        uint32_t intEnabled;
 
-    /** Are gem5 extensions available? */
-    const bool haveGem5Extensions;
+        /** GICD_I{S,C}PENDR0
+         * interrupt pending bits for first 32 interrupts, 1b per interrupt */
+        uint32_t pendingInt;
 
-    /** interrupt enable bits for all possible 1020 interupts.
-     * one bit per interrupt, 32 bit per word = 32 words */
-    uint32_t intEnabled[INT_BITS_MAX];
+        /** GICD_I{S,C}ACTIVER0
+         * interrupt active bits for first 32 interrupts, 1b per interrupt */
+        uint32_t activeInt;
 
-    /** interrupt pending bits for all possible 1020 interupts.
-     * one bit per interrupt, 32 bit per word = 32 words */
-    uint32_t pendingInt[INT_BITS_MAX];
+        /** GICD_IPRIORITYR{0..7}
+         * interrupt priority for SGIs and PPIs */
+        uint8_t intPriority[SGI_MAX + PPI_MAX];
 
-    /** interrupt active bits for all possible 1020 interupts.
-     * one bit per interrupt, 32 bit per word = 32 words */
-    uint32_t activeInt[INT_BITS_MAX];
+        /** GICD_ITARGETSR{0..7}
+         * 8b CPU target ID for each SGI and PPI */
+        uint8_t cpuTarget[SGI_MAX + PPI_MAX];
 
-    /** read only running priroity register, 1 per cpu*/
+        void serialize(CheckpointOut &cp) const override;
+        void unserialize(CheckpointIn &cp) override;
+
+        BankedRegs() :
+            intEnabled(0), pendingInt(0), activeInt(0),
+            intPriority {0}, cpuTarget {0}
+          {}
+    };
+    std::vector<BankedRegs*> bankedRegs;
+
+    BankedRegs& getBankedRegs(ContextID);
+
+    /** GICD_I{S,C}ENABLER{1..31}
+     * interrupt enable bits for global interrupts
+     * 1b per interrupt, 32 bits per word, 31 words */
+    uint32_t intEnabled[INT_BITS_MAX-1];
+
+    uint32_t& getIntEnabled(ContextID ctx_id, uint32_t ix) {
+        if (ix == 0) {
+            return getBankedRegs(ctx_id).intEnabled;
+        } else {
+            return intEnabled[ix - 1];
+        }
+    }
+
+    /** GICD_I{S,C}PENDR{1..31}
+     * interrupt pending bits for global interrupts
+     * 1b per interrupt, 32 bits per word, 31 words */
+    uint32_t pendingInt[INT_BITS_MAX-1];
+
+    uint32_t& getPendingInt(ContextID ctx_id, uint32_t ix) {
+        assert(ix < INT_BITS_MAX);
+        if (ix == 0) {
+            return getBankedRegs(ctx_id).pendingInt;
+        } else {
+            return pendingInt[ix - 1];
+        }
+    }
+
+    /** GICD_I{S,C}ACTIVER{1..31}
+     * interrupt active bits for global interrupts
+     * 1b per interrupt, 32 bits per word, 31 words */
+    uint32_t activeInt[INT_BITS_MAX-1];
+
+    uint32_t& getActiveInt(ContextID ctx_id, uint32_t ix) {
+        assert(ix < INT_BITS_MAX);
+        if (ix == 0) {
+            return getBankedRegs(ctx_id).activeInt;
+        } else {
+            return activeInt[ix - 1];
+        }
+    }
+
+    /** read only running priority register, 1 per cpu*/
     uint32_t iccrpr[CPU_MAX];
 
-    /** an 8 bit priority (lower is higher priority) for each
-     * of the 1020 possible supported interrupts.
+    /** GICD_IPRIORITYR{8..255}
+     * an 8 bit priority (lower is higher priority) for each
+     * of the global (not replicated per CPU) interrupts.
      */
-    uint8_t intPriority[INT_LINES_MAX];
+    uint8_t intPriority[GLOBAL_INT_LINES];
 
-    /** an 8 bit cpu target id for each shared peripheral interrupt
-     * of the 1020 possible supported interrupts.
+    uint8_t& getIntPriority(ContextID ctx_id, uint32_t ix) {
+        assert(ix < INT_LINES_MAX);
+        if (ix < SGI_MAX + PPI_MAX) {
+            return getBankedRegs(ctx_id).intPriority[ix];
+        } else {
+            return intPriority[ix - (SGI_MAX + PPI_MAX)];
+        }
+    }
+
+    /** GICD_ITARGETSR{8..255}
+     * an 8 bit cpu target id for each global interrupt.
      */
-    uint8_t cpuTarget[INT_LINES_MAX];
+    uint8_t cpuTarget[GLOBAL_INT_LINES];
+
+    uint8_t& getCpuTarget(ContextID ctx_id, uint32_t ix) {
+        assert(ix < INT_LINES_MAX);
+        if (ix < SGI_MAX + PPI_MAX) {
+            return getBankedRegs(ctx_id).cpuTarget[ix];
+        } else {
+            return cpuTarget[ix - (SGI_MAX + PPI_MAX)];
+        }
+    }
 
     /** 2 bit per interrupt signaling if it's level or edge sensitive
      * and if it is 1:N or N:N */
@@ -218,9 +290,6 @@ class Pl390 : public BaseGic
      * will be used since PPI interrupts are numberred from 16 to 32 */
     uint32_t cpuPpiPending[CPU_MAX];
     uint32_t cpuPpiActive[CPU_MAX];
-
-    /** Banked interrupt prioirty registers for SGIs and PPIs */
-    uint8_t bankedIntPriority[CPU_MAX][SGI_MAX + PPI_MAX];
 
     /** IRQ Enable Used for debug */
     bool irqEnable;
