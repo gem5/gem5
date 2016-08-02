@@ -969,7 +969,17 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     } else {  // AArch64
         // Set the FAR register.  Nothing else to do if we are in AArch64 state
         // because the syndrome register has already been set inside invoke64()
-        tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), faultAddr);
+        if (stage2) {
+            // stage 2 fault, set HPFAR_EL2 to the faulting IPA
+            // and FAR_EL2 to the Original VA
+            tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), OVAddr);
+            tc->setMiscReg(MISCREG_HPFAR_EL2, bits(faultAddr, 47, 12) << 4);
+
+            DPRINTF(Faults, "Abort Fault (Stage 2) VA: 0x%x IPA: 0x%x\n",
+                    OVAddr, faultAddr);
+        } else {
+            tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), faultAddr);
+        }
     }
 }
 
