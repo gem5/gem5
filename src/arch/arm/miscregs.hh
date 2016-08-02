@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2015 ARM Limited
+ * Copyright (c) 2010-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1735,10 +1735,12 @@ namespace ArmISA
     BitUnion32(VTCR_t)
         Bitfield<3, 0> t0sz;
         Bitfield<4> s;
+        Bitfield<5, 0> t0sz64;
         Bitfield<7, 6> sl0;
         Bitfield<9, 8> irgn0;
         Bitfield<11, 10> orgn0;
         Bitfield<13, 12> sh0;
+        Bitfield<15, 14> tg0;
     EndBitUnion(VTCR_t)
 
     BitUnion32(PRRR)

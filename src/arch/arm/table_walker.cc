@@ -249,7 +249,10 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
         currState->vaddr = currState->vaddr_tainted;
 
     if (currState->aarch64) {
-        switch (currState->el) {
+        if (isStage2) {
+            currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
+            currState->vtcr = currState->tc->readMiscReg(MISCREG_VTCR_EL2);
+        } else switch (currState->el) {
           case EL0:
           case EL1:
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
@@ -269,6 +272,7 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
             panic("Invalid exception level");
             break;
         }
+        currState->hcr = currState->tc->readMiscReg(MISCREG_HCR_EL2);
     } else {
         currState->sctlr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
             MISCREG_SCTLR, currState->tc, !currState->isSecure));
@@ -289,9 +293,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     // hyp mode, the second stage MMU is enabled, and this table walker
     // instance is the first stage.
     currState->doingStage2 = false;
-    // @todo: for now disable this in AArch64 (HCR is not set)
-    currState->stage2Req = !currState->aarch64 && currState->hcr.vm &&
-                           !isStage2 && !currState->isSecure && !currState->isHyp;
+    currState->stage2Req = currState->hcr.vm && !isStage2 &&
+                           !currState->isSecure && !currState->isHyp;
 
     bool long_desc_format = currState->aarch64 || _isHyp || isStage2 ||
                             longDescFormatInUse(currState->tc);
@@ -743,10 +746,32 @@ TableWalker::processWalkAArch64()
     int tsz = 0, ps = 0;
     GrainSize tg = Grain4KB; // grain size computed from tg* field
     bool fault = false;
+
+    LookupLevel start_lookup_level = MAX_LOOKUP_LEVELS;
+
     switch (currState->el) {
       case EL0:
       case EL1:
-        switch (bits(currState->vaddr, 63,48)) {
+        if (isStage2) {
+            DPRINTF(TLB, " - Selecting VTTBR0 (AArch64 stage 2)\n");
+            ttbr = currState->tc->readMiscReg(MISCREG_VTTBR_EL2);
+            tsz = 64 - currState->vtcr.t0sz64;
+            tg = GrainMapDefault[currState->vtcr.tg0];
+            // ARM DDI 0487A.f D7-2148
+            // The starting level of stage 2 translation depends on
+            // VTCR_EL2.SL0 and VTCR_EL2.TG0
+            LookupLevel __ = MAX_LOOKUP_LEVELS; // invalid level
+            uint8_t sl_tg = (currState->vtcr.sl0 << 2) | currState->vtcr.tg0;
+            static const LookupLevel SLL[] = {
+                L2, L3, L3, __, // sl0 == 0
+                L1, L2, L2, __, // sl0 == 1, etc.
+                L0, L1, L1, __,
+                __, __, __, __
+            };
+            start_lookup_level = SLL[sl_tg];
+            panic_if(start_lookup_level == MAX_LOOKUP_LEVELS,
+                     "Cannot discern lookup level from vtcr.{sl0,tg0}");
+        } else switch (bits(currState->vaddr, 63,48)) {
           case 0:
             DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL1);
@@ -824,16 +849,13 @@ TableWalker::processWalkAArch64()
         tg = Grain4KB;
     }
 
-    int stride = tg - 3;
-    LookupLevel start_lookup_level = MAX_LOOKUP_LEVELS;
-
     // Determine starting lookup level
     // See aarch64/translation/walk in Appendix G: ARMv8 Pseudocode Library
     // in ARM DDI 0487A.  These table values correspond to the cascading tests
     // to compute the lookup level and are of the form
     // (grain_size + N*stride), for N = {1, 2, 3}.
     // A value of 64 will never succeed and a value of 0 will always succeed.
-    {
+    if (start_lookup_level == MAX_LOOKUP_LEVELS) {
         struct GrainMap {
             GrainSize grain_size;
             unsigned lookup_level_cutoff[MAX_LOOKUP_LEVELS];
@@ -863,6 +885,8 @@ TableWalker::processWalkAArch64()
         panic_if(start_lookup_level == MAX_LOOKUP_LEVELS,
                  "Table walker couldn't find lookup level\n");
     }
+
+    int stride = tg - 3;
 
     // Determine table base address
     int base_addr_lo = 3 + tsz - stride * (3 - start_lookup_level) - tg;
@@ -969,10 +993,9 @@ TableWalker::processWalkAArch64()
         stateQueues[start_lookup_level].push_back(currState);
         currState = NULL;
     } else if (!currState->functional) {
-        port->dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
-                       NULL, (uint8_t*) &currState->longDesc.data,
-                       currState->tc->getCpuPtr()->clockPeriod(), flag);
-        doLongDescriptor();
+        fetchDescriptor(desc_addr, (uint8_t*)&currState->longDesc.data,
+                        sizeof(uint64_t), flag, -1, NULL,
+                        &TableWalker::doLongDescriptor);
         f = currState->fault;
     } else {
         RequestPtr req = new Request(desc_addr, sizeof(uint64_t), flag,
@@ -1913,8 +1936,12 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
 {
     bool isTiming = currState->timing;
 
-    // do the requests for the page table descriptors have to go through the
-    // second stage MMU
+    DPRINTF(TLBVerbose, "Fetching descriptor at address: 0x%x stage2Req: %d\n",
+            descAddr, currState->stage2Req);
+
+    // If this translation has a stage 2 then we know descAddr is an IPA and
+    // needs to be translated before we can access the page table. Do that
+    // check here.
     if (currState->stage2Req) {
         Fault fault;
         flags = flags | TLB::MustBeOne;
