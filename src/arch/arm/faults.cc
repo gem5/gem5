@@ -1116,7 +1116,7 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
     toHyp |= (stage2 ||
                 ( (source ==               DebugEvent) && hdcr.tde && (cpsr.mode !=  MODE_HYP)) ||
                 ( (source == SynchronousExternalAbort) && hcr.tge  && (cpsr.mode == MODE_USER))
-             ) && !inSecureState(scr, cpsr);
+             ) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1182,7 +1182,7 @@ DataAbort::routeToHyp(ThreadContext *tc) const
                   ((source == AlignmentFault)            ||
                    (source == SynchronousExternalAbort))
                 )
-             ) && !inSecureState(scr, cpsr);
+             ) && !inSecureState(tc);
     return toHyp;
 }
 
@@ -1272,7 +1272,7 @@ Interrupt::routeToHyp(ThreadContext *tc) const
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     // Determine whether IRQs are routed to Hyp mode.
-    toHyp = (!scr.irq && hcr.imo && !inSecureState(scr, cpsr)) ||
+    toHyp = (!scr.irq && hcr.imo && !inSecureState(tc)) ||
             (cpsr.mode == MODE_HYP);
     return toHyp;
 }
@@ -1311,7 +1311,7 @@ FastInterrupt::routeToHyp(ThreadContext *tc) const
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     // Determine whether IRQs are routed to Hyp mode.
-    toHyp = (!scr.fiq && hcr.fmo && !inSecureState(scr, cpsr)) ||
+    toHyp = (!scr.fiq && hcr.fmo && !inSecureState(tc)) ||
             (cpsr.mode == MODE_HYP);
     return toHyp;
 }
@@ -1380,10 +1380,9 @@ SystemError::routeToHyp(ThreadContext *tc) const
 
     SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
 
-    toHyp = (!scr.ea && hcr.amo && !inSecureState(scr, cpsr)) ||
-            (!scr.ea && !scr.rw && !hcr.amo && !inSecureState(scr,cpsr));
+    toHyp = (!scr.ea && hcr.amo && !inSecureState(tc)) ||
+            (!scr.ea && !scr.rw && !hcr.amo && !inSecureState(tc));
     return toHyp;
 }
 

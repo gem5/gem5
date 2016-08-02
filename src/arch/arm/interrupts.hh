@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -141,10 +141,9 @@ class Interrupts : public SimObject
             return false;
 
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-        SCR  scr  = tc->readMiscReg(MISCREG_SCR);
 
         bool isHypMode   = cpsr.mode == MODE_HYP;
-        bool isSecure    = inSecureState(scr, cpsr);
+        bool isSecure    = inSecureState(tc);
         bool allowVIrq   = !cpsr.i && hcr.imo && !isSecure && !isHypMode;
         bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
@@ -229,13 +228,12 @@ class Interrupts : public SimObject
 
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-        SCR  scr  = tc->readMiscReg(MISCREG_SCR);
 
         // Calculate a few temp vars so we can work out if there's a pending
         // virtual interrupt, and if its allowed to happen
         // ARM ARM Issue C section B1.9.9, B1.9.11, and B1.9.13
         bool isHypMode   = cpsr.mode == MODE_HYP;
-        bool isSecure    = inSecureState(scr, cpsr);
+        bool isSecure    = inSecureState(tc);
         bool allowVIrq   = !cpsr.i && hcr.imo && !isSecure && !isHypMode;
         bool allowVFiq   = !cpsr.f && hcr.fmo && !isSecure && !isHypMode;
         bool allowVAbort = !cpsr.a && hcr.amo && !isSecure && !isHypMode;
