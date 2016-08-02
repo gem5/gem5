@@ -1220,7 +1220,30 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
         (opModeToEL(op_mode) == EL0 && ELIs64(tc, EL1));
 
     if (aarch64) {  // AArch64
-        aarch64EL = (ExceptionLevel) (uint8_t) cpsr.el;
+        // determine EL we need to translate in
+        switch (tranType) {
+            case S1E0Tran:
+            case S12E0Tran:
+                aarch64EL = EL0;
+                break;
+            case S1E1Tran:
+            case S12E1Tran:
+                aarch64EL = EL1;
+                break;
+            case S1E2Tran:
+                aarch64EL = EL2;
+                break;
+            case S1E3Tran:
+                aarch64EL = EL3;
+                break;
+            case NormalTran:
+            case S1CTran:
+            case S1S2NsTran:
+            case HypMode:
+                aarch64EL = (ExceptionLevel) (uint8_t) cpsr.el;
+                break;
+        }
+
         switch (aarch64EL) {
           case EL0:
           case EL1:
@@ -1258,7 +1281,8 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
             // compute it for every translation.
             stage2Req = isStage2 ||
                         (hcr.vm && !isHyp && !isSecure &&
-                         !(tranType & S1CTran) && (aarch64EL < EL2));
+                         !(tranType & S1CTran) && (aarch64EL < EL2) &&
+                         !(tranType & S1E1Tran)); // <--- FIX THIS HACK
             directToStage2 = !isStage2 && stage2Req && !sctlr.m;
         } else {
             vmid           = 0;

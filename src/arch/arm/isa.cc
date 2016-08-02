@@ -1698,62 +1698,62 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 switch(misc_reg) {
                   case MISCREG_AT_S1E1R_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::S1CTran;
+                    tranType = TLB::S1E1Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E1W_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::S1CTran;
+                    tranType = TLB::S1E1Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S1E0R_Xt:
                     flags    = TLB::MustBeOne | TLB::UserMode;
-                    tranType = TLB::S1CTran;
+                    tranType = TLB::S1E0Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E0W_Xt:
                     flags    = TLB::MustBeOne | TLB::UserMode;
-                    tranType = TLB::S1CTran;
+                    tranType = TLB::S1E0Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S1E2R_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::HypMode;
+                    tranType = TLB::S1E2Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E2W_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::HypMode;
+                    tranType = TLB::S1E2Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S12E0R_Xt:
                     flags    = TLB::MustBeOne | TLB::UserMode;
-                    tranType = TLB::S1S2NsTran;
+                    tranType = TLB::S12E0Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S12E0W_Xt:
                     flags    = TLB::MustBeOne | TLB::UserMode;
-                    tranType = TLB::S1S2NsTran;
+                    tranType = TLB::S12E0Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S12E1R_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::S1S2NsTran;
+                    tranType = TLB::S12E1Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S12E1W_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::S1S2NsTran;
+                    tranType = TLB::S12E1Tran;
                     mode     = BaseTLB::Write;
                     break;
                   case MISCREG_AT_S1E3R_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::HypMode; // There is no TZ mode defined.
+                    tranType = TLB::S1E3Tran;
                     mode     = BaseTLB::Read;
                     break;
                   case MISCREG_AT_S1E3W_Xt:
                     flags    = TLB::MustBeOne;
-                    tranType = TLB::HypMode; // There is no TZ mode defined.
+                    tranType = TLB::S1E3Tran;
                     mode     = BaseTLB::Write;
                     break;
                 }
@@ -1788,12 +1788,22 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                     // Set fault bit and FSR
                     FSR fsr = armFault->getFsr(tc);
 
-                    newVal = ((fsr >> 9) & 1) << 11;
-                    // rearange fault status
-                    newVal |= ((fsr >>  0) & 0x3f) << 1;
-                    newVal |= 0x1; // F bit
-                    newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
-                    newVal |= armFault->isStage2() ? 0x200 : 0;
+                    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+                    if (cpsr.width) { // AArch32
+                        newVal = ((fsr >> 9) & 1) << 11;
+                        // rearrange fault status
+                        newVal |= ((fsr >>  0) & 0x3f) << 1;
+                        newVal |= 0x1; // F bit
+                        newVal |= ((armFault->iss() >> 7) & 0x1) << 8;
+                        newVal |= armFault->isStage2() ? 0x200 : 0;
+                    } else { // AArch64
+                        newVal = 1; // F bit
+                        newVal |= fsr << 1; // FST
+                        // TODO: DDI 0487A.f D7-2083, AbortFault's s1ptw bit.
+                        newVal |= armFault->isStage2() ? 1 << 8 : 0; // PTW
+                        newVal |= armFault->isStage2() ? 1 << 9 : 0; // S
+                        newVal |= 1 << 11; // RES1
+                    }
                     DPRINTF(MiscRegs,
                             "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
                             val, fsr, newVal);

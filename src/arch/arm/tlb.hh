@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -127,7 +127,17 @@ class TLB : public BaseTLB
         HypMode = 0x2,
         // Secure code operating as if it wasn't (required by some Address
         // Translate operations)
-        S1S2NsTran = 0x4
+        S1S2NsTran = 0x4,
+        // Address translation instructions (eg AT S1E0R_Xt) need to be handled
+        // in special ways during translation because they could need to act
+        // like a different EL than the current EL. The following flags are
+        // for these instructions
+        S1E0Tran = 0x8,
+        S1E1Tran = 0x10,
+        S1E2Tran = 0x20,
+        S1E3Tran = 0x40,
+        S12E0Tran = 0x80,
+        S12E1Tran = 0x100
     };
   protected:
     TlbEntry* table;     // the Page Table
