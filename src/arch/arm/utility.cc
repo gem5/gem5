@@ -590,7 +590,9 @@ msrMrs64TrapToSup(const MiscRegIndex miscReg, ExceptionLevel el,
 }
 
 bool
-msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead,
+msrMrs64TrapToHyp(const MiscRegIndex miscReg,
+                  ExceptionLevel el,
+                  bool isRead,
                   CPTR cptr /* CPTR_EL2 */,
                   HCR hcr /* HCR_EL2 */,
                   bool * isVfpNeon)
@@ -608,7 +610,7 @@ msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead,
         break;
       // CPACR
       case MISCREG_CPACR_EL1:
-        trapToHyp = cptr.tcpac;
+        trapToHyp = cptr.tcpac && el == EL1;
         break;
       // Virtual memory control regs
       case MISCREG_SCTLR_EL1:
@@ -622,7 +624,8 @@ msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead,
       case MISCREG_MAIR_EL1:
       case MISCREG_AMAIR_EL1:
       case MISCREG_CONTEXTIDR_EL1:
-        trapToHyp = (hcr.trvm && isRead) || (hcr.tvm && !isRead);
+        trapToHyp = ((hcr.trvm && isRead) || (hcr.tvm && !isRead))
+                    && el == EL1;
         break;
       // TLB maintenance instructions
       case MISCREG_TLBI_VMALLE1:
@@ -637,30 +640,30 @@ msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead,
       case MISCREG_TLBI_VAAE1IS_Xt:
       case MISCREG_TLBI_VALE1IS_Xt:
       case MISCREG_TLBI_VAALE1IS_Xt:
-        trapToHyp = hcr.ttlb;
+        trapToHyp = hcr.ttlb && el == EL1;
         break;
       // Cache maintenance instructions to the point of unification
       case MISCREG_IC_IVAU_Xt:
       case MISCREG_ICIALLU:
       case MISCREG_ICIALLUIS:
       case MISCREG_DC_CVAU_Xt:
-        trapToHyp = hcr.tpu;
+        trapToHyp = hcr.tpu && el <= EL1;
         break;
       // Data/Unified cache maintenance instructions to the point of coherency
       case MISCREG_DC_IVAC_Xt:
       case MISCREG_DC_CIVAC_Xt:
       case MISCREG_DC_CVAC_Xt:
-        trapToHyp = hcr.tpc;
+        trapToHyp = hcr.tpc && el <= EL1;
         break;
       // Data/Unified cache maintenance instructions by set/way
       case MISCREG_DC_ISW_Xt:
       case MISCREG_DC_CSW_Xt:
       case MISCREG_DC_CISW_Xt:
-        trapToHyp = hcr.tsw;
+        trapToHyp = hcr.tsw && el == EL1;
         break;
       // ACTLR
       case MISCREG_ACTLR_EL1:
-        trapToHyp = hcr.tacr;
+        trapToHyp = hcr.tacr && el == EL1;
         break;
 
       // @todo: Trap implementation-dependent functionality based on
@@ -695,20 +698,20 @@ msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead,
       case MISCREG_ID_AA64AFR0_EL1:
       case MISCREG_ID_AA64AFR1_EL1:
         assert(isRead);
-        trapToHyp = hcr.tid3;
+        trapToHyp = hcr.tid3 && el == EL1;
         break;
       // ID regs, group 2
       case MISCREG_CTR_EL0:
       case MISCREG_CCSIDR_EL1:
       case MISCREG_CLIDR_EL1:
       case MISCREG_CSSELR_EL1:
-        trapToHyp = hcr.tid2;
+        trapToHyp = hcr.tid2 && el <= EL1;
         break;
       // ID regs, group 1
       case MISCREG_AIDR_EL1:
       case MISCREG_REVIDR_EL1:
         assert(isRead);
-        trapToHyp = hcr.tid1;
+        trapToHyp = hcr.tid1 && el == EL1;
         break;
       default:
         break;

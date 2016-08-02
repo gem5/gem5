@@ -265,8 +265,8 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
 
 bool msrMrs64TrapToSup(const MiscRegIndex miscReg, ExceptionLevel el,
                        CPACR cpacr);
-bool msrMrs64TrapToHyp(const MiscRegIndex miscReg, bool isRead, CPTR cptr,
-                       HCR hcr, bool * isVfpNeon);
+bool msrMrs64TrapToHyp(const MiscRegIndex miscReg, ExceptionLevel el,
+                       bool isRead, CPTR cptr, HCR hcr, bool * isVfpNeon);
 bool msrMrs64TrapToMon(const MiscRegIndex miscReg, CPTR cptr,
                        ExceptionLevel el, bool * isVfpNeon);
 
