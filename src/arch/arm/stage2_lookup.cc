@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -60,6 +60,17 @@ Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
                                    functional, false, tranType);
     // Call finish if we're done already
     if ((fault != NoFault) || (stage2Te != NULL)) {
+        // Since we directly requested the table entry (which we need later on
+        // to merge the attributes) then we've skipped some stage2 permissions
+        // checking. So call translate on stage 2 to do the checking. As the
+        // entry is now in the TLB this should always hit the cache.
+        if (fault == NoFault) {
+            if (inAArch64(tc))
+                fault = stage2Tlb->checkPermissions64(stage2Te, &req, mode, tc);
+            else
+                fault = stage2Tlb->checkPermissions(stage2Te, &req, mode);
+        }
+
         mergeTe(&req, mode);
         *destTe = stage1Te;
     }
@@ -69,14 +80,6 @@ Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
 void
 Stage2LookUp::mergeTe(RequestPtr req, BaseTLB::Mode mode)
 {
-    // Since we directly requested the table entry (which we need later on to
-    // merge the attributes) then we've skipped some stage 2 permissinos
-    // checking. So call translate on stage 2 to do the checking. As the entry
-    // is now in the TLB this should always hit the cache.
-    if (fault == NoFault) {
-        fault = stage2Tlb->checkPermissions(stage2Te, req, mode);
-    }
-
     // Check again that we haven't got a fault
     if (fault == NoFault) {
         assert(stage2Te != NULL);
