@@ -65,8 +65,10 @@ TableWalker::TableWalker(const Params *p)
       pendingReqs(0),
       pendingChangeTick(curTick()),
       doL1DescEvent(this), doL2DescEvent(this),
-      doL0LongDescEvent(this), doL1LongDescEvent(this), doL2LongDescEvent(this),
-      doL3LongDescEvent(this),
+      doL0LongDescEvent(this), doL1LongDescEvent(this),
+      doL2LongDescEvent(this), doL3LongDescEvent(this),
+      LongDescEventByLevel { &doL0LongDescEvent, &doL1LongDescEvent,
+                             &doL2LongDescEvent, &doL3LongDescEvent },
       doProcessEvent(this)
 {
     sctlr = 0;
@@ -138,7 +140,8 @@ void
 TableWalker::completeDrain()
 {
     if (drainState() == DrainState::Draining &&
-        stateQueues[L1].empty() && stateQueues[L2].empty() &&
+        stateQueues[L0].empty() && stateQueues[L1].empty() &&
+        stateQueues[L2].empty() && stateQueues[L3].empty() &&
         pendingQueue.empty()) {
 
         DPRINTF(Drain, "TableWalker done draining, processing drain event\n");
@@ -697,12 +700,10 @@ TableWalker::processWalkLPAE()
     currState->longDesc.aarch64 = false;
     currState->longDesc.grainSize = Grain4KB;
 
-    Event *event = start_lookup_level == L1 ? (Event *) &doL1LongDescEvent
-                                            : (Event *) &doL2LongDescEvent;
-
     bool delayed = fetchDescriptor(desc_addr, (uint8_t*)&currState->longDesc.data,
                                    sizeof(uint64_t), flag, start_lookup_level,
-                                   event, &TableWalker::doLongDescriptor);
+                                   LongDescEventByLevel[start_lookup_level],
+                                   &TableWalker::doLongDescriptor);
     if (!delayed) {
         f = currState->fault;
     }
@@ -967,32 +968,9 @@ TableWalker::processWalkAArch64()
     currState->longDesc.grainSize = tg;
 
     if (currState->timing) {
-        Event *event;
-        switch (start_lookup_level) {
-          case L0:
-            event = (Event *) &doL0LongDescEvent;
-            break;
-          case L1:
-            event = (Event *) &doL1LongDescEvent;
-            break;
-          case L2:
-            event = (Event *) &doL2LongDescEvent;
-            break;
-          case L3:
-            event = (Event *) &doL3LongDescEvent;
-            break;
-          default:
-            panic("Invalid table lookup level");
-            break;
-        }
-        port->dmaAction(MemCmd::ReadReq, desc_addr, sizeof(uint64_t),
-                       event, (uint8_t*) &currState->longDesc.data,
-                       currState->tc->getCpuPtr()->clockPeriod(), flag);
-        DPRINTF(TLBVerbose,
-                "Adding to walker fifo: queue size before adding: %d\n",
-                stateQueues[start_lookup_level].size());
-        stateQueues[start_lookup_level].push_back(currState);
-        currState = NULL;
+        fetchDescriptor(desc_addr, (uint8_t*) &currState->longDesc.data,
+                        sizeof(uint64_t), flag, start_lookup_level,
+                        LongDescEventByLevel[start_lookup_level], NULL);
     } else {
         fetchDescriptor(desc_addr, (uint8_t*)&currState->longDesc.data,
                         sizeof(uint64_t), flag, -1, NULL,
@@ -1672,19 +1650,15 @@ TableWalker::doLongDescriptor()
             if (currState->secureLookup)
                 flag.set(Request::SECURE);
 
-            currState->longDesc.lookupLevel =
+            LookupLevel L = currState->longDesc.lookupLevel =
                 (LookupLevel) (currState->longDesc.lookupLevel + 1);
             Event *event = NULL;
-            switch (currState->longDesc.lookupLevel) {
+            switch (L) {
               case L1:
                 assert(currState->aarch64);
-                event = &doL1LongDescEvent;
-                break;
               case L2:
-                event = &doL2LongDescEvent;
-                break;
               case L3:
-                event = &doL3LongDescEvent;
+                event = LongDescEventByLevel[L];
                 break;
               default:
                 panic("Wrong lookup level in table walk\n");

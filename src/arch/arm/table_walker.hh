@@ -944,6 +944,7 @@ class TableWalker : public MemObject
                  &TableWalker::doL3LongDescriptorWrapper> doL3LongDescEvent;
 
     void doLongDescriptorWrapper(LookupLevel curr_lookup_level);
+    Event* LongDescEventByLevel[4];
 
     bool fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
         Request::Flags flags, int queueIndex, Event *event,
