@@ -337,6 +337,13 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup, bool hyp,
     }
 }
 
+void
+TLB::flushIpaVmid(Addr ipa, bool secure_lookup, bool hyp, uint8_t target_el)
+{
+    assert(!isStage2);
+    stage2Tlb->_flushMva(ipa, 0xbeef, secure_lookup, hyp, true, target_el);
+}
+
 bool
 TLB::checkELMatch(uint8_t target_el, uint8_t tentry_el, bool ignore_el)
 {

@@ -275,6 +275,19 @@ class TLB : public BaseTLB
      */
     void flushMva(Addr mva, bool secure_lookup, bool hyp, uint8_t target_el);
 
+    /**
+     * Invalidate all entries in the stage 2 TLB that match the given ipa
+     * and the current VMID
+     * @param ipa the address to invalidate
+     * @param secure_lookup if the operation affects the secure world
+     * @param hyp if the operation affects hyp mode
+     */
+    void flushIpaVmid(Addr ipa, bool secure_lookup, bool hyp, uint8_t target_el);
+
+    Fault trickBoxCheck(RequestPtr req, Mode mode, TlbEntry::DomainType domain);
+    Fault walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz, bool is_exec,
+            bool is_write, TlbEntry::DomainType domain, LookupLevel lookup_level);
+
     void printTlb() const;
 
     void demapPage(Addr vaddr, uint64_t asn) override

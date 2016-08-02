@@ -1393,8 +1393,27 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_TLBI_IPAS2E1IS_Xt:
           case MISCREG_TLBI_IPAS2E1_Xt:
             assert64(tc);
-            // @todo: implement these as part of Virtualization
-            warn("Not doing anything for write of miscreg ITLB_IPAS2\n");
+            target_el = 1; // EL 0 and 1 are handled together
+            scr = readMiscReg(MISCREG_SCR, tc);
+            secure_lookup = haveSecurity && !scr.ns;
+            sys = tc->getSystemPtr();
+            for (x = 0; x < sys->numContexts(); x++) {
+                oc = sys->getThreadContext(x);
+                assert(oc->getITBPtr() && oc->getDTBPtr());
+                Addr ipa = ((Addr) bits(newVal, 35, 0)) << 12;
+                oc->getITBPtr()->flushIpaVmid(ipa,
+                    secure_lookup, false, target_el);
+                oc->getDTBPtr()->flushIpaVmid(ipa,
+                    secure_lookup, false, target_el);
+
+                CheckerCPU *checker = oc->getCheckerCpuPtr();
+                if (checker) {
+                    checker->getITBPtr()->flushIpaVmid(ipa,
+                        secure_lookup, false, target_el);
+                    checker->getDTBPtr()->flushIpaVmid(ipa,
+                        secure_lookup, false, target_el);
+                }
+            }
             return;
           case MISCREG_ACTLR:
             warn("Not doing anything for write of miscreg ACTLR\n");
