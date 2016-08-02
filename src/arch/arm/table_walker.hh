@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2015 ARM Limited
+ * Copyright (c) 2010-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -902,7 +902,7 @@ class TableWalker : public MemObject
     Fault walk(RequestPtr req, ThreadContext *tc, uint16_t asid, uint8_t _vmid,
                bool _isHyp, TLB::Mode mode, TLB::Translation *_trans,
                bool timing, bool functional, bool secure,
-               TLB::ArmTranslationType tranType);
+               TLB::ArmTranslationType tranType, bool _stage2Req);
 
     void setTlb(TLB *_tlb) { tlb = _tlb; }
     TLB* getTlb() { return tlb; }

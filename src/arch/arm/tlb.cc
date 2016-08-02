@@ -1384,7 +1384,7 @@ TLB::getTE(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
         Fault fault;
         fault = tableWalker->walk(req, tc, asid, vmid, isHyp, mode,
                                   translation, timing, functional, is_secure,
-                                  tranType);
+                                  tranType, stage2Req);
         // for timing mode, return and wait for table walk,
         if (timing || fault != NoFault) {
             return fault;

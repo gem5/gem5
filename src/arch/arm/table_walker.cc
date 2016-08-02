@@ -181,7 +181,8 @@ Fault
 TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
                   uint8_t _vmid, bool _isHyp, TLB::Mode _mode,
                   TLB::Translation *_trans, bool _timing, bool _functional,
-                  bool secure, TLB::ArmTranslationType tranType)
+                  bool secure, TLB::ArmTranslationType tranType,
+                  bool _stage2Req)
 {
     assert(!(_functional && _timing));
     ++statWalks;
@@ -292,9 +293,9 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     // We only do a second stage of translation if we're not secure, or in
     // hyp mode, the second stage MMU is enabled, and this table walker
     // instance is the first stage.
+    // TODO: fix setting of doingStage2 for timing mode
     currState->doingStage2 = false;
-    currState->stage2Req = currState->hcr.vm && !isStage2 &&
-                           !currState->isSecure && !currState->isHyp;
+    currState->stage2Req = _stage2Req && !isStage2;
 
     bool long_desc_format = currState->aarch64 || _isHyp || isStage2 ||
                             longDescFormatInUse(currState->tc);
