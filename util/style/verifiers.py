@@ -56,6 +56,40 @@ import sort_includes
 from region import *
 from file_types import lang_type
 
+
+def safefix(fix_func):
+    """ Decorator for the fix functions of the Verifier class.
+        This function wraps the fix function and creates a backup file
+        just in case there is an error.
+    """
+    def safefix_wrapper(*args, **kwargs):
+        # Check to be sure that this is decorating a function we expect:
+        # a class method with filename as the first argument (after self)
+        assert(os.path.exists(args[1]))
+        self = args[0]
+        assert(is_verifier(self.__class__))
+        filename = args[1]
+
+        # Now, Let's make a backup file.
+        from shutil import copyfile
+        backup_name = filename+'.bak'
+        copyfile(filename, backup_name)
+
+        # Try to apply the fix. If it fails, then we revert the file
+        # Either way, we need to clean up our backup file
+        try:
+            fix_func(*args, **kwargs)
+        except Exception as e:
+            # Restore the original file to the backup file
+            self.ui.write("Error! Restoring the original file.\n")
+            copyfile(backup_name, filename)
+            raise
+        finally:
+            # Clean up the backup file
+            os.remove(backup_name)
+
+    return safefix_wrapper
+
 def _modified_regions(old, new):
     try:
         m = SequenceMatcher(a=old, b=new, autojunk=False)
@@ -122,11 +156,11 @@ class Verifier(object):
         return f
 
     def skip(self, filename):
-        # We never want to handle symlinks, so always skip them: If the location
-        # pointed to is a directory, skip it. If the location is a file inside
-        # the gem5 directory, it will be checked as a file, so symlink can be
-        # skipped. If the location is a file outside gem5, we don't want to
-        # check it anyway.
+        # We never want to handle symlinks, so always skip them: If the
+        # location pointed to is a directory, skip it. If the location is a
+        # file inside the gem5 directory, it will be checked as a file, so
+        # symlink can be skipped. If the location is a file outside gem5, we
+        # don't want to check it anyway.
         if os.path.islink(filename):
             return True
         return lang_type(filename) not in self.languages
@@ -202,6 +236,7 @@ class LineVerifier(Verifier):
         f.close()
         return errors
 
+    @safefix
     def fix(self, filename, regions=all_regions):
         f = self.open(filename, 'r+')
 
@@ -318,6 +353,7 @@ class SortedIncludes(Verifier):
 
         return 0
 
+    @safefix
     def fix(self, filename, regions=all_regions):
         f = self.open(filename, 'r+')
 
