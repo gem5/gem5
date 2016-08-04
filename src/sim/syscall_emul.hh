@@ -1389,6 +1389,28 @@ mmapImpl(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
     return start;
 }
 
+template <class OS>
+SyscallReturn
+pwrite64Func(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr bufPtr = p->getSyscallArg(tc, index);
+    int nbytes = p->getSyscallArg(tc, index);
+    int offset = p->getSyscallArg(tc, index);
+
+    int sim_fd = p->getSimFD(tgt_fd);
+    if (sim_fd < 0)
+        return -EBADF;
+
+    BufferArg bufArg(bufPtr, nbytes);
+    bufArg.copyIn(tc->getMemProxy());
+
+    int bytes_written = pwrite64(sim_fd, bufArg.bufferPtr(), nbytes, offset);
+
+    return (bytes_written == -1) ? -errno : bytes_written;
+}
+
 /// Target mmap() handler.
 template <class OS>
 SyscallReturn
