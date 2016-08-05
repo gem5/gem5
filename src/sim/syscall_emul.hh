@@ -64,6 +64,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#include <unistd.h>
 
 #include <cerrno>
 #include <string>
@@ -1406,7 +1407,7 @@ pwrite64Func(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     BufferArg bufArg(bufPtr, nbytes);
     bufArg.copyIn(tc->getMemProxy());
 
-    int bytes_written = pwrite64(sim_fd, bufArg.bufferPtr(), nbytes, offset);
+    int bytes_written = pwrite(sim_fd, bufArg.bufferPtr(), nbytes, offset);
 
     return (bytes_written == -1) ? -errno : bytes_written;
 }

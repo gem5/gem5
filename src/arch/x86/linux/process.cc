@@ -356,7 +356,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 135 */ SyscallDesc("personality", unimplementedFunc),
     /* 136 */ SyscallDesc("ustat", unimplementedFunc),
     /* 137 */ SyscallDesc("statfs", unimplementedFunc),
-    /* 138 */ SyscallDesc("fstatfs", fstatfsFunc<X86Linux64>),
+    /* 138 */ SyscallDesc("fstatfs", unimplementedFunc),
     /* 139 */ SyscallDesc("sysfs", unimplementedFunc),
     /* 140 */ SyscallDesc("getpriority", unimplementedFunc),
     /* 141 */ SyscallDesc("setpriority", unimplementedFunc),
