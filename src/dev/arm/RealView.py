@@ -301,12 +301,18 @@ class RealView(Platform):
 
     _off_chip_ranges = []
 
-    def _attach_io(self, devices, bus):
+    def _attach_device(self, device, bus, dma_ports=None):
+        if hasattr(device, "pio"):
+            device.pio = bus.master
+        if hasattr(device, "dma"):
+            if dma_ports is None:
+                device.dma = bus.slave
+            else:
+                dma_ports.append(device.dma)
+
+    def _attach_io(self, devices, *args, **kwargs):
         for d in devices:
-            if hasattr(d, "pio"):
-                d.pio = bus.master
-            if hasattr(d, "dma"):
-                d.dma = bus.slave
+            self._attach_device(d, *args, **kwargs)
 
     def _attach_clk(self, devices, clkdomain):
         for d in devices:
@@ -325,13 +331,13 @@ class RealView(Platform):
     def offChipIOClkDomain(self, clkdomain):
         self._attach_clk(self._off_chip_devices(), clkdomain)
 
-    def attachOnChipIO(self, bus, bridge=None):
-        self._attach_io(self._on_chip_devices(), bus)
+    def attachOnChipIO(self, bus, bridge=None, **kwargs):
+        self._attach_io(self._on_chip_devices(), bus, **kwargs)
         if bridge:
             bridge.ranges = self._off_chip_ranges
 
-    def attachIO(self, bus):
-        self._attach_io(self._off_chip_devices(), bus)
+    def attachIO(self, *args, **kwargs):
+        self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
@@ -923,10 +929,9 @@ Interrupts:
             self.energy_ctrl,
         ]
 
-    def attachPciDevice(self, device, bus):
+    def attachPciDevice(self, device, *args, **kwargs):
         device.host = self.pci_host
-        device.pio = bus.master
-        device.dma = bus.slave
+        self._attach_device(device, *args, **kwargs)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
