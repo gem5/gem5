@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, 2015 ARM Limited
+# Copyright (c) 2010-2012, 2015-2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -203,7 +203,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   dtb_filename=None, bare_metal=False, cmdline=None,
-                  external_memory=""):
+                  external_memory="", ruby=False):
     assert machine_type
 
     default_dtbs = {
@@ -233,11 +233,12 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     self.readfile = mdesc.script()
     self.iobus = IOXBar()
-    self.membus = MemBus()
-    self.membus.badaddr_responder.warn_access = "warn"
-    self.bridge = Bridge(delay='50ns')
-    self.bridge.master = self.iobus.slave
-    self.bridge.slave = self.membus.master
+    if not ruby:
+        self.bridge = Bridge(delay='50ns')
+        self.bridge.master = self.iobus.slave
+        self.membus = MemBus()
+        self.membus.badaddr_responder.warn_access = "warn"
+        self.bridge.slave = self.membus.master
 
     self.mem_mode = mem_mode
 
@@ -318,7 +319,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # iobus, as gem5's membus is only used for initialization and
         # SST doesn't use it.  Attaching nvmem to iobus solves this issue.
         # During initialization, system_port -> membus -> iobus -> nvmem.
-        if external_memory:
+        if external_memory or ruby:
             self.realview.setupBootLoader(self.iobus,  self, binary)
         else:
             self.realview.setupBootLoader(self.membus, self, binary)
@@ -366,20 +367,31 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.bridge.ranges = [self.realview.nvmem.range]
 
         self.realview.attachOnChipIO(self.iobus)
+        # Attach off-chip devices
+        self.realview.attachIO(self.iobus)
+    elif ruby:
+        self._dma_ports = [ ]
+        self.realview.attachOnChipIO(self.iobus, dma_ports=self._dma_ports)
+        # Force Ruby to treat the boot ROM as an IO device.
+        self.realview.nvmem.in_addr_map = False
+        self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
     else:
         self.realview.attachOnChipIO(self.membus, self.bridge)
+        # Attach off-chip devices
+        self.realview.attachIO(self.iobus)
 
-    # Attach off-chip devices
-    self.realview.attachIO(self.iobus)
     for dev_id, dev in enumerate(pci_devices):
         dev.pci_bus, dev.pci_dev, dev.pci_func = (0, dev_id + 1, 0)
-        self.realview.attachPciDevice(dev, self.iobus)
+        self.realview.attachPciDevice(
+            dev, self.iobus,
+            dma_ports=self._dma_ports if ruby else None)
 
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
 
-    self.system_port = self.membus.slave
+    if not ruby:
+        self.system_port = self.membus.slave
 
     return self
 
