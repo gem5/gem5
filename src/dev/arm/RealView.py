@@ -759,7 +759,8 @@ class VExpress_EMM64(VExpress_EMM):
         pci_pio_base=0x2f000000)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range = AddrRange(0, size = '64MB'))
+        self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
+                                  conf_table_reported=False)
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot_emm.arm64')
         cur_sys.atags_addr = 0x8000000
@@ -928,7 +929,8 @@ Interrupts:
         device.dma = bus.slave
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'))
+        self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
+                                  conf_table_reported=False)
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
         cur_sys.atags_addr = 0x8000000
