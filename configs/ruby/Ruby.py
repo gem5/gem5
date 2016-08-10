@@ -194,6 +194,8 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
     # independent of the protocol and kept in the protocol-agnostic
     # part (i.e. here).
     sys_port_proxy = RubyPortProxy(ruby_system = ruby)
+    if piobus is not None:
+        sys_port_proxy.pio_master_port = piobus.slave
 
     # Give the system port proxy a SimObject parent without creating a
     # full-fledged controller

@@ -312,9 +312,10 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
-        assert(rp->memMasterPort.isConnected());
         DPRINTF(RubyPort, "Pio Request for address: 0x%#x\n", pkt->getAddr());
-        panic("RubyPort::PioMasterPort::recvFunctional() not implemented!\n");
+        assert(rp->pioMasterPort.isConnected());
+        rp->pioMasterPort.sendFunctional(pkt);
+        return;
     }
 
     assert(pkt->getAddr() + pkt->getSize() <=
