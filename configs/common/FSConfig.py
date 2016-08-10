@@ -393,6 +393,11 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     if not ruby:
         self.system_port = self.membus.slave
 
+    if ruby:
+        fatal("You're trying to use Ruby on ARM, which is not working " \
+              "properly yet. If you want to test it anyway, you " \
+              "need to remove this fatal error from FSConfig.py.")
+
     return self
 
 
