@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 ARM Limited
+ * Copyright (c) 2013-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -65,9 +65,9 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
     DPRINTF(SnoopFilter, "%s: packet src %s addr 0x%x cmd %s\n",
             __func__, slave_port.name(), cpkt->getAddr(), cpkt->cmdString());
 
-    // Ultimately we should check if the packet came from an
-    // allocating source, not just if the port is snooping
-    bool allocate = !cpkt->req->isUncacheable() && slave_port.isSnooping();
+    // check if the packet came from a cache
+    bool allocate = !cpkt->req->isUncacheable() && slave_port.isSnooping() &&
+        cpkt->fromCache();
     Addr line_addr = cpkt->getBlockAddr(linesize);
     SnoopMask req_port = portToMask(slave_port);
     reqLookupResult = cachedLocations.find(line_addr);
@@ -235,11 +235,12 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
     assert(cpkt->isResponse());
     assert(cpkt->cacheResponding());
 
-    // Ultimately we should check if the packet came from an
-    // allocating source, not just if the port is snooping
-    bool allocate = !cpkt->req->isUncacheable() && req_port.isSnooping();
-    if (!allocate)
+    // if this snoop response is due to an uncacheable request, or is
+    // being turned into a normal response, there is nothing more to
+    // do
+    if (cpkt->req->isUncacheable() || !req_port.isSnooping()) {
         return;
+    }
 
     Addr line_addr = cpkt->getBlockAddr(linesize);
     SnoopMask rsp_mask = portToMask(rsp_port);
@@ -268,6 +269,7 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
         sf_item.holder = 0;
     }
     assert(!cpkt->isWriteback());
+    // @todo Deal with invalidating responses
     sf_item.holder |=  req_mask;
     sf_item.requested &= ~req_mask;
     assert(sf_item.requested | sf_item.holder);
@@ -319,15 +321,19 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
 
     assert(cpkt->isResponse());
 
-    // Ultimately we should check if the packet came from an
-    // allocating source, not just if the port is snooping
-    bool allocate = !cpkt->req->isUncacheable() && slave_port.isSnooping();
-    if (!allocate)
+    // we only allocate if the packet actually came from a cache, but
+    // start by checking if the port is snooping
+    if (cpkt->req->isUncacheable() || !slave_port.isSnooping())
         return;
 
+    // next check if we actually allocated an entry
     Addr line_addr = cpkt->getBlockAddr(linesize);
+    auto sf_it = cachedLocations.find(line_addr);
+    if (sf_it == cachedLocations.end())
+        return;
+
     SnoopMask slave_mask = portToMask(slave_port);
-    SnoopItem& sf_item = cachedLocations[line_addr];
+    SnoopItem& sf_item = sf_it->second;
 
     DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
             __func__,  sf_item.requested, sf_item.holder);
