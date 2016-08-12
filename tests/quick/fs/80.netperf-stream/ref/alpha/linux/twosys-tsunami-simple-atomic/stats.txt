@@ -4,11 +4,11 @@ sim_seconds                                  0.200409                       # Nu
 sim_ticks                                200409271000                       # Number of ticks simulated
 final_tick                               4321213476000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                               17965406                       # Simulator instruction rate (inst/s)
-host_op_rate                                 17965399                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             6873925677                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 491760                       # Number of bytes of host memory used
-host_seconds                                    29.16                       # Real time elapsed on the host
+host_inst_rate                               11448115                       # Simulator instruction rate (inst/s)
+host_op_rate                                 11448111                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4380279881                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 499724                       # Number of bytes of host memory used
+host_seconds                                    45.75                       # Real time elapsed on the host
 sim_insts                                   523780905                       # Number of instructions simulated
 sim_ops                                     523780905                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -235,6 +235,12 @@ drivesys.iobus.pkt_size_drivesys.bridge.master::total       948604              
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total     57261614                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size::total               58210218                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+drivesys.membus.snoop_filter.tot_snoops             0                       # Total number of snoops made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 drivesys.membus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.membus.trans_dist::ReadReq          25081955                       # Transaction distribution
 drivesys.membus.trans_dist::ReadResp         25182911                       # Transaction distribution
@@ -262,14 +268,14 @@ drivesys.membus.pkt_size::total             175319714                       # Cu
 drivesys.membus.snoops                              0                       # Total snoops (count)
 drivesys.membus.snoopTraffic                        0                       # Total snoop traffic (bytes)
 drivesys.membus.snoop_fanout::samples        27247410                       # Request fanout histogram
-drivesys.membus.snoop_fanout::mean           0.786764                       # Request fanout histogram
-drivesys.membus.snoop_fanout::stdev          0.409593                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean                  0                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev                 0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-drivesys.membus.snoop_fanout::0               5810141     21.32%     21.32% # Request fanout histogram
-drivesys.membus.snoop_fanout::1              21437269     78.68%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0              27247410    100.00%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::1                     0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
-drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
+drivesys.membus.snoop_fanout::max_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::total          27247410                       # Request fanout histogram
 drivesys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
@@ -587,6 +593,12 @@ testsys.iobus.pkt_size_testsys.bridge.master::total       942152                
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total     57261398                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size::total                58203550                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+testsys.membus.snoop_filter.tot_snoops              0                       # Total number of snoops made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 testsys.membus.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.membus.trans_dist::ReadReq           26478762                       # Transaction distribution
 testsys.membus.trans_dist::ReadResp          26587372                       # Transaction distribution
@@ -614,14 +626,14 @@ testsys.membus.pkt_size::total              183678150                       # Cu
 testsys.membus.snoops                               0                       # Total snoops (count)
 testsys.membus.snoopTraffic                         0                       # Total snoop traffic (bytes)
 testsys.membus.snoop_fanout::samples         28885173                       # Request fanout histogram
-testsys.membus.snoop_fanout::mean            0.784032                       # Request fanout histogram
-testsys.membus.snoop_fanout::stdev           0.411493                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean                   0                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev                  0                       # Request fanout histogram
 testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
-testsys.membus.snoop_fanout::0                6238286     21.60%     21.60% # Request fanout histogram
-testsys.membus.snoop_fanout::1               22646887     78.40%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0               28885173    100.00%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::1                      0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
-testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
+testsys.membus.snoop_fanout::max_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::total           28885173                       # Request fanout histogram
 testsys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED 4321213476000                       # Cumulative time (in ticks) in various power states
@@ -709,11 +721,11 @@ sim_seconds                                  0.000407                       # Nu
 sim_ticks                                   407341500                       # Number of ticks simulated
 final_tick                               4321620817500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                             9196187733                       # Simulator instruction rate (inst/s)
-host_op_rate                               9194395313                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                             7148094141                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 491760                       # Number of bytes of host memory used
-host_seconds                                     0.06                       # Real time elapsed on the host
+host_inst_rate                             5887840528                       # Simulator instruction rate (inst/s)
+host_op_rate                               5886957075                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             4576964640                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 499724                       # Number of bytes of host memory used
+host_seconds                                     0.09                       # Real time elapsed on the host
 sim_insts                                   523853183                       # Number of instructions simulated
 sim_ops                                     523853183                       # Number of ops (including micro ops) simulated
 drivesys.voltage_domain.voltage                     1                       # Voltage in Volts
@@ -919,6 +931,12 @@ drivesys.iobus.pkt_size_drivesys.bridge.master::total         1928              
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::drivesys.iobridge.slave       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size_drivesys.tsunami.ethernet.dma::total       116400                       # Cumulative packet size per connected master and slave (bytes)
 drivesys.iobus.pkt_size::total                 118328                       # Cumulative packet size per connected master and slave (bytes)
+drivesys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+drivesys.membus.snoop_filter.tot_snoops             0                       # Total number of snoops made to the snoop filter.
+drivesys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+drivesys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 drivesys.membus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.membus.trans_dist::ReadReq             47907                       # Transaction distribution
 drivesys.membus.trans_dist::ReadResp            48111                       # Transaction distribution
@@ -946,14 +964,14 @@ drivesys.membus.pkt_size::total                340576                       # Cu
 drivesys.membus.snoops                              0                       # Total snoops (count)
 drivesys.membus.snoopTraffic                        0                       # Total snoop traffic (bytes)
 drivesys.membus.snoop_fanout::samples           52004                       # Request fanout histogram
-drivesys.membus.snoop_fanout::mean           0.788439                       # Request fanout histogram
-drivesys.membus.snoop_fanout::stdev          0.408419                       # Request fanout histogram
+drivesys.membus.snoop_fanout::mean                  0                       # Request fanout histogram
+drivesys.membus.snoop_fanout::stdev                 0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::underflows            0      0.00%      0.00% # Request fanout histogram
-drivesys.membus.snoop_fanout::0                 11002     21.16%     21.16% # Request fanout histogram
-drivesys.membus.snoop_fanout::1                 41002     78.84%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::0                 52004    100.00%    100.00% # Request fanout histogram
+drivesys.membus.snoop_fanout::1                     0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::overflows             0      0.00%    100.00% # Request fanout histogram
 drivesys.membus.snoop_fanout::min_value             0                       # Request fanout histogram
-drivesys.membus.snoop_fanout::max_value             1                       # Request fanout histogram
+drivesys.membus.snoop_fanout::max_value             0                       # Request fanout histogram
 drivesys.membus.snoop_fanout::total             52004                       # Request fanout histogram
 drivesys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 drivesys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
@@ -1218,6 +1236,12 @@ testsys.iobus.pkt_size_testsys.bridge.master::total         1928                
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::testsys.iobridge.slave       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size_testsys.tsunami.ethernet.dma::total       116376                       # Cumulative packet size per connected master and slave (bytes)
 testsys.iobus.pkt_size::total                  118304                       # Cumulative packet size per connected master and slave (bytes)
+testsys.membus.snoop_filter.tot_requests            0                       # Total number of requests made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+testsys.membus.snoop_filter.tot_snoops              0                       # Total number of snoops made to the snoop filter.
+testsys.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+testsys.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 testsys.membus.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.membus.trans_dist::ReadReq              47876                       # Transaction distribution
 testsys.membus.trans_dist::ReadResp             48080                       # Transaction distribution
@@ -1245,14 +1269,14 @@ testsys.membus.pkt_size::total                 340448                       # Cu
 testsys.membus.snoops                               0                       # Total snoops (count)
 testsys.membus.snoopTraffic                         0                       # Total snoop traffic (bytes)
 testsys.membus.snoop_fanout::samples            51975                       # Request fanout histogram
-testsys.membus.snoop_fanout::mean            0.788360                       # Request fanout histogram
-testsys.membus.snoop_fanout::stdev           0.408475                       # Request fanout histogram
+testsys.membus.snoop_fanout::mean                   0                       # Request fanout histogram
+testsys.membus.snoop_fanout::stdev                  0                       # Request fanout histogram
 testsys.membus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
-testsys.membus.snoop_fanout::0                  11000     21.16%     21.16% # Request fanout histogram
-testsys.membus.snoop_fanout::1                  40975     78.84%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::0                  51975    100.00%    100.00% # Request fanout histogram
+testsys.membus.snoop_fanout::1                      0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::overflows              0      0.00%    100.00% # Request fanout histogram
 testsys.membus.snoop_fanout::min_value              0                       # Request fanout histogram
-testsys.membus.snoop_fanout::max_value              1                       # Request fanout histogram
+testsys.membus.snoop_fanout::max_value              0                       # Request fanout histogram
 testsys.membus.snoop_fanout::total              51975                       # Request fanout histogram
 testsys.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states
 testsys.tsunami.backdoor.pwrStateResidencyTicks::UNDEFINED    407341500                       # Cumulative time (in ticks) in various power states

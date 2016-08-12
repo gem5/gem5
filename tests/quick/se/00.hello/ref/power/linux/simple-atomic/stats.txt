@@ -4,11 +4,11 @@ sim_seconds                                  0.000003                       # Nu
 sim_ticks                                     2896000                       # Number of ticks simulated
 final_tick                                    2896000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 667625                       # Simulator instruction rate (inst/s)
-host_op_rate                                   666766                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              332924076                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 235336                       # Number of bytes of host memory used
-host_seconds                                     0.01                       # Real time elapsed on the host
+host_inst_rate                                 247008                       # Simulator instruction rate (inst/s)
+host_op_rate                                   246868                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              123347407                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 238692                       # Number of bytes of host memory used
+host_seconds                                     0.02                       # Real time elapsed on the host
 sim_insts                                        5793                       # Number of instructions simulated
 sim_ops                                          5793                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -116,6 +116,12 @@ system.cpu.op_class::MemWrite                    1046     18.06%    100.00% # Cl
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::total                       5793                       # Class of executed instruction
+system.membus.snoop_filter.tot_requests             0                       # Total number of requests made to the snoop filter.
+system.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+system.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.membus.snoop_filter.tot_snoops               0                       # Total number of snoops made to the snoop filter.
+system.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+system.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.membus.pwrStateResidencyTicks::UNDEFINED      2896000                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq                6754                       # Transaction distribution
 system.membus.trans_dist::ReadResp               6754                       # Transaction distribution
@@ -130,14 +136,14 @@ system.membus.pkt_size::total                   31101                       # Cu
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoopTraffic                          0                       # Total snoop traffic (bytes)
 system.membus.snoop_fanout::samples              7800                       # Request fanout histogram
-system.membus.snoop_fanout::mean             0.742692                       # Request fanout histogram
-system.membus.snoop_fanout::stdev            0.437178                       # Request fanout histogram
+system.membus.snoop_fanout::mean                    0                       # Request fanout histogram
+system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::0                    2007     25.73%     25.73% # Request fanout histogram
-system.membus.snoop_fanout::1                    5793     74.27%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::0                    7800    100.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::1                       0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
-system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               0                       # Request fanout histogram
 system.membus.snoop_fanout::total                7800                       # Request fanout histogram
 
 ---------- End Simulation Statistics   ----------
