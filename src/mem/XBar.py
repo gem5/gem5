@@ -153,6 +153,9 @@ class SystemXBar(CoherentXBar):
     response_latency = 2
     snoop_response_latency = 4
 
+    # Use a snoop-filter by default
+    snoop_filter = SnoopFilter(lookup_latency = 1)
+
     # This specialisation of the coherent crossbar is to be considered
     # the point of coherency, as there are no (coherent) downstream
     # caches.
