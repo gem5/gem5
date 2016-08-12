@@ -146,8 +146,8 @@ Cache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
 
 
 void
-Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
-                             bool deferred_response, bool pending_downgrade)
+Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
+                      bool deferred_response, bool pending_downgrade)
 {
     assert(pkt->isRequest());
 
@@ -230,30 +230,22 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
                         // (cacheResponding set, hasSharers not set)
                         pkt->setCacheResponding();
 
-                        if (clusivity == Enums::mostly_excl) {
-                            // if this cache is mostly exclusive with
-                            // respect to the cache above, drop the
-                            // block, no need to first unset the dirty
-                            // bit
-                            invalidateBlock(blk);
-                        } else {
-                            // if this cache is mostly inclusive, we
-                            // keep the block in the Exclusive state,
-                            // and pass it upwards as Modified
-                            // (writable and dirty), hence we have
-                            // multiple caches, all on the same path
-                            // towards memory, all considering the
-                            // same block writable, but only one
-                            // considering it Modified
+                        // if this cache is mostly inclusive, we
+                        // keep the block in the Exclusive state,
+                        // and pass it upwards as Modified
+                        // (writable and dirty), hence we have
+                        // multiple caches, all on the same path
+                        // towards memory, all considering the
+                        // same block writable, but only one
+                        // considering it Modified
 
-                            // we get away with multiple caches (on
-                            // the same path to memory) considering
-                            // the block writeable as we always enter
-                            // the cache hierarchy through a cache,
-                            // and first snoop upwards in all other
-                            // branches
-                            blk->status &= ~BlkDirty;
-                        }
+                        // we get away with multiple caches (on
+                        // the same path to memory) considering
+                        // the block writeable as we always enter
+                        // the cache hierarchy through a cache,
+                        // and first snoop upwards in all other
+                        // branches
+                        blk->status &= ~BlkDirty;
                     } else {
                         // if we're responding after our own miss,
                         // there's a window where the recipient didn't
@@ -433,12 +425,13 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // like a Writeback which could not find a replaceable block so has to
         // go to next level.
         return false;
-    } else if ((blk != nullptr) &&
-               (pkt->needsWritable() ? blk->isWritable() :
-                blk->isReadable())) {
+    } else if (blk && (pkt->needsWritable() ? blk->isWritable() :
+                       blk->isReadable())) {
         // OK to satisfy access
         incHitCount(pkt);
-        satisfyCpuSideRequest(pkt, blk);
+        satisfyRequest(pkt, blk);
+        maintainClusivity(pkt->fromCache(), blk);
+
         return true;
     }
 
@@ -454,6 +447,18 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     }
 
     return false;
+}
+
+void
+Cache::maintainClusivity(bool from_cache, CacheBlk *blk)
+{
+    if (from_cache && blk && blk->isValid() && !blk->isDirty() &&
+        clusivity == Enums::mostly_excl) {
+        // if we have responded to a cache, and our block is still
+        // valid, but not dirty, and this cache is mostly exclusive
+        // with respect to the cache above, drop the block
+        invalidateBlock(blk);
+    }
 }
 
 void
@@ -1073,14 +1078,15 @@ Cache::recvAtomic(PacketPtr pkt)
                                      allocOnFill(pkt->cmd));
                     assert(blk != NULL);
                     is_invalidate = false;
-                    satisfyCpuSideRequest(pkt, blk);
+                    satisfyRequest(pkt, blk);
                 } else if (bus_pkt->isRead() ||
                            bus_pkt->cmd == MemCmd::UpgradeResp) {
                     // we're updating cache state to allow us to
                     // satisfy the upstream request from the cache
                     blk = handleFill(bus_pkt, blk, writebacks,
                                      allocOnFill(pkt->cmd));
-                    satisfyCpuSideRequest(pkt, blk);
+                    satisfyRequest(pkt, blk);
+                    maintainClusivity(pkt->fromCache(), blk);
                 } else {
                     // we're satisfying the upstream request without
                     // modifying cache state, e.g., a write-through
@@ -1318,6 +1324,8 @@ Cache::recvTimingResp(PacketPtr pkt)
     // First offset for critical word first calculations
     int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
+    bool from_cache = false;
+
     while (mshr->hasTargets()) {
         MSHR::Target *target = mshr->getTarget();
         Packet *tgt_pkt = target->pkt;
@@ -1339,6 +1347,10 @@ Cache::recvTimingResp(PacketPtr pkt)
                 delete tgt_pkt;
                 break; // skip response
             }
+
+            // keep track of whether we have responded to another
+            // cache
+            from_cache = from_cache || tgt_pkt->fromCache();
 
             // unlike the other packet flows, where data is found in other
             // caches or memory and brought back, write-line requests always
@@ -1362,8 +1374,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             }
 
             if (is_fill) {
-                satisfyCpuSideRequest(tgt_pkt, blk,
-                                      true, mshr->hasPostDowngrade());
+                satisfyRequest(tgt_pkt, blk, true, mshr->hasPostDowngrade());
 
                 // How many bytes past the first request is this one
                 int transfer_offset =
@@ -1450,6 +1461,8 @@ Cache::recvTimingResp(PacketPtr pkt)
 
         mshr->popTarget();
     }
+
+    maintainClusivity(from_cache, blk);
 
     if (blk && blk->isValid()) {
         // an invalidate response stemming from a write line request
@@ -1725,7 +1738,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         // only read responses and write-line requests have data;
         // note that we don't write the data here for write-line - that
-        // happens in the subsequent satisfyCpuSideRequest.
+        // happens in the subsequent call to satisfyRequest
         assert(pkt->isRead() || pkt->cmd == MemCmd::WriteLineReq);
 
         // need to do a replacement if allocating, otherwise we stick
@@ -1764,7 +1777,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
     // sanity check for whole-line writes, which should always be
     // marked as writable as part of the fill, and then later marked
-    // dirty as part of satisfyCpuSideRequest
+    // dirty as part of satisfyRequest
     if (pkt->cmd == MemCmd::WriteLineReq) {
         assert(!pkt->hasSharers());
         // at the moment other caches do not respond to the

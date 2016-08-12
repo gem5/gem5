@@ -303,6 +303,17 @@ class Cache : public BaseCache
     void invalidateBlock(CacheBlk *blk);
 
     /**
+     * Maintain the clusivity of this cache by potentially
+     * invalidating a block. This method works in conjunction with
+     * satisfyRequest, but is separate to allow us to handle all MSHR
+     * targets before potentially dropping a block.
+     *
+     * @param from_cache Whether we have dealt with a packet from a cache
+     * @param blk The block that should potentially be dropped
+     */
+    void maintainClusivity(bool from_cache, CacheBlk *blk);
+
+    /**
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
@@ -401,10 +412,22 @@ class Cache : public BaseCache
      */
     void functionalAccess(PacketPtr pkt, bool fromCpuSide);
 
-    void satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
-                               bool deferred_response = false,
-                               bool pending_downgrade = false);
-    bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, CacheBlk *blk);
+    /**
+     * Perform any necessary updates to the block and perform any data
+     * exchange between the packet and the block. The flags of the
+     * packet are also set accordingly.
+     *
+     * @param pkt Request packet from upstream that hit a block
+     * @param blk Cache block that the packet hit
+     * @param deferred_response Whether this hit is to block that
+     *                          originally missed
+     * @param pending_downgrade Whether the writable flag is to be removed
+     *
+     * @return True if the block is to be invalidated
+     */
+    void satisfyRequest(PacketPtr pkt, CacheBlk *blk,
+                        bool deferred_response = false,
+                        bool pending_downgrade = false);
 
     void doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
                                 bool already_copied, bool pending_inval);
