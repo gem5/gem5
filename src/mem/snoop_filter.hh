@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 ARM Limited
+ * Copyright (c) 2013-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -143,7 +143,7 @@ class SnoopFilter : public SimObject {
      * @param will_retry    This request will retry on this bus / snoop filter
      * @param addr          Packet address, merely for sanity checking
      */
-    void finishRequest(bool will_retry, const Addr addr);
+    void finishRequest(bool will_retry, Addr addr, bool is_secure);
 
     /**
      * Handle an incoming snoop from below (the master port). These
@@ -281,6 +281,14 @@ class SnoopFilter : public SimObject {
     const Cycles lookupLatency;
     /** Max capacity in terms of cache blocks tracked, for sanity checking */
     const unsigned maxEntryCount;
+
+    /**
+     * Use the lower bits of the address to keep track of the line status
+     */
+    enum LineStatus {
+        /** block holds data from the secure memory space */
+        LineSecure = 0x01,
+    };
 
     /** Statistics */
     Stats::Scalar totRequests;

@@ -69,6 +69,9 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
     bool allocate = !cpkt->req->isUncacheable() && slave_port.isSnooping() &&
         cpkt->fromCache();
     Addr line_addr = cpkt->getBlockAddr(linesize);
+    if (cpkt->isSecure()) {
+        line_addr |= LineSecure;
+    }
     SnoopMask req_port = portToMask(slave_port);
     reqLookupResult = cachedLocations.find(line_addr);
     bool is_hit = (reqLookupResult != cachedLocations.end());
@@ -146,12 +149,16 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const SlavePort& slave_port)
 }
 
 void
-SnoopFilter::finishRequest(bool will_retry, const Addr addr)
+SnoopFilter::finishRequest(bool will_retry, Addr addr, bool is_secure)
 {
     if (reqLookupResult != cachedLocations.end()) {
         // since we rely on the caller, do a basic check to ensure
         // that finishRequest is being called following lookupRequest
-        assert(reqLookupResult->first == (addr & ~(Addr(linesize - 1))));
+        Addr line_addr = (addr & ~(Addr(linesize - 1)));
+        if (is_secure) {
+            line_addr |= LineSecure;
+        }
+        assert(reqLookupResult->first == line_addr);
         if (will_retry) {
             // Undo any changes made in lookupRequest to the snoop filter
             // entry if the request will come again. retryItem holds
@@ -175,6 +182,9 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
     assert(cpkt->isRequest());
 
     Addr line_addr = cpkt->getBlockAddr(linesize);
+    if (cpkt->isSecure()) {
+        line_addr |= LineSecure;
+    }
     auto sf_it = cachedLocations.find(line_addr);
     bool is_hit = (sf_it != cachedLocations.end());
 
@@ -243,6 +253,9 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
     }
 
     Addr line_addr = cpkt->getBlockAddr(linesize);
+    if (cpkt->isSecure()) {
+        line_addr |= LineSecure;
+    }
     SnoopMask rsp_mask = portToMask(rsp_port);
     SnoopMask req_mask = portToMask(req_port);
     SnoopItem& sf_item = cachedLocations[line_addr];
@@ -289,6 +302,9 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
     assert(cpkt->cacheResponding());
 
     Addr line_addr = cpkt->getBlockAddr(linesize);
+    if (cpkt->isSecure()) {
+        line_addr |= LineSecure;
+    }
     auto sf_it = cachedLocations.find(line_addr);
     bool is_hit = sf_it != cachedLocations.end();
 
@@ -328,6 +344,9 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
 
     // next check if we actually allocated an entry
     Addr line_addr = cpkt->getBlockAddr(linesize);
+    if (cpkt->isSecure()) {
+        line_addr |= LineSecure;
+    }
     auto sf_it = cachedLocations.find(line_addr);
     if (sf_it == cachedLocations.end())
         return;
