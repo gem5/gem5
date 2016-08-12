@@ -200,16 +200,14 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
                 // sanity check
                 assert(pkt->cmd == MemCmd::ReadExReq ||
                        pkt->cmd == MemCmd::SCUpgradeFailReq);
+                assert(!pkt->hasSharers());
 
                 // if we have a dirty copy, make sure the recipient
                 // keeps it marked dirty (in the modified state)
                 if (blk->isDirty()) {
                     pkt->setCacheResponding();
+                    blk->status &= ~BlkDirty;
                 }
-                // on ReadExReq we give up our copy unconditionally,
-                // even if this cache is mostly inclusive, we may want
-                // to revisit this
-                invalidateBlock(blk);
             } else if (blk->isWritable() && !pending_downgrade &&
                        !pkt->hasSharers() &&
                        pkt->cmd != MemCmd::ReadCleanReq) {
@@ -260,12 +258,19 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
                 pkt->setHasSharers();
             }
         }
-    } else {
-        // Upgrade or Invalidate
-        assert(pkt->isUpgrade() || pkt->isInvalidate());
+    } else if (pkt->isUpgrade()) {
+        // sanity check
+        assert(!pkt->hasSharers());
 
-        // for invalidations we could be looking at the temp block
-        // (for upgrades we always allocate)
+        if (blk->isDirty()) {
+            // we were in the Owned state, and a cache above us that
+            // has the line in Shared state needs to be made aware
+            // that the data it already has is in fact dirty
+            pkt->setCacheResponding();
+            blk->status &= ~BlkDirty;
+        }
+    } else {
+        assert(pkt->isInvalidate());
         invalidateBlock(blk);
         DPRINTF(CacheVerbose, "%s for %s addr %#llx size %d (invalidation)\n",
                 __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -956,7 +961,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     // if there are upstream caches that have already marked the
     // packet as having sharers (not passing writable), pass that info
     // downstream
-    if (cpu_pkt->hasSharers()) {
+    if (cpu_pkt->hasSharers() && !needsWritable) {
         // note that cpu_pkt may have spent a considerable time in the
         // MSHR queue and that the information could possibly be out
         // of date, however, there is no harm in conservatively
@@ -2059,13 +2064,17 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         }
     }
 
-    if (!respond && is_timing && is_deferred) {
-        // if it's a deferred timing snoop to which we are not
-        // responding, then we've made a copy of both the request and
-        // the packet, delete them here
+    if (!respond && is_deferred) {
         assert(pkt->needsResponse());
-        assert(!pkt->cacheResponding());
-        delete pkt->req;
+
+        // if we copied the deferred packet with the intention to
+        // respond, but are not responding, then a cache above us must
+        // be, and we can use this as the indication of whether this
+        // is a packet where we created a copy of the request or not
+        if (!pkt->cacheResponding()) {
+            delete pkt->req;
+        }
+
         delete pkt;
     }
 
