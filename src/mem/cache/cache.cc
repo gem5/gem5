@@ -191,14 +191,8 @@ Cache::satisfyCpuSideRequest(PacketPtr pkt, CacheBlk *blk,
         assert(pkt->hasRespData());
         pkt->setDataFromBlock(blk->data, blkSize);
 
-        // determine if this read is from a (coherent) cache, or not
-        // by looking at the command type; we could potentially add a
-        // packet attribute such as 'FromCache' to make this check a
-        // bit cleaner
-        if (pkt->cmd == MemCmd::ReadExReq ||
-            pkt->cmd == MemCmd::ReadSharedReq ||
-            pkt->cmd == MemCmd::ReadCleanReq ||
-            pkt->cmd == MemCmd::SCUpgradeFailReq) {
+        // determine if this read is from a (coherent) cache or not
+        if (pkt->fromCache()) {
             assert(pkt->getSize() == blkSize);
             // special handling for coherent block requests from
             // upper-level caches

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 ARM Limited
+ * Copyright (c) 2012-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -151,6 +151,7 @@ class MemCmd
         IsError,        //!< Error response
         IsPrint,        //!< Print state matching address (for debugging)
         IsFlush,        //!< Flush the address from caches
+        FromCache,      //!< Request originated from a caching agent
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -193,6 +194,7 @@ class MemCmd
     bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
     bool isEviction() const        { return testCmdAttrib(IsEviction); }
+    bool fromCache() const         { return testCmdAttrib(FromCache); }
 
     /**
      * A writeback is an eviction that carries data.
@@ -514,6 +516,7 @@ class Packet : public Printable
     bool needsResponse() const       { return cmd.needsResponse(); }
     bool isInvalidate() const        { return cmd.isInvalidate(); }
     bool isEviction() const          { return cmd.isEviction(); }
+    bool fromCache() const           { return cmd.fromCache(); }
     bool isWriteback() const         { return cmd.isWriteback(); }
     bool hasData() const             { return cmd.hasData(); }
     bool hasRespData() const
