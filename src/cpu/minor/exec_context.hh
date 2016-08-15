@@ -113,7 +113,7 @@ class ExecContext : public ::ExecContext
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
-             Request::Flags flags, uint64_t *res)
+             Request::Flags flags, uint64_t *res) override
     {
         execute.getLSQ().pushRequest(inst, false /* store */, data,
             size, addr, flags, res);
@@ -121,34 +121,34 @@ class ExecContext : public ::ExecContext
     }
 
     IntReg
-    readIntRegOperand(const StaticInst *si, int idx)
+    readIntRegOperand(const StaticInst *si, int idx) override
     {
         return thread.readIntReg(si->srcRegIdx(idx));
     }
 
     TheISA::FloatReg
-    readFloatRegOperand(const StaticInst *si, int idx)
+    readFloatRegOperand(const StaticInst *si, int idx) override
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Reg_Base;
         return thread.readFloatReg(reg_idx);
     }
 
     TheISA::FloatRegBits
-    readFloatRegOperandBits(const StaticInst *si, int idx)
+    readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Reg_Base;
         return thread.readFloatRegBits(reg_idx);
     }
 
     void
-    setIntRegOperand(const StaticInst *si, int idx, IntReg val)
+    setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
     {
         thread.setIntReg(si->destRegIdx(idx), val);
     }
 
     void
     setFloatRegOperand(const StaticInst *si, int idx,
-        TheISA::FloatReg val)
+        TheISA::FloatReg val) override
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Reg_Base;
         thread.setFloatReg(reg_idx, val);
@@ -156,32 +156,32 @@ class ExecContext : public ::ExecContext
 
     void
     setFloatRegOperandBits(const StaticInst *si, int idx,
-        TheISA::FloatRegBits val)
+        TheISA::FloatRegBits val) override
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Reg_Base;
         thread.setFloatRegBits(reg_idx, val);
     }
 
     bool
-    readPredicate()
+    readPredicate() override
     {
         return thread.readPredicate();
     }
 
     void
-    setPredicate(bool val)
+    setPredicate(bool val) override
     {
         thread.setPredicate(val);
     }
 
     TheISA::PCState
-    pcState() const
+    pcState() const override
     {
         return thread.pcState();
     }
 
     void
-    pcState(const TheISA::PCState &val)
+    pcState(const TheISA::PCState &val) override
     {
         thread.pcState(val);
     }
@@ -193,19 +193,19 @@ class ExecContext : public ::ExecContext
     }
 
     TheISA::MiscReg
-    readMiscReg(int misc_reg)
+    readMiscReg(int misc_reg) override
     {
         return thread.readMiscReg(misc_reg);
     }
 
     void
-    setMiscReg(int misc_reg, const TheISA::MiscReg &val)
+    setMiscReg(int misc_reg, const TheISA::MiscReg &val) override
     {
         thread.setMiscReg(misc_reg, val);
     }
 
     TheISA::MiscReg
-    readMiscRegOperand(const StaticInst *si, int idx)
+    readMiscRegOperand(const StaticInst *si, int idx) override
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::Misc_Reg_Base;
         return thread.readMiscReg(reg_idx);
@@ -213,14 +213,14 @@ class ExecContext : public ::ExecContext
 
     void
     setMiscRegOperand(const StaticInst *si, int idx,
-        const TheISA::MiscReg &val)
+        const TheISA::MiscReg &val) override
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::Misc_Reg_Base;
         return thread.setMiscReg(reg_idx, val);
     }
 
     Fault
-    hwrei()
+    hwrei() override
     {
 #if THE_ISA == ALPHA_ISA
         return thread.hwrei();
@@ -230,7 +230,7 @@ class ExecContext : public ::ExecContext
     }
 
     bool
-    simPalCheck(int palFunc)
+    simPalCheck(int palFunc) override
     {
 #if THE_ISA == ALPHA_ISA
         return thread.simPalCheck(palFunc);
@@ -240,40 +240,40 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    syscall(int64_t callnum)
-    {
+    syscall(int64_t callnum) override
+     {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.\n");
 
         thread.syscall(callnum);
     }
 
-    ThreadContext *tcBase() { return thread.getTC(); }
+    ThreadContext *tcBase() override { return thread.getTC(); }
 
     /* @todo, should make stCondFailures persistent somewhere */
-    unsigned int readStCondFailures() const { return 0; }
-    void setStCondFailures(unsigned int st_cond_failures) {}
+    unsigned int readStCondFailures() const override { return 0; }
+    void setStCondFailures(unsigned int st_cond_failures) override {}
 
     ContextID contextId() { return thread.contextId(); }
     /* ISA-specific (or at least currently ISA singleton) functions */
 
     /* X86: TLB twiddling */
     void
-    demapPage(Addr vaddr, uint64_t asn)
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         thread.getITBPtr()->demapPage(vaddr, asn);
         thread.getDTBPtr()->demapPage(vaddr, asn);
     }
 
     TheISA::CCReg
-    readCCRegOperand(const StaticInst *si, int idx)
+    readCCRegOperand(const StaticInst *si, int idx) override
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::CC_Reg_Base;
         return thread.readCCReg(reg_idx);
     }
 
     void
-    setCCRegOperand(const StaticInst *si, int idx, TheISA::CCReg val)
+    setCCRegOperand(const StaticInst *si, int idx, TheISA::CCReg val) override
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::CC_Reg_Base;
         thread.setCCReg(reg_idx, val);
@@ -292,7 +292,7 @@ class ExecContext : public ::ExecContext
     }
 
     /* ALPHA/POWER: Effective address storage */
-    void setEA(Addr ea)
+    void setEA(Addr ea) override
     {
         inst->ea = ea;
     }
@@ -300,7 +300,7 @@ class ExecContext : public ::ExecContext
     BaseCPU *getCpuPtr() { return &cpu; }
 
     /* POWER: Effective address storage */
-    Addr getEA() const
+    Addr getEA() const override
     {
         return inst->ea;
     }
@@ -343,16 +343,16 @@ class ExecContext : public ::ExecContext
 
   public:
     // monitor/mwait funtions
-    void armMonitor(Addr address)
+    void armMonitor(Addr address) override
     { getCpuPtr()->armMonitor(inst->id.threadId, address); }
 
-    bool mwait(PacketPtr pkt)
+    bool mwait(PacketPtr pkt) override
     { return getCpuPtr()->mwait(inst->id.threadId, pkt); }
 
-    void mwaitAtomic(ThreadContext *tc)
+    void mwaitAtomic(ThreadContext *tc) override
     { return getCpuPtr()->mwaitAtomic(inst->id.threadId, tc, thread.dtb); }
 
-    AddressMonitor *getAddrMonitor()
+    AddressMonitor *getAddrMonitor() override
     { return getCpuPtr()->getCpuAddrMonitor(inst->id.threadId); }
 };
 
