@@ -104,7 +104,8 @@ class ExecContext : public ::ExecContext
     }
 
     Fault
-    initiateMemRead(Addr addr, unsigned int size, Request::Flags flags)
+    initiateMemRead(Addr addr, unsigned int size,
+                    Request::Flags flags) override
     {
         execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
             size, addr, flags, NULL);
