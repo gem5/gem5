@@ -518,11 +518,13 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              _isUncacheable ? "Unc" : "",
              inService ? "InSvc" : "",
              downstreamPending ? "DwnPend" : "",
-             hasPostInvalidate() ? "PostInv" : "",
-             hasPostDowngrade() ? "PostDowngr" : "");
+             postInvalidate ? "PostInv" : "",
+             postDowngrade ? "PostDowngr" : "");
 
-    ccprintf(os, "%s  Targets:\n", prefix);
-    targets.print(os, verbosity, prefix + "    ");
+    if (!targets.empty()) {
+        ccprintf(os, "%s  Targets:\n", prefix);
+        targets.print(os, verbosity, prefix + "    ");
+    }
     if (!deferredTargets.empty()) {
         ccprintf(os, "%s  Deferred Targets:\n", prefix);
         deferredTargets.print(os, verbosity, prefix + "      ");
