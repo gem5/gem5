@@ -139,7 +139,8 @@ CheckerCPU::unserialize(CheckpointIn &cp)
 }
 
 Fault
-CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
+CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
+                    Request::Flags flags)
 {
     Fault fault = NoFault;
     int fullSize = size;
@@ -225,7 +226,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
 
 Fault
 CheckerCPU::writeMem(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res)
+                     Addr addr, Request::Flags flags, uint64_t *res)
 {
     Fault fault = NoFault;
     bool checked_flags = false;

@@ -1465,7 +1465,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_ATS1HR:
           case MISCREG_ATS1HW:
             {
-              unsigned flags = 0;
+              Request::Flags flags = 0;
               BaseTLB::Mode mode = BaseTLB::Read;
               TLB::ArmTranslationType tranType = TLB::NormalTran;
               Fault fault;
@@ -1710,7 +1710,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_AT_S1E3W_Xt:
             {
                 RequestPtr req = new Request;
-                unsigned flags = 0;
+                Request::Flags flags = 0;
                 BaseTLB::Mode mode = BaseTLB::Read;
                 TLB::ArmTranslationType tranType = TLB::NormalTran;
                 Fault fault;

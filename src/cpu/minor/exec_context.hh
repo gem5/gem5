@@ -58,6 +58,7 @@
 #include "cpu/minor/pipeline.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
+#include "mem/request.hh"
 #include "debug/MinorExecute.hh"
 
 namespace Minor
@@ -103,7 +104,7 @@ class ExecContext : public ::ExecContext
     }
 
     Fault
-    initiateMemRead(Addr addr, unsigned int size, unsigned int flags)
+    initiateMemRead(Addr addr, unsigned int size, Request::Flags flags)
     {
         execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
             size, addr, flags, NULL);
@@ -112,7 +113,7 @@ class ExecContext : public ::ExecContext
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
-        unsigned int flags, uint64_t *res)
+             Request::Flags flags, uint64_t *res)
     {
         execute.getLSQ().pushRequest(inst, false /* store */, data,
             size, addr, flags, res);

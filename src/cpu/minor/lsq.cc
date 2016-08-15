@@ -1471,7 +1471,8 @@ LSQ::needsToTick()
 
 void
 LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
-    unsigned int size, Addr addr, unsigned int flags, uint64_t *res)
+                 unsigned int size, Addr addr, Request::Flags flags,
+                 uint64_t *res)
 {
     bool needs_burst = transferNeedsBurst(addr, size, lineWidth);
     LSQRequestPtr request;

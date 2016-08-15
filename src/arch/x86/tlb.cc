@@ -273,7 +273,7 @@ Fault
 TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
         Mode mode, bool &delayedResponse, bool timing)
 {
-    uint32_t flags = req->getFlags();
+    Request::Flags flags = req->getFlags();
     int seg = flags & SegmentFlagMask;
     bool storeCheck = flags & (StoreCheck << FlagShift);
 

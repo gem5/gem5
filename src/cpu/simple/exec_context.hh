@@ -53,6 +53,7 @@
 #include "cpu/simple/base.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
+#include "mem/request.hh"
 
 class BaseSimpleCPU;
 
@@ -286,19 +287,19 @@ class SimpleExecContext : public ExecContext {
     { panic("BaseSimpleCPU::getEA() not implemented\n"); }
 
     Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-                  unsigned int flags) override
+                  Request::Flags flags) override
     {
         return cpu->readMem(addr, data, size, flags);
     }
 
     Fault initiateMemRead(Addr addr, unsigned int size,
-                          unsigned int flags) override
+                          Request::Flags flags) override
     {
         return cpu->initiateMemRead(addr, size, flags);
     }
 
     Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
-                   unsigned int flags, uint64_t *res) override
+                   Request::Flags flags, uint64_t *res) override
     {
         return cpu->writeMem(data, size, addr, flags, res);
     }

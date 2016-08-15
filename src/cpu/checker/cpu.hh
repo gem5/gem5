@@ -57,6 +57,7 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "debug/Checker.hh"
+#include "mem/request.hh"
 #include "params/CheckerCPU.hh"
 #include "sim/eventq.hh"
 
@@ -374,9 +375,9 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
-                  unsigned flags) override;
-    Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res) override;
+                  Request::Flags flags) override;
+    Fault writeMem(uint8_t *data, unsigned size, Addr addr,
+                   Request::Flags flags, uint64_t *res) override;
 
     unsigned int readStCondFailures() const override {
         return thread->readStCondFailures();

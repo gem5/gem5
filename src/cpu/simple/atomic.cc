@@ -334,8 +334,8 @@ AtomicSimpleCPU::AtomicCPUDPort::recvFunctionalSnoop(PacketPtr pkt)
 }
 
 Fault
-AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
-                         unsigned size, unsigned flags)
+AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
+                         Request::Flags flags)
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -422,15 +422,16 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
 }
 
 Fault
-AtomicSimpleCPU::initiateMemRead(Addr addr, unsigned size, unsigned flags)
+AtomicSimpleCPU::initiateMemRead(Addr addr, unsigned size,
+                                 Request::Flags flags)
 {
     panic("initiateMemRead() is for timing accesses, and should "
           "never be called on AtomicSimpleCPU.\n");
 }
 
 Fault
-AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
-                          Addr addr, unsigned flags, uint64_t *res)
+AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
+                          Request::Flags flags, uint64_t *res)
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;

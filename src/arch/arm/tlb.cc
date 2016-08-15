@@ -64,6 +64,7 @@
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
 #include "mem/page_table.hh"
+#include "mem/request.hh"
 #include "params/ArmTLB.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
@@ -555,7 +556,7 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
     else
         vaddr = vaddr_tainted;
-    uint32_t flags = req->getFlags();
+    Request::Flags flags = req->getFlags();
 
     bool is_fetch = (mode == Execute);
     bool is_write = (mode == Write);
@@ -588,7 +589,7 @@ Fault
 TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
 {
     Addr vaddr = req->getVaddr(); // 32-bit don't have to purify
-    uint32_t flags = req->getFlags();
+    Request::Flags flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
     bool is_write  = (mode == Write);
     bool is_priv   = isPriv && !(flags & UserMode);
@@ -760,7 +761,7 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
 
-    uint32_t flags = req->getFlags();
+    Request::Flags flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
     bool is_write  = (mode == Write);
     bool is_priv M5_VAR_USED  = isPriv && !(flags & UserMode);
@@ -967,7 +968,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
     else
         vaddr = vaddr_tainted;
-    uint32_t flags = req->getFlags();
+    Request::Flags flags = req->getFlags();
 
     bool is_fetch  = (mode == Execute);
     bool is_write  = (mode == Write);
@@ -981,7 +982,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             isPriv, flags & UserMode, isSecure, tranType & S1S2NsTran);
 
     DPRINTF(TLB, "translateFs addr %#x, mode %d, st2 %d, scr %#x sctlr %#x "
-                 "flags %#x tranType 0x%x\n", vaddr_tainted, mode, isStage2,
+                 "flags %#lx tranType 0x%x\n", vaddr_tainted, mode, isStage2,
                  scr, sctlr, flags, tranType);
 
     if ((req->isInstFetch() && (!sctlr.i)) ||

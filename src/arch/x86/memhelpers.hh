@@ -45,7 +45,7 @@ namespace X86ISA
 template <class XC>
 Fault
 initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
-                unsigned dataSize, unsigned flags)
+                unsigned dataSize, Request::Flags flags)
 {
     return xc->initiateMemRead(addr, dataSize, flags);
 }
@@ -100,7 +100,7 @@ getMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize,
 template <class XC>
 Fault
 readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, uint64_t &mem,
-        unsigned dataSize, unsigned flags)
+              unsigned dataSize, Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
     Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
@@ -142,7 +142,8 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr,
 template <class XC>
 Fault
 writeMemTiming(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
-        unsigned dataSize, Addr addr, unsigned flags, uint64_t *res)
+               unsigned dataSize, Addr addr, Request::Flags flags,
+               uint64_t *res)
 {
     if (traceData) {
         traceData->setData(mem);
@@ -176,7 +177,8 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData,
 template <class XC>
 Fault
 writeMemAtomic(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
-        unsigned dataSize, Addr addr, unsigned flags, uint64_t *res)
+               unsigned dataSize, Addr addr, Request::Flags flags,
+               uint64_t *res)
 {
     if (traceData) {
         traceData->setData(mem);

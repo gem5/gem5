@@ -54,7 +54,7 @@
 template <class XC, class MemT>
 Fault
 initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
-                MemT &mem, unsigned flags)
+                MemT &mem, Request::Flags flags)
 {
     return xc->initiateMemRead(addr, sizeof(MemT), flags);
 }
@@ -73,7 +73,7 @@ getMem(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 template <class XC, class MemT>
 Fault
 readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
-        unsigned flags)
+              Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
     Fault fault = xc->readMem(addr, (uint8_t *)&mem, sizeof(MemT), flags);
@@ -89,7 +89,7 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
 template <class XC, class MemT>
 Fault
 writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
-        unsigned flags, uint64_t *res)
+               Request::Flags flags, uint64_t *res)
 {
     if (traceData) {
         traceData->setData(mem);
@@ -102,7 +102,7 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
 template <class XC, class MemT>
 Fault
 writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
-        Addr addr, unsigned flags, uint64_t *res)
+               Addr addr, Request::Flags flags, uint64_t *res)
 {
     if (traceData) {
         traceData->setData(mem);

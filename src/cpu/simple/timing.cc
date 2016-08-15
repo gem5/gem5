@@ -409,14 +409,15 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 
 Fault
 TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
-                         unsigned size, unsigned flags)
+                         unsigned size, Request::Flags flags)
 {
     panic("readMem() is for atomic accesses, and should "
           "never be called on TimingSimpleCPU.\n");
 }
 
 Fault
-TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size, unsigned flags)
+TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
+                                 Request::Flags flags)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -489,7 +490,7 @@ TimingSimpleCPU::handleWritePacket()
 
 Fault
 TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
-                          Addr addr, unsigned flags, uint64_t *res)
+                          Addr addr, Request::Flags flags, uint64_t *res)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;

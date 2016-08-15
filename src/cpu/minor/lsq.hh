@@ -712,7 +712,8 @@ class LSQ : public Named
     /** Single interface for readMem/writeMem to issue requests into
      *  the LSQ */
     void pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, unsigned int flags, uint64_t *res);
+                     unsigned int size, Addr addr, Request::Flags flags,
+                     uint64_t *res);
 
     /** Push a predicate failed-representing request into the queues just
      *  to maintain commit order */

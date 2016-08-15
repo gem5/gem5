@@ -279,12 +279,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void suspendContext(ThreadID thread_num) override;
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
-                  unsigned flags) override;
+                  Request::Flags flags) override;
 
-    Fault initiateMemRead(Addr addr, unsigned size, unsigned flags) override;
+    Fault initiateMemRead(Addr addr, unsigned size,
+                          Request::Flags flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res) override;
+                   Addr addr, Request::Flags flags, uint64_t *res) override;
 
     void fetch();
     void sendFetch(const Fault &fault, RequestPtr req, ThreadContext *tc);

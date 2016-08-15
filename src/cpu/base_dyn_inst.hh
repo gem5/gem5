@@ -65,6 +65,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/translation.hh"
 #include "mem/packet.hh"
+#include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
@@ -313,10 +314,10 @@ class BaseDynInst : public ExecContext, public RefCounted
         cpu->demapPage(vaddr, asn);
     }
 
-    Fault initiateMemRead(Addr addr, unsigned size, unsigned flags);
+    Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags);
 
-    Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size, Addr addr,
+                   Request::Flags flags, uint64_t *res);
 
     /** Splits a request in two if it crosses a dcache block. */
     void splitRequest(RequestPtr req, RequestPtr &sreqLow,
@@ -873,7 +874,8 @@ class BaseDynInst : public ExecContext, public RefCounted
 
 template<class Impl>
 Fault
-BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size, unsigned flags)
+BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
+                                   Request::Flags flags)
 {
     instFlags[ReqMade] = true;
     Request *req = NULL;
@@ -925,8 +927,8 @@ BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size, unsigned flags)
 
 template<class Impl>
 Fault
-BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
-                            Addr addr, unsigned flags, uint64_t *res)
+BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size, Addr addr,
+                            Request::Flags flags, uint64_t *res)
 {
     if (traceData)
         traceData->setMem(addr, size, flags);

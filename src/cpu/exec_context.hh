@@ -51,6 +51,7 @@
 #include "cpu/base.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
+#include "mem/request.hh"
 
 /**
  * The ExecContext is an abstract base class the provides the
@@ -182,7 +183,7 @@ class ExecContext {
      * should never be called).
      */
     virtual Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-                          unsigned int flags)
+                          Request::Flags flags)
     {
         panic("ExecContext::readMem() should be overridden\n");
     }
@@ -195,7 +196,7 @@ class ExecContext {
      * should never be called).
      */
     virtual Fault initiateMemRead(Addr addr, unsigned int size,
-                                  unsigned int flags)
+                                  Request::Flags flags)
     {
         panic("ExecContext::initiateMemRead() should be overridden\n");
     }
@@ -205,7 +206,7 @@ class ExecContext {
      * For timing-mode contexts, initiate a timing memory write operation.
      */
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
-                           unsigned int flags, uint64_t *res) = 0;
+                           Request::Flags flags, uint64_t *res) = 0;
 
     /**
      * Sets the number of consecutive store conditional failures.
