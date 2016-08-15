@@ -89,8 +89,10 @@ class RawDiskImage : public DiskImage
 
     std::streampos size() const override;
 
-    std::streampos read(uint8_t *data, std::streampos offset) const override;
-    std::streampos write(const uint8_t *data, std::streampos offset) override;
+    virtual std::streampos read(uint8_t *data, std::streampos offset)
+        const override;
+    virtual std::streampos write(const uint8_t *data, std::streampos offset)
+        override;
 };
 
 /**
