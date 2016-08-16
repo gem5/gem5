@@ -80,3 +80,10 @@ class TraceCPU(BaseCPU):
     # false by default
     enableEarlyExit = Param.Bool(False, "Exit when any one Trace CPU "\
                                  "completes execution")
+
+    # If progress msg interval is set to a non-zero value, it is treated as
+    # the interval of committed instructions at which an info message is
+    # printed.
+    progressMsgInterval = Param.Unsigned(0, "Interval of committed "\
+                                         "instructions at which to print a"\
+                                         " progress msg")

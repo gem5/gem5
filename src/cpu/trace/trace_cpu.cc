@@ -62,13 +62,15 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         oneTraceComplete(false),
         traceOffset(0),
         execCompleteEvent(nullptr),
-        enableEarlyExit(params->enableEarlyExit)
+        enableEarlyExit(params->enableEarlyExit),
+        progressMsgInterval(params->progressMsgInterval),
+        progressMsgThreshold(params->progressMsgInterval)
 {
     // Increment static counter for number of Trace CPUs.
     ++TraceCPU::numTraceCPUs;
 
-    // Check that the python parameters for sizes of ROB, store buffer and load
-    // buffer do not overflow the corresponding C++ variables.
+    // Check that the python parameters for sizes of ROB, store buffer and
+    // load buffer do not overflow the corresponding C++ variables.
     fatal_if(params->sizeROB > UINT16_MAX, "ROB size set to %d exceeds the "
                 "max. value of %d.\n", params->sizeROB, UINT16_MAX);
     fatal_if(params->sizeStoreBuffer > UINT16_MAX, "ROB size set to %d "
@@ -88,6 +90,16 @@ TraceCPU*
 TraceCPUParams::create()
 {
     return new TraceCPU(this);
+}
+
+void
+TraceCPU::updateNumOps(uint64_t rob_num)
+{
+    numOps = rob_num;
+    if (progressMsgInterval != 0 && numOps.value() >= progressMsgThreshold) {
+        inform("%s: %i insts committed\n", name(), progressMsgThreshold);
+        progressMsgThreshold += progressMsgInterval;
+    }
 }
 
 void

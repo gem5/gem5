@@ -177,7 +177,7 @@ class TraceCPU : public BaseCPU
      * Set the no. of ops when elastic data generator completes executing a
      * node.
      */
-    void updateNumOps(uint64_t rob_num) { numOps = rob_num; }
+    void updateNumOps(uint64_t rob_num);
 
     /* Pure virtual function in BaseCPU. Do nothing. */
     void wakeup(ThreadID tid = 0)
@@ -1121,6 +1121,19 @@ class TraceCPU : public BaseCPU
      * configured true then the execCompleteEvent is not scheduled.
      */
     const bool enableEarlyExit;
+
+    /**
+      * Interval of committed instructions specified by the user at which a
+      * progress info message is printed
+      */
+    const uint64_t progressMsgInterval;
+
+    /*
+     * The progress msg threshold is kept updated to the next multiple of the
+     * progress msg interval. As soon as the threshold is reached, an info
+     * message is printed.
+     */
+    uint64_t progressMsgThreshold;
 
     Stats::Scalar numSchedDcacheEvent;
     Stats::Scalar numSchedIcacheEvent;
