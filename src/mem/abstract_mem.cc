@@ -57,7 +57,7 @@ using namespace std;
 AbstractMemory::AbstractMemory(const Params *p) :
     MemObject(p), range(params()->range), pmemAddr(NULL),
     confTableReported(p->conf_table_reported), inAddrMap(p->in_addr_map),
-    _system(NULL)
+    kvmMap(p->kvm_map), _system(NULL)
 {
 }
 

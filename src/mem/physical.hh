@@ -49,6 +49,51 @@
 class AbstractMemory;
 
 /**
+ * A single entry for the backing store.
+ */
+class BackingStoreEntry
+{
+  public:
+
+    /**
+     * Create a backing store entry. Don't worry about managing the memory
+     * pointers, because PhysicalMemory is responsible for that.
+     */
+    BackingStoreEntry(AddrRange range, uint8_t* pmem,
+                      bool conf_table_reported, bool in_addr_map, bool kvm_map)
+        : range(range), pmem(pmem), confTableReported(conf_table_reported),
+          inAddrMap(in_addr_map), kvmMap(kvm_map)
+        {}
+
+    /**
+     * The address range covered in the guest.
+     */
+     AddrRange range;
+
+    /**
+     * Pointer to the host memory this range maps to. This memory is the same
+     * size as the range field.
+     */
+     uint8_t* pmem;
+
+     /**
+      * Whether this memory should be reported to the configuration table
+      */
+     bool confTableReported;
+
+     /**
+      * Whether this memory should appear in the global address map
+      */
+     bool inAddrMap;
+
+     /**
+      * Whether KVM should map this memory into the guest address space during
+      * acceleration.
+      */
+     bool kvmMap;
+};
+
+/**
  * The physical memory encapsulates all memories in the system and
  * provides basic functionality for accessing those memories without
  * going through the memory system and interconnect.
@@ -90,7 +135,7 @@ class PhysicalMemory : public Serializable
 
     // The physical memory used to provide the memory in the simulated
     // system
-    std::vector<std::pair<AddrRange, uint8_t*>> backingStore;
+    std::vector<BackingStoreEntry> backingStore;
 
     // Prevent copying
     PhysicalMemory(const PhysicalMemory&);
@@ -105,9 +150,12 @@ class PhysicalMemory : public Serializable
      *
      * @param range The address range covered
      * @param memories The memories this range maps to
+     * @param kvm_map Should KVM map this memory for the guest
      */
     void createBackingStore(AddrRange range,
-                            const std::vector<AbstractMemory*>& _memories);
+                            const std::vector<AbstractMemory*>& _memories,
+                            bool conf_table_reported,
+                            bool in_addr_map, bool kvm_map);
 
   public:
 
@@ -167,7 +215,7 @@ class PhysicalMemory : public Serializable
      *
      * @return Pointers to the memory backing store
      */
-    std::vector<std::pair<AddrRange, uint8_t*>> getBackingStore() const
+    std::vector<BackingStoreEntry> getBackingStore() const
     { return backingStore; }
 
     /**

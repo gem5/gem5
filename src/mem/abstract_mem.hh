@@ -111,10 +111,13 @@ class AbstractMemory : public MemObject
     uint8_t* pmemAddr;
 
     // Enable specific memories to be reported to the configuration table
-    bool confTableReported;
+    const bool confTableReported;
 
     // Should the memory appear in the global address map
-    bool inAddrMap;
+    const bool inAddrMap;
+
+    // Should KVM map this memory for the guest
+    const bool kvmMap;
 
     std::list<LockedAddr> lockedAddrList;
 
@@ -281,6 +284,14 @@ class AbstractMemory : public MemObject
      * @return if this memory is part of the address map
      */
     bool isInAddrMap() const { return inAddrMap; }
+
+    /**
+     * When shadow memories are in use, KVM may want to make one or the other,
+     * but cannot map both into the guest address space.
+     *
+     * @return if this memory should be mapped into the KVM guest address space
+     */
+    bool isKvmMap() const { return kvmMap; }
 
     /**
      * Perform an untimed memory access and update all the state

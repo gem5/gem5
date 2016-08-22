@@ -341,13 +341,18 @@ KvmVM::cpuStartup()
 void
 KvmVM::delayedStartup()
 {
-    const std::vector<std::pair<AddrRange, uint8_t*> >&memories(
+    const std::vector<BackingStoreEntry> &memories(
         system->getPhysMem().getBackingStore());
 
     DPRINTF(Kvm, "Mapping %i memory region(s)\n", memories.size());
     for (int slot(0); slot < memories.size(); ++slot) {
-        const AddrRange &range(memories[slot].first);
-        void *pmem(memories[slot].second);
+        if (!memories[slot].kvmMap) {
+            DPRINTF(Kvm, "Skipping region marked as not usable by KVM\n");
+            continue;
+        }
+
+        const AddrRange &range(memories[slot].range);
+        void *pmem(memories[slot].pmem);
 
         if (pmem) {
             DPRINTF(Kvm, "Mapping region: 0x%p -> 0x%llx [size: 0x%llx]\n",
