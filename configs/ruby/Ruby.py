@@ -122,6 +122,9 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
                 MemConfig.get(options.mem_type), r, index, options.num_dirs,
                 int(math.log(options.num_dirs, 2)), options.cacheline_size)
 
+            if options.access_backing_store:
+                mem_ctrl.kvm_map=False
+
             mem_ctrls.append(mem_ctrl)
 
             if crossbar != None:

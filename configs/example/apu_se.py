@@ -150,6 +150,10 @@ parser.add_option("--numLdsBanks", type="int", default=32,
                   help="number of physical banks per LDS module")
 parser.add_option("--ldsBankConflictPenalty", type="int", default=1,
                   help="number of cycles per LDS bank conflict")
+parser.add_option('--fast-forward-pseudo-op', action='store_true',
+                  help = 'fast forward using kvm until the m5_switchcpu'
+                  ' pseudo-op is encountered, then switch cpus. subsequent'
+                  ' m5_switchcpu pseudo-ops will toggle back and forth')
 
 
 Ruby.define_options(parser)
@@ -280,47 +284,67 @@ cp_list = []
 # List of CPUs
 cpu_list = []
 
-# We only support timing mode for shader and memory
+CpuClass, mem_mode = Simulation.getCPUClass(options.cpu_type)
+if CpuClass == AtomicSimpleCPU:
+    fatal("AtomicSimpleCPU is not supported")
+if mem_mode != 'timing':
+    fatal("Only the timing memory mode is supported")
 shader.timing = True
-mem_mode = 'timing'
 
-# create the cpus
-for i in range(options.num_cpus):
-    cpu = None
-    if options.cpu_type == "detailed":
-        cpu = DerivO3CPU(cpu_id=i,
-                         clk_domain = SrcClockDomain(
-                             clock = options.CPUClock,
-                             voltage_domain = VoltageDomain(
-                                 voltage = options.cpu_voltage)))
-    elif options.cpu_type == "timing":
-        cpu = TimingSimpleCPU(cpu_id=i,
-                              clk_domain = SrcClockDomain(
-                                  clock = options.CPUClock,
-                                  voltage_domain = VoltageDomain(
-                                      voltage = options.cpu_voltage)))
-    else:
-        fatal("Atomic CPU not supported/tested")
-    cpu_list.append(cpu)
+if options.fast_forward and options.fast_forward_pseudo_op:
+    fatal("Cannot fast-forward based both on the number of instructions and"
+          " on pseudo-ops")
+fast_forward = options.fast_forward or options.fast_forward_pseudo_op
 
-# create the command processors
+if fast_forward:
+    FutureCpuClass, future_mem_mode = CpuClass, mem_mode
+
+    CpuClass = X86KvmCPU
+    mem_mode = 'atomic_noncaching'
+    # Leave shader.timing untouched, because its value only matters at the
+    # start of the simulation and because we require switching cpus
+    # *before* the first kernel launch.
+
+    future_cpu_list = []
+
+    # Initial CPUs to be used during fast-forwarding.
+    for i in xrange(options.num_cpus):
+        cpu = CpuClass(cpu_id = i,
+                       clk_domain = SrcClockDomain(
+                           clock = options.CPUClock,
+                           voltage_domain = VoltageDomain(
+                               voltage = options.cpu_voltage)))
+        cpu_list.append(cpu)
+
+        if options.fast_forward:
+            cpu.max_insts_any_thread = int(options.fast_forward)
+
+if fast_forward:
+    MainCpuClass = FutureCpuClass
+else:
+    MainCpuClass = CpuClass
+
+# CPs to be used throughout the simulation.
 for i in xrange(options.num_cp):
-    cp = None
-    if options.cpu_type == "detailed":
-        cp = DerivO3CPU(cpu_id = options.num_cpus + i,
-                        clk_domain = SrcClockDomain(
-                            clock = options.CPUClock,
-                            voltage_domain = VoltageDomain(
-                                voltage = options.cpu_voltage)))
-    elif options.cpu_type == 'timing':
-        cp = TimingSimpleCPU(cpu_id=options.num_cpus + i,
-                             clk_domain = SrcClockDomain(
-                                 clock = options.CPUClock,
-                                 voltage_domain = VoltageDomain(
-                                     voltage = options.cpu_voltage)))
+    cp = MainCpuClass(cpu_id = options.num_cpus + i,
+                      clk_domain = SrcClockDomain(
+                          clock = options.CPUClock,
+                          voltage_domain = VoltageDomain(
+                              voltage = options.cpu_voltage)))
+    cp_list.append(cp)
+
+# Main CPUs (to be used after fast-forwarding if fast-forwarding is specified).
+for i in xrange(options.num_cpus):
+    cpu = MainCpuClass(cpu_id = i,
+                       clk_domain = SrcClockDomain(
+                           clock = options.CPUClock,
+                           voltage_domain = VoltageDomain(
+                               voltage = options.cpu_voltage)))
+    if fast_forward:
+        cpu.switched_out = True
+        future_cpu_list.append(cpu)
     else:
-        fatal("Atomic CPU not supported/tested")
-    cp_list = cp_list + [cp]
+        cpu_list.append(cpu)
 
 ########################## Creating the GPU dispatcher ########################
 # Dispatcher dispatches work from host CPU to GPU
@@ -371,7 +395,16 @@ for cpu in cpu_list:
 for cp in cp_list:
     cp.workload = host_cpu.workload
 
+if fast_forward:
+    for i in xrange(len(future_cpu_list)):
+        future_cpu_list[i].workload = cpu_list[i].workload
+
 ########################## Create the overall system ########################
+# List of CPUs that must be switched when moving between KVM and simulation
+if fast_forward:
+    switch_cpu_list = \
+        [(cpu_list[i], future_cpu_list[i]) for i in xrange(options.num_cpus)]
+
 # Full list of processing cores in the system. Note that
 # dispatcher is also added to cpu_list although it is
 # not a processing element
@@ -383,9 +416,21 @@ system = System(cpu = cpu_list,
                 mem_ranges = [AddrRange(options.mem_size)],
                 cache_line_size = options.cacheline_size,
                 mem_mode = mem_mode)
+if fast_forward:
+    system.future_cpu = future_cpu_list
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
 system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
                                    voltage_domain = system.voltage_domain)
+
+if fast_forward:
+    have_kvm_support = 'BaseKvmCPU' in globals()
+    if have_kvm_support and buildEnv['TARGET_ISA'] == "x86":
+        system.vm = KvmVM()
+        for i in xrange(len(host_cpu.workload)):
+            host_cpu.workload[i].useArchPT = True
+            host_cpu.workload[i].kvmInSE = True
+    else:
+        fatal("KvmCPU can only be used in SE mode with x86")
 
 # configure the TLB hierarchy
 GPUTLBConfig.config_tlb_hierarchy(options, system, shader_idx)
@@ -413,6 +458,9 @@ for i in range(options.num_cpus):
         system.cpu[i].interrupts[0].pio = system.piobus.master
         system.cpu[i].interrupts[0].int_master = system.piobus.slave
         system.cpu[i].interrupts[0].int_slave = system.piobus.master
+        if fast_forward:
+            system.cpu[i].itb.walker.port = ruby_port.slave
+            system.cpu[i].dtb.walker.port = ruby_port.slave
 
 # attach CU ports to Ruby
 # Because of the peculiarities of the CP core, you may have 1 CPU but 2
@@ -466,8 +514,12 @@ dispatcher.dma = system.piobus.slave
 
 # Note this implicit setting of the cpu_pointer, shader_pointer and tlb array
 # parameters must be after the explicit setting of the System cpu list
-shader.cpu_pointer = host_cpu
-dispatcher.cpu = host_cpu
+if fast_forward:
+    shader.cpu_pointer = future_cpu_list[0]
+    dispatcher.cpu = future_cpu_list[0]
+else:
+    shader.cpu_pointer = host_cpu
+    dispatcher.cpu = host_cpu
 dispatcher.shader_pointer = shader
 dispatcher.cl_driver = driver
 
@@ -494,7 +546,32 @@ m5.instantiate(checkpoint_dir)
 # Map workload to this address space
 host_cpu.workload[0].map(0x10000000, 0x200000000, 4096)
 
+if options.fast_forward:
+    print "Switch at instruction count: %d" % \
+        cpu_list[0].max_insts_any_thread
+
 exit_event = m5.simulate(maxtick)
+
+if options.fast_forward:
+    if exit_event.getCause() == "a thread reached the max instruction count":
+        m5.switchCpus(system, switch_cpu_list)
+        print "Switched CPUS @ tick %s" % (m5.curTick())
+        m5.stats.reset()
+        exit_event = m5.simulate(maxtick - m5.curTick())
+elif options.fast_forward_pseudo_op:
+    while exit_event.getCause() == "switchcpu":
+        # If we are switching *to* kvm, then the current stats are meaningful
+        # Note that we don't do any warmup by default
+        if type(switch_cpu_list[0][0]) == FutureCpuClass:
+            print "Dumping stats..."
+            m5.stats.dump()
+        m5.switchCpus(system, switch_cpu_list)
+        print "Switched CPUS @ tick %s" % (m5.curTick())
+        m5.stats.reset()
+        # This lets us switch back and forth without keeping a counter
+        switch_cpu_list = [(x[1], x[0]) for x in switch_cpu_list]
+        exit_event = m5.simulate(maxtick - m5.curTick())
+
 print "Ticks:", m5.curTick()
 print 'Exiting because ', exit_event.getCause()
 sys.exit(exit_event.getCode())
