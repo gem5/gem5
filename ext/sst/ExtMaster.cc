@@ -48,7 +48,7 @@
 #undef fatal
 #endif
 
-#include <sst_config.h>
+#include <core/sst_config.h>
 
 #include <mem/packet.hh>
 

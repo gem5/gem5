@@ -45,7 +45,6 @@
 #ifndef EXT_SST_EXTSLAVE_HH
 #define EXT_SST_EXTSLAVE_HH
 
-#include <sst/core/serialization.h>
 #include <sst/core/component.h>
 #include <sst/core/output.h>
 #include <sst/core/interfaces/simpleMem.h>

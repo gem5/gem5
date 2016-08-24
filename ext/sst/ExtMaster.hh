@@ -48,7 +48,6 @@
 #include <list>
 #include <set>
 
-#include <sst/core/serialization.h>
 #include <sst/core/component.h>
 #include <sst/elements/memHierarchy/memEvent.h>
 

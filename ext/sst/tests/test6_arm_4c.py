@@ -52,18 +52,24 @@ def getenv(name):
         pass
     return res
 
+def debug(d):
+    try:
+        r = int(getenv(d))
+    except ValueError:
+        return 0
+    return r
+
 baseCacheParams = ({
-    "debug" :getenv("DEBUG"),
+    "debug" :debug("DEBUG"),
     "debug_level" : 6,
     "coherence_protocol" : "MSI",
     "replacement_policy" : "LRU",
     "cache_line_size" : 64,
-    "cache_frequency" : clockRate,
-    "statistics" : 1
+    "cache_frequency" : clockRate
     })
 
 l1CacheParams = ({
-    "debug" : getenv("DEBUG"),
+    "debug" : debug("DEBUG"),
     "debug_level" : 6,
     "L1" : 1,
     "cache_size" : "64 KB",
@@ -73,7 +79,7 @@ l1CacheParams = ({
     })
 
 l2CacheParams = ({
-    "debug" : getenv("DEBUG"),
+    "debug" : debug("DEBUG"),
     "debug_level" : 6,
     "L1" : 0,
     "cache_size" : "256 KB",
@@ -87,8 +93,8 @@ l2CacheParams = ({
 
 GEM5 = sst.Component("system", "gem5.gem5")
 GEM5.addParams({
-    "comp_debug" : getenv("GEM5_DEBUG"),
-    "gem5DebugFlags" : getenv("M5_DEBUG"),
+    "comp_debug" : debug("GEM5_DEBUG"),
+    "gem5DebugFlags" : debug("M5_DEBUG"),
     "frequency" : clockRate,
     "cmd" : "configs/example/fs.py --num-cpus 4 --disk-image=vexpress64-openembedded_minimal-armv8_20130623-376.img --root-device=/dev/sda2 --kernel=vmlinux.aarch64.20140821 --dtb-filename=vexpress.aarch64.20140821.dtb --mem-size=256MB --machine-type=VExpress_EMM64 --cpu-type=timing --external-memory-system=sst"
     })
@@ -96,7 +102,7 @@ GEM5.addParams({
 bus = sst.Component("membus", "memHierarchy.Bus")
 bus.addParams({
     "bus_frequency": "2GHz",
-    "debug" : getenv("DEBUG"),
+    "debug" : debug("DEBUG"),
     "debug_level" : 8
     })
 
@@ -154,8 +160,7 @@ l2cache = sst.Component("l2cache", "memHierarchy.Cache")
 l2cache.addParams(baseCacheParams)
 l2cache.addParams(l2CacheParams)
 l2cache.addParams({
-      "network_address" : "2",
-      "directory_at_next_level" : "1"
+      "network_address" : "2"
 })
 
 link = sst.Link("l2cache_bus_link")
@@ -168,7 +173,7 @@ memory.addParams({
     "access_time" : "25 ns",
     "backend.mem_size" : 256,
     "clock" : "2GHz",
-    "debug" : getenv("DEBUG"),
+    "debug" : debug("DEBUG"),
     "range_start" : 0, # 2 * (1024 ** 3), # it's behind a directory controller.
     })
 

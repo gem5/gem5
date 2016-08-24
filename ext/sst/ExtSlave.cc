@@ -44,8 +44,7 @@
 
 #include "gem5.hh"
 
-#include <sst_config.h>
-#include <sst/core/serialization.h>
+#include <core/sst_config.h>
 
 #include <sst/core/params.h>
 #include <sst/core/output.h>

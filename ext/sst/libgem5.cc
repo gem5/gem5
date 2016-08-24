@@ -42,9 +42,8 @@
 //
 // For license information, see the LICENSE file in the current directory.
 
-#include <sst_config.h>
+#include <core/sst_config.h>
 
-#include <sst/core/serialization.h>
 #include <sst/core/element.h>
 #include <sst/core/component.h>
 

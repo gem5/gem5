@@ -42,9 +42,8 @@
 //
 // For license information, see the LICENSE file in the current directory.
 
-#include <sst_config.h>
+#include <core/sst_config.h>
 #include <Python.h>  // Before serialization to prevent spurious warnings
-#include <sst/core/serialization.h>
 
 #include "gem5.hh"
 
