@@ -44,12 +44,6 @@
 
 #include "gem5.hh"
 
-#include <core/sst_config.h>
-
-#include <sst/core/params.h>
-#include <sst/core/output.h>
-#include <sst/core/link.h>
-
 #ifdef fatal  // gem5 sets this
 #undef fatal
 #endif

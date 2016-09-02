@@ -48,8 +48,8 @@
 #include <list>
 #include <set>
 
-#include <sst/core/component.h>
-#include <sst/elements/memHierarchy/memEvent.h>
+#include <core/component.h>
+#include <elements/memHierarchy/memEvent.h>
 
 #include <sim/sim_object.hh>
 #include <mem/packet.hh>

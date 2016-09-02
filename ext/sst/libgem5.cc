@@ -44,9 +44,6 @@
 
 #include <core/sst_config.h>
 
-#include <sst/core/element.h>
-#include <sst/core/component.h>
-
 #include "gem5.hh"
 
 static

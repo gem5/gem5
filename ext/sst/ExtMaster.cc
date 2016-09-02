@@ -48,14 +48,9 @@
 #undef fatal
 #endif
 
-#include <core/sst_config.h>
-
 #include <mem/packet.hh>
 
-#include <sst/core/component.h>
-#include <sst/core/params.h>
-#include <sst/core/link.h>
-#include <sst/elements/memHierarchy/memNIC.h>
+#include <elements/memHierarchy/memNIC.h>
 
 using namespace SST;
 using namespace SST::gem5;

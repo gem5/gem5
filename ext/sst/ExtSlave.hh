@@ -45,9 +45,7 @@
 #ifndef EXT_SST_EXTSLAVE_HH
 #define EXT_SST_EXTSLAVE_HH
 
-#include <sst/core/component.h>
-#include <sst/core/output.h>
-#include <sst/core/interfaces/simpleMem.h>
+#include <core/interfaces/simpleMem.h>
 
 #include <sim/sim_object.hh>
 #include <mem/packet.hh>

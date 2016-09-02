@@ -1,4 +1,4 @@
-// Copyright (c) 2015 ARM Limited
+// Copyright (c) 2015-2016 ARM Limited
 // All rights reserved.
 // 
 // The license below extends only to copyright in the software and shall
@@ -65,9 +65,7 @@
 #endif
 
 // More SST Headers
-#include <sst/core/params.h>
-#include <sst/core/link.h>
-#include <sst/core/timeConverter.h>
+#include <core/timeConverter.h>
 
 using namespace SST;
 using namespace SST::gem5;
@@ -76,11 +74,11 @@ gem5Component::gem5Component(ComponentId_t id, Params &params) :
     SST::Component(id)
 {
     dbg.init("@t:gem5:@p():@l " + getName() + ": ", 0, 0,
-            (Output::output_location_t)params.find_integer("comp_debug", 0));
+            (Output::output_location_t)params.find<int>("comp_debug", 0));
     info.init("gem5:" + getName() + ": ", 0, 0, Output::STDOUT);
 
     TimeConverter *clock = registerClock(
-            params.find_string("frequency", "1GHz"),
+            params.find<std::string>("frequency", "1GHz"),
             new Clock::Handler<gem5Component>(this, &gem5Component::clockTick));
 
     // This sets how many gem5 cycles we'll need to simulate per clock tick
@@ -89,7 +87,7 @@ gem5Component::gem5Component(ComponentId_t id, Params &params) :
     // Disable gem5's inform() messages.
     want_info = false;
 
-    std::string cmd = params.find_string("cmd", "");
+    std::string cmd = params.find<std::string>("cmd", "");
     if (cmd.empty()) {
         dbg.fatal(CALL_INFO, -1, "Component %s must have a 'cmd' parameter.\n",
                getName().c_str());
@@ -106,7 +104,7 @@ gem5Component::gem5Component(ComponentId_t id, Params &params) :
     }
 
     std::vector<char*> flags;
-    std::string gem5DbgFlags = params.find_string("gem5DebugFlags", "");
+    std::string gem5DbgFlags = params.find<std::string>("gem5DebugFlags", "");
     splitCommandArgs(gem5DbgFlags, flags);
     for (auto flag : flags) {
         dbg.output(CALL_INFO, "  Setting Debug Flag [%s]\n", flag);
@@ -162,7 +160,7 @@ gem5Component::finish(void)
     for (auto m : masters) {
         m->finish();
     }
-    info.output("Complete. Clocks Processed: %"PRIu64"\n", clocks_processed);
+    info.output("Complete. Clocks Processed: %" PRIu64"\n", clocks_processed);
 }
 
 bool
