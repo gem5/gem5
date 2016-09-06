@@ -44,6 +44,8 @@
 #include "dev/arm/realview.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/packet_access.hh"
+#include "nomali/lib/mali_midg_regmap.h"
+#include "params/CustomNoMaliGpu.hh"
 #include "params/NoMaliGpu.hh"
 
 static const std::map<Enums::NoMaliGpuType, nomali_gpu_type_t> gpuTypeMap{
@@ -320,8 +322,71 @@ NoMaliGpu::_reset(nomali_handle_t h, void *usr)
     _this->onReset();
 }
 
+
+CustomNoMaliGpu::CustomNoMaliGpu(const CustomNoMaliGpuParams *p)
+    : NoMaliGpu(p),
+      idRegs{
+        { GPU_CONTROL_REG(GPU_ID), p->gpu_id },
+        { GPU_CONTROL_REG(L2_FEATURES), p->l2_features },
+        { GPU_CONTROL_REG(TILER_FEATURES), p->tiler_features },
+        { GPU_CONTROL_REG(MEM_FEATURES), p->mem_features },
+        { GPU_CONTROL_REG(MMU_FEATURES), p->mmu_features },
+        { GPU_CONTROL_REG(AS_PRESENT), p->as_present },
+        { GPU_CONTROL_REG(JS_PRESENT), p->js_present },
+
+        { GPU_CONTROL_REG(THREAD_MAX_THREADS), p->thread_max_threads },
+        { GPU_CONTROL_REG(THREAD_MAX_WORKGROUP_SIZE),
+          p->thread_max_workgroup_size },
+        { GPU_CONTROL_REG(THREAD_MAX_BARRIER_SIZE),
+          p->thread_max_barrier_size },
+        { GPU_CONTROL_REG(THREAD_FEATURES), p->thread_features },
+
+        { GPU_CONTROL_REG(SHADER_PRESENT_LO), bits(p->shader_present, 31, 0) },
+        { GPU_CONTROL_REG(SHADER_PRESENT_HI), bits(p->shader_present, 63, 32) },
+        { GPU_CONTROL_REG(TILER_PRESENT_LO), bits(p->tiler_present, 31, 0) },
+        { GPU_CONTROL_REG(TILER_PRESENT_HI), bits(p->tiler_present, 63, 32) },
+        { GPU_CONTROL_REG(L2_PRESENT_LO), bits(p->l2_present, 31, 0) },
+        { GPU_CONTROL_REG(L2_PRESENT_HI), bits(p->l2_present, 63, 32) },
+      }
+{
+    fatal_if(p->texture_features.size() > 3,
+             "Too many texture feature registers specified (%i)\n",
+             p->texture_features.size());
+
+    fatal_if(p->js_features.size() > 16,
+             "Too many job slot feature registers specified (%i)\n",
+             p->js_features.size());
+
+    for (int i = 0; i < p->texture_features.size(); i++)
+        idRegs[TEXTURE_FEATURES_REG(i)] = p->texture_features[i];
+
+    for (int i = 0; i < p->js_features.size(); i++)
+        idRegs[JS_FEATURES_REG(i)] = p->js_features[i];
+}
+
+CustomNoMaliGpu::~CustomNoMaliGpu()
+{
+}
+
+void
+CustomNoMaliGpu::onReset()
+{
+    NoMaliGpu::onReset();
+
+    for (const auto &reg : idRegs)
+        writeRegRaw(reg.first, reg.second);
+}
+
+
+
 NoMaliGpu *
 NoMaliGpuParams::create()
 {
     return new NoMaliGpu(this);
+}
+
+CustomNoMaliGpu *
+CustomNoMaliGpuParams::create()
+{
+    return new CustomNoMaliGpu(this);
 }

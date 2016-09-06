@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015 ARM Limited
+# Copyright (c) 2014-2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -61,3 +61,67 @@ class NoMaliGpu(PioDevice):
     int_gpu = Param.UInt32("Interrupt number for GPU interrupts")
     int_job = Param.UInt32("Interrupt number for JOB interrupts")
     int_mmu = Param.UInt32("Interrupt number for MMU interrupts")
+
+class CustomNoMaliGpu(NoMaliGpu):
+    """Base class for custom NoMali implementation that need to override
+    configuration registers. See CustomNoMaliT760 for a usage example.
+
+    """
+
+    type = 'CustomNoMaliGpu'
+    cxx_header = "dev/arm/gpu_nomali.hh"
+
+    gpu_id = Param.UInt32("")
+    l2_features = Param.UInt32("")
+    tiler_features = Param.UInt32("")
+    mem_features = Param.UInt32("")
+    mmu_features = Param.UInt32("")
+    as_present = Param.UInt32("")
+    js_present = Param.UInt32("")
+
+    thread_max_threads = Param.UInt32("")
+    thread_max_workgroup_size = Param.UInt32("")
+    thread_max_barrier_size = Param.UInt32("")
+    thread_features = Param.UInt32("")
+
+    texture_features = VectorParam.UInt32("")
+    js_features = VectorParam.UInt32("")
+
+    shader_present = Param.UInt64("")
+    tiler_present = Param.UInt64("")
+    l2_present = Param.UInt64("")
+
+class CustomNoMaliT760(CustomNoMaliGpu):
+    """Example NoMali T760 r0p0-0 configuration using the defaults from
+    the NoMali library.
+
+    """
+
+    gpu_id = 0x07500000
+
+    l2_features = 0x07130206
+    tiler_features = 0x00000809
+    mem_features = 0x00000001
+    mmu_features = 0x00002830
+    as_present = 0x000000ff
+    js_present = 0x00000007
+
+    thread_max_threads = 0x00000100
+    thread_max_workgroup_size = 0x00000100
+    thread_max_barrier_size = 0x00000100
+    thread_features = 0x0a040400
+
+    texture_features = [
+        0x00fe001e,
+        0x0000ffff,
+        0x9f81ffff,
+    ]
+    js_features = [
+        0x0000020e,
+        0x000001fe,
+        0x0000007e,
+    ]
+
+    shader_present = 0x0000000f
+    tiler_present = 0x00000001
+    l2_present = 0x00000001

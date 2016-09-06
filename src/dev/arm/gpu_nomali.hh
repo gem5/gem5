@@ -46,6 +46,7 @@
 #include "libnomali/nomali.h"
 
 class NoMaliGpuParams;
+class CustomNoMaliGpuParams;
 class RealView;
 
 class NoMaliGpu : public PioDevice
@@ -185,5 +186,19 @@ class NoMaliGpu : public PioDevice
     nomali_handle_t nomali;
 };
 
+
+class CustomNoMaliGpu : public NoMaliGpu
+{
+  public:
+    CustomNoMaliGpu(const CustomNoMaliGpuParams *p);
+    virtual ~CustomNoMaliGpu();
+
+  protected:
+    void onReset() override;
+
+  private:
+    /** Map between GPU registers and their custom reset values */
+    std::map<nomali_addr_t, uint32_t> idRegs;
+};
 
 #endif // __DEV_ARM_NOMALI_GPU_HH__
