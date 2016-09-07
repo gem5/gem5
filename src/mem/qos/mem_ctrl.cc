@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -329,9 +329,6 @@ MemCtrl::regStats()
         priorityMinLatency.subname(j, std::to_string(j));
         priorityMaxLatency.subname(j, std::to_string(j));
     }
-
-    if (policy)
-        policy->regStats();
 }
 
 void
