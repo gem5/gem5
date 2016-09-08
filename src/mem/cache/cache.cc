@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 ARM Limited
+ * Copyright (c) 2010-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1336,16 +1336,17 @@ Cache::recvTimingResp(PacketPtr pkt)
 
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
 
-    // upgrade deferred targets if the response has no sharers, and is
-    // thus passing writable
-    if (!pkt->hasSharers()) {
-        mshr->promoteWritable();
-    }
-
     bool is_fill = !mshr->isForward &&
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
 
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+    const bool valid_blk = blk && blk->isValid();
+    // If the response indicates that there are no sharers and we
+    // either had the block already or the response is filling we can
+    // promote our copy to writable
+    if (!pkt->hasSharers() && (is_fill || valid_blk)) {
+        mshr->promoteWritable();
+    }
 
     if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
