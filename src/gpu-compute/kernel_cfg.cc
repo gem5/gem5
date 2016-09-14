@@ -139,7 +139,7 @@ ControlFlowInfo::connectBasicBlocks()
         GPUStaticInst* last = lastInstruction(bb.get());
         if (last->o_type == Enums::OT_RET) {
             bb->successorIds.insert(exit_bb->id);
-            break;
+            continue;
         }
         if (last->o_type == Enums::OT_BRANCH) {
             const uint32_t target_pc = last->getTargetPc();
