@@ -1284,7 +1284,17 @@ mmapImpl(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc,
     int sim_fd = -1;
     uint8_t *pmap = nullptr;
     if (!(tgt_flags & OS::TGT_MAP_ANONYMOUS)) {
-        sim_fd = p->getSimFD(tgt_fd);
+        // Check for EmulatedDriver mmap
+        FDEntry *fde = p->getFDEntry(tgt_fd);
+        if (fde == NULL)
+            return -EBADF;
+
+        if (fde->driver != NULL) {
+            return fde->driver->mmap(p, tc, start, length, prot,
+                                     tgt_flags, tgt_fd, offset);
+        }
+        sim_fd = fde->fd;
+
         if (sim_fd < 0)
             return -EBADF;
 

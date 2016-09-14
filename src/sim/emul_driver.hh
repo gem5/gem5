@@ -46,8 +46,8 @@ class ThreadContext;
  * hardware inside gem5 can be created by deriving from this class and
  * overriding the abstract virtual methods.
  *
- * Currently only open() and ioctl() calls are supported, but other calls
- * (e.g., read(), write(), mmap()) could be added as needed.
+ * Currently only open(), ioctl(), and mmap() calls are supported, but other
+ * calls (e.g., read(), write()) could be added as needed.
  */
 class EmulatedDriver : public SimObject
 {
@@ -85,6 +85,17 @@ class EmulatedDriver : public SimObject
      * (see the SyscallReturn class).
      */
     virtual int ioctl(LiveProcess *p, ThreadContext *tc, unsigned req) = 0;
+
+    /**
+     * Virtual method, invoked when the user program calls mmap() on
+     * the file descriptor returned by a previous open().  The parameters
+     * are the same as those passed in to mmapFunc() (q.v.).
+     * @return The return ptr for the mmap, or the negation of the errno
+     * (see the SyscallReturn class).
+     */
+    virtual Addr mmap(LiveProcess *p, ThreadContext *tc, Addr start,
+                      uint64_t length, int prot, int tgtFlags, int tgtFd,
+                      int offset) { return -EBADF; }
 };
 
 #endif // __SIM_EMUL_DRIVER_HH
