@@ -185,6 +185,91 @@ class DmaDevice : public PioDevice
 };
 
 /**
+ * DMA callback class.
+ *
+ * Allows one to register for a callback event after a sequence of (potentially
+ * non-contiguous) DMA transfers on a DmaPort completes.  Derived classes must
+ * implement the process() method and use getChunkEvent() to allocate a
+ * callback event for each participating DMA.
+ */
+class DmaCallback : public Drainable
+{
+  public:
+    virtual const std::string name() const { return "DmaCallback"; }
+
+    /**
+     * DmaPort ensures that all oustanding DMA accesses have completed before
+     * it finishes draining.  However, DmaChunkEvents scheduled with a delay
+     * might still be sitting on the event queue.  Therefore, draining is not
+     * complete until count is 0, which ensures that all outstanding
+     * DmaChunkEvents associated with this DmaCallback have fired.
+     */
+    DrainState drain() override
+    {
+        return count ? DrainState::Draining : DrainState::Drained;
+    }
+
+  protected:
+    int count;
+
+    DmaCallback()
+        : count(0)
+    { }
+
+    virtual ~DmaCallback() { }
+
+    /**
+     * Callback function invoked on completion of all chunks.
+     */
+    virtual void process() = 0;
+
+  private:
+    /**
+     * Called by DMA engine completion event on each chunk completion.
+     * Since the object may delete itself here, callers should not use
+     * the object pointer after calling this function.
+     */
+    void chunkComplete()
+    {
+        if (--count == 0) {
+            process();
+            // Need to notify DrainManager that this object is finished
+            // draining, even though it is immediately deleted.
+            signalDrainDone();
+            delete this;
+        }
+    }
+
+    /**
+     * Event invoked by DmaDevice on completion of each chunk.
+     */
+    class DmaChunkEvent : public Event
+    {
+      private:
+        DmaCallback *callback;
+
+      public:
+        DmaChunkEvent(DmaCallback *cb)
+          : Event(Default_Pri, AutoDelete), callback(cb)
+        { }
+
+        void process() { callback->chunkComplete(); }
+    };
+
+  public:
+
+    /**
+     * Request a chunk event.  Chunks events should be provided to each DMA
+     * request that wishes to participate in this DmaCallback.
+     */
+    Event *getChunkEvent()
+    {
+        ++count;
+        return new DmaChunkEvent(this);
+    }
+};
+
+/**
  * Buffered DMA engine helper class
  *
  * This class implements a simple DMA engine that feeds a FIFO
