@@ -41,6 +41,7 @@
  * Authors: Kevin Lim
  */
 
+#include "arch/kernel_stats.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -48,6 +49,8 @@
 #include "cpu/quiesce_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Context.hh"
+#include "debug/Quiesce.hh"
+#include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 
 void
@@ -101,6 +104,39 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         panic("Context ids don't match, one: %d, two: %d", id1, id2);
 
 
+}
+
+void
+ThreadContext::quiesce()
+{
+    if (!getCpuPtr()->params()->do_quiesce)
+        return;
+
+    DPRINTF(Quiesce, "%s: quiesce()\n", getCpuPtr()->name());
+
+    suspend();
+    if (getKernelStats())
+       getKernelStats()->quiesce();
+}
+
+
+void
+ThreadContext::quiesceTick(Tick resume)
+{
+    BaseCPU *cpu = getCpuPtr();
+
+    if (!cpu->params()->do_quiesce)
+        return;
+
+    EndQuiesceEvent *quiesceEvent = getQuiesceEvent();
+
+    cpu->reschedule(quiesceEvent, resume, true);
+
+    DPRINTF(Quiesce, "%s: quiesceTick until %lu\n", cpu->name(), resume);
+
+    suspend();
+    if (getKernelStats())
+        getKernelStats()->quiesce();
 }
 
 void

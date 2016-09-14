@@ -380,10 +380,9 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
         assert(o3_tc->cpu);
         o3_tc->thread = this->thread[tid];
 
-        if (FullSystem) {
-            // Setup quiesce event.
-            this->thread[tid]->quiesceEvent = new EndQuiesceEvent(tc);
-        }
+        // Setup quiesce event.
+        this->thread[tid]->quiesceEvent = new EndQuiesceEvent(tc);
+
         // Give the thread the TC.
         this->thread[tid]->tc = tc;
 

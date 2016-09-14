@@ -174,6 +174,12 @@ class ThreadContext
     /// Set the status to Halted.
     virtual void halt() = 0;
 
+    /// Quiesce thread context
+    void quiesce();
+
+    /// Quiesce, suspend, and schedule activate at resume
+    void quiesceTick(Tick resume);
+
     virtual void dumpFuncProfile() = 0;
 
     virtual void takeOverFrom(ThreadContext *old_context) = 0;
@@ -366,6 +372,12 @@ class ProxyThreadContext : public ThreadContext
 
     /// Set the status to Halted.
     void halt() { actualTC->halt(); }
+
+    /// Quiesce thread context
+    void quiesce() { actualTC->quiesce(); }
+
+    /// Quiesce, suspend, and schedule activate at resume
+    void quiesceTick(Tick resume) { actualTC->quiesceTick(resume); }
 
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 
