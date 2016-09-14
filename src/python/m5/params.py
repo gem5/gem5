@@ -778,7 +778,9 @@ class AddrRange(ParamValue):
             raise TypeError, "Too many keywords: %s" % kwargs.keys()
 
     def __str__(self):
-        return '%s:%s' % (self.start, self.end)
+        return '%s:%s:%s:%s:%s:%s' \
+            % (self.start, self.end, self.intlvHighBit, self.xorHighBit,\
+               self.intlvBits, self.intlvMatch)
 
     def size(self):
         # Divide the size by the size of the interleaving slice
@@ -799,16 +801,28 @@ class AddrRange(ParamValue):
 
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
-        code('uint64_t _start, _end;')
+        code('uint64_t _start, _end, _intlvHighBit = 0, _xorHighBit = 0;')
+        code('uint64_t _intlvBits = 0, _intlvMatch = 0;')
         code('char _sep;')
         code('std::istringstream _stream(${src});')
         code('_stream >> _start;')
         code('_stream.get(_sep);')
         code('_stream >> _end;')
+        code('if (!_stream.fail() && !_stream.eof()) {')
+        code('    _stream.get(_sep);')
+        code('    _stream >> _intlvHighBit;')
+        code('    _stream.get(_sep);')
+        code('    _stream >> _xorHighBit;')
+        code('    _stream.get(_sep);')
+        code('    _stream >> _intlvBits;')
+        code('    _stream.get(_sep);')
+        code('    _stream >> _intlvMatch;')
+        code('}')
         code('bool _ret = !_stream.fail() &&'
             '_stream.eof() && _sep == \':\';')
         code('if (_ret)')
-        code('   ${dest} = AddrRange(_start, _end);')
+        code('   ${dest} = AddrRange(_start, _end, _intlvHighBit, \
+                _xorHighBit, _intlvBits, _intlvMatch);')
         code('${ret} _ret;')
 
     def getValue(self):
