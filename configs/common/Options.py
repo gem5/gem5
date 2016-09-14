@@ -142,6 +142,39 @@ def addCommonOptions(parser):
     parser.add_option("--l3_assoc", type="int", default=16)
     parser.add_option("--cacheline_size", type="int", default=64)
 
+    # dist-gem5 options
+    parser.add_option("--dist", action="store_true",
+                      help="Parallel distributed gem5 simulation.")
+    parser.add_option("--is-switch", action="store_true",
+                      help="Select the network switch simulator process for a"\
+                      "distributed gem5 run")
+    parser.add_option("--dist-rank", default=0, action="store", type="int",
+                      help="Rank of this system within the dist gem5 run.")
+    parser.add_option("--dist-size", default=0, action="store", type="int",
+                      help="Number of gem5 processes within the dist gem5 run.")
+    parser.add_option("--dist-server-name",
+                      default="127.0.0.1",
+                      action="store", type="string",
+                      help="Name of the message server host\nDEFAULT: localhost")
+    parser.add_option("--dist-server-port",
+                      default=2200,
+                      action="store", type="int",
+                      help="Message server listen port\nDEFAULT: 2200")
+    parser.add_option("--dist-sync-repeat",
+                      default="0us",
+                      action="store", type="string",
+                      help="Repeat interval for synchronisation barriers among dist-gem5 processes\nDEFAULT: --ethernet-linkdelay")
+    parser.add_option("--dist-sync-start",
+                      default="5200000000000t",
+                      action="store", type="string",
+                      help="Time to schedule the first dist synchronisation barrier\nDEFAULT:5200000000000t")
+    parser.add_option("--ethernet-linkspeed", default="10Gbps",
+                        action="store", type="string",
+                        help="Link speed in bps\nDEFAULT: 10Gbps")
+    parser.add_option("--ethernet-linkdelay", default="10us",
+                      action="store", type="string",
+                      help="Link delay in seconds\nDEFAULT: 10us")
+
     # Enable Ruby
     parser.add_option("--ruby", action="store_true")
 
@@ -297,41 +330,10 @@ def addFSOptions(parser):
     # Benchmark options
     parser.add_option("--dual", action="store_true",
                       help="Simulate two systems attached with an ethernet link")
-    parser.add_option("--dist", action="store_true",
-                      help="Parallel distributed gem5 simulation.")
-    parser.add_option("--is-switch", action="store_true",
-                      help="Select the network switch simulator process for a"\
-                      "distributed gem5 run")
-    parser.add_option("--dist-rank", default=0, action="store", type="int",
-                      help="Rank of this system within the dist gem5 run.")
-    parser.add_option("--dist-size", default=0, action="store", type="int",
-                      help="Number of gem5 processes within the dist gem5 run.")
-    parser.add_option("--dist-server-name",
-                      default="127.0.0.1",
-                      action="store", type="string",
-                      help="Name of the message server host\nDEFAULT: localhost")
-    parser.add_option("--dist-server-port",
-                      default=2200,
-                      action="store", type="int",
-                      help="Message server listen port\nDEFAULT: 2200")
-    parser.add_option("--dist-sync-repeat",
-                      default="0us",
-                      action="store", type="string",
-                      help="Repeat interval for synchronisation barriers among dist-gem5 processes\nDEFAULT: --ethernet-linkdelay")
-    parser.add_option("--dist-sync-start",
-                      default="5200000000000t",
-                      action="store", type="string",
-                      help="Time to schedule the first dist synchronisation barrier\nDEFAULT:5200000000000t")
     parser.add_option("-b", "--benchmark", action="store", type="string",
                       dest="benchmark",
                       help="Specify the benchmark to run. Available benchmarks: %s"\
                       % DefinedBenchmarks)
-    parser.add_option("--ethernet-linkspeed", default="10Gbps",
-                        action="store", type="string",
-                        help="Link speed in bps\nDEFAULT: 10Gbps")
-    parser.add_option("--ethernet-linkdelay", default="10us",
-                      action="store", type="string",
-                      help="Link delay in seconds\nDEFAULT: 10us")
 
     # Metafile options
     parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
