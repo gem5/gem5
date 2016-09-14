@@ -267,9 +267,8 @@ TCPIface::sendTCP(int sock, const void *buf, unsigned length)
     ret = ::send(sock, buf, length, MSG_NOSIGNAL);
     if (ret < 0) {
         if (errno == ECONNRESET || errno == EPIPE) {
-            inform("send(): %s", strerror(errno));
-            exit_message("info", 0, "Message server closed connection, "
-                         "simulation is exiting");
+            exitSimLoop("Message server closed connection, simulation "
+                        "is exiting");
         } else {
             panic("send() failed: %s", strerror(errno));
         }

@@ -610,10 +610,10 @@ DistIface::recvThreadFunc(Event *recv_done, Tick link_delay)
             // because one of them called m5 exit. So we stop here.
             // Grab the eventq lock to stop the simulation thread
             curEventQueue()->lock();
-            exit_message("info",
-                         0,
-                         "Message server closed connection, "
-                         "simulation is exiting");
+            exitSimLoop("Message server closed connection, simulator "
+                        "is exiting");
+            curEventQueue()->unlock();
+            break;
         }
 
         // We got a valid dist header packet, let's process it
