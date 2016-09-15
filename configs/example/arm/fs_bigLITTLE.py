@@ -60,10 +60,27 @@ default_rcs = 'bootscript.rcS'
 
 default_mem_size= "2GB"
 
-def createSystem(kernel, mem_mode, bootscript, disks=[]):
+
+class BigCluster(devices.CpuCluster):
+    def __init__(self, system, num_cpus, cpu_clock,
+                 cpu_voltage="1.0V"):
+        cpu_config = [ CpuConfig.get("arm_detailed"), devices.L1I, devices.L1D,
+                    devices.WalkCache, devices.L2 ]
+        super(BigCluster, self).__init__(system, num_cpus, cpu_clock,
+                                         cpu_voltage, *cpu_config)
+
+class LittleCluster(devices.CpuCluster):
+    def __init__(self, system, num_cpus, cpu_clock,
+                 cpu_voltage="1.0V"):
+        cpu_config = [ CpuConfig.get("minor"), devices.L1I, devices.L1D,
+                       devices.WalkCache, devices.L2 ]
+        super(LittleCluster, self).__init__(system, num_cpus, cpu_clock,
+                                         cpu_voltage, *cpu_config)
+
+
+def createSystem(kernel, bootscript, disks=[]):
     sys = devices.SimpleSystem(kernel=SysPaths.binary(kernel),
                                readfile=bootscript,
-                               mem_mode=mem_mode,
                                machine_type="DTOnly")
 
     mem_region = sys.realview._mem_regions[0]
@@ -89,90 +106,6 @@ def createSystem(kernel, mem_mode, bootscript, disks=[]):
     sys.realview.setupBootLoader(sys.membus, sys, SysPaths.binary)
 
     return sys
-
-
-class CpuCluster(SubSystem):
-    def addCPUs(self, cpu_config, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        try:
-            self._cluster_id
-            m5.util.panic("CpuCluster.addCPUs() must be called exactly once")
-        except AttributeError:
-            pass
-
-        assert num_cpus > 0
-        system = self._parent
-        self._cluster_id = len(system._clusters)
-        system._clusters.append(self)
-        self._config = cpu_config
-
-        self.voltage_domain = VoltageDomain(voltage=cpu_voltage)
-        self.clk_domain = SrcClockDomain(clock=cpu_clock,
-                                         voltage_domain=self.voltage_domain)
-
-        cpu_class = cpu_config['cpu']
-        self.cpus = [ cpu_class(cpu_id=len(system._cpus) + idx,
-                                clk_domain=self.clk_domain)
-                      for idx in range(num_cpus) ]
-
-        for cpu in self.cpus:
-            cpu.createThreads()
-            cpu.createInterruptController()
-            cpu.socket_id = self._cluster_id
-            system._cpus.append(cpu)
-
-    def createCache(self, key):
-        try:
-            return self._config[key]()
-        except KeyError:
-            return None
-
-    def addL1(self):
-        self._cluster_id
-        for cpu in self.cpus:
-            l1i = self.createCache('l1i')
-            l1d = self.createCache('l1d')
-            iwc = self.createCache('wcache')
-            dwc = self.createCache('wcache')
-            cpu.addPrivateSplitL1Caches(l1i, l1d, iwc, dwc)
-
-    def addL2(self, clk_domain):
-        self._cluster_id
-        self.toL2Bus = L2XBar(width=64, clk_domain=clk_domain)
-        #self.toL2Bus = L2XBar(width=64, clk_domain=clk_domain,
-        #snoop_filter=NULL)
-        self.l2 = self._config['l2']()
-        for cpu in self.cpus:
-            cpu.connectAllPorts(self.toL2Bus)
-        self.toL2Bus.master = self.l2.cpu_side
-
-    def connectMemSide(self, bus):
-        self._cluster_id
-        bus.slave
-        try:
-            self.l2.mem_side = bus.slave
-        except AttributeError:
-            for cpu in self.cpus:
-                cpu.connectAllPorts(bus)
-
-
-def addCaches(system, last_cache_level):
-    cluster_mem_bus = system.membus
-    assert last_cache_level >= 1 and last_cache_level <= 3
-    for cluster in system._clusters:
-        cluster.addL1()
-    if last_cache_level > 1:
-        for cluster in system._clusters:
-            cluster.addL2(cluster.clk_domain)
-    if last_cache_level > 2:
-        max_clock_cluster = max(system._clusters,
-                                key=lambda c: c.clk_domain.clock[0])
-        system.l3 = devices.L3(clk_domain=max_clock_cluster.clk_domain)
-        system.toL3Bus = L2XBar(width=64)
-        system.toL3Bus.master = system.l3.cpu_side
-        system.l3.mem_side = system.membus.slave
-        cluster_mem_bus = system.toL3Bus
-
-    return cluster_mem_bus
 
 
 def main():
@@ -210,24 +143,6 @@ def main():
 
     options = parser.parse_args()
 
-    if options.atomic:
-        cpu_config = { 'cpu' : AtomicSimpleCPU }
-        big_cpu_config, little_cpu_config = cpu_config, cpu_config
-    else:
-        big_cpu_config = { 'cpu' : CpuConfig.get("arm_detailed"),
-                           'l1i' : devices.L1I,
-                           'l1d' : devices.L1D,
-                           'wcache' : devices.WalkCache,
-                           'l2' : devices.L2 }
-        little_cpu_config = { 'cpu' : MinorCPU,
-                              'l1i' : devices.L1I,
-                              'l1d' : devices.L1D,
-                              'wcache' : devices.WalkCache,
-                              'l2' : devices.L2 }
-
-    big_cpu_class = big_cpu_config['cpu']
-    little_cpu_class = little_cpu_config['cpu']
-
     kernel_cmd = [
         "earlyprintk=pl011,0x1c090000",
         "console=ttyAMA0",
@@ -243,41 +158,49 @@ def main():
 
     root = Root(full_system=True)
 
-    assert big_cpu_class.memory_mode() == little_cpu_class.memory_mode()
     disks = default_disk if len(options.disk) == 0 else options.disk
-    system = createSystem(options.kernel, big_cpu_class.memory_mode(),
-                          options.bootscript, disks=disks)
+    system = createSystem(options.kernel, options.bootscript, disks=disks)
 
     root.system = system
     system.boot_osflags = " ".join(kernel_cmd)
 
+    AtomicCluster = devices.AtomicCluster
+
+    if options.big_cpus + options.little_cpus == 0:
+        m5.util.panic("Empty CPU clusters")
+
     # big cluster
     if options.big_cpus > 0:
-        system.bigCluster = CpuCluster()
-        system.bigCluster.addCPUs(big_cpu_config, options.big_cpus,
-                                  options.big_cpu_clock)
-
-
-    # LITTLE cluster
+        if options.atomic:
+            system.bigCluster = AtomicCluster(system, options.big_cpus,
+                                              options.big_cpu_clock)
+        else:
+            system.bigCluster = BigCluster(system, options.big_cpus,
+                                           options.big_cpu_clock)
+        mem_mode = system.bigCluster.memoryMode()
+    # little cluster
     if options.little_cpus > 0:
-        system.littleCluster = CpuCluster()
-        system.littleCluster.addCPUs(little_cpu_config, options.little_cpus,
-                                     options.little_cpu_clock)
+        if options.atomic:
+            system.littleCluster = AtomicCluster(system, options.little_cpus,
+                                                 options.little_cpu_clock)
 
-    # add caches
-    if options.caches:
-        cluster_mem_bus = addCaches(system, options.last_cache_level)
-    else:
-        if big_cpu_class.require_caches():
-            m5.util.panic("CPU model %s requires caches" % str(big_cpu_class))
-        if little_cpu_class.require_caches():
-            m5.util.panic("CPU model %s requires caches" %
-                          str(little_cpu_class))
-        cluster_mem_bus = system.membus
+        else:
+            system.littleCluster = LittleCluster(system, options.little_cpus,
+                                                 options.little_cpu_clock)
+        mem_mode = system.littleCluster.memoryMode()
 
-    # connect each cluster to the memory hierarchy
-    for cluster in system._clusters:
-        cluster.connectMemSide(cluster_mem_bus)
+    if options.big_cpus > 0 and options.little_cpus > 0:
+        if system.bigCluster.memoryMode() != system.littleCluster.memoryMode():
+            m5.util.panic("Memory mode missmatch among CPU clusters")
+    system.mem_mode = mem_mode
+
+    # create caches
+    system.addCaches(options.caches, options.last_cache_level)
+    if not options.caches:
+        if options.big_cpus > 0 and system.bigCluster.requireCaches():
+            m5.util.panic("Big CPU model requires caches")
+        if options.little_cpus > 0 and system.littleCluster.requireCaches():
+            m5.util.panic("Little CPU model requires caches")
 
     # Linux device tree
     system.dtb_filename = SysPaths.binary(options.dtb)

@@ -42,6 +42,7 @@ import m5
 from m5.objects import *
 m5.util.addToPath('../../common')
 from Caches import *
+import CpuConfig
 
 class L1I(L1_ICache):
     hit_latency = 1
@@ -98,33 +99,104 @@ class MemBus(SystemXBar):
     default = Self.badaddr_responder.pio
 
 
+class CpuCluster(SubSystem):
+    def __init__(self, system,  num_cpus, cpu_clock, cpu_voltage,
+                 cpu_type, l1i_type, l1d_type, wcache_type, l2_type):
+        super(CpuCluster, self).__init__()
+        self._cpu_type = cpu_type
+        self._l1i_type = l1i_type
+        self._l1d_type = l1d_type
+        self._wcache_type = wcache_type
+        self._l2_type = l2_type
+
+        assert num_cpus > 0
+
+        self.voltage_domain = VoltageDomain(voltage=cpu_voltage)
+        self.clk_domain = SrcClockDomain(clock=cpu_clock,
+                                         voltage_domain=self.voltage_domain)
+
+        self.cpus = [ self._cpu_type(cpu_id=system.numCpus() + idx,
+                                     clk_domain=self.clk_domain)
+                      for idx in range(num_cpus) ]
+
+        for cpu in self.cpus:
+            cpu.createThreads()
+            cpu.createInterruptController()
+            cpu.socket_id = system.numCpuClusters()
+        system.addCpuCluster(self, num_cpus)
+
+    def requireCaches(self):
+        return self._cpu_type.require_caches()
+
+    def memoryMode(self):
+        return self._cpu_type.memory_mode()
+
+    def addL1(self):
+        for cpu in self.cpus:
+            l1i = None if self._l1i_type is None else self._l1i_type()
+            l1d = None if self._l1d_type is None else self._l1d_type()
+            iwc = None if self._wcache_type is None else self._wcache_type()
+            dwc = None if self._wcache_type is None else self._wcache_type()
+            cpu.addPrivateSplitL1Caches(l1i, l1d, iwc, dwc)
+
+    def addL2(self, clk_domain):
+        if self._l2_type is None:
+            return
+        self.toL2Bus = L2XBar(width=64, clk_domain=clk_domain)
+        self.l2 = self._l2_type()
+        for cpu in self.cpus:
+            cpu.connectAllPorts(self.toL2Bus)
+        self.toL2Bus.master = self.l2.cpu_side
+
+    def connectMemSide(self, bus):
+        bus.slave
+        try:
+            self.l2.mem_side = bus.slave
+        except AttributeError:
+            for cpu in self.cpus:
+                cpu.connectAllPorts(bus)
+
+
+class AtomicCluster(CpuCluster):
+    def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
+        cpu_config = [ CpuConfig.get("atomic"), None, None, None, None ]
+        super(AtomicCluster, self).__init__(system, num_cpus, cpu_clock,
+                                            cpu_voltage, *cpu_config)
+    def addL1(self):
+        pass
+
+
 class SimpleSystem(LinuxArmSystem):
     cache_line_size = 64
 
-    voltage_domain = VoltageDomain(voltage="1.0V")
-    clk_domain = SrcClockDomain(clock="1GHz",
-                                voltage_domain=Parent.voltage_domain)
+    def __init__(self, **kwargs):
+        super(SimpleSystem, self).__init__(**kwargs)
 
-    realview = VExpress_GEM5_V1()
+        self.voltage_domain = VoltageDomain(voltage="1.0V")
+        self.clk_domain = SrcClockDomain(clock="1GHz",
+                                         voltage_domain=Parent.voltage_domain)
 
-    gic_cpu_addr = realview.gic.cpu_addr
-    flags_addr = realview.realview_io.pio_addr + 0x30
+        self.realview = VExpress_GEM5_V1()
 
-    membus = MemBus()
+        self.gic_cpu_addr = self.realview.gic.cpu_addr
+        self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
-    intrctrl = IntrControl()
-    terminal = Terminal()
-    vncserver = VncServer()
+        self.membus = MemBus()
 
-    iobus = IOXBar()
-    # CPUs->PIO
-    iobridge = Bridge(delay='50ns')
-    # Device DMA -> MEM
-    dmabridge = Bridge(delay='50ns', ranges=realview._mem_regions)
+        self.intrctrl = IntrControl()
+        self.terminal = Terminal()
+        self.vncserver = VncServer()
 
-    _pci_devices = 0
-    _clusters = []
-    _cpus = []
+        self.iobus = IOXBar()
+        # CPUs->PIO
+        self.iobridge = Bridge(delay='50ns')
+        # Device DMA -> MEM
+        self.dmabridge = Bridge(delay='50ns',
+                                ranges=self.realview._mem_regions)
+
+        self._pci_devices = 0
+        self._clusters = []
+        self._num_cpus = 0
 
     def attach_pci(self, dev):
         dev.pci_bus, dev.pci_dev, dev.pci_func = (0, self._pci_devices + 1, 0)
@@ -142,3 +214,42 @@ class SimpleSystem(LinuxArmSystem):
         self.realview.attachOnChipIO(self.membus, self.iobridge)
         self.realview.attachIO(self.iobus)
         self.system_port = self.membus.slave
+
+    def numCpuClusters(self):
+        return len(self._clusters)
+
+    def addCpuCluster(self, cpu_cluster, num_cpus):
+        assert cpu_cluster not in self._clusters
+        assert num_cpus > 0
+        self._clusters.append(cpu_cluster)
+        self._num_cpus += num_cpus
+
+    def numCpus(self):
+        return self._num_cpus
+
+    def addCaches(self, need_caches, last_cache_level):
+        if not need_caches:
+            # connect each cluster to the memory hierarchy
+            for cluster in self._clusters:
+                cluster.connectMemSide(self.membus)
+            return
+
+        cluster_mem_bus = self.membus
+        assert last_cache_level >= 1 and last_cache_level <= 3
+        for cluster in self._clusters:
+            cluster.addL1()
+        if last_cache_level > 1:
+            for cluster in self._clusters:
+                cluster.addL2(cluster.clk_domain)
+        if last_cache_level > 2:
+            max_clock_cluster = max(self._clusters,
+                                    key=lambda c: c.clk_domain.clock[0])
+            self.l3 = L3(clk_domain=max_clock_cluster.clk_domain)
+            self.toL3Bus = L2XBar(width=64)
+            self.toL3Bus.master = self.l3.cpu_side
+            self.l3.mem_side = self.membus.slave
+            cluster_mem_bus = self.toL3Bus
+
+        # connect each cluster to the memory hierarchy
+        for cluster in self._clusters:
+            cluster.connectMemSide(cluster_mem_bus)
