@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2015 ARM Limited
+ * Copyright (c) 2013 - 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -795,6 +795,14 @@ class TraceCPU : public BaseCPU
             /** Input file stream for the protobuf trace */
             ProtoInputStream trace;
 
+            /**
+             * A multiplier for the compute delays in the trace to modulate
+             * the Trace CPU frequency either up or down. The Trace CPU's
+             * clock domain frequency must also be set to match the expected
+             * result of frequency scaling.
+             */
+            const double timeMultiplier;
+
             /** Count of committed ops read from trace plus the filtered ops */
             uint64_t microOpCount;
 
@@ -809,8 +817,10 @@ class TraceCPU : public BaseCPU
              * Create a trace input stream for a given file name.
              *
              * @param filename Path to the file to read from
+             * @param time_multiplier used to scale the compute delays
              */
-            InputStream(const std::string& filename);
+            InputStream(const std::string& filename,
+                        const double time_multiplier);
 
             /**
              * Reset the stream such that it can be played once
@@ -840,19 +850,19 @@ class TraceCPU : public BaseCPU
         /* Constructor */
         ElasticDataGen(TraceCPU& _owner, const std::string& _name,
                    MasterPort& _port, MasterID master_id,
-                   const std::string& trace_file, uint16_t max_rob,
-                   uint16_t max_stores, uint16_t max_loads)
+                   const std::string& trace_file, TraceCPUParams *params)
             : owner(_owner),
               port(_port),
               masterID(master_id),
-              trace(trace_file),
+              trace(trace_file, 1.0 / params->freqMultiplier),
               genName(owner.name() + ".elastic" + _name),
               retryPkt(nullptr),
               traceComplete(false),
               nextRead(false),
               execComplete(false),
               windowSize(trace.getWindowSize()),
-              hwResource(max_rob, max_stores, max_loads)
+              hwResource(params->sizeROB, params->sizeStoreBuffer,
+                         params->sizeLoadBuffer)
         {
             DPRINTF(TraceCPUData, "Window size in the trace is %d.\n",
                     windowSize);

@@ -1,4 +1,4 @@
-# Copyright (c) 2013 - 2015 ARM Limited
+# Copyright (c) 2013 - 2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -69,3 +69,9 @@ class TraceCPU(BaseCPU):
     sizeLoadBuffer = Param.Unsigned(16, "Number of entries in the load buffer")
     sizeROB =  Param.Unsigned(40, "Number of entries in the re-order buffer")
 
+    # Frequency multiplier used to effectively scale the Trace CPU frequency
+    # either up or down. Note that the Trace CPU's clock domain must also be
+    # changed when frequency is scaled. A default value of 1.0 means the same
+    # frequency as was used for generating the traces.
+    freqMultiplier = Param.Float(1.0, "Multiplier scale the Trace CPU "\
+                                 "frequency up or down")

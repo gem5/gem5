@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2015 ARM Limited
+ * Copyright (c) 2013 - 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,8 +56,7 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         dataTraceFile(params->dataTraceFile),
         icacheGen(*this, ".iside", icachePort, instMasterID, instTraceFile),
         dcacheGen(*this, ".dside", dcachePort, dataMasterID, dataTraceFile,
-                    params->sizeROB, params->sizeStoreBuffer,
-                    params->sizeLoadBuffer),
+                  params),
         icacheNextEvent(this),
         dcacheNextEvent(this),
         oneTraceComplete(false),
@@ -1225,8 +1224,11 @@ TraceCPU::DcachePort::recvReqRetry()
     owner->dcacheRetryRecvd();
 }
 
-TraceCPU::ElasticDataGen::InputStream::InputStream(const std::string& filename)
+TraceCPU::ElasticDataGen::InputStream::InputStream(
+    const std::string& filename,
+    const double time_multiplier)
     : trace(filename),
+      timeMultiplier(time_multiplier),
       microOpCount(0)
 {
     // Create a protobuf message for the header and read it from the stream
@@ -1259,7 +1261,8 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
         // Required fields
         element->seqNum = pkt_msg.seq_num();
         element->type = pkt_msg.type();
-        element->compDelay = pkt_msg.comp_delay();
+        // Scale the compute delay to effectively scale the Trace CPU frequency
+        element->compDelay = pkt_msg.comp_delay() * timeMultiplier;
 
         // Repeated field robDepList
         element->clearRobDep();
