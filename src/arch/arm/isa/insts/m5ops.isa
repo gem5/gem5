@@ -247,6 +247,11 @@ let {{
     m5fail_code = '''
         PseudoInst::m5fail(xc->tcBase(), join32to64(R1, R0), join32to64(R3, R2));
     '''
+
+    m5fail_code64 = '''
+        PseudoInst::m5fail(xc->tcBase(), X0, X1);
+    '''
+
     m5failIop = InstObjParams("m5fail", "M5fail", "PredOp",
                                    { "code": m5fail_code,
                                      "predicate_test": predicateTest },
@@ -254,6 +259,15 @@ let {{
     header_output += BasicDeclare.subst(m5failIop)
     decoder_output += BasicConstructor.subst(m5failIop)
     exec_output += PredOpExecute.subst(m5failIop)
+
+    m5failIop = InstObjParams("m5fail", "M5fail64", "PredOp",
+                                   { "code": m5fail_code64,
+                                     "predicate_test": predicateTest },
+                                     ["No_OpClass", "IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5failIop)
+    decoder_output += BasicConstructor.subst(m5failIop)
+    exec_output += PredOpExecute.subst(m5failIop)
+
 
     m5exitIop = InstObjParams("m5exit", "M5exit64", "PredOp",
                                    { "code": m5exit_code64,

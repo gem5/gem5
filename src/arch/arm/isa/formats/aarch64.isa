@@ -2013,6 +2013,7 @@ namespace Aarch64
           case 0x11: return new Deprecated_ivle(machInst);
           case 0x20: return new Deprecated_exit (machInst);
           case 0x21: return new M5exit64(machInst);
+          case 0x22: return new M5fail64(machInst);
           case 0x31: return new Loadsymbol(machInst);
           case 0x30: return new Initparam64(machInst);
           case 0x40: return new Resetstats64(machInst);
