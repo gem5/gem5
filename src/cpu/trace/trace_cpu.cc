@@ -61,7 +61,8 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         dcacheNextEvent(this),
         oneTraceComplete(false),
         traceOffset(0),
-        execCompleteEvent(nullptr)
+        execCompleteEvent(nullptr),
+        enableEarlyExit(params->enableEarlyExit)
 {
     // Increment static counter for number of Trace CPUs.
     ++TraceCPU::numTraceCPUs;
@@ -137,10 +138,16 @@ TraceCPU::init()
     // events using a relative tick delta
     dcacheGen.adjustInitTraceOffset(traceOffset);
 
-    // The static counter for number of Trace CPUs is correctly set at this
-    // point so create an event and pass it.
-    execCompleteEvent = new CountedExitEvent("end of all traces reached.",
-                                                numTraceCPUs);
+    // If the Trace CPU simulation is configured to exit on any one trace
+    // completion then we don't need a counted event to count down all Trace
+    // CPUs in the system. If not then instantiate a counted event.
+    if (!enableEarlyExit) {
+        // The static counter for number of Trace CPUs is correctly set at
+        // this point so create an event and pass it.
+        execCompleteEvent = new CountedExitEvent("end of all traces reached.",
+                                                 numTraceCPUs);
+    }
+
 }
 
 void
@@ -191,7 +198,15 @@ TraceCPU::checkAndSchedExitEvent()
         // Schedule event to indicate execution is complete as both
         // instruction and data access traces have been played back.
         inform("%s: Execution complete.\n", name());
-        schedule(*execCompleteEvent, curTick());
+        // If the replay is configured to exit early, that is when any one
+        // execution is complete then exit immediately and return. Otherwise,
+        // schedule the counted exit that counts down completion of each Trace
+        // CPU.
+        if (enableEarlyExit) {
+            exitSimLoop("End of trace reached");
+        } else {
+            schedule(*execCompleteEvent, curTick());
+        }
     }
 }
 

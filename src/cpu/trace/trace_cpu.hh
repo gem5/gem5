@@ -1116,6 +1116,12 @@ class TraceCPU : public BaseCPU
     */
     CountedExitEvent *execCompleteEvent;
 
+    /**
+     * Exit when any one Trace CPU completes its execution. If this is
+     * configured true then the execCompleteEvent is not scheduled.
+     */
+    const bool enableEarlyExit;
+
     Stats::Scalar numSchedDcacheEvent;
     Stats::Scalar numSchedIcacheEvent;
 

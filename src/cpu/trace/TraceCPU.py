@@ -75,3 +75,8 @@ class TraceCPU(BaseCPU):
     # frequency as was used for generating the traces.
     freqMultiplier = Param.Float(1.0, "Multiplier scale the Trace CPU "\
                                  "frequency up or down")
+
+    # Enable exiting when any one Trace CPU completes execution which is set to
+    # false by default
+    enableEarlyExit = Param.Bool(False, "Exit when any one Trace CPU "\
+                                 "completes execution")
