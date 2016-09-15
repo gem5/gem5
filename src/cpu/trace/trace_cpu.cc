@@ -60,7 +60,7 @@ TraceCPU::TraceCPU(TraceCPUParams *params)
         icacheNextEvent(this),
         dcacheNextEvent(this),
         oneTraceComplete(false),
-        firstFetchTick(0),
+        traceOffset(0),
         execCompleteEvent(nullptr)
 {
     // Increment static counter for number of Trace CPUs.
@@ -116,22 +116,31 @@ TraceCPU::init()
 
     BaseCPU::init();
 
-    // Get the send tick of the first instruction read request and schedule
-    // icacheNextEvent at that tick.
+    // Get the send tick of the first instruction read request
     Tick first_icache_tick = icacheGen.init();
-    schedule(icacheNextEvent, first_icache_tick);
 
-    // Get the send tick of the first data read/write request and schedule
-    // dcacheNextEvent at that tick.
+    // Get the send tick of the first data read/write request
     Tick first_dcache_tick = dcacheGen.init();
-    schedule(dcacheNextEvent, first_dcache_tick);
+
+    // Set the trace offset as the minimum of that in both traces
+    traceOffset = std::min(first_icache_tick, first_dcache_tick);
+    inform("%s: Time offset (tick) found as min of both traces is %lli.\n",
+            name(), traceOffset);
+
+    // Schedule next icache and dcache event by subtracting the offset
+    schedule(icacheNextEvent, first_icache_tick - traceOffset);
+    schedule(dcacheNextEvent, first_dcache_tick - traceOffset);
+
+    // Adjust the trace offset for the dcache generator's ready nodes
+    // We don't need to do this for the icache generator as it will
+    // send its first request at the first event and schedule subsequent
+    // events using a relative tick delta
+    dcacheGen.adjustInitTraceOffset(traceOffset);
 
     // The static counter for number of Trace CPUs is correctly set at this
     // point so create an event and pass it.
     execCompleteEvent = new CountedExitEvent("end of all traces reached.",
                                                 numTraceCPUs);
-    // Save the first fetch request tick to dump it as tickOffset
-    firstFetchTick = first_icache_tick;
 }
 
 void
@@ -164,6 +173,9 @@ TraceCPU::schedDcacheNext()
 {
     DPRINTF(TraceCPUData, "DcacheGen event.\n");
 
+    // Update stat for numCycles
+    numCycles = clockEdge() / clockPeriod();
+
     dcacheGen.execute();
     if (dcacheGen.isExecComplete()) {
         checkAndSchedExitEvent();
@@ -179,11 +191,6 @@ TraceCPU::checkAndSchedExitEvent()
         // Schedule event to indicate execution is complete as both
         // instruction and data access traces have been played back.
         inform("%s: Execution complete.\n", name());
-
-        // Record stats which are computed at the end of simulation
-        tickOffset = firstFetchTick;
-        numCycles = (clockEdge() - firstFetchTick) / clockPeriod();
-        numOps = dcacheGen.getMicroOpCount();
         schedule(*execCompleteEvent, curTick());
     }
 }
@@ -215,11 +222,6 @@ TraceCPU::regStats()
     .precision(6)
     ;
     cpi = numCycles/numOps;
-
-    tickOffset
-    .name(name() + ".tickOffset")
-    .desc("The first execution tick for the root node of elastic traces")
-    ;
 
     icacheGen.regStats();
     dcacheGen.regStats();
@@ -309,6 +311,13 @@ TraceCPU::ElasticDataGen::init()
     // Return the execute tick of the earliest ready node so that an event
     // can be scheduled to call execute()
     return (free_itr->execTick);
+}
+
+void
+TraceCPU::ElasticDataGen::adjustInitTraceOffset(Tick& offset) {
+    for (auto& free_node : readyList) {
+        free_node.execTick -= offset;
+    }
 }
 
 void
@@ -534,6 +543,8 @@ TraceCPU::ElasticDataGen::execute()
             hwResource.release(node_ptr);
             // clear the dynamically allocated set of dependents
             (node_ptr->dependents).clear();
+            // Update the stat for numOps simulated
+            owner.updateNumOps(node_ptr->robNum);
             // delete node
             delete node_ptr;
             // remove from graph
@@ -736,6 +747,8 @@ TraceCPU::ElasticDataGen::completeMemAccess(PacketPtr pkt)
 
         // clear the dynamically allocated set of dependents
         (node_ptr->dependents).clear();
+        // Update the stat for numOps completed
+        owner.updateNumOps(node_ptr->robNum);
         // delete node
         delete node_ptr;
         // remove from graph

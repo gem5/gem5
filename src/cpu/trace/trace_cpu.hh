@@ -136,10 +136,9 @@
  * Strictly-ordered requests are skipped and the dependencies on such requests
  * are handled by simply marking them complete immediately.
  *
- * The simulated seconds can be calculated as the difference between the
- * final_tick stat and the tickOffset stat. A CountedExitEvent that contains a
- * static int belonging to the Trace CPU class as a down counter is used to
- * implement multi Trace CPU simulation exit.
+ * A CountedExitEvent that contains a static int belonging to the Trace CPU
+ * class as a down counter is used to implement multi Trace CPU simulation
+ * exit.
  */
 
 class TraceCPU : public BaseCPU
@@ -171,8 +170,14 @@ class TraceCPU : public BaseCPU
      */
     Counter totalOps() const
     {
-        return dcacheGen.getMicroOpCount();
+        return numOps.value();
     }
+
+    /*
+     * Set the no. of ops when elastic data generator completes executing a
+     * node.
+     */
+    void updateNumOps(uint64_t rob_num) { numOps = rob_num; }
 
     /* Pure virtual function in BaseCPU. Do nothing. */
     void wakeup(ThreadID tid = 0)
@@ -876,6 +881,14 @@ class TraceCPU : public BaseCPU
          */
         Tick init();
 
+        /**
+         * Adjust traceOffset based on what TraceCPU init() determines on
+         * comparing the offsets in the fetch request and elastic traces.
+         *
+         * @param trace_offset trace offset set by comparing both traces
+         */
+        void adjustInitTraceOffset(Tick& offset);
+
         /** Returns name of the ElasticDataGen instance. */
         const std::string& name() const { return genName; }
 
@@ -1081,10 +1094,12 @@ class TraceCPU : public BaseCPU
     bool oneTraceComplete;
 
     /**
-     * This is stores the tick of the first instruction fetch request
-     * which is later used for dumping the tickOffset stat.
+     * This stores the time offset in the trace, which is taken away from
+     * the ready times of requests. This is specially useful because the time
+     * offset can be very large if the traces are generated from the middle of
+     * a program.
      */
-    Tick firstFetchTick;
+    Tick traceOffset;
 
     /**
      * Number of Trace CPUs in the system used as a shared variable and passed
@@ -1108,13 +1123,6 @@ class TraceCPU : public BaseCPU
     Stats::Scalar numOps;
     /** Stat for the CPI. This is really cycles per micro-op and not inst. */
     Stats::Formula cpi;
-
-    /**
-     * The first execution tick is dumped as a stat so that the simulated
-     * seconds for a trace replay can be calculated as a difference between the
-     * final_tick stat and the tickOffset stat
-     */
-    Stats::Scalar tickOffset;
 
   public:
 
