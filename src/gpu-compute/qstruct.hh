@@ -95,59 +95,6 @@ struct HsaQueueEntry
     uint16_t num_args;
 };
 
-// State used to start (or restart) a WF
-struct WFContext
-{
-    // 32 bit values
-    // barrier state
-    std::vector<int> bar_cnt;
-
-    // id (which WF in the WG)
-    int cnt;
-
-    // more barrier state
-    int max_bar_cnt;
-    int old_barrier_cnt;
-    int barrier_cnt;
-
-    // More Program Counter Stuff
-    uint32_t pc;
-
-    // Program counter of the immediate post-dominator instruction
-    uint32_t rpc;
-
-    // WG wide state (I don't see how to avoid redundancy here)
-    int cu_id;
-    uint32_t wg_id;
-    uint32_t barrier_id;
-
-    // 64 bit values (these values depend on the wavefront size)
-    // masks
-    uint64_t init_mask;
-    uint64_t exec_mask;
-
-    // private memory;
-    Addr privBase;
-    Addr spillBase;
-
-    LdsChunk *ldsChunk;
-
-    /*
-     * Kernel wide state
-     * This is a hack. This state should be moved through simulated memory
-     * during a yield. Though not much is being used here, so it's probably
-     * probably not a big deal.
-     *
-     * Just to add to this comment... The ndr is derived from simulated
-     * memory when the cl-runtime allocates an HsaQueueEntry and populates it
-     * for a kernel launch. So in theory the runtime should be able to keep
-     * that state around. Then a WF can reference it upon restart to derive
-     * kernel wide state. The runtime can deallocate the state when the
-     * kernel completes.
-     */
-    NDRange *ndr;
-};
-
 // State that needs to be passed between the simulation and simulated app, a
 // pointer to this struct can be passed through the depends field in the
 // HsaQueueEntry struct

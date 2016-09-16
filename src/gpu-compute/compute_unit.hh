@@ -256,12 +256,8 @@ class ComputeUnit : public MemObject
     void fetch(PacketPtr pkt, Wavefront *wavefront);
     void FillKernelState(Wavefront *w, NDRange *ndr);
 
-    void StartWF(Wavefront *w, WFContext *wfCtx, int trueWgSize[],
-                 int trueWgSizeTotal);
-
-    void InitializeWFContext(WFContext *wfCtx, NDRange *ndr, int cnt,
-                             int trueWgSize[], int trueWgSizeTotal,
-                             LdsChunk *ldsChunk, uint64_t origSpillMemStart);
+    void StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
+                     int cnt, LdsChunk *ldsChunk, NDRange *ndr);
 
     void StartWorkgroup(NDRange *ndr);
     int ReadyWorkgroup(NDRange *ndr);
