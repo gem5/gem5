@@ -155,16 +155,16 @@ class Wavefront : public SimObject
     enum status_e {S_STOPPED,S_RETURNING,S_RUNNING};
 
     // Base pointer for array of instruction pointers
-    uint64_t base_ptr;
+    uint64_t basePtr;
 
-    uint32_t old_barrier_cnt;
-    uint32_t barrier_cnt;
-    uint32_t barrier_id;
-    uint32_t barrier_slots;
+    uint32_t oldBarrierCnt;
+    uint32_t barrierCnt;
+    uint32_t barrierId;
+    uint32_t barrierSlots;
     status_e status;
     // HW slot id where the WF is mapped to inside a SIMD unit
     int wfSlotId;
-    int kern_id;
+    int kernId;
     // SIMD unit where the WV has been scheduled
     int simdId;
     // pointer to parent CU
@@ -193,37 +193,37 @@ class Wavefront : public SimObject
     bool isOldestInstALU();
     bool isOldestInstBarrier();
     // used for passing spill address to DDInstGPU
-    std::vector<Addr> last_addr;
-    std::vector<uint32_t> workitemid[3];
-    std::vector<uint32_t> workitemFlatId;
-    uint32_t workgroupid[3];
-    uint32_t workgroupsz[3];
-    uint32_t gridsz[3];
-    uint32_t wg_id;
-    uint32_t wg_sz;
-    uint32_t dynwaveid;
-    uint32_t maxdynwaveid;
-    uint32_t dispatchid;
+    std::vector<Addr> lastAddr;
+    std::vector<uint32_t> workItemId[3];
+    std::vector<uint32_t> workItemFlatId;
+    uint32_t workGroupId[3];
+    uint32_t workGroupSz[3];
+    uint32_t gridSz[3];
+    uint32_t wgId;
+    uint32_t wgSz;
+    uint32_t dynWaveId;
+    uint32_t maxDynWaveId;
+    uint32_t dispatchId;
     // outstanding global+local memory requests
-    uint32_t outstanding_reqs;
+    uint32_t outstandingReqs;
     // memory requests between scoreboard
     // and execute stage not yet executed
-    uint32_t mem_reqs_in_pipe;
+    uint32_t memReqsInPipe;
     // outstanding global memory write requests
-    uint32_t outstanding_reqs_wr_gm;
+    uint32_t outstandingReqsWrGm;
     // outstanding local memory write requests
-    uint32_t outstanding_reqs_wr_lm;
+    uint32_t outstandingReqsWrLm;
     // outstanding global memory read requests
-    uint32_t outstanding_reqs_rd_gm;
+    uint32_t outstandingReqsRdGm;
     // outstanding local memory read requests
-    uint32_t outstanding_reqs_rd_lm;
-    uint32_t rd_lm_reqs_in_pipe;
-    uint32_t rd_gm_reqs_in_pipe;
-    uint32_t wr_lm_reqs_in_pipe;
-    uint32_t wr_gm_reqs_in_pipe;
+    uint32_t outstandingReqsRdLm;
+    uint32_t rdLmReqsInPipe;
+    uint32_t rdGmReqsInPipe;
+    uint32_t wrLmReqsInPipe;
+    uint32_t wrGmReqsInPipe;
 
-    int mem_trace_busy;
-    uint64_t last_trace;
+    int memTraceBusy;
+    uint64_t lastTrace;
     // number of vector registers reserved by WF
     int reservedVectorRegs;
     // Index into the Vector Register File's namespace where the WF's registers
@@ -231,25 +231,25 @@ class Wavefront : public SimObject
     uint32_t startVgprIndex;
 
     // Old value of destination gpr (for trace)
-    std::vector<uint32_t> old_vgpr;
+    std::vector<uint32_t> oldVgpr;
     // Id of destination gpr (for trace)
-    uint32_t old_vgpr_id;
+    uint32_t oldVgprId;
     // Tick count of last old_vgpr copy
-    uint64_t old_vgpr_tcnt;
+    uint64_t oldVgprTcnt;
 
     // Old value of destination gpr (for trace)
-    std::vector<uint64_t> old_dgpr;
+    std::vector<uint64_t> oldDgpr;
     // Id of destination gpr (for trace)
-    uint32_t old_dgpr_id;
+    uint32_t oldDgprId;
     // Tick count of last old_vgpr copy
-    uint64_t old_dgpr_tcnt;
+    uint64_t oldDgprTcnt;
 
     // Execution mask at wavefront start
-    VectorMask init_mask;
+    VectorMask initMask;
 
     // number of barriers this WF has joined
-    std::vector<int> bar_cnt;
-    int max_bar_cnt;
+    std::vector<int> barCnt;
+    int maxBarCnt;
     // Flag to stall a wave on barrier
     bool stalledAtBarrier;
 
@@ -333,7 +333,7 @@ class Wavefront : public SimObject
     int ready(itype_e type);
     bool instructionBufferHasBranch();
     void regStats();
-    VectorMask get_pred() { return execMask() & init_mask; }
+    VectorMask getPred() { return execMask() & initMask; }
 
     bool waitingAtBarrier(int lane);
 

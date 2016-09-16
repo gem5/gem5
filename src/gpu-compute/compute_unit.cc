@@ -178,13 +178,13 @@ ComputeUnit::FillKernelState(Wavefront *w, NDRange *ndr)
 {
     w->resizeRegFiles(ndr->q.cRegCount, ndr->q.sRegCount, ndr->q.dRegCount);
 
-    w->workgroupsz[0] = ndr->q.wgSize[0];
-    w->workgroupsz[1] = ndr->q.wgSize[1];
-    w->workgroupsz[2] = ndr->q.wgSize[2];
-    w->wg_sz = w->workgroupsz[0] * w->workgroupsz[1] * w->workgroupsz[2];
-    w->gridsz[0] = ndr->q.gdSize[0];
-    w->gridsz[1] = ndr->q.gdSize[1];
-    w->gridsz[2] = ndr->q.gdSize[2];
+    w->workGroupSz[0] = ndr->q.wgSize[0];
+    w->workGroupSz[1] = ndr->q.wgSize[1];
+    w->workGroupSz[2] = ndr->q.wgSize[2];
+    w->wgSz = w->workGroupSz[0] * w->workGroupSz[1] * w->workGroupSz[2];
+    w->gridSz[0] = ndr->q.gdSize[0];
+    w->gridSz[1] = ndr->q.gdSize[1];
+    w->gridSz[2] = ndr->q.gdSize[2];
     w->kernelArgs = ndr->q.args;
     w->privSizePerItem = ndr->q.privMemPerItem;
     w->spillSizePerItem = ndr->q.spillMemPerItem;
@@ -236,29 +236,29 @@ ComputeUnit::StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
             init_mask[k] = 1;
     }
 
-    w->kern_id = ndr->dispatchId;
-    w->dynwaveid = cnt;
-    w->init_mask = init_mask.to_ullong();
+    w->kernId = ndr->dispatchId;
+    w->dynWaveId = cnt;
+    w->initMask = init_mask.to_ullong();
 
     for (int k = 0; k < wfSize(); ++k) {
-        w->workitemid[0][k] = (k+cnt*wfSize()) % trueWgSize[0];
-        w->workitemid[1][k] =
+        w->workItemId[0][k] = (k+cnt*wfSize()) % trueWgSize[0];
+        w->workItemId[1][k] =
             ((k + cnt * wfSize()) / trueWgSize[0]) % trueWgSize[1];
-        w->workitemid[2][k] =
+        w->workItemId[2][k] =
             (k + cnt * wfSize()) / (trueWgSize[0] * trueWgSize[1]);
 
-        w->workitemFlatId[k] = w->workitemid[2][k] * trueWgSize[0] *
-            trueWgSize[1] + w->workitemid[1][k] * trueWgSize[0] +
-            w->workitemid[0][k];
+        w->workItemFlatId[k] = w->workItemId[2][k] * trueWgSize[0] *
+            trueWgSize[1] + w->workItemId[1][k] * trueWgSize[0] +
+            w->workItemId[0][k];
     }
 
-    w->barrier_slots = divCeil(trueWgSizeTotal, wfSize());
+    w->barrierSlots = divCeil(trueWgSizeTotal, wfSize());
 
-    w->bar_cnt.resize(wfSize(), 0);
+    w->barCnt.resize(wfSize(), 0);
 
-    w->max_bar_cnt = 0;
-    w->old_barrier_cnt = 0;
-    w->barrier_cnt = 0;
+    w->maxBarCnt = 0;
+    w->oldBarrierCnt = 0;
+    w->barrierCnt = 0;
 
     w->privBase = ndr->q.privMemStart;
     ndr->q.privMemStart += ndr->q.privMemPerItem * wfSize();
@@ -269,22 +269,22 @@ ComputeUnit::StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
     w->pushToReconvergenceStack(0, UINT32_MAX, init_mask.to_ulong());
 
     // WG state
-    w->wg_id = ndr->globalWgId;
-    w->dispatchid = ndr->dispatchId;
-    w->workgroupid[0] = w->wg_id % ndr->numWg[0];
-    w->workgroupid[1] = (w->wg_id / ndr->numWg[0]) % ndr->numWg[1];
-    w->workgroupid[2] = w->wg_id / (ndr->numWg[0] * ndr->numWg[1]);
+    w->wgId = ndr->globalWgId;
+    w->dispatchId = ndr->dispatchId;
+    w->workGroupId[0] = w->wgId % ndr->numWg[0];
+    w->workGroupId[1] = (w->wgId / ndr->numWg[0]) % ndr->numWg[1];
+    w->workGroupId[2] = w->wgId / (ndr->numWg[0] * ndr->numWg[1]);
 
-    w->barrier_id = barrier_id;
+    w->barrierId = barrier_id;
     w->stalledAtBarrier = false;
 
     // set the wavefront context to have a pointer to this section of the LDS
     w->ldsChunk = ldsChunk;
 
     int32_t refCount M5_VAR_USED =
-                    lds.increaseRefCounter(w->dispatchid, w->wg_id);
+                    lds.increaseRefCounter(w->dispatchId, w->wgId);
     DPRINTF(GPUDisp, "CU%d: increase ref ctr wg[%d] to [%d]\n",
-                    cu_id, w->wg_id, refCount);
+                    cu_id, w->wgId, refCount);
 
     w->instructionBuffer.clear();
 
@@ -468,15 +468,15 @@ ComputeUnit::AllAtBarrier(uint32_t _barrier_id, uint32_t bcnt, uint32_t bslots)
                 DPRINTF(GPUSync, "Checking WF[%d][%d]\n", i_simd, i_wf);
 
                 DPRINTF(GPUSync, "wf->barrier_id = %d, _barrier_id = %d\n",
-                        w->barrier_id, _barrier_id);
+                        w->barrierId, _barrier_id);
 
                 DPRINTF(GPUSync, "wf->barrier_cnt %d, bcnt = %d\n",
-                        w->barrier_cnt, bcnt);
+                        w->barrierCnt, bcnt);
             }
 
             if (w->status == Wavefront::S_RUNNING &&
-                w->barrier_id == _barrier_id && w->barrier_cnt == bcnt &&
-                !w->outstanding_reqs) {
+                w->barrierId == _barrier_id && w->barrierCnt == bcnt &&
+                !w->outstandingReqs) {
                 ++ccnt;
 
                 DPRINTF(GPUSync, "WF[%d][%d] at barrier, increment ccnt to "
@@ -646,17 +646,17 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
         if (w->status == Wavefront::S_RETURNING) {
             DPRINTF(GPUDisp, "CU%d: WF[%d][%d][wv=%d]: WG id completed %d\n",
                     computeUnit->cu_id, w->simdId, w->wfSlotId,
-                    w->wfDynId, w->kern_id);
+                    w->wfDynId, w->kernId);
 
             computeUnit->shader->dispatcher->notifyWgCompl(w);
             w->status = Wavefront::S_STOPPED;
         } else {
-            w->outstanding_reqs--;
+            w->outstandingReqs--;
         }
 
         DPRINTF(GPUSync, "CU%d: WF[%d][%d]: barrier_cnt = %d\n",
                 computeUnit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, w->barrier_cnt);
+                gpuDynInst->wfSlotId, w->barrierCnt);
 
         if (gpuDynInst->useContinuation) {
             assert(gpuDynInst->scope != Enums::MEMORY_SCOPE_NONE);

@@ -960,7 +960,7 @@ namespace HsailISA
                 gpuDynInst->simdId = w->simdId;
                 gpuDynInst->wfSlotId = w->wfSlotId;
                 gpuDynInst->wfDynId = w->wfDynId;
-                gpuDynInst->kern_id = w->kern_id;
+                gpuDynInst->kern_id = w->kernId;
                 gpuDynInst->cu_id = w->computeUnit->cu_id;
 
                 gpuDynInst->memoryOrder =
@@ -971,10 +971,10 @@ namespace HsailISA
                 GlobalMemPipeline* gmp = &(w->computeUnit->globalMemoryPipe);
                 gmp->getGMReqFIFO().push(gpuDynInst);
 
-                w->wr_gm_reqs_in_pipe--;
-                w->rd_gm_reqs_in_pipe--;
-                w->mem_reqs_in_pipe--;
-                w->outstanding_reqs++;
+                w->wrGmReqsInPipe--;
+                w->rdGmReqsInPipe--;
+                w->memReqsInPipe--;
+                w->outstandingReqs++;
             } else if (o_type == Enums::OT_SHARED_MEMFENCE) {
                 // no-op
             } else {

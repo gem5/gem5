@@ -115,7 +115,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
 {
     // calculate the virtual address to fetch from the SQC
     Addr vaddr = wavefront->pc() + wavefront->instructionBuffer.size();
-    vaddr = wavefront->base_ptr +  vaddr * sizeof(GPUStaticInst*);
+    vaddr = wavefront->basePtr +  vaddr * sizeof(GPUStaticInst*);
 
     DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Initiating fetch translation: %#x\n",
             computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId, vaddr);

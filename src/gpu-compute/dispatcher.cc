@@ -305,7 +305,7 @@ GpuDispatcher::exec()
 void
 GpuDispatcher::notifyWgCompl(Wavefront *w)
 {
-    int kern_id = w->kern_id;
+    int kern_id = w->kernId;
     DPRINTF(GPUDisp, "notify WgCompl %d\n",kern_id);
     assert(ndRangeMap[kern_id].dispatchId == kern_id);
     ndRangeMap[kern_id].numWgCompleted++;

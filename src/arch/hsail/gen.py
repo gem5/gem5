@@ -233,7 +233,7 @@ $class_name::execute(GPUDynInstPtr gpuDynInst)
 
     typedef Base::DestCType DestCType;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -254,7 +254,7 @@ $class_name::execute(GPUDynInstPtr gpuDynInst)
     typedef Base::DestCType DestCType;
     typedef Base::SrcCType  SrcCType;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -275,7 +275,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *w = gpuDynInst->wavefront();
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -310,7 +310,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
     typedef typename Base::Src1CType Src1T;
     typedef typename Base::Src2CType Src2T;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -344,7 +344,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
     typedef CType Src0T;
     typedef typename Base::Src1CType Src1T;
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -371,7 +371,7 @@ $class_name<DataType>::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *w = gpuDynInst->wavefront();
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
             CType dest_val;
@@ -399,7 +399,7 @@ $class_name<DestDataType, SrcDataType>::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *w = gpuDynInst->wavefront();
 
-    const VectorMask &mask = w->get_pred();
+    const VectorMask &mask = w->getPred();
 
     for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
         if (mask[lane]) {
@@ -745,17 +745,17 @@ def gen_special(brig_opcode, expr, dest_type='U32'):
 
     gen(brig_opcode, None, expr, base_class)
 
-gen_special('WorkItemId', 'w->workitemid[src0][lane]')
+gen_special('WorkItemId', 'w->workItemId[src0][lane]')
 gen_special('WorkItemAbsId',
-    'w->workitemid[src0][lane] + (w->workgroupid[src0] * w->workgroupsz[src0])')
-gen_special('WorkGroupId', 'w->workgroupid[src0]')
-gen_special('WorkGroupSize', 'w->workgroupsz[src0]')
-gen_special('CurrentWorkGroupSize', 'w->workgroupsz[src0]')
-gen_special('GridSize', 'w->gridsz[src0]')
+    'w->workItemId[src0][lane] + (w->workGroupId[src0] * w->workGroupSz[src0])')
+gen_special('WorkGroupId', 'w->workGroupId[src0]')
+gen_special('WorkGroupSize', 'w->workGroupSz[src0]')
+gen_special('CurrentWorkGroupSize', 'w->workGroupSz[src0]')
+gen_special('GridSize', 'w->gridSz[src0]')
 gen_special('GridGroups',
-    'divCeil(w->gridsz[src0],w->workgroupsz[src0])')
+    'divCeil(w->gridSz[src0],w->workGroupSz[src0])')
 gen_special('LaneId', 'lane')
-gen_special('WaveId', 'w->dynwaveid')
+gen_special('WaveId', 'w->dynWaveId')
 gen_special('Clock', 'w->computeUnit->shader->tick_cnt', 'U64')
 
 # gen_special('CU'', ')

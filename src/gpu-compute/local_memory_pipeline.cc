@@ -170,16 +170,16 @@ LocalMemPipeline::doSmReturn(GPUDynInstPtr m)
     }
 
     // Decrement outstanding request count
-    computeUnit->shader->ScheduleAdd(&w->outstanding_reqs, m->time, -1);
+    computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
 
     if (m->m_op == Enums::MO_ST || MO_A(m->m_op) || MO_ANR(m->m_op)
         || MO_H(m->m_op)) {
-        computeUnit->shader->ScheduleAdd(&w->outstanding_reqs_wr_lm,
+        computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrLm,
                                          m->time, -1);
     }
 
     if (m->m_op == Enums::MO_LD || MO_A(m->m_op) || MO_ANR(m->m_op)) {
-        computeUnit->shader->ScheduleAdd(&w->outstanding_reqs_rd_lm,
+        computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdLm,
                                          m->time, -1);
     }
 

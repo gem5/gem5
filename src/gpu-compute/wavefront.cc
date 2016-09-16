@@ -52,43 +52,43 @@ WavefrontParams::create()
 Wavefront::Wavefront(const Params *p)
   : SimObject(p), callArgMem(nullptr)
 {
-    last_trace = 0;
+    lastTrace = 0;
     simdId = p->simdId;
     wfSlotId = p->wf_slot_id;
     status = S_STOPPED;
     reservedVectorRegs = 0;
     startVgprIndex = 0;
-    outstanding_reqs = 0;
-    mem_reqs_in_pipe = 0;
-    outstanding_reqs_wr_gm = 0;
-    outstanding_reqs_wr_lm = 0;
-    outstanding_reqs_rd_gm = 0;
-    outstanding_reqs_rd_lm = 0;
-    rd_lm_reqs_in_pipe = 0;
-    rd_gm_reqs_in_pipe = 0;
-    wr_lm_reqs_in_pipe = 0;
-    wr_gm_reqs_in_pipe = 0;
+    outstandingReqs = 0;
+    memReqsInPipe = 0;
+    outstandingReqsWrGm = 0;
+    outstandingReqsWrLm = 0;
+    outstandingReqsRdGm = 0;
+    outstandingReqsRdLm = 0;
+    rdLmReqsInPipe = 0;
+    rdGmReqsInPipe = 0;
+    wrLmReqsInPipe = 0;
+    wrGmReqsInPipe = 0;
 
-    barrier_cnt = 0;
-    old_barrier_cnt = 0;
+    barrierCnt = 0;
+    oldBarrierCnt = 0;
     stalledAtBarrier = false;
 
-    mem_trace_busy = 0;
-    old_vgpr_tcnt = 0xffffffffffffffffll;
-    old_dgpr_tcnt = 0xffffffffffffffffll;
-    old_vgpr.resize(p->wfSize);
+    memTraceBusy = 0;
+    oldVgprTcnt = 0xffffffffffffffffll;
+    oldDgprTcnt = 0xffffffffffffffffll;
+    oldVgpr.resize(p->wfSize);
 
     pendingFetch = false;
     dropFetch = false;
     condRegState = new ConditionRegisterState();
     maxSpVgprs = 0;
     maxDpVgprs = 0;
-    last_addr.resize(p->wfSize);
-    workitemFlatId.resize(p->wfSize);
-    old_dgpr.resize(p->wfSize);
-    bar_cnt.resize(p->wfSize);
+    lastAddr.resize(p->wfSize);
+    workItemFlatId.resize(p->wfSize);
+    oldDgpr.resize(p->wfSize);
+    barCnt.resize(p->wfSize);
     for (int i = 0; i < 3; ++i) {
-        workitemid[i].resize(p->wfSize);
+        workItemId[i].resize(p->wfSize);
     }
 }
 
@@ -158,7 +158,7 @@ void
 Wavefront::start(uint64_t _wfDynId,uint64_t _base_ptr)
 {
     wfDynId = _wfDynId;
-    base_ptr = _base_ptr;
+    basePtr = _base_ptr;
     status = S_RUNNING;
 }
 
@@ -333,12 +333,12 @@ Wavefront::ready(itype_e type)
 
     // Is the wave waiting at a barrier
     if (stalledAtBarrier) {
-        if (!computeUnit->AllAtBarrier(barrier_id,barrier_cnt,
-                        computeUnit->getRefCounter(dispatchid, wg_id))) {
+        if (!computeUnit->AllAtBarrier(barrierId,barrierCnt,
+                        computeUnit->getRefCounter(dispatchId, wgId))) {
             // Are all threads at barrier?
             return 0;
         }
-        old_barrier_cnt = barrier_cnt;
+        oldBarrierCnt = barrierCnt;
         stalledAtBarrier = false;
     }
 
@@ -395,7 +395,7 @@ Wavefront::ready(itype_e type)
         }
 
         // Are there in pipe or outstanding memory requests?
-        if ((outstanding_reqs + mem_reqs_in_pipe) > 0) {
+        if ((outstandingReqs + memReqsInPipe) > 0) {
             return 0;
         }
 
@@ -416,7 +416,7 @@ Wavefront::ready(itype_e type)
         }
 
         // Are there in pipe or outstanding memory requests?
-        if ((outstanding_reqs + mem_reqs_in_pipe) > 0) {
+        if ((outstandingReqs + memReqsInPipe) > 0) {
             return 0;
         }
 
@@ -444,7 +444,7 @@ Wavefront::ready(itype_e type)
         // Here Global memory instruction
         if (IS_OT_READ_GM(ii->opType()) || IS_OT_ATOMIC_GM(ii->opType())) {
             // Are there in pipe or outstanding global memory write requests?
-            if ((outstanding_reqs_wr_gm + wr_gm_reqs_in_pipe) > 0) {
+            if ((outstandingReqsWrGm + wrGmReqsInPipe) > 0) {
                 return 0;
             }
         }
@@ -452,7 +452,7 @@ Wavefront::ready(itype_e type)
         if (IS_OT_WRITE_GM(ii->opType()) || IS_OT_ATOMIC_GM(ii->opType()) ||
             IS_OT_HIST_GM(ii->opType())) {
             // Are there in pipe or outstanding global memory read requests?
-            if ((outstanding_reqs_rd_gm + rd_gm_reqs_in_pipe) > 0)
+            if ((outstandingReqsRdGm + rdGmReqsInPipe) > 0)
                 return 0;
         }
 
@@ -467,7 +467,7 @@ Wavefront::ready(itype_e type)
         }
 
         if (!computeUnit->globalMemoryPipe.
-            isGMReqFIFOWrRdy(rd_gm_reqs_in_pipe + wr_gm_reqs_in_pipe)) {
+            isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
             // Can we insert a new request to the Global Mem Request FIFO?
             return 0;
         }
@@ -484,14 +484,14 @@ Wavefront::ready(itype_e type)
                IS_OT_WRITE_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType()))) {
         // Here for Shared memory instruction
         if (IS_OT_READ_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType())) {
-            if ((outstanding_reqs_wr_lm + wr_lm_reqs_in_pipe) > 0) {
+            if ((outstandingReqsWrLm + wrLmReqsInPipe) > 0) {
                 return 0;
             }
         }
 
         if (IS_OT_WRITE_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType()) ||
             IS_OT_HIST_LM(ii->opType())) {
-            if ((outstanding_reqs_rd_lm + rd_lm_reqs_in_pipe) > 0) {
+            if ((outstandingReqsRdLm + rdLmReqsInPipe) > 0) {
                 return 0;
             }
         }
@@ -506,7 +506,7 @@ Wavefront::ready(itype_e type)
         }
 
         if (!computeUnit->localMemoryPipe.
-            isLMReqFIFOWrRdy(rd_lm_reqs_in_pipe + wr_lm_reqs_in_pipe)) {
+            isLMReqFIFOWrRdy(rdLmReqsInPipe + wrLmReqsInPipe)) {
             // Can we insert a new request to the LDS Request FIFO?
             return 0;
         }
@@ -523,14 +523,14 @@ Wavefront::ready(itype_e type)
                IS_OT_WRITE_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType()))) {
         // Here for Private memory instruction ------------------------    //
         if (IS_OT_READ_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType())) {
-            if ((outstanding_reqs_wr_gm + wr_gm_reqs_in_pipe) > 0) {
+            if ((outstandingReqsWrGm + wrGmReqsInPipe) > 0) {
                 return 0;
             }
         }
 
         if (IS_OT_WRITE_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType()) ||
             IS_OT_HIST_PM(ii->opType())) {
-            if ((outstanding_reqs_rd_gm + rd_gm_reqs_in_pipe) > 0) {
+            if ((outstandingReqsRdGm + rdGmReqsInPipe) > 0) {
                 return 0;
             }
         }
@@ -546,7 +546,7 @@ Wavefront::ready(itype_e type)
         }
 
         if (!computeUnit->globalMemoryPipe.
-            isGMReqFIFOWrRdy(rd_gm_reqs_in_pipe + wr_gm_reqs_in_pipe)) {
+            isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
             // Can we insert a new request to the Global Mem Request FIFO?
             return 0;
         }
@@ -579,13 +579,13 @@ Wavefront::ready(itype_e type)
             return 0;
         }
         if (!computeUnit->globalMemoryPipe.
-            isGMReqFIFOWrRdy(rd_gm_reqs_in_pipe + wr_gm_reqs_in_pipe)) {
+            isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
             // Can we insert a new request to the Global Mem Request FIFO?
             return 0;
         }
 
         if (!computeUnit->localMemoryPipe.
-            isLMReqFIFOWrRdy(rd_lm_reqs_in_pipe + wr_lm_reqs_in_pipe)) {
+            isLMReqFIFOWrRdy(rdLmReqsInPipe + wrLmReqsInPipe)) {
             // Can we insert a new request to the LDS Request FIFO?
             return 0;
         }
@@ -636,8 +636,8 @@ Wavefront::updateResources()
                                            ticks(computeUnit->issuePeriod));
     } else if (ii->opType() == Enums::OT_FLAT_READ) {
         assert(Enums::SC_NONE != ii->executedAs());
-        mem_reqs_in_pipe++;
-        rd_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        rdGmReqsInPipe++;
         if ( Enums::SC_SHARED == ii->executedAs() ) {
             computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
                 preset(computeUnit->shader->ticks(4));
@@ -651,8 +651,8 @@ Wavefront::updateResources()
         }
     } else if (ii->opType() == Enums::OT_FLAT_WRITE) {
         assert(Enums::SC_NONE != ii->executedAs());
-        mem_reqs_in_pipe++;
-        wr_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrGmReqsInPipe++;
         if (Enums::SC_SHARED == ii->executedAs()) {
             computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
                 preset(computeUnit->shader->ticks(8));
@@ -665,67 +665,67 @@ Wavefront::updateResources()
                 preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
         }
     } else if (IS_OT_READ_GM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        rd_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        rdGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_WRITE_GM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        wr_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_ATOMIC_GM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        wr_gm_reqs_in_pipe++;
-        rd_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrGmReqsInPipe++;
+        rdGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_READ_LM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        rd_lm_reqs_in_pipe++;
+        memReqsInPipe++;
+        rdLmReqsInPipe++;
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             preset(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_WRITE_LM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        wr_lm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrLmReqsInPipe++;
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_ATOMIC_LM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        wr_lm_reqs_in_pipe++;
-        rd_lm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrLmReqsInPipe++;
+        rdLmReqsInPipe++;
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_READ_PM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        rd_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        rdGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_WRITE_PM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        wr_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     } else if (IS_OT_ATOMIC_PM(ii->opType())) {
-        mem_reqs_in_pipe++;
-        wr_gm_reqs_in_pipe++;
-        rd_gm_reqs_in_pipe++;
+        memReqsInPipe++;
+        wrGmReqsInPipe++;
+        rdGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
@@ -865,7 +865,7 @@ Wavefront::exec()
 bool
 Wavefront::waitingAtBarrier(int lane)
 {
-    return bar_cnt[lane] < max_bar_cnt;
+    return barCnt[lane] < maxBarCnt;
 }
 
 void

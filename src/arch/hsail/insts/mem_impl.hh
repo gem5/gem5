@@ -59,7 +59,7 @@ namespace HsailISA
         Wavefront *w = gpuDynInst->wavefront();
 
         typedef typename DestDataType::CType CType M5_VAR_USED;
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
         std::vector<Addr> addr_vec;
         addr_vec.resize(w->computeUnit->wfSize(), (Addr)0);
         this->addr.calcVector(w, addr_vec);
@@ -159,7 +159,7 @@ namespace HsailISA
         Wavefront *w = gpuDynInst->wavefront();
 
         typedef typename MemDataType::CType MemCType;
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
 
         // Kernarg references are handled uniquely for now (no Memory Request
         // is used), so special-case them up front.  Someday we should
@@ -230,7 +230,7 @@ namespace HsailISA
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
-        m->kern_id = w->kern_id;
+        m->kern_id = w->kernId;
         m->cu_id = w->computeUnit->cu_id;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
@@ -261,8 +261,8 @@ namespace HsailISA
             }
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_rd_gm++;
-            w->rd_gm_reqs_in_pipe--;
+            w->outstandingReqsRdGm++;
+            w->rdGmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_SPILL:
@@ -281,14 +281,14 @@ namespace HsailISA
                         m->addr[lane] = m->addr[lane] * w->spillWidth +
                                         lane * sizeof(MemCType) + w->spillBase;
 
-                        w->last_addr[lane] = m->addr[lane];
+                        w->lastAddr[lane] = m->addr[lane];
                     }
                 }
             }
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_rd_gm++;
-            w->rd_gm_reqs_in_pipe--;
+            w->outstandingReqsRdGm++;
+            w->rdGmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_GROUP:
@@ -296,8 +296,8 @@ namespace HsailISA
             m->pipeId = LDSMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(24));
             w->computeUnit->localMemoryPipe.getLMReqFIFO().push(m);
-            w->outstanding_reqs_rd_lm++;
-            w->rd_lm_reqs_in_pipe--;
+            w->outstandingReqsRdLm++;
+            w->rdLmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_READONLY:
@@ -313,8 +313,8 @@ namespace HsailISA
             }
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_rd_gm++;
-            w->rd_gm_reqs_in_pipe--;
+            w->outstandingReqsRdGm++;
+            w->rdGmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_PRIVATE:
@@ -332,8 +332,8 @@ namespace HsailISA
                 }
             }
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_rd_gm++;
-            w->rd_gm_reqs_in_pipe--;
+            w->outstandingReqsRdGm++;
+            w->rdGmReqsInPipe--;
             break;
 
           default:
@@ -341,8 +341,8 @@ namespace HsailISA
                   m->addr[0]);
         }
 
-        w->outstanding_reqs++;
-        w->mem_reqs_in_pipe--;
+        w->outstandingReqs++;
+        w->memReqsInPipe--;
     }
 
     template<typename OperationType, typename SrcDataType,
@@ -355,7 +355,7 @@ namespace HsailISA
 
         typedef typename OperationType::CType CType;
 
-        const VectorMask &mask = w->get_pred();
+        const VectorMask &mask = w->getPred();
 
         // arg references are handled uniquely for now (no Memory Request
         // is used), so special-case them up front.  Someday we should
@@ -419,7 +419,7 @@ namespace HsailISA
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
-        m->kern_id = w->kern_id;
+        m->kern_id = w->kernId;
         m->cu_id = w->computeUnit->cu_id;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
@@ -448,8 +448,8 @@ namespace HsailISA
             }
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_wr_gm++;
-            w->wr_gm_reqs_in_pipe--;
+            w->outstandingReqsWrGm++;
+            w->wrGmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_SPILL:
@@ -469,8 +469,8 @@ namespace HsailISA
             }
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_wr_gm++;
-            w->wr_gm_reqs_in_pipe--;
+            w->outstandingReqsWrGm++;
+            w->wrGmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_GROUP:
@@ -478,8 +478,8 @@ namespace HsailISA
             m->pipeId = LDSMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(24));
             w->computeUnit->localMemoryPipe.getLMReqFIFO().push(m);
-            w->outstanding_reqs_wr_lm++;
-            w->wr_lm_reqs_in_pipe--;
+            w->outstandingReqsWrLm++;
+            w->wrLmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_PRIVATE:
@@ -497,16 +497,16 @@ namespace HsailISA
             }
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_wr_gm++;
-            w->wr_gm_reqs_in_pipe--;
+            w->outstandingReqsWrGm++;
+            w->wrGmReqsInPipe--;
             break;
 
           default:
             fatal("Store to unsupported segment %d\n", this->segment);
         }
 
-        w->outstanding_reqs++;
-        w->mem_reqs_in_pipe--;
+        w->outstandingReqs++;
+        w->memReqsInPipe--;
     }
 
     template<typename OperationType, typename SrcDataType,
@@ -596,7 +596,7 @@ namespace HsailISA
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
-        m->kern_id = w->kern_id;
+        m->kern_id = w->kernId;
         m->cu_id = w->computeUnit->cu_id;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
@@ -607,10 +607,10 @@ namespace HsailISA
             m->pipeId = GLBMEM_PIPE;
 
             w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
-            w->outstanding_reqs_wr_gm++;
-            w->wr_gm_reqs_in_pipe--;
-            w->outstanding_reqs_rd_gm++;
-            w->rd_gm_reqs_in_pipe--;
+            w->outstandingReqsWrGm++;
+            w->wrGmReqsInPipe--;
+            w->outstandingReqsRdGm++;
+            w->rdGmReqsInPipe--;
             break;
 
           case Brig::BRIG_SEGMENT_GROUP:
@@ -618,10 +618,10 @@ namespace HsailISA
             m->pipeId = LDSMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(24));
             w->computeUnit->localMemoryPipe.getLMReqFIFO().push(m);
-            w->outstanding_reqs_wr_lm++;
-            w->wr_lm_reqs_in_pipe--;
-            w->outstanding_reqs_rd_lm++;
-            w->rd_lm_reqs_in_pipe--;
+            w->outstandingReqsWrLm++;
+            w->wrLmReqsInPipe--;
+            w->outstandingReqsRdLm++;
+            w->rdLmReqsInPipe--;
             break;
 
           default:
@@ -629,8 +629,8 @@ namespace HsailISA
                   this->segment);
         }
 
-        w->outstanding_reqs++;
-        w->mem_reqs_in_pipe--;
+        w->outstandingReqs++;
+        w->memReqsInPipe--;
     }
 
     const char* atomicOpToString(Brig::BrigAtomicOperation atomicOp);
