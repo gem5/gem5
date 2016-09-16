@@ -89,6 +89,7 @@ DebugFlag('GPUPrefetch')
 DebugFlag('GPUReg')
 DebugFlag('GPUSync')
 DebugFlag('GPUTLB')
+DebugFlag('GPUVRF')
 DebugFlag('HSALoader')
 DebugFlag('HSAIL')
 DebugFlag('HSAILObject')
@@ -96,4 +97,5 @@ DebugFlag('Predictor')
 DebugFlag('WavefrontStack')
 
 CompoundFlag('GPUALL', ['GPUCoalescer', 'GPUDisp', 'GPUExec', 'GPUFetch',
-                        'GPUMem', 'GPUPort', 'GPUSync', 'GPUTLB', 'HSAIL'])
+                        'GPUMem', 'GPUPort', 'GPUSync', 'GPUTLB', 'HSAIL',
+                        'GPUVRF'])
