@@ -236,6 +236,7 @@ class ClassicTest(Test):
     # and other files that we don't care about.
     ref_ignore_files = FileIgnoreList(
         names=(
+            "EMPTY",
         ), rex=(
             # Mercurial sometimes leaves backups when applying MQ patches
             r"\.orig$",
@@ -284,16 +285,20 @@ class ClassicTest(Test):
         ]
 
     def verify_units(self):
-        return [
-            DiffStatFile(ref_dir=self.ref_dir, test_dir=self.output_dir,
-                         skip=self.skip_diff_stat)
-        ] + [
+        ref_files = set(self.ref_files())
+        units = []
+        if "stats.txt" in ref_files:
+            units.append(
+                DiffStatFile(ref_dir=self.ref_dir, test_dir=self.output_dir,
+                             skip=self.skip_diff_stat))
+        units += [
             DiffOutFile(f,
                         ref_dir=self.ref_dir, test_dir=self.output_dir,
                         skip=self.skip_diff_out)
-            for f in self.ref_files()
-            if f not in ClassicTest.diff_ignore_files
+            for f in ref_files if f not in ClassicTest.diff_ignore_files
         ]
+
+        return units
 
     def update_ref(self):
         for fname in self.ref_files():
