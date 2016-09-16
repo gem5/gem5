@@ -354,6 +354,18 @@ class Wavefront : public SimObject
      */
     uint32_t getStaticContextSize() const;
 
+    /**
+     * Returns the hardware context as a stream of bytes
+     * This method is designed for HSAIL execution
+     */
+    void getContext(const void *out);
+
+    /**
+     * Sets the hardware context fromt a stream of bytes
+     * This method is designed for HSAIL execution
+     */
+    void setContext(const void *in);
+
   private:
     /**
      * Stack containing Control Flow Graph nodes (i.e., kernel instructions)
