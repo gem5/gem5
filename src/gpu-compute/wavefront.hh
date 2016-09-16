@@ -354,6 +354,12 @@ class Wavefront : public SimObject
 
     void discardFetch();
 
+    /**
+     * Returns the size of the static hardware context of a particular wavefront
+     * This should be updated everytime the context is changed
+     */
+    uint32_t getStaticContextSize() const;
+
   private:
     /**
      * Stack containing Control Flow Graph nodes (i.e., kernel instructions)

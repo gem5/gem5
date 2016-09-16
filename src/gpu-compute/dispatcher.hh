@@ -159,6 +159,9 @@ class GpuDispatcher : public DmaDevice
         int getNumCUs();
         int wfSize() const;
         void setFuncargsSize(int funcargs_size);
+
+        /** Returns the size of the static hardware context of a wavefront */
+        uint32_t getStaticContextSize() const;
 };
 
 #endif // __GPU_DISPATCHER_HH__

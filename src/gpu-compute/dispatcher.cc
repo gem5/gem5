@@ -398,3 +398,9 @@ GpuDispatcher::setFuncargsSize(int funcargs_size)
 {
     shader->funcargs_size = funcargs_size;
 }
+
+uint32_t
+GPUDispatcher::getStaticContextSize() const
+{
+    return shader->cuList[0]->wfList[0][0]->getStaticContextSize();
+}

@@ -155,9 +155,9 @@ Wavefront::~Wavefront()
 }
 
 void
-Wavefront::start(uint64_t _wfDynId,uint64_t _base_ptr)
+Wavefront::start(uint64_t _wf_dyn_id,uint64_t _base_ptr)
 {
-    wfDynId = _wfDynId;
+    wfDynId = _wf_dyn_id;
     basePtr = _base_ptr;
     status = S_RUNNING;
 }
@@ -930,4 +930,14 @@ void
 Wavefront::pc(uint32_t new_pc)
 {
     reconvergenceStack.top()->pc = new_pc;
+}
+
+uint32_t
+Wavefront::getStaticContextSize() const
+{
+    return barCnt.size() * sizeof(int) + sizeof(dynWaveId) + sizeof(maxBarCnt) +
+           sizeof(oldBarrierCnt) + sizeof(barrierCnt) + sizeof(wgId) +
+           sizeof(computeUnit->cu_id) + sizeof(barrierId) + sizeof(initMask) +
+           sizeof(privBase) + sizeof(spillBase) + sizeof(ldsChunk) +
+           computeUnit->wfSize() * sizeof(ReconvergenceStackEntry);
 }

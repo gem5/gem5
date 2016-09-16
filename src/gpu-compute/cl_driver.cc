@@ -242,6 +242,13 @@ ClDriver::ioctl(LiveProcess *process, ThreadContext *tc, unsigned req)
             buf.copyOut(tc->getMemProxy());
         }
         break;
+      case HSA_GET_HW_STATIC_CONTEXT_SIZE:
+        {
+            BufferArg buf(buf_addr, sizeof(uint32_t));
+            *((uint32_t*)buf.bufferPtr()) = dispatcher->getStaticContextSize();
+            buf.copyOut(tc->getMemProxy());
+        }
+        break;
 
       default:
         fatal("ClDriver: bad ioctl %d\n", req);
