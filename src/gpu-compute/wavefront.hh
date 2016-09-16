@@ -52,6 +52,27 @@
 
 static const int MAX_NUM_INSTS_PER_WF = 12;
 
+/**
+ * A reconvergence stack entry conveys the necessary state to implement
+ * control flow divergence.
+ */
+struct ReconvergenceStackEntry {
+    /**
+     * PC of current instruction.
+     */
+    uint32_t pc;
+    /**
+     * PC of the immediate post-dominator instruction, i.e., the value of
+     * @a pc for the first instruction that will be executed by the wavefront
+     * when a reconvergence point is reached.
+     */
+    uint32_t rpc;
+    /**
+     * Execution mask.
+     */
+    VectorMask execMask;
+};
+
 /*
  * Arguments for the hsail opcode call, are user defined and variable length.
  * The hardware/finalizer can support arguments in hardware or use memory to
@@ -118,34 +139,6 @@ class CallArgMem
     {
         *((CType*)(mem + getLaneOffset<CType>(lane, addr))) = val;
     }
-};
-
-/**
- * A reconvergence stack entry conveys the necessary state to implement
- * control flow divergence.
- */
-class ReconvergenceStackEntry {
-
-  public:
-    ReconvergenceStackEntry(uint32_t new_pc, uint32_t new_rpc,
-                            VectorMask new_mask) : pc(new_pc), rpc(new_rpc),
-                            execMask(new_mask) {
-    }
-
-    /**
-     * PC of current instruction.
-     */
-    uint32_t pc;
-    /**
-     * PC of the immediate post-dominator instruction, i.e., the value of
-     * @a pc for the first instruction that will be executed by the wavefront
-     * when a reconvergence point is reached.
-     */
-    uint32_t rpc;
-    /**
-     * Execution mask.
-     */
-    VectorMask execMask;
 };
 
 class Wavefront : public SimObject
@@ -368,7 +361,7 @@ class Wavefront : public SimObject
      * point (branch instruction), and shrinks every time the wavefront
      * reaches a reconvergence point (immediate post-dominator instruction).
      */
-    std::stack<std::unique_ptr<ReconvergenceStackEntry>> reconvergenceStack;
+    std::deque<std::unique_ptr<ReconvergenceStackEntry>> reconvergenceStack;
 };
 
 #endif // __WAVEFRONT_HH__

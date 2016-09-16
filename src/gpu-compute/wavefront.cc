@@ -873,7 +873,7 @@ Wavefront::pushToReconvergenceStack(uint32_t pc, uint32_t rpc,
                                     const VectorMask& mask)
 {
     assert(mask.count());
-    reconvergenceStack.emplace(new ReconvergenceStackEntry(pc, rpc, mask));
+    reconvergenceStack.emplace_back(new ReconvergenceStackEntry{pc, rpc, mask});
 }
 
 void
@@ -886,7 +886,7 @@ Wavefront::popFromReconvergenceStack()
             execMask().to_string<char, std::string::traits_type,
             std::string::allocator_type>().c_str(), pc());
 
-    reconvergenceStack.pop();
+    reconvergenceStack.pop_back();
 
     DPRINTF(WavefrontStack, "%3i %s\n", pc(),
             execMask().to_string<char, std::string::traits_type,
@@ -904,32 +904,32 @@ Wavefront::discardFetch()
 uint32_t
 Wavefront::pc() const
 {
-    return reconvergenceStack.top()->pc;
+    return reconvergenceStack.back()->pc;
 }
 
 uint32_t
 Wavefront::rpc() const
 {
-    return reconvergenceStack.top()->rpc;
+    return reconvergenceStack.back()->rpc;
 }
 
 VectorMask
 Wavefront::execMask() const
 {
-    return reconvergenceStack.top()->execMask;
+    return reconvergenceStack.back()->execMask;
 }
 
 bool
 Wavefront::execMask(int lane) const
 {
-    return reconvergenceStack.top()->execMask[lane];
+    return reconvergenceStack.back()->execMask[lane];
 }
 
 
 void
 Wavefront::pc(uint32_t new_pc)
 {
-    reconvergenceStack.top()->pc = new_pc;
+    reconvergenceStack.back()->pc = new_pc;
 }
 
 uint32_t
