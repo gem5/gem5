@@ -93,6 +93,15 @@ namespace HsailISA
                                          this->dest_vect[1].disassemble(),
                                          this->addr.disassemble());
             break;
+          case 3:
+            this->disassembly = csprintf("%s_%s_%s (%s,%s,%s), %s", this->opcode,
+                                         segmentNames[this->segment],
+                                         MemDataType::label,
+                                         this->dest_vect[0].disassemble(),
+                                         this->dest_vect[1].disassemble(),
+                                         this->dest_vect[2].disassemble(),
+                                         this->addr.disassemble());
+            break;
           case 4:
             this->disassembly = csprintf("%s_%s_%s (%s,%s,%s,%s), %s",
                                          this->opcode,
