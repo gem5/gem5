@@ -755,7 +755,7 @@ gen_special('GridSize', 'w->gridSz[src0]')
 gen_special('GridGroups',
     'divCeil(w->gridSz[src0],w->workGroupSz[src0])')
 gen_special('LaneId', 'lane')
-gen_special('WaveId', 'w->dynWaveId')
+gen_special('WaveId', 'w->wfId')
 gen_special('Clock', 'w->computeUnit->shader->tick_cnt', 'U64')
 
 # gen_special('CU'', ')

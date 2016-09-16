@@ -194,7 +194,8 @@ class Wavefront : public SimObject
     uint32_t gridSz[3];
     uint32_t wgId;
     uint32_t wgSz;
-    uint32_t dynWaveId;
+    // wavefront id within a workgroup
+    uint32_t wfId;
     uint32_t maxDynWaveId;
     uint32_t dispatchId;
     // outstanding global+local memory requests

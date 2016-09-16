@@ -221,7 +221,7 @@ ComputeUnit::updateEvents() {
 
 void
 ComputeUnit::StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
-                     int cnt, LdsChunk *ldsChunk, NDRange *ndr)
+                     int waveId, LdsChunk *ldsChunk, NDRange *ndr)
 {
     static int _n_wave = 0;
 
@@ -232,20 +232,20 @@ ComputeUnit::StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
     init_mask.reset();
 
     for (int k = 0; k < wfSize(); ++k) {
-        if (k + cnt * wfSize() < trueWgSizeTotal)
+        if (k + waveId * wfSize() < trueWgSizeTotal)
             init_mask[k] = 1;
     }
 
     w->kernId = ndr->dispatchId;
-    w->dynWaveId = cnt;
+    w->wfId = waveId;
     w->initMask = init_mask.to_ullong();
 
     for (int k = 0; k < wfSize(); ++k) {
-        w->workItemId[0][k] = (k+cnt*wfSize()) % trueWgSize[0];
+        w->workItemId[0][k] = (k + waveId * wfSize()) % trueWgSize[0];
         w->workItemId[1][k] =
-            ((k + cnt * wfSize()) / trueWgSize[0]) % trueWgSize[1];
+            ((k + waveId * wfSize()) / trueWgSize[0]) % trueWgSize[1];
         w->workItemId[2][k] =
-            (k + cnt * wfSize()) / (trueWgSize[0] * trueWgSize[1]);
+            (k + waveId * wfSize()) / (trueWgSize[0] * trueWgSize[1]);
 
         w->workItemFlatId[k] = w->workItemId[2][k] * trueWgSize[0] *
             trueWgSize[1] + w->workItemId[1][k] * trueWgSize[0] +
@@ -294,8 +294,8 @@ ComputeUnit::StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
     // is this the last wavefront in the workgroup
     // if set the spillWidth to be the remaining work-items
     // so that the vector access is correct
-    if ((cnt + 1) * wfSize() >= trueWgSizeTotal) {
-        w->spillWidth = trueWgSizeTotal - (cnt * wfSize());
+    if ((waveId + 1) * wfSize() >= trueWgSizeTotal) {
+        w->spillWidth = trueWgSizeTotal - (waveId * wfSize());
     } else {
         w->spillWidth = wfSize();
     }
@@ -341,7 +341,7 @@ ComputeUnit::StartWorkgroup(NDRange *ndr)
 
     // calculate the number of 32-bit vector registers required by wavefront
     int vregDemand = ndr->q.sRegCount + (2 * ndr->q.dRegCount);
-    int cnt = 0;
+    int wave_id = 0;
 
     // Assign WFs by spreading them across SIMDs, 1 WF per SIMD at a time
     for (int m = 0; m < shader->n_wf * numSIMDs; ++m) {
@@ -352,7 +352,7 @@ ComputeUnit::StartWorkgroup(NDRange *ndr)
         if (w->status == Wavefront::S_STOPPED) {
             // if we have scheduled all work items then stop
             // scheduling wavefronts
-            if (cnt * wfSize() >= trueWgSizeTotal)
+            if (wave_id * wfSize() >= trueWgSizeTotal)
                 break;
 
             // reserve vector registers for the scheduled wavefront
@@ -365,8 +365,8 @@ ComputeUnit::StartWorkgroup(NDRange *ndr)
             w->reservedVectorRegs = normSize;
             vectorRegsReserved[m % numSIMDs] += w->reservedVectorRegs;
 
-            StartWF(w, trueWgSize, trueWgSizeTotal, cnt, ldsChunk, ndr);
-            ++cnt;
+            StartWF(w, trueWgSize, trueWgSizeTotal, wave_id, ldsChunk, ndr);
+            ++wave_id;
         }
     }
     ++barrier_id;

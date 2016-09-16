@@ -935,7 +935,7 @@ Wavefront::pc(uint32_t new_pc)
 uint32_t
 Wavefront::getStaticContextSize() const
 {
-    return barCnt.size() * sizeof(int) + sizeof(dynWaveId) + sizeof(maxBarCnt) +
+    return barCnt.size() * sizeof(int) + sizeof(wfId) + sizeof(maxBarCnt) +
            sizeof(oldBarrierCnt) + sizeof(barrierCnt) + sizeof(wgId) +
            sizeof(computeUnit->cu_id) + sizeof(barrierId) + sizeof(initMask) +
            sizeof(privBase) + sizeof(spillBase) + sizeof(ldsChunk) +
