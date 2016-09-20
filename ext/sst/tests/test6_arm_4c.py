@@ -171,7 +171,7 @@ memory.addParams({
     "request_width" : 64,
     "coherence_protocol" : "MSI",
     "access_time" : "25 ns",
-    "backend.mem_size" : 256,
+    "backend.mem_size" : "256MiB",
     "clock" : "2GHz",
     "debug" : debug("DEBUG"),
     "range_start" : 0, # 2 * (1024 ** 3), # it's behind a directory controller.
