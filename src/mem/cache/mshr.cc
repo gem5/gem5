@@ -318,16 +318,24 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
     // - there are other targets already deferred
     // - there's a pending invalidate to be applied after the response
     //   comes back (but before this target is processed)
+    // - the MSHR's first (and only) non-deferred target is a cache
+    //   maintenance packet
+    // - the new target is a cache maintenance packet (this is probably
+    //   overly conservative but certainly safe)
     // - this target requires a writable block and either we're not
     //   getting a writable block back or we have already snooped
     //   another read request that will downgrade our writable block
     //   to non-writable (Shared or Owned)
-    if (inService &&
-        (!deferredTargets.empty() || hasPostInvalidate() ||
-         (pkt->needsWritable() &&
-          (!isPendingModified() || hasPostDowngrade() || isForward)))) {
+    PacketPtr tgt_pkt = targets.front().pkt;
+    if (pkt->req->isCacheMaintenance() ||
+        tgt_pkt->req->isCacheMaintenance() ||
+        !deferredTargets.empty() ||
+        (inService &&
+         (hasPostInvalidate() ||
+          (pkt->needsWritable() &&
+           (!isPendingModified() || hasPostDowngrade() || isForward))))) {
         // need to put on deferred list
-        if (hasPostInvalidate())
+        if (inService && hasPostInvalidate())
             replaceUpgrade(pkt);
         deferredTargets.add(pkt, whenReady, _order, Target::FromCPU, true,
                             alloc_on_fill);
@@ -349,7 +357,8 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     // when we snoop packets the needsWritable and isInvalidate flags
     // should always be the same, however, this assumes that we never
     // snoop writes as they are currently not marked as invalidations
-    panic_if(pkt->needsWritable() != pkt->isInvalidate(),
+    panic_if((pkt->needsWritable() != pkt->isInvalidate()) &&
+             !pkt->req->isCacheMaintenance(),
              "%s got snoop %s where needsWritable, "
              "does not match isInvalidate", name(), pkt->print());
 
@@ -367,7 +376,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // That is, even though the upper-level cache got out on its
         // local bus first, some other invalidating transaction
         // reached the global bus before the upgrade did.
-        if (pkt->needsWritable()) {
+        if (pkt->needsWritable() || pkt->req->isCacheInvalidate()) {
             targets.replaceUpgrades();
             deferredTargets.replaceUpgrades();
         }
@@ -377,16 +386,18 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 
     // From here on down, the request issued by this MSHR logically
     // precedes the request we're snooping.
-    if (pkt->needsWritable()) {
+    if (pkt->needsWritable() || pkt->req->isCacheInvalidate()) {
         // snooped request still precedes the re-request we'll have to
         // issue for deferred targets, if any...
         deferredTargets.replaceUpgrades();
     }
 
-    if (hasPostInvalidate()) {
-        // a prior snoop has already appended an invalidation, so
-        // logically we don't have the block anymore; no need for
-        // further snooping.
+    PacketPtr tgt_pkt = targets.front().pkt;
+    if (hasPostInvalidate() || tgt_pkt->req->isCacheInvalidate()) {
+        // a prior snoop has already appended an invalidation or a
+        // cache invalidation operation is in progress, so logically
+        // we don't have the block anymore; no need for further
+        // snooping.
         return true;
     }
 
@@ -401,7 +412,8 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 
         // Start by determining if we will eventually respond or not,
         // matching the conditions checked in Cache::handleSnoop
-        bool will_respond = isPendingModified() && pkt->needsResponse();
+        bool will_respond = isPendingModified() && pkt->needsResponse() &&
+                      !pkt->isClean();
 
         // The packet we are snooping may be deleted by the time we
         // actually process the target, and we consequently need to
@@ -435,9 +447,13 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
                     downstreamPending && targets.needsWritable, false);
 
-        if (pkt->needsWritable()) {
+        if (pkt->needsWritable() || pkt->isInvalidate()) {
             // This transaction will take away our pending copy
             postInvalidate = true;
+        }
+
+        if (pkt->isClean()) {
+            pkt->setSatisfied();
         }
     }
 
@@ -490,23 +506,36 @@ MSHR::extractServiceableTargets(PacketPtr pkt)
 bool
 MSHR::promoteDeferredTargets()
 {
-    if (targets.empty())  {
-        if (deferredTargets.empty()) {
-            return false;
-        }
-
-        std::swap(targets, deferredTargets);
-    } else {
-        // If the targets list is not empty then we have one targets
-        // from the deferredTargets list to the targets list. A new
-        // request will then service the targets list.
-        targets.splice(targets.end(), deferredTargets);
-        targets.populateFlags();
+    if (targets.empty() && deferredTargets.empty()) {
+        // nothing to promote
+        return false;
     }
 
-    // clear deferredTargets flags
-    deferredTargets.resetFlags();
+    // the deferred targets can be generally promoted unless they
+    // contain a cache maintenance request
 
+    // find the first target that is a cache maintenance request
+    auto it = std::find_if(deferredTargets.begin(), deferredTargets.end(),
+                           [](MSHR::Target &t) {
+                               return t.pkt->req->isCacheMaintenance();
+                           });
+    if (it == deferredTargets.begin()) {
+        // if the first deferred target is a cache maintenance packet
+        // then we can promote provided the targets list is empty and
+        // we can service it on its own
+        if (targets.empty()) {
+            targets.splice(targets.end(), deferredTargets, it);
+        }
+    } else {
+        // if a cache maintenance operation exists, we promote all the
+        // deferred targets that precede it, or all deferred targets
+        // otherwise
+        targets.splice(targets.end(), deferredTargets,
+                       deferredTargets.begin(), it);
+    }
+
+    deferredTargets.populateFlags();
+    targets.populateFlags();
     order = targets.front().order;
     readyTime = std::max(curTick(), targets.front().readyTime);
 
