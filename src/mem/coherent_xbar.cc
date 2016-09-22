@@ -40,6 +40,7 @@
  * Authors: Ali Saidi
  *          Andreas Hansson
  *          William Wang
+ *          Nikos Nikoleris
  */
 
 /**
@@ -194,6 +195,22 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     if (snoop_caches) {
         assert(pkt->snoopDelay == 0);
 
+        if (pkt->isClean() && !is_destination) {
+            // before snooping we need to make sure that the memory
+            // below is not busy and the cache clean request can be
+            // forwarded to it
+            if (!masterPorts[master_port_id]->tryTiming(pkt)) {
+                DPRINTF(CoherentXBar, "%s: src %s packet %s RETRY\n", __func__,
+                        src_port->name(), pkt->print());
+
+                // update the layer state and schedule an idle event
+                reqLayers[master_port_id]->failedTiming(src_port,
+                                                        clockEdge(Cycles(1)));
+                return false;
+            }
+        }
+
+
         // the packet is a memory-mapped request and should be
         // broadcasted to our snoopers but the source
         if (snoopFilter) {
@@ -342,21 +359,76 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
         // queue the packet for deletion
         pendingDelete.reset(pkt);
 
+    // normally we respond to the packet we just received if we need to
+    PacketPtr rsp_pkt = pkt;
+    PortID rsp_port_id = slave_port_id;
+
+    // If this is the destination of the cache clean operation the
+    // crossbar is responsible for responding. This crossbar will
+    // respond when the cache clean is complete. A cache clean
+    // is complete either:
+    // * direcly, if no cache above had a dirty copy of the block
+    //   as indicated by the satisfied flag of the packet, or
+    // * when the crossbar has seen both the cache clean request
+    //   (CleanSharedReq, CleanInvalidReq) and the corresponding
+    //   write (WriteClean) which updates the block in the memory
+    //   below.
+    if (success &&
+        ((pkt->isClean() && pkt->satisfied()) ||
+         pkt->cmd == MemCmd::WriteClean) &&
+        is_destination) {
+        PacketPtr deferred_rsp = pkt->isWrite() ? nullptr : pkt;
+        auto cmo_lookup = outstandingCMO.find(pkt->id);
+        if (cmo_lookup != outstandingCMO.end()) {
+            // the cache clean request has already reached this xbar
+            respond_directly = true;
+            if (pkt->isWrite()) {
+                rsp_pkt = cmo_lookup->second;
+                assert(rsp_pkt);
+
+                // determine the destination
+                const auto route_lookup = routeTo.find(rsp_pkt->req);
+                assert(route_lookup != routeTo.end());
+                rsp_port_id = route_lookup->second;
+                assert(rsp_port_id != InvalidPortID);
+                assert(rsp_port_id < respLayers.size());
+                // remove the request from the routing table
+                routeTo.erase(route_lookup);
+            }
+            outstandingCMO.erase(cmo_lookup);
+        } else {
+            respond_directly = false;
+            outstandingCMO.emplace(pkt->id, deferred_rsp);
+            if (!pkt->isWrite()) {
+                assert(routeTo.find(pkt->req) == routeTo.end());
+                routeTo[pkt->req] = slave_port_id;
+
+                panic_if(routeTo.size() > 512,
+                         "Routing table exceeds 512 packets\n");
+            }
+        }
+    }
+
+
     if (respond_directly) {
-        assert(pkt->needsResponse());
+        assert(rsp_pkt->needsResponse());
         assert(success);
 
-        pkt->makeResponse();
+        rsp_pkt->makeResponse();
 
         if (snoopFilter && !system->bypassCaches()) {
             // let the snoop filter inspect the response and update its state
-            snoopFilter->updateResponse(pkt, *slavePorts[slave_port_id]);
+            snoopFilter->updateResponse(rsp_pkt, *slavePorts[rsp_port_id]);
         }
 
+        // we send the response after the current packet, even if the
+        // response is not for this packet (e.g. cache clean operation
+        // where both the request and the write packet have to cross
+        // the destination xbar before the response is sent.)
         Tick response_time = clockEdge() + pkt->headerDelay;
-        pkt->headerDelay = 0;
+        rsp_pkt->headerDelay = 0;
 
-        slavePorts[slave_port_id]->schedTimingResp(pkt, response_time);
+        slavePorts[rsp_port_id]->schedTimingResp(rsp_pkt, response_time);
     }
 
     return success;
@@ -754,6 +826,30 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         response_latency = snoop_response_latency;
     }
 
+    // If this is the destination of the cache clean operation the
+    // crossbar is responsible for responding. This crossbar will
+    // respond when the cache clean is complete. An atomic cache clean
+    // is complete when the crossbars receives the cache clean
+    // request (CleanSharedReq, CleanInvalidReq), as either:
+    // * no cache above had a dirty copy of the block as indicated by
+    //   the satisfied flag of the packet, or
+    // * the crossbar has already seen the corresponding write
+    //   (WriteClean) which updates the block in the memory below.
+    if (pkt->isClean() && isDestination(pkt) && pkt->satisfied()) {
+        auto it = outstandingCMO.find(pkt->id);
+        assert(it != outstandingCMO.end());
+        // we are responding right away
+        outstandingCMO.erase(it);
+    } else if (pkt->cmd == MemCmd::WriteClean && isDestination(pkt)) {
+        // if this is the destination of the operation, the xbar
+        // sends the responce to the cache clean operation only
+        // after having encountered the cache clean request
+        auto M5_VAR_USED ret = outstandingCMO.emplace(pkt->id, nullptr);
+        // in atomic mode we know that the WriteClean packet should
+        // precede the clean request
+        assert(ret.second);
+    }
+
     // add the response data
     if (pkt->isResponse()) {
         pkt_size = pkt->hasData() ? pkt->getSize() : 0;
@@ -988,8 +1084,13 @@ bool
 CoherentXBar::forwardPacket(const PacketPtr pkt)
 {
     // we are forwarding the packet if:
-    // 1) this is a read or a write
-    // 2) this crossbar is above the point of coherency
+    // 1) this is a cache clean request to the PoU/PoC and this
+    //    crossbar is above the PoU/PoC
+    // 2) this is a read or a write
+    // 3) this crossbar is above the point of coherency
+    if (pkt->isClean()) {
+        return !isDestination(pkt);
+    }
     return pkt->isRead() || pkt->isWrite() || !pointOfCoherency;
 }
 

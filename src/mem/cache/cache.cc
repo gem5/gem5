@@ -1092,7 +1092,7 @@ Cache::recvAtomic(PacketPtr pkt)
         // until the point of reference.
         DPRINTF(CacheVerbose, "%s: packet %s found block: %s\n",
                 __func__, pkt->print(), blk->print());
-        PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest());
+        PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(), pkt->id);
         writebacks.push_back(wb_pkt);
         pkt->setSatisfied();
     }
@@ -1679,7 +1679,7 @@ Cache::writebackBlk(CacheBlk *blk)
 }
 
 PacketPtr
-Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest)
+Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 {
     Request *req = new Request(tags->regenerateBlkAddr(blk->tag, blk->set),
                                blkSize, 0, Request::wbMasterId);
@@ -1688,7 +1688,7 @@ Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest)
     }
     req->taskId(blk->task_id);
     blk->task_id = ContextSwitchTaskId::Unknown;
-    PacketPtr pkt = new Packet(req, MemCmd::WriteClean);
+    PacketPtr pkt = new Packet(req, MemCmd::WriteClean, blkSize, id);
     DPRINTF(Cache, "Create %s writable: %d, dirty: %d\n", pkt->print(),
             blk->isWritable(), blk->isDirty());
     // make sure the block is not marked dirty
@@ -2093,7 +2093,7 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         if (blk_valid && blk->isDirty()) {
             DPRINTF(CacheVerbose, "%s: packet (snoop) %s found block: %s\n",
                     __func__, pkt->print(), blk->print());
-            PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest());
+            PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(), pkt->id);
             PacketList writebacks;
             writebacks.push_back(wb_pkt);
 
@@ -2643,7 +2643,8 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
             // until the point of reference.
             DPRINTF(CacheVerbose, "%s: packet %s found block: %s\n",
                     __func__, pkt->print(), blk->print());
-            PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest());
+            PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(),
+                                             pkt->id);
             PacketList writebacks;
             writebacks.push_back(wb_pkt);
             doWritebacks(writebacks, 0);

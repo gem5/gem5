@@ -458,7 +458,7 @@ class Cache : public BaseCache
      * @param dest The destination of this clean operation
      * @return The write clean packet for the block.
      */
-    PacketPtr writecleanBlk(CacheBlk *blk, Request::Flags dest = 0);
+    PacketPtr writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id);
 
     /**
      * Create a CleanEvict request for the given block.

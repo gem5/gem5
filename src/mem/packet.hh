@@ -70,6 +70,7 @@ class Packet;
 typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
+typedef uint64_t PacketId;
 
 class MemCmd
 {
@@ -315,6 +316,8 @@ class Packet : public Printable
 
     /// The command field of the packet.
     MemCmd cmd;
+
+    const PacketId id;
 
     /// A pointer to the original request.
     const RequestPtr req;
@@ -743,9 +746,9 @@ class Packet : public Printable
      * not be valid. The command must be supplied.
      */
     Packet(const RequestPtr _req, MemCmd _cmd)
-        :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           size(0), headerDelay(0), snoopDelay(0), payloadDelay(0),
-           senderState(NULL)
+        :  cmd(_cmd), id((PacketId)_req), req(_req), data(nullptr), addr(0),
+           _isSecure(false), size(0), headerDelay(0), snoopDelay(0),
+           payloadDelay(0), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr();
@@ -763,10 +766,10 @@ class Packet : public Printable
      * a request that is for a whole block, not the address from the
      * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize)
-        :  cmd(_cmd), req(_req), data(nullptr), addr(0), _isSecure(false),
-           headerDelay(0), snoopDelay(0), payloadDelay(0),
-           senderState(NULL)
+    Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
+        :  cmd(_cmd), id(_id ? _id : (PacketId)_req), req(_req), data(nullptr),
+           addr(0), _isSecure(false), headerDelay(0), snoopDelay(0),
+           payloadDelay(0), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -785,7 +788,7 @@ class Packet : public Printable
      * packet should allocate its own data.
      */
     Packet(const PacketPtr pkt, bool clear_flags, bool alloc_data)
-        :  cmd(pkt->cmd), req(pkt->req),
+        :  cmd(pkt->cmd), id(pkt->id), req(pkt->req),
            data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
            bytesValid(pkt->bytesValid),

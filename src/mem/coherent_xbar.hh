@@ -51,6 +51,7 @@
 #ifndef __MEM_COHERENT_XBAR_HH__
 #define __MEM_COHERENT_XBAR_HH__
 
+#include <unordered_map>
 #include <unordered_set>
 
 #include "mem/snoop_filter.hh"
@@ -261,6 +262,13 @@ class CoherentXBar : public BaseXBar
      * generated and which ones were merely forwarded.
      */
     std::unordered_set<RequestPtr> outstandingSnoop;
+
+    /**
+     * Store the outstanding cache maintenance that we are expecting
+     * snoop responses from so we can determine when we received all
+     * snoop responses and if any of the agents satisfied the request.
+     */
+    std::unordered_map<PacketId, PacketPtr> outstandingCMO;
 
     /**
      * Keep a pointer to the system to be allow to querying memory system
