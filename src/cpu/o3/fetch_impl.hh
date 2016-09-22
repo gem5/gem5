@@ -424,8 +424,10 @@ template <class Impl>
 void
 DefaultFetch<Impl>::drainResume()
 {
-    for (ThreadID i = 0; i < numThreads; ++i)
+    for (ThreadID i = 0; i < numThreads; ++i) {
+        stalls[i].decode = false;
         stalls[i].drain = false;
+    }
 }
 
 template <class Impl>

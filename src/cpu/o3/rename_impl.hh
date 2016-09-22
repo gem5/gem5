@@ -304,7 +304,8 @@ DefaultRename<Impl>::isDrained() const
         if (instsInProgress[tid] != 0 ||
             !historyBuffer[tid].empty() ||
             !skidBuffer[tid].empty() ||
-            !insts[tid].empty())
+            !insts[tid].empty() ||
+            (renameStatus[tid] != Idle && renameStatus[tid] != Running))
             return false;
     }
     return true;

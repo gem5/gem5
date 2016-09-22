@@ -391,6 +391,7 @@ DefaultIEW<Impl>::isDrained() const
             DPRINTF(Drain, "%i: Skid buffer not empty.\n", tid);
             drained = false;
         }
+        drained = drained && dispatchStatus[tid] == Running;
     }
 
     // Also check the FU pool as instructions are "stored" in FU
