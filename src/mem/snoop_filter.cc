@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 ARM Limited
+ * Copyright (c) 2013-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -215,10 +215,13 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
     // ReadEx and Writes require both invalidation and exlusivity, while reads
     // require neither. Writebacks on the other hand require exclusivity but
     // not the invalidation. Previously Writebacks did not generate upward
-    // snoops so this was never an aissue. Now that Writebacks generate snoops
-    // we need to special case for Writebacks.
+    // snoops so this was never an issue. Now that Writebacks generate snoops
+    // we need a special case for Writebacks. Additionally cache maintenance
+    // operations can generate snoops as they clean and/or invalidate all
+    // caches down to the specified point of reference.
     assert(cpkt->isWriteback() || cpkt->req->isUncacheable() ||
-           (cpkt->isInvalidate() == cpkt->needsWritable()));
+           (cpkt->isInvalidate() == cpkt->needsWritable()) ||
+           cpkt->req->isCacheMaintenance());
     if (cpkt->isInvalidate() && !sf_item.requested) {
         // Early clear of the holder, if no other request is currently going on
         // @todo: This should possibly be updated even though we do not filter
