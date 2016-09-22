@@ -183,6 +183,12 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // determine how long to be crossbar layer is busy
     Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
 
+    // is this the destination point for this packet? (e.g. true if
+    // this xbar is the PoC for a cache maintenance operation to the
+    // PoC) otherwise the destination is any cache that can satisfy
+    // the request
+    const bool is_destination = isDestination(pkt);
+
     const bool snoop_caches = !system->bypassCaches() &&
         pkt->cmd != MemCmd::WriteClean;
     if (snoop_caches) {
@@ -243,7 +249,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     } else {
         // determine if we are forwarding the packet, or responding to
         // it
-        if (!pointOfCoherency || pkt->isRead() || pkt->isWrite()) {
+        if (forwardPacket(pkt)) {
             // if we are passing on, rather than sinking, a packet to
             // which an upstream cache has committed to responding,
             // the line was needs writable, and the responding only
@@ -251,6 +257,13 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
             // downstream caches know, bypass any flow control
             if (pkt->cacheResponding()) {
                 pkt->setExpressSnoop();
+            }
+
+            // make sure that the write request (e.g., WriteClean)
+            // will stop at the memory below if this crossbar is its
+            // destination
+            if (pkt->isWrite() && is_destination) {
+                pkt->clearWriteThrough();
             }
 
             // since it is a normal request, attempt to send the packet
@@ -646,6 +659,12 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
     Tick snoop_response_latency = 0;
 
+    // is this the destination point for this packet? (e.g. true if
+    // this xbar is the PoC for a cache maintenance operation to the
+    // PoC) otherwise the destination is any cache that can satisfy
+    // the request
+    const bool is_destination = isDestination(pkt);
+
     const bool snoop_caches = !system->bypassCaches() &&
         pkt->cmd != MemCmd::WriteClean;
     if (snoop_caches) {
@@ -698,7 +717,14 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
         DPRINTF(CoherentXBar, "%s: Not forwarding %s\n", __func__,
                 pkt->print());
     } else {
-        if (!pointOfCoherency || pkt->isRead() || pkt->isWrite()) {
+        if (forwardPacket(pkt)) {
+            // make sure that the write request (e.g., WriteClean)
+            // will stop at the memory below if this crossbar is its
+            // destination
+            if (pkt->isWrite() && is_destination) {
+                pkt->clearWriteThrough();
+            }
+
             // forward the request to the appropriate destination
             response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
         } else {
@@ -957,6 +983,16 @@ CoherentXBar::sinkPacket(const PacketPtr pkt) const
         (pkt->cacheResponding() &&
          (!pkt->needsWritable() || pkt->responderHadWritable()));
 }
+
+bool
+CoherentXBar::forwardPacket(const PacketPtr pkt)
+{
+    // we are forwarding the packet if:
+    // 1) this is a read or a write
+    // 2) this crossbar is above the point of coherency
+    return pkt->isRead() || pkt->isWrite() || !pointOfCoherency;
+}
+
 
 void
 CoherentXBar::regStats()

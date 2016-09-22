@@ -253,7 +253,7 @@ class Packet : public Printable
 
     enum : FlagsType {
         // Flags to transfer across when copying a packet
-        COPY_FLAGS             = 0x0000000F,
+        COPY_FLAGS             = 0x0000001F,
 
         // Does this packet have sharers (which means it should not be
         // considered writable) or not. See setHasSharers below.
@@ -271,6 +271,10 @@ class Packet : public Printable
         // Snoop co-ordination flag to indicate that a cache is
         // responding to a snoop. See setCacheResponding below.
         CACHE_RESPONDING       = 0x00000008,
+
+        // The writeback/writeclean should be propagated further
+        // downstream by the receiver
+        WRITE_THROUGH          = 0x00000010,
 
         /// Are the 'addr' and 'size' fields valid?
         VALID_ADDR             = 0x00000100,
@@ -618,6 +622,19 @@ class Packet : public Printable
     }
     bool responderHadWritable() const
     { return flags.isSet(RESPONDER_HAD_WRITABLE); }
+
+    /**
+     * A writeback/writeclean cmd gets propagated further downstream
+     * by the receiver when the flag is set.
+     */
+    void setWriteThrough()
+    {
+        assert(cmd.isWrite() &&
+               (cmd.isEviction() || cmd == MemCmd::WriteClean));
+        flags.set(WRITE_THROUGH);
+    }
+    void clearWriteThrough() { flags.clear(WRITE_THROUGH); }
+    bool writeThrough() const { return flags.isSet(WRITE_THROUGH); }
 
     void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
     bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }

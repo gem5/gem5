@@ -398,6 +398,29 @@ class CoherentXBar : public BaseXBar
      */
     bool sinkPacket(const PacketPtr pkt) const;
 
+    /**
+     * Determine if the crossbar should forward the packet, as opposed to
+     * responding to it.
+     */
+    bool forwardPacket(const PacketPtr pkt);
+
+    /**
+     * Determine if the packet's destination is the memory below
+     *
+     * The memory below is the destination for a cache mainteance
+     * operation to the Point of Coherence/Unification if this is the
+     * Point of Coherence/Unification.
+     *
+     * @param pkt The processed packet
+     *
+     * @return Whether the memory below is the destination for the packet
+     */
+    bool isDestination(const PacketPtr pkt) const
+    {
+        return (pkt->req->isToPOC() && pointOfCoherency) ||
+            (pkt->req->isToPOU() && pointOfUnification);
+    }
+
     Stats::Scalar snoops;
     Stats::Scalar snoopTraffic;
     Stats::Distribution snoopFanout;

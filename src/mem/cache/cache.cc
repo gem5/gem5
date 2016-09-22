@@ -430,20 +430,26 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         assert(blkSize == pkt->getSize());
 
         if (!blk) {
-            // a writeback that misses needs to allocate a new block
-            blk = allocateBlock(pkt->getAddr(), pkt->isSecure(),
-                                writebacks);
-            if (!blk) {
-                // no replaceable block available: give up, fwd to
-                // next level.
-                incMissCount(pkt);
+            if (pkt->writeThrough()) {
+                // if this is a write through packet, we don't try to
+                // allocate if the block is not present
                 return false;
-            }
-            tags->insertBlock(pkt, blk);
+            } else {
+                // a writeback that misses needs to allocate a new block
+                blk = allocateBlock(pkt->getAddr(), pkt->isSecure(),
+                                    writebacks);
+                if (!blk) {
+                    // no replaceable block available: give up, fwd to
+                    // next level.
+                    incMissCount(pkt);
+                    return false;
+                }
+                tags->insertBlock(pkt, blk);
 
-            blk->status = (BlkValid | BlkReadable);
-            if (pkt->isSecure()) {
-                blk->status |= BlkSecure;
+                blk->status = (BlkValid | BlkReadable);
+                if (pkt->isSecure()) {
+                    blk->status |= BlkSecure;
+                }
             }
         }
 
@@ -451,7 +457,9 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // write clean operation and the block is already in this
         // cache, we need to update the data and the block flags
         assert(blk);
-        blk->status |= BlkDirty;
+        if (!pkt->writeThrough()) {
+            blk->status |= BlkDirty;
+        }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
         std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
@@ -461,7 +469,9 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // populate the time when the block will be ready to access.
         blk->whenReady = clockEdge(fillLatency) + pkt->headerDelay +
             pkt->payloadDelay;
-        return true;
+        // if this a write-through packet it will be sent to cache
+        // below
+        return !pkt->writeThrough();
     } else if (blk && (pkt->needsWritable() ? blk->isWritable() :
                        blk->isReadable())) {
         // OK to satisfy access
@@ -1623,7 +1633,7 @@ Cache::writebackBlk(CacheBlk *blk)
 }
 
 PacketPtr
-Cache::writecleanBlk(CacheBlk *blk)
+Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest)
 {
     Request *req = new Request(tags->regenerateBlkAddr(blk->tag, blk->set),
                                blkSize, 0, Request::wbMasterId);
@@ -1641,6 +1651,10 @@ Cache::writecleanBlk(CacheBlk *blk)
     // We inform the cache below that the block has sharers in the
     // system as we retain our copy.
     pkt->setHasSharers();
+    if (dest) {
+        req->setFlags(dest);
+        pkt->setWriteThrough();
+    }
     std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
     return pkt;
 }

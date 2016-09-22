@@ -349,12 +349,14 @@ Packet::popSenderState()
 void
 Packet::print(ostream &o, const int verbosity, const string &prefix) const
 {
-    ccprintf(o, "%s%s [%x:%x]%s%s%s%s", prefix, cmdString(),
+    ccprintf(o, "%s%s [%x:%x]%s%s%s%s%s%s", prefix, cmdString(),
              getAddr(), getAddr() + getSize() - 1,
              req->isSecure() ? " (s)" : "",
              req->isInstFetch() ? " IF" : "",
              req->isUncacheable() ? " UC" : "",
-             isExpressSnoop() ? " ES" : "");
+             isExpressSnoop() ? " ES" : "",
+             req->isToPOC() ? " PoC" : "",
+             req->isToPOU() ? " PoU" : "");
 }
 
 std::string

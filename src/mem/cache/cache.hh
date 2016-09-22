@@ -455,9 +455,10 @@ class Cache : public BaseCache
     /**
      * Create a writeclean request for the given block.
      * @param blk The block to write clean
+     * @param dest The destination of this clean operation
      * @return The write clean packet for the block.
      */
-    PacketPtr writecleanBlk(CacheBlk *blk);
+    PacketPtr writecleanBlk(CacheBlk *blk, Request::Flags dest = 0);
 
     /**
      * Create a CleanEvict request for the given block.

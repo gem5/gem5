@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -87,7 +87,7 @@ typedef uint16_t MasterID;
 class Request
 {
   public:
-    typedef uint32_t FlagsType;
+    typedef uint64_t FlagsType;
     typedef uint8_t ArchFlagsType;
     typedef ::Flags<FlagsType> Flags;
 
@@ -181,6 +181,15 @@ class Request
         SECURE                      = 0x10000000,
         /** The request is a page table walk */
         PT_WALK                     = 0x20000000,
+
+        /** The request targets the point of unification */
+        DST_POU                     = 0x0000001000000000,
+
+        /** The request targets the point of coherence */
+        DST_POC                     = 0x0000002000000000,
+
+        /** Bits to define the destination of a request */
+        DST_BITS                    = 0x0000003000000000,
 
         /**
          * These flags are *not* cleared when a Request object is
@@ -788,6 +797,17 @@ class Request
         return _flags.isSet(ATOMIC_RETURN_OP) ||
                _flags.isSet(ATOMIC_NO_RETURN_OP);
     }
+
+    /**
+     * Accessor functions for the destination of a memory request. The
+     * destination flag can specify a point of reference for the
+     * operation (e.g. a cache block clean to the the point of
+     * unification). At the moment the destination is only used by the
+     * cache maintenance operations.
+     */
+    bool isToPOU() const { return _flags.isSet(DST_POU); }
+    bool isToPOC() const { return _flags.isSet(DST_POC); }
+    Flags getDest() const { return _flags & DST_BITS; }
 
     /**
      * Accessor functions for the memory space configuration flags and used by
