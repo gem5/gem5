@@ -182,6 +182,11 @@ class Request
         /** The request is a page table walk */
         PT_WALK                     = 0x20000000,
 
+        /** The request invalidates a memory location */
+        INVALIDATE                  = 0x0000000100000000,
+        /** The request cleans a memory location */
+        CLEAN                       = 0x0000000200000000,
+
         /** The request targets the point of unification */
         DST_POU                     = 0x0000001000000000,
 
@@ -889,6 +894,23 @@ class Request
     {
         return _memSpaceConfigFlags.isSet(ARG_SEGMENT);
     }
+
+    /**
+     * Accessor functions to determine whether this request is part of
+     * a cache maintenance operation. At the moment three operations
+     * are supported:
+
+     * 1) A cache clean operation updates all copies of a memory
+     * location to the point of reference,
+     * 2) A cache invalidate operation invalidates all copies of the
+     * specified block in the memory above the point of reference,
+     * 3) A clean and invalidate operation is a combination of the two
+     * operations.
+     * @{ */
+    bool isCacheClean() const { return _flags.isSet(CLEAN); }
+    bool isCacheInvalidate() const { return _flags.isSet(INVALIDATE); }
+    bool isCacheMaintenance() const { return _flags.isSet(CLEAN|INVALIDATE); }
+    /** @} */
 };
 
 #endif // __MEM_REQUEST_HH__

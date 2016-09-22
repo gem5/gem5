@@ -114,6 +114,10 @@ class MemCmd
         MessageResp,
         MemFenceReq,
         MemFenceResp,
+        CleanSharedReq,
+        CleanSharedResp,
+        CleanInvalidReq,
+        CleanInvalidResp,
         // Error responses
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards
@@ -140,6 +144,7 @@ class MemCmd
         IsWrite,        //!< Data flows from requester to responder
         IsUpgrade,
         IsInvalidate,
+        IsClean,        //!< Cleans any existing dirty blocks
         NeedsWritable,  //!< Requires writable copy to complete in-cache
         IsRequest,      //!< Issued by requester
         IsResponse,     //!< Issue by responder
@@ -195,6 +200,7 @@ class MemCmd
     bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
     bool isEviction() const        { return testCmdAttrib(IsEviction); }
+    bool isClean() const           { return testCmdAttrib(IsClean); }
     bool fromCache() const         { return testCmdAttrib(FromCache); }
 
     /**
@@ -521,6 +527,7 @@ class Packet : public Printable
     bool needsResponse() const       { return cmd.needsResponse(); }
     bool isInvalidate() const        { return cmd.isInvalidate(); }
     bool isEviction() const          { return cmd.isEviction(); }
+    bool isClean() const             { return cmd.isClean(); }
     bool fromCache() const           { return cmd.fromCache(); }
     bool isWriteback() const         { return cmd.isWriteback(); }
     bool hasData() const             { return cmd.hasData(); }
@@ -815,7 +822,12 @@ class Packet : public Printable
             return MemCmd::StoreCondReq;
         else if (req->isSwap())
             return MemCmd::SwapReq;
-        else
+        else if (req->isCacheInvalidate()) {
+          return req->isCacheClean() ? MemCmd::CleanInvalidReq :
+              MemCmd::InvalidateReq;
+        } else if (req->isCacheClean()) {
+            return MemCmd::CleanSharedReq;
+        } else
             return MemCmd::WriteReq;
     }
 

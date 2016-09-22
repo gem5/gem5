@@ -184,6 +184,24 @@ MemCmd::commandInfo[] =
     {SET2(IsRequest, NeedsResponse), MemFenceResp, "MemFenceReq"},
     /* MemFenceResp -- for synchronization responses */
     {SET1(IsResponse), InvalidCmd, "MemFenceResp"},
+    /* Cache Clean Request -- Update with the latest data all existing
+       copies of the block down to the point indicated by the
+       request */
+    { SET4(IsRequest, IsClean, NeedsResponse, FromCache),
+      CleanSharedResp, "CleanSharedReq" },
+    /* Cache Clean Response - Indicates that all caches up to the
+       specified point of reference have a up-to-date copy of the
+       cache block or no copy at all */
+    { SET2(IsResponse, IsClean), InvalidCmd, "CleanSharedResp" },
+    /* Cache Clean and Invalidate Request -- Invalidate all existing
+       copies down to the point indicated by the request */
+    { SET5(IsRequest, IsInvalidate, IsClean, NeedsResponse, FromCache),
+      CleanInvalidResp, "CleanInvalidReq" },
+     /* Cache Clean and Invalidate Respose -- Indicates that no cache
+        above the specified point holds the block and that the block
+        was written to a memory below the specified point. */
+    { SET3(IsResponse, IsInvalidate, IsClean),
+      InvalidCmd, "CleanInvalidResp" },
     /* InvalidDestError  -- packet dest field invalid */
     { SET2(IsResponse, IsError), InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */
