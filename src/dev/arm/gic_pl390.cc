@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2016 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,8 +63,11 @@ const AddrRange Pl390::GICD_ITARGETSR (0x800, 0xbff);
 const AddrRange Pl390::GICD_ICFGR     (0xc00, 0xcff);
 
 Pl390::Pl390(const Params *p)
-    : BaseGic(p), distAddr(p->dist_addr),
-      cpuAddr(p->cpu_addr), distPioDelay(p->dist_pio_delay),
+    : BaseGic(p),
+      distRange(RangeSize(p->dist_addr, DIST_SIZE)),
+      cpuRange(RangeSize(p->cpu_addr, CPU_SIZE)),
+      addrRanges{distRange, cpuRange},
+      distPioDelay(p->dist_pio_delay),
       cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
       enabled(false), haveGem5Extensions(p->gem5_extensions),
       itLines(p->it_lines),
@@ -93,12 +96,11 @@ Pl390::Pl390(const Params *p)
 Tick
 Pl390::read(PacketPtr pkt)
 {
+    const Addr addr = pkt->getAddr();
 
-    Addr addr = pkt->getAddr();
-
-    if (addr >= distAddr && addr < distAddr + DIST_SIZE)
+    if (distRange.contains(addr))
         return readDistributor(pkt);
-    else if (addr >= cpuAddr && addr < cpuAddr + CPU_SIZE)
+    else if (cpuRange.contains(addr))
         return readCpu(pkt);
     else
         panic("Read to unknown address %#x\n", pkt->getAddr());
@@ -108,12 +110,11 @@ Pl390::read(PacketPtr pkt)
 Tick
 Pl390::write(PacketPtr pkt)
 {
+    const Addr addr = pkt->getAddr();
 
-    Addr addr = pkt->getAddr();
-
-    if (addr >= distAddr && addr < distAddr + DIST_SIZE)
+    if (distRange.contains(addr))
         return writeDistributor(pkt);
-    else if (addr >= cpuAddr && addr < cpuAddr + CPU_SIZE)
+    else if (cpuRange.contains(addr))
         return writeCpu(pkt);
     else
         panic("Write to unknown address %#x\n", pkt->getAddr());
@@ -122,9 +123,8 @@ Pl390::write(PacketPtr pkt)
 Tick
 Pl390::readDistributor(PacketPtr pkt)
 {
-    Addr daddr = pkt->getAddr() - distAddr;
-
-    ContextID ctx = pkt->req->contextId();
+    const Addr daddr = pkt->getAddr() - distRange.start();
+    const ContextID ctx = pkt->req->contextId();
 
     DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
@@ -267,10 +267,10 @@ done:
 Tick
 Pl390::readCpu(PacketPtr pkt)
 {
-    Addr daddr = pkt->getAddr() - cpuAddr;
+    const Addr daddr = pkt->getAddr() - cpuRange.start();
 
     assert(pkt->req->hasContextId());
-    ContextID ctx = pkt->req->contextId();
+    const ContextID ctx = pkt->req->contextId();
     assert(ctx < sys->numRunningContexts());
 
     DPRINTF(GIC, "gic cpu read register %#x cpu context: %d\n", daddr,
@@ -361,10 +361,10 @@ Pl390::readCpu(PacketPtr pkt)
 Tick
 Pl390::writeDistributor(PacketPtr pkt)
 {
-    Addr daddr = pkt->getAddr() - distAddr;
+    const Addr daddr = pkt->getAddr() - distRange.start();
 
     assert(pkt->req->hasContextId());
-    ContextID ctx = pkt->req->contextId();
+    const ContextID ctx = pkt->req->contextId();
 
     uint32_t pkt_data M5_VAR_USED;
     switch (pkt->getSize())
@@ -520,10 +520,10 @@ done:
 Tick
 Pl390::writeCpu(PacketPtr pkt)
 {
-    Addr daddr = pkt->getAddr() - cpuAddr;
+    const Addr daddr = pkt->getAddr() - cpuRange.start();
 
     assert(pkt->req->hasContextId());
-    ContextID ctx = pkt->req->contextId();
+    const ContextID ctx = pkt->req->contextId();
     IAR iar;
 
     DPRINTF(GIC, "gic cpu write register cpu:%d %#x val: %#x\n",
@@ -816,25 +816,12 @@ Pl390::postInt(uint32_t cpu, Tick when)
         eventq->schedule(postIntEvent[cpu], when);
 }
 
-AddrRangeList
-Pl390::getAddrRanges() const
-{
-    AddrRangeList ranges;
-    ranges.push_back(RangeSize(distAddr, DIST_SIZE));
-    ranges.push_back(RangeSize(cpuAddr, CPU_SIZE));
-    return ranges;
-}
-
 
 void
 Pl390::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm GIC\n");
 
-    SERIALIZE_SCALAR(distAddr);
-    SERIALIZE_SCALAR(cpuAddr);
-    SERIALIZE_SCALAR(distPioDelay);
-    SERIALIZE_SCALAR(cpuPioDelay);
     SERIALIZE_SCALAR(enabled);
     SERIALIZE_SCALAR(itLines);
     SERIALIZE_ARRAY(intEnabled, INT_BITS_MAX-1);
@@ -887,10 +874,6 @@ Pl390::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
 
-    UNSERIALIZE_SCALAR(distAddr);
-    UNSERIALIZE_SCALAR(cpuAddr);
-    UNSERIALIZE_SCALAR(distPioDelay);
-    UNSERIALIZE_SCALAR(cpuPioDelay);
     UNSERIALIZE_SCALAR(enabled);
     UNSERIALIZE_SCALAR(itLines);
     UNSERIALIZE_ARRAY(intEnabled, INT_BITS_MAX-1);

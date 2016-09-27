@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2016 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -122,22 +122,26 @@ class Pl390 : public BaseGic
         Bitfield<12,10> cpu_id;
     EndBitUnion(IAR)
 
-    /** Distributor address GIC listens at */
-    Addr distAddr;
+  protected: /* Params */
+    /** Address range for the distributor interface */
+    const AddrRange distRange;
 
-    /** CPU address GIC listens at */
-    /** @todo is this one per cpu? */
-    Addr cpuAddr;
+    /** Address range for the CPU interfaces */
+    const AddrRange cpuRange;
+
+    /** All address ranges used by this GIC */
+    const AddrRangeList addrRanges;
 
     /** Latency for a distributor operation */
-    Tick distPioDelay;
+    const Tick distPioDelay;
 
     /** Latency for a cpu operation */
-    Tick cpuPioDelay;
+    const Tick cpuPioDelay;
 
     /** Latency for a interrupt to get to CPU */
-    Tick intLatency;
+    const Tick intLatency;
 
+  protected:
     /** Gic enabled */
     bool enabled;
 
@@ -343,11 +347,11 @@ class Pl390 : public BaseGic
     }
     Pl390(const Params *p);
 
-    /** @{ */
-    /** Return the address ranges used by the Gic
-     * This is the distributor address + all cpu addresses
-     */
-    AddrRangeList getAddrRanges() const override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+
+  public: /* PioDevice */
+    AddrRangeList getAddrRanges() const { return addrRanges; }
 
     /** A PIO read to the device, immediately split up into
      * readDistributor() or readCpu()
@@ -358,27 +362,15 @@ class Pl390 : public BaseGic
      * writeDistributor() or writeCpu()
      */
     Tick write(PacketPtr pkt) override;
-    /** @} */
 
-    /** @{ */
-    /** Post an interrupt from a device that is connected to the Gic.
-     * Depending on the configuration, the gic will pass this interrupt
-     * on through to a CPU.
-     * @param number number of interrupt to send */
+  public: /* BaseGic */
     void sendInt(uint32_t number) override;
-
-    /** Interface call for private peripheral interrupts  */
-    void sendPPInt(uint32_t num, uint32_t cpu) override;
-
-    /** Clear an interrupt from a device that is connected to the Gic
-     * Depending on the configuration, the gic may de-assert it's cpu line
-     * @param number number of interrupt to send */
     void clearInt(uint32_t number) override;
 
-    /** Clear a (level-sensitive) PPI */
+    void sendPPInt(uint32_t num, uint32_t cpu) override;
     void clearPPInt(uint32_t num, uint32_t cpu) override;
-    /** @} */
 
+  public: // Test & debug intefaces
     /** @{ */
     /* Various functions fer testing and debugging */
     void driveSPI(uint32_t spi);
@@ -386,9 +378,6 @@ class Pl390 : public BaseGic
     void driveLegFIQ(bool state);
     void driveIrqEn(bool state);
     /** @} */
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
 
   protected:
     /** Handle a read to the distributor portion of the GIC
