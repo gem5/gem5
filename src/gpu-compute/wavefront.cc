@@ -1066,3 +1066,14 @@ Wavefront::setContext(const void *in)
             ldsChunk->write<char>(i, val);
         }
 }
+
+void
+Wavefront::computeActualWgSz(NDRange *ndr)
+{
+    actualWgSzTotal = 1;
+    for (int d = 0; d < 3; ++d) {
+        actualWgSz[d] = std::min(workGroupSz[d],
+                                 gridSz[d] - ndr->wgId[d] * workGroupSz[d]);
+        actualWgSzTotal *= actualWgSz[d];
+    }
+}

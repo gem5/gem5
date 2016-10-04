@@ -47,6 +47,7 @@
 #include "gpu-compute/condition_register_state.hh"
 #include "gpu-compute/lds_state.hh"
 #include "gpu-compute/misc.hh"
+#include "gpu-compute/ndrange.hh"
 #include "params/Wavefront.hh"
 #include "sim/sim_object.hh"
 
@@ -189,11 +190,16 @@ class Wavefront : public SimObject
     std::vector<Addr> lastAddr;
     std::vector<uint32_t> workItemId[3];
     std::vector<uint32_t> workItemFlatId;
+    /* kernel launch parameters */
     uint32_t workGroupId[3];
     uint32_t workGroupSz[3];
     uint32_t gridSz[3];
     uint32_t wgId;
     uint32_t wgSz;
+    /* the actual WG size can differ than the maximum size */
+    uint32_t actualWgSz[3];
+    uint32_t actualWgSzTotal;
+    void computeActualWgSz(NDRange *ndr);
     // wavefront id within a workgroup
     uint32_t wfId;
     uint32_t maxDynWaveId;

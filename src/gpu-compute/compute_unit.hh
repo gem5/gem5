@@ -254,10 +254,10 @@ class ComputeUnit : public MemObject
     void exec();
     void initiateFetch(Wavefront *wavefront);
     void fetch(PacketPtr pkt, Wavefront *wavefront);
-    void FillKernelState(Wavefront *w, NDRange *ndr);
+    void fillKernelState(Wavefront *w, NDRange *ndr);
 
-    void StartWF(Wavefront *w, int trueWgSize[], int trueWgSizeTotal,
-                     int cnt, LdsChunk *ldsChunk, NDRange *ndr);
+    void startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
+                        NDRange *ndr);
 
     void StartWorkgroup(NDRange *ndr);
     int ReadyWorkgroup(NDRange *ndr);
