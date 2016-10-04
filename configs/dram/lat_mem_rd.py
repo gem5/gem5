@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015-2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -247,7 +247,8 @@ cfg_file.write("TRANSITION %d %d 1\n" % (nxt_state - 1, nxt_state - 1))
 cfg_file.close()
 
 # create a traffic generator, and point it to the file we just created
-system.tgen = TrafficGen(config_file = cfg_file_name)
+system.tgen = TrafficGen(config_file = cfg_file_name,
+                         progress_check = '10s')
 
 # add a communication monitor
 system.monitor = CommMonitor()
