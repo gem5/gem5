@@ -184,6 +184,12 @@ class IniFile
     bool find(const std::string &section, const std::string &entry,
               std::string &value) const;
 
+    /// Determine whether the entry exists within named section exists
+    /// in the .ini file.
+    /// @return True if the section exists.
+    bool entryExists(const std::string &section,
+                     const std::string &entry) const;
+
     /// Determine whether the named section exists in the .ini file.
     /// Note that the 'Section' class is (intentionally) not public,
     /// so all clients can do is get a bool that says whether there

@@ -230,6 +230,17 @@ IniFile::find(const string &sectionName, const string &entryName,
 }
 
 bool
+IniFile::entryExists(const string &sectionName, const string &entryName) const
+{
+    Section *section = findSection(sectionName);
+
+    if (!section)
+        return false;
+    else
+        return section->findEntry(entryName);
+}
+
+bool
 IniFile::sectionExists(const string &sectionName) const
 {
     return findSection(sectionName) != NULL;

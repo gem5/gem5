@@ -693,6 +693,12 @@ CheckpointIn::~CheckpointIn()
 }
 
 bool
+CheckpointIn::entryExists(const string &section, const string &entry)
+{
+    return db->entryExists(section, entry);
+}
+
+bool
 CheckpointIn::find(const string &section, const string &entry, string &value)
 {
     return db->find(section, entry, value);

@@ -359,6 +359,8 @@ class CheckpointIn
     bool findObj(const std::string &section, const std::string &entry,
                  SimObject *&value);
 
+
+    bool entryExists(const std::string &section, const std::string &entry);
     bool sectionExists(const std::string &section);
 
     // The following static functions have to do with checkpoint
