@@ -29,8 +29,10 @@
  */
 
 #include "arch/x86/pseudo_inst.hh"
+#include "arch/x86/system.hh"
 #include "debug/PseudoInst.hh"
 #include "sim/process.hh"
+#include "sim/system.hh"
 
 using namespace X86ISA;
 
@@ -62,8 +64,23 @@ m5PageFault(ThreadContext *tc)
 
     Process *p = tc->getProcessPtr();
     if (!p->fixupStackFault(tc->readMiscReg(MISCREG_CR2))) {
-        panic("Page fault at %#x ", tc->readMiscReg(MISCREG_CR2));
-    }
+        SETranslatingPortProxy proxy = tc->getMemProxy();
+        // at this point we should have 6 values on the interrupt stack
+        int size = 6;
+        uint64_t is[size];
+        // reading the interrupt handler stack
+        proxy.readBlob(ISTVirtAddr + PageBytes - size*sizeof(uint64_t),
+                       (uint8_t *)&is, sizeof(is));
+        panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
+                "\tss: %#x\n"
+                "\trsp: %#x\n"
+                "\trflags: %#x\n"
+                "\tcs: %#x\n"
+                "\trip: %#x\n"
+                "\terr_code: %#x\n",
+                tc->readMiscReg(MISCREG_CR2),
+                is[5], is[4], is[3], is[2], is[1], is[0]);
+   }
 }
 
 } // namespace X86ISA
