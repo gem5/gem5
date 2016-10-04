@@ -249,6 +249,12 @@ BaseRemoteGDB::InputEvent::InputEvent(BaseRemoteGDB *g, int fd, int e)
 void
 BaseRemoteGDB::InputEvent::process(int revent)
 {
+    if (gdb->trapEvent.scheduled()) {
+        warn("GDB trap event has already been scheduled! "
+             "Ignoring this input event.");
+        return;
+    }
+
     if (revent & POLLIN) {
         gdb->trapEvent.type(SIGILL);
         gdb->scheduleInstCommitEvent(&gdb->trapEvent, 0);
