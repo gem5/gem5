@@ -94,14 +94,13 @@ GarnetNetwork::~GarnetNetwork()
 }
 
 void
-GarnetNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                          LinkDirection direction,
+GarnetNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                           const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
 
     GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
-    NetworkLink *net_link = garnet_link->m_network_links[direction];
+    NetworkLink *net_link = garnet_link->m_network_links[0];
 
     net_link->init_net_ptr(this);
     m_links.push_back(net_link);
@@ -110,8 +109,7 @@ GarnetNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
 }
 
 void
-GarnetNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                           LinkDirection direction,
+GarnetNetwork::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                            const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
@@ -119,7 +117,7 @@ GarnetNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
     assert(m_routers[src] != NULL);
 
     GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
-    NetworkLink *net_link = garnet_link->m_network_links[direction];
+    NetworkLink *net_link = garnet_link->m_network_links[1];
 
     net_link->init_net_ptr(this);
     m_links.push_back(net_link);
@@ -130,11 +128,10 @@ GarnetNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 
 void
 GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                LinkDirection direction,
                                 const NetDest& routing_table_entry)
 {
     GarnetIntLink* garnet_link = safe_cast<GarnetIntLink*>(link);
-    NetworkLink *net_link = garnet_link->m_network_links[direction];
+    NetworkLink *net_link = garnet_link->m_network_links[0];
 
     net_link->init_net_ptr(this);
     m_links.push_back(net_link);

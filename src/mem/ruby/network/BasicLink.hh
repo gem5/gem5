@@ -73,10 +73,6 @@ class BasicExtLink : public BasicLink
     const Params *params() const { return (const Params *)_params; }
 
     friend class Topology;
-
-  protected:
-    BasicRouter* m_int_node;
-    AbstractController* m_ext_node;
 };
 
 class BasicIntLink : public BasicLink
@@ -87,10 +83,6 @@ class BasicIntLink : public BasicLink
     const Params *params() const { return (const Params *)_params; }
 
     friend class Topology;
-
-  protected:
-    BasicRouter* m_node_a;
-    BasicRouter* m_node_b;
 };
 
 #endif // __MEM_RUBY_NETWORK_BASIC_LINK_HH__

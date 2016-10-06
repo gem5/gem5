@@ -78,8 +78,7 @@ SimpleNetwork::~SimpleNetwork()
 
 // From a switch to an endpoint node
 void
-SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                           LinkDirection direction,
+SimpleNetwork::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                            const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
@@ -95,8 +94,7 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 
 // From an endpoint node to a switch
 void
-SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                          LinkDirection direction,
+SimpleNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                           const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
@@ -106,7 +104,6 @@ SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
 // From a switch to a switch
 void
 SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                LinkDirection direction,
                                 const NetDest& routing_table_entry)
 {
     // Create a set of new MessageBuffers

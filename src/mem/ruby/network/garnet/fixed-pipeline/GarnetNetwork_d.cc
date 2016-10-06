@@ -127,15 +127,14 @@ GarnetNetwork_d::~GarnetNetwork_d()
 */
 
 void
-GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                            LinkDirection direction,
+GarnetNetwork_d::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                             const NetDest& routing_table_entry)
 {
     assert(src < m_nodes);
 
     GarnetExtLink_d* garnet_link = safe_cast<GarnetExtLink_d*>(link);
-    NetworkLink_d* net_link = garnet_link->m_network_links[direction];
-    CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
+    NetworkLink_d* net_link = garnet_link->m_network_links[0];
+    CreditLink_d* credit_link = garnet_link->m_credit_links[0];
 
     m_links.push_back(net_link);
     m_creditlinks.push_back(credit_link);
@@ -151,8 +150,7 @@ GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest, BasicLink* link,
 */
 
 void
-GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                             LinkDirection direction,
+GarnetNetwork_d::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                              const NetDest& routing_table_entry)
 {
     assert(dest < m_nodes);
@@ -160,8 +158,8 @@ GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
     assert(m_routers[src] != NULL);
 
     GarnetExtLink_d* garnet_link = safe_cast<GarnetExtLink_d*>(link);
-    NetworkLink_d* net_link = garnet_link->m_network_links[direction];
-    CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
+    NetworkLink_d* net_link = garnet_link->m_network_links[1];
+    CreditLink_d* credit_link = garnet_link->m_credit_links[1];
 
     m_links.push_back(net_link);
     m_creditlinks.push_back(credit_link);
@@ -177,12 +175,11 @@ GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
 
 void
 GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                  LinkDirection direction,
                                   const NetDest& routing_table_entry)
 {
     GarnetIntLink_d* garnet_link = safe_cast<GarnetIntLink_d*>(link);
-    NetworkLink_d* net_link = garnet_link->m_network_links[direction];
-    CreditLink_d* credit_link = garnet_link->m_credit_links[direction];
+    NetworkLink_d* net_link = garnet_link->m_network_links[0];
+    CreditLink_d* credit_link = garnet_link->m_credit_links[0];
 
     m_links.push_back(net_link);
     m_creditlinks.push_back(credit_link);

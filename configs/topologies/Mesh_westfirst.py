@@ -1,4 +1,5 @@
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
+#               2016 Georgia Institute of Technology
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,19 +26,31 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Brad Beckmann
+#          Tushar Krishna
 
 from m5.params import *
 from m5.objects import *
 
 from BaseTopology import SimpleTopology
 
-class Mesh(SimpleTopology):
-    description='Mesh'
+# Creates a generic Mesh assuming an equal number of cache
+# and directory controllers.
+# West-first routing is enforced (using link weights)
+# to guarantee deadlock freedom.
+# The network randomly chooses between links with the same
+# weight for messages within unordered virtual networks.
+# Within ordered virtual networks, a fixed link direction
+# is always chosen based on which appears first inside the
+# routing table.
+
+class Mesh_westfirst(SimpleTopology):
+    description='Mesh_westfirst'
 
     def __init__(self, controllers):
         self.nodes = controllers
 
-    # Makes a generic mesh assuming an equal number of cache and directory cntrls
+    # Makes a generic mesh
+    # assuming an equal number of cache and directory cntrls
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
@@ -89,29 +102,57 @@ class Mesh(SimpleTopology):
 
         network.ext_links = ext_links
 
-        # Create the mesh links.  First row (east-west) links then column
-        # (north-south) links
+        # Create the mesh links.
         int_links = []
+
+        # East output to West input links (weight = 2)
         for row in xrange(num_rows):
             for col in xrange(num_columns):
                 if (col + 1 < num_columns):
-                    east_id = col + (row * num_columns)
-                    west_id = (col + 1) + (row * num_columns)
+                    east_out = col + (row * num_columns)
+                    west_in = (col + 1) + (row * num_columns)
                     int_links.append(IntLink(link_id=link_count,
-                                            node_a=routers[east_id],
-                                            node_b=routers[west_id],
-                                            weight=1))
+                                             src_node=routers[east_out],
+                                             dst_node=routers[west_in],
+                                             weight=2))
                     link_count += 1
 
+        # West output to East input links (weight = 1)
+        for row in xrange(num_rows):
+            for col in xrange(num_columns):
+                if (col + 1 < num_columns):
+                    east_in = col + (row * num_columns)
+                    west_out = (col + 1) + (row * num_columns)
+                    int_links.append(IntLink(link_id=link_count,
+                                             src_node=routers[west_out],
+                                             dst_node=routers[east_in],
+                                             weight=1))
+                    link_count += 1
+
+
+        # North output to South input links (weight = 2)
         for col in xrange(num_columns):
             for row in xrange(num_rows):
                 if (row + 1 < num_rows):
-                    north_id = col + (row * num_columns)
-                    south_id = col + ((row + 1) * num_columns)
+                    north_out = col + (row * num_columns)
+                    south_in = col + ((row + 1) * num_columns)
                     int_links.append(IntLink(link_id=link_count,
-                                            node_a=routers[north_id],
-                                            node_b=routers[south_id],
-                                            weight=2))
+                                             src_node=routers[north_out],
+                                             dst_node=routers[south_in],
+                                             weight=2))
                     link_count += 1
+
+        # South output to North input links (weight = 2)
+        for col in xrange(num_columns):
+            for row in xrange(num_rows):
+                if (row + 1 < num_rows):
+                    north_in = col + (row * num_columns)
+                    south_out = col + ((row + 1) * num_columns)
+                    int_links.append(IntLink(link_id=link_count,
+                                             src_node=routers[south_out],
+                                             dst_node=routers[north_in],
+                                             weight=2))
+                    link_count += 1
+
 
         network.int_links = int_links

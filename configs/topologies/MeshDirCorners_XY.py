@@ -31,16 +31,15 @@ from m5.objects import *
 
 from BaseTopology import SimpleTopology
 
-class MeshDirCorners(SimpleTopology):
-    description='MeshDirCorners'
+# Creates a Mesh topology with 4 directories, one at each corner.
+# One L1 (and L2, depending on the protocol) are connected to each router.
+# XY routing is enforced (using link weights) to guarantee deadlock freedom.
+
+class MeshDirCorners_XY(SimpleTopology):
+    description='MeshDirCorners_XY'
 
     def __init__(self, controllers):
         self.nodes = controllers
-
-    # This file contains a special network creation function.  This
-    # networks is not general and will only work with specific system
-    # configurations.  The network specified is similar to GEMS old file
-    # specified network.
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
         nodes = self.nodes
@@ -110,29 +109,56 @@ class MeshDirCorners(SimpleTopology):
 
         network.ext_links = ext_links
 
-        # Create the mesh links.  First row (east-west) links then column
-        # (north-south) links
+        # Create the mesh links.
         int_links = []
+
+        # East output to West input links (weight = 1)
         for row in xrange(num_rows):
             for col in xrange(num_columns):
                 if (col + 1 < num_columns):
-                    east_id = col + (row * num_columns)
-                    west_id = (col + 1) + (row * num_columns)
+                    east_out = col + (row * num_columns)
+                    west_in = (col + 1) + (row * num_columns)
                     int_links.append(IntLink(link_id=link_count,
-                                            node_a=routers[east_id],
-                                            node_b=routers[west_id],
-                                            weight=1))
+                                             src_node=routers[east_out],
+                                             dst_node=routers[west_in],
+                                             weight=1))
                     link_count += 1
 
+        # West output to East input links (weight = 1)
+        for row in xrange(num_rows):
+            for col in xrange(num_columns):
+                if (col + 1 < num_columns):
+                    east_in = col + (row * num_columns)
+                    west_out = (col + 1) + (row * num_columns)
+                    int_links.append(IntLink(link_id=link_count,
+                                             src_node=routers[west_out],
+                                             dst_node=routers[east_in],
+                                             weight=1))
+                    link_count += 1
+
+        # North output to South input links (weight = 2)
         for col in xrange(num_columns):
             for row in xrange(num_rows):
                 if (row + 1 < num_rows):
-                    north_id = col + (row * num_columns)
-                    south_id = col + ((row + 1) * num_columns)
+                    north_out = col + (row * num_columns)
+                    south_in = col + ((row + 1) * num_columns)
                     int_links.append(IntLink(link_id=link_count,
-                                            node_a=routers[north_id],
-                                            node_b=routers[south_id],
-                                            weight=2))
+                                             src_node=routers[north_out],
+                                             dst_node=routers[south_in],
+                                             weight=2))
                     link_count += 1
+
+        # South output to North input links (weight = 2)
+        for col in xrange(num_columns):
+            for row in xrange(num_rows):
+                if (row + 1 < num_rows):
+                    north_in = col + (row * num_columns)
+                    south_out = col + ((row + 1) * num_columns)
+                    int_links.append(IntLink(link_id=link_count,
+                                             src_node=routers[south_out],
+                                             dst_node=routers[north_in],
+                                             weight=2))
+                    link_count += 1
+
 
         network.int_links = int_links

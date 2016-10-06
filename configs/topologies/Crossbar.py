@@ -39,6 +39,7 @@ class Crossbar(SimpleTopology):
         # the centralized crossbar.  The large numbers of routers are needed
         # because external links do not model outgoing bandwidth in the
         # simple network, but internal links do.
+        # For garnet, one router suffices, use CrossbarGarnet.py
 
         routers = [Router(router_id=i) for i in range(len(self.nodes)+1)]
         xbar = routers[len(self.nodes)] # the crossbar router is the last router created
@@ -49,7 +50,18 @@ class Crossbar(SimpleTopology):
         network.ext_links = ext_links
 
         link_count = len(self.nodes)
-        int_links = [IntLink(link_id=(link_count+i),
-                             node_a=routers[i], node_b=xbar)
-                        for i in range(len(self.nodes))]
+
+        int_links = []
+        for i in range(len(self.nodes)):
+            int_links.append(IntLink(link_id=(link_count+i),
+                                     src_node=routers[i],
+                                     dst_node=xbar))
+
+        link_count += len(self.nodes)
+
+        for i in range(len(self.nodes)):
+            int_links.append(IntLink(link_id=(link_count+i),
+                                     src_node=xbar,
+                                     dst_node=routers[i]))
+
         network.int_links = int_links

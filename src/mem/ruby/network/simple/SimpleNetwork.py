@@ -56,12 +56,10 @@ class SimpleNetwork(RubyNetwork):
         # Also add buffers for all router-link connections
         for router in self.routers:
             router_buffers = []
-            # Add message buffers to routers for each internal link connection
+            # Add message buffers to routers at the end of each
+            # unidirectional internal link
             for link in self.int_links:
-                if link.node_a == router:
-                    for i in xrange(self.number_of_virtual_networks):
-                        router_buffers.append(MessageBuffer(ordered = True))
-                if link.node_b == router:
+                if link.dst_node == router:
                     for i in xrange(self.number_of_virtual_networks):
                         router_buffers.append(MessageBuffer(ordered = True))
 

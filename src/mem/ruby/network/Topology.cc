@@ -55,10 +55,14 @@ Topology::Topology(uint32_t num_routers,
     // Total nodes/controllers in network
     assert(m_nodes > 1);
 
-    // analyze both the internal and external links, create data structures
-    // Note that the python created links are bi-directional, but that the
-    // topology and networks utilize uni-directional links.  Thus each
-    // BasicLink is converted to two calls to add link, on for each direction
+    // analyze both the internal and external links, create data structures.
+    // The python created external links are bi-directional,
+    // and the python created internal links are uni-directional.
+    // The networks and topology utilize uni-directional links.
+    // Thus each external link is converted to two calls to addLink,
+    // one for each direction.
+    //
+    // External Links
     for (vector<BasicExtLink*>::const_iterator i = ext_links.begin();
          i != ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
@@ -71,29 +75,27 @@ Topology::Topology(uint32_t num_routers,
         int int_idx = router->params()->router_id + 2*m_nodes;
 
         // create the internal uni-directional links in both directions
-        //   the first direction is marked: In
-        addLink(ext_idx1, int_idx, ext_link, LinkDirection_In);
-        //   the first direction is marked: Out
-        addLink(int_idx, ext_idx2, ext_link, LinkDirection_Out);
+        // ext to int
+        addLink(ext_idx1, int_idx, ext_link);
+        // int to ext
+        addLink(int_idx, ext_idx2, ext_link);
     }
 
+    // Internal Links
     for (vector<BasicIntLink*>::const_iterator i = int_links.begin();
          i != int_links.end(); ++i) {
         BasicIntLink *int_link = (*i);
-        BasicRouter *router_a = int_link->params()->node_a;
-        BasicRouter *router_b = int_link->params()->node_b;
+        BasicRouter *router_src = int_link->params()->src_node;
+        BasicRouter *router_dst = int_link->params()->dst_node;
 
         // Store the IntLink pointers for later
         m_int_link_vector.push_back(int_link);
 
-        int a = router_a->params()->router_id + 2*m_nodes;
-        int b = router_b->params()->router_id + 2*m_nodes;
+        int src = router_src->params()->router_id + 2*m_nodes;
+        int dst = router_dst->params()->router_id + 2*m_nodes;
 
-        // create the internal uni-directional links in both directions
-        //   the first direction is marked: In
-        addLink(a, b, int_link, LinkDirection_In);
-        //   the second direction is marked: Out
-        addLink(b, a, int_link, LinkDirection_Out);
+        // create the internal uni-directional link from src to dst
+        addLink(src, dst, int_link);
     }
 }
 
@@ -151,8 +153,7 @@ Topology::createLinks(Network *net)
 }
 
 void
-Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
-                  LinkDirection dir)
+Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link)
 {
     assert(src <= m_number_of_switches+m_nodes+m_nodes);
     assert(dest <= m_number_of_switches+m_nodes+m_nodes);
@@ -162,7 +163,6 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     src_dest_pair.first = src;
     src_dest_pair.second = dest;
-    link_entry.direction = dir;
     link_entry.link = link;
     m_link_map[src_dest_pair] = link_entry;
 }
@@ -182,23 +182,23 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         src_dest.first = src;
         src_dest.second = dest;
         link_entry = m_link_map[src_dest];
-        net->makeInLink(src, dest - (2 * m_nodes), link_entry.link,
-                        link_entry.direction, routing_table_entry);
+        net->makeExtInLink(src, dest - (2 * m_nodes), link_entry.link,
+                        routing_table_entry);
     } else if (dest < 2*m_nodes) {
         assert(dest >= m_nodes);
         NodeID node = dest - m_nodes;
         src_dest.first = src;
         src_dest.second = dest;
         link_entry = m_link_map[src_dest];
-        net->makeOutLink(src - (2 * m_nodes), node, link_entry.link,
-                         link_entry.direction, routing_table_entry);
+        net->makeExtOutLink(src - (2 * m_nodes), node, link_entry.link,
+                         routing_table_entry);
     } else {
         assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
         src_dest.first = src;
         src_dest.second = dest;
         link_entry = m_link_map[src_dest];
         net->makeInternalLink(src - (2 * m_nodes), dest - (2 * m_nodes),
-                              link_entry.link, link_entry.direction,
+                              link_entry.link,
                               routing_table_entry);
     }
 }

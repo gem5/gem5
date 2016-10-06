@@ -72,8 +72,7 @@ class Topology
     void print(std::ostream& out) const { out << "[Topology]"; }
 
   private:
-    void addLink(SwitchID src, SwitchID dest, BasicLink* link,
-                 LinkDirection dir);
+    void addLink(SwitchID src, SwitchID dest, BasicLink* link);
     void makeLink(Network *net, SwitchID src, SwitchID dest,
                   const NetDest& routing_table_entry);
 

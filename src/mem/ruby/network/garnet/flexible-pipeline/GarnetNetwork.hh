@@ -60,14 +60,11 @@ class GarnetNetwork : public BaseGarnetNetwork
     void print(std::ostream& out) const;
 
     // Methods used by Topology to setup the network
-    void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                     LinkDirection direction,
+    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                      const NetDest& routing_table_entry);
-    void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                    LinkDirection direction,
+    void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          LinkDirection direction,
                           const NetDest& routing_table_entry);
 
     //! Function for performing a functional read. The return value

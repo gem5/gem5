@@ -86,23 +86,30 @@ class Cluster(BaseTopology):
                 node.makeTopology(options, network, IntLink, ExtLink, Router)
 
                 # connect this cluster to the router
-                link = IntLink(link_id=self.num_int_links(), node_a=self.router,
-                        node_b=node.router)
+                link_out = IntLink(link_id=self.num_int_links(), src_node=self.router,
+                           dst_node_=node.router)
+                link_in = IntLink(link_id=self.num_int_links(), src_node=node.router,
+                                  dst_node_=self.router)
 
                 if node.extBW:
-                    link.bandwidth_factor = node.extBW
+                    link_out.bandwidth_factor = node.extBW
+                    link_in.bandwidth_factor = node.extBW
 
-                # if there is an interanl b/w for this node
+                # if there is an internal b/w for this node
                 # and no ext b/w to override
                 elif self.intBW:
-                    link.bandwidth_factor = self.intBW
+                    link_out.bandwidth_factor = self.intBW
+                    link_in.bandwidth_factor = self.intBW
 
                 if node.extLatency:
-                    link.latency = node.extLatency
+                    link_out.latency = node.extLatency
+                    link_in.latency = node.extLatency
                 elif self.intLatency:
-                    link.latency = self.intLatency
+                    link_out.latency = self.intLatency
+                    link_in.latency = self.intLatency
 
-                network.int_links.append(link)
+                network.int_links.append(link_out)
+                network.int_links.append(link_in)
             else:
                 # node is just a controller,
                 # connect it to the router via a ext_link

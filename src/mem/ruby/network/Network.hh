@@ -80,14 +80,11 @@ class Network : public ClockedObject
     virtual void checkNetworkAllocation(NodeID id, bool ordered,
         int network_num, std::string vnet_type);
 
-    virtual void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                             LinkDirection direction,
+    virtual void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                              const NetDest& routing_table_entry) = 0;
-    virtual void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
-                            LinkDirection direction,
+    virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                             const NetDest& routing_table_entry) = 0;
     virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                  LinkDirection direction,
                                   const NetDest& routing_table_entry) = 0;
 
     virtual void collateStats() = 0;
