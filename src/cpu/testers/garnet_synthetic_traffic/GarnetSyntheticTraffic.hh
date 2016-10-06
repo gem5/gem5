@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2016 Georgia Institute of Technology
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,36 @@
  * Authors: Tushar Krishna
  */
 
-#ifndef __CPU_NETWORKTEST_NETWORKTEST_HH__
-#define __CPU_NETWORKTEST_NETWORKTEST_HH__
+#ifndef __CPU_GARNET_SYNTHETIC_TRAFFIC_HH__
+#define __CPU_GARNET_SYNTHETIC_TRAFFIC_HH__
 
 #include <set>
 
 #include "base/statistics.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
-#include "params/NetworkTest.hh"
+#include "params/GarnetSyntheticTraffic.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
+enum TrafficType {BIT_COMPLEMENT_ = 0,
+                  BIT_REVERSE_ = 1,
+                  BIT_ROTATION_ = 2,
+                  NEIGHBOR_ = 3,
+                  SHUFFLE_ = 4,
+                  TORNADO_ = 5,
+                  TRANSPOSE_ = 6,
+                  UNIFORM_RANDOM_ = 7,
+                  NUM_TRAFFIC_PATTERNS_};
+
 class Packet;
-class NetworkTest : public MemObject
+class GarnetSyntheticTraffic : public MemObject
 {
   public:
-    typedef NetworkTestParams Params;
-    NetworkTest(const Params *p);
+    typedef GarnetSyntheticTrafficParams Params;
+    GarnetSyntheticTraffic(const Params *p);
 
     virtual void init();
 
@@ -67,24 +77,27 @@ class NetworkTest : public MemObject
     class TickEvent : public Event
     {
       private:
-        NetworkTest *cpu;
+        GarnetSyntheticTraffic *cpu;
 
       public:
-        TickEvent(NetworkTest *c) : Event(CPU_Tick_Pri), cpu(c) {}
+        TickEvent(GarnetSyntheticTraffic *c) : Event(CPU_Tick_Pri), cpu(c) {}
         void process() { cpu->tick(); }
-        virtual const char *description() const { return "NetworkTest tick"; }
+        virtual const char *description() const
+        {
+            return "GarnetSyntheticTraffic tick";
+        }
     };
 
     TickEvent tickEvent;
 
     class CpuPort : public MasterPort
     {
-        NetworkTest *networktest;
+        GarnetSyntheticTraffic *tester;
 
       public:
 
-        CpuPort(const std::string &_name, NetworkTest *_networktest)
-            : MasterPort(_name, _networktest), networktest(_networktest)
+        CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester)
+            : MasterPort(_name, _tester), tester(_tester)
         { }
 
       protected:
@@ -96,11 +109,11 @@ class NetworkTest : public MemObject
 
     CpuPort cachePort;
 
-    class NetworkTestSenderState : public Packet::SenderState
+    class GarnetSyntheticTrafficSenderState : public Packet::SenderState
     {
       public:
         /** Constructor. */
-        NetworkTestSenderState(uint8_t *_data)
+        GarnetSyntheticTrafficSenderState(uint8_t *_data)
             : data(_data)
         { }
 
@@ -112,19 +125,26 @@ class NetworkTest : public MemObject
     unsigned size;
     int id;
 
+    std::map<std::string, TrafficType> trafficStringToEnum;
+
     unsigned blockSizeBits;
 
     Tick noResponseCycles;
 
-    int numMemories;
+    int numDestinations;
     Tick simCycles;
-    bool fixedPkts;
-    int maxPackets;
+    int numPacketsMax;
     int numPacketsSent;
+    int singleSender;
+    int singleDest;
 
-    int trafficType;
+    std::string trafficType; // string
+    TrafficType traffic; // enum from string
     double injRate;
+    int injVnet;
     int precision;
+
+    const Cycles responseLimit;
 
     MasterID masterId;
 
@@ -132,13 +152,14 @@ class NetworkTest : public MemObject
 
     void generatePkt();
     void sendPkt(PacketPtr pkt);
+    void initTrafficType();
 
     void doRetry();
 
     friend class MemCompleteEvent;
 };
 
-#endif // __CPU_NETWORKTEST_NETWORKTEST_HH__
+#endif // __CPU_GARNET_SYNTHETIC_TRAFFIC_HH__
 
 
 

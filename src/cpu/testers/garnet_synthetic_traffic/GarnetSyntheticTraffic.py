@@ -1,4 +1,4 @@
-# Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2016 Georgia Institute of Technology
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,17 +30,28 @@ from MemObject import MemObject
 from m5.params import *
 from m5.proxy import *
 
-class NetworkTest(MemObject):
-    type = 'NetworkTest'
-    cxx_header = "cpu/testers/networktest/networktest.hh"
+class GarnetSyntheticTraffic(MemObject):
+    type = 'GarnetSyntheticTraffic'
+    cxx_header = \
+        "cpu/testers/garnet_synthetic_traffic/GarnetSyntheticTraffic.hh"
     block_offset = Param.Int(6, "block offset in bits")
-    num_memories = Param.Int(1, "Num Memories")
+    num_dest = Param.Int(1, "Number of Destinations")
     memory_size = Param.Int(65536, "memory size")
     sim_cycles = Param.Int(1000, "Number of simulation cycles")
-    fixed_pkts = Param.Bool(False, "Send fixed number of packets")
-    max_packets = Param.Counter(0, "Number of packets to send when in fixed_pkts mode")
-    traffic_type = Param.Counter(0, "Traffic type: uniform random, tornado, bit complement")
+    num_packets_max = Param.Int(-1, "Max number of packets to send. \
+                        Default is to keep sending till simulation ends")
+    single_sender = Param.Int(-1, "Send only from this node. \
+                                   By default every node sends")
+    single_dest = Param.Int(-1, "Send only to this dest. \
+                                 Default depends on traffic_type")
+    traffic_type = Param.String("uniform_random", "Traffic type")
     inj_rate = Param.Float(0.1, "Packet injection rate")
-    precision = Param.Int(3, "Number of digits of precision after decimal point")
+    inj_vnet = Param.Int(-1, "Vnet to inject in. \
+                              0 and 1 are 1-flit, 2 is 5-flit. \
+                                Default is to inject in all three vnets")
+    precision = Param.Int(3, "Number of digits of precision \
+                              after decimal point")
+    response_limit = Param.Cycles(5000000, "Cycles before exiting \
+                                            due to lack of progress")
     test = MasterPort("Port to the memory system to test")
     system = Param.System(Parent.any, "System we belong to")

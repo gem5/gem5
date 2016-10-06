@@ -1,5 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
-# Copyright (c) 2010 Advanced Micro Devices, Inc.
+# Copyright (c) 2016 Georgia Institute of Technology
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,8 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ron Dreslinski
-#          Tushar Krishna
+# Author: Tushar Krishna
 
 import m5
 from m5.objects import *
@@ -48,9 +46,10 @@ m5_root = os.path.dirname(config_root)
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 
-parser.add_option("--synthetic", type="int", default=0,
-                  help="Synthetic Traffic type. 0 = Uniform Random,\
-                        1 = Tornado, 2 = Bit Complement")
+parser.add_option("--synthetic", type="choice", default="uniform_random",
+                  choices=['uniform_random', 'tornado', 'bit_complement', \
+                           'bit_reverse', 'bit_rotation', 'neighbor', \
+                            'shuffle', 'transpose'])
 
 parser.add_option("-i", "--injectionrate", type="float", default=0.1,
                   metavar="I",
@@ -65,12 +64,22 @@ parser.add_option("--precision", type="int", default=3,
 parser.add_option("--sim-cycles", type="int", default=1000,
                    help="Number of simulation cycles")
 
-parser.add_option("--fixed-pkts", action="store_true",
-                  help="Network_test: inject --maxpackets and stop")
+parser.add_option("--num-packets-max", type="int", default=-1,
+                  help="Stop injecting after --num-packets-max.\
+                        Set to -1 to disable.")
 
-parser.add_option("--maxpackets", type="int", default=1,
-                  help="Stop injecting after --maxpackets. \
-                        Works only with --fixed-pkts")
+parser.add_option("--single-sender-id", type="int", default=-1,
+                  help="Only inject from this sender.\
+                        Set to -1 to disable.")
+
+parser.add_option("--single-dest-id", type="int", default=-1,
+                  help="Only send to this destination.\
+                        Set to -1 to disable.")
+
+parser.add_option("--inj-vnet", type="int", default=-1,
+                  help="Only inject in this vnet (0, 1 or 2).\
+                        0 and 1 are 1-flit, 2 is 5-flit.\
+                        Set to -1 to inject randomly in all vnets.")
 
 #
 # Add the ruby specific and protocol specific options
@@ -85,21 +94,24 @@ if args:
      print "Error: script doesn't take any positional arguments"
      sys.exit(1)
 
-block_size = 64
 
-if options.num_cpus > block_size:
-     print "Error: Number of cores %d limited to %d because of false sharing" \
-           % (options.num_cpus, block_size)
-     sys.exit(1)
+if options.inj_vnet > 2:
+    print "Error: Injection vnet %d should be 0 (1-flit), 1 (1-flit) \
+                  or 2 (5-flit) or -1 (random)"\
+           % (options.inj_vnet)
+    sys.exit(1)
 
 
-cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts,
-                     max_packets=options.maxpackets,
+cpus = [ GarnetSyntheticTraffic(
+                     num_packets_max=options.num_packets_max,
+                     single_sender=options.single_sender_id,
+                     single_dest=options.single_dest_id,
                      sim_cycles=options.sim_cycles,
                      traffic_type=options.synthetic,
                      inj_rate=options.injectionrate,
+                     inj_vnet=options.inj_vnet,
                      precision=options.precision,
-                     num_memories=options.num_dirs) \
+                     num_dest=options.num_dirs) \
          for i in xrange(options.num_cpus) ]
 
 # create the desired simulated system

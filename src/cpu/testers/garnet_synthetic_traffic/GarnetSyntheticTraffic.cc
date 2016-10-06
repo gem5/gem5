@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2016 Georgia Institute of Technology
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,8 +37,8 @@
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "base/statistics.hh"
-#include "cpu/testers/networktest/networktest.hh"
-#include "debug/NetworkTest.hh"
+#include "cpu/testers/garnet_synthetic_traffic/GarnetSyntheticTraffic.hh"
+#include "debug/GarnetSyntheticTraffic.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
@@ -52,20 +52,20 @@ using namespace std;
 int TESTER_NETWORK=0;
 
 bool
-NetworkTest::CpuPort::recvTimingResp(PacketPtr pkt)
+GarnetSyntheticTraffic::CpuPort::recvTimingResp(PacketPtr pkt)
 {
-    networktest->completeRequest(pkt);
+    tester->completeRequest(pkt);
     return true;
 }
 
 void
-NetworkTest::CpuPort::recvReqRetry()
+GarnetSyntheticTraffic::CpuPort::recvReqRetry()
 {
-    networktest->doRetry();
+    tester->doRetry();
 }
 
 void
-NetworkTest::sendPkt(PacketPtr pkt)
+GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
 {
     if (!cachePort.sendTimingReq(pkt)) {
         retryPkt = pkt; // RubyPort will retry sending
@@ -73,34 +73,43 @@ NetworkTest::sendPkt(PacketPtr pkt)
     numPacketsSent++;
 }
 
-NetworkTest::NetworkTest(const Params *p)
+GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params *p)
     : MemObject(p),
       tickEvent(this),
-      cachePort("network-test", this),
+      cachePort("GarnetSyntheticTraffic", this),
       retryPkt(NULL),
       size(p->memory_size),
       blockSizeBits(p->block_offset),
-      numMemories(p->num_memories),
+      numDestinations(p->num_dest),
       simCycles(p->sim_cycles),
-      fixedPkts(p->fixed_pkts),
-      maxPackets(p->max_packets),
+      numPacketsMax(p->num_packets_max),
       numPacketsSent(0),
+      singleSender(p->single_sender),
+      singleDest(p->single_dest),
       trafficType(p->traffic_type),
       injRate(p->inj_rate),
+      injVnet(p->inj_vnet),
       precision(p->precision),
+      responseLimit(p->response_limit),
       masterId(p->system->getMasterId(name()))
 {
     // set up counters
     noResponseCycles = 0;
     schedule(tickEvent, 0);
 
+    initTrafficType();
+    if (trafficStringToEnum.count(trafficType) == 0) {
+        fatal("Unknown Traffic Type: %s!\n", traffic);
+    }
+    traffic = trafficStringToEnum[trafficType];
+
     id = TESTER_NETWORK++;
-    DPRINTF(NetworkTest,"Config Created: Name = %s , and id = %d\n",
+    DPRINTF(GarnetSyntheticTraffic,"Config Created: Name = %s , and id = %d\n",
             name(), id);
 }
 
 BaseMasterPort &
-NetworkTest::getMasterPort(const std::string &if_name, PortID idx)
+GarnetSyntheticTraffic::getMasterPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "test")
         return cachePort;
@@ -109,18 +118,19 @@ NetworkTest::getMasterPort(const std::string &if_name, PortID idx)
 }
 
 void
-NetworkTest::init()
+GarnetSyntheticTraffic::init()
 {
     numPacketsSent = 0;
 }
 
 
 void
-NetworkTest::completeRequest(PacketPtr pkt)
+GarnetSyntheticTraffic::completeRequest(PacketPtr pkt)
 {
     Request *req = pkt->req;
 
-    DPRINTF(NetworkTest, "Completed injection of %s packet for address %x\n",
+    DPRINTF(GarnetSyntheticTraffic,
+            "Completed injection of %s packet for address %x\n",
             pkt->isWrite() ? "write" : "read\n",
             req->getPaddr());
 
@@ -132,34 +142,36 @@ NetworkTest::completeRequest(PacketPtr pkt)
 
 
 void
-NetworkTest::tick()
+GarnetSyntheticTraffic::tick()
 {
-    if (++noResponseCycles >= 500000) {
-        cerr << name() << ": deadlocked at cycle " << curTick() << endl;
-        fatal("");
+    if (++noResponseCycles >= responseLimit) {
+        fatal("%s deadlocked at cycle %d\n", name(), curTick());
     }
 
     // make new request based on injection rate
     // (injection rate's range depends on precision)
     // - generate a random number between 0 and 10^precision
     // - send pkt if this number is < injRate*(10^precision)
-    bool send_this_cycle;
+    bool sendAllowedThisCycle;
     double injRange = pow((double) 10, (double) precision);
     unsigned trySending = random_mt.random<unsigned>(0, (int) injRange);
     if (trySending < injRate*injRange)
-        send_this_cycle = true;
+        sendAllowedThisCycle = true;
     else
-        send_this_cycle = false;
+        sendAllowedThisCycle = false;
 
-    // always generatePkt unless fixedPkts is enabled
-    if (send_this_cycle) {
-        if (fixedPkts) {
-            if (numPacketsSent < maxPackets) {
-                generatePkt();
-            }
-        } else {
+    // always generatePkt unless fixedPkts or singleSender is enabled
+    if (sendAllowedThisCycle) {
+        bool senderEnable = true;
+
+        if (numPacketsMax >= 0 && numPacketsSent >= numPacketsMax)
+            senderEnable = false;
+
+        if (singleSender >= 0 && id != singleSender)
+            senderEnable = false;
+
+        if (senderEnable)
             generatePkt();
-        }
     }
 
     // Schedule wakeup
@@ -172,30 +184,64 @@ NetworkTest::tick()
 }
 
 void
-NetworkTest::generatePkt()
+GarnetSyntheticTraffic::generatePkt()
 {
+    int num_destinations = numDestinations;
+    int radix = (int) sqrt(num_destinations);
     unsigned destination = id;
-    if (trafficType == 0) { // Uniform Random
-        destination = random_mt.random<unsigned>(0, numMemories - 1);
-    } else if (trafficType == 1) { // Tornado
-        int networkDimension = (int) sqrt(numMemories);
-        int my_x = id%networkDimension;
-        int my_y = id/networkDimension;
+    int dest_x = -1;
+    int dest_y = -1;
+    int source = id;
+    int src_x = id%radix;
+    int src_y = id/radix;
 
-        int dest_x = my_x + (int) ceil(networkDimension/2) - 1;
-        dest_x = dest_x%networkDimension;
-        int dest_y = my_y;
+    if (singleDest >= 0)
+    {
+        destination = singleDest;
+    } else if (traffic == UNIFORM_RANDOM_) {
+        destination = random_mt.random<unsigned>(0, num_destinations - 1);
+    } else if (traffic == BIT_COMPLEMENT_) {
+        dest_x = radix - src_x - 1;
+        dest_y = radix - src_y - 1;
+        destination = dest_y*radix + dest_x;
+    } else if (traffic == BIT_REVERSE_) {
+        unsigned int straight = source;
+        unsigned int reverse = source & 1; // LSB
 
-        destination = dest_y*networkDimension + dest_x;
-    } else if (trafficType == 2) { // Bit Complement
-        int networkDimension = (int) sqrt(numMemories);
-        int my_x = id%networkDimension;
-        int my_y = id/networkDimension;
+        int num_bits = (int) log2(num_destinations);
 
-        int dest_x = networkDimension - my_x - 1;
-        int dest_y = networkDimension - my_y - 1;
-
-        destination = dest_y*networkDimension + dest_x;
+        for (int i = 1; i < num_bits; i++)
+        {
+            reverse <<= 1;
+            straight >>= 1;
+            reverse |= (straight & 1); // LSB
+        }
+        destination = reverse;
+    } else if (traffic == BIT_ROTATION_) {
+        if (source%2 == 0)
+            destination = source/2;
+        else // (source%2 == 1)
+            destination = ((source/2) + (num_destinations/2));
+    } else if (traffic == NEIGHBOR_) {
+            dest_x = (src_x + 1) % radix;
+            dest_y = src_y;
+            destination = dest_y*radix + dest_x;
+    } else if (traffic == SHUFFLE_) {
+        if (source < num_destinations/2)
+            destination = source*2;
+        else
+            destination = (source*2 - num_destinations + 1);
+    } else if (traffic == TRANSPOSE_) {
+            dest_x = src_y;
+            dest_y = src_x;
+            destination = dest_y*radix + dest_x;
+    } else if (traffic == TORNADO_) {
+        dest_x = (src_x + (int) ceil(radix/2) - 1) % radix;
+        dest_y = src_y;
+        destination = dest_y*radix + dest_x;
+    }
+    else {
+        fatal("Unknown Traffic Type: %s!\n", traffic);
     }
 
     // The source of the packets is a cache.
@@ -207,7 +253,7 @@ NetworkTest::generatePkt()
 
     // Modeling different coherence msg types over different msg classes.
     //
-    // networktest assumes the Network_test coherence protocol
+    // GarnetSyntheticTraffic assumes the Garnet_standalone coherence protocol
     // which models three message classes/virtual networks.
     // These are: request, forward, response.
     // requests and forwards are "control" packets (typically 8 bytes),
@@ -234,18 +280,28 @@ NetworkTest::generatePkt()
     Request *req = nullptr;
     Request::Flags flags;
 
-    unsigned randomReqType = random_mt.random(0, 2);
-    if (randomReqType == 0) {
+    // Inject in specific Vnet
+    // Vnet 0 and 1 are for control packets (1-flit)
+    // Vnet 2 is for data packets (5-flit)
+    int injReqType = injVnet;
+
+    if (injReqType < 0 || injReqType > 2)
+    {
+        // randomly inject in any vnet
+        injReqType = random_mt.random(0, 2);
+    }
+
+    if (injReqType == 0) {
         // generate packet for virtual network 0
         requestType = MemCmd::ReadReq;
         req = new Request(paddr, access_size, flags, masterId);
-    } else if (randomReqType == 1) {
+    } else if (injReqType == 1) {
         // generate packet for virtual network 1
         requestType = MemCmd::ReadReq;
         flags.set(Request::INST_FETCH);
         req = new Request(0, 0x0, access_size, flags, masterId, 0x0, 0);
         req->setPaddr(paddr);
-    } else {  // if (randomReqType == 2)
+    } else {  // if (injReqType == 2)
         // generate packet for virtual network 2
         requestType = MemCmd::WriteReq;
         req = new Request(paddr, access_size, flags, masterId);
@@ -256,7 +312,7 @@ NetworkTest::generatePkt()
     //No need to do functional simulation
     //We just do timing simulation of the network
 
-    DPRINTF(NetworkTest,
+    DPRINTF(GarnetSyntheticTraffic,
             "Generated packet with destination %d, embedded in address %x\n",
             destination, req->getPaddr());
 
@@ -268,7 +324,20 @@ NetworkTest::generatePkt()
 }
 
 void
-NetworkTest::doRetry()
+GarnetSyntheticTraffic::initTrafficType()
+{
+    trafficStringToEnum["bit_complement"] = BIT_COMPLEMENT_;
+    trafficStringToEnum["bit_reverse"] = BIT_REVERSE_;
+    trafficStringToEnum["bit_rotation"] = BIT_ROTATION_;
+    trafficStringToEnum["neighbor"] = NEIGHBOR_;
+    trafficStringToEnum["shuffle"] = SHUFFLE_;
+    trafficStringToEnum["tornado"] = TORNADO_;
+    trafficStringToEnum["transpose"] = TRANSPOSE_;
+    trafficStringToEnum["uniform_random"] = UNIFORM_RANDOM_;
+}
+
+void
+GarnetSyntheticTraffic::doRetry()
 {
     if (cachePort.sendTimingReq(retryPkt)) {
         retryPkt = NULL;
@@ -276,14 +345,14 @@ NetworkTest::doRetry()
 }
 
 void
-NetworkTest::printAddr(Addr a)
+GarnetSyntheticTraffic::printAddr(Addr a)
 {
     cachePort.printAddr(a);
 }
 
 
-NetworkTest *
-NetworkTestParams::create()
+GarnetSyntheticTraffic *
+GarnetSyntheticTrafficParams::create()
 {
-    return new NetworkTest(this);
+    return new GarnetSyntheticTraffic(this);
 }
