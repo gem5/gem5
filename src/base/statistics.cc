@@ -180,8 +180,8 @@ Info::setName(const string &name)
     bool result = p.second;
 
     if (!result) {
-        // using other->name instead of just name to avoid a compiler
-        // warning.  They should be the same.
+      // using other->name instead of just name to avoid a compiler
+      // warning.  They should be the same.
         panic("same statistic name used twice! name=%s\n", other->name);
     }
 
