@@ -40,10 +40,12 @@ from m5.util import addToPath
 import os, optparse, sys
 addToPath('../common')
 addToPath('../ruby')
+addToPath('../network')
 addToPath('../topologies')
 
 import Options
 import Ruby
+import Network
 
 # Get paths we might need.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +78,7 @@ parser.add_option("--wfs-per-simd", type="int", default=10, help="Number of " \
 # Add the ruby specific and protocol specific options
 #
 Ruby.define_options(parser)
+Network.define_options(parser)
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 

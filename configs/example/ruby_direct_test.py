@@ -35,10 +35,12 @@ from m5.util import addToPath
 import os, optparse, sys
 addToPath('../common')
 addToPath('../ruby')
+addToPath('../network')
 addToPath('../topologies')
 
 import Options
 import Ruby
+import Network
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -63,6 +65,7 @@ parser.add_option("--percent-writes", type="int", default=100,
 # Add the ruby specific and protocol specific options
 #
 Ruby.define_options(parser)
+Network.define_options(parser)
 (options, args) = parser.parse_args()
 
 if args:

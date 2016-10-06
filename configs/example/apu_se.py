@@ -43,11 +43,13 @@ from m5.objects import *
 from m5.util import addToPath
 
 addToPath('../ruby')
+addToPath('../network')
 addToPath('../common')
 addToPath('../topologies')
 
 import Options
 import Ruby
+import Network
 import Simulation
 import GPUTLBOptions, GPUTLBConfig
 
@@ -157,6 +159,7 @@ parser.add_option('--fast-forward-pseudo-op', action='store_true',
 
 
 Ruby.define_options(parser)
+Network.define_options(parser)
 
 #add TLB options to the parser
 GPUTLBOptions.tlb_options(parser)
