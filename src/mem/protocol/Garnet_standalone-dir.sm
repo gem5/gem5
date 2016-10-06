@@ -31,7 +31,7 @@
  */
 
 
-machine(MachineType:Directory, "Network_test Directory")
+machine(MachineType:Directory, "Garnet_standalone Directory")
     : MessageBuffer * requestToDir, network="From", virtual_network="0",
             vnet_type = "request";
       MessageBuffer * forwardToDir, network="From", virtual_network="1",
@@ -79,11 +79,11 @@ machine(MachineType:Directory, "Network_test Directory")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    error("Network test does not support functional read.");
+    error("Garnet_standalone does not support functional read.");
   }
 
   int functionalWrite(Addr addr, Packet *pkt) {
-    error("Network test does not support functional write.");
+    error("Garnet_standalone does not support functional write.");
   }
 
   // ** IN_PORTS **
@@ -139,7 +139,7 @@ machine(MachineType:Directory, "Network_test Directory")
   // TRANSITIONS
 
   // The directory simply drops the received packets.
-  // The goal of Network_test is only to track network stats.
+  // The goal of Garnet_standalone is only to track network stats.
 
   transition(I, Receive_Request) {
     i_popIncomingRequestQueue;

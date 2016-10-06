@@ -73,7 +73,7 @@ class RubySequencer(RubyPort):
        "max requests (incl. prefetches) outstanding")
    deadlock_threshold = Param.Cycles(500000,
        "max outstanding cycles for a request before deadlock/livelock declared")
-   using_network_tester = Param.Bool(False, "")
+   garnet_standalone = Param.Bool(False, "")
    # id used by protocols that support multiple sequencers per controller
    # 99 is the dummy default value
    coreid = Param.Int(99, "CorePair core id")

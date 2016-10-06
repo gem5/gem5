@@ -142,7 +142,7 @@ GPUCoalescer::GPUCoalescer(const Params *p)
 
     m_data_cache_hit_latency = p->dcache_hit_latency;
 
-    m_usingNetworkTester = p->using_network_tester;
+    m_runningGarnetStandalone = p->garnet_standalone;
     assumingRfOCoherence = p->assume_rfo;
 }
 
@@ -516,10 +516,10 @@ GPUCoalescer::writeCallback(Addr address,
     // For Alpha, properly handle LL, SC, and write requests with respect to
     // locked cache blocks.
     //
-    // Not valid for Network_test protocl
+    // Not valid for Garnet_standalone protocl
     //
     bool success = true;
-    if (!m_usingNetworkTester)
+    if (!m_runningGarnetStandalone)
         success = handleLlsc(address, request);
 
     if (request->m_type == RubyRequestType_Locked_RMW_Read) {

@@ -201,7 +201,7 @@ class Sequencer : public RubyPort
 
     int m_coreId;
 
-    bool m_usingNetworkTester;
+    bool m_runningGarnetStandalone;
 
     //! Histogram for number of outstanding requests per cycle.
     Stats::Histogram m_outstandReqHist;

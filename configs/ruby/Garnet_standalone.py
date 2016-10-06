@@ -1,5 +1,5 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2016 Georgia Institute of Technology
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Brad Beckmann
+#          Tushar Krishna
 
 import m5
 from m5.objects import *
@@ -42,22 +43,21 @@ def define_options(parser):
     return
 
 def create_system(options, full_system, system, dma_ports, ruby_system):
-
-    if buildEnv['PROTOCOL'] != 'Network_test':
-        panic("This script requires the Network_test protocol to be built.")
+    if buildEnv['PROTOCOL'] != 'Garnet_standalone':
+        panic("This script requires Garnet_standalone protocol to be built.")
 
     cpu_sequencers = []
 
     #
-    # The Garnet tester protocol does not support fs nor dma
+    # The Garnet_standalone protocol does not support fs nor dma
     #
     assert(dma_ports == [])
 
     #
     # The ruby network creation expects the list of nodes in the system to be
-    # consistent with the NetDest list.  Therefore the l1 controller nodes must be
-    # listed before the directory nodes and directory nodes before dma nodes, etc.
-    #
+    # consistent with the NetDest list.
+    # Therefore the l1 controller nodes must be listed before
+    # the directory nodes and directory nodes before dma nodes, etc.
     l1_cntrl_nodes = []
     dir_cntrl_nodes = []
 
@@ -84,7 +84,7 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
         cpu_seq = RubySequencer(icache = cache,
                                 dcache = cache,
-                                using_network_tester = True,
+                                garnet_standalone = True,
                                 ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq

@@ -31,7 +31,7 @@
  */
 
 
-machine(MachineType:L1Cache, "Network_test L1 Cache")
+machine(MachineType:L1Cache, "Garnet_standalone L1 Cache")
     : Sequencer * sequencer;
       Cycles issue_latency := 2;
 
@@ -53,9 +53,9 @@ machine(MachineType:L1Cache, "Network_test L1 Cache")
   // EVENTS
   enumeration(Event, desc="Cache events") {
     // From processor
-    Request,    desc="Request from Network_test";
-    Forward,    desc="Forward from Network_test";
-    Response,   desc="Response from Network_test";
+    Request,    desc="Request from Garnet_standalone";
+    Forward,    desc="Forward from Garnet_standalone";
+    Response,   desc="Response from Garnet_standalone";
   }
 
   // STRUCTURE DEFINITIONS
@@ -74,7 +74,7 @@ machine(MachineType:L1Cache, "Network_test L1 Cache")
   // ReadReq, INST_FETCH, and WriteReq.
   // These are converted to LD, IFETCH and ST by mem/ruby/system/RubyPort.cc.
   // These are then sent to the sequencer, which sends them here.
-  // Network_test-cache.sm tags LD, IFETCH and ST as Request, Forward, 
+  // Garnet_standalone-cache.sm tags LD, IFETCH and ST as Request, Forward,
   // and Response Events respectively, which are then injected into
   // virtual networks 0, 1 and 2 respectively.
   // This models traffic of different types within the network.
@@ -115,11 +115,11 @@ machine(MachineType:L1Cache, "Network_test L1 Cache")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    error("Network test does not support functional read.");
+    error("Garnet_standalone does not support functional read.");
   }
 
   int functionalWrite(Addr addr, Packet *pkt) {
-    error("Network test does not support functional write.");
+    error("Garnet_standalone does not support functional write.");
   }
 
   // NETWORK PORTS
@@ -149,7 +149,11 @@ machine(MachineType:L1Cache, "Network_test L1 Cache")
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
-      //out_msg.Destination := broadcast(MachineType:Directory);
+
+      // To send broadcasts in vnet0 (to emulate broadcast-based protocols),
+      // replace the above line by the following:
+      // out_msg.Destination := broadcast(MachineType:Directory);
+
       out_msg.MessageSize := MessageSizeType:Control;
     }
   }
@@ -190,7 +194,7 @@ machine(MachineType:L1Cache, "Network_test L1 Cache")
   // TRANSITIONS
 
   // sequencer hit call back is performed after injecting the packets.
-  // The goal of the Network_test protocol is only to inject packets into
+  // The goal of the Garnet_standalone protocol is only to inject packets into
   // the network, not to keep track of them via TBEs.
 
   transition(I, Response) {

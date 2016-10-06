@@ -291,7 +291,7 @@ class GPUCoalescer : public RubyPort
     int m_load_waiting_on_store_cycles;
     int m_load_waiting_on_load_cycles;
 
-    bool m_usingNetworkTester;
+    bool m_runningGarnetStandalone;
 
     class GPUCoalescerWakeupEvent : public Event
     {
