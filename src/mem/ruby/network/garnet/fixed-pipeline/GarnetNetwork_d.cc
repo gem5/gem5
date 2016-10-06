@@ -175,7 +175,9 @@ GarnetNetwork_d::makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
 
 void
 GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                  const NetDest& routing_table_entry)
+                                  const NetDest& routing_table_entry,
+                                  PortDirection src_outport,
+                                  PortDirection dst_inport)
 {
     GarnetIntLink_d* garnet_link = safe_cast<GarnetIntLink_d*>(link);
     NetworkLink_d* net_link = garnet_link->m_network_links[0];

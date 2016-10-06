@@ -74,7 +74,9 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          const NetDest& routing_table_entry);
+                          const NetDest& routing_table_entry,
+                          PortDirection src_outport,
+                          PortDirection dst_inport);
 
     //! Function for performing a functional write. The return value
     //! indicates the number of messages that were written.

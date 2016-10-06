@@ -64,7 +64,9 @@ class SimpleNetwork : public Network
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          const NetDest& routing_table_entry);
+                          const NetDest& routing_table_entry,
+                          PortDirection src_outport,
+                          PortDirection dst_inport);
 
     void print(std::ostream& out) const;
 

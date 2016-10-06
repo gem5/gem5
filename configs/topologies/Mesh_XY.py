@@ -109,6 +109,8 @@ class Mesh_XY(SimpleTopology):
                     int_links.append(IntLink(link_id=link_count,
                                              src_node=routers[east_out],
                                              dst_node=routers[west_in],
+                                             src_outport="East",
+                                             dst_inport="West",
                                              weight=1))
                     link_count += 1
 
@@ -121,6 +123,8 @@ class Mesh_XY(SimpleTopology):
                     int_links.append(IntLink(link_id=link_count,
                                              src_node=routers[west_out],
                                              dst_node=routers[east_in],
+                                             src_outport="West",
+                                             dst_inport="East",
                                              weight=1))
                     link_count += 1
 
@@ -133,6 +137,8 @@ class Mesh_XY(SimpleTopology):
                     int_links.append(IntLink(link_id=link_count,
                                              src_node=routers[north_out],
                                              dst_node=routers[south_in],
+                                             src_outport="North",
+                                             dst_inport="South",
                                              weight=2))
                     link_count += 1
 
@@ -145,6 +151,8 @@ class Mesh_XY(SimpleTopology):
                     int_links.append(IntLink(link_id=link_count,
                                              src_node=routers[south_out],
                                              dst_node=routers[north_in],
+                                             src_outport="South",
+                                             dst_inport="North",
                                              weight=2))
                     link_count += 1
 

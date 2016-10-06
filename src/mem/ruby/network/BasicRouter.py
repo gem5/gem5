@@ -34,3 +34,4 @@ class BasicRouter(ClockedObject):
     type = 'BasicRouter'
     cxx_header = "mem/ruby/network/BasicRouter.hh"
     router_id = Param.Int("ID in relation to other routers")
+    latency   = Param.Cycles(1, "number of cycles inside router")

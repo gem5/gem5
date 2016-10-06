@@ -104,7 +104,9 @@ SimpleNetwork::makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
 // From a switch to a switch
 void
 SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                const NetDest& routing_table_entry)
+                                const NetDest& routing_table_entry,
+                                PortDirection src_outport,
+                                PortDirection dst_inport)
 {
     // Create a set of new MessageBuffers
     std::vector<MessageBuffer*> queues(m_virtual_networks);

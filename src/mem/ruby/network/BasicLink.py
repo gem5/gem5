@@ -46,11 +46,17 @@ class BasicExtLink(BasicLink):
     cxx_header = "mem/ruby/network/BasicLink.hh"
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
-    bandwidth_factor = 16
+    bandwidth_factor = 16 # only used by simple network
 
 class BasicIntLink(BasicLink):
     type = 'BasicIntLink'
     cxx_header = "mem/ruby/network/BasicLink.hh"
     src_node = Param.BasicRouter("Router on src end")
     dst_node = Param.BasicRouter("Router on dst end")
+
+    # only used by Garnet.
+    src_outport = Param.String("", "Outport direction at src router")
+    dst_inport = Param.String("", "Inport direction at dst router")
+
+    # only used by simple network
     bandwidth_factor = 16

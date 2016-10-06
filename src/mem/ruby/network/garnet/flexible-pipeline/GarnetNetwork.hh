@@ -65,7 +65,9 @@ class GarnetNetwork : public BaseGarnetNetwork
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     const NetDest& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          const NetDest& routing_table_entry);
+                          const NetDest& routing_table_entry,
+                          PortDirection src_outport,
+                          PortDirection dst_inport);
 
     //! Function for performing a functional read. The return value
     //! indicates if a message was found that had the required address.
