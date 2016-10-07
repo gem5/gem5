@@ -234,7 +234,8 @@ GenericTimer::GenericTimer(GenericTimerParams *p)
       irqPhys(p->int_phys),
       irqVirt(p->int_virt)
 {
-    dynamic_cast<ArmSystem &>(*p->system).setGenericTimer(this);
+    fatal_if(!p->system, "No system specified, can't instantiate timer.\n");
+    p->system->setGenericTimer(this);
 }
 
 void

@@ -231,7 +231,7 @@ class CpuLocalTimer(BasicPioDevice):
 class GenericTimer(SimObject):
     type = 'GenericTimer'
     cxx_header = "dev/arm/generic_timer.hh"
-    system = Param.System(Parent.any, "system")
+    system = Param.ArmSystem(Parent.any, "system")
     gic = Param.BaseGic(Parent.any, "GIC to use for interrupting")
     # @todo: for now only two timers per CPU is supported, which is the
     # normal behaviour when security extensions are disabled.
