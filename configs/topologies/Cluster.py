@@ -87,9 +87,9 @@ class Cluster(BaseTopology):
 
                 # connect this cluster to the router
                 link_out = IntLink(link_id=self.num_int_links(), src_node=self.router,
-                           dst_node_=node.router)
+                           dst_node=node.router)
                 link_in = IntLink(link_id=self.num_int_links(), src_node=node.router,
-                                  dst_node_=self.router)
+                                  dst_node=self.router)
 
                 if node.extBW:
                     link_out.bandwidth_factor = node.extBW
