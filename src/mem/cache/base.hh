@@ -566,10 +566,13 @@ class BaseCache : public MemObject
      * @param blk The referenced block, can be nullptr.
      * @param needs_writable Indicates that the block must be writable
      * even if the request in cpu_pkt doesn't indicate that.
+     * @param is_whole_line_write True if there are writes for the
+     * whole line
      * @return A packet send to the memory below
      */
     virtual PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                                       bool needs_writable) const = 0;
+                                       bool needs_writable,
+                                       bool is_whole_line_write) const = 0;
 
     /**
      * Determine if clean lines should be written back or not. In

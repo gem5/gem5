@@ -148,7 +148,8 @@ NoncoherentCache::recvTimingReq(PacketPtr pkt)
 
 PacketPtr
 NoncoherentCache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                                   bool needs_writable) const
+                                   bool needs_writable,
+                                   bool is_whole_line_write) const
 {
     // We also fill for writebacks from the coherent caches above us,
     // and they do not need responses
@@ -173,7 +174,8 @@ Cycles
 NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                                       PacketList &writebacks)
 {
-    PacketPtr bus_pkt = createMissPacket(pkt, blk, true);
+    PacketPtr bus_pkt = createMissPacket(pkt, blk, true,
+                                         pkt->isWholeLineWrite(blkSize));
     DPRINTF(Cache, "Sending an atomic %s\n", bus_pkt->print());
 
     Cycles latency = ticksToCycles(memSidePort.sendAtomic(bus_pkt));

@@ -120,7 +120,8 @@ class NoncoherentCache : public BaseCache
      * needs_writeble parameter is ignored.
      */
     PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                               bool needs_writable) const override;
+                               bool needs_writable,
+                               bool is_whole_line_write) const override;
 
     M5_NODISCARD PacketPtr evictBlock(CacheBlk *blk) override;
 

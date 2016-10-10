@@ -152,7 +152,8 @@ class Cache : public BaseCache
     PacketPtr cleanEvictBlk(CacheBlk *blk);
 
     PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                               bool needsWritable) const override;
+                               bool needs_writable,
+                               bool is_whole_line_write) const override;
 
     /**
      * Send up a snoop request and find cached copies. If cached copies are

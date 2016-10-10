@@ -477,7 +477,8 @@ Cache::recvTimingReq(PacketPtr pkt)
 
 PacketPtr
 Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-                        bool needsWritable) const
+                        bool needsWritable,
+                        bool is_whole_line_write) const
 {
     // should never see evictions here
     assert(!cpu_pkt->isEviction());
@@ -500,7 +501,8 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     // write miss on a shared owned block will generate a ReadExcl,
     // which will clobber the owned copy.
     const bool useUpgrades = true;
-    if (cpu_pkt->cmd == MemCmd::WriteLineReq) {
+    assert(cpu_pkt->cmd != MemCmd::WriteLineReq || is_whole_line_write);
+    if (is_whole_line_write) {
         assert(!blkValid || !blk->isWritable());
         // forward as invalidate to all other caches, this gives us
         // the line in Exclusive state, and invalidates all other
@@ -580,7 +582,8 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
 
     // only misses left
 
-    PacketPtr bus_pkt = createMissPacket(pkt, blk, pkt->needsWritable());
+    PacketPtr bus_pkt = createMissPacket(pkt, blk, pkt->needsWritable(),
+                                         pkt->isWholeLineWrite(blkSize));
 
     bool is_forward = (bus_pkt == nullptr);
 
@@ -615,12 +618,12 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
             if (bus_pkt->isError()) {
                 pkt->makeAtomicResponse();
                 pkt->copyError(bus_pkt);
-            } else if (pkt->cmd == MemCmd::WriteLineReq) {
+            } else if (pkt->isWholeLineWrite(blkSize)) {
                 // note the use of pkt, not bus_pkt here.
 
                 // write-line request to the cache that promoted
                 // the write to a whole line
-                blk = handleFill(pkt, blk, writebacks,
+                blk = handleFill(bus_pkt, blk, writebacks,
                                  allocOnFill(pkt->cmd));
                 assert(blk != NULL);
                 is_invalidate = false;
@@ -676,7 +679,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
     const bool is_error = pkt->isError();
     // allow invalidation responses originating from write-line
     // requests to be discarded
-    bool is_invalidate = pkt->isInvalidate();
+    bool is_invalidate = pkt->isInvalidate() &&
+        !mshr->wasWholeLineWrite;
 
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
     for (auto &target: targets) {
@@ -706,16 +710,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
             // from above.
             if (tgt_pkt->cmd == MemCmd::WriteLineReq) {
                 assert(!is_error);
-                // we got the block in a writable state, so promote
-                // any deferred targets if possible
-                mshr->promoteWritable();
-                // NB: we use the original packet here and not the response!
-                blk = handleFill(tgt_pkt, blk, writebacks,
-                                 targets.allocOnFill);
                 assert(blk);
-
-                // discard the invalidation response
-                is_invalidate = false;
+                assert(blk->isWritable());
             }
 
             if (blk && blk->isValid() && !mshr->isForward) {

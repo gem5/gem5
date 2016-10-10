@@ -474,7 +474,12 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     PacketList writebacks;
 
     bool is_fill = !mshr->isForward &&
-        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
+        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp ||
+         mshr->wasWholeLineWrite);
+
+    // make sure that if the mshr was due to a whole line write then
+    // the response is an invalidation
+    assert(!mshr->wasWholeLineWrite || pkt->isInvalidate());
 
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
 
@@ -1121,7 +1126,7 @@ CacheBlk*
 BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
                       bool allocate)
 {
-    assert(pkt->isResponse() || pkt->cmd == MemCmd::WriteLineReq);
+    assert(pkt->isResponse());
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
 #if TRACING_ON
@@ -1134,12 +1139,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
     if (!blk) {
         // better have read new data...
-        assert(pkt->hasData());
-
-        // only read responses and write-line requests have data;
-        // note that we don't write the data here for write-line - that
-        // happens in the subsequent call to satisfyRequest
-        assert(pkt->isRead() || pkt->cmd == MemCmd::WriteLineReq);
+        assert(pkt->hasData() || pkt->cmd == MemCmd::InvalidateResp);
 
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
@@ -1173,7 +1173,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     // sanity check for whole-line writes, which should always be
     // marked as writable as part of the fill, and then later marked
     // dirty as part of satisfyRequest
-    if (pkt->cmd == MemCmd::WriteLineReq) {
+    if (pkt->cmd == MemCmd::InvalidateResp) {
         assert(!pkt->hasSharers());
     }
 
@@ -1465,7 +1465,8 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
 
     // either a prefetch that is not present upstream, or a normal
     // MSHR request, proceed to get the packet to send downstream
-    PacketPtr pkt = createMissPacket(tgt_pkt, blk, mshr->needsWritable());
+    PacketPtr pkt = createMissPacket(tgt_pkt, blk, mshr->needsWritable(),
+                                     mshr->isWholeLineWrite());
 
     mshr->isForward = (pkt == nullptr);
 
