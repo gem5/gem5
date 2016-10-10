@@ -58,6 +58,7 @@
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
 #include "params/BaseCache.hh"
+#include "params/WriteAllocator.hh"
 #include "sim/core.hh"
 
 class BaseMasterPort;
@@ -83,6 +84,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       tags(p->tags),
       prefetcher(p->prefetcher),
       prefetchOnAccess(p->prefetch_on_access),
+      writeAllocator(p->write_allocator),
       writebackClean(p->writeback_clean),
       tempBlockWriteback(nullptr),
       writebackTempBlockAtomicEvent([this]{ writebackTempBlockAtomic(); },
@@ -243,6 +245,12 @@ void
 BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                                Tick forward_time, Tick request_time)
 {
+    if (writeAllocator &&
+        pkt && pkt->isWrite() && !pkt->req->isUncacheable()) {
+        writeAllocator->updateMode(pkt->getAddr(), pkt->getSize(),
+                                   pkt->getBlockAddr(blkSize));
+    }
+
     if (mshr) {
         /// MSHR hit
         /// @note writebacks will be checked in getNextMSHR()
@@ -391,11 +399,13 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         // already allocated for this, we need to let the prefetcher
         // know about the request
 
-        // Don't notify prefetcher on SWPrefetch or cache maintenance
-        // operations
+        // Don't notify prefetcher on SWPrefetch, cache maintenance
+        // operations or for writes that we are coaslescing.
         if (prefetcher && pkt &&
             !pkt->cmd.isSWPrefetch() &&
-            !pkt->req->isCacheMaintenance()) {
+            !pkt->req->isCacheMaintenance() &&
+            !(writeAllocator && writeAllocator->coalesce() &&
+              pkt->isWrite())) {
             next_pf_time = prefetcher->notify(pkt);
         }
     }
@@ -487,7 +497,9 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
                 pkt->getAddr());
 
-        blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill());
+        const bool allocate = (writeAllocator && mshr->wasWholeLineWrite) ?
+            writeAllocator->allocate() : mshr->allocOnFill();
+        blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
     }
 
@@ -1461,6 +1473,29 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
 
     DPRINTF(Cache, "%s: MSHR %s\n", __func__, tgt_pkt->print());
 
+    // if the cache is in write coalescing mode or (additionally) in
+    // no allocation mode, and we have a write packet with an MSHR
+    // that is not a whole-line write (due to incompatible flags etc),
+    // then reset the write mode
+    if (writeAllocator && writeAllocator->coalesce() && tgt_pkt->isWrite()) {
+        if (!mshr->isWholeLineWrite()) {
+            // if we are currently write coalescing, hold on the
+            // MSHR as many cycles extra as we need to completely
+            // write a cache line
+            if (writeAllocator->delay(mshr->blkAddr)) {
+                Tick delay = blkSize / tgt_pkt->getSize() * clockPeriod();
+                DPRINTF(CacheVerbose, "Delaying pkt %s %llu ticks to allow "
+                        "for write coalescing\n", tgt_pkt->print(), delay);
+                mshrQueue.delay(mshr, delay);
+                return false;
+            } else {
+                writeAllocator->reset();
+            }
+        } else {
+            writeAllocator->resetDelay(mshr->blkAddr);
+        }
+    }
+
     CacheBlk *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
 
     // either a prefetch that is not present upstream, or a normal
@@ -2356,4 +2391,44 @@ BaseCache::MemSidePort::MemSidePort(const std::string &_name,
       _reqQueue(*_cache, *this, _snoopRespQueue, _label),
       _snoopRespQueue(*_cache, *this, _label), cache(_cache)
 {
+}
+
+void
+WriteAllocator::updateMode(Addr write_addr, unsigned write_size,
+                           Addr blk_addr)
+{
+    // check if we are continuing where the last write ended
+    if (nextAddr == write_addr) {
+        delayCtr[blk_addr] = delayThreshold;
+        // stop if we have already saturated
+        if (mode != WriteMode::NO_ALLOCATE) {
+            byteCount += write_size;
+            // switch to streaming mode if we have passed the lower
+            // threshold
+            if (mode == WriteMode::ALLOCATE &&
+                byteCount > coalesceLimit) {
+                mode = WriteMode::COALESCE;
+                DPRINTF(Cache, "Switched to write coalescing\n");
+            } else if (mode == WriteMode::COALESCE &&
+                       byteCount > noAllocateLimit) {
+                // and continue and switch to non-allocating mode if we
+                // pass the upper threshold
+                mode = WriteMode::NO_ALLOCATE;
+                DPRINTF(Cache, "Switched to write-no-allocate\n");
+            }
+        }
+    } else {
+        // we did not see a write matching the previous one, start
+        // over again
+        byteCount = write_size;
+        mode = WriteMode::ALLOCATE;
+        resetDelay(blk_addr);
+    }
+    nextAddr = write_addr + write_size;
+}
+
+WriteAllocator*
+WriteAllocatorParams::create()
+{
+    return new WriteAllocator(this);
 }

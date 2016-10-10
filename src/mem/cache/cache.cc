@@ -623,8 +623,9 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
 
                 // write-line request to the cache that promoted
                 // the write to a whole line
-                blk = handleFill(bus_pkt, blk, writebacks,
-                                 allocOnFill(pkt->cmd));
+                const bool allocate = allocOnFill(pkt->cmd) &&
+                    (!writeAllocator || writeAllocator->allocate());
+                blk = handleFill(bus_pkt, blk, writebacks, allocate);
                 assert(blk != NULL);
                 is_invalidate = false;
                 satisfyRequest(pkt, blk);
