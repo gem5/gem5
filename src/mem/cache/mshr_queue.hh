@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -105,6 +105,15 @@ class MSHRQueue : public Queue<MSHR>
      * @param mshr The entry to move.
      */
     void moveToFront(MSHR *mshr);
+
+    /**
+     * Adds a delay to the provided MSHR and moves MSHRs that will be
+     * ready earlier than this entry to the top of the list
+     *
+     * @param mshr that needs to be delayed
+     * @param delay_ticks ticks of the desired delay
+     */
+    void delay(MSHR *mshr, Tick delay_ticks);
 
     /**
      * Mark the given MSHR as in service. This removes the MSHR from the

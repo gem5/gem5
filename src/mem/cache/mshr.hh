@@ -514,6 +514,16 @@ class MSHR : public QueueEntry, public Printable
     bool trySatisfyFunctional(PacketPtr pkt);
 
     /**
+     * Adds a delay relative to the current tick to the current MSHR
+     * @param delay_ticks the desired delay in ticks
+     */
+    void delay(Tick delay_ticks)
+    {
+        assert(readyTime <= curTick());
+        readyTime = curTick() + delay_ticks;
+    }
+
+    /**
      * Prints the contents of this MSHR for debugging.
      */
     void print(std::ostream &os,
