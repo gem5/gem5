@@ -40,6 +40,7 @@
  *
  * Authors: Erik Hallnor
  *          Dave Greene
+ *          Nikos Nikoleris
  */
 
 /**
@@ -63,7 +64,7 @@
 MSHR::MSHR() : downstreamPending(false),
                pendingModified(false),
                postInvalidate(false), postDowngrade(false),
-               isForward(false)
+               wasWholeLineWrite(false), isForward(false)
 {
 }
 
@@ -95,6 +96,8 @@ MSHR::TargetList::updateFlags(PacketPtr pkt, Target::Source source,
 
         if (source != Target::FromPrefetcher) {
             hasFromCache = hasFromCache || pkt->fromCache();
+
+            updateWriteFlags(pkt);
         }
     }
 }
@@ -257,16 +260,19 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     order = _order;
     assert(target);
     isForward = false;
+    wasWholeLineWrite = false;
     _isUncacheable = target->req->isUncacheable();
     inService = false;
     downstreamPending = false;
-    assert(targets.isReset());
+
+    targets.init(blkAddr, blkSize);
+    deferredTargets.init(blkAddr, blkSize);
+
     // Don't know of a case where we would allocate a new MSHR for a
     // snoop (mem-side request), so set source according to request here
     Target::Source source = (target->cmd == MemCmd::HardPFReq) ?
         Target::FromPrefetcher : Target::FromCPU;
     targets.add(target, when_ready, _order, source, true, alloc_on_fill);
-    assert(deferredTargets.isReset());
 }
 
 
@@ -294,6 +300,10 @@ MSHR::markInService(bool pending_modified_resp)
         // level where it's going to get a response
         targets.clearDownstreamPending();
     }
+    // if the line is not considered a whole-line write when sent
+    // downstream, make sure it is also not considered a whole-line
+    // write when receiving the response, and vice versa
+    wasWholeLineWrite = isWholeLineWrite();
 }
 
 
@@ -480,6 +490,7 @@ MSHR::TargetList
 MSHR::extractServiceableTargets(PacketPtr pkt)
 {
     TargetList ready_targets;
+    ready_targets.init(blkAddr, blkSize);
     // If the downstream MSHR got an invalidation request then we only
     // service the first of the FromCPU targets and any other
     // non-FromCPU target. This way the remaining FromCPU targets
