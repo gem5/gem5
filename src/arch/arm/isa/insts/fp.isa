@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013 ARM Limited
+// Copyright (c) 2010-2013,2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -642,6 +642,26 @@ let {{
                          "-FpOp1", "-dbl(FpOp1P0_uw, FpOp1P1_uw)")
     buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp", "SimdFloatMiscOp",
                          "fabsf(FpOp1)", "fabs(dbl(FpOp1P0_uw, FpOp1P1_uw))")
+    buildSimpleUnaryFpOp("vrintp", "VRIntP", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_POSINF, false, fpscr)",
+        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
+        "FPRounding_POSINF, false, fpscr)"
+        )
+    buildSimpleUnaryFpOp("vrintm", "VRIntM", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_NEGINF, false, fpscr)",
+        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
+        "FPRounding_NEGINF, false, fpscr)"
+        )
+    buildSimpleUnaryFpOp("vrinta", "VRIntA", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_TIEAWAY, false, fpscr)",
+        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
+        "FPRounding_TIEAWAY, false, fpscr)"
+        )
+    buildSimpleUnaryFpOp("vrintn", "VRIntN", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_TIEEVEN, false, fpscr)",
+        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
+        "FPRounding_TIEEVEN, false, fpscr)"
+        )
 }};
 
 let {{
@@ -1401,6 +1421,46 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vcmpeZeroDIop);
     exec_output += PredOpExecute.subst(vcmpeZeroDIop);
 }};
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    vselSCode = vfpEnabledCheckCode + '''
+        if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, cond)) {
+            FpDest = FpOp1;
+        } else {
+            FpDest = FpOp2;
+        } '''
+
+    vselSIop = InstObjParams("vsels", "VselS", "FpRegRegRegCondOp",
+                             { "code" : vselSCode,
+                               "predicate_test" : predicateTest,
+                               "op_class" : "SimdFloatCmpOp" }, [] )
+    header_output += FpRegRegRegCondOpDeclare.subst(vselSIop);
+    decoder_output += FpRegRegRegCondOpConstructor.subst(vselSIop);
+    exec_output +=  PredOpExecute.subst(vselSIop);
+
+    vselDCode = vfpEnabledCheckCode + '''
+        if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, cond)) {
+            FpDestP0_uw = FpOp1P0_uw;
+            FpDestP1_uw = FpOp1P1_uw;
+        } else {
+            FpDestP0_uw = FpOp2P0_uw;
+            FpDestP1_uw = FpOp2P1_uw;
+        } '''
+
+    vselDIop = InstObjParams("vseld", "VselD", "FpRegRegRegCondOp",
+                             { "code" : vselDCode,
+                               "predicate_test" : predicateTest,
+                               "op_class" : "SimdFloatCmpOp" }, [] )
+    header_output += FpRegRegRegCondOpDeclare.subst(vselDIop);
+    decoder_output += FpRegRegRegCondOpConstructor.subst(vselDIop);
+    exec_output +=  PredOpExecute.subst(vselDIop);
+}};
+
 
 let {{
 

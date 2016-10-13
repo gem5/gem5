@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011 ARM Limited
+// Copyright (c) 2010-2011,2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1950,7 +1950,101 @@ let {{
         const uint32_t b = bits(machInst, 6, 5);
         if ((machInst.thumb == 1 && bits(machInst, 28) == 1) ||
             (machInst.thumb == 0 && machInst.condCode == 0xf)) {
-            return new Unknown(machInst);
+            // Determine if this is backported aarch64 FP instruction
+            const bool b31_b24 = bits(machInst, 31, 24) == 0xFE;
+            const bool b23 = bits(machInst, 23);
+            const bool b21_b18 = bits(machInst, 21, 18) == 0xE;
+            const bool b11_b9  = bits(machInst, 11, 9) == 0x5;
+            const bool sz = bits(machInst, 8);
+            const bool b7_b6   = bits(machInst, 7, 6) == 0x1;
+            const bool b6 = bits(machInst, 6) == 0x0;
+            const bool b4 = bits(machInst, 4) == 0x0;
+            if (b31_b24 && b23 && b21_b18 && b11_b9 && b7_b6 && b4) {
+                  // VINT* Integer Rounding Instructon
+                  const uint32_t rm = bits(machInst, 17, 16);
+
+                  if (sz) {
+                      const IntRegIndex vd =
+                          (IntRegIndex)((bits(machInst, 22) << 5) |
+                                        (bits(machInst, 15, 12) << 1));
+                      const IntRegIndex vm =
+                          (IntRegIndex)((bits(machInst, 5) << 5) |
+                                        (bits(machInst, 3, 0) << 1));
+                      switch(rm) {
+                        case 0x0:
+                          return decodeVfpRegRegOp<VRIntAD>(machInst, vd, vm,
+                                                            true);
+                        case 0x1:
+                          return decodeVfpRegRegOp<VRIntND>(machInst, vd, vm,
+                                                            true);
+                        case 0x2:
+                          return decodeVfpRegRegOp<VRIntPD>(machInst, vd, vm,
+                                                            true);
+                        case 0x3:
+                          return decodeVfpRegRegOp<VRIntMD>(machInst, vd, vm,
+                                                            true);
+                        default: return new Unknown(machInst);
+                      }
+                  } else {
+                      const IntRegIndex vd =
+                          (IntRegIndex)(bits(machInst, 22) |
+                                       (bits(machInst, 15, 12) << 1));
+                      const IntRegIndex vm =
+                          (IntRegIndex)(bits(machInst, 5) |
+                                        (bits(machInst, 3, 0) << 1));
+                      switch(rm) {
+                        case 0x0:
+                          return decodeVfpRegRegOp<VRIntAS>(machInst, vd, vm,
+                                                            false);
+                        case 0x1:
+                          return decodeVfpRegRegOp<VRIntNS>(machInst, vd, vm,
+                                                            false);
+                        case 0x2:
+                          return decodeVfpRegRegOp<VRIntPS>(machInst, vd, vm,
+                                                            false);
+                        case 0x3:
+                          return decodeVfpRegRegOp<VRIntMS>(machInst, vd, vm,
+                                                            false);
+                        default: return new Unknown(machInst);
+                      }
+                  }
+            } else if (b31_b24 && !b23 && b11_b9 && b6 && b4){
+                // VSEL* floating point conditional select
+
+                ConditionCode cond;
+                switch(bits(machInst, 21, 20)) {
+                  case 0x0: cond = COND_EQ; break;
+                  case 0x1: cond = COND_VS; break;
+                  case 0x2: cond = COND_GE; break;
+                  case 0x3: cond = COND_GT; break;
+                }
+
+                if (sz) {
+                      const IntRegIndex vd =
+                          (IntRegIndex)((bits(machInst, 22) << 5) |
+                                        (bits(machInst, 15, 12) << 1));
+                      const IntRegIndex vm =
+                          (IntRegIndex)((bits(machInst, 5) << 5) |
+                                        (bits(machInst, 3, 0) << 1));
+                      const IntRegIndex vn =
+                          (IntRegIndex)((bits(machInst, 7) << 5) |
+                                       (bits(machInst, 19, 16) << 1));
+                    return new VselD(machInst, vd, vn, vm, cond);
+                } else {
+                      const IntRegIndex vd =
+                          (IntRegIndex)(bits(machInst, 22) |
+                                       (bits(machInst, 15, 12) << 1));
+                      const IntRegIndex vm =
+                          (IntRegIndex)(bits(machInst, 5) |
+                                        (bits(machInst, 3, 0) << 1));
+                      const IntRegIndex vn =
+                          (IntRegIndex)((bits(machInst, 19, 16) << 1) |
+                                        bits(machInst, 7));
+                      return new VselS(machInst, vd, vn, vm, cond);
+                }
+            } else {
+                return new Unknown(machInst);
+            }
         }
         if (l == 0 && c == 0) {
             if (a == 0) {

@@ -123,6 +123,21 @@ FpRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
+FpRegRegRegCondOp::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printCondition(ss, cond);
+    printReg(ss, dest + FP_Reg_Base);
+    ss << ", ";
+    printReg(ss, op1 + FP_Reg_Base);
+    ss << ", ";
+    printReg(ss, op2 + FP_Reg_Base);
+    return ss.str();
+}
+
+std::string
 FpRegRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;

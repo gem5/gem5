@@ -979,6 +979,27 @@ class FpRegRegRegOp : public FpOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+class FpRegRegRegCondOp : public FpOp
+{
+  protected:
+    IntRegIndex dest;
+    IntRegIndex op1;
+    IntRegIndex op2;
+    ConditionCode cond;
+
+    FpRegRegRegCondOp(const char *mnem, ExtMachInst _machInst,
+                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
+                      IntRegIndex _op2, ConditionCode _cond,
+                      VfpMicroMode mode = VfpNotAMicroop) :
+        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2),
+        cond(_cond)
+    {
+        setVfpMicroFlags(mode, flags);
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 class FpRegRegRegRegOp : public FpOp
 {
   protected:

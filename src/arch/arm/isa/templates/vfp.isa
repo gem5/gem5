@@ -210,3 +210,30 @@ def template FpRegRegRegOpConstructor {{
         }
     }
 }};
+
+def template FpRegRegRegCondOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                  ConditionCode _cond,
+                   VfpMicroMode mode = VfpNotAMicroop);
+    %(BasicExecDeclare)s
+};
+}};
+
+def template FpRegRegRegCondOpConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          ConditionCode _cond,
+                                          VfpMicroMode mode)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _cond, mode)
+    {
+        %(constructor)s;
+    }
+}};
