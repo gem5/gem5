@@ -383,6 +383,9 @@ class DDR3_1600_x64(DRAMCtrl):
     IDD4W = '125mA'
     IDD4R = '157mA'
     IDD5 = '235mA'
+    IDD3P1 = '38mA'
+    IDD2P1 = '32mA'
+    IDD6 = '20mA'
     VDD = '1.5V'
 
 # A single HMC-2500 x32 model based on:
@@ -511,6 +514,9 @@ class DDR3_2133_x64(DDR3_1600_x64):
     IDD4W = '157mA'
     IDD4R = '191mA'
     IDD5 = '250mA'
+    IDD3P1 = '44mA'
+    IDD2P1 = '43mA'
+    IDD6 ='20mA'
     VDD = '1.5V'
 
 # A single DDR4-2400 x64 channel (one command and address bus), with
@@ -612,6 +618,9 @@ class DDR4_2400_x64(DRAMCtrl):
     IDD4W = '302mA'
     IDD4R = '230mA'
     IDD5 = '192mA'
+    IDD3P1 = '44mA'
+    IDD2P1 = '32mA'
+    IDD6 = '20mA'
     VDD = '1.2V'
     VDD2 = '2.5V'
 
@@ -706,6 +715,12 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     IDD4R2 = '220mA'
     IDD5 = '40mA'
     IDD52 = '150mA'
+    IDD3P1 = '1.2mA'
+    IDD3P12 = '8mA'
+    IDD2P1 = '0.6mA'
+    IDD2P12 = '0.8mA'
+    IDD6 = '1mA'
+    IDD62 = '3.2mA'
     VDD = '1.8V'
     VDD2 = '1.2V'
 
@@ -868,6 +883,12 @@ class LPDDR3_1600_x32(DRAMCtrl):
     IDD4R2 = '230mA'
     IDD5 = '28mA'
     IDD52 = '150mA'
+    IDD3P1 = '1.4mA'
+    IDD3P12 = '11mA'
+    IDD2P1 = '0.8mA'
+    IDD2P12 = '1.8mA'
+    IDD6 = '0.5mA'
+    IDD62 = '1.8mA'
     VDD = '1.8V'
     VDD2 = '1.2V'
 
