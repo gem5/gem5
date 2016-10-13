@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 ARM Limited
+# Copyright (c) 2012-2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -376,13 +376,13 @@ class DDR3_1600_x64(DRAMCtrl):
     # self refresh exit time
     tXS = '270ns'
 
-    # Current values from datasheet
-    IDD0 = '75mA'
-    IDD2N = '50mA'
-    IDD3N = '57mA'
-    IDD4W = '165mA'
-    IDD4R = '187mA'
-    IDD5 = '220mA'
+    # Current values from datasheet Die Rev E,J
+    IDD0 = '55mA'
+    IDD2N = '32mA'
+    IDD3N = '38mA'
+    IDD4W = '125mA'
+    IDD4R = '157mA'
+    IDD5 = '235mA'
     VDD = '1.5V'
 
 # A single HMC-2500 x32 model based on:
