@@ -684,7 +684,7 @@ DRAMCtrl::processRespondEvent()
     } else {
         // if there is nothing left in any queue, signal a drain
         if (drainState() == DrainState::Draining &&
-            writeQueue.empty() && readQueue.empty()) {
+            writeQueue.empty() && readQueue.empty() && allRanksDrained()) {
 
             DPRINTF(Drain, "DRAM controller done draining\n");
             signalDrainDone();
@@ -1288,8 +1288,11 @@ DRAMCtrl::processNextReqEvent()
                 switch_to_writes = true;
             } else {
                 // check if we are drained
+                // not done draining until in PWR_IDLE state
+                // ensuring all banks are closed and
+                // have exited low power states
                 if (drainState() == DrainState::Draining &&
-                    respQueue.empty()) {
+                    respQueue.empty() && allRanksDrained()) {
 
                     DPRINTF(Drain, "DRAM controller done draining\n");
                     signalDrainDone();
@@ -1538,6 +1541,9 @@ void
 DRAMCtrl::Rank::suspend()
 {
     deschedule(refreshEvent);
+
+    // Update the stats
+    updatePowerStats();
 }
 
 void
@@ -1708,23 +1714,6 @@ DRAMCtrl::Rank::processRefreshEvent()
         // at the moment this affects all ranks
         cmdList.push_back(Command(MemCommand::REF, 0, curTick()));
 
-        // All commands up to refresh have completed
-        // flush cmdList to DRAMPower
-        flushCmdList();
-
-        // update the counters for DRAMPower, passing false to
-        // indicate that this is not the last command in the
-        // list. DRAMPower requires this information for the
-        // correct calculation of the background energy at the end
-        // of the simulation. Ideally we would want to call this
-        // function with true once at the end of the
-        // simulation. However, the discarded energy is extremly
-        // small and does not effect the final results.
-        power.powerlib.updateCounters(false);
-
-        // call the energy function
-        power.powerlib.calcEnergy();
-
         // Update the stats
         updatePowerStats();
 
@@ -1833,6 +1822,23 @@ DRAMCtrl::Rank::processPowerEvent()
 void
 DRAMCtrl::Rank::updatePowerStats()
 {
+    // All commands up to refresh have completed
+    // flush cmdList to DRAMPower
+    flushCmdList();
+
+    // update the counters for DRAMPower, passing false to
+    // indicate that this is not the last command in the
+    // list. DRAMPower requires this information for the
+    // correct calculation of the background energy at the end
+    // of the simulation. Ideally we would want to call this
+    // function with true once at the end of the
+    // simulation. However, the discarded energy is extremly
+    // small and does not effect the final results.
+    power.powerlib.updateCounters(false);
+
+    // call the energy function
+    power.powerlib.calcEnergy();
+
     // Get the energy and power from DRAMPower
     Data::MemoryPowerModel::Energy energy =
         power.powerlib.getEnergy();
@@ -2182,7 +2188,9 @@ DRAMCtrl::drain()
 {
     // if there is anything in any of our internal queues, keep track
     // of that as well
-    if (!(writeQueue.empty() && readQueue.empty() && respQueue.empty())) {
+    if (!(writeQueue.empty() && readQueue.empty() && respQueue.empty() &&
+          allRanksDrained())) {
+
         DPRINTF(Drain, "DRAM controller not drained, write: %d, read: %d,"
                 " resp: %d\n", writeQueue.size(), readQueue.size(),
                 respQueue.size());
@@ -2196,6 +2204,19 @@ DRAMCtrl::drain()
     } else {
         return DrainState::Drained;
     }
+}
+
+bool
+DRAMCtrl::allRanksDrained() const
+{
+    // true until proven false
+    bool all_ranks_drained = true;
+    for (auto r : ranks) {
+        // then verify that the power state is IDLE
+        // ensuring all banks are closed and rank is not in a low power state
+        all_ranks_drained = r->inPwrIdleState() && all_ranks_drained;
+    }
+    return all_ranks_drained;
 }
 
 void

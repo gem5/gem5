@@ -382,6 +382,15 @@ class DRAMCtrl : public AbstractMemory
         bool isAvailable() const { return refreshState == REF_IDLE; }
 
         /**
+         * Check if the current rank has all banks closed and is not
+         * in a low power state
+         *
+         * @param Return true if the rank is idle from a bank
+         *        and power point of view
+         */
+        bool inPwrIdleState() const { return pwrState == PWR_IDLE; }
+
+        /**
          * Let the rank check if it was waiting for requests to drain
          * to allow it to transition states.
          */
@@ -912,6 +921,17 @@ class DRAMCtrl : public AbstractMemory
     virtual void init() override;
     virtual void startup() override;
     virtual void drainResume() override;
+
+    /**
+     * Return true once refresh is complete for all ranks and there are no
+     * additional commands enqueued.  (only evaluated when draining)
+     * This will ensure that all banks are closed, power state is IDLE, and
+     * power stats have been updated
+     *
+     * @return true if all ranks have refreshed, with no commands enqueued
+     *
+     */
+    bool allRanksDrained() const;
 
   protected:
 
