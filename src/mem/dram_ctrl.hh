@@ -42,6 +42,7 @@
  *          Neha Agarwal
  *          Omar Naji
  *          Matthias Jung
+ *          Wendy Elsasser
  */
 
 /**
@@ -87,6 +88,10 @@
  * controllers for future system architecture exploration",
  * Proc. ISPASS, 2014. If you use this model as part of your research
  * please cite the paper.
+ *
+ * The low-power functionality implements a staggered powerdown
+ * similar to that described in "Optimized Active and Power-Down Mode
+ * Refresh Control in 3D-DRAMs" by Jung et al, VLSI-SoC, 2014.
  */
 class DRAMCtrl : public AbstractMemory
 {
@@ -140,12 +145,13 @@ class DRAMCtrl : public AbstractMemory
      */
     enum BusState {
         READ = 0,
-        READ_TO_WRITE,
         WRITE,
-        WRITE_TO_READ
     };
 
     BusState busState;
+
+    /* bus state for next request event triggered */
+    BusState busStateNext;
 
     /**
      * Simple structure to hold the values needed to keep track of
@@ -198,6 +204,82 @@ class DRAMCtrl : public AbstractMemory
 
 
     /**
+     * The power state captures the different operational states of
+     * the DRAM and interacts with the bus read/write state machine,
+     * and the refresh state machine.
+     *
+     * PWR_IDLE      : The idle state in which all banks are closed
+     *                 From here can transition to:  PWR_REF, PWR_ACT,
+     *                 PWR_PRE_PDN
+     *
+     * PWR_REF       : Auto-refresh state.  Will transition when refresh is
+     *                 complete based on power state prior to PWR_REF
+     *                 From here can transition to:  PWR_IDLE, PWR_PRE_PDN,
+     *                 PWR_SREF
+     *
+     * PWR_SREF      : Self-refresh state.  Entered after refresh if
+     *                 previous state was PWR_PRE_PDN
+     *                 From here can transition to:  PWR_IDLE
+     *
+     * PWR_PRE_PDN   : Precharge power down state
+     *                 From here can transition to:  PWR_REF, PWR_IDLE
+     *
+     * PWR_ACT       : Activate state in which one or more banks are open
+     *                 From here can transition to:  PWR_IDLE, PWR_ACT_PDN
+     *
+     * PWR_ACT_PDN   : Activate power down state
+     *                 From here can transition to:  PWR_ACT
+     */
+     enum PowerState {
+         PWR_IDLE = 0,
+         PWR_REF,
+         PWR_SREF,
+         PWR_PRE_PDN,
+         PWR_ACT,
+         PWR_ACT_PDN
+     };
+
+    /**
+     * The refresh state is used to control the progress of the
+     * refresh scheduling. When normal operation is in progress the
+     * refresh state is idle. Once tREFI has elasped, a refresh event
+     * is triggered to start the following STM transitions which are
+     * used to issue a refresh and return back to normal operation
+     *
+     * REF_IDLE      : IDLE state used during normal operation
+     *                 From here can transition to:  REF_DRAIN
+     *
+     * REF_SREF_EXIT : Exiting a self-refresh; refresh event scheduled
+     *                 after self-refresh exit completes
+     *                 From here can transition to:  REF_DRAIN
+     *
+     * REF_DRAIN     : Drain state in which on going accesses complete.
+     *                 From here can transition to:  REF_PD_EXIT
+     *
+     * REF_PD_EXIT   : Evaluate pwrState and issue wakeup if needed
+     *                 Next state dependent on whether banks are open
+     *                 From here can transition to:  REF_PRE, REF_START
+     *
+     * REF_PRE       : Close (precharge) all open banks
+     *                 From here can transition to:  REF_START
+     *
+     * REF_START     : Issue refresh command and update DRAMPower stats
+     *                 From here can transition to:  REF_RUN
+     *
+     * REF_RUN       : Refresh running, waiting for tRFC to expire
+     *                 From here can transition to:  REF_IDLE, REF_SREF_EXIT
+     */
+     enum RefreshState {
+         REF_IDLE = 0,
+         REF_DRAIN,
+         REF_PD_EXIT,
+         REF_SREF_EXIT,
+         REF_PRE,
+         REF_START,
+         REF_RUN
+     };
+
+    /**
      * Rank class includes a vector of banks. Refresh and Power state
      * machines are defined per rank. Events required to change the
      * state of the refresh and power state machine are scheduled per
@@ -210,69 +292,25 @@ class DRAMCtrl : public AbstractMemory
       private:
 
         /**
-         * The power state captures the different operational states of
-         * the DRAM and interacts with the bus read/write state machine,
-         * and the refresh state machine. In the idle state all banks are
-         * precharged. From there we either go to an auto refresh (as
-         * determined by the refresh state machine), or to a precharge
-         * power down mode. From idle the memory can also go to the active
-         * state (with one or more banks active), and in turn from there
-         * to active power down. At the moment we do not capture the deep
-         * power down and self-refresh state.
-         */
-        enum PowerState {
-            PWR_IDLE = 0,
-            PWR_REF,
-            PWR_PRE_PDN,
-            PWR_ACT,
-            PWR_ACT_PDN
-        };
-
-        /**
-         * The refresh state is used to control the progress of the
-         * refresh scheduling. When normal operation is in progress the
-         * refresh state is idle. From there, it progresses to the refresh
-         * drain state once tREFI has passed. The refresh drain state
-         * captures the DRAM row active state, as it will stay there until
-         * all ongoing accesses complete. Thereafter all banks are
-         * precharged, and lastly, the DRAM is refreshed.
-         */
-        enum RefreshState {
-            REF_IDLE = 0,
-            REF_DRAIN,
-            REF_PRE,
-            REF_RUN
-        };
-
-        /**
          * A reference to the parent DRAMCtrl instance
          */
         DRAMCtrl& memory;
 
         /**
          * Since we are taking decisions out of order, we need to keep
-         * track of what power transition is happening at what time, such
-         * that we can go back in time and change history. For example, if
-         * we precharge all banks and schedule going to the idle state, we
-         * might at a later point decide to activate a bank before the
-         * transition to idle would have taken place.
+         * track of what power transition is happening at what time
          */
         PowerState pwrStateTrans;
 
         /**
-         * Current power state.
+         * Previous low-power state, which will be re-entered after refresh.
          */
-        PowerState pwrState;
+        PowerState pwrStatePostRefresh;
 
         /**
          * Track when we transitioned to the current power state
          */
         Tick pwrStateTick;
-
-        /**
-         * current refresh state
-         */
-        RefreshState refreshState;
 
         /**
          * Keep track of when a refresh is due.
@@ -298,8 +336,29 @@ class DRAMCtrl : public AbstractMemory
          */
         Stats::Scalar preBackEnergy;
 
+        /*
+         * Active Power-Down Energy
+         */
+        Stats::Scalar actPowerDownEnergy;
+
+        /*
+         * Precharge Power-Down Energy
+         */
+        Stats::Scalar prePowerDownEnergy;
+
+        /*
+         * self Refresh Energy
+         */
+        Stats::Scalar selfRefreshEnergy;
+
         Stats::Scalar totalEnergy;
         Stats::Scalar averagePower;
+
+        /**
+         * Stat to track total DRAM idle time
+         *
+         */
+        Stats::Scalar totalIdleTime;
 
         /**
          * Track time spent in each power state.
@@ -323,9 +382,46 @@ class DRAMCtrl : public AbstractMemory
       public:
 
         /**
+         * Current power state.
+         */
+        PowerState pwrState;
+
+       /**
+         * current refresh state
+         */
+        RefreshState refreshState;
+
+        /**
+         * rank is in or transitioning to power-down or self-refresh
+         */
+        bool inLowPowerState;
+
+        /**
          * Current Rank index
          */
         uint8_t rank;
+
+       /**
+         * Track number of packets in read queue going to this rank
+         */
+        uint32_t readEntries;
+
+       /**
+         * Track number of packets in write queue going to this rank
+         */
+        uint32_t writeEntries;
+
+        /**
+         * Number of ACT, RD, and WR events currently scheduled
+         * Incremented when a refresh event is started as well
+         * Used to determine when a low-power state can be entered
+         */
+        uint8_t outstandingEvents;
+
+        /**
+         * delay power-down and self-refresh exit until this requirement is met
+         */
+        Tick wakeUpAllowedAt;
 
         /**
          * One DRAMPower instance per rank
@@ -377,6 +473,10 @@ class DRAMCtrl : public AbstractMemory
 
         /**
          * Check if the current rank is available for scheduling.
+         * Rank will be unavailable if refresh is ongoing.
+         * This includes refresh events explicitly scheduled from the the
+         * controller or memory initiated events which will occur during
+         * self-refresh mode.
          *
          * @param Return true if the rank is idle from a refresh point of view
          */
@@ -390,6 +490,29 @@ class DRAMCtrl : public AbstractMemory
          *        and power point of view
          */
         bool inPwrIdleState() const { return pwrState == PWR_IDLE; }
+
+        /**
+         * Trigger a self-refresh exit if there are entries enqueued
+         * Exit if there are any read entries regardless of the bus state.
+         * If we are currently issuing write commands, exit if we have any
+         * write commands enqueued as well.
+         * Could expand this in the future to analyze state of entire queue
+         * if needed.
+         *
+         * @return boolean indicating self-refresh exit should be scheduled
+         */
+        bool forceSelfRefreshExit() const {
+            return (readEntries != 0) ||
+                   ((memory.busStateNext == WRITE) && (writeEntries != 0));
+        }
+
+        /**
+         * Check if the current rank is idle and should enter a low-pwer state
+         *
+         * @param Return true if the there are no read commands in Q
+         *                    and there are no outstanding events
+         */
+        bool lowPowerEntryReady() const;
 
         /**
          * Let the rank check if it was waiting for requests to drain
@@ -415,6 +538,27 @@ class DRAMCtrl : public AbstractMemory
          */
         void computeStats();
 
+        /**
+         * Schedule a transition to power-down (sleep)
+         *
+         * @param pwr_state Power state to transition to
+         * @param tick Absolute tick when transition should take place
+         */
+        void powerDownSleep(PowerState pwr_state, Tick tick);
+
+       /**
+         * schedule and event to wake-up from power-down or self-refresh
+         * and update bank timing parameters
+         *
+         * @param exit_delay Relative tick defining the delay required between
+         *                   low-power exit and the next command
+         */
+        void scheduleWakeUpEvent(Tick exit_delay);
+
+        void processWriteDoneEvent();
+        EventWrapper<Rank, &Rank::processWriteDoneEvent>
+        writeDoneEvent;
+
         void processActivateEvent();
         EventWrapper<Rank, &Rank::processActivateEvent>
         activateEvent;
@@ -430,6 +574,10 @@ class DRAMCtrl : public AbstractMemory
         void processPowerEvent();
         EventWrapper<Rank, &Rank::processPowerEvent>
         powerEvent;
+
+        void processWakeUpEvent();
+        EventWrapper<Rank, &Rank::processWakeUpEvent>
+        wakeUpEvent;
 
     };
 
