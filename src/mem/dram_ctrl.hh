@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 ARM Limited
+ * Copyright (c) 2012-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -145,6 +145,21 @@ class DRAMCtrl : public AbstractMemory
     };
 
     BusState busState;
+
+    /**
+     * Simple structure to hold the values needed to keep track of
+     * commands for DRAMPower
+     */
+    struct Command {
+       Data::MemCommand::cmds type;
+       uint8_t bank;
+       Tick timeStamp;
+
+       constexpr Command(Data::MemCommand::cmds _type, uint8_t _bank,
+                         Tick time_stamp)
+            : type(_type), bank(_bank), timeStamp(time_stamp)
+        { }
+    };
 
     /**
      * A basic class to track the bank state, i.e. what row is
@@ -317,6 +332,14 @@ class DRAMCtrl : public AbstractMemory
         DRAMPower power;
 
         /**
+         * List of comamnds issued, to be sent to DRAMPpower at refresh
+         * and stats dump.  Keep commands here since commands to different
+         * banks are added out of order.  Will only pass commands up to
+         * curTick() to DRAMPower after sorting.
+         */
+        std::vector<Command> cmdList;
+
+        /**
          * Vector of Banks. Each rank is made of several devices which in
          * term are made from several banks.
          */
@@ -363,6 +386,14 @@ class DRAMCtrl : public AbstractMemory
          * to allow it to transition states.
          */
         void checkDrainDone();
+
+        /**
+         * Push command out of cmdList queue that are scheduled at
+         * or before curTick() to DRAMPower library
+         * All commands before curTick are guaranteed to be complete
+         * and can safely be flushed.
+         */
+        void flushCmdList();
 
         /*
          * Function to register Stats
@@ -857,17 +888,15 @@ class DRAMCtrl : public AbstractMemory
     void updatePowerStats(Rank& rank_ref);
 
     /**
-     * Function for sorting commands in the command list of DRAMPower.
+     * Function for sorting Command structures based on timeStamp
      *
-     * @param a Memory Command in command list of DRAMPower library
-     * @param next Memory Command in command list of DRAMPower
-     * @return true if timestamp of Command 1 < timestamp of Command 2
+     * @param a Memory Command
+     * @param next Memory Command
+     * @return true if timeStamp of Command 1 < timeStamp of Command 2
      */
-    static bool sortTime(const Data::MemCommand& m1,
-                         const Data::MemCommand& m2) {
-        return m1.getTimeInt64() < m2.getTimeInt64();
+    static bool sortTime(const Command& cmd, const Command& cmd_next) {
+        return cmd.timeStamp < cmd_next.timeStamp;
     };
-
 
   public:
 

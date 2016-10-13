@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2015 ARM Limited
+ * Copyright (c) 2010-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -898,9 +898,8 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
             bank_ref.bank, rank_ref.rank, act_tick,
             ranks[rank_ref.rank]->numBanksActive);
 
-    rank_ref.power.powerlib.doCommand(MemCommand::ACT, bank_ref.bank,
-                                      divCeil(act_tick, tCK) -
-                                      timeStampOffset);
+    rank_ref.cmdList.push_back(Command(MemCommand::ACT, bank_ref.bank,
+                               act_tick));
 
     DPRINTF(DRAMPower, "%llu,ACT,%d,%d\n", divCeil(act_tick, tCK) -
             timeStampOffset, bank_ref.bank, rank_ref.rank);
@@ -1002,9 +1001,8 @@ DRAMCtrl::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_at, bool trace)
 
     if (trace) {
 
-        rank_ref.power.powerlib.doCommand(MemCommand::PRE, bank.bank,
-                                                divCeil(pre_at, tCK) -
-                                                timeStampOffset);
+        rank_ref.cmdList.push_back(Command(MemCommand::PRE, bank.bank,
+                                   pre_at));
         DPRINTF(DRAMPower, "%llu,PRE,%d,%d\n", divCeil(pre_at, tCK) -
                 timeStampOffset, bank.bank, rank_ref.rank);
     }
@@ -1176,8 +1174,20 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     MemCommand::cmds command = (mem_cmd == "RD") ? MemCommand::RD :
                                                    MemCommand::WR;
 
+    // Update bus state
+    busBusyUntil = dram_pkt->readyTime;
+
+    DPRINTF(DRAM, "Access to %lld, ready at %lld bus busy until %lld.\n",
+            dram_pkt->addr, dram_pkt->readyTime, busBusyUntil);
+
+    dram_pkt->rankRef.cmdList.push_back(Command(command, dram_pkt->bank,
+                                        cmd_at));
+
+    DPRINTF(DRAMPower, "%llu,%s,%d,%d\n", divCeil(cmd_at, tCK) -
+            timeStampOffset, mem_cmd, dram_pkt->bank, dram_pkt->rank);
+
     // if this access should use auto-precharge, then we are
-    // closing the row
+    // closing the row after the read/write burst
     if (auto_precharge) {
         // if auto-precharge push a PRE command at the correct tick to the
         // list used by DRAMPower library to calculate power
@@ -1185,19 +1195,6 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 
         DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
     }
-
-    // Update bus state
-    busBusyUntil = dram_pkt->readyTime;
-
-    DPRINTF(DRAM, "Access to %lld, ready at %lld bus busy until %lld.\n",
-            dram_pkt->addr, dram_pkt->readyTime, busBusyUntil);
-
-    dram_pkt->rankRef.power.powerlib.doCommand(command, dram_pkt->bank,
-                                                 divCeil(cmd_at, tCK) -
-                                                 timeStampOffset);
-
-    DPRINTF(DRAMPower, "%llu,%s,%d,%d\n", divCeil(cmd_at, tCK) -
-            timeStampOffset, mem_cmd, dram_pkt->bank, dram_pkt->rank);
 
     // Update the minimum timing between the requests, this is a
     // conservative estimate of when we have to schedule the next
@@ -1559,6 +1556,34 @@ DRAMCtrl::Rank::checkDrainDone()
 }
 
 void
+DRAMCtrl::Rank::flushCmdList()
+{
+    // at the moment sort the list of commands and update the counters
+    // for DRAMPower libray when doing a refresh
+    sort(cmdList.begin(), cmdList.end(), DRAMCtrl::sortTime);
+
+    auto next_iter = cmdList.begin();
+    // push to commands to DRAMPower
+    for ( ; next_iter != cmdList.end() ; ++next_iter) {
+         Command cmd = *next_iter;
+         if (cmd.timeStamp <= curTick()) {
+             // Move all commands at or before curTick to DRAMPower
+             power.powerlib.doCommand(cmd.type, cmd.bank,
+                                      divCeil(cmd.timeStamp, memory.tCK) -
+                                      memory.timeStampOffset);
+         } else {
+             // done - found all commands at or before curTick()
+             // next_iter references the 1st command after curTick
+             break;
+         }
+    }
+    // reset cmdList to only contain commands after curTick
+    // if there are no commands after curTick, updated cmdList will be empty
+    // in this case, next_iter is cmdList.end()
+    cmdList.assign(next_iter, cmdList.end());
+}
+
+void
 DRAMCtrl::Rank::processActivateEvent()
 {
     // we should transition to the active state as soon as any bank is active
@@ -1645,9 +1670,7 @@ DRAMCtrl::Rank::processRefreshEvent()
             }
 
             // precharge all banks in rank
-            power.powerlib.doCommand(MemCommand::PREA, 0,
-                                     divCeil(pre_at, memory.tCK) -
-                                     memory.timeStampOffset);
+            cmdList.push_back(Command(MemCommand::PREA, 0, pre_at));
 
             DPRINTF(DRAMPower, "%llu,PREA,0,%d\n",
                     divCeil(pre_at, memory.tCK) -
@@ -1683,14 +1706,11 @@ DRAMCtrl::Rank::processRefreshEvent()
         }
 
         // at the moment this affects all ranks
-        power.powerlib.doCommand(MemCommand::REF, 0,
-                                 divCeil(curTick(), memory.tCK) -
-                                 memory.timeStampOffset);
+        cmdList.push_back(Command(MemCommand::REF, 0, curTick()));
 
-        // at the moment sort the list of commands and update the counters
-        // for DRAMPower libray when doing a refresh
-        sort(power.powerlib.cmdList.begin(),
-             power.powerlib.cmdList.end(), DRAMCtrl::sortTime);
+        // All commands up to refresh have completed
+        // flush cmdList to DRAMPower
+        flushCmdList();
 
         // update the counters for DRAMPower, passing false to
         // indicate that this is not the last command in the
