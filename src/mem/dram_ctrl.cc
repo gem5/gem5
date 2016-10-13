@@ -1857,6 +1857,24 @@ DRAMCtrl::Rank::updatePowerStats()
 }
 
 void
+DRAMCtrl::Rank::computeStats()
+{
+    DPRINTF(DRAM,"Computing final stats\n");
+
+    // Force DRAM power to update counters based on time spent in
+    // current state up to curTick()
+    cmdList.push_back(Command(MemCommand::NOP, 0, curTick()));
+
+    // Update the stats
+    updatePowerStats();
+
+    // final update of power state times
+    pwrStateTime[pwrState] += (curTick() - pwrStateTick);
+    pwrStateTick = curTick();
+
+}
+
+void
 DRAMCtrl::Rank::regStats()
 {
     using namespace Stats;
@@ -1906,6 +1924,8 @@ DRAMCtrl::Rank::regStats()
     averagePower
         .name(name() + ".averagePower")
         .desc("Core power per rank (mW)");
+
+    registerDumpCallback(new RankDumpCallback(this));
 }
 void
 DRAMCtrl::regStats()

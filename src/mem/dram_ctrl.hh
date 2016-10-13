@@ -56,6 +56,7 @@
 #include <string>
 #include <unordered_set>
 
+#include "base/callback.hh"
 #include "base/statistics.hh"
 #include "enums/AddrMap.hh"
 #include "enums/MemSched.hh"
@@ -409,6 +410,11 @@ class DRAMCtrl : public AbstractMemory
          */
         void regStats();
 
+        /**
+         * Computes stats just prior to dump event
+         */
+        void computeStats();
+
         void processActivateEvent();
         EventWrapper<Rank, &Rank::processActivateEvent>
         activateEvent;
@@ -425,6 +431,18 @@ class DRAMCtrl : public AbstractMemory
         EventWrapper<Rank, &Rank::processPowerEvent>
         powerEvent;
 
+    };
+
+    // define the process to compute stats on simulation exit
+    // defined per rank as the per rank stats are based on state
+    // transition and periodically updated, requiring re-sync at
+    // exit.
+    class RankDumpCallback : public Callback
+    {
+        Rank *ranks;
+      public:
+        RankDumpCallback(Rank *r) : ranks(r) {}
+        virtual void process() { ranks->computeStats(); };
     };
 
     /**
