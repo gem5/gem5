@@ -370,6 +370,12 @@ class DDR3_1600_x64(DRAMCtrl):
     # <=85C, half for >85C
     tREFI = '7.8us'
 
+    # active powerdown and precharge powerdown exit time
+    tXP = '6ns'
+
+    # self refresh exit time
+    tXS = '270ns'
+
     # Current values from datasheet
     IDD0 = '75mA'
     IDD2N = '50mA'
@@ -591,6 +597,12 @@ class DDR4_2400_x64(DRAMCtrl):
     # <=85C, half for >85C
     tREFI = '7.8us'
 
+    # active powerdown and precharge powerdown exit time
+    tXP = '6ns'
+
+    # self refresh exit time
+    tXS = '120ns'
+
     # Current values from datasheet
     IDD0 = '70mA'
     IDD02 = '4.6mA'
@@ -658,6 +670,12 @@ class LPDDR2_S4_1066_x32(DRAMCtrl):
     # LPDDR2-S4, 4 Gbit
     tRFC = '130ns'
     tREFI = '3.9us'
+
+    # active powerdown and precharge powerdown exit time
+    tXP = '7.5ns'
+
+    # self refresh exit time
+    tXS = '140ns'
 
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
@@ -814,6 +832,12 @@ class LPDDR3_1600_x32(DRAMCtrl):
     # LPDDR3, 4 Gb
     tRFC = '130ns'
     tREFI = '3.9us'
+
+    # active powerdown and precharge powerdown exit time
+    tXP = '7.5ns'
+
+    # self refresh exit time
+    tXS = '140ns'
 
     # Irrespective of speed grade, tWTR is 7.5 ns
     tWTR = '7.5ns'
@@ -1057,3 +1081,9 @@ class HBM_1000_4H_x64(HBM_1000_4H_x128):
     # Default different rank bus delay to 2 CK, @1000 MHz = 2 ns
     tCS = '2ns'
     tREFI = '3.9us'
+
+    # active powerdown and precharge powerdown exit time
+    tXP = '10ns'
+
+    # self refresh exit time
+    tXS = '65ns'

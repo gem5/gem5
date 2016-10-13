@@ -726,6 +726,8 @@ class DRAMCtrl : public AbstractMemory
     const Tick tRRD;
     const Tick tRRD_L;
     const Tick tXAW;
+    const Tick tXP;
+    const Tick tXS;
     const uint32_t activationLimit;
 
     /**
