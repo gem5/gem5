@@ -1,5 +1,14 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2016 ARM Limited
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,43 +33,4 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ron Dreslinski
-
-import m5
-from m5.objects import *
-m5.util.addToPath('../configs/common')
-
-nb_cores = 4
-cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
-
-import ruby_config
-ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
-
-# system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = SystemXBar(),
-                mem_mode = "timing",
-                clk_domain = SrcClockDomain(clock = '1GHz'))
-
-# Create a seperate clock domain for components that should run at
-# CPUs frequency
-system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
-
-for cpu in cpus:
-    # create the interrupt controller
-    cpu.createInterruptController()
-    cpu.connectAllPorts(system.membus)
-    # All cpus are associated with cpu_clk_domain
-    cpu.clk_domain = system.cpu_clk_domain
-
-# connect memory to membus
-system.physmem.port = system.membus.master
-
-# Connect the system port for loading of binaries etc
-system.system_port = system.membus.slave
-
-# -----------------------
-# run simulation
-# -----------------------
-
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+# Authors: Andreas Hansson

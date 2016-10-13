@@ -28,8 +28,6 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/topologies')
-
 
 nb_cores = 4
 cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]

@@ -40,8 +40,8 @@ from m5.defines import buildEnv
 from Ruby import create_topology
 from Ruby import send_evicts
 
-from Cluster import Cluster
-from Crossbar import Crossbar
+from topologies.Cluster import Cluster
+from topologies.Crossbar import Crossbar
 
 class CntrlBase:
     _seqs = 0

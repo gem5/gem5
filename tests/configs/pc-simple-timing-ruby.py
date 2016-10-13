@@ -32,9 +32,8 @@ m5.util.addToPath('../configs/common')
 from Benchmarks import SysConfig
 import FSConfig
 
-m5.util.addToPath('../configs/ruby')
-m5.util.addToPath('../configs/topologies')
-import Ruby
+m5.util.addToPath('../configs/')
+from ruby import Ruby
 import Options
 
 # Add the ruby specific and protocol specific options

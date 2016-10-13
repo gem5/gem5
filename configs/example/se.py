@@ -51,13 +51,12 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
+addToPath('../')
 addToPath('../common')
-addToPath('../ruby')
-addToPath('../network')
+
+from ruby import Ruby
 
 import Options
-import Ruby
-import Network
 import Simulation
 import CacheConfig
 import CpuConfig
@@ -129,7 +128,6 @@ Options.addSEOptions(parser)
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
-    Network.define_options(parser)
 
 (options, args) = parser.parse_args()
 

@@ -39,7 +39,7 @@ from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import convert
 from CntrlBase import *
-from Cluster import Cluster
+from topologies.Cluster import Cluster
 
 #
 # Note: the L1 Cache latency is only used by the sequencer on fast path hits

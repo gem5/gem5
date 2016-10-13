@@ -34,13 +34,10 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys
 addToPath('../common')
-addToPath('../ruby')
-addToPath('../network')
-addToPath('../topologies')
+addToPath('../')
 
 import Options
-import Ruby
-import Network
+from ruby import Ruby
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -59,7 +56,6 @@ parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
 # Add the ruby specific and protocol specific options
 #
 Ruby.define_options(parser)
-Network.define_options(parser)
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 

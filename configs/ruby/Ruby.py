@@ -46,10 +46,9 @@ from m5.defines import buildEnv
 from m5.util import addToPath, fatal
 
 import MemConfig
-addToPath('../topologies')
-addToPath('../network')
 
-import Network
+from topologies import *
+from network import Network
 
 def define_options(parser):
     # By default, ruby uses the simple timing cpu
@@ -80,6 +79,7 @@ def define_options(parser):
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
+    Network.define_options(parser)
 
 def setup_memory_controllers(system, ruby, dir_cntrls, options):
     ruby.block_size_bytes = options.cacheline_size
@@ -141,7 +141,7 @@ def create_topology(controllers, options):
         found in configs/topologies/BaseTopology.py
         This is a wrapper for the legacy topologies.
     """
-    exec "import %s as Topo" % options.topology
+    exec "import topologies.%s as Topo" % options.topology
     topology = eval("Topo.%s(controllers)" % options.topology)
     return topology
 

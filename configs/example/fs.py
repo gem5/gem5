@@ -49,12 +49,10 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
+addToPath('../')
 addToPath('../common')
-addToPath('../ruby')
-addToPath('../network')
 
-import Ruby
-import Network
+from ruby import Ruby
 
 from FSConfig import *
 from SysPaths import *
@@ -308,7 +306,6 @@ Options.addFSOptions(parser)
 # Add the ruby specific and protocol specific options
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
-    Network.define_options(parser)
 
 (options, args) = parser.parse_args()
 

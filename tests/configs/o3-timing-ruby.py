@@ -29,7 +29,6 @@
 import m5
 from m5.objects import *
 m5.util.addToPath('../configs/common')
-m5.util.addToPath('../configs/topologies')
 
 
 import ruby_config

@@ -39,14 +39,10 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys, math, glob
 
-# Get paths we might need
-config_path = os.path.dirname(os.path.abspath(__file__))
-config_root = os.path.dirname(config_path)
-addToPath(config_root+'/configs/common')
-addToPath(config_root+'/configs/ruby')
-addToPath(config_root+'/configs/topologies')
+m5.util.addToPath('../configs/common')
+m5.util.addToPath('../configs/')
 
-import Ruby
+from ruby import Ruby
 import Options
 import GPUTLBOptions, GPUTLBConfig
 
