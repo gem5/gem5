@@ -508,35 +508,35 @@ class DDR3_2133_x64(DDR3_1600_x64):
     VDD = '1.5V'
 
 # A single DDR4-2400 x64 channel (one command and address bus), with
-# timings based on a DDR4-2400 4 Gbit datasheet (Micron MT40A512M8)
-# in an 8x8 configuration.
+# timings based on a DDR4-2400 4 Gbit datasheet (Micron MT40A512M16)
+# in an 4x16 configuration.
 class DDR4_2400_x64(DRAMCtrl):
     # size of device
     device_size = '512MB'
 
-    # 8x8 configuration, 8 devices each with an 8-bit interface
-    device_bus_width = 8
+    # 4x16 configuration, 4 devices each with an 16-bit interface
+    device_bus_width = 16
 
     # DDR4 is a BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
-    device_rowbuffer_size = '1kB'
+    # Each device has a page (row buffer) size of 2 Kbyte (1K columns x16)
+    device_rowbuffer_size = '2kB'
 
-    # 8x8 configuration, so 8 devices
-    devices_per_rank = 8
+    # 4x16 configuration, so 4 devices
+    devices_per_rank = 4
 
     # Match our DDR3 configurations which is dual rank
     ranks_per_channel = 2
 
     # DDR4 has 2 (x16) or 4 (x4 and x8) bank groups
-    # Set to 4 for x4, x8 case
-    bank_groups_per_rank = 4
+    # Set to 2 for x16 case
+    bank_groups_per_rank = 2
 
-    # DDR4 has 16 banks (4 bank groups) in all
-    # configurations. Currently we do not capture the additional
+    # DDR4 has 16 banks(x4,x8) and 8 banks(x16) (4 bank groups in all
+    # configurations). Currently we do not capture the additional
     # constraints incurred by the bank groups
-    banks_per_rank = 16
+    banks_per_rank = 8
 
     # override the default buffer sizes and go for something larger to
     # accommodate the larger bank count
@@ -558,21 +558,21 @@ class DDR4_2400_x64(DRAMCtrl):
     # for CAS-to-CAS delay for bursts to different bank groups
     tCCD_L = '5ns';
 
-    # DDR4-2400 17-17-17
-    tRCD = '14.16ns'
-    tCL = '14.16ns'
-    tRP = '14.16ns'
-    tRAS = '32ns'
+    # DDR4-2400 16-16-16
+    tRCD = '13.32ns'
+    tCL = '13.32ns'
+    tRP = '13.32ns'
+    tRAS = '35ns'
 
-    # RRD_S (different bank group) for 1K page is MAX(4 CK, 3.3ns)
-    tRRD = '3.3ns'
+    # RRD_S (different bank group) for 2K page is MAX(4 CK, 5.3ns)
+    tRRD = '5.3ns'
 
-    # RRD_L (same bank group) for 1K page is MAX(4 CK, 4.9ns)
-    tRRD_L = '4.9ns';
+    # RRD_L (same bank group) for 2K page is MAX(4 CK, 6.4ns)
+    tRRD_L = '6.4ns';
 
-    tXAW = '21ns'
+    tXAW = '30ns'
     activation_limit = 4
-    tRFC = '350ns'
+    tRFC = '260ns'
 
     tWR = '15ns'
 
@@ -592,13 +592,13 @@ class DDR4_2400_x64(DRAMCtrl):
     tREFI = '7.8us'
 
     # Current values from datasheet
-    IDD0 = '64mA'
-    IDD02 = '4mA'
+    IDD0 = '70mA'
+    IDD02 = '4.6mA'
     IDD2N = '50mA'
     IDD3N = '67mA'
     IDD3N2 = '3mA'
-    IDD4W = '180mA'
-    IDD4R = '160mA'
+    IDD4W = '302mA'
+    IDD4R = '230mA'
     IDD5 = '192mA'
     VDD = '1.2V'
     VDD2 = '2.5V'
