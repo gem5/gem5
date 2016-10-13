@@ -3,9 +3,9 @@ Redirecting stderr to build/ARM/tests/opt/long/se/20.parser/arm/linux/minor-timi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:37:41
-gem5 started Jul 21 2016 14:38:21
-gem5 executing on e108600-lin, pid 23072
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:47:38
+gem5 executing on e108600-lin, pid 17428
 command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/20.parser/arm/linux/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/20.parser/arm/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
@@ -70,4 +70,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 366439129500 because target called exit()
+Exiting @ tick 368600034500 because target called exit()

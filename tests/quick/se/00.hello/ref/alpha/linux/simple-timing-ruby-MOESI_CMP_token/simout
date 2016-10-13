@@ -3,13 +3,13 @@ Redirecting stderr to build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/00.hello/al
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 14 2016 22:02:54
-gem5 started Mar 14 2016 22:04:07
-gem5 executing on phenom, pid 29513
-command line: build/ALPHA_MOESI_CMP_token/gem5.opt -d build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token
+gem5 compiled Oct 13 2016 20:33:48
+gem5 started Oct 13 2016 20:34:16
+gem5 executing on e108600-lin, pid 27525
+command line: /work/curdun01/gem5-external.hg/build/ALPHA_MOESI_CMP_token/gem5.opt -d build/ALPHA_MOESI_CMP_token/tests/opt/quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token
 
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 108253 because target called exit()
+Exiting @ tick 113952 because target called exit()

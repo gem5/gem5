@@ -3,13 +3,13 @@ Redirecting stderr to build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/le
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:37:41
-gem5 started Jul 21 2016 15:03:01
-gem5 executing on e108600-lin, pid 24156
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 21:05:17
+gem5 executing on e108600-lin, pid 17589
 command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-two-level -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/03.learning-gem5/arm/linux/learning-gem5-p1-two-level
 
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 49855000 because target called exit()
+Exiting @ tick 52453000 because target called exit()

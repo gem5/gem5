@@ -3,9 +3,9 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/minor
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 19 2016 12:23:51
-gem5 started Jul 21 2016 14:09:28
-gem5 executing on e108600-lin, pid 4301
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:19:44
+gem5 executing on e108600-lin, pid 28059
 command line: /work/curdun01/gem5-external.hg/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/40.perlbmk/alpha/tru64/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/40.perlbmk/alpha/tru64/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
@@ -650,4 +650,4 @@ info: Increasing stack size by one page.
 2000: 2845746745
 1000: 2068042552
 0: 290958364
-Exiting @ tick 508215534000 because target called exit()
+Exiting @ tick 521167228000 because target called exit()

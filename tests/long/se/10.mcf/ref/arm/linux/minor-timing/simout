@@ -3,9 +3,9 @@ Redirecting stderr to build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing/
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:37:41
-gem5 started Jul 21 2016 15:03:02
-gem5 executing on e108600-lin, pid 24162
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:43:02
+gem5 executing on e108600-lin, pid 17345
 command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/10.mcf/arm/linux/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/10.mcf/arm/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
@@ -26,4 +26,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 62408957500 because target called exit()
+Exiting @ tick 62552970500 because target called exit()

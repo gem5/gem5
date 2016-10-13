@@ -3,9 +3,9 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/o3-timi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 19 2016 12:23:51
-gem5 started Jul 21 2016 14:09:29
-gem5 executing on e108600-lin, pid 4309
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:19:44
+gem5 executing on e108600-lin, pid 28058
 command line: /work/curdun01/gem5-external.hg/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/60.bzip2/alpha/tru64/o3-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/60.bzip2/alpha/tru64/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
@@ -26,4 +26,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 669587683000 because target called exit()
+Exiting @ tick 684199968000 because target called exit()

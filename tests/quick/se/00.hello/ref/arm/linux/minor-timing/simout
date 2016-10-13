@@ -3,12 +3,12 @@ Redirecting stderr to build/ARM/tests/opt/quick/se/00.hello/arm/linux/minor-timi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:37:41
-gem5 started Jul 21 2016 14:38:22
-gem5 executing on e108600-lin, pid 23083
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:42:59
+gem5 executing on e108600-lin, pid 17319
 command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/se/00.hello/arm/linux/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/arm/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 30083500 because target called exit()
+Exiting @ tick 32719500 because target called exit()

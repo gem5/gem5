@@ -3,9 +3,9 @@ Redirecting stderr to build/ARM/tests/opt/long/se/30.eon/arm/linux/minor-timing/
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:37:41
-gem5 started Jul 21 2016 14:38:22
-gem5 executing on e108600-lin, pid 23074
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:47:28
+gem5 executing on e108600-lin, pid 17426
 command line: /work/curdun01/gem5-external.hg/build/ARM/gem5.opt -d build/ARM/tests/opt/long/se/30.eon/arm/linux/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/30.eon/arm/linux/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
@@ -16,4 +16,4 @@ info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 OO-style eon Time= 0.220000
-Exiting @ tick 225030243000 because target called exit()
+Exiting @ tick 225206521000 because target called exit()

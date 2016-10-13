@@ -3,12 +3,12 @@ Redirecting stderr to build/ALPHA/tests/opt/long/se/50.vortex/alpha/tru64/minor-
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 19 2016 12:23:51
-gem5 started Jul 21 2016 14:09:29
-gem5 executing on e108600-lin, pid 4306
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 20:19:45
+gem5 executing on e108600-lin, pid 28063
 command line: /work/curdun01/gem5-external.hg/build/ALPHA/gem5.opt -d build/ALPHA/tests/opt/long/se/50.vortex/alpha/tru64/minor-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/50.vortex/alpha/tru64/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 60000593000 because target called exit()
+Exiting @ tick 61709224000 because target called exit()

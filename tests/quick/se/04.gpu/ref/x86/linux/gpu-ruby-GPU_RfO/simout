@@ -1,12 +1,14 @@
+Redirecting stdout to build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO/simout
+Redirecting stderr to build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 10 2016 12:22:56
-gem5 started Mar 10 2016 12:23:20
-gem5 executing on phenom, pid 9635
-command line: build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /home/stever/hg/m5sim.org/gem5/tests/run.py build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
+gem5 compiled Oct 13 2016 21:24:38
+gem5 started Oct 13 2016 21:24:54
+gem5 executing on e108600-lin, pid 29892
+command line: /work/curdun01/gem5-external.hg/build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
 
-Using GPU kernel code file(s) /home/stever/hg/m5sim.org/gem5/tests/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
+Using GPU kernel code file(s) /arm/projectscratch/randd/systems/dist/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
 Global frequency set at 1000000000000 ticks per second
 Forcing maxCoalescedReqs to 32 (TLB assoc.) 
 Forcing maxCoalescedReqs to 32 (TLB assoc.) 
@@ -18,4 +20,4 @@ info: Entering event queue @ 0.  Starting simulation...
 keys = 0x7b2bc0, &keys = 0x798998, keys[0] = 23
 the gpu says:
 elloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloe
-Exiting @ tick 663454500 because target called exit()
+Exiting @ tick 668137500 because target called exit()

@@ -1,12 +1,14 @@
+Redirecting stdout to build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby/simout
+Redirecting stderr to build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 21 2016 14:41:03
-gem5 started Jan 21 2016 14:41:52
-gem5 executing on zizzer, pid 17892
-command line: build/X86/gem5.opt -d build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby -re /z/atgutier/gem5/gem5-commit/tests/run.py build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby
+gem5 compiled Oct 11 2016 00:00:58
+gem5 started Oct 13 2016 21:09:01
+gem5 executing on e108600-lin, pid 17636
+command line: /work/curdun01/gem5-external.hg/build/X86/gem5.opt -d build/X86/tests/opt/quick/se/00.hello/x86/linux/simple-timing-ruby -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/x86/linux/simple-timing-ruby
 
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 87948 because target called exit()
+Exiting @ tick 91859 because target called exit()
