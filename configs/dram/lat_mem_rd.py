@@ -44,8 +44,8 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.internal.stats import periodicStatDump
 
-addToPath('../common')
-import MemConfig
+addToPath('../')
+from common import MemConfig
 
 addToPath('../../util')
 import protolib
@@ -258,7 +258,7 @@ system.tgen.port = system.monitor.slave
 
 # create the actual cache hierarchy, for now just go with something
 # basic to explore some of the options
-from Caches import *
+from common.Caches import *
 
 # a starting point for an L3 cache
 class L3Cache(Cache):

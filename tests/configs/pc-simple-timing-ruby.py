@@ -28,13 +28,11 @@
 
 import m5, os, optparse, sys
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Benchmarks import SysConfig
-import FSConfig
-
 m5.util.addToPath('../configs/')
+from common.Benchmarks import SysConfig
+from common import FSConfig
 from ruby import Ruby
-import Options
+from common import Options
 
 # Add the ruby specific and protocol specific options
 parser = optparse.OptionParser()

@@ -52,17 +52,16 @@ from m5.objects import *
 from m5.util import addToPath, fatal
 
 addToPath('../')
-addToPath('../common')
 
 from ruby import Ruby
 
-import Options
-import Simulation
-import CacheConfig
-import CpuConfig
-import MemConfig
-from Caches import *
-from cpu2000 import *
+from common import Options
+from common import Simulation
+from common import CacheConfig
+from common import CpuConfig
+from common import MemConfig
+from common.Caches import *
+from common.cpu2000 import *
 
 # Check if KVM support has been enabled, we might need to do VM
 # configuration if that's the case.

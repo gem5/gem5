@@ -39,12 +39,11 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys, math, glob
 
-m5.util.addToPath('../configs/common')
 m5.util.addToPath('../configs/')
 
 from ruby import Ruby
-import Options
-import GPUTLBOptions, GPUTLBConfig
+from common import Options
+from common import GPUTLBOptions, GPUTLBConfig
 
 ########################## Script Options ########################
 def setOption(parser, opt_str, value = 1):

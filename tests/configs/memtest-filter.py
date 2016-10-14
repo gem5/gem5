@@ -28,8 +28,8 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Caches import *
+m5.util.addToPath('../configs/')
+from common.Caches import *
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8

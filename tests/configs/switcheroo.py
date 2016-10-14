@@ -37,8 +37,8 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from Caches import *
+m5.util.addToPath('../configs/')
+from common.Caches import *
 
 class Sequential:
     """Sequential CPU switcher.

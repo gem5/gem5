@@ -39,10 +39,10 @@ from abc import ABCMeta, abstractmethod
 import m5
 from m5.objects import *
 from m5.proxy import *
-m5.util.addToPath('../configs/common')
-from Benchmarks import SysConfig
-import FSConfig
-from Caches import *
+m5.util.addToPath('../configs/')
+from common.Benchmarks import SysConfig
+from common import FSConfig
+from common.Caches import *
 from base_config import *
 
 class LinuxX86SystemBuilder(object):

@@ -28,7 +28,6 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
 
 nb_cores = 4
 cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]

@@ -43,13 +43,12 @@ from m5.objects import *
 from m5.util import addToPath
 
 addToPath('../')
-addToPath('../common')
 
 from ruby import Ruby
 
-import Options
-import Simulation
-import GPUTLBOptions, GPUTLBConfig
+from common import Options
+from common import Simulation
+from common import GPUTLBOptions, GPUTLBConfig
 
 ########################## Script Options ########################
 def setOption(parser, opt_str, value = 1):

@@ -38,10 +38,10 @@ from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys
-addToPath('../common')
+
 addToPath('../')
 
-import Options
+from common import Options
 from ruby import Ruby
 
 # Get paths we might need.

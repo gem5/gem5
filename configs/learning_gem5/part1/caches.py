@@ -36,7 +36,7 @@ line options from each individual class.
 
 from m5.objects import Cache
 
-import SimpleOpts
+from common import SimpleOpts
 
 # Some specific options for caches
 # For all options see src/mem/cache/BaseCache.py

@@ -42,9 +42,9 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.internal.stats import periodicStatDump
 
-addToPath('../common')
+addToPath('../')
 
-import MemConfig
+from common import MemConfig
 
 # this script is helpful to sweep the efficiency of a specific memory
 # controller configuration, by varying the number of banks accessed,

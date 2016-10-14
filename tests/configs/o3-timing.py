@@ -42,7 +42,7 @@ from m5.objects import *
 from m5.defines import buildEnv
 from base_config import *
 from arm_generic import *
-from O3_ARM_v7a import O3_ARM_v7a_3
+from common.O3_ARM_v7a import O3_ARM_v7a_3
 
 # If we are running ARM regressions, use a more sensible CPU
 # configuration. This makes the results more meaningful, and also

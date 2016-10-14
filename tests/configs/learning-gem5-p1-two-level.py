@@ -45,7 +45,7 @@ def run_test(root):
 
         # Add paths that we need
         m5.util.addToPath('../configs/learning_gem5/part1')
-        m5.util.addToPath('../configs/common')
+        m5.util.addToPath('../configs/')
 
         # The path to this script is the only parameter. Delete it so we can
         # execute the script that we want to execute.

@@ -46,13 +46,13 @@ import m5
 from m5.objects import *
 
 # Add the common scripts to our path
-m5.util.addToPath('../../common')
+m5.util.addToPath('../../')
 
 # import the caches which we made
 from caches import *
 
 # import the SimpleOpts module
-import SimpleOpts
+from common import SimpleOpts
 
 # Set the usage message to display
 SimpleOpts.set_usage("usage: %prog [options] <binary to execute>")

@@ -6,9 +6,10 @@ import m5
 from m5.objects import *
 from m5.util import addToPath
 
-addToPath('../common')
-import MemConfig
-import HMC
+addToPath('../')
+
+from common import MemConfig
+from common import HMC
 
 parser = optparse.OptionParser()
 

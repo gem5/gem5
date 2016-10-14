@@ -46,9 +46,10 @@ import sys
 import m5
 from m5.objects import *
 
-m5.util.addToPath("../../common")
-import SysPaths
-import CpuConfig
+m5.util.addToPath("../../")
+
+from common import SysPaths
+from common import CpuConfig
 
 import devices
 

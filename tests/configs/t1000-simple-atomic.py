@@ -28,8 +28,8 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-import FSConfig
+m5.util.addToPath('../configs/')
+from common import FSConfig
 
 try:
     system = FSConfig.makeSparcSystem('atomic')

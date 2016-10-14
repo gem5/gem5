@@ -32,10 +32,9 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys
 
-m5.util.addToPath('../configs/common')
 m5.util.addToPath('../configs/')
 
-import Options
+from common import Options
 from ruby import Ruby
 
 parser = optparse.OptionParser()

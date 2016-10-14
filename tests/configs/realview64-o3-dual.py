@@ -37,7 +37,7 @@
 
 from m5.objects import *
 from arm_generic import *
-from O3_ARM_v7a import O3_ARM_v7a_3
+from common.O3_ARM_v7a import O3_ARM_v7a_3
 
 root = LinuxArmFSSystem(machine_type='VExpress_EMM64',
                         mem_mode='timing',

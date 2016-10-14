@@ -37,10 +37,10 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath('../common')
+addToPath('../')
 
-import Simulation
-import Options
+from common import Simulation
+from common import Options
 
 def build_switch(options):
     # instantiate an EtherSwitch

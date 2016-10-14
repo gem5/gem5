@@ -28,9 +28,9 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/common')
-from FSConfig import *
-from Benchmarks import *
+m5.util.addToPath('../configs/')
+from common.FSConfig import *
+from common.Benchmarks import *
 
 test_sys = makeLinuxAlphaSystem('atomic',
                                 SysConfig('netperf-stream-client.rcS'))

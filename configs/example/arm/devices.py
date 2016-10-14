@@ -40,9 +40,9 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../../common')
-from Caches import *
-import CpuConfig
+m5.util.addToPath('../../')
+from common.Caches import *
+from common import CpuConfig
 
 class L1I(L1_ICache):
     hit_latency = 1

@@ -45,7 +45,7 @@ from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath, fatal
 
-import MemConfig
+from common import MemConfig
 
 from topologies import *
 from network import Network

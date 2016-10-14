@@ -39,12 +39,12 @@ from abc import ABCMeta, abstractmethod
 import m5
 from m5.objects import *
 from m5.proxy import *
-m5.util.addToPath('../configs/common')
-import FSConfig
-from Caches import *
+m5.util.addToPath('../configs/')
+from common import FSConfig
+from common.Caches import *
 from base_config import *
-from O3_ARM_v7a import *
-from Benchmarks import SysConfig
+from common.O3_ARM_v7a import *
+from common.Benchmarks import SysConfig
 
 class ArmSESystemUniprocessor(BaseSESystemUniprocessor):
     """Syscall-emulation builder for ARM uniprocessor systems.

@@ -40,7 +40,6 @@ import sys
 import os
 
 import m5
-m5.util.addToPath('../configs/common')
 
 _exit_normal = (
     "target called exit()",
