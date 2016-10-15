@@ -245,7 +245,7 @@ readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     int bytes_read = read(sim_fd, bufArg.bufferPtr(), nbytes);
 
-    if (bytes_read != -1)
+    if (bytes_read > 0)
         bufArg.copyOut(tc->getMemProxy());
 
     return bytes_read;
