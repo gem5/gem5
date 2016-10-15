@@ -142,18 +142,18 @@ def parseConfig(config_file):
         print "ERROR: config file '", config_file, "' not found"
         sys.exit(1)
 
-    if config.has_section("system.cluster.cpu"):
+    if config.has_section("system.cpu"):
         num_cpus = 1
     else:
         num_cpus = 0
-        while config.has_section("system.cluster.cpu" + str(num_cpus)):
+        while config.has_section("system.cpu" + str(num_cpus)):
             num_cpus += 1
 
-    if config.has_section("system.cluster.l2_cache"):
+    if config.has_section("system.l2_cache"):
         num_l2 = 1
     else:
         num_l2 = 0
-        while config.has_section("system.cluster.l2_cache" + str(num_l2)):
+        while config.has_section("system.l2_cache" + str(num_l2)):
             num_l2 += 1
 
     print "Num CPUs:", num_cpus
