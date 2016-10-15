@@ -62,24 +62,28 @@ class O3_ARM_v7a_FP(FUDesc):
                OpDesc(opClass='SimdFloatDiv', opLat=3),
                OpDesc(opClass='SimdFloatMisc', opLat=3),
                OpDesc(opClass='SimdFloatMult', opLat=3),
-               OpDesc(opClass='SimdFloatMultAcc',opLat=1),
+               OpDesc(opClass='SimdFloatMultAcc',opLat=5),
                OpDesc(opClass='SimdFloatSqrt', opLat=9),
                OpDesc(opClass='FloatAdd', opLat=5),
                OpDesc(opClass='FloatCmp', opLat=5),
                OpDesc(opClass='FloatCvt', opLat=5),
                OpDesc(opClass='FloatDiv', opLat=9, pipelined=False),
                OpDesc(opClass='FloatSqrt', opLat=33, pipelined=False),
-               OpDesc(opClass='FloatMult', opLat=4) ]
+               OpDesc(opClass='FloatMult', opLat=4),
+               OpDesc(opClass='FloatMultAcc', opLat=5),
+               OpDesc(opClass='FloatMisc', opLat=3) ]
     count = 2
 
 
 # Load/Store Units
 class O3_ARM_v7a_Load(FUDesc):
-    opList = [ OpDesc(opClass='MemRead',opLat=2) ]
+    opList = [ OpDesc(opClass='MemRead',opLat=2),
+               OpDesc(opClass='FloatMemRead',opLat=2) ]
     count = 1
 
 class O3_ARM_v7a_Store(FUDesc):
-    opList = [OpDesc(opClass='MemWrite',opLat=2) ]
+    opList = [ OpDesc(opClass='MemWrite',opLat=2),
+               OpDesc(opClass='FloatMemWrite',opLat=2) ]
     count = 1
 
 # Functional Units for this CPU

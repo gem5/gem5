@@ -142,8 +142,8 @@ class MinorDefaultIntDivFU(MinorFU):
 
 class MinorDefaultFloatSimdFU(MinorFU):
     opClasses = minorMakeOpClassSet([
-        'FloatAdd', 'FloatCmp', 'FloatCvt', 'FloatMult', 'FloatDiv',
-        'FloatSqrt',
+        'FloatAdd', 'FloatCmp', 'FloatCvt', 'FloatMisc', 'FloatMult',
+        'FloatMultAcc', 'FloatDiv', 'FloatSqrt',
         'SimdAdd', 'SimdAddAcc', 'SimdAlu', 'SimdCmp', 'SimdCvt',
         'SimdMisc', 'SimdMult', 'SimdMultAcc', 'SimdShift', 'SimdShiftAcc',
         'SimdSqrt', 'SimdFloatAdd', 'SimdFloatAlu', 'SimdFloatCmp',
@@ -154,7 +154,8 @@ class MinorDefaultFloatSimdFU(MinorFU):
     opLat = 6
 
 class MinorDefaultMemFU(MinorFU):
-    opClasses = minorMakeOpClassSet(['MemRead', 'MemWrite'])
+    opClasses = minorMakeOpClassSet(['MemRead', 'MemWrite', 'FloatMemRead',
+                                     'FloatMemWrite'])
     timings = [MinorFUTiming(description='Mem',
         srcRegsRelativeLats=[1], extraAssumedLat=2)]
     opLat = 1

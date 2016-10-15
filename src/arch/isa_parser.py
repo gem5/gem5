@@ -1130,9 +1130,21 @@ class InstObjParams(object):
         # These are good enough for most cases.
         if not self.op_class:
             if 'IsStore' in self.flags:
-                self.op_class = 'MemWriteOp'
+                # The order matters here: 'IsFloating' and 'IsInteger' are
+                # usually set in FP instructions because of the base
+                # register
+                if 'IsFloating' in self.flags:
+                    self.op_class = 'FloatMemWriteOp'
+                else:
+                    self.op_class = 'MemWriteOp'
             elif 'IsLoad' in self.flags or 'IsPrefetch' in self.flags:
-                self.op_class = 'MemReadOp'
+                # The order matters here: 'IsFloating' and 'IsInteger' are
+                # usually set in FP instructions because of the base
+                # register
+                if 'IsFloating' in self.flags:
+                    self.op_class = 'FloatMemReadOp'
+                else:
+                    self.op_class = 'MemReadOp'
             elif 'IsFloating' in self.flags:
                 self.op_class = 'FloatAddOp'
             else:

@@ -43,13 +43,15 @@ from m5.params import *
 
 class OpClass(Enum):
     vals = ['No_OpClass', 'IntAlu', 'IntMult', 'IntDiv', 'FloatAdd',
-            'FloatCmp', 'FloatCvt', 'FloatMult', 'FloatDiv', 'FloatSqrt',
+            'FloatCmp', 'FloatCvt', 'FloatMult', 'FloatMultAcc', 'FloatDiv',
+            'FloatMisc', 'FloatSqrt',
             'SimdAdd', 'SimdAddAcc', 'SimdAlu', 'SimdCmp', 'SimdCvt',
             'SimdMisc', 'SimdMult', 'SimdMultAcc', 'SimdShift', 'SimdShiftAcc',
             'SimdSqrt', 'SimdFloatAdd', 'SimdFloatAlu', 'SimdFloatCmp',
             'SimdFloatCvt', 'SimdFloatDiv', 'SimdFloatMisc', 'SimdFloatMult',
             'SimdFloatMultAcc', 'SimdFloatSqrt',
-            'MemRead', 'MemWrite', 'IprAccess', 'InstPrefetch']
+            'MemRead', 'MemWrite', 'FloatMemRead', 'FloatMemWrite',
+            'IprAccess', 'InstPrefetch']
 
 class OpDesc(SimObject):
     type = 'OpDesc'
