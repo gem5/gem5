@@ -4,11 +4,11 @@ sim_seconds                                  0.000021                       # Nu
 sim_ticks                                    21268000                       # Number of ticks simulated
 final_tick                                   21268000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 112778                       # Simulator instruction rate (inst/s)
-host_op_rate                                   112739                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              413846380                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 248372                       # Number of bytes of host memory used
-host_seconds                                     0.05                       # Real time elapsed on the host
+host_inst_rate                                 133148                       # Simulator instruction rate (inst/s)
+host_op_rate                                   133114                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              488684971                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 249832                       # Number of bytes of host memory used
+host_seconds                                     0.04                       # Real time elapsed on the host
 sim_insts                                        5792                       # Number of instructions simulated
 sim_ops                                          5792                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -386,37 +386,41 @@ system.cpu.iq.issued_per_cycle::min_value            0                       # N
 system.cpu.iq.issued_per_cycle::max_value            8                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::total           12418                       # Number of insts issued each cycle
 system.cpu.iq.fu_full::No_OpClass                   0      0.00%      0.00% # attempts to use FU when none available
-system.cpu.iq.fu_full::IntAlu                      12      6.32%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::IntMult                      0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::IntDiv                       0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatAdd                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatCmp                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatCvt                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatMult                    0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatDiv                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatSqrt                    0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdAdd                      0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdAddAcc                   0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdAlu                      0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdCmp                      0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdCvt                      0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdMisc                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdMult                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdMultAcc                  0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdShift                    0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdShiftAcc                 0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdSqrt                     0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatAdd                 0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatAlu                 0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatCmp                 0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatCvt                 0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatDiv                 0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatMisc                0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatMult                0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatMultAcc             0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatSqrt                0      0.00%      6.32% # attempts to use FU when none available
-system.cpu.iq.fu_full::MemRead                     88     46.32%     52.63% # attempts to use FU when none available
-system.cpu.iq.fu_full::MemWrite                    90     47.37%    100.00% # attempts to use FU when none available
+system.cpu.iq.fu_full::IntAlu                      12      6.06%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::IntMult                      0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::IntDiv                       0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatAdd                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatCmp                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatCvt                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatMult                    0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatMultAcc                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatDiv                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatMisc                    0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatSqrt                    0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdAdd                      0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdAddAcc                   0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdAlu                      0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdCmp                      0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdCvt                      0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdMisc                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdMult                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdMultAcc                  0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdShift                    0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdShiftAcc                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdSqrt                     0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatAdd                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatAlu                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatCmp                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatCvt                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatDiv                 0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatMisc                0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatMult                0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatMultAcc             0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatSqrt                0      0.00%      6.06% # attempts to use FU when none available
+system.cpu.iq.fu_full::MemRead                     88     44.44%     50.51% # attempts to use FU when none available
+system.cpu.iq.fu_full::MemWrite                    87     43.94%     94.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatMemRead                 0      0.00%     94.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatMemWrite               11      5.56%    100.00% # attempts to use FU when none available
 system.cpu.iq.fu_full::IprAccess                    0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.fu_full::InstPrefetch                 0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.FU_type_0::No_OpClass                 0      0.00%      0.00% # Type of FU issued
@@ -427,7 +431,9 @@ system.cpu.iq.FU_type_0::FloatAdd                   2      0.02%     62.81% # Ty
 system.cpu.iq.FU_type_0::FloatCmp                   0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatCvt                   0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatMult                  0      0.00%     62.81% # Type of FU issued
+system.cpu.iq.FU_type_0::FloatMultAcc               0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatDiv                   0      0.00%     62.81% # Type of FU issued
+system.cpu.iq.FU_type_0::FloatMisc                  0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatSqrt                  0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::SimdAdd                    0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::SimdAddAcc                 0      0.00%     62.81% # Type of FU issued
@@ -449,22 +455,24 @@ system.cpu.iq.FU_type_0::SimdFloatMisc              0      0.00%     62.81% # Ty
 system.cpu.iq.FU_type_0::SimdFloatMult              0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::SimdFloatMultAcc            0      0.00%     62.81% # Type of FU issued
 system.cpu.iq.FU_type_0::SimdFloatSqrt              0      0.00%     62.81% # Type of FU issued
-system.cpu.iq.FU_type_0::MemRead                 1813     20.58%     83.39% # Type of FU issued
-system.cpu.iq.FU_type_0::MemWrite                1463     16.61%    100.00% # Type of FU issued
+system.cpu.iq.FU_type_0::MemRead                 1811     20.56%     83.37% # Type of FU issued
+system.cpu.iq.FU_type_0::MemWrite                1439     16.34%     99.70% # Type of FU issued
+system.cpu.iq.FU_type_0::FloatMemRead               2      0.02%     99.73% # Type of FU issued
+system.cpu.iq.FU_type_0::FloatMemWrite             24      0.27%    100.00% # Type of FU issued
 system.cpu.iq.FU_type_0::IprAccess                  0      0.00%    100.00% # Type of FU issued
 system.cpu.iq.FU_type_0::InstPrefetch               0      0.00%    100.00% # Type of FU issued
 system.cpu.iq.FU_type_0::total                   8808                       # Type of FU issued
 system.cpu.iq.rate                           0.207067                       # Inst issue rate
-system.cpu.iq.fu_busy_cnt                         190                       # FU busy when requested
-system.cpu.iq.fu_busy_rate                   0.021571                       # FU busy rate (busy events/executed inst)
-system.cpu.iq.int_inst_queue_reads              30215                       # Number of integer instruction queue reads
+system.cpu.iq.fu_busy_cnt                         198                       # FU busy when requested
+system.cpu.iq.fu_busy_rate                   0.022480                       # FU busy rate (busy events/executed inst)
+system.cpu.iq.int_inst_queue_reads              30218                       # Number of integer instruction queue reads
 system.cpu.iq.int_inst_queue_writes             14647                       # Number of integer instruction queue writes
 system.cpu.iq.int_inst_queue_wakeup_accesses         8115                       # Number of integer instruction queue wakeup accesses
-system.cpu.iq.fp_inst_queue_reads                  62                       # Number of floating instruction queue reads
+system.cpu.iq.fp_inst_queue_reads                  67                       # Number of floating instruction queue reads
 system.cpu.iq.fp_inst_queue_writes                 36                       # Number of floating instruction queue writes
 system.cpu.iq.fp_inst_queue_wakeup_accesses           27                       # Number of floating instruction queue wakeup accesses
-system.cpu.iq.int_alu_accesses                   8964                       # Number of integer alu accesses
-system.cpu.iq.fp_alu_accesses                      34                       # Number of floating point alu accesses
+system.cpu.iq.int_alu_accesses                   8967                       # Number of integer alu accesses
+system.cpu.iq.fp_alu_accesses                      39                       # Number of floating point alu accesses
 system.cpu.iew.lsq.thread0.forwLoads               79                       # Number of loads that had data forwarded from stores
 system.cpu.iew.lsq.thread0.invAddrLoads             0                       # Number of loads ignored due to an invalid address
 system.cpu.iew.lsq.thread0.squashedLoads          976                       # Number of loads squashed
@@ -543,7 +551,9 @@ system.cpu.commit.op_class_0::FloatAdd              2      0.03%     65.35% # Cl
 system.cpu.commit.op_class_0::FloatCmp              0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::FloatCvt              0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::FloatMult             0      0.00%     65.35% # Class of committed instruction
+system.cpu.commit.op_class_0::FloatMultAcc            0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::FloatDiv              0      0.00%     65.35% # Class of committed instruction
+system.cpu.commit.op_class_0::FloatMisc             0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::FloatSqrt             0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::SimdAdd               0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::SimdAddAcc            0      0.00%     65.35% # Class of committed instruction
@@ -565,8 +575,10 @@ system.cpu.commit.op_class_0::SimdFloatMisc            0      0.00%     65.35% #
 system.cpu.commit.op_class_0::SimdFloatMult            0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::SimdFloatMultAcc            0      0.00%     65.35% # Class of committed instruction
 system.cpu.commit.op_class_0::SimdFloatSqrt            0      0.00%     65.35% # Class of committed instruction
-system.cpu.commit.op_class_0::MemRead             961     16.59%     81.94% # Class of committed instruction
-system.cpu.commit.op_class_0::MemWrite           1046     18.06%    100.00% # Class of committed instruction
+system.cpu.commit.op_class_0::MemRead             960     16.57%     81.92% # Class of committed instruction
+system.cpu.commit.op_class_0::MemWrite           1027     17.73%     99.65% # Class of committed instruction
+system.cpu.commit.op_class_0::FloatMemRead            1      0.02%     99.67% # Class of committed instruction
+system.cpu.commit.op_class_0::FloatMemWrite           19      0.33%    100.00% # Class of committed instruction
 system.cpu.commit.op_class_0::IprAccess             0      0.00%    100.00% # Class of committed instruction
 system.cpu.commit.op_class_0::InstPrefetch            0      0.00%    100.00% # Class of committed instruction
 system.cpu.commit.op_class_0::total              5792                       # Class of committed instruction

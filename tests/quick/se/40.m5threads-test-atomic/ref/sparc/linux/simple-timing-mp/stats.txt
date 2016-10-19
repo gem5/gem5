@@ -4,11 +4,11 @@ sim_seconds                                  0.000263                       # Nu
 sim_ticks                                   263409500                       # Number of ticks simulated
 final_tick                                  263409500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 389943                       # Simulator instruction rate (inst/s)
-host_op_rate                                   389940                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              154718592                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 263736                       # Number of bytes of host memory used
-host_seconds                                     1.70                       # Real time elapsed on the host
+host_inst_rate                                 919692                       # Simulator instruction rate (inst/s)
+host_op_rate                                   919679                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                              364903746                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 263368                       # Number of bytes of host memory used
+host_seconds                                     0.72                       # Real time elapsed on the host
 sim_insts                                      663871                       # Number of instructions simulated
 sim_ops                                        663871                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -95,7 +95,9 @@ system.cpu0.op_class::FloatAdd                      0      0.00%     53.29% # Cl
 system.cpu0.op_class::FloatCmp                      0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::FloatCvt                      0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::FloatMult                     0      0.00%     53.29% # Class of executed instruction
+system.cpu0.op_class::FloatMultAcc                  0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::FloatDiv                      0      0.00%     53.29% # Class of executed instruction
+system.cpu0.op_class::FloatMisc                     0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::FloatSqrt                     0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::SimdAdd                       0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::SimdAddAcc                    0      0.00%     53.29% # Class of executed instruction
@@ -119,6 +121,8 @@ system.cpu0.op_class::SimdFloatMultAcc              0      0.00%     53.29% # Cl
 system.cpu0.op_class::SimdFloatSqrt                 0      0.00%     53.29% # Class of executed instruction
 system.cpu0.op_class::MemRead                   48981     30.94%     84.23% # Class of executed instruction
 system.cpu0.op_class::MemWrite                  24959     15.77%    100.00% # Class of executed instruction
+system.cpu0.op_class::FloatMemRead                  0      0.00%    100.00% # Class of executed instruction
+system.cpu0.op_class::FloatMemWrite                 0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu0.op_class::total                    158306                       # Class of executed instruction
@@ -364,7 +368,9 @@ system.cpu1.op_class::FloatAdd                      0      0.00%     59.26% # Cl
 system.cpu1.op_class::FloatCmp                      0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::FloatCvt                      0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::FloatMult                     0      0.00%     59.26% # Class of executed instruction
+system.cpu1.op_class::FloatMultAcc                  0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::FloatDiv                      0      0.00%     59.26% # Class of executed instruction
+system.cpu1.op_class::FloatMisc                     0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::FloatSqrt                     0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::SimdAdd                       0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::SimdAddAcc                    0      0.00%     59.26% # Class of executed instruction
@@ -388,6 +394,8 @@ system.cpu1.op_class::SimdFloatMultAcc              0      0.00%     59.26% # Cl
 system.cpu1.op_class::SimdFloatSqrt                 0      0.00%     59.26% # Class of executed instruction
 system.cpu1.op_class::MemRead                   55710     32.89%     92.15% # Class of executed instruction
 system.cpu1.op_class::MemWrite                  13289      7.85%    100.00% # Class of executed instruction
+system.cpu1.op_class::FloatMemRead                  0      0.00%    100.00% # Class of executed instruction
+system.cpu1.op_class::FloatMemWrite                 0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu1.op_class::total                    169372                       # Class of executed instruction
@@ -632,7 +640,9 @@ system.cpu2.op_class::FloatAdd                      0      0.00%     59.45% # Cl
 system.cpu2.op_class::FloatCmp                      0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::FloatCvt                      0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::FloatMult                     0      0.00%     59.45% # Class of executed instruction
+system.cpu2.op_class::FloatMultAcc                  0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::FloatDiv                      0      0.00%     59.45% # Class of executed instruction
+system.cpu2.op_class::FloatMisc                     0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::FloatSqrt                     0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::SimdAdd                       0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::SimdAddAcc                    0      0.00%     59.45% # Class of executed instruction
@@ -656,6 +666,8 @@ system.cpu2.op_class::SimdFloatMultAcc              0      0.00%     59.45% # Cl
 system.cpu2.op_class::SimdFloatSqrt                 0      0.00%     59.45% # Class of executed instruction
 system.cpu2.op_class::MemRead                   53070     31.98%     91.44% # Class of executed instruction
 system.cpu2.op_class::MemWrite                  14205      8.56%    100.00% # Class of executed instruction
+system.cpu2.op_class::FloatMemRead                  0      0.00%    100.00% # Class of executed instruction
+system.cpu2.op_class::FloatMemWrite                 0      0.00%    100.00% # Class of executed instruction
 system.cpu2.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu2.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu2.op_class::total                    165924                       # Class of executed instruction
@@ -900,7 +912,9 @@ system.cpu3.op_class::FloatAdd                      0      0.00%     59.20% # Cl
 system.cpu3.op_class::FloatCmp                      0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::FloatCvt                      0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::FloatMult                     0      0.00%     59.20% # Class of executed instruction
+system.cpu3.op_class::FloatMultAcc                  0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::FloatDiv                      0      0.00%     59.20% # Class of executed instruction
+system.cpu3.op_class::FloatMisc                     0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::FloatSqrt                     0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::SimdAdd                       0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::SimdAddAcc                    0      0.00%     59.20% # Class of executed instruction
@@ -924,6 +938,8 @@ system.cpu3.op_class::SimdFloatMultAcc              0      0.00%     59.20% # Cl
 system.cpu3.op_class::SimdFloatSqrt                 0      0.00%     59.20% # Class of executed instruction
 system.cpu3.op_class::MemRead                   57167     33.54%     92.75% # Class of executed instruction
 system.cpu3.op_class::MemWrite                  12359      7.25%    100.00% # Class of executed instruction
+system.cpu3.op_class::FloatMemRead                  0      0.00%    100.00% # Class of executed instruction
+system.cpu3.op_class::FloatMemWrite                 0      0.00%    100.00% # Class of executed instruction
 system.cpu3.op_class::IprAccess                     0      0.00%    100.00% # Class of executed instruction
 system.cpu3.op_class::InstPrefetch                  0      0.00%    100.00% # Class of executed instruction
 system.cpu3.op_class::total                    170427                       # Class of executed instruction
