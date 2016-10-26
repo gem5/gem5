@@ -484,15 +484,11 @@ class BaseCache : public MemObject
         return blkSize;
     }
 
-
-    Addr blockAlign(Addr addr) const { return (addr & ~(Addr(blkSize - 1))); }
-
-
     const AddrRangeList &getAddrRanges() const { return addrRanges; }
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool sched_send = true)
     {
-        MSHR *mshr = mshrQueue.allocate(blockAlign(pkt->getAddr()), blkSize,
+        MSHR *mshr = mshrQueue.allocate(pkt->getBlockAddr(blkSize), blkSize,
                                         pkt, time, order++,
                                         allocOnFill(pkt->cmd));
 
@@ -513,7 +509,7 @@ class BaseCache : public MemObject
         // should only see writes or clean evicts here
         assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
 
-        Addr blk_addr = blockAlign(pkt->getAddr());
+        Addr blk_addr = pkt->getBlockAddr(blkSize);
 
         WriteQueueEntry *wq_entry =
             writeBuffer.findMatch(blk_addr, pkt->isSecure());

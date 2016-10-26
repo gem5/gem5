@@ -737,7 +737,7 @@ Cache::recvTimingReq(PacketPtr pkt)
     } else {
         // miss
 
-        Addr blk_addr = blockAlign(pkt->getAddr());
+        Addr blk_addr = pkt->getBlockAddr(blkSize);
 
         // ignore any existing MSHR if we are dealing with an
         // uncacheable request
@@ -961,7 +961,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     }
 
     // the packet should be block aligned
-    assert(pkt->getAddr() == blockAlign(pkt->getAddr()));
+    assert(pkt->getAddr() == pkt->getBlockAddr(blkSize));
 
     pkt->allocate();
     DPRINTF(Cache, "%s: created %s from %s\n", __func__, pkt->print(),
@@ -1149,7 +1149,7 @@ Cache::functionalAccess(PacketPtr pkt, bool fromCpuSide)
         return;
     }
 
-    Addr blk_addr = blockAlign(pkt->getAddr());
+    Addr blk_addr = pkt->getBlockAddr(blkSize);
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
@@ -1731,7 +1731,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 #endif
 
     // When handling a fill, we should have no writes to this line.
-    assert(addr == blockAlign(addr));
+    assert(addr == pkt->getBlockAddr(blkSize));
     assert(!writeBuffer.findMatch(addr, is_secure));
 
     if (blk == nullptr) {
@@ -2092,7 +2092,7 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
 
-    Addr blk_addr = blockAlign(pkt->getAddr());
+    Addr blk_addr = pkt->getBlockAddr(blkSize);
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
     // Update the latency cost of the snoop so that the crossbar can
@@ -2281,7 +2281,7 @@ Cache::getNextQueueEntry()
         // If we have a miss queue slot, we can try a prefetch
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
-            Addr pf_addr = blockAlign(pkt->getAddr());
+            Addr pf_addr = pkt->getBlockAddr(blkSize);
             if (!tags->findBlock(pf_addr, pkt->isSecure()) &&
                 !mshrQueue.findMatch(pf_addr, pkt->isSecure()) &&
                 !writeBuffer.findMatch(pf_addr, pkt->isSecure())) {
