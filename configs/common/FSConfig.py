@@ -42,7 +42,7 @@
 from m5.objects import *
 from Benchmarks import *
 from m5.util import *
-import PlatformConfig
+from common import PlatformConfig
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'alpha' : [ 'linux' ],

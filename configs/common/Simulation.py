@@ -43,8 +43,8 @@ import sys
 from os import getcwd
 from os.path import join as joinpath
 
-import CpuConfig
-import MemConfig
+from common import CpuConfig
+from common import MemConfig
 
 import m5
 from m5.defines import buildEnv

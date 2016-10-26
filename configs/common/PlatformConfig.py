@@ -63,7 +63,7 @@ def is_platform_class(cls):
     try:
         return issubclass(cls, m5.objects.Platform) and \
             not cls.abstract
-    except TypeError:
+    except (TypeError, AttributeError):
         return False
 
 def get(name):

@@ -41,13 +41,11 @@
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from Benchmarks import *
+from common.Benchmarks import *
 
-import CpuConfig
-import MemConfig
-import PlatformConfig
-
-from FSConfig import os_types
+from common import CpuConfig
+from common import MemConfig
+from common import PlatformConfig
 
 def _listCpuTypes(option, opt, value, parser):
     CpuConfig.print_cpu_list()
@@ -61,15 +59,10 @@ def _listPlatformTypes(option, opt, value, parser):
     PlatformConfig.print_platform_list()
     sys.exit(0)
 
-def addCommonOptions(parser):
-    # system options
-    parser.add_option("--list-cpu-types",
-                      action="callback", callback=_listCpuTypes,
-                      help="List available CPU types")
-    parser.add_option("--cpu-type", type="choice", default="atomic",
-                      choices=CpuConfig.cpu_names(),
-                      help = "type of cpu to run with")
-    parser.add_option("--checker", action="store_true");
+# Add the very basic options that work also in the case of the no ISA
+# being used, and consequently no CPUs, but rather various types of
+# testers and traffic generators.
+def addNoISAOptions(parser):
     parser.add_option("-n", "--num-cpus", type="int", default=1)
     parser.add_option("--sys-voltage", action="store", type="string",
                       default='1.0V',
@@ -79,6 +72,73 @@ def addCommonOptions(parser):
                       default='1GHz',
                       help = """Top-level clock for blocks running at system
                       speed""")
+
+    # Memory Options
+    parser.add_option("--list-mem-types",
+                      action="callback", callback=_listMemTypes,
+                      help="List available memory types")
+    parser.add_option("--mem-type", type="choice", default="DDR3_1600_x64",
+                      choices=MemConfig.mem_names(),
+                      help = "type of memory to use")
+    parser.add_option("--mem-channels", type="int", default=1,
+                      help = "number of memory channels")
+    parser.add_option("--mem-ranks", type="int", default=None,
+                      help = "number of memory ranks per channel")
+    parser.add_option("--mem-size", action="store", type="string",
+                      default="512MB",
+                      help="Specify the physical memory size (single memory)")
+
+
+    parser.add_option("--memchecker", action="store_true")
+
+    # Cache Options
+    parser.add_option("--external-memory-system", type="string",
+                      help="use external ports of this port_type for caches")
+    parser.add_option("--tlm-memory", type="string",
+                      help="use external port for SystemC TLM cosimulation")
+    parser.add_option("--caches", action="store_true")
+    parser.add_option("--l2cache", action="store_true")
+    parser.add_option("--num-dirs", type="int", default=1)
+    parser.add_option("--num-l2caches", type="int", default=1)
+    parser.add_option("--num-l3caches", type="int", default=1)
+    parser.add_option("--l1d_size", type="string", default="64kB")
+    parser.add_option("--l1i_size", type="string", default="32kB")
+    parser.add_option("--l2_size", type="string", default="2MB")
+    parser.add_option("--l3_size", type="string", default="16MB")
+    parser.add_option("--l1d_assoc", type="int", default=2)
+    parser.add_option("--l1i_assoc", type="int", default=2)
+    parser.add_option("--l2_assoc", type="int", default=8)
+    parser.add_option("--l3_assoc", type="int", default=16)
+    parser.add_option("--cacheline_size", type="int", default=64)
+
+    # Enable Ruby
+    parser.add_option("--ruby", action="store_true")
+
+    # Run duration options
+    parser.add_option("-m", "--abs-max-tick", type="int", default=m5.MaxTick,
+                      metavar="TICKS", help="Run to absolute simulated tick "
+                      "specified including ticks from a restored checkpoint")
+    parser.add_option("--rel-max-tick", type="int", default=None,
+                      metavar="TICKS", help="Simulate for specified number of"
+                      " ticks relative to the simulation start tick (e.g. if "
+                      "restoring a checkpoint)")
+    parser.add_option("--maxtime", type="float", default=None,
+                      help="Run to the specified absolute simulated time in "
+                      "seconds")
+
+# Add common options that assume a non-NULL ISA.
+def addCommonOptions(parser):
+    # start by adding the base options that do not assume an ISA
+    addNoISAOptions(parser)
+
+    # system options
+    parser.add_option("--list-cpu-types",
+                      action="callback", callback=_listCpuTypes,
+                      help="List available CPU types")
+    parser.add_option("--cpu-type", type="choice", default="atomic",
+                      choices=CpuConfig.cpu_names(),
+                      help = "type of cpu to run with")
+    parser.add_option("--checker", action="store_true");
     parser.add_option("--cpu-clock", action="store", type="string",
                       default='2GHz',
                       help="Clock for blocks running at CPU speed")
@@ -101,46 +161,10 @@ def addCommonOptions(parser):
                       Elastic Trace probe in a capture simulation and
                       Trace CPU in a replay simulation""", default="")
 
-    # Memory Options
-    parser.add_option("--list-mem-types",
-                      action="callback", callback=_listMemTypes,
-                      help="List available memory types")
-    parser.add_option("--mem-type", type="choice", default="DDR3_1600_x64",
-                      choices=MemConfig.mem_names(),
-                      help = "type of memory to use")
-    parser.add_option("--mem-channels", type="int", default=1,
-                      help = "number of memory channels")
-    parser.add_option("--mem-ranks", type="int", default=None,
-                      help = "number of memory ranks per channel")
-    parser.add_option("--mem-size", action="store", type="string",
-                      default="512MB",
-                      help="Specify the physical memory size (single memory)")
-
     parser.add_option("-l", "--lpae", action="store_true")
     parser.add_option("-V", "--virtualisation", action="store_true")
 
-    parser.add_option("--memchecker", action="store_true")
-
-    # Cache Options
-    parser.add_option("--external-memory-system", type="string",
-                      help="use external ports of this port_type for caches")
-    parser.add_option("--tlm-memory", type="string",
-                      help="use external port for SystemC TLM cosimulation")
-    parser.add_option("--caches", action="store_true")
-    parser.add_option("--l2cache", action="store_true")
     parser.add_option("--fastmem", action="store_true")
-    parser.add_option("--num-dirs", type="int", default=1)
-    parser.add_option("--num-l2caches", type="int", default=1)
-    parser.add_option("--num-l3caches", type="int", default=1)
-    parser.add_option("--l1d_size", type="string", default="64kB")
-    parser.add_option("--l1i_size", type="string", default="32kB")
-    parser.add_option("--l2_size", type="string", default="2MB")
-    parser.add_option("--l3_size", type="string", default="16MB")
-    parser.add_option("--l1d_assoc", type="int", default=2)
-    parser.add_option("--l1i_assoc", type="int", default=2)
-    parser.add_option("--l2_assoc", type="int", default=8)
-    parser.add_option("--l3_assoc", type="int", default=16)
-    parser.add_option("--cacheline_size", type="int", default=64)
 
     # dist-gem5 options
     parser.add_option("--dist", action="store_true",
@@ -175,20 +199,7 @@ def addCommonOptions(parser):
                       action="store", type="string",
                       help="Link delay in seconds\nDEFAULT: 10us")
 
-    # Enable Ruby
-    parser.add_option("--ruby", action="store_true")
-
     # Run duration options
-    parser.add_option("-m", "--abs-max-tick", type="int", default=m5.MaxTick,
-                      metavar="TICKS", help="Run to absolute simulated tick " \
-                      "specified including ticks from a restored checkpoint")
-    parser.add_option("--rel-max-tick", type="int", default=None,
-                      metavar="TICKS", help="Simulate for specified number of" \
-                      " ticks relative to the simulation start tick (e.g. if " \
-                      "restoring a checkpoint)")
-    parser.add_option("--maxtime", type="float", default=None,
-                      help="Run to the specified absolute simulated time in " \
-                      "seconds")
     parser.add_option("-I", "--maxinsts", action="store", type="int",
                       default=None, help="""Total number of instructions to
                                             simulate (default: run forever)""")
@@ -297,6 +308,8 @@ def addSEOptions(parser):
                       help="Redirect stderr to a file.")
 
 def addFSOptions(parser):
+    from FSConfig import os_types
+
     # Simulation options
     parser.add_option("--timesync", action="store_true",
             help="Prevent simulated time from getting ahead of real time")

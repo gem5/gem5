@@ -70,7 +70,7 @@ def is_cpu_class(cls):
         return issubclass(cls, m5.objects.BaseCPU) and \
             not cls.abstract and \
             not issubclass(cls, m5.objects.CheckerCPU)
-    except TypeError:
+    except (TypeError, AttributeError):
         return False
 
 def get(name):
