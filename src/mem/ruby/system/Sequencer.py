@@ -81,3 +81,4 @@ class RubySequencer(RubyPort):
 class DMASequencer(RubyPort):
    type = 'DMASequencer'
    cxx_header = "mem/ruby/system/DMASequencer.hh"
+   max_outstanding_requests = Param.Int(64, "max outstanding requests")

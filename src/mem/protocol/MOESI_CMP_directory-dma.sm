@@ -184,7 +184,7 @@ machine(MachineType:DMA, "DMA Controller")
   }
 
   action(a_ackCallback, "a", desc="Notify dma controller that write request completed") {
-      dma_sequencer.ackCallback();
+      dma_sequencer.ackCallback(address);
   }
 
   action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
@@ -236,7 +236,7 @@ machine(MachineType:DMA, "DMA Controller")
 
   action(d_dataCallbackFromTBE, "/d", desc="data callback with data from TBE") {
     assert(is_valid(tbe));
-    dma_sequencer.dataCallback(tbe.DataBlk);
+    dma_sequencer.dataCallback(tbe.DataBlk, address);
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {

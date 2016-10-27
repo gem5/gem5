@@ -220,8 +220,8 @@ structure (WireBuffer, inport="yes", outport="yes", external = "yes") {
 }
 
 structure (DMASequencer, external = "yes") {
-  void ackCallback();
-  void dataCallback(DataBlock);
+  void ackCallback(Addr);
+  void dataCallback(DataBlock,Addr);
   void recordRequestType(CacheRequestType);
 }
 

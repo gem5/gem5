@@ -50,17 +50,38 @@ machine(MachineType:DMA, "DMA Controller")
     Ack,          desc="DMA write to memory completed";
   }
 
-  State cur_state;
-
-  Tick clockEdge();
-  Cycles ticksToCycles(Tick t);
-
-  State getState(Addr addr) {
-    return cur_state;
+  structure(TBE, desc="...") {
+    State TBEState,    desc="Transient state";
+    DataBlock DataBlk, desc="Data";
   }
 
-  void setState(Addr addr, State state) {
-    cur_state := state;
+  structure(TBETable, external = "yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+
+  TBETable TBEs, template="<DMA_TBE>", constructor="m_number_of_TBEs";
+
+  Tick clockEdge();
+
+  State getState(TBE tbe, Addr addr) {
+    if (is_valid(tbe)) {
+        return tbe.TBEState;
+    } else {
+        return State:READY;
+    }
+  }
+
+  void setState(TBE tbe, Addr addr, State state) {
+    if (is_valid(tbe)) {
+        tbe.TBEState := state;
+    }
   }
 
   AccessPermission getAccessPermission(Addr addr) {
@@ -84,9 +105,9 @@ machine(MachineType:DMA, "DMA Controller")
     if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {
-          trigger(Event:ReadRequest, in_msg.LineAddress);
+          trigger(Event:ReadRequest, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
         } else if (in_msg.Type == SequencerRequestType:ST) {
-          trigger(Event:WriteRequest, in_msg.LineAddress);
+          trigger(Event:WriteRequest, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
         } else {
           error("Invalid request type");
         }
@@ -98,9 +119,9 @@ machine(MachineType:DMA, "DMA Controller")
     if (dmaResponseQueue_in.isReady(clockEdge())) {
       peek( dmaResponseQueue_in, DMAResponseMsg) {
         if (in_msg.Type == DMAResponseType:ACK) {
-          trigger(Event:Ack, in_msg.LineAddress);
+          trigger(Event:Ack, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
         } else if (in_msg.Type == DMAResponseType:DATA) {
-          trigger(Event:Data, in_msg.LineAddress);
+          trigger(Event:Data, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
         } else {
           error("Invalid response type");
         }
@@ -139,15 +160,28 @@ machine(MachineType:DMA, "DMA Controller")
   }
 
   action(a_ackCallback, "a", desc="Notify dma controller that write request completed") {
-    peek (dmaResponseQueue_in, DMAResponseMsg) {
-      dma_sequencer.ackCallback();
-    }
+    dma_sequencer.ackCallback(address);
   }
 
   action(d_dataCallback, "d", desc="Write data to dma sequencer") {
-    peek (dmaResponseQueue_in, DMAResponseMsg) {
-      dma_sequencer.dataCallback(in_msg.DataBlk);
+    dma_sequencer.dataCallback(tbe.DataBlk, address);
+  }
+
+  action(t_updateTBEData, "t", desc="Update TBE Data") {
+    assert(is_valid(tbe));
+    peek( dmaResponseQueue_in, DMAResponseMsg) {
+        tbe.DataBlk := in_msg.DataBlk;
     }
+  }
+
+  action(v_allocateTBE, "v", desc="Allocate TBE entry") {
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
+  }
+
+  action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
+    TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action(p_popRequestQueue, "p", desc="Pop request queue") {
@@ -158,23 +192,43 @@ machine(MachineType:DMA, "DMA Controller")
     dmaResponseQueue_in.dequeue(clockEdge());
   }
 
+  action(zz_stallAndWaitRequestQueue, "zz", desc="...") {
+    stall_and_wait(dmaRequestQueue_in, address);
+  }
+
+  action(wkad_wakeUpAllDependents, "wkad", desc="wake-up all dependents") {
+    wakeUpAllBuffers();
+  }
+
   transition(READY, ReadRequest, BUSY_RD) {
+    v_allocateTBE;
     s_sendReadRequest;
     p_popRequestQueue;
   }
 
   transition(READY, WriteRequest, BUSY_WR) {
+    v_allocateTBE;
     s_sendWriteRequest;
     p_popRequestQueue;
   }
 
   transition(BUSY_RD, Data, READY) {
+    t_updateTBEData;
     d_dataCallback;
+    w_deallocateTBE;
     p_popResponseQueue;
+    wkad_wakeUpAllDependents;
   }
 
   transition(BUSY_WR, Ack, READY) {
     a_ackCallback;
+    w_deallocateTBE;
     p_popResponseQueue;
+    wkad_wakeUpAllDependents;
   }
+
+  transition({BUSY_RD,BUSY_WR}, {ReadRequest,WriteRequest}) {
+     zz_stallAndWaitRequestQueue;
+  }
+
 }
