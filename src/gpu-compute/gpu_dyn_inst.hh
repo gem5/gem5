@@ -194,7 +194,8 @@ class GPUDynInst : public GPUExecContext
     int getNumOperands();
     bool isVectorRegister(int operandIdx);
     bool isScalarRegister(int operandIdx);
-    int getRegisterIndex(int operandIdx);
+    bool isCondRegister(int operandIdx);
+    int getRegisterIndex(int operandIdx, GPUDynInstPtr gpuDynInst);
     int getOperandSize(int operandIdx);
     bool isDstOperand(int operandIdx);
     bool isSrcOperand(int operandIdx);

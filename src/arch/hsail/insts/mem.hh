@@ -146,7 +146,8 @@ namespace HsailISA
             return((operandIndex == 0) ? dest.opSize() :
                    this->addr.opSize());
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.regIndex() :
@@ -377,7 +378,8 @@ namespace HsailISA
             return((operandIndex == 0) ? dest.opSize() :
                    this->addr.opSize());
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return((operandIndex == 0) ? dest.regIndex() :
@@ -670,7 +672,8 @@ namespace HsailISA
                        AddrOperandType>::dest.opSize());
             return 0;
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if ((num_dest_operands != getNumOperands()) &&
@@ -934,7 +937,8 @@ namespace HsailISA
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.opSize() : this->addr.opSize();
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return !operandIndex ? src.regIndex() : this->addr.regIndex();
@@ -1144,7 +1148,8 @@ namespace HsailISA
                        AddrOperandType>::src.opSize();
             return 0;
         }
-        int getRegisterIndex(int operandIndex) override
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex == num_src_operands)
@@ -1433,7 +1438,8 @@ namespace HsailISA
             else
                 return(dest.opSize());
         }
-        int getRegisterIndex(int operandIndex)
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
         {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (operandIndex < NumSrcOperands)

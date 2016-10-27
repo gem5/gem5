@@ -121,7 +121,7 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i)) {
-            uint32_t vgprIdx = ii->getRegisterIndex(i);
+            uint32_t vgprIdx = ii->getRegisterIndex(i, ii);
             uint32_t pVgpr = w->remap(vgprIdx, ii->getOperandSize(i), 1);
 
             if (regBusy(pVgpr, ii->getOperandSize(i)) == 1) {
@@ -160,7 +160,7 @@ VectorRegisterFile::exec(GPUDynInstPtr ii, Wavefront *w)
     // iterate over all register destination operands
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            uint32_t physReg = w->remap(ii->getRegisterIndex(i),
+            uint32_t physReg = w->remap(ii->getRegisterIndex(i, ii),
                                         ii->getOperandSize(i), 1);
 
             // mark the destination vector register as busy
@@ -216,7 +216,7 @@ VectorRegisterFile::updateResources(Wavefront *w, GPUDynInstPtr ii)
     // iterate over all register destination operands
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            uint32_t physReg = w->remap(ii->getRegisterIndex(i),
+            uint32_t physReg = w->remap(ii->getRegisterIndex(i, ii),
                                         ii->getOperandSize(i), 1);
             // set the in-flight status of the destination vector register
             preMarkReg(physReg, ii->getOperandSize(i), 1);

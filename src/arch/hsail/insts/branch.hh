@@ -95,7 +95,9 @@ namespace HsailISA
             return target.opSize();
         }
 
-        int getRegisterIndex(int operandIndex) override {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.regIndex();
         }
@@ -223,7 +225,9 @@ namespace HsailISA
             else
                 return 1;
         }
-        int getRegisterIndex(int operandIndex) override {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             if (!operandIndex)
                 return target.regIndex();
@@ -370,7 +374,9 @@ namespace HsailISA
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.opSize();
         }
-        int getRegisterIndex(int operandIndex) override {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.regIndex();
         }

@@ -62,19 +62,19 @@ ConditionRegisterState::init(uint32_t _size)
 }
 
 void
-ConditionRegisterState::exec(GPUStaticInst *ii, Wavefront *w)
+ConditionRegisterState::exec(GPUDynInstPtr ii, Wavefront *w)
 {
     // iterate over all operands
     for (auto i = 0; i < ii->getNumOperands(); ++i) {
         // is this a condition register destination operand?
         if (ii->isCondRegister(i) && ii->isDstOperand(i)) {
             // mark the register as busy
-            markReg(ii->getRegisterIndex(i), 1);
+            markReg(ii->getRegisterIndex(i, ii), 1);
             uint32_t pipeLen =  w->computeUnit->spBypassLength();
 
             // schedule an event for marking the register as ready
             w->computeUnit->
-                registerEvent(w->simdId, ii->getRegisterIndex(i),
+                registerEvent(w->simdId, ii->getRegisterIndex(i, ii),
                               ii->getOperandSize(i),
                               w->computeUnit->shader->tick_cnt +
                               w->computeUnit->shader->ticks(pipeLen), 0);

@@ -87,7 +87,7 @@ class ConditionRegisterState
     }
 
     int numRegs() { return c_reg.size(); }
-    void exec(GPUStaticInst *ii, Wavefront *w);
+    void exec(GPUDynInstPtr ii, Wavefront *w);
 
   private:
     ComputeUnit* computeUnit;

@@ -83,7 +83,10 @@ class GPUStaticInst : public GPUStaticInstFlags
     virtual bool isSrcOperand(int operandIndex) = 0;
     virtual bool isDstOperand(int operandIndex) = 0;
     virtual int getOperandSize(int operandIndex) = 0;
-    virtual int getRegisterIndex(int operandIndex) = 0;
+
+    virtual int getRegisterIndex(int operandIndex,
+                                 GPUDynInstPtr gpuDynInst) = 0;
+
     virtual int numDstRegOperands() = 0;
     virtual int numSrcRegOperands() = 0;
 
@@ -286,7 +289,13 @@ class KernelLaunchStaticInst : public GPUStaticInst
     bool isSrcOperand(int operandIndex) { return false; }
     bool isDstOperand(int operandIndex) { return false; }
     int getOperandSize(int operandIndex) { return 0; }
-    int getRegisterIndex(int operandIndex) { return 0; }
+
+    int
+    getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+    {
+        return 0;
+    }
+
     int numDstRegOperands() { return 0; }
     int numSrcRegOperands() { return 0; }
     bool isValid() const { return true; }

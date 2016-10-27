@@ -178,7 +178,9 @@ namespace HsailISA
             else
                 return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
 
             if (operandIndex < NumSrcOperands)
@@ -313,7 +315,10 @@ namespace HsailISA
             else
                 return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (!operandIndex)
                 return src0.regIndex();
@@ -477,7 +482,10 @@ namespace HsailISA
             else
                 return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             if (!operandIndex)
                 return src0.regIndex();
@@ -643,7 +651,7 @@ namespace HsailISA
             return -1;
 
         //handle positive and negative numbers
-        T tmp = (src0 < 0) ? (~src0) : (src0);
+        T tmp = ((int64_t)src0 < 0) ? (~src0) : (src0);
 
         //the starting pos is MSB
         int pos = 8 * sizeof(T) - 1;
@@ -732,7 +740,12 @@ namespace HsailISA
         bool isSrcOperand(int operandIndex) { return false; }
         bool isDstOperand(int operandIndex) { return false; }
         int getOperandSize(int operandIndex) { return 0; }
-        int getRegisterIndex(int operandIndex) { return -1; }
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
+            return -1;
+        }
 
         int numSrcRegOperands() { return 0; }
         int numDstRegOperands() { return 0; }
@@ -777,10 +790,14 @@ namespace HsailISA
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.regIndex();
         }
+
         int numSrcRegOperands() { return 0; }
         int numDstRegOperands() { return dest.isVectorRegister(); }
         int getNumOperands() { return 1; }
@@ -848,10 +865,14 @@ namespace HsailISA
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.opSize();
         }
-        int getRegisterIndex(int operandIndex) {
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
             assert((operandIndex >= 0) && (operandIndex < getNumOperands()));
             return dest.regIndex();
         }
+
         int numSrcRegOperands() { return 0; }
         int numDstRegOperands() { return dest.isVectorRegister(); }
         int getNumOperands() { return 1; }
@@ -1171,8 +1192,13 @@ namespace HsailISA
         bool isScalarRegister(int operandIndex) { return false; }
         bool isSrcOperand(int operandIndex) { return false; }
         bool isDstOperand(int operandIndex) { return false; }
-        int  getOperandSize(int operandIndex) { return 0; }
-        int  getRegisterIndex(int operandIndex) { return -1; }
+        int getOperandSize(int operandIndex) { return 0; }
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        {
+            return -1;
+        }
 
         void
         execute(GPUDynInstPtr gpuDynInst)

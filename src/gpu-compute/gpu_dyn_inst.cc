@@ -102,10 +102,16 @@ GPUDynInst::isScalarRegister(int operandIdx)
     return _staticInst->isScalarRegister(operandIdx);
 }
 
-int
-GPUDynInst::getRegisterIndex(int operandIdx)
+bool
+GPUDynInst::isCondRegister(int operandIdx)
 {
-    return _staticInst->getRegisterIndex(operandIdx);
+    return _staticInst->isCondRegister(operandIdx);
+}
+
+int
+GPUDynInst::getRegisterIndex(int operandIdx, GPUDynInstPtr gpuDynInst)
+{
+    return _staticInst->getRegisterIndex(operandIdx, gpuDynInst);
 }
 
 int
