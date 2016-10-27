@@ -390,6 +390,8 @@ class ComputeUnit : public MemObject
     int32_t
     getRefCounter(const uint32_t dispatchId, const uint32_t wgId) const;
 
+    int cacheLineSize() const { return _cacheLineSize; }
+
     bool
     sendToLds(GPUDynInstPtr gpuDynInst) __attribute__((warn_unused_result));
 
@@ -767,6 +769,7 @@ class ComputeUnit : public MemObject
     uint64_t getAndIncSeqNum() { return globalSeqNum++; }
 
   private:
+    const int _cacheLineSize;
     uint64_t globalSeqNum;
     int wavefrontSize;
     GPUStaticInst *kernelLaunchInst;

@@ -224,7 +224,7 @@ void
 Shader::doFunctionalAccess(RequestPtr req, MemCmd cmd, void *data,
                            bool suppress_func_errors, int cu_id)
 {
-    unsigned block_size = RubySystem::getBlockSizeBytes();
+    int block_size = cuList.at(cu_id)->cacheLineSize();
     unsigned size = req->getSize();
 
     Addr tmp_addr;
@@ -342,7 +342,7 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
 {
     uint8_t *data_buf = (uint8_t*)ptr;
 
-    for (ChunkGenerator gen(address, size, RubySystem::getBlockSizeBytes());
+    for (ChunkGenerator gen(address, size, cuList.at(cu_id)->cacheLineSize());
          !gen.done(); gen.next()) {
         Request *req = new Request(0, gen.addr(), gen.size(), 0,
                                    cuList[0]->masterId(), 0, 0, 0);

@@ -75,7 +75,8 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
     req_tick_latency(p->mem_req_latency * p->clk_domain->clockPeriod()),
     resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
     _masterId(p->system->getMasterId(name() + ".ComputeUnit")),
-    lds(*p->localDataStore), globalSeqNum(0),  wavefrontSize(p->wfSize),
+    lds(*p->localDataStore), _cacheLineSize(p->system->cacheLineSize()),
+    globalSeqNum(0), wavefrontSize(p->wfSize),
     kernelLaunchInst(new KernelLaunchStaticInst())
 {
     /**

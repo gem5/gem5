@@ -132,10 +132,10 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
 
     // Since this is an instruction prefetch, if you're split then just finish
     // out the current line.
-    unsigned block_size = RubySystem::getBlockSizeBytes();
+    int block_size = computeUnit->cacheLineSize();
     // check for split accesses
     Addr split_addr = roundDown(vaddr + block_size - 1, block_size);
-    unsigned size = block_size;
+    int size = block_size;
 
     if (split_addr > vaddr) {
         // misaligned access, just grab the rest of the line
