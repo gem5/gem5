@@ -258,6 +258,10 @@ class GPUDynInst : public GPUExecContext
     // Initiate the specified memory operation, by creating a
     // memory request and sending it off to the memory system.
     void initiateAcc(GPUDynInstPtr gpuDynInst);
+    // Complete the specified memory operation, by writing
+    // value back to the RF in the case of a load or atomic
+    // return or, in the case of a store, we do nothing
+    void completeAcc(GPUDynInstPtr gpuDynInst);
 
     void updateStats();
 

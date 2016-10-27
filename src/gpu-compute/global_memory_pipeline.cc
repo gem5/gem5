@@ -65,13 +65,15 @@ GlobalMemPipeline::exec()
         !gmReturnedStores.empty() ? gmReturnedStores.front() : nullptr;
 
     bool accessVrf = true;
+    Wavefront *w = nullptr;
+
     // check the VRF to see if the operands of a load (or load component
     // of an atomic) are accessible
     if ((m) && (m->isLoad() || m->isAtomicRet())) {
-        Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
+        w = m->wavefront();
 
         accessVrf =
-            w->computeUnit->vrf[m->simdId]->
+            w->computeUnit->vrf[w->simdId]->
             vrfOperandAccessReady(m->seqNum(), w, m,
                                   VrfAccessType::WRITE);
     }
@@ -82,44 +84,38 @@ GlobalMemPipeline::exec()
         (computeUnit->shader->coissue_return ||
          computeUnit->wfWait.at(m->pipeId).rdy())) {
 
-        if (m->v_type == VT_32 && m->m_type == Enums::M_U8)
-            doGmReturn<uint32_t, uint8_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_U16)
-            doGmReturn<uint32_t, uint16_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_U32)
-            doGmReturn<uint32_t, uint32_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_S8)
-            doGmReturn<int32_t, int8_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_S16)
-            doGmReturn<int32_t, int16_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_S32)
-            doGmReturn<int32_t, int32_t>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_F16)
-            doGmReturn<float, Float16>(m);
-        else if (m->v_type == VT_32 && m->m_type == Enums::M_F32)
-            doGmReturn<float, float>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U8)
-            doGmReturn<uint64_t, uint8_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U16)
-            doGmReturn<uint64_t, uint16_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U32)
-            doGmReturn<uint64_t, uint32_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_U64)
-            doGmReturn<uint64_t, uint64_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S8)
-            doGmReturn<int64_t, int8_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S16)
-            doGmReturn<int64_t, int16_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S32)
-            doGmReturn<int64_t, int32_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_S64)
-            doGmReturn<int64_t, int64_t>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_F16)
-            doGmReturn<double, Float16>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_F32)
-            doGmReturn<double, float>(m);
-        else if (m->v_type == VT_64 && m->m_type == Enums::M_F64)
-            doGmReturn<double, double>(m);
+        w = m->wavefront();
+
+        m->completeAcc(m);
+
+        if (m->isLoad() || m->isAtomic()) {
+            gmReturnedLoads.pop();
+            assert(inflightLoads > 0);
+            --inflightLoads;
+        } else {
+            assert(m->isStore());
+            gmReturnedStores.pop();
+            assert(inflightStores > 0);
+            --inflightStores;
+        }
+
+        // Decrement outstanding register count
+        computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
+
+        if (m->isStore() || m->isAtomic()) {
+            computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrGm,
+                                             m->time, -1);
+        }
+
+        if (m->isLoad() || m->isAtomic()) {
+            computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdGm,
+                                             m->time, -1);
+        }
+
+        // Mark write bus busy for appropriate amount of time
+        computeUnit->glbMemToVrfBus.set(m->time);
+        if (!computeUnit->shader->coissue_return)
+            w->computeUnit->wfWait.at(m->pipeId).set(m->time);
     }
 
     // If pipeline has executed a global memory instruction
@@ -147,83 +143,6 @@ GlobalMemPipeline::exec()
         DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping 0 mem_op = \n",
                 computeUnit->cu_id, mp->simdId, mp->wfSlotId);
     }
-}
-
-template<typename c0, typename c1>
-void
-GlobalMemPipeline::doGmReturn(GPUDynInstPtr m)
-{
-    Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
-
-    // Return data to registers
-    if (m->isLoad() || m->isAtomic()) {
-        gmReturnedLoads.pop();
-        assert(inflightLoads > 0);
-        --inflightLoads;
-
-        if (m->isLoad() || m->isAtomicRet()) {
-            std::vector<uint32_t> regVec;
-            // iterate over number of destination register operands since
-            // this is a load or atomic operation
-            for (int k = 0; k < m->n_reg; ++k) {
-                assert((sizeof(c1) * m->n_reg) <= MAX_WIDTH_FOR_MEM_INST);
-                int dst = m->dst_reg + k;
-
-                if (m->n_reg > MAX_REGS_FOR_NON_VEC_MEM_INST)
-                    dst = m->dst_reg_vec[k];
-                // virtual->physical VGPR mapping
-                int physVgpr = w->remap(dst, sizeof(c0), 1);
-                // save the physical VGPR index
-                regVec.push_back(physVgpr);
-                c1 *p1 = &((c1 *)m->d_data)[k * w->computeUnit->wfSize()];
-
-                for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
-                    if (m->exec_mask[i]) {
-                        DPRINTF(GPUReg, "CU%d, WF[%d][%d], lane %d: "
-                                "$%s%d <- %d global ld done (src = wavefront "
-                                "ld inst)\n", w->computeUnit->cu_id, w->simdId,
-                                w->wfSlotId, i, sizeof(c0) == 4 ? "s" : "d",
-                                dst, *p1);
-                        // write the value into the physical VGPR. This is a
-                        // purely functional operation. No timing is modeled.
-                        w->computeUnit->vrf[w->simdId]->write<c0>(physVgpr,
-                                                                    *p1, i);
-                    }
-                    ++p1;
-                }
-            }
-
-            // Schedule the write operation of the load data on the VRF.
-            // This simply models the timing aspect of the VRF write operation.
-            // It does not modify the physical VGPR.
-            loadVrfBankConflictCycles +=
-                w->computeUnit->vrf[w->simdId]->exec(m->seqNum(),
-                                                     w, regVec, sizeof(c0),
-                                                     m->time);
-        }
-    } else {
-        gmReturnedStores.pop();
-        assert(inflightStores > 0);
-        --inflightStores;
-    }
-
-    // Decrement outstanding register count
-    computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
-
-    if (m->isStore() || m->isAtomic()) {
-        computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrGm, m->time,
-                                         -1);
-    }
-
-    if (m->isLoad() || m->isAtomic()) {
-        computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdGm, m->time,
-                                         -1);
-    }
-
-    // Mark write bus busy for appropriate amount of time
-    computeUnit->glbMemToVrfBus.set(m->time);
-    if (!computeUnit->shader->coissue_return)
-        w->computeUnit->wfWait.at(m->pipeId).set(m->time);
 }
 
 void

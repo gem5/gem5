@@ -62,8 +62,6 @@ class GlobalMemPipeline
     void init(ComputeUnit *cu);
     void exec();
 
-    template<typename c0, typename c1> void doGmReturn(GPUDynInstPtr m);
-
     std::queue<GPUDynInstPtr> &getGMReqFIFO() { return gmIssuedRequests; }
     std::queue<GPUDynInstPtr> &getGMStRespFIFO() { return gmReturnedStores; }
     std::queue<GPUDynInstPtr> &getGMLdRespFIFO() { return gmReturnedLoads; }
@@ -88,6 +86,12 @@ class GlobalMemPipeline
 
     const std::string &name() const { return _name; }
     void regStats();
+
+    void
+    incLoadVRFBankConflictCycles(int num_cycles)
+    {
+        loadVrfBankConflictCycles += num_cycles;
+    }
 
   private:
     ComputeUnit *computeUnit;

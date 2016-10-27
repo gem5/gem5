@@ -155,6 +155,12 @@ GPUDynInst::initiateAcc(GPUDynInstPtr gpuDynInst)
     time = 0;
 }
 
+void
+GPUDynInst::completeAcc(GPUDynInstPtr gpuDynInst)
+{
+    _staticInst->completeAcc(gpuDynInst);
+}
+
 /**
  * accessor methods for the attributes of
  * the underlying GPU static instruction

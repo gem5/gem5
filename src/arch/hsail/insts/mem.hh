@@ -36,9 +36,12 @@
 #ifndef __ARCH_HSAIL_INSTS_MEM_HH__
 #define __ARCH_HSAIL_INSTS_MEM_HH__
 
+#include <type_traits>
+
 #include "arch/hsail/insts/decl.hh"
 #include "arch/hsail/insts/gpu_static_inst.hh"
 #include "arch/hsail/operand.hh"
+#include "gpu-compute/compute_unit.hh"
 
 namespace HsailISA
 {
@@ -491,6 +494,86 @@ namespace HsailISA
             gpuDynInst->updateStats();
         }
 
+        void
+        completeAcc(GPUDynInstPtr gpuDynInst) override
+        {
+            typedef typename MemDataType::CType c1;
+
+            constexpr bool is_vt_32 = DestDataType::vgprType == VT_32;
+
+            /**
+              * this code essentially replaces the long if-else chain
+              * that was in used GlobalMemPipeline::exec() to infer the
+              * size (single/double) and type (floating point/integer) of
+              * the destination register. this is needed for load
+              * instructions because the loaded value and the
+              * destination type can be of different sizes, and we also
+              * need to know if the value we're writing back is floating
+              * point and signed/unsigned, so we can properly cast the
+              * writeback value
+              */
+            typedef typename std::conditional<is_vt_32,
+                typename std::conditional<std::is_floating_point<c1>::value,
+                    float, typename std::conditional<std::is_signed<c1>::value,
+                    int32_t, uint32_t>::type>::type,
+                typename std::conditional<std::is_floating_point<c1>::value,
+                    double, typename std::conditional<std::is_signed<c1>::value,
+                    int64_t, uint64_t>::type>::type>::type c0;
+
+
+            Wavefront *w = gpuDynInst->wavefront();
+
+            std::vector<uint32_t> regVec;
+            // iterate over number of destination register operands since
+            // this is a load
+            for (int k = 0; k < num_dest_operands; ++k) {
+                assert((sizeof(c1) * num_dest_operands)
+                       <= MAX_WIDTH_FOR_MEM_INST);
+
+                int dst = this->dest.regIndex() + k;
+                if (num_dest_operands > MAX_REGS_FOR_NON_VEC_MEM_INST)
+                    dst = dest_vect[k].regIndex();
+                // virtual->physical VGPR mapping
+                int physVgpr = w->remap(dst, sizeof(c0), 1);
+                // save the physical VGPR index
+                regVec.push_back(physVgpr);
+
+                c1 *p1 =
+                    &((c1*)gpuDynInst->d_data)[k * w->computeUnit->wfSize()];
+
+                for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
+                    if (gpuDynInst->exec_mask[i]) {
+                        DPRINTF(GPUReg, "CU%d, WF[%d][%d], lane %d: "
+                                "$%s%d <- %d global ld done (src = wavefront "
+                                "ld inst)\n", w->computeUnit->cu_id, w->simdId,
+                                w->wfSlotId, i, sizeof(c0) == 4 ? "s" : "d",
+                                dst, *p1);
+                        // write the value into the physical VGPR. This is a
+                        // purely functional operation. No timing is modeled.
+                        w->computeUnit->vrf[w->simdId]->write<c0>(physVgpr,
+                                                                    *p1, i);
+                    }
+                    ++p1;
+                }
+            }
+
+            // Schedule the write operation of the load data on the VRF.
+            // This simply models the timing aspect of the VRF write operation.
+            // It does not modify the physical VGPR.
+            int loadVrfBankConflictCycles = gpuDynInst->computeUnit()->
+                vrf[w->simdId]->exec(gpuDynInst->seqNum(), w, regVec,
+                                     sizeof(c0), gpuDynInst->time);
+
+            if (this->isGlobalMem()) {
+                gpuDynInst->computeUnit()->globalMemoryPipe
+                    .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+            } else {
+                assert(this->isLocalMem());
+                gpuDynInst->computeUnit()->localMemoryPipe
+                    .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+            }
+        }
+
       private:
         void
         execLdAcq(GPUDynInstPtr gpuDynInst) override
@@ -940,6 +1023,11 @@ namespace HsailISA
             // if there is no release semantic, perform stores immediately
             execSt(gpuDynInst);
         }
+
+        // stores don't write anything back, so there is nothing
+        // to do here. we only override this method to avoid the
+        // fatal in the base class implementation
+        void completeAcc(GPUDynInstPtr gpuDynInst) override { }
 
       private:
         // execSt may be called through a continuation
@@ -1407,6 +1495,58 @@ namespace HsailISA
             // if there is no release semantic, execute the RMW immediately
             execAtomic(gpuDynInst);
 
+        }
+
+        void
+        completeAcc(GPUDynInstPtr gpuDynInst) override
+        {
+            // if this is not an atomic return op, then we
+            // have nothing more to do.
+            if (this->isAtomicRet()) {
+                // the size of the src operands and the
+                // memory being operated on must match
+                // for HSAIL atomics - this assumption may
+                // not apply to all ISAs
+                typedef typename MemDataType::CType CType;
+
+                Wavefront *w = gpuDynInst->wavefront();
+                int dst = this->dest.regIndex();
+                std::vector<uint32_t> regVec;
+                // virtual->physical VGPR mapping
+                int physVgpr = w->remap(dst, sizeof(CType), 1);
+                regVec.push_back(physVgpr);
+                CType *p1 = &((CType*)gpuDynInst->d_data)[0];
+
+                for (int i = 0; i < w->computeUnit->wfSize(); ++i) {
+                    if (gpuDynInst->exec_mask[i]) {
+                        DPRINTF(GPUReg, "CU%d, WF[%d][%d], lane %d: "
+                                "$%s%d <- %d global ld done (src = wavefront "
+                                "ld inst)\n", w->computeUnit->cu_id, w->simdId,
+                                w->wfSlotId, i, sizeof(CType) == 4 ? "s" : "d",
+                                dst, *p1);
+                        // write the value into the physical VGPR. This is a
+                        // purely functional operation. No timing is modeled.
+                        w->computeUnit->vrf[w->simdId]->write<CType>(physVgpr, *p1, i);
+                    }
+                    ++p1;
+                }
+
+                // Schedule the write operation of the load data on the VRF.
+                // This simply models the timing aspect of the VRF write operation.
+                // It does not modify the physical VGPR.
+                int loadVrfBankConflictCycles = gpuDynInst->computeUnit()->
+                    vrf[w->simdId]->exec(gpuDynInst->seqNum(), w, regVec,
+                                         sizeof(CType), gpuDynInst->time);
+
+                if (this->isGlobalMem()) {
+                    gpuDynInst->computeUnit()->globalMemoryPipe
+                        .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+                } else {
+                    assert(this->isLocalMem());
+                    gpuDynInst->computeUnit()->localMemoryPipe
+                        .incLoadVRFBankConflictCycles(loadVrfBankConflictCycles);
+                }
+            }
         }
 
         void execute(GPUDynInstPtr gpuDynInst) override;

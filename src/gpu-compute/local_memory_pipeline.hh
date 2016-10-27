@@ -61,8 +61,6 @@ class LocalMemPipeline
     void init(ComputeUnit *cu);
     void exec();
 
-    template<typename c0, typename c1> void doSmReturn(GPUDynInstPtr m);
-
     std::queue<GPUDynInstPtr> &getLMReqFIFO() { return lmIssuedRequests; }
     std::queue<GPUDynInstPtr> &getLMRespFIFO() { return lmReturnedRequests; }
 
@@ -80,6 +78,12 @@ class LocalMemPipeline
 
     const std::string& name() const { return _name; }
     void regStats();
+
+    void
+    incLoadVRFBankConflictCycles(int num_cycles)
+    {
+        loadVrfBankConflictCycles += num_cycles;
+    }
 
   private:
     ComputeUnit *computeUnit;
