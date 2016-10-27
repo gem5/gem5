@@ -61,6 +61,9 @@ class GPUStaticInst : public GPUStaticInstFlags
 {
   public:
     GPUStaticInst(const std::string &opcode);
+    void instAddr(int inst_addr) { _instAddr = inst_addr; }
+    int instAddr() const { return _instAddr; }
+    int nextInstAddr() const { return _instAddr + instSize(); }
 
     void instNum(int num) { _instNum = num; }
 
@@ -190,7 +193,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isGloballyCoherent() const { return _flags[GloballyCoherent]; }
     bool isSystemCoherent() const { return _flags[SystemCoherent]; }
 
-    virtual uint32_t instSize() = 0;
+    virtual int instSize() const = 0;
 
     // only used for memory instructions
     virtual void
@@ -243,6 +246,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     const std::string opcode;
     std::string disassembly;
     int _instNum;
+    int _instAddr;
     /**
      * Identifier of the immediate post-dominator instruction.
      */
@@ -286,7 +290,7 @@ class KernelLaunchStaticInst : public GPUStaticInst
     int numDstRegOperands() { return 0; }
     int numSrcRegOperands() { return 0; }
     bool isValid() const { return true; }
-    uint32_t instSize() { return 0; }
+    int instSize() const override { return 0; }
 };
 
 #endif // __GPU_STATIC_INST_HH__

@@ -42,6 +42,7 @@
  * Defines the base class representing HSAIL GPU static instructions.
  */
 
+#include "arch/hsail/gpu_types.hh"
 #include "gpu-compute/gpu_static_inst.hh"
 
 class BrigObject;
@@ -54,7 +55,7 @@ namespace HsailISA
       public:
         HsailGPUStaticInst(const BrigObject *obj, const std::string &opcode);
         void generateDisassembly();
-        uint32_t instSize() { return 4; }
+        int instSize() const override { return sizeof(RawMachInst); }
         bool isValid() const override { return true; }
 
       protected:

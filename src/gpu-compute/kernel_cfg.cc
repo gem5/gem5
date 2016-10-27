@@ -63,11 +63,11 @@ ControlFlowInfo::ControlFlowInfo(const std::vector<GPUStaticInst*>& insts) :
 }
 
 BasicBlock*
-ControlFlowInfo::basicBlock(int inst_num) const {
+ControlFlowInfo::basicBlock(int inst_addr) const {
     for (auto& block: basicBlocks) {
-       int first_block_id = block->firstInstruction->instNum();
-       if (inst_num >= first_block_id &&
-               inst_num < first_block_id + block->size) {
+       int first_block_addr = block->firstInstruction->instAddr();
+       if (inst_addr >= first_block_addr && inst_addr <
+           first_block_addr + block->size * sizeof(TheGpuISA::RawMachInst)) {
            return block.get();
        }
     }
@@ -102,24 +102,23 @@ ControlFlowInfo::createBasicBlocks()
     std::set<int> leaders;
     // first instruction is a leader
     leaders.insert(0);
-    for (int i = 1; i < instructions.size(); i++) {
-        GPUStaticInst* instruction = instructions[i];
+    for (const auto &instruction : instructions) {
         if (instruction->isBranch()) {
             const int target_pc = instruction->getTargetPc();
             leaders.insert(target_pc);
-            leaders.insert(i + 1);
+            leaders.insert(instruction->nextInstAddr());
         }
     }
 
     size_t block_size = 0;
-    for (int i = 0; i < instructions.size(); i++) {
-        if (leaders.find(i) != leaders.end()) {
+    for (const auto &instruction : instructions) {
+        if (leaders.find(instruction->instAddr()) != leaders.end()) {
             uint32_t id = basicBlocks.size();
             if (id > 0) {
                 basicBlocks.back()->size = block_size;
             }
             block_size = 0;
-            basicBlocks.emplace_back(new BasicBlock(id, instructions[i]));
+            basicBlocks.emplace_back(new BasicBlock(id, instruction));
         }
         block_size++;
     }
@@ -149,7 +148,7 @@ ControlFlowInfo::connectBasicBlocks()
 
         // Unconditional jump instructions have a unique successor
         if (!last->isUnconditionalJump()) {
-            BasicBlock* next_bb = basicBlock(last->instNum() + 1);
+            BasicBlock* next_bb = basicBlock(last->nextInstAddr());
             bb->successorIds.insert(next_bb->id);
         }
     }
@@ -236,9 +235,9 @@ ControlFlowInfo::findImmediatePostDominators()
         BasicBlock* ipd_block = basicBlocks[*(candidates.begin())].get();
         if (!ipd_block->isExit()) {
             GPUStaticInst* ipd_first_inst = ipd_block->firstInstruction;
-            last_instruction->ipdInstNum(ipd_first_inst->instNum());
+            last_instruction->ipdInstNum(ipd_first_inst->instAddr());
         } else {
-            last_instruction->ipdInstNum(last_instruction->instNum() + 1);
+            last_instruction->ipdInstNum(last_instruction->nextInstAddr());
         }
     }
 }
@@ -271,8 +270,8 @@ void
 ControlFlowInfo::printBasicBlocks() const
 {
     for (GPUStaticInst* inst : instructions) {
-        int inst_num = inst->instNum();
-        std::cout << inst_num << " [" << basicBlock(inst_num)->id
+        int inst_addr = inst->instAddr();
+        std::cout << inst_addr << " [" << basicBlock(inst_addr)->id
                 << "]: " << inst->disassemble();
         if (inst->isBranch()) {
             std::cout << ", PC = " << inst->getTargetPc();

@@ -38,6 +38,7 @@
 
 #include <cstdint>
 
+#include "arch/hsail/gpu_types.hh"
 #include "base/misc.hh"
 #include "gpu-compute/misc.hh"
 
@@ -71,7 +72,7 @@ namespace HsailISA
         uint32_t
         advancePC(uint32_t old_pc, GPUDynInstPtr gpuDynInst)
         {
-            return old_pc + 1;
+            return old_pc + sizeof(RawMachInst);
         }
 
       private:

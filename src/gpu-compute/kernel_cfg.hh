@@ -106,7 +106,7 @@ private:
 
     GPUStaticInst* lastInstruction(const BasicBlock* block) const;
 
-    BasicBlock* basicBlock(int inst_num) const;
+    BasicBlock* basicBlock(int inst_addr) const;
 
     BasicBlock* postDominator(const BasicBlock* block) const;
 

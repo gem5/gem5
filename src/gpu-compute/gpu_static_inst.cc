@@ -37,7 +37,7 @@
 
 GPUStaticInst::GPUStaticInst(const std::string &opcode)
     : executed_as(Enums::SC_NONE), opcode(opcode),
-      _instNum(0)
+      _instNum(0), _instAddr(0)
 {
     setFlag(NoOrder);
 }

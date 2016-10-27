@@ -122,11 +122,10 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
      * instrutions on a 32b granularity so we must account for that here.
     */
     for (int i = 0; i < wavefront->instructionBuffer.size(); ++i) {
-        int current_inst_size =
+        vaddr +=
             wavefront->instructionBuffer.at(i)->staticInstruction()->instSize();
-        vaddr += current_inst_size / sizeof(uint32_t);
     }
-    vaddr = wavefront->basePtr +  vaddr * sizeof(GPUStaticInst*);
+    vaddr = wavefront->basePtr +  vaddr;
 
     DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Initiating fetch translation: %#x\n",
             computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId, vaddr);

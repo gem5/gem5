@@ -79,7 +79,7 @@ ClDriver::ClDriver(ClDriverParams *p)
         kernelInfo[i].code_offs = code_offs;
 
         name_offs += k->name().size() + 1;
-        code_offs += k->numInsts() * sizeof(GPUStaticInst*);
+        code_offs += k->numInsts() * sizeof(TheGpuISA::RawMachInst);
     }
 }
 
@@ -130,7 +130,8 @@ ClDriver::ioctl(LiveProcess *process, ThreadContext *tc, unsigned req)
                 HsaCode *k = kernels[i];
                 // add one for terminating '\0'
                 sizes->string_table_size += k->name().size() + 1;
-                sizes->code_size += k->numInsts() * sizeof(GPUStaticInst*);
+                sizes->code_size +=
+                    k->numInsts() * sizeof(TheGpuISA::RawMachInst);
             }
 
             sizes.copyOut(tc->getMemProxy());

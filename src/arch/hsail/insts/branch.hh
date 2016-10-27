@@ -257,7 +257,7 @@ namespace HsailISA
     {
         Wavefront *w = gpuDynInst->wavefront();
 
-        const uint32_t curr_pc = w->pc();
+        const uint32_t curr_pc M5_VAR_USED = w->pc();
         const uint32_t curr_rpc = w->rpc();
         const VectorMask curr_mask = w->execMask();
 
@@ -281,7 +281,7 @@ namespace HsailISA
         }
 
         // not taken branch
-        const uint32_t false_pc = curr_pc + 1;
+        const uint32_t false_pc = nextInstAddr();
         assert(true_pc != false_pc);
         if (false_pc != rpc && true_mask.count() < curr_mask.count()) {
             VectorMask false_mask = curr_mask & ~true_mask;
