@@ -625,9 +625,8 @@ GPUCoalescer::hitCallback(GPUCoalescerRequest* srequest,
     int len = reqCoalescer[request_line_address].size();
     std::vector<PacketPtr> mylist;
     for (int i = 0; i < len; ++i) {
-        PacketPtr pkt = reqCoalescer[request_line_address][i].first;
-        assert(type ==
-               reqCoalescer[request_line_address][i].second[PrimaryType]);
+        PacketPtr pkt = reqCoalescer[request_line_address][i].pkt;
+        assert(type == reqCoalescer[request_line_address][i].primaryType);
         request_address = pkt->getAddr();
         request_line_address = makeLineAddress(pkt->getAddr());
         if (pkt->getPtr<uint8_t>()) {
@@ -848,25 +847,22 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
     // let us see if we can coalesce this request with the previous
     // requests from this cycle
     } else if (primary_type !=
-               reqCoalescer[line_addr][0].second[PrimaryType]) {
+               reqCoalescer[line_addr][0].primaryType) {
         // can't coalesce loads, stores and atomics!
         return RequestStatus_Aliased;
     } else if (pkt->req->isLockedRMW() ||
-               reqCoalescer[line_addr][0].first->req->isLockedRMW()) {
+               reqCoalescer[line_addr][0].pkt->req->isLockedRMW()) {
         // can't coalesce locked accesses, but can coalesce atomics!
         return RequestStatus_Aliased;
     } else if (pkt->req->hasContextId() && pkt->req->isRelease() &&
                pkt->req->contextId() !=
-               reqCoalescer[line_addr][0].first->req->contextId()) {
+               reqCoalescer[line_addr][0].pkt->req->contextId()) {
         // can't coalesce releases from different wavefronts
         return RequestStatus_Aliased;
     }
 
     // in addition to the packet, we need to save both request types
-    reqCoalescer[line_addr].push_back(
-            RequestDesc(pkt, std::vector<RubyRequestType>()) );
-    reqCoalescer[line_addr].back().second.push_back(primary_type);
-    reqCoalescer[line_addr].back().second.push_back(secondary_type);
+    reqCoalescer[line_addr].emplace_back(pkt, primary_type, secondary_type);
     if (!issueEvent.scheduled())
         schedule(issueEvent, curTick());
     // TODO: issue hardware prefetches here
@@ -910,7 +906,7 @@ GPUCoalescer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     std::vector< std::pair<int,AtomicOpFunctor*> > atomicOps;
     uint32_t tableSize = reqCoalescer[line_addr].size();
     for (int i = 0; i < tableSize; i++) {
-        PacketPtr tmpPkt = reqCoalescer[line_addr][i].first;
+        PacketPtr tmpPkt = reqCoalescer[line_addr][i].pkt;
         uint32_t tmpOffset = (tmpPkt->getAddr()) - line_addr;
         uint32_t tmpSize = tmpPkt->getSize();
         if (tmpPkt->isAtomicOp()) {
@@ -1020,12 +1016,12 @@ GPUCoalescer::completeIssue()
         // can be coalesced with the first request. So, only
         // one request is issued per cacheline.
         RequestDesc info = reqCoalescer[newRequests[i]][0];
-        PacketPtr pkt = info.first;
+        PacketPtr pkt = info.pkt;
         DPRINTF(GPUCoalescer, "Completing for newReq %d: paddr %#x\n",
                 i, pkt->req->getPaddr());
         // Insert this request to the read/writeRequestTables. These tables
         // are used to track aliased requests in makeRequest subroutine
-        bool found = insertRequest(pkt, info.second[PrimaryType]);
+        bool found = insertRequest(pkt, info.primaryType);
 
         if (found) {
             panic("GPUCoalescer::makeRequest should never be called if the "
@@ -1033,7 +1029,7 @@ GPUCoalescer::completeIssue()
         }
 
         // Issue request to ruby subsystem
-        issueRequest(pkt, info.second[SecondaryType]);
+        issueRequest(pkt, info.secondaryType);
     }
     newRequests.clear();
 
@@ -1107,9 +1103,9 @@ GPUCoalescer::atomicCallback(Addr address,
     int len = reqCoalescer[request_line_address].size();
     std::vector<PacketPtr> mylist;
     for (int i = 0; i < len; ++i) {
-        PacketPtr pkt = reqCoalescer[request_line_address][i].first;
+        PacketPtr pkt = reqCoalescer[request_line_address][i].pkt;
         assert(srequest->m_type ==
-               reqCoalescer[request_line_address][i].second[PrimaryType]);
+               reqCoalescer[request_line_address][i].primaryType);
         request_address = (pkt->getAddr());
         request_line_address = makeLineAddress(request_address);
         if (pkt->getPtr<uint8_t>() &&

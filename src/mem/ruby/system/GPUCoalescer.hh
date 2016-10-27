@@ -73,6 +73,24 @@ struct GPUCoalescerRequest
     {}
 };
 
+class RequestDesc
+{
+  public:
+    RequestDesc(PacketPtr pkt, RubyRequestType p_type, RubyRequestType s_type)
+        : pkt(pkt), primaryType(p_type), secondaryType(s_type)
+    {
+    }
+
+    RequestDesc() : pkt(nullptr), primaryType(RubyRequestType_NULL),
+        secondaryType(RubyRequestType_NULL)
+    {
+    }
+
+    PacketPtr pkt;
+    RubyRequestType primaryType;
+    RubyRequestType secondaryType;
+};
+
 std::ostream& operator<<(std::ostream& out, const GPUCoalescerRequest& obj);
 
 class GPUCoalescer : public RubyPort
@@ -271,9 +289,7 @@ class GPUCoalescer : public RubyPort
     // The secondary request type comprises a subset of RubyRequestTypes that
     // are understood by the L1 Controller. A primary request type can be any
     // RubyRequestType.
-    enum {PrimaryType, SecondaryType};
-    typedef std::pair<PacketPtr, std::vector<RubyRequestType> > RequestDesc;
-    typedef std::unordered_map<Addr, std::vector<RequestDesc> > CoalescingTable;
+    typedef std::unordered_map<Addr, std::vector<RequestDesc>> CoalescingTable;
     CoalescingTable reqCoalescer;
     std::vector<Addr> newRequests;
 
