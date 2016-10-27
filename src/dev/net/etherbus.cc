@@ -98,7 +98,7 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 
     packet = pkt;
     sender = sndr;
-    int delay = (int)ceil(((double)pkt->length * ticksPerByte) + 1.0);
+    int delay = (int)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
     schedule(event, curTick() + delay);

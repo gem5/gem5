@@ -1085,6 +1085,7 @@ Device::txKick()
 
       case txCopyDone:
         vnic->TxDone = txDmaLen | Regs::TxDone_Complete;
+        txPacket->simLength += txDmaLen;
         txPacket->length += txDmaLen;
         if ((vnic->TxData & Regs::TxData_More)) {
             txPacketOffset += txDmaLen;
@@ -1495,7 +1496,7 @@ Device::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(txPacketExists);
     txPacket = 0;
     if (txPacketExists) {
-        txPacket = make_shared<EthPacketData>(16384);
+        txPacket = make_shared<EthPacketData>();
         txPacket->unserialize("txPacket", cp);
         UNSERIALIZE_SCALAR(txPacketOffset);
         UNSERIALIZE_SCALAR(txPacketBytes);

@@ -197,7 +197,7 @@ DistEtherLink::TxLink::transmit(EthPacketPtr pkt)
     }
 
     packet = pkt;
-    Tick delay = (Tick)ceil(((double)pkt->length * ticksPerByte) + 1.0);
+    Tick delay = (Tick)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     if (delayVar != 0)
         delay += random_mt.random<Tick>(0, delayVar);
 
@@ -233,7 +233,7 @@ DistEtherLink::Link::unserialize(CheckpointIn &cp)
     bool packet_exists;
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
-        packet = make_shared<EthPacketData>(16384);
+        packet = make_shared<EthPacketData>();
         packet->unserialize("packet", cp);
     }
 

@@ -239,6 +239,7 @@ EtherTap::process(int revent)
         EthPacketPtr packet;
         packet = make_shared<EthPacketData>(data_len);
         packet->length = data_len;
+        packet->simLength = data_len;
         memcpy(packet->data, data, data_len);
 
         assert(buffer_offset >= data_len + sizeof(uint32_t));

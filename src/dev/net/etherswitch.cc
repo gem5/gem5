@@ -200,7 +200,7 @@ EtherSwitch::Interface::transmit()
 Tick
 EtherSwitch::Interface::switchingDelay()
 {
-    Tick delay = (Tick)ceil(((double)outputFifo.front()->length
+    Tick delay = (Tick)ceil(((double)outputFifo.front()->simLength
                                      * ticksPerByte) + 1.0);
     if (delayVar != 0)
                 delay += random_mt.random<Tick>(0, delayVar);

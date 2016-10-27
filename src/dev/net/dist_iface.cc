@@ -407,7 +407,7 @@ DistIface::RecvScheduler::resumeRecvTicks()
         Desc d = descQueue.front();
         descQueue.pop();
         d.sendTick = curTick();
-        d.sendDelay = d.packet->size(); // assume 1 tick/byte max link speed
+        d.sendDelay = d.packet->simLength; // assume 1 tick/byte max link speed
         v.push_back(d);
     }
 
@@ -493,7 +493,7 @@ DistIface::RecvScheduler::Desc::unserialize(CheckpointIn &cp)
 {
         UNSERIALIZE_SCALAR(sendTick);
         UNSERIALIZE_SCALAR(sendDelay);
-        packet = std::make_shared<EthPacketData>(16384);
+        packet = std::make_shared<EthPacketData>();
         packet->unserialize("rxPacket", cp);
 }
 
@@ -583,14 +583,15 @@ DistIface::packetOut(EthPacketPtr pkt, Tick send_delay)
     header.sendTick  = curTick();
     header.sendDelay = send_delay;
 
-    header.dataPacketLength = pkt->size();
+    header.dataPacketLength = pkt->length;
+    header.simLength = pkt->simLength;
 
     // Send out the packet and the meta info.
     sendPacket(header, pkt);
 
     DPRINTF(DistEthernetPkt,
             "DistIface::sendDataPacket() done size:%d send_delay:%llu\n",
-            pkt->size(), send_delay);
+            pkt->length, send_delay);
 }
 
 void

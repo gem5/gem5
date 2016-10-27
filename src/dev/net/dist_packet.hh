@@ -86,6 +86,11 @@ class DistHeaderPkt
          */
         MsgType msgType;
         Tick sendTick;
+        /**
+         * Length used for modeling timing in the simulator.
+         * (from EthPacketData::simLength).
+         */
+        unsigned simLength;
         union {
             Tick sendDelay;
             Tick syncRepeat;
@@ -93,6 +98,7 @@ class DistHeaderPkt
         union {
             /**
              * Actual length of the simulated Ethernet packet.
+             * (from EthPacketData::length).
              */
             unsigned dataPacketLength;
             struct {

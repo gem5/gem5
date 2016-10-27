@@ -192,7 +192,7 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
     DDUMP(EthernetData, pkt->data, pkt->length);
 
     packet = pkt;
-    Tick delay = (Tick)ceil(((double)pkt->length * ticksPerByte) + 1.0);
+    Tick delay = (Tick)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     if (delayVar != 0)
         delay += random_mt.random<Tick>(0, delayVar);
 
@@ -235,7 +235,7 @@ EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
     bool packet_exists;
     paramIn(cp, base + ".packet_exists", packet_exists);
     if (packet_exists) {
-        packet = make_shared<EthPacketData>(16384);
+        packet = make_shared<EthPacketData>();
         packet->unserialize(base + ".packet", cp);
     }
 
@@ -251,7 +251,7 @@ EtherLink::Link::unserialize(const string &base, CheckpointIn &cp)
     if (optParamIn(cp, base + ".tx_queue_size", tx_queue_size)) {
         for (size_t idx = 0; idx < tx_queue_size; ++idx) {
             Tick tick;
-            EthPacketPtr delayed_packet = make_shared<EthPacketData>(16384);
+            EthPacketPtr delayed_packet = make_shared<EthPacketData>();
 
             paramIn(cp, csprintf("%s.txQueue[%i].tick", base, idx), tick);
             delayed_packet->unserialize(

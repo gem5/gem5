@@ -1771,12 +1771,15 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "TSO: use: %d hdrlen: %d mss: %d total: %d "
             "used: %d loaded hdr: %d\n", useTso, tsoHeaderLen, tsoMss,
             tsoTotalLen, tsoUsedLen, tsoLoadedHeader);
+        pktPtr->simLength += tsoCopyBytes;
         pktPtr->length += tsoCopyBytes;
         tsoUsedLen += tsoCopyBytes;
         DPRINTF(EthernetDesc, "TSO: descBytesUsed: %d copyBytes: %d\n",
             tsoDescBytesUsed, tsoCopyBytes);
-    } else
+    } else {
+        pktPtr->simLength += TxdOp::getLen(desc);
         pktPtr->length += TxdOp::getLen(desc);
+    }
 
 
 
@@ -2519,7 +2522,7 @@ IGbE::unserialize(CheckpointIn &cp)
     bool txPktExists;
     UNSERIALIZE_SCALAR(txPktExists);
     if (txPktExists) {
-        txPacket = std::make_shared<EthPacketData>(16384);
+        txPacket = std::make_shared<EthPacketData>();
         txPacket->unserialize("txpacket", cp);
     }
 

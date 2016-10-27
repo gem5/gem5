@@ -41,6 +41,7 @@ using namespace std;
 void
 EthPacketData::serialize(const string &base, CheckpointOut &cp) const
 {
+    paramOut(cp, base + ".simLength", simLength);
     paramOut(cp, base + ".length", length);
     arrayParamOut(cp, base + ".data", data, length);
 }
@@ -49,7 +50,12 @@ void
 EthPacketData::unserialize(const string &base, CheckpointIn &cp)
 {
     paramIn(cp, base + ".length", length);
-    if (length)
+    if (length) {
+        assert(data == nullptr);
+        data = new uint8_t[length];
         arrayParamIn(cp, base + ".data", data, length);
+    }
+    if (!optParamIn(cp, base + ".simLength", simLength))
+        simLength = length;
 }
 

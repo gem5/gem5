@@ -329,6 +329,7 @@ TCPIface::recvPacket(const Header &header, EthPacketPtr &packet)
     packet = make_shared<EthPacketData>(header.dataPacketLength);
     bool ret = recvTCP(sock, packet->data, header.dataPacketLength);
     panic_if(!ret, "Error while reading socket");
+    packet->simLength = header.simLength;
     packet->length = header.dataPacketLength;
 }
 
