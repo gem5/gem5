@@ -301,6 +301,31 @@ class ComputeUnit : public MemObject
     LdsState &lds;
 
   public:
+    Stats::Scalar vALUInsts;
+    Stats::Formula vALUInstsPerWF;
+    Stats::Scalar sALUInsts;
+    Stats::Formula sALUInstsPerWF;
+    Stats::Scalar instCyclesVALU;
+    Stats::Scalar instCyclesSALU;
+    Stats::Scalar threadCyclesVALU;
+    Stats::Formula vALUUtilization;
+    Stats::Scalar ldsNoFlatInsts;
+    Stats::Formula ldsNoFlatInstsPerWF;
+    Stats::Scalar flatVMemInsts;
+    Stats::Formula flatVMemInstsPerWF;
+    Stats::Scalar flatLDSInsts;
+    Stats::Formula flatLDSInstsPerWF;
+    Stats::Scalar vectorMemWrites;
+    Stats::Formula vectorMemWritesPerWF;
+    Stats::Scalar vectorMemReads;
+    Stats::Formula vectorMemReadsPerWF;
+    Stats::Scalar scalarMemWrites;
+    Stats::Formula scalarMemWritesPerWF;
+    Stats::Scalar scalarMemReads;
+    Stats::Formula scalarMemReadsPerWF;
+
+    void updateInstStats(GPUDynInstPtr gpuDynInst);
+
     // the following stats compute the avg. TLB accesslatency per
     // uncoalesced request (only for data)
     Stats::Scalar tlbRequests;

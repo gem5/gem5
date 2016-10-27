@@ -1408,6 +1408,114 @@ ComputeUnit::regStats()
 {
     MemObject::regStats();
 
+    vALUInsts
+        .name(name() + ".valu_insts")
+        .desc("Number of vector ALU insts issued.")
+        ;
+    vALUInstsPerWF
+        .name(name() + ".valu_insts_per_wf")
+        .desc("The avg. number of vector ALU insts issued per-wavefront.")
+        ;
+    sALUInsts
+        .name(name() + ".salu_insts")
+        .desc("Number of scalar ALU insts issued.")
+        ;
+    sALUInstsPerWF
+        .name(name() + ".salu_insts_per_wf")
+        .desc("The avg. number of scalar ALU insts issued per-wavefront.")
+        ;
+    instCyclesVALU
+        .name(name() + ".inst_cycles_valu")
+        .desc("Number of cycles needed to execute VALU insts.")
+        ;
+    instCyclesSALU
+        .name(name() + ".inst_cycles_salu")
+        .desc("Number of cycles needed to execute SALU insts.")
+        ;
+    threadCyclesVALU
+        .name(name() + ".thread_cycles_valu")
+        .desc("Number of thread cycles used to execute vector ALU ops. "
+              "Similar to instCyclesVALU but multiplied by the number of "
+              "active threads.")
+        ;
+    vALUUtilization
+        .name(name() + ".valu_utilization")
+        .desc("Percentage of active vector ALU threads in a wave.")
+        ;
+    ldsNoFlatInsts
+        .name(name() + ".lds_no_flat_insts")
+        .desc("Number of LDS insts issued, not including FLAT "
+              "accesses that resolve to LDS.")
+        ;
+    ldsNoFlatInstsPerWF
+        .name(name() + ".lds_no_flat_insts_per_wf")
+        .desc("The avg. number of LDS insts (not including FLAT "
+              "accesses that resolve to LDS) per-wavefront.")
+        ;
+    flatVMemInsts
+        .name(name() + ".flat_vmem_insts")
+        .desc("The number of FLAT insts that resolve to vmem issued.")
+        ;
+    flatVMemInstsPerWF
+        .name(name() + ".flat_vmem_insts_per_wf")
+        .desc("The average number of FLAT insts that resolve to vmem "
+              "issued per-wavefront.")
+        ;
+    flatLDSInsts
+        .name(name() + ".flat_lds_insts")
+        .desc("The number of FLAT insts that resolve to LDS issued.")
+        ;
+    flatLDSInstsPerWF
+        .name(name() + ".flat_lds_insts_per_wf")
+        .desc("The average number of FLAT insts that resolve to LDS "
+              "issued per-wavefront.")
+        ;
+    vectorMemWrites
+        .name(name() + ".vector_mem_writes")
+        .desc("Number of vector mem write insts (excluding FLAT insts).")
+        ;
+    vectorMemWritesPerWF
+        .name(name() + ".vector_mem_writes_per_wf")
+        .desc("The average number of vector mem write insts "
+              "(excluding FLAT insts) per-wavefront.")
+        ;
+    vectorMemReads
+        .name(name() + ".vector_mem_reads")
+        .desc("Number of vector mem read insts (excluding FLAT insts).")
+        ;
+    vectorMemReadsPerWF
+        .name(name() + ".vector_mem_reads_per_wf")
+        .desc("The avg. number of vector mem read insts (excluding "
+              "FLAT insts) per-wavefront.")
+        ;
+    scalarMemWrites
+        .name(name() + ".scalar_mem_writes")
+        .desc("Number of scalar mem write insts.")
+        ;
+    scalarMemWritesPerWF
+        .name(name() + ".scalar_mem_writes_per_wf")
+        .desc("The average number of scalar mem write insts per-wavefront.")
+        ;
+    scalarMemReads
+        .name(name() + ".scalar_mem_reads")
+        .desc("Number of scalar mem read insts.")
+        ;
+    scalarMemReadsPerWF
+        .name(name() + ".scalar_mem_reads_per_wf")
+        .desc("The average number of scalar mem read insts per-wavefront.")
+        ;
+
+    vALUInstsPerWF = vALUInsts / completedWfs;
+    sALUInstsPerWF = sALUInsts / completedWfs;
+    vALUUtilization = (threadCyclesVALU / (64 * instCyclesVALU)) * 100;
+    ldsNoFlatInstsPerWF = ldsNoFlatInsts / completedWfs;
+    flatVMemInstsPerWF = flatVMemInsts / completedWfs;
+    flatLDSInstsPerWF = flatLDSInsts / completedWfs;
+    vectorMemWritesPerWF = vectorMemWrites / completedWfs;
+    vectorMemReadsPerWF = vectorMemReads / completedWfs;
+    scalarMemWritesPerWF = scalarMemWrites / completedWfs;
+    scalarMemReadsPerWF = scalarMemReads / completedWfs;
+
     tlbCycles
         .name(name() + ".tlb_cycles")
         .desc("total number of cycles for all uncoalesced requests")
@@ -1564,6 +1672,39 @@ ComputeUnit::regStats()
     // register stats of memory pipeline
     globalMemoryPipe.regStats();
     localMemoryPipe.regStats();
+}
+
+void
+ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
+{
+    if (gpuDynInst->isScalar()) {
+        if (gpuDynInst->isALU() && !gpuDynInst->isWaitcnt()) {
+            sALUInsts++;
+            instCyclesSALU++;
+        } else if (gpuDynInst->isLoad()) {
+            scalarMemReads++;
+        } else if (gpuDynInst->isStore()) {
+            scalarMemWrites++;
+        }
+    } else {
+        if (gpuDynInst->isALU()) {
+            vALUInsts++;
+            instCyclesVALU++;
+            threadCyclesVALU += gpuDynInst->wavefront()->execMask().count();
+        } else if (gpuDynInst->isFlat()) {
+            if (gpuDynInst->isLocalMem()) {
+                flatLDSInsts++;
+            } else {
+                flatVMemInsts++;
+            }
+        } else if (gpuDynInst->isLocalMem()) {
+            ldsNoFlatInsts++;
+        } else if (gpuDynInst->isLoad()) {
+            vectorMemReads++;
+        } else if (gpuDynInst->isStore()) {
+            vectorMemWrites++;
+        }
+    }
 }
 
 void

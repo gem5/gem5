@@ -656,7 +656,11 @@ Wavefront::exec()
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
             "(pc: %i)\n", computeUnit->cu_id, simdId, wfSlotId, wfDynId,
             ii->disassemble(), old_pc);
+
+    // update the instruction stats in the CU
+
     ii->execute(ii);
+    computeUnit->updateInstStats(ii);
     // access the VRF
     computeUnit->vrf[simdId]->exec(ii, this);
     srcRegOpDist.sample(ii->numSrcRegOperands());
