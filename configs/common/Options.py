@@ -169,6 +169,8 @@ def addCommonOptions(parser):
     # dist-gem5 options
     parser.add_option("--dist", action="store_true",
                       help="Parallel distributed gem5 simulation.")
+    parser.add_option("--dist-sync-on-pseudo-op", action="store_true",
+                      help="Use a pseudo-op to start dist-gem5 synchronization.")
     parser.add_option("--is-switch", action="store_true",
                       help="Select the network switch simulator process for a"\
                       "distributed gem5 run")

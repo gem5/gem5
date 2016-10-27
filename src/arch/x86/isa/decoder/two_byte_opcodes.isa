@@ -228,6 +228,9 @@
                     0x5b: m5_work_end({{
                         PseudoInst::workend(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
+                    0x62: m5togglesync({{
+                        PseudoInst::togglesync(xc->tcBase());
+                    }}, IsNonSpeculative, IsQuiesce);
                     default: Inst::UD2();
                 }
             }

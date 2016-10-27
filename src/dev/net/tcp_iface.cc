@@ -82,8 +82,9 @@ bool TCPIface::anyListening = false;
 TCPIface::TCPIface(string server_name, unsigned server_port,
                    unsigned dist_rank, unsigned dist_size,
                    Tick sync_start, Tick sync_repeat,
-                   EventManager *em, bool is_switch, int num_nodes) :
-    DistIface(dist_rank, dist_size, sync_start, sync_repeat, em,
+                   EventManager *em, bool use_pseudo_op, bool is_switch,
+                   int num_nodes) :
+    DistIface(dist_rank, dist_size, sync_start, sync_repeat, em, use_pseudo_op,
               is_switch, num_nodes), serverName(server_name),
     serverPort(server_port), isSwitch(is_switch), listening(false)
 {

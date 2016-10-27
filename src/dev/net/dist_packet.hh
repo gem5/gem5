@@ -103,6 +103,7 @@ class DistHeaderPkt
             unsigned dataPacketLength;
             struct {
                 ReqType needCkpt;
+                ReqType needStopSync;
                 ReqType needExit;
             };
         };

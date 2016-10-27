@@ -73,6 +73,7 @@ class DistEtherLink(EtherObject):
     server_name = Param.String('localhost', "Message server name")
     server_port = Param.UInt32('2200', "Message server port")
     is_switch = Param.Bool(False, "true if this a link in etherswitch")
+    dist_sync_on_pseudo_op = Param.Bool(False, "Start sync with pseudo_op")
     num_nodes = Param.UInt32('2', "Number of simulate nodes")
 
 class EtherBus(EtherObject):

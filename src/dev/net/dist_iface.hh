@@ -91,6 +91,8 @@
 #include "sim/serialize.hh"
 
 class EventManager;
+class System;
+class ThreadContext;
 
 /**
  * The interface class to talk to peer gem5 processes.
@@ -139,13 +141,13 @@ class DistIface : public Drainable, public Serializable
          */
         bool doCkpt;
         /**
+         * Flag is set if sync is to stop upon sync completion
+         */
+        bool doStopSync;
+        /**
          * The repeat value for the next periodic sync
          */
         Tick nextRepeat;
-        /**
-         * Tick for the very first periodic sync
-         */
-        Tick firstAt;
         /**
          * Tick for the next periodic sync (if the event is not scheduled yet)
          */
@@ -172,10 +174,12 @@ class DistIface : public Drainable, public Serializable
         virtual void progress(Tick send_tick,
                               Tick next_repeat,
                               ReqType do_ckpt,
-                              ReqType do_exit) = 0;
+                              ReqType do_exit,
+                              ReqType do_stop_sync) = 0;
 
         virtual void requestCkpt(ReqType req) = 0;
         virtual void requestExit(ReqType req) = 0;
+        virtual void requestStopSync(ReqType req) = 0;
 
         void drainComplete();
 
@@ -194,6 +198,10 @@ class DistIface : public Drainable, public Serializable
          * Ckpt requested
          */
         ReqType needCkpt;
+        /**
+         * Sync stop requested
+         */
+        ReqType needStopSync;
 
       public:
 
@@ -203,10 +211,12 @@ class DistIface : public Drainable, public Serializable
         void progress(Tick max_req_tick,
                       Tick next_repeat,
                       ReqType do_ckpt,
-                      ReqType do_exit) override;
+                      ReqType do_exit,
+                      ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType req) override;
         void requestExit(ReqType req) override;
+        void requestStopSync(ReqType req) override;
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
@@ -224,6 +234,10 @@ class DistIface : public Drainable, public Serializable
          */
         unsigned numCkptReq;
         /**
+         * Counter for recording stop sync requests
+         */
+        unsigned numStopSyncReq;
+        /**
          *  Number of connected simulated nodes
          */
         unsigned numNodes;
@@ -236,13 +250,17 @@ class DistIface : public Drainable, public Serializable
         void progress(Tick max_req_tick,
                       Tick next_repeat,
                       ReqType do_ckpt,
-                      ReqType do_exit) override;
+                      ReqType do_exit,
+                      ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType) override {
             panic("Switch requested checkpoint");
         }
         void requestExit(ReqType) override {
             panic("Switch requested exit");
+        }
+        void requestStopSync(ReqType) override {
+            panic("Switch requested stop sync");
         }
 
         void serialize(CheckpointOut &cp) const override;
@@ -437,6 +455,10 @@ class DistIface : public Drainable, public Serializable
      * Meta information about data packets received.
      */
     RecvScheduler recvScheduler;
+    /**
+     * Use pseudoOp to start synchronization.
+     */
+    bool syncStartOnPseudoOp;
 
   protected:
     /**
@@ -476,6 +498,14 @@ class DistIface : public Drainable, public Serializable
      * a master to co-ordinate the global synchronisation.
      */
     static DistIface *master;
+    /**
+     * System pointer used to wakeup sleeping threads when stopping sync.
+     */
+    static System *sys;
+    /**
+     * Is this node a switch?
+     */
+     static bool isSwitch;
 
   private:
     /**
@@ -533,6 +563,7 @@ class DistIface : public Drainable, public Serializable
               Tick sync_start,
               Tick sync_repeat,
               EventManager *em,
+              bool use_pseudo_op,
               bool is_switch,
               int num_nodes);
 
@@ -590,6 +621,10 @@ class DistIface : public Drainable, public Serializable
      * Getter for the dist size param.
      */
     static uint64_t sizeParam();
+    /**
+     * Trigger the master to start/stop synchronization.
+     */
+    static void toggleSync(ThreadContext *tc);
  };
 
 #endif

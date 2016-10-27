@@ -211,6 +211,11 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         m5PageFault(tc);
         break;
 
+      /* dist-gem5 functions */
+      case 0x62: // distToggleSync_func
+        togglesync(tc);
+        break;
+
       default:
         warn("Unhandled m5 op: 0x%x\n", func);
         break;
@@ -572,6 +577,13 @@ switchcpu(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::switchcpu()\n");
     exitSimLoop("switchcpu");
+}
+
+void
+togglesync(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "PseudoInst::togglesync()\n");
+    DistIface::toggleSync(tc);
 }
 
 //

@@ -148,7 +148,7 @@ class TCPIface : public DistIface
     TCPIface(std::string server_name, unsigned server_port,
              unsigned dist_rank, unsigned dist_size,
              Tick sync_start, Tick sync_repeat, EventManager *em,
-             bool is_switch, int num_nodes);
+             bool use_pseudo_op, bool is_switch, int num_nodes);
 
     ~TCPIface() override;
 };

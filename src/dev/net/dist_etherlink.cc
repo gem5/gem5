@@ -94,7 +94,8 @@ DistEtherLink::DistEtherLink(const Params *p)
     // create the dist (TCP) interface to talk to the peer gem5 processes.
     distIface = new TCPIface(p->server_name, p->server_port,
                              p->dist_rank, p->dist_size,
-                             p->sync_start, sync_repeat, this, p->is_switch,
+                             p->sync_start, sync_repeat, this,
+                             p->dist_sync_on_pseudo_op, p->is_switch,
                              p->num_nodes);
 
     localIface = new LocalIface(name() + ".int0", txLink, rxLink, distIface);
