@@ -170,7 +170,7 @@ namespace X86ISA
          */
         bool accessDistance;
 
-        GpuTlbEntry *tlb;
+        std::vector<GpuTlbEntry> tlb;
 
         /*
          * It's a per-set list. As long as we have not reached

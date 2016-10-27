@@ -221,7 +221,6 @@ class GPUStaticInst : public GPUStaticInstFlags
 
     void setFlag(Flags flag) { _flags[flag] = true; }
 
-  protected:
     virtual void
     execLdAcq(GPUDynInstPtr gpuDynInst)
     {
@@ -246,6 +245,7 @@ class GPUStaticInst : public GPUStaticInstFlags
         fatal("calling execAtomicAcq() on a non-atomic instruction.\n");
     }
 
+  protected:
     const std::string opcode;
     std::string disassembly;
     int _instNum;

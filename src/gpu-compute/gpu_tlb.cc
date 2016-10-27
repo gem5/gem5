@@ -71,16 +71,15 @@ namespace X86ISA
         accessDistance = p->accessDistance;
         clock = p->clk_domain->clockPeriod();
 
-        tlb = new GpuTlbEntry[size];
-        std::memset(tlb, 0, sizeof(GpuTlbEntry) * size);
+        tlb.assign(size, GpuTlbEntry());
 
         freeList.resize(numSets);
         entryList.resize(numSets);
 
         for (int set = 0; set < numSets; ++set) {
             for (int way = 0; way < assoc; ++way) {
-                int x = set*assoc + way;
-                freeList[set].push_back(&tlb[x]);
+                int x = set * assoc + way;
+                freeList[set].push_back(&tlb.at(x));
             }
         }
 
@@ -133,9 +132,6 @@ namespace X86ISA
     {
         // make sure all the hash-maps are empty
         assert(translationReturnEvent.empty());
-
-        // delete the TLB
-        delete[] tlb;
     }
 
     BaseSlavePort&

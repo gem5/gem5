@@ -73,7 +73,10 @@ static const int ArgumentReg[] = {
     INTREG_R8W,
     INTREG_R9W
 };
-static const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
+
+static const int NumArgumentRegs M5_VAR_USED =
+    sizeof(ArgumentReg) / sizeof(const int);
+
 static const int ArgumentReg32[] = {
     INTREG_EBX,
     INTREG_ECX,
@@ -82,7 +85,9 @@ static const int ArgumentReg32[] = {
     INTREG_EDI,
     INTREG_EBP
 };
-static const int NumArgumentRegs32 = sizeof(ArgumentReg) / sizeof(const int);
+
+static const int NumArgumentRegs32 M5_VAR_USED =
+    sizeof(ArgumentReg) / sizeof(const int);
 
 X86LiveProcess::X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
         SyscallDesc *_syscallDescs, int _numSyscallDescs) :

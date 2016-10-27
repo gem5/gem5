@@ -776,6 +776,52 @@ gen('Call', base_class='SpecialInstNoSrcNoDest')
 # Generate file epilogs
 #
 ###############
+header_code('''
+template<>
+inline void
+Abs<U32>::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *w = gpuDynInst->wavefront();
+
+    const VectorMask &mask = w->getPred();
+
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
+        if (mask[lane]) {
+            CType dest_val;
+            CType src_val;
+
+            src_val = this->src[0].template get<CType>(w, lane);
+
+            dest_val = (CType)(src_val);
+
+            this->dest.set(w, lane, dest_val);
+        }
+    }
+}
+
+template<>
+inline void
+Abs<U64>::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *w = gpuDynInst->wavefront();
+
+    const VectorMask &mask = w->getPred();
+
+    for (int lane = 0; lane < w->computeUnit->wfSize(); ++lane) {
+        if (mask[lane]) {
+            CType dest_val;
+            CType src_val;
+
+            src_val = this->src[0].template get<CType>(w, lane);
+
+            dest_val = (CType)(src_val);
+
+            this->dest.set(w, lane, dest_val);
+        }
+    }
+}
+''')
+
 header_code.dedent()
 header_code('''
 } // namespace HsailISA
