@@ -40,3 +40,13 @@ GPUStaticInst::GPUStaticInst(const std::string &opcode)
       _instNum(0), _scalarOp(false)
 {
 }
+const std::string&
+GPUStaticInst::disassemble()
+{
+    if (disassembly.empty()) {
+        generateDisassembly();
+        assert(!disassembly.empty());
+    }
+
+    return disassembly;
+}

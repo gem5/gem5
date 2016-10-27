@@ -72,7 +72,7 @@ class GPUStaticInst
 
     virtual void execute(GPUDynInstPtr gpuDynInst) = 0;
     virtual void generateDisassembly() = 0;
-    virtual const std::string &disassemble() = 0;
+    const std::string& disassemble();
     virtual int getNumOperands() = 0;
     virtual bool isCondRegister(int operandIndex) = 0;
     virtual bool isScalarRegister(int operandIndex) = 0;
