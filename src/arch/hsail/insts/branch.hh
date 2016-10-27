@@ -133,7 +133,6 @@ namespace HsailISA
             // Rpc and execution mask remain the same
             w->pc(getTargetPc());
         }
-        w->discardFetch();
     }
 
     class BrnDirectInst : public BrnInstBase<LabelOperand>
@@ -293,7 +292,6 @@ namespace HsailISA
             w->pushToReconvergenceStack(true_pc, rpc, true_mask);
         }
         assert(w->pc() != curr_pc);
-        w->discardFetch();
     }
 
 
@@ -405,7 +403,6 @@ namespace HsailISA
             // Rpc and execution mask remain the same
             w->pc(getTargetPc());
         }
-        w->discardFetch();
     }
 
     class BrDirectInst : public BrInstBase<LabelOperand>

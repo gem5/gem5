@@ -675,6 +675,8 @@ Wavefront::exec()
         } else {
             instructionBuffer.pop_front();
         }
+    } else {
+        discardFetch();
     }
 
     if (computeUnit->shader->hsail_mode==Shader::SIMT) {
