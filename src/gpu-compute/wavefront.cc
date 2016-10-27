@@ -49,7 +49,7 @@ WavefrontParams::create()
 }
 
 Wavefront::Wavefront(const Params *p)
-  : SimObject(p), callArgMem(nullptr)
+  : SimObject(p), callArgMem(nullptr), _gpuISA(*this)
 {
     lastTrace = 0;
     simdId = p->simdId;
@@ -670,7 +670,7 @@ Wavefront::exec()
                                      computeUnit->lastExecCycle[simdId]);
     computeUnit->lastExecCycle[simdId] = computeUnit->totalCycles.value();
     if (pc() == old_pc) {
-        uint32_t new_pc = old_pc + 1;
+        uint32_t new_pc = _gpuISA.advancePC(old_pc, ii);
         // PC not modified by instruction, proceed to next or pop frame
         pc(new_pc);
         if (new_pc == rpc()) {

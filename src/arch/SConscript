@@ -71,6 +71,7 @@ make_switching_dir('arch', isa_switch_hdrs, env)
 if env['BUILD_GPU']:
     gpu_isa_switch_hdrs = Split('''
             gpu_decoder.hh
+            gpu_isa.hh
             gpu_types.hh
             ''')
 

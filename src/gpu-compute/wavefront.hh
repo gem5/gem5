@@ -42,8 +42,10 @@
 #include <stack>
 #include <vector>
 
+#include "arch/gpu_isa.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "config/the_gpu_isa.hh"
 #include "gpu-compute/condition_register_state.hh"
 #include "gpu-compute/lds_state.hh"
 #include "gpu-compute/misc.hh"
@@ -372,7 +374,14 @@ class Wavefront : public SimObject
      */
     void setContext(const void *in);
 
+    TheGpuISA::GPUISA&
+    gpuISA()
+    {
+        return _gpuISA;
+    }
+
   private:
+    TheGpuISA::GPUISA _gpuISA;
     /**
      * Stack containing Control Flow Graph nodes (i.e., kernel instructions)
      * to be visited by the wavefront, and the associated execution masks. The

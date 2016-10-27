@@ -114,7 +114,18 @@ void
 FetchUnit::initiateFetch(Wavefront *wavefront)
 {
     // calculate the virtual address to fetch from the SQC
-    Addr vaddr = wavefront->pc() + wavefront->instructionBuffer.size();
+    Addr vaddr = wavefront->pc();
+
+    /**
+     * the instruction buffer holds one instruction per entry, regardless
+     * of the underlying instruction's size. the PC, however, addresses
+     * instrutions on a 32b granularity so we must account for that here.
+    */
+    for (int i = 0; i < wavefront->instructionBuffer.size(); ++i) {
+        int current_inst_size =
+            wavefront->instructionBuffer.at(i)->staticInstruction()->instSize();
+        vaddr += current_inst_size / sizeof(uint32_t);
+    }
     vaddr = wavefront->basePtr +  vaddr * sizeof(GPUStaticInst*);
 
     DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Initiating fetch translation: %#x\n",
@@ -267,6 +278,18 @@ FetchUnit::processFetchReturn(PacketPtr pkt)
             GPUStaticInst *inst_ptr = decoder.decode(inst_index_ptr[i]);
 
             assert(inst_ptr);
+
+            if (inst_ptr->instSize() == 8) {
+                /**
+                 * this instruction occupies 2 consecutive
+                 * entries in the instruction array, the
+                 * second of which contains a nullptr. so if
+                 * this inst is 8 bytes we advance two entries
+                 * instead of 1
+                 */
+                ++i;
+            }
+
             DPRINTF(GPUFetch, "CU%d: WF[%d][%d]: added %s\n",
                     computeUnit->cu_id, wavefront->simdId,
                     wavefront->wfSlotId, inst_ptr->disassemble());

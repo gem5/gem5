@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2016 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -30,37 +30,53 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Anthony Gutierrez
+ * Authors: Anthony Gutierrez
  */
 
-#include "gpu-compute/gpu_exec_context.hh"
-#include "gpu-compute/wavefront.hh"
+#ifndef __ARCH_HSAIL_GPU_ISA_HH__
+#define __ARCH_HSAIL_GPU_ISA_HH__
 
-GPUExecContext::GPUExecContext(ComputeUnit *_cu, Wavefront *_wf)
-    : cu(_cu), wf(_wf), gpuISA(_wf->gpuISA())
+#include <cstdint>
+
+#include "base/misc.hh"
+#include "gpu-compute/misc.hh"
+
+class Wavefront;
+
+namespace HsailISA
 {
+    typedef uint64_t MiscReg;
+
+    class GPUISA
+    {
+      public:
+        GPUISA(Wavefront &wf) : wavefront(wf)
+        {
+        }
+
+        void
+        writeMiscReg(int opIdx, MiscReg operandVal)
+        {
+            fatal("HSAIL does not implement misc registers yet\n");
+        }
+
+        MiscReg
+        readMiscReg(int opIdx) const
+        {
+            fatal("HSAIL does not implement misc registers yet\n");
+        }
+
+        bool hasScalarUnit() const { return false; }
+
+        uint32_t
+        advancePC(uint32_t old_pc, GPUDynInstPtr gpuDynInst)
+        {
+            return old_pc + 1;
+        }
+
+      private:
+        Wavefront &wavefront;
+    };
 }
 
-ComputeUnit*
-GPUExecContext::computeUnit()
-{
-    return cu;
-}
-
-Wavefront*
-GPUExecContext::wavefront()
-{
-    return wf;
-}
-
-TheGpuISA::MiscReg
-GPUExecContext::readMiscReg(int opIdx) const
-{
-    return gpuISA.readMiscReg(opIdx);
-}
-
-void
-GPUExecContext::writeMiscReg(int opIdx, TheGpuISA::MiscReg operandVal)
-{
-    gpuISA.writeMiscReg(opIdx, operandVal);
-}
+#endif // __ARCH_HSAIL_GPU_ISA_HH__
