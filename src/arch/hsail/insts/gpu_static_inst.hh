@@ -56,6 +56,7 @@ namespace HsailISA
         void generateDisassembly();
         const std::string &disassemble();
         uint32_t instSize() { return 4; }
+        bool isValid() const override { return true; }
 
       protected:
         HsailCode *hsailCode;

@@ -84,6 +84,8 @@ class GPUStaticInst
     virtual int numDstRegOperands() = 0;
     virtual int numSrcRegOperands() = 0;
 
+    virtual bool isValid() const = 0;
+
     /*
      * Most instructions (including all HSAIL instructions)
      * are vector ops, so _scalarOp will be false by default.
@@ -107,6 +109,13 @@ class GPUStaticInst
     initiateAcc(GPUDynInstPtr gpuDynInst)
     {
         fatal("calling initiateAcc() on a non-memory instruction.\n");
+    }
+
+    // only used for memory instructions
+    virtual void
+    completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        fatal("calling completeAcc() on a non-memory instruction.\n");
     }
 
     virtual uint32_t getTargetPc() { return 0; }
