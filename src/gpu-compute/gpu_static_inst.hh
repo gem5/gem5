@@ -48,7 +48,7 @@
 #include <cstdint>
 #include <string>
 
-#include "enums/OpType.hh"
+#include "enums/GPUStaticInstFlags.hh"
 #include "enums/StorageClassType.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/misc.hh"
@@ -57,7 +57,7 @@ class BaseOperand;
 class BaseRegOperand;
 class Wavefront;
 
-class GPUStaticInst
+class GPUStaticInst : public GPUStaticInstFlags
 {
   public:
     GPUStaticInst(const std::string &opcode);
@@ -86,22 +86,110 @@ class GPUStaticInst
 
     virtual bool isValid() const = 0;
 
-    /*
-     * Most instructions (including all HSAIL instructions)
-     * are vector ops, so _scalarOp will be false by default.
-     * Derived instruction objects that are scalar ops must
-     * set _scalarOp to true in their constructors.
-     */
-    bool scalarOp() const { return _scalarOp; }
+    bool isALU() const { return _flags[ALU]; }
+    bool isBranch() const { return _flags[Branch]; }
+    bool isNop() const { return _flags[Nop]; }
+    bool isReturn() const { return _flags[Return]; }
 
-    virtual bool isLocalMem() const
+    bool
+    isUnconditionalJump() const
     {
-        fatal("calling isLocalMem() on non-memory instruction.\n");
-
-        return false;
+        return _flags[UnconditionalJump];
     }
 
-    bool isArgLoad() { return false; }
+    bool isSpecialOp() const { return _flags[SpecialOp]; }
+    bool isWaitcnt() const { return _flags[Waitcnt]; }
+
+    bool isBarrier() const { return _flags[MemBarrier]; }
+    bool isMemFence() const { return _flags[MemFence]; }
+    bool isMemRef() const { return _flags[MemoryRef]; }
+    bool isFlat() const { return _flags[Flat]; }
+    bool isLoad() const { return _flags[Load]; }
+    bool isStore() const { return _flags[Store]; }
+
+    bool
+    isAtomic() const
+    {
+        return _flags[AtomicReturn] || _flags[AtomicNoReturn];
+    }
+
+    bool isAtomicNoRet() const { return _flags[AtomicNoReturn]; }
+    bool isAtomicRet() const { return _flags[AtomicReturn]; }
+
+    bool isScalar() const { return _flags[Scalar]; }
+    bool readsSCC() const { return _flags[ReadsSCC]; }
+    bool writesSCC() const { return _flags[WritesSCC]; }
+    bool readsVCC() const { return _flags[ReadsVCC]; }
+    bool writesVCC() const { return _flags[WritesVCC]; }
+
+    bool isAtomicAnd() const { return _flags[AtomicAnd]; }
+    bool isAtomicOr() const { return _flags[AtomicOr]; }
+    bool isAtomicXor() const { return _flags[AtomicXor]; }
+    bool isAtomicCAS() const { return _flags[AtomicCAS]; }
+    bool isAtomicExch() const { return _flags[AtomicExch]; }
+    bool isAtomicAdd() const { return _flags[AtomicAdd]; }
+    bool isAtomicSub() const { return _flags[AtomicSub]; }
+    bool isAtomicInc() const { return _flags[AtomicInc]; }
+    bool isAtomicDec() const { return _flags[AtomicDec]; }
+    bool isAtomicMax() const { return _flags[AtomicMax]; }
+    bool isAtomicMin() const { return _flags[AtomicMin]; }
+
+    bool
+    isArgLoad() const
+    {
+        return (_flags[KernArgSegment] || _flags[ArgSegment]) && _flags[Load];
+    }
+
+    bool
+    isGlobalMem() const
+    {
+        return _flags[MemoryRef] && (_flags[GlobalSegment] ||
+               _flags[PrivateSegment] || _flags[ReadOnlySegment] ||
+               _flags[SpillSegment]);
+    }
+
+    bool
+    isLocalMem() const
+    {
+        return _flags[MemoryRef] && _flags[GroupSegment];
+    }
+
+    bool isArgSeg() const { return _flags[ArgSegment]; }
+    bool isGlobalSeg() const { return _flags[GlobalSegment]; }
+    bool isGroupSeg() const { return _flags[GroupSegment]; }
+    bool isKernArgSeg() const { return _flags[KernArgSegment]; }
+    bool isPrivateSeg() const { return _flags[PrivateSegment]; }
+    bool isReadOnlySeg() const { return _flags[ReadOnlySegment]; }
+    bool isSpillSeg() const { return _flags[SpillSegment]; }
+
+    bool isWorkitemScope() const { return _flags[WorkitemScope]; }
+    bool isWavefrontScope() const { return _flags[WavefrontScope]; }
+    bool isWorkgroupScope() const { return _flags[WorkgroupScope]; }
+    bool isDeviceScope() const { return _flags[DeviceScope]; }
+    bool isSystemScope() const { return _flags[SystemScope]; }
+    bool isNoScope() const { return _flags[NoScope]; }
+
+    bool isRelaxedOrder() const { return _flags[RelaxedOrder]; }
+    bool isAcquire() const { return _flags[Acquire]; }
+    bool isRelease() const { return _flags[Release]; }
+    bool isAcquireRelease() const { return _flags[AcquireRelease]; }
+    bool isNoOrder() const { return _flags[NoOrder]; }
+
+    /**
+     * Coherence domain of a memory instruction. Only valid for
+     * machine ISA. The coherence domain specifies where it is
+     * possible to perform memory synchronization, e.g., acquire
+     * or release, from the shader kernel.
+     *
+     * isGloballyCoherent(): returns true if kernel is sharing memory
+     * with other work-items on the same device (GPU)
+     *
+     * isSystemCoherent(): returns true if kernel is sharing memory
+     * with other work-items on a different device (GPU) or the host (CPU)
+     */
+    bool isGloballyCoherent() const { return _flags[GloballyCoherent]; }
+    bool isSystemCoherent() const { return _flags[SystemCoherent]; }
+
     virtual uint32_t instSize() = 0;
 
     // only used for memory instructions
@@ -120,21 +208,12 @@ class GPUStaticInst
 
     virtual uint32_t getTargetPc() { return 0; }
 
-    /**
-     * Query whether the instruction is an unconditional jump i.e., the jump
-     * is always executed because there is no condition to be evaluated.
-     *
-     * If the instruction is not of branch type, the result is always false.
-     *
-     * @return True if the instruction is an unconditional jump.
-     */
-    virtual bool unconditionalJumpInstruction() { return false; }
-
     static uint64_t dynamic_id_count;
 
-    Enums::OpType o_type;
     // For flat memory accesses
     Enums::StorageClassType executed_as;
+
+    void setFlag(Flags flag) { _flags[flag] = true; }
 
   protected:
     virtual void
@@ -169,7 +248,45 @@ class GPUStaticInst
      */
     int _ipdInstNum;
 
-    bool _scalarOp;
+    std::bitset<Num_Flags> _flags;
+};
+
+class KernelLaunchStaticInst : public GPUStaticInst
+{
+  public:
+    KernelLaunchStaticInst() : GPUStaticInst("kernel_launch")
+    {
+        setFlag(Nop);
+        setFlag(Scalar);
+        setFlag(Acquire);
+        setFlag(SystemScope);
+        setFlag(GlobalSegment);
+    }
+
+    void
+    execute(GPUDynInstPtr gpuDynInst)
+    {
+        fatal("kernel launch instruction should not be executed\n");
+    }
+
+    void
+    generateDisassembly()
+    {
+        disassembly = opcode;
+    }
+
+    int getNumOperands() { return 0; }
+    bool isCondRegister(int operandIndex) { return false; }
+    bool isScalarRegister(int operandIndex) { return false; }
+    bool isVectorRegister(int operandIndex) { return false; }
+    bool isSrcOperand(int operandIndex) { return false; }
+    bool isDstOperand(int operandIndex) { return false; }
+    int getOperandSize(int operandIndex) { return 0; }
+    int getRegisterIndex(int operandIndex) { return 0; }
+    int numDstRegOperands() { return 0; }
+    int numSrcRegOperands() { return 0; }
+    bool isValid() const { return true; }
+    uint32_t instSize() { return 0; }
 };
 
 #endif // __GPU_STATIC_INST_HH__

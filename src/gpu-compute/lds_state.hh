@@ -43,7 +43,6 @@
 #include <utility>
 #include <vector>
 
-#include "enums/MemOpType.hh"
 #include "enums/MemType.hh"
 #include "gpu-compute/misc.hh"
 #include "mem/mem_object.hh"

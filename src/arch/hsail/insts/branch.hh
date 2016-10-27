@@ -59,16 +59,15 @@ namespace HsailISA
         BrnInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : HsailGPUStaticInst(obj, "brn")
         {
-            o_type = Enums::OT_BRANCH;
+            setFlag(Branch);
+            setFlag(UnconditionalJump);
             width = ((Brig::BrigInstBr*)ib)->width;
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             target.init(op_offs, obj);
-            o_type = Enums::OT_BRANCH;
         }
 
         uint32_t getTargetPc()  override { return target.getTarget(0, 0); }
 
-        bool unconditionalJumpInstruction() override { return true; }
         bool isVectorRegister(int operandIndex) override {
             assert(operandIndex >= 0 && operandIndex < getNumOperands());
             return target.isVectorRegister();
@@ -175,13 +174,12 @@ namespace HsailISA
         CbrInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : HsailGPUStaticInst(obj, "cbr")
         {
-            o_type = Enums::OT_BRANCH;
+            setFlag(Branch);
             width = ((Brig::BrigInstBr *)ib)->width;
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             cond.init(op_offs, obj);
             op_offs = obj->getOperandPtr(ib->operands, 1);
             target.init(op_offs, obj);
-            o_type = Enums::OT_BRANCH;
         }
 
         uint32_t getTargetPc() override { return target.getTarget(0, 0); }
@@ -343,16 +341,14 @@ namespace HsailISA
         BrInstBase(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : HsailGPUStaticInst(obj, "br")
         {
-            o_type = Enums::OT_BRANCH;
+            setFlag(Branch);
+            setFlag(UnconditionalJump);
             width.init(((Brig::BrigInstBr *)ib)->width, obj);
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             target.init(op_offs, obj);
-            o_type = Enums::OT_BRANCH;
         }
 
         uint32_t getTargetPc() override { return target.getTarget(0, 0); }
-
-        bool unconditionalJumpInstruction() override { return true; }
 
         void execute(GPUDynInstPtr gpuDynInst) override;
         bool isVectorRegister(int operandIndex) override {

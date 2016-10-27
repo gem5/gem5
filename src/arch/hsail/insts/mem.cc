@@ -36,75 +36,12 @@
 #include "arch/hsail/insts/mem.hh"
 
 #include "arch/hsail/Brig.h"
-#include "enums/OpType.hh"
 
 using namespace Brig;
 
 namespace HsailISA
 {
     const char* atomicOpToString(BrigAtomicOperation brigOp);
-
-    Enums::MemOpType
-    brigAtomicToMemOpType(BrigOpcode brigOpCode, BrigAtomicOperation brigOp)
-    {
-        if (brigOpCode == Brig::BRIG_OPCODE_ATOMIC) {
-            switch (brigOp) {
-              case BRIG_ATOMIC_AND:
-                return Enums::MO_AAND;
-              case BRIG_ATOMIC_OR:
-                return Enums::MO_AOR;
-              case BRIG_ATOMIC_XOR:
-                return Enums::MO_AXOR;
-              case BRIG_ATOMIC_CAS:
-                return Enums::MO_ACAS;
-              case BRIG_ATOMIC_EXCH:
-                return Enums::MO_AEXCH;
-              case BRIG_ATOMIC_ADD:
-                return Enums::MO_AADD;
-              case BRIG_ATOMIC_WRAPINC:
-                return Enums::MO_AINC;
-              case BRIG_ATOMIC_WRAPDEC:
-                return Enums::MO_ADEC;
-              case BRIG_ATOMIC_MIN:
-                return Enums::MO_AMIN;
-              case BRIG_ATOMIC_MAX:
-                return Enums::MO_AMAX;
-              case BRIG_ATOMIC_SUB:
-                return Enums::MO_ASUB;
-              default:
-                fatal("Bad BrigAtomicOperation code %d\n", brigOp);
-            }
-        } else if (brigOpCode == Brig::BRIG_OPCODE_ATOMICNORET) {
-            switch (brigOp) {
-              case BRIG_ATOMIC_AND:
-                  return Enums::MO_ANRAND;
-              case BRIG_ATOMIC_OR:
-                  return Enums::MO_ANROR;
-              case BRIG_ATOMIC_XOR:
-                  return Enums::MO_ANRXOR;
-              case BRIG_ATOMIC_CAS:
-                  return Enums::MO_ANRCAS;
-              case BRIG_ATOMIC_EXCH:
-                  return Enums::MO_ANREXCH;
-              case BRIG_ATOMIC_ADD:
-                  return Enums::MO_ANRADD;
-              case BRIG_ATOMIC_WRAPINC:
-                  return Enums::MO_ANRINC;
-              case BRIG_ATOMIC_WRAPDEC:
-                  return Enums::MO_ANRDEC;
-              case BRIG_ATOMIC_MIN:
-                  return Enums::MO_ANRMIN;
-              case BRIG_ATOMIC_MAX:
-                  return Enums::MO_ANRMAX;
-              case BRIG_ATOMIC_SUB:
-                  return Enums::MO_ANRSUB;
-              default:
-                fatal("Bad BrigAtomicOperation code %d\n", brigOp);
-            }
-        } else {
-            fatal("Bad BrigAtomicOpcode %d\n", brigOpCode);
-        }
-    }
 
     const char*
     atomicOpToString(BrigAtomicOperation brigOp)

@@ -33,7 +33,6 @@
  * Author: Steve Reinhardt
  */
 
-#include "arch/hsail/generic_types.hh"
 #include "gpu-compute/hsail_code.hh"
 
 // defined in code.cc, but not worth sucking in all of code.h for this
@@ -215,16 +214,12 @@ namespace HsailISA
 
         this->addr.calcVector(w, m->addr);
 
-        m->m_op = Enums::MO_LD;
         m->m_type = MemDataType::memType;
         m->v_type = DestDataType::vgprType;
 
         m->exec_mask = w->execMask();
         m->statusBitVector = 0;
         m->equiv = this->equivClass;
-        m->memoryOrder = getGenericMemoryOrder(this->memoryOrder);
-
-        m->scope = getGenericMemoryScope(this->memoryScope);
 
         if (num_dest_operands == 1) {
             m->dst_reg = this->dest.regIndex();
@@ -245,7 +240,6 @@ namespace HsailISA
 
         switch (this->segment) {
           case Brig::BRIG_SEGMENT_GLOBAL:
-            m->s_type = SEG_GLOBAL;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
 
@@ -276,7 +270,6 @@ namespace HsailISA
 
           case Brig::BRIG_SEGMENT_SPILL:
             assert(num_dest_operands == 1);
-            m->s_type = SEG_SPILL;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
@@ -301,7 +294,6 @@ namespace HsailISA
             break;
 
           case Brig::BRIG_SEGMENT_GROUP:
-            m->s_type = SEG_SHARED;
             m->pipeId = LDSMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(24));
             w->computeUnit->localMemoryPipe.getLMReqFIFO().push(m);
@@ -310,7 +302,6 @@ namespace HsailISA
             break;
 
           case Brig::BRIG_SEGMENT_READONLY:
-            m->s_type = SEG_READONLY;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
 
@@ -327,7 +318,6 @@ namespace HsailISA
             break;
 
           case Brig::BRIG_SEGMENT_PRIVATE:
-            m->s_type = SEG_PRIVATE;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
@@ -408,7 +398,6 @@ namespace HsailISA
             }
         }
 
-        m->m_op = Enums::MO_ST;
         m->m_type = OperationType::memType;
         m->v_type = OperationType::vgprType;
 
@@ -421,10 +410,6 @@ namespace HsailISA
             m->n_reg = num_src_operands;
         }
 
-        m->memoryOrder = getGenericMemoryOrder(this->memoryOrder);
-
-        m->scope = getGenericMemoryScope(this->memoryScope);
-
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
@@ -434,7 +419,6 @@ namespace HsailISA
 
         switch (this->segment) {
           case Brig::BRIG_SEGMENT_GLOBAL:
-            m->s_type = SEG_GLOBAL;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
 
@@ -463,7 +447,6 @@ namespace HsailISA
 
           case Brig::BRIG_SEGMENT_SPILL:
             assert(num_src_operands == 1);
-            m->s_type = SEG_SPILL;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
@@ -483,7 +466,6 @@ namespace HsailISA
             break;
 
           case Brig::BRIG_SEGMENT_GROUP:
-            m->s_type = SEG_SHARED;
             m->pipeId = LDSMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(24));
             w->computeUnit->localMemoryPipe.getLMReqFIFO().push(m);
@@ -492,7 +474,6 @@ namespace HsailISA
             break;
 
           case Brig::BRIG_SEGMENT_PRIVATE:
-            m->s_type = SEG_PRIVATE;
             m->pipeId = GLBMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(1));
             {
@@ -586,7 +567,6 @@ namespace HsailISA
 
         assert(NumSrcOperands <= 2);
 
-        m->m_op = this->opType;
         m->m_type = DataType::memType;
         m->v_type = DataType::vgprType;
 
@@ -594,9 +574,6 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;  // atomics don't have an equivalence class operand
         m->n_reg = 1;
-        m->memoryOrder = getGenericMemoryOrder(this->memoryOrder);
-
-        m->scope = getGenericMemoryScope(this->memoryScope);
 
         if (HasDst) {
             m->dst_reg = this->dest.regIndex();
@@ -611,7 +588,6 @@ namespace HsailISA
 
         switch (this->segment) {
           case Brig::BRIG_SEGMENT_GLOBAL:
-            m->s_type = SEG_GLOBAL;
             m->latency.set(w->computeUnit->shader->ticks(64));
             m->pipeId = GLBMEM_PIPE;
 
@@ -623,7 +599,6 @@ namespace HsailISA
             break;
 
           case Brig::BRIG_SEGMENT_GROUP:
-            m->s_type = SEG_SHARED;
             m->pipeId = LDSMEM_PIPE;
             m->latency.set(w->computeUnit->shader->ticks(24));
             w->computeUnit->localMemoryPipe.getLMReqFIFO().push(m);

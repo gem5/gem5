@@ -47,7 +47,6 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
-#include "enums/MemOpType.hh"
 #include "enums/MemType.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_tlb.hh"

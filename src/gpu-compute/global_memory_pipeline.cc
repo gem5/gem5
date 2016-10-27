@@ -67,7 +67,7 @@ GlobalMemPipeline::exec()
     bool accessVrf = true;
     // check the VRF to see if the operands of a load (or load component
     // of an atomic) are accessible
-    if ((m) && (m->m_op==Enums::MO_LD || MO_A(m->m_op))) {
+    if ((m) && (m->isLoad() || m->isAtomicRet())) {
         Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
 
         accessVrf =
@@ -127,10 +127,7 @@ GlobalMemPipeline::exec()
     // memory packets to DTLB
     if (!gmIssuedRequests.empty()) {
         GPUDynInstPtr mp = gmIssuedRequests.front();
-        if (mp->m_op == Enums::MO_LD ||
-            (mp->m_op >= Enums::MO_AAND && mp->m_op <= Enums::MO_AMIN) ||
-            (mp->m_op >= Enums::MO_ANRAND && mp->m_op <= Enums::MO_ANRMIN)) {
-
+        if (mp->isLoad() || mp->isAtomic()) {
             if (inflightLoads >= gmQueueSize) {
                 return;
             } else {
@@ -139,7 +136,7 @@ GlobalMemPipeline::exec()
         } else {
             if (inflightStores >= gmQueueSize) {
                 return;
-            } else if (mp->m_op == Enums::MO_ST) {
+            } else if (mp->isStore()) {
                 ++inflightStores;
             }
         }
@@ -147,9 +144,8 @@ GlobalMemPipeline::exec()
         mp->initiateAcc(mp);
         gmIssuedRequests.pop();
 
-        DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping 0 mem_op = %s\n",
-                computeUnit->cu_id, mp->simdId, mp->wfSlotId,
-                Enums::MemOpTypeStrings[mp->m_op]);
+        DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping 0 mem_op = \n",
+                computeUnit->cu_id, mp->simdId, mp->wfSlotId);
     }
 }
 
@@ -160,12 +156,12 @@ GlobalMemPipeline::doGmReturn(GPUDynInstPtr m)
     Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
 
     // Return data to registers
-    if (m->m_op == Enums::MO_LD || MO_A(m->m_op) || MO_ANR(m->m_op)) {
+    if (m->isLoad() || m->isAtomic()) {
         gmReturnedLoads.pop();
         assert(inflightLoads > 0);
         --inflightLoads;
 
-        if (m->m_op == Enums::MO_LD || MO_A(m->m_op)) {
+        if (m->isLoad() || m->isAtomicRet()) {
             std::vector<uint32_t> regVec;
             // iterate over number of destination register operands since
             // this is a load or atomic operation
@@ -214,13 +210,12 @@ GlobalMemPipeline::doGmReturn(GPUDynInstPtr m)
     // Decrement outstanding register count
     computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
 
-    if (m->m_op == Enums::MO_ST || MO_A(m->m_op) || MO_ANR(m->m_op) ||
-        MO_H(m->m_op)) {
+    if (m->isStore() || m->isAtomic()) {
         computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrGm, m->time,
                                          -1);
     }
 
-    if (m->m_op == Enums::MO_LD || MO_A(m->m_op) || MO_ANR(m->m_op)) {
+    if (m->isLoad() || m->isAtomic()) {
         computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdGm, m->time,
                                          -1);
     }

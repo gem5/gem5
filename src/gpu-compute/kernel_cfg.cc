@@ -104,7 +104,7 @@ ControlFlowInfo::createBasicBlocks()
     leaders.insert(0);
     for (int i = 1; i < instructions.size(); i++) {
         GPUStaticInst* instruction = instructions[i];
-        if (instruction->o_type == Enums::OT_BRANCH) {
+        if (instruction->isBranch()) {
             const int target_pc = instruction->getTargetPc();
             leaders.insert(target_pc);
             leaders.insert(i + 1);
@@ -137,18 +137,18 @@ ControlFlowInfo::connectBasicBlocks()
             break;
         }
         GPUStaticInst* last = lastInstruction(bb.get());
-        if (last->o_type == Enums::OT_RET) {
+        if (last->isReturn()) {
             bb->successorIds.insert(exit_bb->id);
             continue;
         }
-        if (last->o_type == Enums::OT_BRANCH) {
+        if (last->isBranch()) {
             const uint32_t target_pc = last->getTargetPc();
             BasicBlock* target_bb = basicBlock(target_pc);
             bb->successorIds.insert(target_bb->id);
         }
 
         // Unconditional jump instructions have a unique successor
-        if (!last->unconditionalJumpInstruction()) {
+        if (!last->isUnconditionalJump()) {
             BasicBlock* next_bb = basicBlock(last->instNum() + 1);
             bb->successorIds.insert(next_bb->id);
         }
@@ -274,7 +274,7 @@ ControlFlowInfo::printBasicBlocks() const
         int inst_num = inst->instNum();
         std::cout << inst_num << " [" << basicBlock(inst_num)->id
                 << "]: " << inst->disassemble();
-        if (inst->o_type == Enums::OT_BRANCH) {
+        if (inst->isBranch()) {
             std::cout << ", PC = " << inst->getTargetPc();
         }
         std::cout << std::endl;

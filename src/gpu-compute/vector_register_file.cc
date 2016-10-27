@@ -38,7 +38,6 @@
 #include <string>
 
 #include "base/misc.hh"
-#include "gpu-compute/code_enums.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"
@@ -153,8 +152,8 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 void
 VectorRegisterFile::exec(GPUDynInstPtr ii, Wavefront *w)
 {
-    bool loadInstr = IS_OT_READ(ii->opType());
-    bool atomicInstr = IS_OT_ATOMIC(ii->opType());
+    bool loadInstr = ii->isLoad();
+    bool atomicInstr = ii->isAtomic() || ii->isMemFence();
 
     bool loadNoArgInstr = loadInstr && !ii->isArgLoad();
 

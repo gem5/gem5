@@ -75,7 +75,8 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
     req_tick_latency(p->mem_req_latency * p->clk_domain->clockPeriod()),
     resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
     _masterId(p->system->getMasterId(name() + ".ComputeUnit")),
-    lds(*p->localDataStore), globalSeqNum(0),  wavefrontSize(p->wfSize)
+    lds(*p->localDataStore), globalSeqNum(0),  wavefrontSize(p->wfSize),
+    kernelLaunchInst(new KernelLaunchStaticInst())
 {
     /**
      * This check is necessary because std::bitset only provides conversion
@@ -316,13 +317,11 @@ ComputeUnit::StartWorkgroup(NDRange *ndr)
     // Send L1 cache acquire
     // isKernel + isAcquire = Kernel Begin
     if (shader->impl_kern_boundary_sync) {
-        GPUDynInstPtr gpuDynInst = std::make_shared<GPUDynInst>(this,
-                                                                nullptr,
-                                                                nullptr, 0);
+        GPUDynInstPtr gpuDynInst =
+            std::make_shared<GPUDynInst>(this, nullptr, kernelLaunchInst,
+                                         getAndIncSeqNum());
 
         gpuDynInst->useContinuation = false;
-        gpuDynInst->memoryOrder = Enums::MEMORY_ORDER_SC_ACQUIRE;
-        gpuDynInst->scope = Enums::MEMORY_SCOPE_SYSTEM;
         injectGlobalMemFence(gpuDynInst, true);
     }
 
@@ -647,7 +646,7 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
                 gpuDynInst->wfSlotId, w->barrierCnt);
 
         if (gpuDynInst->useContinuation) {
-            assert(gpuDynInst->scope != Enums::MEMORY_SCOPE_NONE);
+            assert(!gpuDynInst->isNoScope());
             gpuDynInst->execContinuation(gpuDynInst->staticInstruction(),
                                            gpuDynInst);
         }
@@ -658,7 +657,7 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
         return true;
     } else if (pkt->req->isKernel() && pkt->req->isAcquire()) {
         if (gpuDynInst->useContinuation) {
-            assert(gpuDynInst->scope != Enums::MEMORY_SCOPE_NONE);
+            assert(!gpuDynInst->isNoScope());
             gpuDynInst->execContinuation(gpuDynInst->staticInstruction(),
                                            gpuDynInst);
         }
@@ -942,6 +941,8 @@ void
 ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelLaunch,
                                   Request* req)
 {
+    assert(gpuDynInst->isGlobalSeg());
+
     if (!req) {
         req = new Request(0, 0, 0, 0, masterId(), 0, gpuDynInst->wfDynId);
     }
@@ -949,8 +950,6 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelLaunch,
     if (kernelLaunch) {
         req->setFlags(Request::KERNEL);
     }
-
-    gpuDynInst->s_type = SEG_GLOBAL;
 
     // for non-kernel MemFence operations, memorder flags are set depending
     // on which type of request is currently being sent, so this
@@ -1033,8 +1032,7 @@ ComputeUnit::DataPort::MemRespEvent::process()
                 if (gpuDynInst->n_reg > MAX_REGS_FOR_NON_VEC_MEM_INST)
                     gpuDynInst->statusVector.clear();
 
-                if (gpuDynInst->m_op == Enums::MO_LD || MO_A(gpuDynInst->m_op)
-                    || MO_ANR(gpuDynInst->m_op)) {
+                if (gpuDynInst->isLoad() || gpuDynInst->isAtomic()) {
                     assert(compute_unit->globalMemoryPipe.isGMLdRespFIFOWrRdy());
 
                     compute_unit->globalMemoryPipe.getGMLdRespFIFO()
@@ -1055,7 +1053,7 @@ ComputeUnit::DataPort::MemRespEvent::process()
                 // the continuation may generate more work for
                 // this memory request
                 if (gpuDynInst->useContinuation) {
-                    assert(gpuDynInst->scope != Enums::MEMORY_SCOPE_NONE);
+                    assert(!gpuDynInst->isNoScope());
                     gpuDynInst->execContinuation(gpuDynInst->staticInstruction(),
                                                  gpuDynInst);
                 }
@@ -1065,7 +1063,7 @@ ComputeUnit::DataPort::MemRespEvent::process()
         gpuDynInst->statusBitVector = VectorMask(0);
 
         if (gpuDynInst->useContinuation) {
-            assert(gpuDynInst->scope != Enums::MEMORY_SCOPE_NONE);
+            assert(!gpuDynInst->isNoScope());
             gpuDynInst->execContinuation(gpuDynInst->staticInstruction(),
                                          gpuDynInst);
         }

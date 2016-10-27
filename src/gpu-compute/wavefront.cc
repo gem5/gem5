@@ -37,7 +37,6 @@
 
 #include "debug/GPUExec.hh"
 #include "debug/WavefrontStack.hh"
-#include "gpu-compute/code_enums.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"
@@ -165,19 +164,8 @@ Wavefront::start(uint64_t _wf_dyn_id,uint64_t _base_ptr)
 bool
 Wavefront::isGmInstruction(GPUDynInstPtr ii)
 {
-    if (IS_OT_READ_PM(ii->opType()) || IS_OT_WRITE_PM(ii->opType()) ||
-        IS_OT_ATOMIC_PM(ii->opType())) {
+    if (ii->isGlobalMem() || ii->isFlat())
         return true;
-    }
-
-    if (IS_OT_READ_GM(ii->opType()) || IS_OT_WRITE_GM(ii->opType()) ||
-        IS_OT_ATOMIC_GM(ii->opType())) {
-        return true;
-    }
-
-    if (IS_OT_FLAT(ii->opType())) {
-        return true;
-    }
 
     return false;
 }
@@ -185,8 +173,7 @@ Wavefront::isGmInstruction(GPUDynInstPtr ii)
 bool
 Wavefront::isLmInstruction(GPUDynInstPtr ii)
 {
-    if (IS_OT_READ_LM(ii->opType()) || IS_OT_WRITE_LM(ii->opType()) ||
-        IS_OT_ATOMIC_LM(ii->opType())) {
+    if (ii->isLocalMem()) {
         return true;
     }
 
@@ -199,10 +186,9 @@ Wavefront::isOldestInstALU()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && (ii->opType() == Enums::OT_NOP ||
-        ii->opType() == Enums::OT_RET || ii->opType() == Enums::OT_BRANCH ||
-        ii->opType() == Enums::OT_ALU || IS_OT_LDAS(ii->opType()) ||
-        ii->opType() == Enums::OT_KERN_READ)) {
+    if (status != S_STOPPED && (ii->isNop() ||
+        ii->isReturn() || ii->isBranch() ||
+        ii->isALU() || (ii->isKernArgSeg() && ii->isLoad()))) {
         return true;
     }
 
@@ -215,7 +201,7 @@ Wavefront::isOldestInstBarrier()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && ii->opType() == Enums::OT_BARRIER) {
+    if (status != S_STOPPED && ii->isBarrier()) {
         return true;
     }
 
@@ -228,9 +214,7 @@ Wavefront::isOldestInstGMem()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && (IS_OT_READ_GM(ii->opType()) ||
-        IS_OT_WRITE_GM(ii->opType()) || IS_OT_ATOMIC_GM(ii->opType()))) {
-
+    if (status != S_STOPPED && ii->isGlobalMem()) {
         return true;
     }
 
@@ -243,9 +227,7 @@ Wavefront::isOldestInstLMem()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && (IS_OT_READ_LM(ii->opType()) ||
-        IS_OT_WRITE_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType()))) {
-
+    if (status != S_STOPPED && ii->isLocalMem()) {
         return true;
     }
 
@@ -258,9 +240,7 @@ Wavefront::isOldestInstPrivMem()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && (IS_OT_READ_PM(ii->opType()) ||
-        IS_OT_WRITE_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType()))) {
-
+    if (status != S_STOPPED && ii->isPrivateSeg()) {
         return true;
     }
 
@@ -273,8 +253,7 @@ Wavefront::isOldestInstFlatMem()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && IS_OT_FLAT(ii->opType())) {
-
+    if (status != S_STOPPED && ii->isFlat()) {
         return true;
     }
 
@@ -289,7 +268,7 @@ Wavefront::instructionBufferHasBranch()
     for (auto it : instructionBuffer) {
         GPUDynInstPtr ii = it;
 
-        if (ii->opType() == Enums::OT_RET || ii->opType() == Enums::OT_BRANCH) {
+        if (ii->isReturn() || ii->isBranch()) {
             return true;
         }
     }
@@ -371,23 +350,16 @@ Wavefront::ready(itype_e type)
     // checking readiness will be fixed eventually.  In the meantime, let's
     // make sure that we do not silently let an instruction type slip
     // through this logic and always return not ready.
-    if (!(ii->opType() == Enums::OT_BARRIER || ii->opType() == Enums::OT_NOP ||
-          ii->opType() == Enums::OT_RET || ii->opType() == Enums::OT_BRANCH ||
-          ii->opType() == Enums::OT_ALU || IS_OT_LDAS(ii->opType()) ||
-          ii->opType() == Enums::OT_KERN_READ ||
-          ii->opType() == Enums::OT_ARG ||
-          IS_OT_READ_GM(ii->opType()) || IS_OT_WRITE_GM(ii->opType()) ||
-          IS_OT_ATOMIC_GM(ii->opType()) || IS_OT_READ_LM(ii->opType()) ||
-          IS_OT_WRITE_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType()) ||
-          IS_OT_READ_PM(ii->opType()) || IS_OT_WRITE_PM(ii->opType()) ||
-          IS_OT_ATOMIC_PM(ii->opType()) || IS_OT_FLAT(ii->opType()))) {
+    if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
+        ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
+        ii->isMemFence() || ii->isFlat())) {
         panic("next instruction: %s is of unknown type\n", ii->disassemble());
     }
 
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Checking Read for Inst : %s\n",
             computeUnit->cu_id, simdId, wfSlotId, ii->disassemble());
 
-    if (type == I_ALU && ii->opType() == Enums::OT_BARRIER) {
+    if (type == I_ALU && ii->isBarrier()) {
         // Here for ALU instruction (barrier)
         if (!computeUnit->wfWait[simdId].prerdy()) {
             // Is wave slot free?
@@ -400,7 +372,7 @@ Wavefront::ready(itype_e type)
         }
 
         ready_inst = true;
-    } else if (type == I_ALU && ii->opType() == Enums::OT_NOP) {
+    } else if (type == I_ALU && ii->isNop()) {
         // Here for ALU instruction (nop)
         if (!computeUnit->wfWait[simdId].prerdy()) {
             // Is wave slot free?
@@ -408,7 +380,7 @@ Wavefront::ready(itype_e type)
         }
 
         ready_inst = true;
-    } else if (type == I_ALU && ii->opType() == Enums::OT_RET) {
+    } else if (type == I_ALU && ii->isReturn()) {
         // Here for ALU instruction (return)
         if (!computeUnit->wfWait[simdId].prerdy()) {
             // Is wave slot free?
@@ -421,10 +393,10 @@ Wavefront::ready(itype_e type)
         }
 
         ready_inst = true;
-    } else if (type == I_ALU && (ii->opType() == Enums::OT_BRANCH ||
-               ii->opType() == Enums::OT_ALU || IS_OT_LDAS(ii->opType()) ||
-               ii->opType() == Enums::OT_KERN_READ ||
-               ii->opType() == Enums::OT_ARG)) {
+    } else if (type == I_ALU && (ii->isBranch() ||
+               ii->isALU() ||
+               (ii->isKernArgSeg() && ii->isLoad()) ||
+               ii->isArgSeg())) {
         // Here for ALU instruction (all others)
         if (!computeUnit->wfWait[simdId].prerdy()) {
             // Is alu slot free?
@@ -439,18 +411,16 @@ Wavefront::ready(itype_e type)
             return 0;
         }
         ready_inst = true;
-    } else if (type == I_GLOBAL && (IS_OT_READ_GM(ii->opType()) ||
-               IS_OT_WRITE_GM(ii->opType()) || IS_OT_ATOMIC_GM(ii->opType()))) {
+    } else if (type == I_GLOBAL && ii->isGlobalMem()) {
         // Here Global memory instruction
-        if (IS_OT_READ_GM(ii->opType()) || IS_OT_ATOMIC_GM(ii->opType())) {
+        if (ii->isLoad() || ii->isAtomic() || ii->isMemFence()) {
             // Are there in pipe or outstanding global memory write requests?
             if ((outstandingReqsWrGm + wrGmReqsInPipe) > 0) {
                 return 0;
             }
         }
 
-        if (IS_OT_WRITE_GM(ii->opType()) || IS_OT_ATOMIC_GM(ii->opType()) ||
-            IS_OT_HIST_GM(ii->opType())) {
+        if (ii->isStore() || ii->isAtomic() || ii->isMemFence()) {
             // Are there in pipe or outstanding global memory read requests?
             if ((outstandingReqsRdGm + rdGmReqsInPipe) > 0)
                 return 0;
@@ -480,17 +450,15 @@ Wavefront::ready(itype_e type)
             return 0;
         }
         ready_inst = true;
-    } else if (type == I_SHARED && (IS_OT_READ_LM(ii->opType()) ||
-               IS_OT_WRITE_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType()))) {
+    } else if (type == I_SHARED && ii->isLocalMem()) {
         // Here for Shared memory instruction
-        if (IS_OT_READ_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType())) {
+        if (ii->isLoad() || ii->isAtomic() || ii->isMemFence()) {
             if ((outstandingReqsWrLm + wrLmReqsInPipe) > 0) {
                 return 0;
             }
         }
 
-        if (IS_OT_WRITE_LM(ii->opType()) || IS_OT_ATOMIC_LM(ii->opType()) ||
-            IS_OT_HIST_LM(ii->opType())) {
+        if (ii->isStore() || ii->isAtomic() || ii->isMemFence()) {
             if ((outstandingReqsRdLm + rdLmReqsInPipe) > 0) {
                 return 0;
             }
@@ -519,47 +487,7 @@ Wavefront::ready(itype_e type)
             return 0;
         }
         ready_inst = true;
-    } else if (type == I_PRIVATE && (IS_OT_READ_PM(ii->opType()) ||
-               IS_OT_WRITE_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType()))) {
-        // Here for Private memory instruction ------------------------    //
-        if (IS_OT_READ_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType())) {
-            if ((outstandingReqsWrGm + wrGmReqsInPipe) > 0) {
-                return 0;
-            }
-        }
-
-        if (IS_OT_WRITE_PM(ii->opType()) || IS_OT_ATOMIC_PM(ii->opType()) ||
-            IS_OT_HIST_PM(ii->opType())) {
-            if ((outstandingReqsRdGm + rdGmReqsInPipe) > 0) {
-                return 0;
-            }
-        }
-
-        if (!glbMemBusRdy) {
-            // Is there an available VRF->Global memory read bus?
-            return 0;
-        }
-
-        if (!glbMemIssueRdy) {
-             // Is wave slot free?
-            return 0;
-        }
-
-        if (!computeUnit->globalMemoryPipe.
-            isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
-            // Can we insert a new request to the Global Mem Request FIFO?
-            return 0;
-        }
-        // can we schedule source & destination operands on the VRF?
-        if (!computeUnit->vrf[simdId]->vrfOperandAccessReady(this, ii,
-                    VrfAccessType::RD_WR)) {
-            return 0;
-        }
-        if (!computeUnit->vrf[simdId]->operandsReady(this, ii)) {
-            return 0;
-        }
-        ready_inst = true;
-    } else if (type == I_FLAT && IS_OT_FLAT(ii->opType())) {
+    } else if (type == I_FLAT && ii->isFlat()) {
         if (!glbMemBusRdy) {
             // Is there an available VRF->Global memory read bus?
             return 0;
@@ -618,23 +546,22 @@ Wavefront::updateResources()
     assert(ii);
     computeUnit->vrf[simdId]->updateResources(this, ii);
     // Single precision ALU or Branch or Return or Special instruction
-    if (ii->opType() == Enums::OT_ALU || ii->opType() == Enums::OT_SPECIAL ||
-        ii->opType() == Enums::OT_BRANCH || IS_OT_LDAS(ii->opType()) ||
+    if (ii->isALU() || ii->isSpecialOp() ||
+        ii->isBranch() ||
         // FIXME: Kernel argument loads are currently treated as ALU operations
         // since we don't send memory packets at execution. If we fix that then
         // we should map them to one of the memory pipelines
-        ii->opType()==Enums::OT_KERN_READ ||
-        ii->opType()==Enums::OT_ARG ||
-        ii->opType()==Enums::OT_RET) {
+        (ii->isKernArgSeg() && ii->isLoad()) || ii->isArgSeg() ||
+        ii->isReturn()) {
         computeUnit->aluPipe[simdId].preset(computeUnit->shader->
                                             ticks(computeUnit->spBypassLength()));
         // this is to enforce a fixed number of cycles per issue slot per SIMD
         computeUnit->wfWait[simdId].preset(computeUnit->shader->
                                            ticks(computeUnit->issuePeriod));
-    } else if (ii->opType() == Enums::OT_BARRIER) {
+    } else if (ii->isBarrier()) {
         computeUnit->wfWait[simdId].preset(computeUnit->shader->
                                            ticks(computeUnit->issuePeriod));
-    } else if (ii->opType() == Enums::OT_FLAT_READ) {
+    } else if (ii->isLoad() && ii->isFlat()) {
         assert(Enums::SC_NONE != ii->executedAs());
         memReqsInPipe++;
         rdGmReqsInPipe++;
@@ -649,7 +576,7 @@ Wavefront::updateResources()
             computeUnit->wfWait[computeUnit->GlbMemUnitId()].
                 preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
         }
-    } else if (ii->opType() == Enums::OT_FLAT_WRITE) {
+    } else if (ii->isStore() && ii->isFlat()) {
         assert(Enums::SC_NONE != ii->executedAs());
         memReqsInPipe++;
         wrGmReqsInPipe++;
@@ -664,21 +591,21 @@ Wavefront::updateResources()
             computeUnit->wfWait[computeUnit->GlbMemUnitId()].
                 preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
         }
-    } else if (IS_OT_READ_GM(ii->opType())) {
+    } else if (ii->isLoad() && ii->isGlobalMem()) {
         memReqsInPipe++;
         rdGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_WRITE_GM(ii->opType())) {
+    } else if (ii->isStore() && ii->isGlobalMem()) {
         memReqsInPipe++;
         wrGmReqsInPipe++;
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_ATOMIC_GM(ii->opType())) {
+    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isGlobalMem()) {
         memReqsInPipe++;
         wrGmReqsInPipe++;
         rdGmReqsInPipe++;
@@ -686,49 +613,27 @@ Wavefront::updateResources()
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_READ_LM(ii->opType())) {
+    } else if (ii->isLoad() && ii->isLocalMem()) {
         memReqsInPipe++;
         rdLmReqsInPipe++;
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             preset(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_WRITE_LM(ii->opType())) {
+    } else if (ii->isStore() && ii->isLocalMem()) {
         memReqsInPipe++;
         wrLmReqsInPipe++;
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_ATOMIC_LM(ii->opType())) {
+    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isLocalMem()) {
         memReqsInPipe++;
         wrLmReqsInPipe++;
         rdLmReqsInPipe++;
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             preset(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_READ_PM(ii->opType())) {
-        memReqsInPipe++;
-        rdGmReqsInPipe++;
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            preset(computeUnit->shader->ticks(4));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_WRITE_PM(ii->opType())) {
-        memReqsInPipe++;
-        wrGmReqsInPipe++;
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            preset(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_ATOMIC_PM(ii->opType())) {
-        memReqsInPipe++;
-        wrGmReqsInPipe++;
-        rdGmReqsInPipe++;
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            preset(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
     }
 }
@@ -751,7 +656,7 @@ Wavefront::exec()
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
             "(pc: %i)\n", computeUnit->cu_id, simdId, wfSlotId, wfDynId,
             ii->disassemble(), old_pc);
-    ii->execute();
+    ii->execute(ii);
     // access the VRF
     computeUnit->vrf[simdId]->exec(ii, this);
     srcRegOpDist.sample(ii->numSrcRegOperands());
@@ -785,24 +690,24 @@ Wavefront::exec()
 
     // ---- Update Vector ALU pipeline and other resources ------------------ //
     // Single precision ALU or Branch or Return or Special instruction
-    if (ii->opType() == Enums::OT_ALU || ii->opType() == Enums::OT_SPECIAL ||
-        ii->opType() == Enums::OT_BRANCH || IS_OT_LDAS(ii->opType()) ||
+    if (ii->isALU() || ii->isSpecialOp() ||
+        ii->isBranch() ||
         // FIXME: Kernel argument loads are currently treated as ALU operations
         // since we don't send memory packets at execution. If we fix that then
         // we should map them to one of the memory pipelines
-        ii->opType() == Enums::OT_KERN_READ ||
-        ii->opType() == Enums::OT_ARG ||
-        ii->opType() == Enums::OT_RET) {
+        (ii->isKernArgSeg() && ii->isLoad()) ||
+        ii->isArgSeg() ||
+        ii->isReturn()) {
         computeUnit->aluPipe[simdId].set(computeUnit->shader->
                                          ticks(computeUnit->spBypassLength()));
 
         // this is to enforce a fixed number of cycles per issue slot per SIMD
         computeUnit->wfWait[simdId].set(computeUnit->shader->
                                         ticks(computeUnit->issuePeriod));
-    } else if (ii->opType() == Enums::OT_BARRIER) {
+    } else if (ii->isBarrier()) {
         computeUnit->wfWait[simdId].set(computeUnit->shader->
                                         ticks(computeUnit->issuePeriod));
-    } else if (ii->opType() == Enums::OT_FLAT_READ) {
+    } else if (ii->isLoad() && ii->isFlat()) {
         assert(Enums::SC_NONE != ii->executedAs());
 
         if (Enums::SC_SHARED == ii->executedAs()) {
@@ -816,7 +721,7 @@ Wavefront::exec()
             computeUnit->wfWait[computeUnit->GlbMemUnitId()].
                 set(computeUnit->shader->ticks(computeUnit->issuePeriod));
         }
-    } else if (ii->opType() == Enums::OT_FLAT_WRITE) {
+    } else if (ii->isStore() && ii->isFlat()) {
         assert(Enums::SC_NONE != ii->executedAs());
         if (Enums::SC_SHARED == ii->executedAs()) {
             computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
@@ -829,32 +734,32 @@ Wavefront::exec()
             computeUnit->wfWait[computeUnit->GlbMemUnitId()].
                 set(computeUnit->shader->ticks(computeUnit->issuePeriod));
         }
-    } else if (IS_OT_READ_GM(ii->opType())) {
+    } else if (ii->isLoad() && ii->isGlobalMem()) {
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             set(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_WRITE_GM(ii->opType())) {
+    } else if (ii->isStore() && ii->isGlobalMem()) {
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             set(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_ATOMIC_GM(ii->opType())) {
+    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isGlobalMem()) {
         computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
             set(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->GlbMemUnitId()].
             set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_READ_LM(ii->opType())) {
+    } else if (ii->isLoad() && ii->isLocalMem()) {
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             set(computeUnit->shader->ticks(4));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_WRITE_LM(ii->opType())) {
+    } else if (ii->isStore() && ii->isLocalMem()) {
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             set(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].
             set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (IS_OT_ATOMIC_LM(ii->opType())) {
+    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isLocalMem()) {
         computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
             set(computeUnit->shader->ticks(8));
         computeUnit->wfWait[computeUnit->ShrMemUnitId()].

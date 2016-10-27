@@ -171,56 +171,6 @@ class GpuDispatcher(DmaDevice):
 
     cl_driver = Param.ClDriver('pointer to driver')
 
-class OpType(Enum): vals = [
-    'OT_NULL',
-    'OT_ALU',
-    'OT_SPECIAL',
-    'OT_GLOBAL_READ',
-    'OT_GLOBAL_WRITE',
-    'OT_GLOBAL_ATOMIC',
-    'OT_GLOBAL_HIST',
-    'OT_GLOBAL_LDAS',
-    'OT_SHARED_READ',
-    'OT_SHARED_WRITE',
-    'OT_SHARED_ATOMIC',
-    'OT_SHARED_HIST',
-    'OT_SHARED_LDAS',
-    'OT_PRIVATE_READ',
-    'OT_PRIVATE_WRITE',
-    'OT_PRIVATE_ATOMIC',
-    'OT_PRIVATE_HIST',
-    'OT_PRIVATE_LDAS',
-    'OT_SPILL_READ',
-    'OT_SPILL_WRITE',
-    'OT_SPILL_ATOMIC',
-    'OT_SPILL_HIST',
-    'OT_SPILL_LDAS',
-    'OT_READONLY_READ',
-    'OT_READONLY_WRITE',
-    'OT_READONLY_ATOMIC',
-    'OT_READONLY_HIST',
-    'OT_READONLY_LDAS',
-    'OT_FLAT_READ',
-    'OT_FLAT_WRITE',
-    'OT_FLAT_ATOMIC',
-    'OT_FLAT_HIST',
-    'OT_FLAT_LDAS',
-    'OT_KERN_READ',
-    'OT_BRANCH',
-
-    # note: Only the OT_BOTH_MEMFENCE seems to be supported in the 1.0F version
-    #       of the compiler.
-    'OT_SHARED_MEMFENCE',
-    'OT_GLOBAL_MEMFENCE',
-    'OT_BOTH_MEMFENCE',
-
-    'OT_BARRIER',
-    'OT_PRINT',
-    'OT_RET',
-    'OT_NOP',
-    'OT_ARG'
-    ]
-
 class MemType(Enum): vals = [
     'M_U8',
     'M_U16',
@@ -233,47 +183,6 @@ class MemType(Enum): vals = [
     'M_F16',
     'M_F32',
     'M_F64',
-    ]
-
-class MemOpType(Enum): vals = [
-    'MO_LD',
-    'MO_ST',
-    'MO_LDAS',
-    'MO_LDA',
-    'MO_AAND',
-    'MO_AOR',
-    'MO_AXOR',
-    'MO_ACAS',
-    'MO_AEXCH',
-    'MO_AADD',
-    'MO_ASUB',
-    'MO_AINC',
-    'MO_ADEC',
-    'MO_AMAX',
-    'MO_AMIN',
-    'MO_ANRAND',
-    'MO_ANROR',
-    'MO_ANRXOR',
-    'MO_ANRCAS',
-    'MO_ANREXCH',
-    'MO_ANRADD',
-    'MO_ANRSUB',
-    'MO_ANRINC',
-    'MO_ANRDEC',
-    'MO_ANRMAX',
-    'MO_ANRMIN',
-    'MO_HAND',
-    'MO_HOR',
-    'MO_HXOR',
-    'MO_HCAS',
-    'MO_HEXCH',
-    'MO_HADD',
-    'MO_HSUB',
-    'MO_HINC',
-    'MO_HDEC',
-    'MO_HMAX',
-    'MO_HMIN',
-    'MO_UNDEF'
     ]
 
 class StorageClassType(Enum): vals = [
@@ -292,21 +201,4 @@ class RegisterType(Enum): vals = [
     'RT_CONDITION',
     'RT_HARDWARE',
     'RT_NONE',
-    ]
-
-class GenericMemoryOrder(Enum): vals = [
-    'MEMORY_ORDER_NONE',
-    'MEMORY_ORDER_RELAXED',
-    'MEMORY_ORDER_SC_ACQUIRE',
-    'MEMORY_ORDER_SC_RELEASE',
-    'MEMORY_ORDER_SC_ACQUIRE_RELEASE',
-    ]
-
-class GenericMemoryScope(Enum): vals = [
-    'MEMORY_SCOPE_NONE',
-    'MEMORY_SCOPE_WORKITEM',
-    'MEMORY_SCOPE_WAVEFRONT',
-    'MEMORY_SCOPE_WORKGROUP',
-    'MEMORY_SCOPE_DEVICE',
-    'MEMORY_SCOPE_SYSTEM',
     ]

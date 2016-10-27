@@ -627,8 +627,12 @@ namespace HsailISA
             ((int*)m->a_data)[lane] = src1.get<int>(w, lane, 3);
         }
 
-        m->m_op = brigAtomicToMemOpType(Brig::BRIG_OPCODE_ATOMICNORET,
-                                        Brig::BRIG_ATOMIC_ADD);
+        setFlag(AtomicNoReturn);
+        setFlag(AtomicAdd);
+        setFlag(NoScope);
+        setFlag(NoOrder);
+        setFlag(GlobalSegment);
+
         m->m_type = U32::memType;
         m->v_type = U32::vgprType;
 
@@ -636,15 +640,12 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;  // atomics don't have an equivalence class operand
         m->n_reg = 1;
-        m->memoryOrder = Enums::MEMORY_ORDER_NONE;
-        m->scope = Enums::MEMORY_SCOPE_NONE;
 
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
-        m->s_type = SEG_GLOBAL;
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(64));
         w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
@@ -666,8 +667,12 @@ namespace HsailISA
             ((int*)m->a_data)[lane] = src1.get<int>(w, lane, 1);
         }
 
-        m->m_op = brigAtomicToMemOpType(Brig::BRIG_OPCODE_ATOMICNORET,
-                                        Brig::BRIG_ATOMIC_ADD);
+        setFlag(AtomicNoReturn);
+        setFlag(AtomicAdd);
+        setFlag(NoScope);
+        setFlag(NoOrder);
+        setFlag(GlobalSegment);
+
         m->m_type = U32::memType;
         m->v_type = U32::vgprType;
 
@@ -675,15 +680,12 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;  // atomics don't have an equivalence class operand
         m->n_reg = 1;
-        m->memoryOrder = Enums::MEMORY_ORDER_NONE;
-        m->scope = Enums::MEMORY_SCOPE_NONE;
 
         m->simdId = w->simdId;
         m->wfSlotId = w->wfSlotId;
         m->wfDynId = w->wfDynId;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
-        m->s_type = SEG_GLOBAL;
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(64));
         w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
@@ -702,7 +704,11 @@ namespace HsailISA
         // calculate the address
         calcAddr(w, m);
 
-        m->m_op = Enums::MO_LD;
+        setFlag(Load);
+        setFlag(NoScope);
+        setFlag(NoOrder);
+        setFlag(GlobalSegment);
+
         m->m_type = U32::memType;  //MemDataType::memType;
         m->v_type = U32::vgprType; //DestDataType::vgprType;
 
@@ -710,8 +716,6 @@ namespace HsailISA
         m->statusBitVector = 0;
         m->equiv = 0;
         m->n_reg = 1;
-        m->memoryOrder = Enums::MEMORY_ORDER_NONE;
-        m->scope = Enums::MEMORY_SCOPE_NONE;
 
         // FIXME
         //m->dst_reg = this->dest.regIndex();
@@ -721,7 +725,6 @@ namespace HsailISA
         m->wfDynId = w->wfDynId;
         m->latency.init(&w->computeUnit->shader->tick_cnt);
 
-        m->s_type = SEG_GLOBAL;
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(1));
         w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);

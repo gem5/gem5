@@ -38,11 +38,9 @@
 
 #include <cmath>
 
-#include "arch/hsail/generic_types.hh"
 #include "arch/hsail/insts/gpu_static_inst.hh"
 #include "arch/hsail/operand.hh"
 #include "debug/HSAIL.hh"
-#include "enums/OpType.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"
 
@@ -127,6 +125,8 @@ namespace HsailISA
                        const char *opcode)
             : HsailGPUStaticInst(obj, opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
 
             dest.init(op_offs, obj);
@@ -240,6 +240,8 @@ namespace HsailISA
                                       const char *opcode)
             : HsailGPUStaticInst(obj, opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
 
@@ -414,6 +416,8 @@ namespace HsailISA
                                     const BrigObject *obj, const char *opcode)
             : HsailGPUStaticInst(obj, opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
 
@@ -818,6 +822,8 @@ namespace HsailISA
                             const BrigObject *obj, const char *_opcode)
             : HsailGPUStaticInst(obj, _opcode)
         {
+            setFlag(ALU);
+
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
 
@@ -874,7 +880,7 @@ namespace HsailISA
         Ret(const Brig::BrigInstBase *ib, const BrigObject *obj)
            : Base(ib, obj, "ret")
         {
-            o_type = Enums::OT_RET;
+            setFlag(GPUStaticInst::Return);
         }
 
         void execute(GPUDynInstPtr gpuDynInst);
@@ -889,7 +895,7 @@ namespace HsailISA
         Barrier(const Brig::BrigInstBase *ib, const BrigObject *obj)
             : Base(ib, obj, "barrier")
         {
-            o_type = Enums::OT_BARRIER;
+            setFlag(GPUStaticInst::MemBarrier);
             assert(ib->base.kind == Brig::BRIG_KIND_INST_BR);
             width = (uint8_t)((Brig::BrigInstBr*)ib)->width;
         }
@@ -924,14 +930,105 @@ namespace HsailISA
             memFenceMemOrder = (Brig::BrigMemoryOrder)
                 ((Brig::BrigInstMemFence*)ib)->memoryOrder;
 
-            // set o_type based on scopes
+            setFlag(MemoryRef);
+            setFlag(GPUStaticInst::MemFence);
+
+            switch (memFenceMemOrder) {
+              case Brig::BRIG_MEMORY_ORDER_NONE:
+                setFlag(NoOrder);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_RELAXED:
+                setFlag(RelaxedOrder);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_SC_ACQUIRE:
+                setFlag(Acquire);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_SC_RELEASE:
+                setFlag(Release);
+                break;
+              case Brig::BRIG_MEMORY_ORDER_SC_ACQUIRE_RELEASE:
+                setFlag(AcquireRelease);
+                break;
+              default:
+                fatal("MemInst has bad BrigMemoryOrder\n");
+            }
+
+            // set inst flags based on scopes
             if (memFenceScopeSegGlobal != Brig::BRIG_MEMORY_SCOPE_NONE &&
                 memFenceScopeSegGroup != Brig::BRIG_MEMORY_SCOPE_NONE) {
-                o_type = Enums::OT_BOTH_MEMFENCE;
+                setFlag(GPUStaticInst::GlobalSegment);
+
+                /**
+                 * A memory fence that has scope for
+                 * both segments will use the global
+                 * segment, and be executed in the
+                 * global memory pipeline, therefore,
+                 * we set the segment to match the
+                 * global scope only
+                 */
+                switch (memFenceScopeSegGlobal) {
+                  case Brig::BRIG_MEMORY_SCOPE_NONE:
+                    setFlag(NoScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKITEM:
+                    setFlag(WorkitemScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKGROUP:
+                    setFlag(WorkgroupScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_AGENT:
+                    setFlag(DeviceScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_SYSTEM:
+                    setFlag(SystemScope);
+                    break;
+                  default:
+                    fatal("MemFence has bad global scope type\n");
+                }
             } else if (memFenceScopeSegGlobal != Brig::BRIG_MEMORY_SCOPE_NONE) {
-                o_type = Enums::OT_GLOBAL_MEMFENCE;
+                setFlag(GPUStaticInst::GlobalSegment);
+
+                switch (memFenceScopeSegGlobal) {
+                  case Brig::BRIG_MEMORY_SCOPE_NONE:
+                    setFlag(NoScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKITEM:
+                    setFlag(WorkitemScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKGROUP:
+                    setFlag(WorkgroupScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_AGENT:
+                    setFlag(DeviceScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_SYSTEM:
+                    setFlag(SystemScope);
+                    break;
+                  default:
+                    fatal("MemFence has bad global scope type\n");
+                }
             } else if (memFenceScopeSegGroup != Brig::BRIG_MEMORY_SCOPE_NONE) {
-                o_type = Enums::OT_SHARED_MEMFENCE;
+                setFlag(GPUStaticInst::GroupSegment);
+
+                switch (memFenceScopeSegGroup) {
+                  case Brig::BRIG_MEMORY_SCOPE_NONE:
+                    setFlag(NoScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKITEM:
+                    setFlag(WorkitemScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_WORKGROUP:
+                    setFlag(WorkgroupScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_AGENT:
+                    setFlag(DeviceScope);
+                    break;
+                  case Brig::BRIG_MEMORY_SCOPE_SYSTEM:
+                    setFlag(SystemScope);
+                    break;
+                  default:
+                    fatal("MemFence has bad group scope type\n");
+                }
             } else {
                 fatal("MemFence constructor: bad scope specifiers\n");
             }
@@ -955,18 +1052,13 @@ namespace HsailISA
             //     etc.). We send a packet, tagged with the memory order and
             //     scope, and let the GPU coalescer handle it.
 
-            if (o_type == Enums::OT_GLOBAL_MEMFENCE ||
-                o_type == Enums::OT_BOTH_MEMFENCE) {
+            if (isGlobalSeg()) {
                 gpuDynInst->simdId = w->simdId;
                 gpuDynInst->wfSlotId = w->wfSlotId;
                 gpuDynInst->wfDynId = w->wfDynId;
                 gpuDynInst->kern_id = w->kernId;
                 gpuDynInst->cu_id = w->computeUnit->cu_id;
 
-                gpuDynInst->memoryOrder =
-                    getGenericMemoryOrder(memFenceMemOrder);
-                gpuDynInst->scope =
-                    getGenericMemoryScope(memFenceScopeSegGlobal);
                 gpuDynInst->useContinuation = false;
                 GlobalMemPipeline* gmp = &(w->computeUnit->globalMemoryPipe);
                 gmp->getGMReqFIFO().push(gpuDynInst);
@@ -975,10 +1067,10 @@ namespace HsailISA
                 w->rdGmReqsInPipe--;
                 w->memReqsInPipe--;
                 w->outstandingReqs++;
-            } else if (o_type == Enums::OT_SHARED_MEMFENCE) {
+            } else if (isGroupSeg()) {
                 // no-op
             } else {
-                fatal("MemFence execute: bad o_type\n");
+                fatal("MemFence execute: bad op type\n");
             }
         }
     };
@@ -1054,6 +1146,7 @@ namespace HsailISA
         Call(const Brig::BrigInstBase *ib, const BrigObject *obj)
             : HsailGPUStaticInst(obj, "call")
         {
+            setFlag(ALU);
             unsigned op_offs = obj->getOperandPtr(ib->operands, 0);
             dest.init(op_offs, obj);
             op_offs = obj->getOperandPtr(ib->operands, 1);

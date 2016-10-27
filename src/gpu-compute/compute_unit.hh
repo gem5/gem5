@@ -744,6 +744,7 @@ class ComputeUnit : public MemObject
   private:
     uint64_t globalSeqNum;
     int wavefrontSize;
+    GPUStaticInst *kernelLaunchInst;
 };
 
 #endif // __COMPUTE_UNIT_HH__

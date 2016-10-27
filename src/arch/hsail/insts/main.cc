@@ -179,12 +179,13 @@ namespace HsailISA
                     w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId);
 
             if (!refCount) {
+                setFlag(SystemScope);
+                setFlag(Release);
+                setFlag(GlobalSegment);
                 // Notify Memory System of Kernel Completion
                 // Kernel End = isKernel + isRelease
                 w->status = Wavefront::S_RETURNING;
                 GPUDynInstPtr local_mempacket = gpuDynInst;
-                local_mempacket->memoryOrder = Enums::MEMORY_ORDER_SC_RELEASE;
-                local_mempacket->scope = Enums::MEMORY_SCOPE_SYSTEM;
                 local_mempacket->useContinuation = false;
                 local_mempacket->simdId = w->simdId;
                 local_mempacket->wfSlotId = w->wfSlotId;

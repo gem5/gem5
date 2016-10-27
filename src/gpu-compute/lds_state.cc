@@ -141,8 +141,7 @@ LdsState::countBankConflicts(GPUDynInstPtr gpuDynInst,
             }
         }
 
-        if (gpuDynInst->m_op == Enums::MO_LD ||
-            gpuDynInst->m_op == Enums::MO_ST) {
+        if (gpuDynInst->isLoad() || gpuDynInst->isStore()) {
             // mask identical addresses
             for (int j = 0; j < numBanks; ++j) {
                 for (int j0 = 0; j0 < j; j0++) {
@@ -208,8 +207,8 @@ LdsState::processPacket(PacketPtr packet)
 
     GPUDynInstPtr dynInst = getDynInstr(packet);
     // account for the LDS bank conflict overhead
-    int busLength = (dynInst->m_op == Enums::MO_LD) ? parent->loadBusLength() :
-        (dynInst->m_op == Enums::MO_ST) ? parent->storeBusLength() :
+    int busLength = (dynInst->isLoad()) ? parent->loadBusLength() :
+        (dynInst->isStore()) ? parent->storeBusLength() :
         parent->loadBusLength();
     // delay for accessing the LDS
     Tick processingTime =

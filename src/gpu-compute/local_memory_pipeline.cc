@@ -62,7 +62,7 @@ LocalMemPipeline::exec()
         lmReturnedRequests.front() : nullptr;
 
     bool accessVrf = true;
-    if ((m) && (m->m_op==Enums::MO_LD || MO_A(m->m_op))) {
+    if ((m) && (m->isLoad() || m->isAtomicRet())) {
         Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
 
         accessVrf =
@@ -137,7 +137,7 @@ LocalMemPipeline::doSmReturn(GPUDynInstPtr m)
     Wavefront *w = computeUnit->wfList[m->simdId][m->wfSlotId];
 
     // Return data to registers
-    if (m->m_op == Enums::MO_LD || MO_A(m->m_op)) {
+    if (m->isLoad() || m->isAtomicRet()) {
         std::vector<uint32_t> regVec;
         for (int k = 0; k < m->n_reg; ++k) {
             int dst = m->dst_reg+k;
@@ -172,13 +172,12 @@ LocalMemPipeline::doSmReturn(GPUDynInstPtr m)
     // Decrement outstanding request count
     computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
 
-    if (m->m_op == Enums::MO_ST || MO_A(m->m_op) || MO_ANR(m->m_op)
-        || MO_H(m->m_op)) {
+    if (m->isStore() || m->isAtomic()) {
         computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrLm,
                                          m->time, -1);
     }
 
-    if (m->m_op == Enums::MO_LD || MO_A(m->m_op) || MO_ANR(m->m_op)) {
+    if (m->isLoad() || m->isAtomic()) {
         computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdLm,
                                          m->time, -1);
     }

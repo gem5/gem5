@@ -41,11 +41,10 @@
 #include "gpu-compute/wavefront.hh"
 
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
-                       GPUStaticInst *_staticInst, uint64_t instSeqNum)
+                       GPUStaticInst *static_inst, uint64_t instSeqNum)
     : GPUExecContext(_cu, _wf), addr(computeUnit()->wfSize(), (Addr)0),
-      m_op(Enums::MO_UNDEF),
-      memoryOrder(Enums::MEMORY_ORDER_NONE), n_reg(0), useContinuation(false),
-      statusBitVector(0), staticInst(_staticInst), _seqNum(instSeqNum)
+      n_reg(0), useContinuation(false),
+      statusBitVector(0), _staticInst(static_inst), _seqNum(instSeqNum)
 {
     tlbHitLevel.assign(computeUnit()->wfSize(), -1);
     d_data = new uint8_t[computeUnit()->wfSize() * 16];
@@ -68,77 +67,69 @@ GPUDynInst::~GPUDynInst()
 }
 
 void
-GPUDynInst::execute()
+GPUDynInst::execute(GPUDynInstPtr gpuDynInst)
 {
-    GPUDynInstPtr gpuDynInst = std::make_shared<GPUDynInst>(cu, wf, staticInst,
-                                                            _seqNum);
-    staticInst->execute(gpuDynInst);
+    _staticInst->execute(gpuDynInst);
 }
 
 int
 GPUDynInst::numSrcRegOperands()
 {
-    return staticInst->numSrcRegOperands();
+    return _staticInst->numSrcRegOperands();
 }
 
 int
 GPUDynInst::numDstRegOperands()
 {
-    return staticInst->numDstRegOperands();
+    return _staticInst->numDstRegOperands();
 }
 
 int
 GPUDynInst::getNumOperands()
 {
-    return staticInst->getNumOperands();
+    return _staticInst->getNumOperands();
 }
 
 bool
 GPUDynInst::isVectorRegister(int operandIdx)
 {
-    return staticInst->isVectorRegister(operandIdx);
+    return _staticInst->isVectorRegister(operandIdx);
 }
 
 bool
 GPUDynInst::isScalarRegister(int operandIdx)
 {
-    return staticInst->isScalarRegister(operandIdx);
+    return _staticInst->isScalarRegister(operandIdx);
 }
 
 int
 GPUDynInst::getRegisterIndex(int operandIdx)
 {
-    return staticInst->getRegisterIndex(operandIdx);
+    return _staticInst->getRegisterIndex(operandIdx);
 }
 
 int
 GPUDynInst::getOperandSize(int operandIdx)
 {
-    return staticInst->getOperandSize(operandIdx);
+    return _staticInst->getOperandSize(operandIdx);
 }
 
 bool
 GPUDynInst::isDstOperand(int operandIdx)
 {
-    return staticInst->isDstOperand(operandIdx);
+    return _staticInst->isDstOperand(operandIdx);
 }
 
 bool
 GPUDynInst::isSrcOperand(int operandIdx)
 {
-    return staticInst->isSrcOperand(operandIdx);
-}
-
-bool
-GPUDynInst::isArgLoad()
-{
-    return staticInst->isArgLoad();
+    return _staticInst->isSrcOperand(operandIdx);
 }
 
 const std::string&
 GPUDynInst::disassemble() const
 {
-    return staticInst->disassemble();
+    return _staticInst->disassemble();
 }
 
 uint64_t
@@ -147,16 +138,10 @@ GPUDynInst::seqNum() const
     return _seqNum;
 }
 
-Enums::OpType
-GPUDynInst::opType()
-{
-    return staticInst->o_type;
-}
-
 Enums::StorageClassType
 GPUDynInst::executedAs()
 {
-    return staticInst->executed_as;
+    return _staticInst->executed_as;
 }
 
 // Process a memory instruction and (if necessary) submit timing request
@@ -166,20 +151,347 @@ GPUDynInst::initiateAcc(GPUDynInstPtr gpuDynInst)
     DPRINTF(GPUMem, "CU%d: WF[%d][%d]: mempacket status bitvector=%#x\n",
             cu->cu_id, simdId, wfSlotId, exec_mask);
 
-    staticInst->initiateAcc(gpuDynInst);
+    _staticInst->initiateAcc(gpuDynInst);
     time = 0;
 }
 
+/**
+ * accessor methods for the attributes of
+ * the underlying GPU static instruction
+ */
 bool
-GPUDynInst::scalarOp() const
+GPUDynInst::isALU() const
 {
-    return staticInst->scalarOp();
+    return _staticInst->isALU();
+}
+
+bool
+GPUDynInst::isBranch() const
+{
+    return _staticInst->isBranch();
+}
+
+bool
+GPUDynInst::isNop() const
+{
+    return _staticInst->isNop();
+}
+
+bool
+GPUDynInst::isReturn() const
+{
+    return _staticInst->isReturn();
+}
+
+bool
+GPUDynInst::isUnconditionalJump() const
+{
+    return _staticInst->isUnconditionalJump();
+}
+
+bool
+GPUDynInst::isSpecialOp() const
+{
+    return _staticInst->isSpecialOp();
+}
+
+bool
+GPUDynInst::isWaitcnt() const
+{
+    return _staticInst->isWaitcnt();
+}
+
+bool
+GPUDynInst::isBarrier() const
+{
+    return _staticInst->isBarrier();
+}
+
+bool
+GPUDynInst::isMemFence() const
+{
+    return _staticInst->isMemFence();
+}
+
+bool
+GPUDynInst::isMemRef() const
+{
+    return _staticInst->isMemRef();
+}
+
+bool
+GPUDynInst::isFlat() const
+{
+    return _staticInst->isFlat();
+}
+
+bool
+GPUDynInst::isLoad() const
+{
+    return _staticInst->isLoad();
+}
+
+bool
+GPUDynInst::isStore() const
+{
+    return _staticInst->isStore();
+}
+
+bool
+GPUDynInst::isAtomic() const
+{
+    return _staticInst->isAtomic();
+}
+
+bool
+GPUDynInst::isAtomicNoRet() const
+{
+    return _staticInst->isAtomicNoRet();
+}
+
+bool
+GPUDynInst::isAtomicRet() const
+{
+    return _staticInst->isAtomicRet();
+}
+
+bool
+GPUDynInst::isScalar() const
+{
+    return _staticInst->isScalar();
+}
+
+bool
+GPUDynInst::readsSCC() const
+{
+    return _staticInst->readsSCC();
+}
+
+bool
+GPUDynInst::writesSCC() const
+{
+    return _staticInst->writesSCC();
+}
+
+bool
+GPUDynInst::readsVCC() const
+{
+    return _staticInst->readsVCC();
+}
+
+bool
+GPUDynInst::writesVCC() const
+{
+    return _staticInst->writesVCC();
+}
+
+bool
+GPUDynInst::isAtomicAnd() const
+{
+    return _staticInst->isAtomicAnd();
+}
+
+bool
+GPUDynInst::isAtomicOr() const
+{
+    return _staticInst->isAtomicOr();
+}
+
+bool
+GPUDynInst::isAtomicXor() const
+{
+    return _staticInst->isAtomicXor();
+}
+
+bool
+GPUDynInst::isAtomicCAS() const
+{
+    return _staticInst->isAtomicCAS();
+}
+
+bool GPUDynInst::isAtomicExch() const
+{
+    return _staticInst->isAtomicExch();
+}
+
+bool
+GPUDynInst::isAtomicAdd() const
+{
+    return _staticInst->isAtomicAdd();
+}
+
+bool
+GPUDynInst::isAtomicSub() const
+{
+    return _staticInst->isAtomicSub();
+}
+
+bool
+GPUDynInst::isAtomicInc() const
+{
+    return _staticInst->isAtomicInc();
+}
+
+bool
+GPUDynInst::isAtomicDec() const
+{
+    return _staticInst->isAtomicDec();
+}
+
+bool
+GPUDynInst::isAtomicMax() const
+{
+    return _staticInst->isAtomicMax();
+}
+
+bool
+GPUDynInst::isAtomicMin() const
+{
+    return _staticInst->isAtomicMin();
+}
+
+bool
+GPUDynInst::isArgLoad() const
+{
+    return _staticInst->isArgLoad();
+}
+
+bool
+GPUDynInst::isGlobalMem() const
+{
+    return _staticInst->isGlobalMem();
+}
+
+bool
+GPUDynInst::isLocalMem() const
+{
+    return _staticInst->isLocalMem();
+}
+
+bool
+GPUDynInst::isArgSeg() const
+{
+    return _staticInst->isArgSeg();
+}
+
+bool
+GPUDynInst::isGlobalSeg() const
+{
+    return _staticInst->isGlobalSeg();
+}
+
+bool
+GPUDynInst::isGroupSeg() const
+{
+    return _staticInst->isGroupSeg();
+}
+
+bool
+GPUDynInst::isKernArgSeg() const
+{
+    return _staticInst->isKernArgSeg();
+}
+
+bool
+GPUDynInst::isPrivateSeg() const
+{
+    return _staticInst->isPrivateSeg();
+}
+
+bool
+GPUDynInst::isReadOnlySeg() const
+{
+    return _staticInst->isReadOnlySeg();
+}
+
+bool
+GPUDynInst::isSpillSeg() const
+{
+    return _staticInst->isSpillSeg();
+}
+
+bool
+GPUDynInst::isWorkitemScope() const
+{
+    return _staticInst->isWorkitemScope();
+}
+
+bool
+GPUDynInst::isWavefrontScope() const
+{
+    return _staticInst->isWavefrontScope();
+}
+
+bool
+GPUDynInst::isWorkgroupScope() const
+{
+    return _staticInst->isWorkgroupScope();
+}
+
+bool
+GPUDynInst::isDeviceScope() const
+{
+    return _staticInst->isDeviceScope();
+}
+
+bool
+GPUDynInst::isSystemScope() const
+{
+    return _staticInst->isSystemScope();
+}
+
+bool
+GPUDynInst::isNoScope() const
+{
+    return _staticInst->isNoScope();
+}
+
+bool
+GPUDynInst::isRelaxedOrder() const
+{
+    return _staticInst->isRelaxedOrder();
+}
+
+bool
+GPUDynInst::isAcquire() const
+{
+    return _staticInst->isAcquire();
+}
+
+bool
+GPUDynInst::isRelease() const
+{
+    return _staticInst->isRelease();
+}
+
+bool
+GPUDynInst::isAcquireRelease() const
+{
+    return _staticInst->isAcquireRelease();
+}
+
+bool
+GPUDynInst::isNoOrder() const
+{
+    return _staticInst->isNoOrder();
+}
+
+bool
+GPUDynInst::isGloballyCoherent() const
+{
+    return _staticInst->isGloballyCoherent();
+}
+
+bool
+GPUDynInst::isSystemCoherent() const
+{
+    return _staticInst->isSystemCoherent();
 }
 
 void
 GPUDynInst::updateStats()
 {
-    if (staticInst->isLocalMem()) {
+    if (_staticInst->isLocalMem()) {
         // access to LDS (shared) memory
         cu->dynamicLMemInstrCnt++;
     } else {
