@@ -45,7 +45,8 @@
 
 GlobalMemPipeline::GlobalMemPipeline(const ComputeUnitParams* p) :
     computeUnit(nullptr), gmQueueSize(p->global_mem_queue_size),
-    inflightStores(0), inflightLoads(0)
+    outOfOrderDataDelivery(p->out_of_order_data_delivery), inflightStores(0),
+    inflightLoads(0)
 {
 }
 
@@ -61,8 +62,7 @@ void
 GlobalMemPipeline::exec()
 {
     // apply any returned global memory operations
-    GPUDynInstPtr m = !gmReturnedLoads.empty() ? gmReturnedLoads.front() :
-        !gmReturnedStores.empty() ? gmReturnedStores.front() : nullptr;
+    GPUDynInstPtr m = getNextReadyResp();
 
     bool accessVrf = true;
     Wavefront *w = nullptr;
@@ -74,30 +74,19 @@ GlobalMemPipeline::exec()
 
         accessVrf =
             w->computeUnit->vrf[w->simdId]->
-            vrfOperandAccessReady(m->seqNum(), w, m,
-                                  VrfAccessType::WRITE);
+                vrfOperandAccessReady(m->seqNum(), w, m, VrfAccessType::WRITE);
     }
 
-    if ((!gmReturnedStores.empty() || !gmReturnedLoads.empty()) &&
-        m->latency.rdy() && computeUnit->glbMemToVrfBus.rdy() &&
+    if (m && m->latency.rdy() && computeUnit->glbMemToVrfBus.rdy() &&
         accessVrf && m->statusBitVector == VectorMask(0) &&
         (computeUnit->shader->coissue_return ||
-         computeUnit->wfWait.at(m->pipeId).rdy())) {
+        computeUnit->wfWait.at(m->pipeId).rdy())) {
 
         w = m->wavefront();
 
         m->completeAcc(m);
 
-        if (m->isLoad() || m->isAtomic()) {
-            gmReturnedLoads.pop();
-            assert(inflightLoads > 0);
-            --inflightLoads;
-        } else {
-            assert(m->isStore());
-            gmReturnedStores.pop();
-            assert(inflightStores > 0);
-            --inflightStores;
-        }
+        completeRequest(m);
 
         // Decrement outstanding register count
         computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
@@ -129,19 +118,114 @@ GlobalMemPipeline::exec()
             } else {
                 ++inflightLoads;
             }
-        } else {
+        } else if (mp->isStore()) {
             if (inflightStores >= gmQueueSize) {
                 return;
-            } else if (mp->isStore()) {
+            } else {
                 ++inflightStores;
             }
         }
 
         mp->initiateAcc(mp);
+
+        if (!outOfOrderDataDelivery && !mp->isMemFence()) {
+            /**
+             * if we are not in out-of-order data delivery mode
+             * then we keep the responses sorted in program order.
+             * in order to do so we must reserve an entry in the
+             * resp buffer before we issue the request to the mem
+             * system. mem fence requests will not be stored here
+             * because once they are issued from the GM pipeline,
+             * they do not send any response back to it.
+             */
+            gmOrderedRespBuffer.insert(std::make_pair(mp->seqNum(),
+                std::make_pair(mp, false)));
+        }
+
         gmIssuedRequests.pop();
 
         DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping 0 mem_op = \n",
                 computeUnit->cu_id, mp->simdId, mp->wfSlotId);
+    }
+}
+
+GPUDynInstPtr
+GlobalMemPipeline::getNextReadyResp()
+{
+    if (outOfOrderDataDelivery) {
+        if (!gmReturnedLoads.empty()) {
+            return gmReturnedLoads.front();
+        } else if (!gmReturnedStores.empty()) {
+            return gmReturnedStores.front();
+        }
+    } else {
+        if (!gmOrderedRespBuffer.empty()) {
+            auto mem_req = gmOrderedRespBuffer.begin();
+
+            if (mem_req->second.second) {
+                return mem_req->second.first;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+void
+GlobalMemPipeline::completeRequest(GPUDynInstPtr gpuDynInst)
+{
+    if (gpuDynInst->isLoad() || gpuDynInst->isAtomic()) {
+        assert(inflightLoads > 0);
+        --inflightLoads;
+    } else if (gpuDynInst->isStore()) {
+        assert(inflightStores > 0);
+        --inflightStores;
+    }
+
+    if (outOfOrderDataDelivery) {
+        if (gpuDynInst->isLoad() || gpuDynInst->isAtomic()) {
+            assert(!gmReturnedLoads.empty());
+            gmReturnedLoads.pop();
+        } else if (gpuDynInst->isStore()) {
+            assert(!gmReturnedStores.empty());
+            gmReturnedStores.pop();
+        }
+    } else {
+        // we should only pop the oldest requst, and it
+        // should be marked as done if we are here
+        assert(gmOrderedRespBuffer.begin()->first == gpuDynInst->seqNum());
+        assert(gmOrderedRespBuffer.begin()->second.first == gpuDynInst);
+        assert(gmOrderedRespBuffer.begin()->second.second);
+        // remove this instruction from the buffer by its
+        // unique seq ID
+        gmOrderedRespBuffer.erase(gpuDynInst->seqNum());
+    }
+}
+
+void
+GlobalMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
+{
+    gmIssuedRequests.push(gpuDynInst);
+}
+
+void
+GlobalMemPipeline::handleResponse(GPUDynInstPtr gpuDynInst)
+{
+    if (outOfOrderDataDelivery) {
+        if (gpuDynInst->isLoad() || gpuDynInst->isAtomic()) {
+            assert(isGMLdRespFIFOWrRdy());
+            gmReturnedLoads.push(gpuDynInst);
+        } else {
+            assert(isGMStRespFIFOWrRdy());
+            gmReturnedStores.push(gpuDynInst);
+        }
+    } else {
+        auto mem_req = gmOrderedRespBuffer.find(gpuDynInst->seqNum());
+        // if we are getting a response for this mem request,
+        // then it ought to already be in the ordered response
+        // buffer
+        assert(mem_req != gmOrderedRespBuffer.end());
+        mem_req->second.second = true;
     }
 }
 

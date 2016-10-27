@@ -648,7 +648,7 @@ namespace HsailISA
 
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(64));
-        w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+        w->computeUnit->globalMemoryPipe.issueRequest(m);
         w->outstandingReqsWrGm++;
         w->wrGmReqsInPipe--;
         w->outstandingReqsRdGm++;
@@ -688,7 +688,7 @@ namespace HsailISA
 
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(64));
-        w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+        w->computeUnit->globalMemoryPipe.issueRequest(m);
         w->outstandingReqsWrGm++;
         w->wrGmReqsInPipe--;
         w->outstandingReqsRdGm++;
@@ -727,7 +727,7 @@ namespace HsailISA
 
         m->pipeId = GLBMEM_PIPE;
         m->latency.set(w->computeUnit->shader->ticks(1));
-        w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+        w->computeUnit->globalMemoryPipe.issueRequest(m);
         w->outstandingReqsRdGm++;
         w->rdGmReqsInPipe--;
         w->outstandingReqs++;

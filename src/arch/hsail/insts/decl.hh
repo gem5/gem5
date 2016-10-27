@@ -1082,7 +1082,7 @@ namespace HsailISA
 
                 gpuDynInst->useContinuation = false;
                 GlobalMemPipeline* gmp = &(w->computeUnit->globalMemoryPipe);
-                gmp->getGMReqFIFO().push(gpuDynInst);
+                gmp->issueRequest(gpuDynInst);
 
                 w->wrGmReqsInPipe--;
                 w->rdGmReqsInPipe--;

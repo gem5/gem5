@@ -263,7 +263,7 @@ namespace HsailISA
                 }
             }
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsRdGm++;
             w->rdGmReqsInPipe--;
             break;
@@ -288,7 +288,7 @@ namespace HsailISA
                 }
             }
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsRdGm++;
             w->rdGmReqsInPipe--;
             break;
@@ -312,7 +312,7 @@ namespace HsailISA
                 }
             }
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsRdGm++;
             w->rdGmReqsInPipe--;
             break;
@@ -330,7 +330,7 @@ namespace HsailISA
                     }
                 }
             }
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsRdGm++;
             w->rdGmReqsInPipe--;
             break;
@@ -440,7 +440,7 @@ namespace HsailISA
                 }
             }
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsWrGm++;
             w->wrGmReqsInPipe--;
             break;
@@ -460,7 +460,7 @@ namespace HsailISA
                 }
             }
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsWrGm++;
             w->wrGmReqsInPipe--;
             break;
@@ -486,7 +486,7 @@ namespace HsailISA
                 }
             }
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsWrGm++;
             w->wrGmReqsInPipe--;
             break;
@@ -591,7 +591,7 @@ namespace HsailISA
             m->latency.set(w->computeUnit->shader->ticks(64));
             m->pipeId = GLBMEM_PIPE;
 
-            w->computeUnit->globalMemoryPipe.getGMReqFIFO().push(m);
+            w->computeUnit->globalMemoryPipe.issueRequest(m);
             w->outstandingReqsWrGm++;
             w->wrGmReqsInPipe--;
             w->outstandingReqsRdGm++;

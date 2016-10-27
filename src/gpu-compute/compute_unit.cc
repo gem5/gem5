@@ -1033,17 +1033,7 @@ ComputeUnit::DataPort::MemRespEvent::process()
                 if (gpuDynInst->n_reg > MAX_REGS_FOR_NON_VEC_MEM_INST)
                     gpuDynInst->statusVector.clear();
 
-                if (gpuDynInst->isLoad() || gpuDynInst->isAtomic()) {
-                    assert(compute_unit->globalMemoryPipe.isGMLdRespFIFOWrRdy());
-
-                    compute_unit->globalMemoryPipe.getGMLdRespFIFO()
-                        .push(gpuDynInst);
-                } else {
-                    assert(compute_unit->globalMemoryPipe.isGMStRespFIFOWrRdy());
-
-                    compute_unit->globalMemoryPipe.getGMStRespFIFO()
-                        .push(gpuDynInst);
-                }
+                compute_unit->globalMemoryPipe.handleResponse(gpuDynInst);
 
                 DPRINTF(GPUMem, "CU%d: WF[%d][%d]: packet totally complete\n",
                         compute_unit->cu_id, gpuDynInst->simdId,

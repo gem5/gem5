@@ -62,9 +62,39 @@ class GlobalMemPipeline
     void init(ComputeUnit *cu);
     void exec();
 
-    std::queue<GPUDynInstPtr> &getGMReqFIFO() { return gmIssuedRequests; }
     std::queue<GPUDynInstPtr> &getGMStRespFIFO() { return gmReturnedStores; }
     std::queue<GPUDynInstPtr> &getGMLdRespFIFO() { return gmReturnedLoads; }
+
+    /**
+     * find the next ready response to service. for OoO mode we
+     * simply pop the oldest (based on when the response was
+     * received) response in the response FIFOs. for in-order mode
+     * we pop the oldest (in program order) response, and only if
+     * it is marked as done.
+     */
+    GPUDynInstPtr getNextReadyResp();
+
+    /**
+     * once a memory request is finished we remove it from the
+     * buffer. this method determines which response buffer
+     * we're using based on the mode (in-order vs. OoO).
+     */
+    void completeRequest(GPUDynInstPtr gpuDynInst);
+
+    /**
+     * issues a request to the pipeline - i.e., enqueue it
+     * in the request buffer.
+     */
+    void issueRequest(GPUDynInstPtr gpuDynInst);
+
+    /**
+     * this method handles responses sent to this GM pipeline by the
+     * CU. in the case of in-order delivery it simply marks the reqeust
+     * as done in the ordered buffer to indicate that the requst is
+     * finished. for out-of-order data delivery, the requests are enqueued
+     * (in the order in which they are received) in the response FIFOs.
+     */
+    void handleResponse(GPUDynInstPtr gpuDynInst);
 
     bool
     isGMLdRespFIFOWrRdy() const
@@ -97,6 +127,7 @@ class GlobalMemPipeline
     ComputeUnit *computeUnit;
     std::string _name;
     int gmQueueSize;
+    bool outOfOrderDataDelivery;
 
     // number of cycles of delaying the update of a VGPR that is the
     // target of a load instruction (or the load component of an atomic)
@@ -110,6 +141,22 @@ class GlobalMemPipeline
 
     // The size of global memory.
     int globalMemSize;
+
+    /*
+     * this buffer holds the memory responses when in-order data
+     * deilvery is used - the responses are ordered by their unique
+     * sequence number, which is monotonically increasing. when a
+     * memory request returns its "done" flag is set to true. during
+     * each tick the the GM pipeline will check if the oldest request
+     * is finished, and if so it will be removed from the queue.
+     *
+     * key:   memory instruction's sequence ID
+     *
+     * value: pair holding the instruction pointer and a bool that
+     *        is used to indicate whether or not the request has
+     *        completed
+     */
+    std::map<uint64_t, std::pair<GPUDynInstPtr, bool>> gmOrderedRespBuffer;
 
     // Global Memory Request FIFO: all global memory requests
     // are issued to this FIFO from the memory pipelines
