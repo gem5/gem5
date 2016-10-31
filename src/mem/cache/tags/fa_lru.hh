@@ -221,16 +221,6 @@ public:
     CacheBlk* findBlockBySetAndWay(int set, int way) const override;
 
     /**
-     * Align an address to the block size.
-     * @param addr the address to align.
-     * @return The aligned address.
-     */
-    Addr blkAlign(Addr addr) const
-    {
-        return (addr & ~(Addr)(blkSize-1));
-    }
-
-    /**
      * Generate the tag from the addres. For fully associative this is just the
      * block address.
      * @param addr The address to get the tag from.

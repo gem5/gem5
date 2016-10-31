@@ -70,7 +70,6 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
         fatal("associativity must be greater than zero");
     }
 
-    blkMask = blkSize - 1;
     setShift = floorLog2(blkSize);
     setMask = numSets - 1;
     tagShift = setShift + floorLog2(numSets);

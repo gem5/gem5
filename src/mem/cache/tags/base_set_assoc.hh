@@ -106,8 +106,6 @@ class BaseSetAssoc : public BaseTags
     int tagShift;
     /** Mask out all bits that aren't part of the set index. */
     unsigned setMask;
-    /** Mask out all bits that aren't part of the block offset. */
-    unsigned blkMask;
 
 public:
 
@@ -319,16 +317,6 @@ public:
     int extractSet(Addr addr) const override
     {
         return ((addr >> setShift) & setMask);
-    }
-
-    /**
-     * Align an address to the block size.
-     * @param addr the address to align.
-     * @return The block address.
-     */
-    Addr blkAlign(Addr addr) const
-    {
-        return (addr & ~(Addr)blkMask);
     }
 
     /**

@@ -67,6 +67,8 @@ class BaseTags : public ClockedObject
   protected:
     /** The block size of the cache. */
     const unsigned blkSize;
+    /** Mask out all bits that aren't part of the block offset. */
+    const Addr blkMask;
     /** The size of the cache. */
     const unsigned size;
     /** The tag lookup latency of the cache. */
@@ -187,13 +189,23 @@ class BaseTags : public ClockedObject
     virtual CacheBlk * findBlock(Addr addr, bool is_secure) const = 0;
 
     /**
+     * Align an address to the block size.
+     * @param addr the address to align.
+     * @return The block address.
+     */
+    Addr blkAlign(Addr addr) const
+    {
+        return addr & ~blkMask;
+    }
+
+    /**
      * Calculate the block offset of an address.
      * @param addr the address to get the offset of.
      * @return the block offset.
      */
     int extractBlkOffset(Addr addr) const
     {
-        return (addr & (Addr)(blkSize-1));
+        return (addr & blkMask);
     }
 
     /**
