@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2016 ARM Limited
+ * Copyright (c) 2012-2014,2016-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -236,7 +236,18 @@ class BaseTags : public ClockedObject
         return -1;
     }
 
-    virtual void invalidate(CacheBlk *blk) = 0;
+    /**
+     * This function updates the tags when a block is invalidated but
+     * does not invalidate the block itself.
+     * @param blk The block to invalidate.
+     */
+    virtual void invalidate(CacheBlk *blk)
+    {
+        assert(blk);
+        assert(blk->isValid());
+        tagsInUse--;
+        occupancies[blk->srcMasterId]--;
+    }
 
     virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014,2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -72,7 +72,6 @@
  * BlkType* accessBlock();
  * BlkType* findVictim();
  * void insertBlock();
- * void invalidate();
  */
 class BaseSetAssoc : public BaseTags
 {
@@ -132,22 +131,6 @@ public:
      * @return The cache block.
      */
     CacheBlk *findBlockBySetAndWay(int set, int way) const override;
-
-    /**
-     * Invalidate the given block.
-     * @param blk The block to invalidate.
-     */
-    void invalidate(CacheBlk *blk) override
-    {
-        assert(blk);
-        assert(blk->isValid());
-        tagsInUse--;
-        assert(blk->srcMasterId < cache->system->maxMasters());
-        occupancies[blk->srcMasterId]--;
-        blk->srcMasterId = Request::invldMasterId;
-        blk->task_id = ContextSwitchTaskId::Unknown;
-        blk->tickInserted = curTick();
-    }
 
     /**
      * Access block and update replacement data. May not succeed, in which case

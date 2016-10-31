@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2016 ARM Limited
+ * Copyright (c) 2012-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -164,12 +164,9 @@ class CacheBlk
   public:
 
     CacheBlk()
-        : task_id(ContextSwitchTaskId::Unknown),
-          tag(0), data(0), status(0), whenReady(0),
-          set(-1), way(-1), isTouched(false), refCount(0),
-          srcMasterId(Request::invldMasterId),
-          tickInserted(0)
-    {}
+    {
+        invalidate();
+    }
 
     CacheBlk(const CacheBlk&) = delete;
     CacheBlk& operator=(const CacheBlk&) = delete;
@@ -210,8 +207,14 @@ class CacheBlk
      */
     void invalidate()
     {
+        tag = MaxAddr;
+        task_id = ContextSwitchTaskId::Unknown;
         status = 0;
+        whenReady = MaxTick;
         isTouched = false;
+        refCount = 0;
+        srcMasterId = Request::invldMasterId;
+        tickInserted = MaxTick;
         lockList.clear();
     }
 

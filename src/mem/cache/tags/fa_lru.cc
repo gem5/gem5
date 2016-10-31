@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013,2016 ARM Limited
+ * Copyright (c) 2013,2016-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -163,8 +163,8 @@ FALRU::hashLookup(Addr addr) const
 void
 FALRU::invalidate(CacheBlk *blk)
 {
-    assert(blk);
-    tagsInUse--;
+    // TODO: We need to move the block to the tail to make it the next victim
+    BaseTags::invalidate(blk);
 }
 
 CacheBlk*
