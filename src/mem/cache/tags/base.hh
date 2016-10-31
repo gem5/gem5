@@ -91,7 +91,7 @@ class BaseTags : public ClockedObject
     bool warmedUp;
 
     /** the number of blocks in the cache */
-    unsigned numBlocks;
+    const unsigned numBlocks;
 
     // Statistics
     /**

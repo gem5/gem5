@@ -73,8 +73,6 @@ FALRU::FALRU(const Params *p)
         cacheMask = 0;
     }
 
-    numBlocks = size/blkSize;
-
     blks = new FALRUBlk[numBlocks];
     head = &(blks[0]);
     tail = &(blks[numBlocks-1]);
