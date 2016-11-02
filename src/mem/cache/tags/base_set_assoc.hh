@@ -257,12 +257,8 @@ public:
              replacements[0]++;
              totalRefs += blk->refCount;
              ++sampledRefs;
-             blk->refCount = 0;
 
-             // deal with evicted block
-             assert(blk->srcMasterId < cache->system->maxMasters());
-             occupancies[blk->srcMasterId]--;
-
+             invalidate(blk);
              blk->invalidate();
          }
 
