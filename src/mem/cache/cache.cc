@@ -1662,8 +1662,6 @@ Cache::writebackBlk(CacheBlk *blk)
         req->setFlags(Request::SECURE);
 
     req->taskId(blk->task_id);
-    blk->task_id= ContextSwitchTaskId::Unknown;
-    blk->tickInserted = curTick();
 
     PacketPtr pkt =
         new Packet(req, blk->isDirty() ?
@@ -1742,8 +1740,6 @@ Cache::cleanEvictBlk(CacheBlk *blk)
         req->setFlags(Request::SECURE);
 
     req->taskId(blk->task_id);
-    blk->task_id = ContextSwitchTaskId::Unknown;
-    blk->tickInserted = curTick();
 
     PacketPtr pkt = new Packet(req, MemCmd::CleanEvict);
     pkt->allocate();
