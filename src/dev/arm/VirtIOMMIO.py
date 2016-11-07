@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013 ARM Limited
+# Copyright (c) 2014, 2016-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,54 +35,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ali Saidi
+# Authors: Andreas Sandberg
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import *
 
-if env['TARGET_ISA'] == 'arm':
-    SimObject('AbstractNVM.py')
-    SimObject('FlashDevice.py')
-    SimObject('Gic.py')
-    SimObject('RealView.py')
-    SimObject('UFSHostDevice.py')
-    SimObject('EnergyCtrl.py')
-    SimObject('NoMali.py')
-    SimObject('VirtIOMMIO.py')
+from Device import BasicPioDevice
+from Gic import ArmInterruptPin
+from VirtIO import VirtIODeviceBase, VirtIODummyDevice
 
-    Source('a9scu.cc')
-    Source('amba_device.cc')
-    Source('amba_fake.cc')
-    Source('base_gic.cc')
-    Source('flash_device.cc')
-    Source('generic_timer.cc')
-    Source('gic_pl390.cc')
-    Source('gic_v2m.cc')
-    Source('pl011.cc')
-    Source('pl111.cc')
-    Source('hdlcd.cc')
-    Source('kmi.cc')
-    Source('timer_sp804.cc')
-    Source('gpu_nomali.cc')
-    Source('pci_host.cc')
-    Source('rv_ctrl.cc')
-    Source('realview.cc')
-    Source('rtc_pl031.cc')
-    Source('timer_cpulocal.cc')
-    Source('timer_a9global.cc')
-    Source('vgic.cc')
-    Source('vio_mmio.cc')
-    Source('ufs_device.cc')
-    Source('energy_ctrl.cc')
+class MmioVirtIO(BasicPioDevice):
+    type = 'MmioVirtIO'
+    cxx_header = 'dev/arm/vio_mmio.hh'
 
-    DebugFlag('AMBA')
-    DebugFlag('FlashDevice')
-    DebugFlag('HDLcd')
-    DebugFlag('PL111')
-    DebugFlag('GICV2M')
-    DebugFlag('Pl050')
-    DebugFlag('GIC')
-    DebugFlag('RVCTRL')
-    DebugFlag('EnergyCtrl')
-    DebugFlag('UFSHostDevice')
-    DebugFlag('VGIC')
-    DebugFlag('NoMali')
+    pio_size = Param.Addr(4096, "IO range")
+    interrupt = Param.ArmInterruptPin("Interrupt to use for this device")
+
+    vio = Param.VirtIODeviceBase(VirtIODummyDevice(), "VirtIO device")
+
+    def generateDeviceTree(self, state):
+        node = self.generateBasicPioDeviceNode(state, 'virtio', self.pio_addr,
+                                               int(self.pio_size), [
+                                                   int(self.interrupt.num),
+                                               ])
+        node.appendCompatible(["virtio,mmio"])
+        yield node
