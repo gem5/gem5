@@ -39,7 +39,7 @@
 
 #include "dev/virtio/pci.hh"
 
-#include "debug/VIOPci.hh"
+#include "debug/VIOIface.hh"
 #include "mem/packet_access.hh"
 #include "params/PciVirtIO.hh"
 
@@ -68,7 +68,7 @@ PciVirtIO::read(PacketPtr pkt)
         panic("Invalid PCI memory access to unmapped memory.\n");
     assert(bar == 0);
 
-    DPRINTF(VIOPci, "Reading offset 0x%x [len: %i]\n", offset, size);
+    DPRINTF(VIOIface, "Reading offset 0x%x [len: %i]\n", offset, size);
 
     // Forward device configuration writes to the device VirtIO model
     if (offset >= OFF_VIO_DEVICE) {
@@ -80,49 +80,49 @@ PciVirtIO::read(PacketPtr pkt)
 
     switch(offset) {
       case OFF_DEVICE_FEATURES:
-        DPRINTF(VIOPci, "   DEVICE_FEATURES request\n");
+        DPRINTF(VIOIface, "   DEVICE_FEATURES request\n");
         assert(size == sizeof(uint32_t));
         pkt->set<uint32_t>(vio.deviceFeatures);
         break;
 
       case OFF_GUEST_FEATURES:
-        DPRINTF(VIOPci, "   GUEST_FEATURES request\n");
+        DPRINTF(VIOIface, "   GUEST_FEATURES request\n");
         assert(size == sizeof(uint32_t));
         pkt->set<uint32_t>(vio.getGuestFeatures());
         break;
 
       case OFF_QUEUE_ADDRESS:
-        DPRINTF(VIOPci, "   QUEUE_ADDRESS request\n");
+        DPRINTF(VIOIface, "   QUEUE_ADDRESS request\n");
         assert(size == sizeof(uint32_t));
         pkt->set<uint32_t>(vio.getQueueAddress());
         break;
 
       case OFF_QUEUE_SIZE:
-        DPRINTF(VIOPci, "   QUEUE_SIZE request\n");
+        DPRINTF(VIOIface, "   QUEUE_SIZE request\n");
         assert(size == sizeof(uint16_t));
         pkt->set<uint16_t>(vio.getQueueSize());
         break;
 
       case OFF_QUEUE_SELECT:
-        DPRINTF(VIOPci, "   QUEUE_SELECT\n");
+        DPRINTF(VIOIface, "   QUEUE_SELECT\n");
         assert(size == sizeof(uint16_t));
         pkt->set<uint16_t>(vio.getQueueSelect());
         break;
 
       case OFF_QUEUE_NOTIFY:
-        DPRINTF(VIOPci, "   QUEUE_NOTIFY request\n");
+        DPRINTF(VIOIface, "   QUEUE_NOTIFY request\n");
         assert(size == sizeof(uint16_t));
         pkt->set<uint16_t>(queueNotify);
         break;
 
       case OFF_DEVICE_STATUS:
-        DPRINTF(VIOPci, "   DEVICE_STATUS request\n");
+        DPRINTF(VIOIface, "   DEVICE_STATUS request\n");
         assert(size == sizeof(uint8_t));
         pkt->set<uint8_t>(vio.getDeviceStatus());
         break;
 
       case OFF_ISR_STATUS: {
-          DPRINTF(VIOPci, "   ISR_STATUS\n");
+          DPRINTF(VIOIface, "   ISR_STATUS\n");
           assert(size == sizeof(uint8_t));
           const uint8_t isr_status(interruptDeliveryPending ? 1 : 0);
           if (interruptDeliveryPending) {
@@ -149,7 +149,7 @@ PciVirtIO::write(PacketPtr pkt)
         panic("Invalid PCI memory access to unmapped memory.\n");
     assert(bar == 0);
 
-    DPRINTF(VIOPci, "Writing offset 0x%x [len: %i]\n", offset, size);
+    DPRINTF(VIOIface, "Writing offset 0x%x [len: %i]\n", offset, size);
 
     // Forward device configuration writes to the device VirtIO model
     if (offset >= OFF_VIO_DEVICE) {
@@ -165,13 +165,13 @@ PciVirtIO::write(PacketPtr pkt)
         break;
 
       case OFF_GUEST_FEATURES:
-        DPRINTF(VIOPci, "   WRITE GUEST_FEATURES request\n");
+        DPRINTF(VIOIface, "   WRITE GUEST_FEATURES request\n");
         assert(size == sizeof(uint32_t));
         vio.setGuestFeatures(pkt->get<uint32_t>());
         break;
 
       case OFF_QUEUE_ADDRESS:
-        DPRINTF(VIOPci, "   WRITE QUEUE_ADDRESS\n");
+        DPRINTF(VIOIface, "   WRITE QUEUE_ADDRESS\n");
         assert(size == sizeof(uint32_t));
         vio.setQueueAddress(pkt->get<uint32_t>());
         break;
@@ -181,13 +181,13 @@ PciVirtIO::write(PacketPtr pkt)
         break;
 
       case OFF_QUEUE_SELECT:
-        DPRINTF(VIOPci, "   WRITE QUEUE_SELECT\n");
+        DPRINTF(VIOIface, "   WRITE QUEUE_SELECT\n");
         assert(size == sizeof(uint16_t));
         vio.setQueueSelect(pkt->get<uint16_t>());
         break;
 
       case OFF_QUEUE_NOTIFY:
-        DPRINTF(VIOPci, "   WRITE QUEUE_NOTIFY\n");
+        DPRINTF(VIOIface, "   WRITE QUEUE_NOTIFY\n");
         assert(size == sizeof(uint16_t));
         queueNotify = pkt->get<uint16_t>();
         vio.onNotify(queueNotify);
@@ -196,7 +196,7 @@ PciVirtIO::write(PacketPtr pkt)
       case OFF_DEVICE_STATUS: {
           assert(size == sizeof(uint8_t));
           uint8_t status(pkt->get<uint8_t>());
-          DPRINTF(VIOPci, "VirtIO set status: 0x%x\n", status);
+          DPRINTF(VIOIface, "VirtIO set status: 0x%x\n", status);
           vio.setDeviceStatus(status);
       } break;
 
@@ -214,7 +214,7 @@ PciVirtIO::write(PacketPtr pkt)
 void
 PciVirtIO::kick()
 {
-    DPRINTF(VIOPci, "kick(): Sending interrupt...\n");
+    DPRINTF(VIOIface, "kick(): Sending interrupt...\n");
     interruptDeliveryPending = true;
     intrPost();
 }
