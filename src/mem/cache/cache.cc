@@ -419,6 +419,9 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
+        // populate the time when the block will be ready to access.
+        blk->whenReady = clockEdge(fillLatency) + pkt->headerDelay +
+            pkt->payloadDelay;
         return true;
     } else if (pkt->cmd == MemCmd::CleanEvict) {
         if (blk != nullptr) {
