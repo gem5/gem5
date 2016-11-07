@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,6 +41,7 @@
 
 #include "debug/VIO.hh"
 #include "params/VirtIODeviceBase.hh"
+#include "params/VirtIODummyDevice.hh"
 
 VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, VirtQueue &_queue,
                                Index descIndex)
@@ -476,4 +477,16 @@ void
 VirtIODeviceBase::registerQueue(VirtQueue &queue)
 {
     _queues.push_back(&queue);
+}
+
+
+VirtIODummyDevice::VirtIODummyDevice(VirtIODummyDeviceParams *params)
+    : VirtIODeviceBase(params, ID_INVALID, 0, 0)
+{
+}
+
+VirtIODummyDevice *
+VirtIODummyDeviceParams::create()
+{
+    return new VirtIODummyDevice(this);
 }
