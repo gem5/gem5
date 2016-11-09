@@ -44,6 +44,9 @@
 
 #include "arch/x86/process.hh"
 
+#include <string>
+#include <vector>
+
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
@@ -57,6 +60,7 @@
 #include "debug/Stack.hh"
 #include "mem/multi_level_page_table.hh"
 #include "mem/page_table.hh"
+#include "sim/aux_vector.hh"
 #include "sim/process_impl.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_return.hh"

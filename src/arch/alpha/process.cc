@@ -38,6 +38,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "mem/page_table.hh"
+#include "sim/aux_vector.hh"
 #include "sim/byteswap.hh"
 #include "sim/process_impl.hh"
 #include "sim/syscall_return.hh"

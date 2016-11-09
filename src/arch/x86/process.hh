@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 
+#include "sim/aux_vector.hh"
 #include "sim/process.hh"
 #include "mem/multi_level_page_table.hh"
 

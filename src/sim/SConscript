@@ -75,6 +75,7 @@ Source('mathexpr.cc')
 if env['TARGET_ISA'] != 'null':
     SimObject('InstTracer.py')
     SimObject('Process.py')
+    Source('aux_vector.cc')
     Source('faults.cc')
     Source('process.cc')
     Source('fd_entry.cc')

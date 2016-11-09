@@ -93,17 +93,6 @@ using namespace TheISA;
 // current number of allocated processes
 int num_processes = 0;
 
-template<class IntType>
-
-AuxVector<IntType>::AuxVector(IntType type, IntType val)
-{
-    a_type = TheISA::htog(type);
-    a_val = TheISA::htog(val);
-}
-
-template struct AuxVector<uint32_t>;
-template struct AuxVector<uint64_t>;
-
 static int
 openFile(const string& filename, int flags, mode_t mode)
 {
@@ -204,7 +193,6 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
         }
     }
 }
-
 
 void
 Process::regStats()
@@ -497,7 +485,6 @@ Process::unserialize(CheckpointIn &cp)
     // found.
 }
 
-
 bool
 Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 {
@@ -505,7 +492,6 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
                 cacheable ? PageTableBase::Zero : PageTableBase::Uncacheable);
     return true;
 }
-
 
 void
 Process::syscall(int64_t callnum, ThreadContext *tc)
@@ -524,7 +510,6 @@ Process::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     return getSyscallArg(tc, i);
 }
-
 
 EmulatedDriver *
 Process::findDriver(std::string filename)
@@ -561,13 +546,11 @@ Process::updateBias()
     interp->updateBias(ld_bias);
 }
 
-
 ObjectFile *
 Process::getInterpreter()
 {
     return objFile->getInterpreter();
 }
-
 
 Addr
 Process::getBias()
@@ -577,7 +560,6 @@ Process::getBias()
     return interp ? interp->bias() : objFile->bias();
 }
 
-
 Addr
 Process::getStartPC()
 {
@@ -585,7 +567,6 @@ Process::getStartPC()
 
     return interp ? interp->entryPoint() : objFile->entryPoint();
 }
-
 
 Process *
 ProcessParams::create()
@@ -633,7 +614,6 @@ ProcessParams::create()
             process = new Sparc32LinuxProcess(this, obj_file);
         }
         break;
-
 
       case ObjectFile::Solaris:
         process = new SparcSolarisProcess(this, obj_file);
@@ -742,4 +722,18 @@ ProcessParams::create()
     if (process == NULL)
         fatal("Unknown error creating process object.");
     return process;
+}
+
+std::string
+Process::fullPath(const std::string &file_name)
+{
+    if (file_name[0] == '/' || cwd.empty())
+        return file_name;
+
+    std::string full = cwd;
+
+    if (cwd[cwd.size() - 1] != '/')
+        full += '/';
+
+    return full + file_name;
 }
