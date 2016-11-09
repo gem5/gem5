@@ -116,10 +116,6 @@ class Process : public SimObject
     // instead, so they can override thie method to return false.
     virtual bool mmapGrowsDown() const { return true; }
 
-    // Base of region for nxm data
-    Addr nxm_start;
-    Addr nxm_end;
-
     Stats::Scalar num_syscalls;       // number of syscalls executed
 
   protected:

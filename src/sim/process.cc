@@ -189,7 +189,6 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
                     0664, false);
 
     mmap_end = 0;
-    nxm_start = nxm_end = 0;
     // other parameters will be initialized when the program is loaded
 
     // load up symbols, if any... these may be used for debugging or
@@ -470,8 +469,6 @@ Process::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(stack_min);
     SERIALIZE_SCALAR(next_thread_stack_base);
     SERIALIZE_SCALAR(mmap_end);
-    SERIALIZE_SCALAR(nxm_start);
-    SERIALIZE_SCALAR(nxm_end);
     pTable->serialize(cp);
     for (int x = 0; x < fd_array->size(); x++) {
         (*fd_array)[x].serializeSection(cp, csprintf("FDEntry%d", x));
@@ -488,8 +485,6 @@ Process::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(stack_min);
     UNSERIALIZE_SCALAR(next_thread_stack_base);
     UNSERIALIZE_SCALAR(mmap_end);
-    UNSERIALIZE_SCALAR(nxm_start);
-    UNSERIALIZE_SCALAR(nxm_end);
     pTable->unserialize(cp);
     for (int x = 0; x < fd_array->size(); x++) {
         FDEntry *fde = getFDEntry(x);
