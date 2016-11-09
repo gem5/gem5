@@ -42,6 +42,7 @@
 #include <cctype>
 #include <iomanip>
 
+#include "base/trace.hh"
 #include "debug/ExternalPort.hh"
 
 /** Implement a `stub' port which just responds to requests by printing

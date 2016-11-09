@@ -46,6 +46,7 @@
 
 #include "base/random.hh"
 #include "base/statistics.hh"
+#include "base/trace.hh"
 #include "debug/MemTest.hh"
 #include "mem/mem_object.hh"
 #include "sim/sim_exit.hh"

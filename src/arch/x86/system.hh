@@ -44,11 +44,7 @@
 #include <vector>
 
 #include "arch/x86/regs/misc.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
 #include "params/X86System.hh"
-#include "sim/sim_object.hh"
 #include "sim/system.hh"
 
 namespace X86ISA

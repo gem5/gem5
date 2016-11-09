@@ -32,6 +32,7 @@
 
 #include <Python.h>
 
+#include "base/misc.hh"
 #include "sim/async.hh"
 #include "sim/eventq.hh"
 

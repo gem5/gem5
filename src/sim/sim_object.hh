@@ -49,21 +49,18 @@
 #ifndef __SIM_OBJECT_HH__
 #define __SIM_OBJECT_HH__
 
-#include <iostream>
-#include <list>
-#include <map>
 #include <string>
 #include <vector>
 
-#include "enums/MemoryMode.hh"
 #include "params/SimObject.hh"
 #include "sim/drain.hh"
+#include "sim/eventq.hh"
 #include "sim/eventq_impl.hh"
 #include "sim/serialize.hh"
 
-class BaseCPU;
-class Event;
+class EventManager;
 class ProbeManager;
+
 /**
  * Abstract superclass for simulation objects.  Represents things that
  * correspond to physical components and can be specified via the

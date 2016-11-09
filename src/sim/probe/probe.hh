@@ -64,13 +64,14 @@
 #include <string>
 #include <vector>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
-#include "params/ProbeListenerObject.hh"
 #include "sim/sim_object.hh"
 
 /** Forward declare the ProbeManager. */
 class ProbeManager;
 class ProbeListener;
+class ProbeListenerObjectParams;
 
 /**
  * Name space containing shared probe point declarations.

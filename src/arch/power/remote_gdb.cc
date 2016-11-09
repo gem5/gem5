@@ -133,6 +133,7 @@
  * "Stub" to allow remote cpu to debug over a serial line using gdb.
  */
 
+
 #include "arch/power/remote_gdb.hh"
 
 #include <sys/signal.h>
@@ -144,6 +145,7 @@
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"
+#include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;

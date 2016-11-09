@@ -36,7 +36,6 @@
 #include <vector>
 
 #include "mem/se_translating_port_proxy.hh"
-#include "sim/byteswap.hh"
 
 //This needs to be templated for cases where 32 bit pointers are needed.
 template<class AddrType>

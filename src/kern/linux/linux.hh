@@ -36,9 +36,9 @@
 #include <string>
 
 #include "kern/operatingsystem.hh"
+#include "sim/process.hh"
 
 class ThreadContext;
-class LiveProcess;
 
 ///
 /// This class encapsulates the types, structures, constants,

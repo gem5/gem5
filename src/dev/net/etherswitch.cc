@@ -36,7 +36,9 @@
 #include "dev/net/etherswitch.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "debug/EthernetAll.hh"
+#include "sim/core.hh"
 
 using namespace std;
 

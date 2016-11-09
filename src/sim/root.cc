@@ -31,13 +31,13 @@
  *          Gabe Black
  */
 
-#include "sim/root.hh"
-
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/TimeSync.hh"
+#include "sim/eventq_impl.hh"
 #include "sim/full_system.hh"
+#include "sim/root.hh"
 
 Root *Root::_root = NULL;
 

@@ -45,9 +45,9 @@
 #ifndef __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 #define __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 
-#include "mem/page_table.hh"
 #include "mem/port_proxy.hh"
 
+class PageTableBase;
 class Process;
 
 /**

@@ -30,6 +30,7 @@
 #include "cpu/testers/rubytest/Check.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "debug/RubyTest.hh"
 #include "mem/ruby/common/SubBlock.hh"
 

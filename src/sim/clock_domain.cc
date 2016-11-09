@@ -47,6 +47,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "base/trace.hh"
 #include "debug/ClockDomain.hh"
 #include "params/ClockDomain.hh"
 #include "params/DerivedClockDomain.hh"

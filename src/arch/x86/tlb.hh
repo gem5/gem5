@@ -41,20 +41,15 @@
 #define __ARCH_X86_TLB_HH__
 
 #include <list>
-#include <string>
 #include <vector>
 
 #include "arch/generic/tlb.hh"
-#include "arch/x86/regs/segment.hh"
 #include "arch/x86/pagetable.hh"
 #include "base/trie.hh"
-#include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
-#include "sim/sim_object.hh"
 
 class ThreadContext;
-class Packet;
 
 namespace X86ISA
 {

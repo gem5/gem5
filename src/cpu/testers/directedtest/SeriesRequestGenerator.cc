@@ -30,6 +30,7 @@
 #include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "debug/DirectedTest.hh"

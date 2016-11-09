@@ -44,8 +44,6 @@
 #include <mutex>
 #include <unordered_set>
 
-#include "base/flags.hh"
-
 class Drainable;
 
 #ifndef SWIG // SWIG doesn't support strongly typed enums

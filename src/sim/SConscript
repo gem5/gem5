@@ -82,6 +82,9 @@ if env['TARGET_ISA'] != 'null':
     Source('syscall_emul.cc')
     Source('syscall_desc.cc')
 
+if env['TARGET_ISA'] != 'x86':
+    Source('microcode_rom.cc')
+
 DebugFlag('Checkpoint')
 DebugFlag('Config')
 DebugFlag('CxxConfig')

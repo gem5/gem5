@@ -40,15 +40,9 @@
 #ifndef __ARCH_X86_UTILITY_HH__
 #define __ARCH_X86_UTILITY_HH__
 
-#include "arch/x86/regs/misc.hh"
-#include "arch/x86/types.hh"
-#include "base/misc.hh"
-#include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"
-
-class ThreadContext;
 
 namespace X86ISA
 {

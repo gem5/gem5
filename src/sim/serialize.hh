@@ -59,14 +59,12 @@
 #include <vector>
 
 #include "base/bitunion.hh"
-#include "base/types.hh"
 
+class CheckpointIn;
 class IniFile;
 class Serializable;
-class CheckpointIn;
 class SimObject;
 class SimObjectResolver;
-class EventQueue;
 
 typedef std::ostream CheckpointOut;
 

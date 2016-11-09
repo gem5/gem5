@@ -52,6 +52,7 @@
 
 #include "base/atomicio.hh"
 #include "base/cprintf.hh"
+#include "base/misc.hh"
 #include "sim/async.hh"
 #include "sim/backtrace.hh"
 #include "sim/core.hh"

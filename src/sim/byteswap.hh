@@ -38,7 +38,6 @@
 #define __SIM_BYTE_SWAP_HH__
 
 #include "base/bigint.hh"
-#include "base/misc.hh"
 #include "base/types.hh"
 
 // This lets us figure out what the byte order of the host system is

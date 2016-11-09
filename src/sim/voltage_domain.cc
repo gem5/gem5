@@ -43,6 +43,7 @@
 #include <algorithm>
 
 #include "base/statistics.hh"
+#include "base/trace.hh"
 #include "debug/VoltageDomain.hh"
 #include "params/VoltageDomain.hh"
 #include "sim/sim_object.hh"

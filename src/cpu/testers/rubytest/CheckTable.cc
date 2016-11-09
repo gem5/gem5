@@ -31,6 +31,7 @@
 
 #include "base/intmath.hh"
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "cpu/testers/rubytest/Check.hh"
 #include "debug/RubyTest.hh"
 

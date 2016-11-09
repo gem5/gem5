@@ -53,13 +53,10 @@
 #include <vector>
 
 #include "debug/DVFS.hh"
-#include "params/ClockDomain.hh"
 #include "params/DVFSHandler.hh"
-#include "params/VoltageDomain.hh"
 #include "sim/clock_domain.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-#include "sim/voltage_domain.hh"
 
 /**
  * DVFS Handler class, maintains a list of all the domains it can handle.
@@ -156,28 +153,7 @@ class DVFSHandler : public SimObject
      * @return Voltage for the requested performance level of the respective
      * domain
      */
-    double voltageAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
-    {
-        VoltageDomain *d = findDomain(domain_id)->voltageDomain();
-        assert(d);
-        PerfLevel n = d->numVoltages();
-        if (perf_level < n)
-            return d->voltage(perf_level);
-
-        // Request outside of the range of the voltage domain
-        if (n == 1) {
-            DPRINTF(DVFS, "DVFS: Request for perf-level %i for single-point "\
-                    "voltage domain %s.  Returning voltage at level 0: %.2f "\
-                    "V\n", perf_level, d->name(), d->voltage(0));
-            // Special case for single point voltage domain -> same voltage for
-            // all points
-            return d->voltage(0);
-        }
-
-        warn("DVFSHandler %s reads illegal voltage level %u from "\
-             "VoltageDomain %s. Returning 0 V\n", name(), perf_level, d->name());
-        return 0.;
-    }
+    double voltageAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const;
 
     /**
      * Get the total number of available performance levels.

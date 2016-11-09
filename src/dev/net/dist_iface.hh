@@ -83,6 +83,7 @@
 #include <thread>
 #include <utility>
 
+#include "base/misc.hh"
 #include "dev/net/dist_packet.hh"
 #include "dev/net/etherpkt.hh"
 #include "sim/core.hh"

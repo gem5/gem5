@@ -41,6 +41,7 @@
 
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 
+#include "base/trace.hh"
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "debug/DirectedTest.hh"
 #include "sim/sim_exit.hh"

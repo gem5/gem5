@@ -57,8 +57,6 @@
 #include <string>
 #include <vector>
 
-#include "mem/port.hh"
-#include "params/SimObject.hh"
 #include "sim/sim_object.hh"
 
 class CxxConfigParams;

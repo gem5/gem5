@@ -37,18 +37,13 @@
  */
 #include "mem/page_table.hh"
 
-#include <fstream>
-#include <map>
-#include <memory>
 #include <string>
 
-#include "base/bitfield.hh"
-#include "base/intmath.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/MMU.hh"
 #include "sim/faults.hh"
-#include "sim/sim_object.hh"
+#include "sim/serialize.hh"
 
 using namespace std;
 using namespace TheISA;

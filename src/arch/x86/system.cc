@@ -39,19 +39,12 @@
 
 #include "arch/x86/system.hh"
 
-#include "arch/vtophys.hh"
 #include "arch/x86/bios/intelmp.hh"
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/isa_traits.hh"
-#include "arch/x86/regs/misc.hh"
-#include "base/intmath.hh"
 #include "base/loader/object_file.hh"
-#include "base/loader/symtab.hh"
-#include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "mem/port_proxy.hh"
 #include "params/X86System.hh"
-#include "sim/byteswap.hh"
 
 using namespace LittleEndianGuest;
 using namespace X86ISA;

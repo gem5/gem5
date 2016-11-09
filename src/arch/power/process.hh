@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 
+#include "mem/page_table.hh"
 #include "sim/process.hh"
 
 class LiveProcess;

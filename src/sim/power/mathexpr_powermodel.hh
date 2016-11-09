@@ -42,11 +42,13 @@
 
 #include <unordered_map>
 
-#include "base/statistics.hh"
 #include "params/MathExprPowerModel.hh"
 #include "sim/mathexpr.hh"
 #include "sim/power/power_model.hh"
-#include "sim/sim_object.hh"
+
+namespace Stats {
+    class Info;
+}
 
 /**
  * A Equation power model. The power is represented as a combination

@@ -43,6 +43,7 @@
 #include <cctype>
 #include <iomanip>
 
+#include "base/trace.hh"
 #include "debug/ExternalPort.hh"
 
 std::map<std::string, ExternalMaster::Handler *>

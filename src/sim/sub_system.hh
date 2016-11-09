@@ -48,7 +48,6 @@
 #include <vector>
 
 #include "params/SubSystem.hh"
-#include "sim/power/thermal_domain.hh"
 #include "sim/sim_object.hh"
 
 class PowerModel;

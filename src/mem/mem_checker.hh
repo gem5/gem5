@@ -48,6 +48,7 @@
 #include <vector>
 
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/MemChecker.hh"
 #include "params/MemChecker.hh"

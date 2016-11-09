@@ -32,18 +32,15 @@
  * @file
  * Definitions of page table
  */
-#include <fstream>
-#include <map>
 #include <string>
 
-#include "base/bitfield.hh"
-#include "base/intmath.hh"
+#include "arch/isa_traits.hh"
+#include "arch/tlb.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/MMU.hh"
 #include "mem/multi_level_page_table.hh"
-#include "sim/faults.hh"
-#include "sim/sim_object.hh"
+#include "mem/page_table.hh"
 
 using namespace std;
 using namespace TheISA;

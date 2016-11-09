@@ -39,6 +39,7 @@
 #include <list>
 
 #include "base/statistics.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/GPUVRF.hh"
 #include "gpu-compute/vector_register_state.hh"

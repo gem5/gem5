@@ -39,6 +39,8 @@
 
 #include "sim/cxx_config_ini.hh"
 
+#include "base/str.hh"
+
 bool
 CxxIniFile::getParam(const std::string &object_name,
     const std::string &param_name,

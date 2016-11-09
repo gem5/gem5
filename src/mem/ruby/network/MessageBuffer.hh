@@ -41,6 +41,7 @@
 #include <string>
 #include <vector>
 
+#include "base/trace.hh"
 #include "debug/RubyQueue.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"

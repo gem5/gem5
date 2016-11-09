@@ -32,7 +32,6 @@
 
 #include "arch/utility.hh"
 #include "config/the_isa.hh"
-#include "cpu/thread_context.hh"
 
 Arguments::Data::~Data()
 {

@@ -46,14 +46,13 @@
 #include <vector>
 
 #include "base/bitunion.hh"
-#include "base/misc.hh"
 #include "base/types.hh"
 #include "base/trie.hh"
-#include "cpu/thread_context.hh"
 #include "arch/x86/system.hh"
 #include "debug/MMU.hh"
 
 class Checkpoint;
+class ThreadContext;
 
 namespace X86ISA
 {

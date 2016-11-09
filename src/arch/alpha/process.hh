@@ -32,6 +32,7 @@
 #ifndef __ARCH_ALPHA_PROCESS_HH__
 #define __ARCH_ALPHA_PROCESS_HH__
 
+#include "mem/page_table.hh"
 #include "sim/process.hh"
 
 class AlphaLiveProcess : public LiveProcess

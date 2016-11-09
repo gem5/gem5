@@ -34,6 +34,7 @@
 #define __DEV_MC146818_HH__
 
 #include "base/bitunion.hh"
+#include "base/misc.hh"
 #include "sim/eventq_impl.hh"
 
 /** Real-Time Clock (MC146818) */

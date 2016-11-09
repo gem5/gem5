@@ -41,6 +41,7 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
+#include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
 using namespace std;

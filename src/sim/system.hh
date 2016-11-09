@@ -53,7 +53,6 @@
 
 #include "arch/isa_traits.hh"
 #include "base/loader/symtab.hh"
-#include "base/misc.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "enums/MemoryMode.hh"
@@ -71,11 +70,9 @@
 #include "cpu/pc_event.hh"
 #endif
 
-class BaseCPU;
 class BaseRemoteGDB;
 class GDBListener;
 class ObjectFile;
-class Platform;
 class ThreadContext;
 
 class System : public MemObject

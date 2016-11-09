@@ -34,7 +34,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <cstdio>
 #include <iostream>
 #include <string>
 
@@ -42,7 +41,6 @@
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"

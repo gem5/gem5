@@ -39,6 +39,8 @@
 
 #include "sim/stat_register.hh"
 
+#include "base/statistics.hh"
+
 namespace Stats
 {
 

@@ -46,7 +46,8 @@
 
 #include <sys/types.h>
 
-#include "base/output.hh" //simout
+#include "base/misc.hh"
+#include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/VNC.hh"
 

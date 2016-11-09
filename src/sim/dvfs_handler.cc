@@ -45,9 +45,11 @@
 #include <utility>
 
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "debug/DVFS.hh"
 #include "params/DVFSHandler.hh"
 #include "sim/clock_domain.hh"
+#include "sim/eventq_impl.hh"
 #include "sim/stat_control.hh"
 #include "sim/voltage_domain.hh"
 
@@ -168,6 +170,30 @@ DVFSHandler::UpdateEvent::updatePerfLevel()
     assert(d->perfLevel() != perfLevelToSet);
 
     d->perfLevel(perfLevelToSet);
+}
+
+double
+DVFSHandler::voltageAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
+{
+    VoltageDomain *d = findDomain(domain_id)->voltageDomain();
+    assert(d);
+    PerfLevel n = d->numVoltages();
+    if (perf_level < n)
+        return d->voltage(perf_level);
+
+    // Request outside of the range of the voltage domain
+    if (n == 1) {
+        DPRINTF(DVFS, "DVFS: Request for perf-level %i for single-point "\
+                "voltage domain %s.  Returning voltage at level 0: %.2f "\
+                "V\n", perf_level, d->name(), d->voltage(0));
+        // Special case for single point voltage domain -> same voltage for
+        // all points
+        return d->voltage(0);
+    }
+
+    warn("DVFSHandler %s reads illegal voltage level %u from "\
+         "VoltageDomain %s. Returning 0 V\n", name(), perf_level, d->name());
+    return 0.;
 }
 
 void

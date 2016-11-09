@@ -42,7 +42,6 @@
 
 #include <vector>
 
-#include "base/statistics.hh"
 #include "params/ThermalCapacitor.hh"
 #include "params/ThermalModel.hh"
 #include "params/ThermalReference.hh"

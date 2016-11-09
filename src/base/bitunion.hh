@@ -32,7 +32,6 @@
 #define __BASE_BITUNION_HH__
 
 #include "base/bitfield.hh"
-#include "base/types.hh"
 
 //      The following implements the BitUnion system of defining bitfields
 //on top of an underlying class. This is done through the pervasive use of

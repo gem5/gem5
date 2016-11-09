@@ -62,7 +62,7 @@
 /// application on the host machine.
 
 #ifdef __CYGWIN32__
-#include <sys/fcntl.h>  // for O_BINARY
+#include <sys/fcntl.h>
 
 #endif
 #include <fcntl.h>
@@ -78,8 +78,7 @@
 #include <cerrno>
 #include <string>
 
-#include "base/chunk_generator.hh"
-#include "base/intmath.hh"      // for RoundUp
+#include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -88,13 +87,11 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
-#include "sim/byteswap.hh"
 #include "sim/emul_driver.hh"
 #include "sim/process.hh"
 #include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_emul_buf.hh"
 #include "sim/syscall_return.hh"
-#include "sim/system.hh"
 
 class SyscallDesc;
 
@@ -156,7 +153,7 @@ SyscallReturn lseekFunc(SyscallDesc *desc, int num,
 
 /// Target _llseek() handler.
 SyscallReturn _llseekFunc(SyscallDesc *desc, int num,
-                        LiveProcess *p, ThreadContext *tc);
+                          LiveProcess *p, ThreadContext *tc);
 
 /// Target munmap() handler.
 SyscallReturn munmapFunc(SyscallDesc *desc, int num,
@@ -236,39 +233,39 @@ SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
 
 /// Target fcntl64() handler.
 SyscallReturn fcntl64Func(SyscallDesc *desc, int num,
-                        LiveProcess *process, ThreadContext *tc);
+                          LiveProcess *process, ThreadContext *tc);
 
 /// Target setuid() handler.
 SyscallReturn setuidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target getpid() handler.
 SyscallReturn getpidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target getuid() handler.
 SyscallReturn getuidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target getgid() handler.
 SyscallReturn getgidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target getppid() handler.
 SyscallReturn getppidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                          LiveProcess *p, ThreadContext *tc);
 
 /// Target geteuid() handler.
 SyscallReturn geteuidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                          LiveProcess *p, ThreadContext *tc);
 
 /// Target getegid() handler.
 SyscallReturn getegidFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                          LiveProcess *p, ThreadContext *tc);
 
 /// Target clone() handler.
 SyscallReturn cloneFunc(SyscallDesc *desc, int num,
-                               LiveProcess *p, ThreadContext *tc);
+                        LiveProcess *p, ThreadContext *tc);
 
 /// Target access() handler
 SyscallReturn accessFunc(SyscallDesc *desc, int num,

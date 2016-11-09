@@ -44,8 +44,6 @@
 #ifndef __SIM_STAT_REGISTER_H__
 #define __SIM_STAT_REGISTER_H__
 
-#include "base/statistics.hh"
-
 namespace Stats
 {
 

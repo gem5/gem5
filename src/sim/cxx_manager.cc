@@ -43,6 +43,7 @@
 #include <sstream>
 
 #include "base/str.hh"
+#include "base/trace.hh"
 #include "debug/CxxConfig.hh"
 #include "mem/mem_object.hh"
 #include "sim/serialize.hh"

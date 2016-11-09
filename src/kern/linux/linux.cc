@@ -33,7 +33,6 @@
 #include <cstdio>
 #include <string>
 
-#include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"

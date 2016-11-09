@@ -43,9 +43,10 @@
 #include "base/statistics.hh"
 #include "params/PowerModel.hh"
 #include "params/PowerModelState.hh"
-#include "sim/power/thermal_model.hh"
 #include "sim/probe/probe.hh"
-#include "sim/sim_object.hh"
+
+class SimObject;
+class ClockedObject;
 
 /**
  * A PowerModelState is an abstract class used as interface to get power

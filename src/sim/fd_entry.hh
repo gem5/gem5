@@ -35,7 +35,9 @@
 #include <ostream>
 #include <string>
 
-#include "sim/emul_driver.hh"
+#include "sim/serialize.hh"
+
+class EmulatedDriver;
 
 /**
  * FDEntry is used to manage a single file descriptor mapping and metadata

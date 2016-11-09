@@ -35,6 +35,7 @@
 #include "params/RiscvInterrupts.hh"
 #include "sim/sim_object.hh"
 
+class BaseCPU;
 class ThreadContext;
 
 namespace RiscvISA {

@@ -31,7 +31,7 @@
 #ifndef __SIM_SYSCALLRETURN_HH__
 #define __SIM_SYSCALLRETURN_HH__
 
-#include "base/types.hh"
+#include <inttypes.h>
 
 /**
  * This class represents the return value from an emulated system call,

@@ -49,6 +49,7 @@
 #include "mem/cache/prefetch/stride.hh"
 
 #include "base/random.hh"
+#include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
 
 StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)

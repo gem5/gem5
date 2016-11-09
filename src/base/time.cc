@@ -35,6 +35,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "base/misc.hh"
 #include "config/use_posix_clock.hh"
 #include "sim/core.hh"
 #include "sim/serialize.hh"

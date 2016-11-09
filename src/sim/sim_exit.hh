@@ -35,7 +35,8 @@
 #include <string>
 
 #include "base/types.hh"
-#include "sim/core.hh"
+
+Tick curTick();
 
 // forward declaration
 class Callback;

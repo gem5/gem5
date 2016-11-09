@@ -51,7 +51,6 @@
 
 #include "base/callback.hh"
 #include "base/intmath.hh"
-#include "base/misc.hh"
 #include "enums/PwrState.hh"
 #include "params/ClockedObject.hh"
 #include "sim/core.hh"

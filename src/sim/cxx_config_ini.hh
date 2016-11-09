@@ -47,7 +47,6 @@
 #define __SIM_CXX_CONFIG_INI_HH__
 
 #include "base/inifile.hh"
-#include "base/str.hh"
 #include "sim/cxx_config.hh"
 
 /** CxxConfigManager interface for using .ini files */

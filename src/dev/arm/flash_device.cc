@@ -54,6 +54,7 @@
 
 #include "dev/arm/flash_device.hh"
 
+#include "base/trace.hh"
 #include "debug/Drain.hh"
 
 /**

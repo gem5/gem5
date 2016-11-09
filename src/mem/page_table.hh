@@ -42,13 +42,14 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/tlb.hh"
+#include "base/intmath.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "mem/request.hh"
 #include "sim/serialize.hh"
-#include "sim/system.hh"
 
 class ThreadContext;
+class System;
 
 /**
  * Declaration of base class for page table

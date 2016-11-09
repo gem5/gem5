@@ -35,6 +35,7 @@
 #include "params/PowerInterrupts.hh"
 #include "sim/sim_object.hh"
 
+class BaseCPU;
 class ThreadContext;
 
 namespace PowerISA {

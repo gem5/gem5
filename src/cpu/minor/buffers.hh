@@ -50,6 +50,7 @@
 #include <queue>
 #include <sstream>
 
+#include "base/misc.hh"
 #include "cpu/minor/trace.hh"
 #include "cpu/activity.hh"
 #include "cpu/timebuf.hh"

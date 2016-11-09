@@ -45,11 +45,11 @@
 #include "base/statistics.hh"
 #include "params/ThermalDomain.hh"
 #include "sim/power/thermal_entity.hh"
-#include "sim/probe/probe.hh"
 #include "sim/sim_object.hh"
-#include "sim/sub_system.hh"
 
+class SubSystem;
 class ThermalNode;
+template <class T> class ProbePointArg;
 
 /**
  * A ThermalDomain is used to group objects under that operate under

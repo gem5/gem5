@@ -39,6 +39,9 @@
 
 #include "sim/ticked_object.hh"
 
+#include "params/TickedObject.hh"
+#include "sim/clocked_object.hh"
+
 Ticked::Ticked(ClockedObject &object_,
     Stats::Scalar *imported_num_cycles,
     Event::Priority priority) :

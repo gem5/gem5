@@ -42,7 +42,7 @@
 #include "base/statistics.hh"
 #include "params/PowerModel.hh"
 #include "params/PowerModelState.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 #include "sim/sub_system.hh"
 
 PowerModelState::PowerModelState(const Params *p)

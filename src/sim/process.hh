@@ -34,6 +34,7 @@
 #define __PROCESS_HH__
 
 #include <array>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -44,15 +45,16 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/fd_entry.hh"
 #include "sim/sim_object.hh"
-#include "sim/syscall_return.hh"
 
-class PageTable;
-struct ProcessParams;
 struct LiveProcessParams;
+struct ProcessParams;
+
+class EmulatedDriver;
+class PageTableBase;
 class SyscallDesc;
+class SyscallReturn;
 class System;
 class ThreadContext;
-class EmulatedDriver;
 
 template<class IntType>
 struct AuxVector

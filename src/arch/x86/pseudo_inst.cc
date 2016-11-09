@@ -31,9 +31,10 @@
 #include "arch/x86/pseudo_inst.hh"
 
 #include "arch/x86/system.hh"
+#include "cpu/thread_context.hh"
 #include "debug/PseudoInst.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
-#include "sim/system.hh"
 
 using namespace X86ISA;
 

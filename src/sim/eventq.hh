@@ -47,7 +47,6 @@
 #include <string>
 
 #include "base/flags.hh"
-#include "base/misc.hh"
 #include "base/types.hh"
 #include "debug/Event.hh"
 #include "sim/serialize.hh"
