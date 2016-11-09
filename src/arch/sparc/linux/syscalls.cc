@@ -29,6 +29,7 @@
  */
 
 #include "arch/sparc/linux/process.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
 class LiveProcess;

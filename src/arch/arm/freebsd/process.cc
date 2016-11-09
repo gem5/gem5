@@ -45,6 +45,7 @@
 #include "cpu/thread_context.hh"
 #include "kern/freebsd/freebsd.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 

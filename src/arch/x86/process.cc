@@ -58,7 +58,7 @@
 #include "mem/multi_level_page_table.hh"
 #include "mem/page_table.hh"
 #include "sim/process_impl.hh"
-#include "sim/syscall_emul.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
 using namespace std;

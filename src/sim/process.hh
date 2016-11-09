@@ -44,7 +44,7 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/fd_entry.hh"
 #include "sim/sim_object.hh"
-#include "sim/syscallreturn.hh"
+#include "sim/syscall_return.hh"
 
 class PageTable;
 struct ProcessParams;

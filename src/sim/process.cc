@@ -66,7 +66,7 @@
 #include "sim/debug.hh"
 #include "sim/process_impl.hh"
 #include "sim/stats.hh"
-#include "sim/syscall_emul.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
 #if THE_ISA == ALPHA_ISA

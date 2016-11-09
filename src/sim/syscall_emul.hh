@@ -79,63 +79,16 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/SyscallBase.hh"
-#include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 #include "sim/emul_driver.hh"
 #include "sim/process.hh"
+#include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_emul_buf.hh"
-#include "sim/syscallreturn.hh"
+#include "sim/syscall_return.hh"
 #include "sim/system.hh"
 
-// This wrapper macro helps out with readability a bit. FLAGEXT specifies
-// the verbosity and FMT is the message to be appended to the syscall
-// header information. The syscall header information contains the cpuid
-// and thread id.
-#define DPRINTF_SYSCALL(FLAGEXT, FMT, ...)                                  \
-    DPRINTFS(Syscall##FLAGEXT, tc->getCpuPtr(), "T%d : syscall " FMT,       \
-             tc->threadId(), __VA_ARGS__)
-
-///
-/// System call descriptor.
-///
-class SyscallDesc {
-
-  public:
-
-    /// Typedef for target syscall handler functions.
-    typedef SyscallReturn (*FuncPtr)(SyscallDesc *, int num,
-                           LiveProcess *, ThreadContext *);
-
-    const char *name;   //!< Syscall name (e.g., "open").
-    FuncPtr funcPtr;    //!< Pointer to emulation function.
-    int flags;          //!< Flags (see Flags enum).
-    bool warned;        //!< Have we warned about unimplemented syscall?
-
-    /// Flag values for controlling syscall behavior.
-    enum Flags {
-        /// Don't set return regs according to funcPtr return value.
-        /// Used for syscalls with non-standard return conventions
-        /// that explicitly set the ThreadContext regs (e.g.,
-        /// sigreturn).
-        SuppressReturnValue = 1,
-        WarnOnce = 2
-    };
-
-    /// Constructor.
-    SyscallDesc(const char *_name, FuncPtr _funcPtr, int _flags = 0)
-        : name(_name), funcPtr(_funcPtr), flags(_flags), warned(false)
-    {
-    }
-
-    /// Emulate the syscall.  Public interface for calling through funcPtr.
-    void doSyscall(int callnum, LiveProcess *proc, ThreadContext *tc);
-
-    /// Is the WarnOnce flag set?
-    bool warnOnce() const {  return (flags & WarnOnce); }
-};
-
+class SyscallDesc;
 
 //////////////////////////////////////////////////////////////////////
 //

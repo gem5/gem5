@@ -46,6 +46,7 @@
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 #include "sim/process.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
 using namespace std;
@@ -159,7 +160,7 @@ setThreadArea32Func(SyscallDesc *desc, int callnum,
         return -EFAULT;
 
     if (!gdt.copyIn(tc->getMemProxy()))
-        panic("Failed to copy in GDT for %s.\n", desc->name);
+        panic("Failed to copy in GDT for %s.\n", desc->name());
 
     if (userDesc->entry_number == (uint32_t)(-1)) {
         // Find a free TLS entry.
@@ -213,7 +214,7 @@ setThreadArea32Func(SyscallDesc *desc, int callnum,
     if (!userDesc.copyOut(tc->getMemProxy()))
         return -EFAULT;
     if (!gdt.copyOut(tc->getMemProxy()))
-        panic("Failed to copy out GDT for %s.\n", desc->name);
+        panic("Failed to copy out GDT for %s.\n", desc->name());
 
     return 0;
 }
