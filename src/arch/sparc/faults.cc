@@ -630,7 +630,7 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
     } else {
         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
         tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
-                p->M5_pid /*context id*/, false, entry.pte);
+                p->_pid /*context id*/, false, entry.pte);
     }
 }
 
@@ -654,7 +654,7 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     } else {
         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
         tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
-                p->M5_pid /*context id*/, false, entry.pte);
+                p->_pid /*context id*/, false, entry.pte);
     }
 }
 

@@ -43,6 +43,13 @@ class Process(SimObject):
     kvmInSE = Param.Bool('false', 'initialize the process for KvmCPU in SE')
     max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
 
+    uid = Param.Int(100, 'user id')
+    euid = Param.Int(100, 'effective user id')
+    gid = Param.Int(100, 'group id')
+    egid = Param.Int(100, 'effective group id')
+    pid = Param.Int(100, 'process id')
+    ppid = Param.Int(99, 'parent process id')
+
     @classmethod
     def export_methods(cls, code):
         code('bool map(Addr vaddr, Addr paddr, int size, bool cacheable=true);')
@@ -60,12 +67,6 @@ class LiveProcess(Process):
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String([], "environment settings")
     cwd = Param.String('', "current working directory")
-    uid = Param.Int(100, 'user id')
-    euid = Param.Int(100, 'effective user id')
-    gid = Param.Int(100, 'group id')
-    egid = Param.Int(100, 'effective group id')
-    pid = Param.Int(100, 'process id')
-    ppid = Param.Int(99, 'parent process id')
     simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
     drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
 

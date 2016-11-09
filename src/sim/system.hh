@@ -248,15 +248,7 @@ class System : public MemObject
      */
     Addr loadAddrOffset;
 
-  protected:
-    uint64_t nextPID;
-
   public:
-    uint64_t allocatePID()
-    {
-        return nextPID++;
-    }
-
     /** Get a pointer to access the physical memory of the system */
     PhysicalMemory& getPhysMem() { return physmem; }
 

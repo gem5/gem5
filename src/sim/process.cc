@@ -131,12 +131,11 @@ Process::Process(ProcessParams * params)
       brk_point(0), stack_base(0), stack_size(0), stack_min(0),
       max_stack_size(params->max_stack_size),
       next_thread_stack_base(0),
-      M5_pid(system->allocatePID()),
       useArchPT(params->useArchPT),
       kvmInSE(params->kvmInSE),
       pTable(useArchPT ?
-        static_cast<PageTableBase *>(new ArchPageTable(name(), M5_pid, system)) :
-        static_cast<PageTableBase *>(new FuncPageTable(name(), M5_pid)) ),
+        static_cast<PageTableBase *>(new ArchPageTable(name(), _pid, system)) :
+        static_cast<PageTableBase *>(new FuncPageTable(name(), _pid))),
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always),
       fd_array(make_shared<array<FDEntry, NUM_FDS>>()),
@@ -147,7 +146,10 @@ Process::Process(ProcessParams * params)
             {"cout",   STDOUT_FILENO},
             {"stdout", STDOUT_FILENO},
             {"cerr",   STDERR_FILENO},
-            {"stderr", STDERR_FILENO}}
+            {"stderr", STDERR_FILENO}},
+      _uid(params->uid), _euid(params->euid),
+      _gid(params->gid), _egid(params->egid),
+      _pid(params->pid), _ppid(params->ppid)
 {
     int sim_fd;
     std::map<string,int>::iterator it;
@@ -457,7 +459,6 @@ Process::serialize(CheckpointOut &cp) const
     for (int x = 0; x < fd_array->size(); x++) {
         (*fd_array)[x].serializeSection(cp, csprintf("FDEntry%d", x));
     }
-    SERIALIZE_SCALAR(M5_pid);
 
 }
 
@@ -478,7 +479,6 @@ Process::unserialize(CheckpointIn &cp)
         fde->unserializeSection(cp, csprintf("FDEntry%d", x));
     }
     fixFileOffsets();
-    UNSERIALIZE_OPT_SCALAR(M5_pid);
     // The above returns a bool so that you could do something if you don't
     // find the param in the checkpoint if you wanted to, like set a default
     // but in this case we'll just stick with the instantiated value if not
@@ -506,9 +506,6 @@ LiveProcess::LiveProcess(LiveProcessParams *params, ObjectFile *_objFile)
     : Process(params), objFile(_objFile),
       argv(params->cmd), envp(params->env), cwd(params->cwd),
       executable(params->executable),
-      __uid(params->uid), __euid(params->euid),
-      __gid(params->gid), __egid(params->egid),
-      __pid(params->pid), __ppid(params->ppid),
       drivers(params->drivers)
 {
 

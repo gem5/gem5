@@ -132,10 +132,6 @@ class Process : public SimObject
 
   public:
 
-    //This id is assigned by m5 and is used to keep process' tlb entries
-    //separated.
-    uint64_t M5_pid;
-
     // flag for using architecture specific page table
     bool useArchPT;
     // running KvmCPU in SE mode requires special initialization
@@ -231,6 +227,18 @@ class Process : public SimObject
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+  public:
+    // Id of the owner of the process
+    uint64_t _uid;
+    uint64_t _euid;
+    uint64_t _gid;
+    uint64_t _egid;
+
+    // pid of the process and it's parent
+    uint64_t _pid;
+    uint64_t _ppid;
+
 };
 
 //
@@ -247,16 +255,6 @@ class LiveProcess : public Process
     std::string executable;
 
     LiveProcess(LiveProcessParams *params, ObjectFile *objFile);
-
-    // Id of the owner of the process
-    uint64_t __uid;
-    uint64_t __euid;
-    uint64_t __gid;
-    uint64_t __egid;
-
-    // pid of the process and it's parent
-    uint64_t __pid;
-    uint64_t __ppid;
 
     // Emulated drivers available to this process
     std::vector<EmulatedDriver *> drivers;
@@ -293,12 +291,12 @@ class LiveProcess : public Process
         M5_AT_VECTOR_SIZE = 44
     };
 
-    inline uint64_t uid() {return __uid;}
-    inline uint64_t euid() {return __euid;}
-    inline uint64_t gid() {return __gid;}
-    inline uint64_t egid() {return __egid;}
-    inline uint64_t pid() {return __pid;}
-    inline uint64_t ppid() {return __ppid;}
+    inline uint64_t uid() { return _uid; }
+    inline uint64_t euid() { return _euid; }
+    inline uint64_t gid() { return _gid; }
+    inline uint64_t egid() { return _egid; }
+    inline uint64_t pid() { return _pid; }
+    inline uint64_t ppid() { return _ppid; }
 
     // provide program name for debug messages
     virtual const char *progName() const { return executable.c_str(); }

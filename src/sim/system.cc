@@ -90,7 +90,6 @@ System::System(Params *p)
       kernel(nullptr),
       loadAddrMask(p->load_addr_mask),
       loadAddrOffset(p->load_offset),
-      nextPID(0),
       physmem(name() + ".physmem", p->memories, p->mmap_using_noreserve),
       memoryMode(p->mem_mode),
       _cacheLineSize(p->cache_line_size),
@@ -371,7 +370,6 @@ System::serialize(CheckpointOut &cp) const
     if (FullSystem)
         kernelSymtab->serialize("kernel_symtab", cp);
     SERIALIZE_SCALAR(pagePtr);
-    SERIALIZE_SCALAR(nextPID);
     serializeSymtab(cp);
 
     // also serialize the memories in the system
@@ -385,7 +383,6 @@ System::unserialize(CheckpointIn &cp)
     if (FullSystem)
         kernelSymtab->unserialize("kernel_symtab", cp);
     UNSERIALIZE_SCALAR(pagePtr);
-    UNSERIALIZE_SCALAR(nextPID);
     unserializeSymtab(cp);
 
     // also unserialize the memories in the system

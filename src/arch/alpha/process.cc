@@ -179,7 +179,7 @@ void
 AlphaLiveProcess::setupASNReg()
 {
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    tc->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
+    tc->setMiscRegNoEffect(IPR_DTB_ASN, _pid << 57);
 }
 
 
@@ -187,7 +187,7 @@ void
 AlphaLiveProcess::loadState(CheckpointIn &cp)
 {
     LiveProcess::loadState(cp);
-    // need to set up ASN after unserialization since M5_pid value may
+    // need to set up ASN after unserialization since _pid value may
     // come from checkpoint
     setupASNReg();
 }
