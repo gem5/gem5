@@ -40,9 +40,8 @@
 #include "sim/process.hh"
 
 class ObjectFile;
-class System;
 
-class SparcLiveProcess : public LiveProcess
+class SparcProcess : public Process
 {
   protected:
 
@@ -51,8 +50,8 @@ class SparcLiveProcess : public LiveProcess
     // The locations of the fill and spill handlers
     Addr fillStart, spillStart;
 
-    SparcLiveProcess(LiveProcessParams * params,
-            ObjectFile *objFile, Addr _StackBias);
+    SparcProcess(ProcessParams * params, ObjectFile *objFile,
+                 Addr _StackBias);
 
     void initState();
 
@@ -71,12 +70,12 @@ class SparcLiveProcess : public LiveProcess
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
-class Sparc32LiveProcess : public SparcLiveProcess
+class Sparc32Process : public SparcProcess
 {
   protected:
 
-    Sparc32LiveProcess(LiveProcessParams * params, ObjectFile *objFile) :
-            SparcLiveProcess(params, objFile, 0)
+    Sparc32Process(ProcessParams * params, ObjectFile *objFile)
+        : SparcProcess(params, objFile, 0)
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
@@ -96,17 +95,17 @@ class Sparc32LiveProcess : public SparcLiveProcess
 
     SparcISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
+    using Process::getSyscallArg;
 
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
-class Sparc64LiveProcess : public SparcLiveProcess
+class Sparc64Process : public SparcProcess
 {
   protected:
 
-    Sparc64LiveProcess(LiveProcessParams * params, ObjectFile *objFile) :
-            SparcLiveProcess(params, objFile, 2047)
+    Sparc64Process(ProcessParams * params, ObjectFile *objFile)
+        : SparcProcess(params, objFile, 2047)
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
@@ -126,7 +125,7 @@ class Sparc64LiveProcess : public SparcLiveProcess
 
     SparcISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
+    using Process::getSyscallArg;
 
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };

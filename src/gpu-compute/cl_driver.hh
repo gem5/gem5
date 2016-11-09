@@ -43,7 +43,7 @@
 
 class GpuDispatcher;
 class HsaCode;
-class LiveProcess;
+class Process;
 class ThreadContext;
 
 struct ClDriverParams;
@@ -53,8 +53,8 @@ class ClDriver final : public EmulatedDriver
   public:
     ClDriver(ClDriverParams *p);
     void handshake(GpuDispatcher *_dispatcher);
-    int open(LiveProcess *p, ThreadContext *tc, int mode, int flags);
-    int ioctl(LiveProcess *p, ThreadContext *tc, unsigned req);
+    int open(Process *p, ThreadContext *tc, int mode, int flags);
+    int ioctl(Process *p, ThreadContext *tc, unsigned req);
     const char* codeOffToKernelName(uint64_t code_ptr);
 
   private:

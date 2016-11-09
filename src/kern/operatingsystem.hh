@@ -35,7 +35,7 @@
 
 #include <string>
 
-class LiveProcess;
+class Process;
 class ThreadContext;
 
 /// This struct is used to build target-OS-dependent tables that
@@ -114,7 +114,8 @@ class OperatingSystem {
         int64_t ru_nivcsw;              //!< involuntary "
     } rusage;
 
-    static int openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc);
+    static int openSpecialFile(std::string path, Process *process,
+                               ThreadContext *tc);
 
 };  // class OperatingSystem
 

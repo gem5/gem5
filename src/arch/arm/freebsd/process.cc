@@ -53,7 +53,7 @@ using namespace std;
 using namespace ArmISA;
 
 static SyscallReturn
-issetugidFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+issetugidFunc(SyscallDesc *desc, int callnum, Process *process,
               ThreadContext *tc)
 {
 
@@ -61,7 +61,7 @@ issetugidFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 static SyscallReturn
-sysctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+sysctlFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
     int index = 0;
@@ -1206,9 +1206,9 @@ static SyscallDesc syscallDescs64[] = {
     /*  547 */ SyscallDesc("unused#547", unimplementedFunc),
 };
 
-ArmFreebsdProcess32::ArmFreebsdProcess32(LiveProcessParams * params,
+ArmFreebsdProcess32::ArmFreebsdProcess32(ProcessParams * params,
         ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess32(params, objFile, _arch)
+    : ArmProcess32(params, objFile, _arch)
 {
     SyscallTable table;
 
@@ -1218,9 +1218,9 @@ ArmFreebsdProcess32::ArmFreebsdProcess32(LiveProcessParams * params,
     syscallTables.push_back(table);
 }
 
-ArmFreebsdProcess64::ArmFreebsdProcess64(LiveProcessParams * params,
+ArmFreebsdProcess64::ArmFreebsdProcess64(ProcessParams * params,
         ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess64(params, objFile, _arch)
+    : ArmProcess64(params, objFile, _arch)
 {
     SyscallTable table;
 
@@ -1269,13 +1269,13 @@ ArmFreebsdProcess64::getDesc(int callnum)
 void
 ArmFreebsdProcess32::initState()
 {
-    ArmLiveProcess32::initState();
+    ArmProcess32::initState();
     // The 32 bit equivalent of the comm page would be set up here.
 }
 
 void
 ArmFreebsdProcess64::initState()
 {
-    ArmLiveProcess64::initState();
+    ArmProcess64::initState();
     // The 64 bit equivalent of the comm page would be set up here.
 }

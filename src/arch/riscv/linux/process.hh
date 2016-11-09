@@ -41,11 +41,11 @@
 #include "sim/eventq.hh"
 
 /// A process with emulated Riscv/Linux syscalls.
-class RiscvLinuxProcess : public RiscvLiveProcess
+class RiscvLinuxProcess : public RiscvProcess
 {
   public:
     /// Constructor.
-    RiscvLinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    RiscvLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
     virtual SyscallDesc* getDesc(int callnum);
 

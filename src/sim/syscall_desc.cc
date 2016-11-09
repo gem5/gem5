@@ -42,7 +42,7 @@
 #include "sim/syscall_return.hh"
 
 void
-SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
+SyscallDesc::doSyscall(int callnum, Process *process, ThreadContext *tc)
 {
     TheISA::IntReg arg[6] M5_VAR_USED;
 

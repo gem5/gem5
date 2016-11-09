@@ -49,7 +49,7 @@ using namespace PowerISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
     int index = 0;
@@ -415,10 +415,10 @@ SyscallDesc PowerLinuxProcess::syscallDescs[] = {
     /* 346 */ SyscallDesc("epoll_pwait", unimplementedFunc),
 };
 
-PowerLinuxProcess::PowerLinuxProcess(LiveProcessParams * params,
+PowerLinuxProcess::PowerLinuxProcess(ProcessParams * params,
         ObjectFile *objFile)
-    : PowerLiveProcess(params, objFile),
-     Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
+    : PowerProcess(params, objFile),
+      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
 }
 
@@ -434,7 +434,7 @@ PowerLinuxProcess::getDesc(int callnum)
 void
 PowerLinuxProcess::initState()
 {
-    PowerLiveProcess::initState();
+    PowerProcess::initState();
 }
 
 PowerISA::IntReg

@@ -46,10 +46,10 @@
 #include "sim/fd_entry.hh"
 #include "sim/sim_object.hh"
 
-struct LiveProcessParams;
 struct ProcessParams;
 
 class EmulatedDriver;
+class ObjectFile;
 class PageTableBase;
 class SyscallDesc;
 class SyscallReturn;
@@ -170,9 +170,6 @@ class Process : public SimObject
     // Find a free context to use
     ThreadContext *findFreeContext();
 
-    // provide program name for debug messages
-    virtual const char *progName() const { return "<unknown>"; }
-
     // generate new target fd for sim_fd
     int allocFD(int sim_fd, const std::string& filename, int flags, int mode,
                 bool pipe);
@@ -202,7 +199,6 @@ class Process : public SimObject
     // set the source of this read pipe for a checkpoint resume
     void setReadPipeSource(int read_pipe_fd, int source_fd);
 
-    virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
 
     void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
 
@@ -228,6 +224,15 @@ class Process : public SimObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
+  protected:
+    ObjectFile *objFile;
+    std::vector<std::string> argv;
+    std::vector<std::string> envp;
+    std::string cwd;
+    std::string executable;
+
+    Process(ProcessParams *params, ObjectFile *obj_file);
+
   public:
     // Id of the owner of the process
     uint64_t _uid;
@@ -239,27 +244,8 @@ class Process : public SimObject
     uint64_t _pid;
     uint64_t _ppid;
 
-};
-
-//
-// "Live" process with system calls redirected to host system
-//
-class ObjectFile;
-class LiveProcess : public Process
-{
-  protected:
-    ObjectFile *objFile;
-    std::vector<std::string> argv;
-    std::vector<std::string> envp;
-    std::string cwd;
-    std::string executable;
-
-    LiveProcess(LiveProcessParams *params, ObjectFile *objFile);
-
     // Emulated drivers available to this process
     std::vector<EmulatedDriver *> drivers;
-
-  public:
 
     enum AuxiliaryVectorType {
         M5_AT_NULL = 0,
@@ -299,7 +285,7 @@ class LiveProcess : public Process
     inline uint64_t ppid() { return _ppid; }
 
     // provide program name for debug messages
-    virtual const char *progName() const { return executable.c_str(); }
+    const char *progName() const { return executable.c_str(); }
 
     std::string
     fullPath(const std::string &filename)
@@ -317,7 +303,7 @@ class LiveProcess : public Process
 
     std::string getcwd() const { return cwd; }
 
-    virtual void syscall(int64_t callnum, ThreadContext *tc);
+    void syscall(int64_t callnum, ThreadContext *tc);
 
     virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i) = 0;
     virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
@@ -345,12 +331,6 @@ class LiveProcess : public Process
 
     Addr getBias();
     Addr getStartPC();
-
-    // this function is used to create the LiveProcess object, since
-    // we can't tell which subclass of LiveProcess to use until we
-    // open and look at the object file.
-    static LiveProcess *create(LiveProcessParams *params);
 };
-
 
 #endif // __PROCESS_HH__

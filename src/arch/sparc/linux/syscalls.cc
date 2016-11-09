@@ -32,15 +32,15 @@
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
 
-class LiveProcess;
+class Process;
 class ThreadContext;
 
 namespace SparcISA {
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-        ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
+          ThreadContext *tc)
 {
     int index = 0;
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
@@ -58,7 +58,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 
 SyscallReturn
-getresuidFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+getresuidFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     const IntReg id = htog(100);
     int index = 0;

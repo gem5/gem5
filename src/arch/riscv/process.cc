@@ -50,8 +50,8 @@
 using namespace std;
 using namespace RiscvISA;
 
-RiscvLiveProcess::RiscvLiveProcess(LiveProcessParams * params,
-    ObjectFile *objFile) : LiveProcess(params, objFile)
+RiscvProcess::RiscvProcess(ProcessParams * params,
+    ObjectFile *objFile) : Process(params, objFile)
 {
     // Set up stack. On RISC-V, stack starts at the top of kuseg
     // user address space. RISC-V stack grows down from here
@@ -68,15 +68,15 @@ RiscvLiveProcess::RiscvLiveProcess(LiveProcessParams * params,
 }
 
 void
-RiscvLiveProcess::initState()
+RiscvProcess::initState()
 {
-    LiveProcess::initState();
+    Process::initState();
 
     argsInit<uint64_t>(PageBytes);
 }
 
 template<class IntType> void
-RiscvLiveProcess::argsInit(int pageSize)
+RiscvProcess::argsInit(int pageSize)
 {
     updateBias();
 
@@ -215,7 +215,7 @@ RiscvLiveProcess::argsInit(int pageSize)
 }
 
 RiscvISA::IntReg
-RiscvLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+RiscvProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     // RISC-V only has four system call argument registers by convention, so
     // if a larger index is requested return 0
@@ -227,13 +227,13 @@ RiscvLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-RiscvLiveProcess::setSyscallArg(ThreadContext *tc, int i, RiscvISA::IntReg val)
+RiscvProcess::setSyscallArg(ThreadContext *tc, int i, RiscvISA::IntReg val)
 {
     tc->setIntReg(SyscallArgumentRegs[i], val);
 }
 
 void
-RiscvLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
+RiscvProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     if (sysret.successful()) {
         // no error

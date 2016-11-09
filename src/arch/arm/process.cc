@@ -59,15 +59,15 @@
 using namespace std;
 using namespace ArmISA;
 
-ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
-                               ObjectFile::Arch _arch)
-    : LiveProcess(params, objFile), arch(_arch)
+ArmProcess::ArmProcess(ProcessParams *params, ObjectFile *objFile,
+                       ObjectFile::Arch _arch)
+    : Process(params, objFile), arch(_arch)
 {
 }
 
-ArmLiveProcess32::ArmLiveProcess32(LiveProcessParams *params,
-                                   ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess(params, objFile, _arch)
+ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
+                           ObjectFile::Arch _arch)
+    : ArmProcess(params, objFile, _arch)
 {
     stack_base = 0xbf000000L;
 
@@ -82,9 +82,9 @@ ArmLiveProcess32::ArmLiveProcess32(LiveProcessParams *params,
     mmap_end = 0x40000000L;
 }
 
-ArmLiveProcess64::ArmLiveProcess64(LiveProcessParams *params,
-                                   ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess(params, objFile, _arch)
+ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
+                           ObjectFile::Arch _arch)
+    : ArmProcess(params, objFile, _arch)
 {
     stack_base = 0x7fffff0000L;
 
@@ -100,9 +100,9 @@ ArmLiveProcess64::ArmLiveProcess64(LiveProcessParams *params,
 }
 
 void
-ArmLiveProcess32::initState()
+ArmProcess32::initState()
 {
-    LiveProcess::initState();
+    Process::initState();
     argsInit<uint32_t>(PageBytes, INTREG_SP);
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
@@ -119,9 +119,9 @@ ArmLiveProcess32::initState()
 }
 
 void
-ArmLiveProcess64::initState()
+ArmProcess64::initState()
 {
-    LiveProcess::initState();
+    Process::initState();
     argsInit<uint64_t>(PageBytes, INTREG_SP0);
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
@@ -142,7 +142,7 @@ ArmLiveProcess64::initState()
 
 template <class IntType>
 void
-ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
+ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 {
     int intSize = sizeof(IntType);
 
@@ -405,21 +405,21 @@ ArmLiveProcess::argsInit(int pageSize, IntRegIndex spIndex)
 }
 
 ArmISA::IntReg
-ArmLiveProcess32::getSyscallArg(ThreadContext *tc, int &i)
+ArmProcess32::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
     return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 ArmISA::IntReg
-ArmLiveProcess64::getSyscallArg(ThreadContext *tc, int &i)
+ArmProcess64::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 8);
     return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 ArmISA::IntReg
-ArmLiveProcess32::getSyscallArg(ThreadContext *tc, int &i, int width)
+ArmProcess32::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     assert(width == 32 || width == 64);
     if (width == 32)
@@ -438,29 +438,28 @@ ArmLiveProcess32::getSyscallArg(ThreadContext *tc, int &i, int width)
 }
 
 ArmISA::IntReg
-ArmLiveProcess64::getSyscallArg(ThreadContext *tc, int &i, int width)
+ArmProcess64::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     return getSyscallArg(tc, i);
 }
 
 
 void
-ArmLiveProcess32::setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val)
+ArmProcess32::setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val)
 {
     assert(i < 6);
     tc->setIntReg(ArgumentReg0 + i, val);
 }
 
 void
-ArmLiveProcess64::setSyscallArg(ThreadContext *tc,
-        int i, ArmISA::IntReg val)
+ArmProcess64::setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val)
 {
     assert(i < 8);
     tc->setIntReg(ArgumentReg0 + i, val);
 }
 
 void
-ArmLiveProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
+ArmProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
 
     if (objFile->getOpSys() == ObjectFile::FreeBSD) {
@@ -477,7 +476,7 @@ ArmLiveProcess32::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 }
 
 void
-ArmLiveProcess64::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
+ArmProcess64::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
 
     if (objFile->getOpSys() == ObjectFile::FreeBSD) {

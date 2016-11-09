@@ -30,4 +30,4 @@ m5.util.addToPath('../configs/common')
 from cpu2000 import vortex
 
 workload = vortex(isa, opsys, 'smred')
-root.system.cpu[0].workload = workload.makeLiveProcess()
+root.system.cpu[0].workload = workload.makeProcess()

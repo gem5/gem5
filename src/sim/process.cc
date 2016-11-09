@@ -61,7 +61,6 @@
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/se_translating_port_proxy.hh"
-#include "params/LiveProcess.hh"
 #include "params/Process.hh"
 #include "sim/emul_driver.hh"
 #include "sim/syscall_desc.hh"
@@ -126,7 +125,7 @@ openOutputFile(const string &filename)
     return openFile(filename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
 }
 
-Process::Process(ProcessParams * params)
+Process::Process(ProcessParams * params, ObjectFile * obj_file)
     : SimObject(params), system(params->system),
       brk_point(0), stack_base(0), stack_size(0), stack_min(0),
       max_stack_size(params->max_stack_size),
@@ -148,9 +147,13 @@ Process::Process(ProcessParams * params)
             {"stdout", STDOUT_FILENO},
             {"cerr",   STDERR_FILENO},
             {"stderr", STDERR_FILENO}},
+      objFile(obj_file),
+      argv(params->cmd), envp(params->env), cwd(params->cwd),
+      executable(params->executable),
       _uid(params->uid), _euid(params->euid),
       _gid(params->gid), _egid(params->egid),
-      _pid(params->pid), _ppid(params->ppid)
+      _pid(params->pid), _ppid(params->ppid),
+      drivers(params->drivers)
 {
     int sim_fd;
     std::map<string,int>::iterator it;
@@ -188,6 +191,19 @@ Process::Process(ProcessParams * params)
     mmap_end = 0;
     nxm_start = nxm_end = 0;
     // other parameters will be initialized when the program is loaded
+
+    // load up symbols, if any... these may be used for debugging or
+    // profiling.
+    if (!debugSymbolTable) {
+        debugSymbolTable = new SymbolTable();
+        if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
+            !objFile->loadLocalSymbols(debugSymbolTable) ||
+            !objFile->loadWeakSymbols(debugSymbolTable)) {
+            // didn't load any symbols
+            delete debugSymbolTable;
+            debugSymbolTable = NULL;
+        }
+    }
 }
 
 
@@ -496,36 +512,8 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 }
 
 
-////////////////////////////////////////////////////////////////////////
-//
-// LiveProcess member definitions
-//
-////////////////////////////////////////////////////////////////////////
-
-
-LiveProcess::LiveProcess(LiveProcessParams *params, ObjectFile *_objFile)
-    : Process(params), objFile(_objFile),
-      argv(params->cmd), envp(params->env), cwd(params->cwd),
-      executable(params->executable),
-      drivers(params->drivers)
-{
-
-    // load up symbols, if any... these may be used for debugging or
-    // profiling.
-    if (!debugSymbolTable) {
-        debugSymbolTable = new SymbolTable();
-        if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
-            !objFile->loadLocalSymbols(debugSymbolTable) ||
-            !objFile->loadWeakSymbols(debugSymbolTable)) {
-            // didn't load any symbols
-            delete debugSymbolTable;
-            debugSymbolTable = NULL;
-        }
-    }
-}
-
 void
-LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
+Process::syscall(int64_t callnum, ThreadContext *tc)
 {
     num_syscalls++;
 
@@ -537,14 +525,14 @@ LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
 }
 
 IntReg
-LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+Process::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     return getSyscallArg(tc, i);
 }
 
 
 EmulatedDriver *
-LiveProcess::findDriver(std::string filename)
+Process::findDriver(std::string filename)
 {
     for (EmulatedDriver *d : drivers) {
         if (d->match(filename))
@@ -555,7 +543,7 @@ LiveProcess::findDriver(std::string filename)
 }
 
 void
-LiveProcess::updateBias()
+Process::updateBias()
 {
     ObjectFile *interp = objFile->getInterpreter();
 
@@ -580,14 +568,14 @@ LiveProcess::updateBias()
 
 
 ObjectFile *
-LiveProcess::getInterpreter()
+Process::getInterpreter()
 {
     return objFile->getInterpreter();
 }
 
 
 Addr
-LiveProcess::getBias()
+Process::getBias()
 {
     ObjectFile *interp = getInterpreter();
 
@@ -596,7 +584,7 @@ LiveProcess::getBias()
 
 
 Addr
-LiveProcess::getStartPC()
+Process::getStartPC()
 {
     ObjectFile *interp = getInterpreter();
 
@@ -604,74 +592,74 @@ LiveProcess::getStartPC()
 }
 
 
-LiveProcess *
-LiveProcess::create(LiveProcessParams * params)
+Process *
+ProcessParams::create()
 {
-    LiveProcess *process = NULL;
+    Process *process = NULL;
 
     // If not specified, set the executable parameter equal to the
     // simulated system's zeroth command line parameter
-    if (params->executable == "") {
-        params->executable = params->cmd[0];
+    if (executable == "") {
+        executable = cmd[0];
     }
 
-    ObjectFile *objFile = createObjectFile(params->executable);
-    if (objFile == NULL) {
-        fatal("Can't load object file %s", params->executable);
+    ObjectFile *obj_file = createObjectFile(executable);
+    if (obj_file == NULL) {
+        fatal("Can't load object file %s", executable);
     }
 
 #if THE_ISA == ALPHA_ISA
-    if (objFile->getArch() != ObjectFile::Alpha)
+    if (obj_file->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
 
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        process = new AlphaLinuxProcess(params, objFile);
+        process = new AlphaLinuxProcess(this, obj_file);
         break;
 
       default:
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == SPARC_ISA
-    if (objFile->getArch() != ObjectFile::SPARC64 &&
-        objFile->getArch() != ObjectFile::SPARC32)
+    if (obj_file->getArch() != ObjectFile::SPARC64 &&
+        obj_file->getArch() != ObjectFile::SPARC32)
         fatal("Object file architecture does not match compiled ISA (SPARC).");
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        if (objFile->getArch() == ObjectFile::SPARC64) {
-            process = new Sparc64LinuxProcess(params, objFile);
+        if (obj_file->getArch() == ObjectFile::SPARC64) {
+            process = new Sparc64LinuxProcess(this, obj_file);
         } else {
-            process = new Sparc32LinuxProcess(params, objFile);
+            process = new Sparc32LinuxProcess(this, obj_file);
         }
         break;
 
 
       case ObjectFile::Solaris:
-        process = new SparcSolarisProcess(params, objFile);
+        process = new SparcSolarisProcess(this, obj_file);
         break;
 
       default:
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == X86_ISA
-    if (objFile->getArch() != ObjectFile::X86_64 &&
-        objFile->getArch() != ObjectFile::I386)
+    if (obj_file->getArch() != ObjectFile::X86_64 &&
+        obj_file->getArch() != ObjectFile::I386)
         fatal("Object file architecture does not match compiled ISA (x86).");
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        if (objFile->getArch() == ObjectFile::X86_64) {
-            process = new X86_64LinuxProcess(params, objFile);
+        if (obj_file->getArch() == ObjectFile::X86_64) {
+            process = new X86_64LinuxProcess(this, obj_file);
         } else {
-            process = new I386LinuxProcess(params, objFile);
+            process = new I386LinuxProcess(this, obj_file);
         }
         break;
 
@@ -679,44 +667,44 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == MIPS_ISA
-    if (objFile->getArch() != ObjectFile::Mips)
+    if (obj_file->getArch() != ObjectFile::Mips)
         fatal("Object file architecture does not match compiled ISA (MIPS).");
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        process = new MipsLinuxProcess(params, objFile);
+        process = new MipsLinuxProcess(this, obj_file);
         break;
 
       default:
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == ARM_ISA
-    ObjectFile::Arch arch = objFile->getArch();
+    ObjectFile::Arch arch = obj_file->getArch();
     if (arch != ObjectFile::Arm && arch != ObjectFile::Thumb &&
         arch != ObjectFile::Arm64)
         fatal("Object file architecture does not match compiled ISA (ARM).");
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
         if (arch == ObjectFile::Arm64) {
-            process = new ArmLinuxProcess64(params, objFile,
-                                            objFile->getArch());
+            process = new ArmLinuxProcess64(this, obj_file,
+                                            obj_file->getArch());
         } else {
-            process = new ArmLinuxProcess32(params, objFile,
-                                            objFile->getArch());
+            process = new ArmLinuxProcess32(this, obj_file,
+                                            obj_file->getArch());
         }
         break;
       case ObjectFile::FreeBSD:
         if (arch == ObjectFile::Arm64) {
-            process = new ArmFreebsdProcess64(params, objFile,
-                                              objFile->getArch());
+            process = new ArmFreebsdProcess64(this, obj_file,
+                                              obj_file->getArch());
         } else {
-            process = new ArmFreebsdProcess32(params, objFile,
-                                              objFile->getArch());
+            process = new ArmFreebsdProcess32(this, obj_file,
+                                              obj_file->getArch());
         }
         break;
       case ObjectFile::LinuxArmOABI:
@@ -726,28 +714,28 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == POWER_ISA
-    if (objFile->getArch() != ObjectFile::Power)
+    if (obj_file->getArch() != ObjectFile::Power)
         fatal("Object file architecture does not match compiled ISA (Power).");
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        process = new PowerLinuxProcess(params, objFile);
+        process = new PowerLinuxProcess(this, obj_file);
         break;
 
       default:
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == RISCV_ISA
-    if (objFile->getArch() != ObjectFile::Riscv)
+    if (obj_file->getArch() != ObjectFile::Riscv)
         fatal("Object file architecture does not match compiled ISA (RISCV).");
-    switch (objFile->getOpSys()) {
+    switch (obj_file->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        process = new RiscvLinuxProcess(params, objFile);
+        process = new RiscvLinuxProcess(this, obj_file);
         break;
       default:
         fatal("Unknown/unsupported operating system.");
@@ -759,10 +747,4 @@ LiveProcess::create(LiveProcessParams * params)
     if (process == NULL)
         fatal("Unknown error creating process object.");
     return process;
-}
-
-LiveProcess *
-LiveProcessParams::create()
-{
-    return LiveProcess::create(this);
 }

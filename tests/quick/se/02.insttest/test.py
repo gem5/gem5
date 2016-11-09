@@ -26,5 +26,5 @@
 #
 # Authors: Ali Saidi
 
-root.system.cpu[0].workload = LiveProcess(cmd = 'insttest',
-                                          executable = binpath('insttest'))
+root.system.cpu[0].workload = Process(cmd = 'insttest',
+                                      executable = binpath('insttest'))

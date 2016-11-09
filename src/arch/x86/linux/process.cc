@@ -54,7 +54,7 @@ using namespace X86ISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
     int index = 0;
@@ -72,7 +72,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 static SyscallReturn
-archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+archPrctlFunc(SyscallDesc *desc, int callnum, Process *process,
               ThreadContext *tc)
 {
     enum ArchPrctlCodes
@@ -139,22 +139,22 @@ struct UserDesc64 {
 
 static SyscallReturn
 setThreadArea32Func(SyscallDesc *desc, int callnum,
-        LiveProcess *process, ThreadContext *tc)
+                    Process *process, ThreadContext *tc)
 {
     const int minTLSEntry = 6;
     const int numTLSEntries = 3;
     const int maxTLSEntry = minTLSEntry + numTLSEntries - 1;
 
-    X86LiveProcess *x86lp = dynamic_cast<X86LiveProcess *>(process);
-    assert(x86lp);
+    X86Process *x86p = dynamic_cast<X86Process *>(process);
+    assert(x86p);
 
-    assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86lp->gdtSize());
+    assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86p->gdtSize());
 
     int argIndex = 0;
     TypedBufferArg<UserDesc32> userDesc(process->getSyscallArg(tc, argIndex));
     TypedBufferArg<uint64_t>
-        gdt(x86lp->gdtStart() + minTLSEntry * sizeof(uint64_t),
-                numTLSEntries * sizeof(uint64_t));
+        gdt(x86p->gdtStart() + minTLSEntry * sizeof(uint64_t),
+            numTLSEntries * sizeof(uint64_t));
 
     if (!userDesc.copyIn(tc->getMemProxy()))
         return -EFAULT;
@@ -536,10 +536,10 @@ static SyscallDesc syscallDescs64[] = {
     /* 313 */ SyscallDesc("finit_module", unimplementedFunc),
 };
 
-X86_64LinuxProcess::X86_64LinuxProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
-    : X86_64LiveProcess(params, objFile, syscallDescs64,
-                        sizeof(syscallDescs64) / sizeof(SyscallDesc))
+X86_64LinuxProcess::X86_64LinuxProcess(ProcessParams * params,
+                                       ObjectFile *objFile)
+    : X86_64Process(params, objFile, syscallDescs64,
+                    sizeof(syscallDescs64) / sizeof(SyscallDesc))
 {}
 
 static SyscallDesc syscallDescs32[] = {
@@ -869,8 +869,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 323 */ SyscallDesc("eventfd", unimplementedFunc)
 };
 
-I386LinuxProcess::I386LinuxProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
-    : I386LiveProcess(params, objFile, syscallDescs32,
-                      sizeof(syscallDescs32) / sizeof(SyscallDesc))
+I386LinuxProcess::I386LinuxProcess(ProcessParams * params, ObjectFile *objFile)
+    : I386Process(params, objFile, syscallDescs32,
+                  sizeof(syscallDescs32) / sizeof(SyscallDesc))
 {}

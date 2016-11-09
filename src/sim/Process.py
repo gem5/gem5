@@ -32,7 +32,6 @@ from m5.proxy import *
 
 class Process(SimObject):
     type = 'Process'
-    abstract = True
     cxx_header = "sim/process.hh"
     input = Param.String('cin', "filename for stdin")
     output = Param.String('cout', 'filename for stdout')
@@ -50,19 +49,6 @@ class Process(SimObject):
     pid = Param.Int(100, 'process id')
     ppid = Param.Int(99, 'parent process id')
 
-    @classmethod
-    def export_methods(cls, code):
-        code('bool map(Addr vaddr, Addr paddr, int size, bool cacheable=true);')
-
-class EmulatedDriver(SimObject):
-    type = 'EmulatedDriver'
-    cxx_header = "sim/emul_driver.hh"
-    abstract = True
-    filename = Param.String("device file name (under /dev)")
-
-class LiveProcess(Process):
-    type = 'LiveProcess'
-    cxx_header = "sim/process.hh"
     executable = Param.String('', "executable (overrides cmd[0] if set)")
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String([], "environment settings")
@@ -70,3 +56,12 @@ class LiveProcess(Process):
     simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
     drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
 
+    @classmethod
+    def export_methods(cls, code):
+        code('bool map(Addr vaddr, Addr paddr, int sz, bool cacheable=true);')
+
+class EmulatedDriver(SimObject):
+    type = 'EmulatedDriver'
+    cxx_header = "sim/emul_driver.hh"
+    abstract = True
+    filename = Param.String("device file name (under /dev)")

@@ -53,7 +53,7 @@ using namespace RiscvISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
     int index = 0;
@@ -126,8 +126,8 @@ std::map<int, SyscallDesc> RiscvLinuxProcess::syscallDescs = {
     {2011, SyscallDesc("getmainvars", unimplementedFunc)},
 };
 
-RiscvLinuxProcess::RiscvLinuxProcess(LiveProcessParams * params,
-    ObjectFile *objFile) : RiscvLiveProcess(params, objFile)
+RiscvLinuxProcess::RiscvLinuxProcess(ProcessParams * params,
+    ObjectFile *objFile) : RiscvProcess(params, objFile)
 {}
 
 SyscallDesc*

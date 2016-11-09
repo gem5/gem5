@@ -38,11 +38,11 @@
 namespace SparcISA {
 
 /// A process with emulated SPARC/Solaris syscalls.
-class SparcSolarisProcess : public Sparc64LiveProcess
+class SparcSolarisProcess : public Sparc64Process
 {
   public:
     /// Constructor.
-    SparcSolarisProcess(LiveProcessParams * params, ObjectFile *objFile);
+    SparcSolarisProcess(ProcessParams * params, ObjectFile *objFile);
 
     virtual SyscallDesc* getDesc(int callnum);
 

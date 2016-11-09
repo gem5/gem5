@@ -91,7 +91,7 @@ def get_processes(options):
 
     idx = 0
     for wrkld in workloads:
-        process = LiveProcess()
+        process = Process()
         process.executable = wrkld
         process.cwd = os.getcwd()
 
@@ -154,7 +154,7 @@ if options.bench:
             else:
                 exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
                         app, options.spec_input))
-            multiprocesses.append(workload.makeLiveProcess())
+            multiprocesses.append(workload.makeProcess())
         except:
             print >>sys.stderr, "Unable to find workload for %s: %s" % (
                     buildEnv['TARGET_ISA'], app)

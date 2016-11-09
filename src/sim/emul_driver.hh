@@ -36,7 +36,7 @@
 #include "params/EmulatedDriver.hh"
 #include "sim/sim_object.hh"
 
-class LiveProcess;
+class Process;
 class ThreadContext;
 
 /**
@@ -74,7 +74,7 @@ class EmulatedDriver : public SimObject
      * to openFunc() (q.v.).
      * @return A newly allocated target fd, or -1 on error.
      */
-    virtual int open(LiveProcess *p, ThreadContext *tc,
+    virtual int open(Process *p, ThreadContext *tc,
                      int mode, int flags) = 0;
 
     /**
@@ -84,7 +84,7 @@ class EmulatedDriver : public SimObject
      * @return The return code for the ioctl, or the negation of the errno
      * (see the SyscallReturn class).
      */
-    virtual int ioctl(LiveProcess *p, ThreadContext *tc, unsigned req) = 0;
+    virtual int ioctl(Process *p, ThreadContext *tc, unsigned req) = 0;
 
     /**
      * Virtual method, invoked when the user program calls mmap() on
@@ -93,7 +93,7 @@ class EmulatedDriver : public SimObject
      * @return The return ptr for the mmap, or the negation of the errno
      * (see the SyscallReturn class).
      */
-    virtual Addr mmap(LiveProcess *p, ThreadContext *tc, Addr start,
+    virtual Addr mmap(Process *p, ThreadContext *tc, Addr start,
                       uint64_t length, int prot, int tgtFlags, int tgtFd,
                       int offset) { return -EBADF; }
 };

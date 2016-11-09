@@ -36,11 +36,11 @@
 namespace AlphaISA  {
 
 /// A process with emulated Alpha/Linux syscalls.
-class AlphaLinuxProcess : public AlphaLiveProcess
+class AlphaLinuxProcess : public AlphaProcess
 {
   public:
     /// Constructor.
-    AlphaLinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    AlphaLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
     virtual SyscallDesc* getDesc(int callnum);
 

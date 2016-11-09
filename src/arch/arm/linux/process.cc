@@ -61,7 +61,7 @@ using namespace ArmISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc32(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc32(SyscallDesc *desc, int callnum, Process *process,
             ThreadContext *tc)
 {
     int index = 0;
@@ -79,7 +79,7 @@ unameFunc32(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc64(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc64(SyscallDesc *desc, int callnum, Process *process,
             ThreadContext *tc)
 {
     int index = 0;
@@ -97,7 +97,7 @@ unameFunc64(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 /// Target set_tls() handler.
 static SyscallReturn
-setTLSFunc32(SyscallDesc *desc, int callnum, LiveProcess *process,
+setTLSFunc32(SyscallDesc *desc, int callnum, Process *process,
              ThreadContext *tc)
 {
     int index = 0;
@@ -110,7 +110,7 @@ setTLSFunc32(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 static SyscallReturn
-setTLSFunc64(SyscallDesc *desc, int callnum, LiveProcess *process,
+setTLSFunc64(SyscallDesc *desc, int callnum, Process *process,
              ThreadContext *tc)
 {
     int index = 0;
@@ -1589,9 +1589,9 @@ static SyscallDesc privSyscallDescs64[] = {
     /*  5 */ SyscallDesc("set_tls", setTLSFunc64)
 };
 
-ArmLinuxProcess32::ArmLinuxProcess32(LiveProcessParams * params,
+ArmLinuxProcess32::ArmLinuxProcess32(ProcessParams * params,
         ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess32(params, objFile, _arch)
+    : ArmProcess32(params, objFile, _arch)
 {
     SyscallTable table;
 
@@ -1608,9 +1608,9 @@ ArmLinuxProcess32::ArmLinuxProcess32(LiveProcessParams * params,
     syscallTables.push_back(table);
 }
 
-ArmLinuxProcess64::ArmLinuxProcess64(LiveProcessParams * params,
+ArmLinuxProcess64::ArmLinuxProcess64(ProcessParams * params,
         ObjectFile *objFile, ObjectFile::Arch _arch)
-    : ArmLiveProcess64(params, objFile, _arch)
+    : ArmProcess64(params, objFile, _arch)
 {
     SyscallTable table;
 
@@ -1667,7 +1667,7 @@ ArmLinuxProcess64::getDesc(int callnum)
 void
 ArmLinuxProcess32::initState()
 {
-    ArmLiveProcess32::initState();
+    ArmProcess32::initState();
     allocateMem(commPage, PageBytes);
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
@@ -1714,6 +1714,6 @@ ArmLinuxProcess32::initState()
 void
 ArmLinuxProcess64::initState()
 {
-    ArmLiveProcess64::initState();
+    ArmProcess64::initState();
     // The 64 bit equivalent of the comm page would be set up here.
 }

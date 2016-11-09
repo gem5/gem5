@@ -30,4 +30,4 @@ m5.util.addToPath('../configs/common')
 from cpu2000 import eon_cook
 
 workload = eon_cook(isa, opsys, 'mdred')
-root.system.cpu[0].workload = workload.makeLiveProcess()
+root.system.cpu[0].workload = workload.makeProcess()

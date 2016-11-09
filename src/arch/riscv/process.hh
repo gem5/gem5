@@ -38,14 +38,13 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
-class LiveProcess;
 class ObjectFile;
 class System;
 
-class RiscvLiveProcess : public LiveProcess
+class RiscvProcess : public Process
 {
   protected:
-    RiscvLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    RiscvProcess(ProcessParams * params, ObjectFile *objFile);
 
     void initState();
 
@@ -55,7 +54,7 @@ class RiscvLiveProcess : public LiveProcess
   public:
     RiscvISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
+    using Process::getSyscallArg;
     void setSyscallArg(ThreadContext *tc, int i, RiscvISA::IntReg val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };

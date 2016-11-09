@@ -36,10 +36,10 @@
 #include "arch/power/process.hh"
 
 /// A process with emulated PPC/Linux syscalls.
-class PowerLinuxProcess : public PowerLiveProcess
+class PowerLinuxProcess : public PowerProcess
 {
   public:
-    PowerLinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    PowerLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
     virtual SyscallDesc* getDesc(int callnum);
 
@@ -47,7 +47,7 @@ class PowerLinuxProcess : public PowerLiveProcess
 
     PowerISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
+    using Process::getSyscallArg;
     void setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val);
 
     /// Array of syscall descriptors, indexed by call number.

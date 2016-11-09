@@ -60,9 +60,9 @@ SparcLinuxProcess::getDesc32(int callnum)
     return &syscall32Descs[callnum];
 }
 
-Sparc32LinuxProcess::Sparc32LinuxProcess(LiveProcessParams * params,
+Sparc32LinuxProcess::Sparc32LinuxProcess(ProcessParams * params,
                                          ObjectFile *objFile)
-    : Sparc32LiveProcess(params, objFile)
+    : Sparc32Process(params, objFile)
 {}
 
 void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
@@ -72,13 +72,13 @@ void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
         tc->syscall(tc->readIntReg(1));
         break;
       default:
-        SparcLiveProcess::handleTrap(trapNum, tc);
+        SparcProcess::handleTrap(trapNum, tc);
     }
 }
 
-Sparc64LinuxProcess::Sparc64LinuxProcess(LiveProcessParams * params,
+Sparc64LinuxProcess::Sparc64LinuxProcess(ProcessParams * params,
                                          ObjectFile *objFile)
-    : Sparc64LiveProcess(params, objFile)
+    : Sparc64Process(params, objFile)
 {}
 
 void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
@@ -89,6 +89,6 @@ void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
         tc->syscall(tc->readIntReg(1));
         break;
       default:
-        SparcLiveProcess::handleTrap(trapNum, tc);
+        SparcProcess::handleTrap(trapNum, tc);
     }
 }

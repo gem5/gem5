@@ -45,7 +45,7 @@ using namespace SparcISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
     int index = 0;
@@ -322,9 +322,9 @@ SyscallDesc SparcSolarisProcess::syscallDescs[] = {
     /* 255 */ SyscallDesc("umount2", unimplementedFunc)
 };
 
-SparcSolarisProcess::SparcSolarisProcess(LiveProcessParams * params,
-                                     ObjectFile *objFile)
-    : Sparc64LiveProcess(params, objFile),
+SparcSolarisProcess::SparcSolarisProcess(ProcessParams * params,
+                                         ObjectFile *objFile)
+    : Sparc64Process(params, objFile),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     // The sparc syscall table must be <= 284 entries because that is all there

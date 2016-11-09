@@ -26,7 +26,7 @@
 #
 # Authors: Korey Sewell
 
-process1 = LiveProcess(cmd = 'hello', executable = binpath('hello'))
-process2 = LiveProcess(cmd = 'hello', executable = binpath('hello'))
+process1 = Process(cmd = 'hello', executable = binpath('hello'))
+process2 = Process(cmd = 'hello', executable = binpath('hello'))
 
 root.system.cpu[0].workload = [process1, process2]

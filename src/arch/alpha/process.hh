@@ -35,13 +35,13 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
-class AlphaLiveProcess : public LiveProcess
+class AlphaProcess : public Process
 {
   private:
     void setupASNReg();
 
   protected:
-    AlphaLiveProcess(LiveProcessParams *params, ObjectFile *objFile);
+    AlphaProcess(ProcessParams *params, ObjectFile *objFile);
 
     void loadState(CheckpointIn &cp) override;
     void initState() override;
@@ -51,12 +51,12 @@ class AlphaLiveProcess : public LiveProcess
   public:
     AlphaISA::IntReg getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
-    using LiveProcess::getSyscallArg;
+    using Process::getSyscallArg;
     void setSyscallArg(ThreadContext *tc, int i, AlphaISA::IntReg val) override;
     void setSyscallReturn(ThreadContext *tc,
                           SyscallReturn return_value) override;
 
-    // override default implementation in LiveProcess as the mmap
+    // override default implementation in Process as the mmap
     // region for Alpha platforms grows upward
     virtual bool mmapGrowsDown() const override { return false; }
 };

@@ -91,19 +91,18 @@ static const int ArgumentReg32[] = {
 static const int NumArgumentRegs32 M5_VAR_USED =
     sizeof(ArgumentReg) / sizeof(const int);
 
-X86LiveProcess::X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
-        SyscallDesc *_syscallDescs, int _numSyscallDescs) :
-    LiveProcess(params, objFile), syscallDescs(_syscallDescs),
-    numSyscallDescs(_numSyscallDescs)
+X86Process::X86Process(ProcessParams * params, ObjectFile *objFile,
+                       SyscallDesc *_syscallDescs, int _numSyscallDescs)
+    : Process(params, objFile), syscallDescs(_syscallDescs),
+      numSyscallDescs(_numSyscallDescs)
 {
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
     brk_point = roundUp(brk_point, PageBytes);
 }
 
-X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
-        ObjectFile *objFile, SyscallDesc *_syscallDescs,
-        int _numSyscallDescs) :
-    X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
+X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
+                             SyscallDesc *_syscallDescs, int _numSyscallDescs)
+    : X86Process(params, objFile, _syscallDescs, _numSyscallDescs)
 {
 
     vsyscallPage.base = 0xffffffffff600000ULL;
@@ -131,7 +130,7 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
 }
 
 void
-I386LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
+I386Process::syscall(int64_t callnum, ThreadContext *tc)
 {
     TheISA::PCState pc = tc->pcState();
     Addr eip = pc.pc();
@@ -140,14 +139,13 @@ I386LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
         pc.npc(vsyscallPage.base + vsyscallPage.vsysexitOffset);
         tc->pcState(pc);
     }
-    X86LiveProcess::syscall(callnum, tc);
+    X86Process::syscall(callnum, tc);
 }
 
 
-I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
-        ObjectFile *objFile, SyscallDesc *_syscallDescs,
-        int _numSyscallDescs) :
-    X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
+I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
+                         SyscallDesc *_syscallDescs, int _numSyscallDescs)
+    : X86Process(params, objFile, _syscallDescs, _numSyscallDescs)
 {
     _gdtStart = ULL(0xffffd000);
     _gdtSize = PageBytes;
@@ -174,7 +172,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
 }
 
 SyscallDesc*
-X86LiveProcess::getDesc(int callnum)
+X86Process::getDesc(int callnum)
 {
     if (callnum < 0 || callnum >= numSyscallDescs)
         return NULL;
@@ -182,9 +180,9 @@ X86LiveProcess::getDesc(int callnum)
 }
 
 void
-X86_64LiveProcess::initState()
+X86_64Process::initState()
 {
-    X86LiveProcess::initState();
+    X86Process::initState();
 
     argsInit(sizeof(uint64_t), PageBytes);
 
@@ -626,9 +624,9 @@ X86_64LiveProcess::initState()
 }
 
 void
-I386LiveProcess::initState()
+I386Process::initState()
 {
-    X86LiveProcess::initState();
+    X86Process::initState();
 
     argsInit(sizeof(uint32_t), PageBytes);
 
@@ -746,7 +744,7 @@ I386LiveProcess::initState()
 
 template<class IntType>
 void
-X86LiveProcess::argsInit(int pageSize,
+X86Process::argsInit(int pageSize,
         std::vector<AuxVector<IntType> > extraAuxvs)
 {
     int intSize = sizeof(IntType);
@@ -1034,16 +1032,16 @@ X86LiveProcess::argsInit(int pageSize,
 }
 
 void
-X86_64LiveProcess::argsInit(int intSize, int pageSize)
+X86_64Process::argsInit(int intSize, int pageSize)
 {
     std::vector<AuxVector<uint64_t> > extraAuxvs;
     extraAuxvs.push_back(AuxVector<uint64_t>(M5_AT_SYSINFO_EHDR,
                 vsyscallPage.base));
-    X86LiveProcess::argsInit<uint64_t>(pageSize, extraAuxvs);
+    X86Process::argsInit<uint64_t>(pageSize, extraAuxvs);
 }
 
 void
-I386LiveProcess::argsInit(int intSize, int pageSize)
+I386Process::argsInit(int intSize, int pageSize)
 {
     std::vector<AuxVector<uint32_t> > extraAuxvs;
     //Tell the binary where the vsyscall part of the vsyscall page is.
@@ -1051,38 +1049,38 @@ I386LiveProcess::argsInit(int intSize, int pageSize)
                 vsyscallPage.base + vsyscallPage.vsyscallOffset));
     extraAuxvs.push_back(AuxVector<uint32_t>(M5_AT_SYSINFO_EHDR,
                 vsyscallPage.base));
-    X86LiveProcess::argsInit<uint32_t>(pageSize, extraAuxvs);
+    X86Process::argsInit<uint32_t>(pageSize, extraAuxvs);
 }
 
 void
-X86LiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn retval)
+X86Process::setSyscallReturn(ThreadContext *tc, SyscallReturn retval)
 {
     tc->setIntReg(INTREG_RAX, retval.encodedValue());
 }
 
 X86ISA::IntReg
-X86_64LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+X86_64Process::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs);
     return tc->readIntReg(ArgumentReg[i++]);
 }
 
 void
-X86_64LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
+X86_64Process::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 {
     assert(i < NumArgumentRegs);
     return tc->setIntReg(ArgumentReg[i], val);
 }
 
 X86ISA::IntReg
-I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+I386Process::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs32);
     return tc->readIntReg(ArgumentReg32[i++]);
 }
 
 X86ISA::IntReg
-I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+I386Process::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     assert(width == 32 || width == 64);
     assert(i < NumArgumentRegs);
@@ -1093,7 +1091,7 @@ I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
 }
 
 void
-I386LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
+I386Process::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 {
     assert(i < NumArgumentRegs);
     return tc->setIntReg(ArgumentReg[i], val);

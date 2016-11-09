@@ -47,9 +47,8 @@
 using namespace std;
 using namespace MipsISA;
 
-MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
-    : LiveProcess(params, objFile)
+MipsProcess::MipsProcess(ProcessParams * params, ObjectFile *objFile)
+    : Process(params, objFile)
 {
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here
@@ -67,16 +66,16 @@ MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
 }
 
 void
-MipsLiveProcess::initState()
+MipsProcess::initState()
 {
-    LiveProcess::initState();
+    Process::initState();
 
     argsInit<uint32_t>(PageBytes);
 }
 
 template<class IntType>
 void
-MipsLiveProcess::argsInit(int pageSize)
+MipsProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
 
@@ -191,22 +190,21 @@ MipsLiveProcess::argsInit(int pageSize)
 
 
 MipsISA::IntReg
-MipsLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+MipsProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
     return tc->readIntReg(FirstArgumentReg + i++);
 }
 
 void
-MipsLiveProcess::setSyscallArg(ThreadContext *tc,
-        int i, MipsISA::IntReg val)
+MipsProcess::setSyscallArg(ThreadContext *tc, int i, MipsISA::IntReg val)
 {
     assert(i < 6);
     tc->setIntReg(FirstArgumentReg + i, val);
 }
 
 void
-MipsLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
+MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     if (sysret.successful()) {
         // no error

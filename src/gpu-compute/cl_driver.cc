@@ -91,7 +91,7 @@ ClDriver::handshake(GpuDispatcher *_dispatcher)
 }
 
 int
-ClDriver::open(LiveProcess *p, ThreadContext *tc, int mode, int flags)
+ClDriver::open(Process *p, ThreadContext *tc, int mode, int flags)
 {
     int fd = p->allocFD(-1, filename, 0, 0, false);
     FDEntry *fde = p->getFDEntry(fd);
@@ -101,7 +101,7 @@ ClDriver::open(LiveProcess *p, ThreadContext *tc, int mode, int flags)
 }
 
 int
-ClDriver::ioctl(LiveProcess *process, ThreadContext *tc, unsigned req)
+ClDriver::ioctl(Process *process, ThreadContext *tc, unsigned req)
 {
     int index = 2;
     Addr buf_addr = process->getSyscallArg(tc, index);

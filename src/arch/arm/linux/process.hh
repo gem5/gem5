@@ -65,16 +65,16 @@ class ArmLinuxProcessBits
 };
 
 /// A process with emulated Arm/Linux syscalls.
-class ArmLinuxProcess32 : public ArmLiveProcess32, public ArmLinuxProcessBits
+class ArmLinuxProcess32 : public ArmProcess32, public ArmLinuxProcessBits
 {
   public:
-    ArmLinuxProcess32(LiveProcessParams * params, ObjectFile *objFile,
+    ArmLinuxProcess32(ProcessParams * params, ObjectFile *objFile,
                       ObjectFile::Arch _arch);
 
     void initState();
 
     /// Explicitly import the otherwise hidden getSyscallArg
-    using ArmLiveProcess::getSyscallArg;
+    using ArmProcess::getSyscallArg;
 
     /// A page to hold "kernel" provided functions. The name might be wrong.
     static const Addr commPage;
@@ -83,10 +83,10 @@ class ArmLinuxProcess32 : public ArmLiveProcess32, public ArmLinuxProcessBits
 };
 
 /// A process with emulated Arm/Linux syscalls.
-class ArmLinuxProcess64 : public ArmLiveProcess64, public ArmLinuxProcessBits
+class ArmLinuxProcess64 : public ArmProcess64, public ArmLinuxProcessBits
 {
   public:
-    ArmLinuxProcess64(LiveProcessParams * params, ObjectFile *objFile,
+    ArmLinuxProcess64(ProcessParams * params, ObjectFile *objFile,
                       ObjectFile::Arch _arch);
 
     void initState();

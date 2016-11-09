@@ -131,8 +131,8 @@ class Benchmark(object):
 
         func(self, isa, os)
 
-    def makeLiveProcessArgs(self, **kwargs):
-        # set up default args for LiveProcess object
+    def makeProcessArgs(self, **kwargs):
+        # set up default args for Process object
         process_args = {}
         process_args['cmd'] = [ self.name ] + self.args
         process_args['executable'] = self.executable
@@ -147,11 +147,11 @@ class Benchmark(object):
 
         return process_args
 
-    def makeLiveProcess(self, **kwargs):
-        process_args = self.makeLiveProcessArgs(**kwargs)
+    def makeProcess(self, **kwargs):
+        process_args = self.makeProcessArgs(**kwargs)
 
         # figure out working directory: use m5's outdir unless
-        # overridden by LiveProcess's cwd param
+        # overridden by Process's cwd param
         cwd = process_args.get('cwd')
 
         if not cwd:
@@ -163,9 +163,9 @@ class Benchmark(object):
         # copy input files to working directory
         for d in self.inputs_dir:
             copyfiles(d, cwd)
-        # generate LiveProcess object
-        from m5.objects import LiveProcess
-        return LiveProcess(**process_args)
+        # generate Process object
+        from m5.objects import Process
+        return Process(**process_args)
 
     def __str__(self):
         return self.name
@@ -750,5 +750,5 @@ if __name__ == '__main__':
             print 'class: %s' % bench.__name__
             x = bench('alpha', 'tru64', input_set)
             print '%s: %s' % (x, input_set)
-            pprint(x.makeLiveProcessArgs())
+            pprint(x.makeProcessArgs())
             print

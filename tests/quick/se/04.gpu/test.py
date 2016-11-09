@@ -42,7 +42,7 @@ else:
 
 driver = ClDriver(filename="hsa", codefile=kernel_files)
 root.system.cpu[2].cl_driver = driver
-root.system.cpu[0].workload = LiveProcess(cmd = 'gpu-hello',
-                                          executable = binpath('gpu-hello'),
-                                          drivers = [driver])
+root.system.cpu[0].workload = Process(cmd = 'gpu-hello',
+                                      executable = binpath('gpu-hello'),
+                                      drivers = [driver])
 

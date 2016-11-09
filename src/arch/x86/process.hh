@@ -55,7 +55,7 @@ namespace X86ISA
         M5_AT_SYSINFO_EHDR = 33
     };
 
-    class X86LiveProcess : public LiveProcess
+    class X86Process : public Process
     {
       protected:
         Addr _gdtStart;
@@ -64,8 +64,8 @@ namespace X86ISA
         SyscallDesc *syscallDescs;
         const int numSyscallDescs;
 
-        X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
-                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+        X86Process(ProcessParams * params, ObjectFile *objFile,
+                   SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
         template<class IntType>
         void argsInit(int pageSize,
@@ -83,11 +83,11 @@ namespace X86ISA
         void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
     };
 
-    class X86_64LiveProcess : public X86LiveProcess
+    class X86_64Process : public X86Process
     {
       protected:
-        X86_64LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
-                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+        X86_64Process(ProcessParams *params, ObjectFile *objFile,
+                      SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
         class VSyscallPage
         {
@@ -105,15 +105,15 @@ namespace X86ISA
 
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
         /// Explicitly import the otherwise hidden getSyscallArg
-        using LiveProcess::getSyscallArg;
+        using Process::getSyscallArg;
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 
-    class I386LiveProcess : public X86LiveProcess
+    class I386Process : public X86Process
     {
       protected:
-        I386LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
-                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+        I386Process(ProcessParams *params, ObjectFile *objFile,
+                    SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
         class VSyscallPage
         {

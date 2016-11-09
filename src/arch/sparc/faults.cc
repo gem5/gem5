@@ -768,12 +768,11 @@ SpillNNormal::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     Process *p = tc->getProcessPtr();
 
-    //XXX This will only work in faults from a SparcLiveProcess
-    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-    assert(lp);
+    SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
+    assert(sp);
 
     // Then adjust the PC and NPC
-    tc->pcState(lp->readSpillStart());
+    tc->pcState(sp->readSpillStart());
 }
 
 void
@@ -788,12 +787,11 @@ FillNNormal::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     Process *p = tc->getProcessPtr();
 
-    //XXX This will only work in faults from a SparcLiveProcess
-    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-    assert(lp);
+    SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
+    assert(sp);
 
     // Then adjust the PC and NPC
-    tc->pcState(lp->readFillStart());
+    tc->pcState(sp->readFillStart());
 }
 
 void
@@ -810,10 +808,10 @@ TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     Process *p = tc->getProcessPtr();
 
-    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-    assert(lp);
+    SparcProcess *sp = dynamic_cast<SparcProcess *>(p);
+    assert(sp);
 
-    lp->handleTrap(_n, tc);
+    sp->handleTrap(_n, tc);
 
     // We need to explicitly advance the pc, since that's not done for us
     // on a faulting instruction

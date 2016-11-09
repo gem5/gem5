@@ -48,7 +48,7 @@
 
 #include <string>
 
-class LiveProcess;
+class Process;
 class SyscallReturn;
 class ThreadContext;
 
@@ -62,7 +62,7 @@ class SyscallDesc {
   public:
     /** Typedef the function pointer here to clean up code below */
     typedef SyscallReturn (*SyscallExecutor)(SyscallDesc*, int num,
-                                             LiveProcess*, ThreadContext*);
+                                             Process*, ThreadContext*);
 
     SyscallDesc(const char *name, SyscallExecutor sys_exec, int flags = 0)
         : _name(name), executor(sys_exec), _flags(flags), _warned(false)
@@ -91,7 +91,7 @@ class SyscallDesc {
      * @param proc Handle for the owning Process to pass information
      * @param tc Handle for owning ThreadContext to pass information
      */
-    void doSyscall(int callnum, LiveProcess *proc, ThreadContext *tc);
+    void doSyscall(int callnum, Process *proc, ThreadContext *tc);
 
     /**
      * Return false if WarnOnce is set and a warning has already been issued.

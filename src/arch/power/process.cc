@@ -47,9 +47,8 @@
 using namespace std;
 using namespace PowerISA;
 
-PowerLiveProcess::PowerLiveProcess(LiveProcessParams *params,
-        ObjectFile *objFile)
-    : LiveProcess(params, objFile)
+PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
+    : Process(params, objFile)
 {
     stack_base = 0xbf000000L;
 
@@ -65,7 +64,7 @@ PowerLiveProcess::PowerLiveProcess(LiveProcessParams *params,
 }
 
 void
-PowerLiveProcess::initState()
+PowerProcess::initState()
 {
     Process::initState();
 
@@ -73,7 +72,7 @@ PowerLiveProcess::initState()
 }
 
 void
-PowerLiveProcess::argsInit(int intSize, int pageSize)
+PowerProcess::argsInit(int intSize, int pageSize)
 {
     typedef AuxVector<uint32_t> auxv_t;
     std::vector<auxv_t> auxv;
@@ -266,22 +265,21 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
 }
 
 PowerISA::IntReg
-PowerLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
+PowerProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 5);
     return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 void
-PowerLiveProcess::setSyscallArg(ThreadContext *tc,
-        int i, PowerISA::IntReg val)
+PowerProcess::setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val)
 {
     assert(i < 5);
     tc->setIntReg(ArgumentReg0 + i, val);
 }
 
 void
-PowerLiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
+PowerProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
 {
     Cr cr = tc->readIntReg(INTREG_CR);
     if (sysret.successful()) {

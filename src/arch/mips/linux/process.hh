@@ -37,11 +37,11 @@
 #include "sim/eventq.hh"
 
 /// A process with emulated Mips/Linux syscalls.
-class MipsLinuxProcess : public MipsLiveProcess
+class MipsLinuxProcess : public MipsProcess
 {
   public:
     /// Constructor.
-    MipsLinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    MipsLinuxProcess(ProcessParams * params, ObjectFile *objFile);
 
     virtual SyscallDesc* getDesc(int callnum);
 

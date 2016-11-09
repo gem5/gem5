@@ -392,9 +392,9 @@ else:
 # OpenCL driver
 driver = ClDriver(filename="hsa", codefile=kernel_files)
 for cpu in cpu_list:
-    cpu.workload = LiveProcess(executable = executable,
-                               cmd = [options.cmd] + options.options.split(),
-                               drivers = [driver])
+    cpu.workload = Process(executable = executable,
+                           cmd = [options.cmd] + options.options.split(),
+                           drivers = [driver])
 for cp in cp_list:
     cp.workload = host_cpu.workload
 

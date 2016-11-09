@@ -51,25 +51,23 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
-class LiveProcess;
 class ObjectFile;
-class System;
 
-class ArmLiveProcess : public LiveProcess
+class ArmProcess : public Process
 {
   protected:
     ObjectFile::Arch arch;
-    ArmLiveProcess(LiveProcessParams * params, ObjectFile *objFile,
-                   ObjectFile::Arch _arch);
+    ArmProcess(ProcessParams * params, ObjectFile *objFile,
+               ObjectFile::Arch _arch);
     template<class IntType>
     void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
 };
 
-class ArmLiveProcess32 : public ArmLiveProcess
+class ArmProcess32 : public ArmProcess
 {
   protected:
-    ArmLiveProcess32(LiveProcessParams * params, ObjectFile *objFile,
-                     ObjectFile::Arch _arch);
+    ArmProcess32(ProcessParams * params, ObjectFile *objFile,
+                 ObjectFile::Arch _arch);
 
     void initState();
 
@@ -81,11 +79,11 @@ class ArmLiveProcess32 : public ArmLiveProcess
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
-class ArmLiveProcess64 : public ArmLiveProcess
+class ArmProcess64 : public ArmProcess
 {
   protected:
-    ArmLiveProcess64(LiveProcessParams * params, ObjectFile *objFile,
-                     ObjectFile::Arch _arch);
+    ArmProcess64(ProcessParams * params, ObjectFile *objFile,
+                 ObjectFile::Arch _arch);
 
     void initState();
 

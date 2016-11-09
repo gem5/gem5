@@ -46,7 +46,7 @@ using namespace AlphaISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
     int index = 0;
@@ -66,7 +66,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                    ThreadContext *tc)
 {
     int index = 0;
@@ -95,7 +95,7 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 /// Target osf_setsysinfo() handler.
 static SyscallReturn
-osf_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                    ThreadContext *tc)
 {
     int index = 0;
@@ -572,9 +572,9 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 441 */ SyscallDesc("keyctl", unimplementedFunc)
 };
 
-AlphaLinuxProcess::AlphaLinuxProcess(LiveProcessParams * params,
+AlphaLinuxProcess::AlphaLinuxProcess(ProcessParams * params,
                                      ObjectFile *objFile)
-    : AlphaLiveProcess(params, objFile),
+    : AlphaProcess(params, objFile),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     //init_regs->intRegFile[0] = 0;

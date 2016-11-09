@@ -34,7 +34,7 @@
 #include "base/misc.hh"
 
 int
-OperatingSystem::openSpecialFile(std::string path, LiveProcess *process,
+OperatingSystem::openSpecialFile(std::string path, Process *process,
                                  ThreadContext *tc)
 {
     warn("Attempting to open special file: %s. Ignoring. Simulation may"

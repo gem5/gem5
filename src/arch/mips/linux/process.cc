@@ -49,7 +49,7 @@ using namespace MipsISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
     int index = 0;
@@ -69,7 +69,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+sys_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                    ThreadContext *tc)
 {
     int index = 0;
@@ -98,7 +98,7 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 /// Target sys_setsysinfo() handler.
 static SyscallReturn
-sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+sys_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                    ThreadContext *tc)
 {
     int index = 0;
@@ -128,7 +128,7 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 static SyscallReturn
-setThreadAreaFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+setThreadAreaFunc(SyscallDesc *desc, int callnum, Process *process,
                   ThreadContext *tc)
 {
     int index = 0;
@@ -460,10 +460,10 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 319 */ SyscallDesc("eventfd", unimplementedFunc)
 };
 
-MipsLinuxProcess::MipsLinuxProcess(LiveProcessParams * params,
-                                     ObjectFile *objFile)
-    : MipsLiveProcess(params, objFile),
-     Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
+MipsLinuxProcess::MipsLinuxProcess(ProcessParams * params,
+                                   ObjectFile *objFile)
+    : MipsProcess(params, objFile),
+      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {  }
 
 SyscallDesc*

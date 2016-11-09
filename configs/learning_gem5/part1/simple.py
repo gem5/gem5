@@ -89,7 +89,7 @@ isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
 binary = 'tests/test-progs/hello/bin/' + isa + '/linux/hello'
 
 # Create a process for a simple "Hello World" application
-process = LiveProcess()
+process = Process()
 # Set the command
 # cmd is a list which begins with the executable (like argv)
 process.cmd = [binary]
