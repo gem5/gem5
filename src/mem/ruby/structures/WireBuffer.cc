@@ -29,12 +29,13 @@
  *
  */
 
+#include "mem/ruby/structures/WireBuffer.hh"
+
 #include <algorithm>
 #include <functional>
 
 #include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
-#include "mem/ruby/structures/WireBuffer.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;

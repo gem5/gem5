@@ -28,6 +28,8 @@
  * Authors: Tushar Krishna
  */
 
+#include "cpu/testers/garnet_synthetic_traffic/GarnetSyntheticTraffic.hh"
+
 #include <cmath>
 #include <iomanip>
 #include <set>
@@ -37,7 +39,6 @@
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "base/statistics.hh"
-#include "cpu/testers/garnet_synthetic_traffic/GarnetSyntheticTraffic.hh"
 #include "debug/GarnetSyntheticTraffic.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"

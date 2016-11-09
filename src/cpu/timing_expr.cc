@@ -37,8 +37,9 @@
  * Authors: Andrew Bardsley
  */
 
-#include "base/intmath.hh"
 #include "cpu/timing_expr.hh"
+
+#include "base/intmath.hh"
 
 TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
     ThreadContext *thread_,

@@ -42,6 +42,7 @@
  */
 
 #include "arch/arm/insts/pseudo.hh"
+
 #include "cpu/exec_context.hh"
 
 DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)

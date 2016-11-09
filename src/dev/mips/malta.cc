@@ -33,6 +33,8 @@
  * Implementation of Malta platform.
  */
 
+#include "dev/mips/malta.hh"
+
 #include <deque>
 #include <string>
 #include <vector>
@@ -40,7 +42,6 @@
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "debug/Malta.hh"
-#include "dev/mips/malta.hh"
 #include "dev/mips/malta_cchip.hh"
 #include "dev/mips/malta_io.hh"
 #include "dev/terminal.hh"

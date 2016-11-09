@@ -30,8 +30,6 @@
 
 #include "mem/ruby/structures/PseudoLRUPolicy.hh"
 
-
-
 PseudoLRUPolicy::PseudoLRUPolicy(const Params * p)
     : AbstractReplacementPolicy(p)
 {

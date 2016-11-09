@@ -60,8 +60,8 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <cstdio>
 #include <cstddef>
+#include <cstdio>
 
 #include "base/atomicio.hh"
 #include "base/bitmap.hh"

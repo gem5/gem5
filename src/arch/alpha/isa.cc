@@ -28,9 +28,10 @@
  * Authors: Gabe Black
  */
 
+#include "arch/alpha/isa.hh"
+
 #include <cassert>
 
-#include "arch/alpha/isa.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
 #include "params/AlphaISA.hh"

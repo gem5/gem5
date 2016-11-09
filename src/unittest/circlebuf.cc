@@ -38,7 +38,6 @@
  */
 
 #include "base/circlebuf.hh"
-
 #include "unittest/unittest.hh"
 
 const char data[] = {

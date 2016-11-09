@@ -41,6 +41,7 @@
  */
 
 #include "arch/arm/insts/mem.hh"
+
 #include "base/loader/symtab.hh"
 
 using namespace std;

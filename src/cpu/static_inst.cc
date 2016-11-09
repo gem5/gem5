@@ -29,9 +29,10 @@
  *          Nathan Binkert
  */
 
+#include "cpu/static_inst.hh"
+
 #include <iostream>
 
-#include "cpu/static_inst.hh"
 #include "sim/core.hh"
 
 StaticInstPtr StaticInst::nullStaticInstPtr;

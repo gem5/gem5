@@ -30,6 +30,7 @@
  */
 
 #include "arch/alpha/utility.hh"
+
 #include "arch/alpha/vtophys.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "sim/full_system.hh"

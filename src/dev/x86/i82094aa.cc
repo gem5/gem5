@@ -28,11 +28,12 @@
  * Authors: Gabe Black
  */
 
+#include "dev/x86/i82094aa.hh"
+
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"
 #include "debug/I82094AA.hh"
-#include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8259.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

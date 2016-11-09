@@ -44,7 +44,6 @@
 #include "debug/KvmInt.hh"
 #include "params/BaseArmKvmCPU.hh"
 
-
 #define INTERRUPT_ID(type, vcpu, irq) (                    \
         ((type) << KVM_ARM_IRQ_TYPE_SHIFT) |               \
         ((vcpu) << KVM_ARM_IRQ_VCPU_SHIFT) |               \

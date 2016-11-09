@@ -36,6 +36,7 @@
  */
 
 #include "arch/alpha/freebsd/system.hh"
+
 #include "arch/alpha/system.hh"
 #include "arch/isa_traits.hh"
 #include "arch/vtophys.hh"

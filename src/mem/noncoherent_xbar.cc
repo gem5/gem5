@@ -47,11 +47,12 @@
  * Definition of a non-coherent crossbar object.
  */
 
+#include "mem/noncoherent_xbar.hh"
+
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/NoncoherentXBar.hh"
 #include "debug/XBar.hh"
-#include "mem/noncoherent_xbar.hh"
 
 NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
     : BaseXBar(p)

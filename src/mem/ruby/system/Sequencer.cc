@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/system/Sequencer.hh"
+
 #include "arch/x86/ldstflags.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
@@ -34,13 +36,12 @@
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubySequencer.hh"
 #include "debug/RubyStats.hh"
+#include "mem/packet.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/packet.hh"
 #include "sim/system.hh"
 
 using namespace std;

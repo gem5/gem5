@@ -37,9 +37,10 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/emulenv.hh"
+
 #include <cassert>
 
-#include "arch/x86/emulenv.hh"
 #include "base/misc.hh"
 
 using namespace X86ISA;

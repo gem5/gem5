@@ -33,11 +33,12 @@
  * in legion. Any access is translated to an offset in the disk image.
  */
 
+#include "dev/sparc/mm_disk.hh"
+
 #include <cstring>
 
 #include "base/trace.hh"
 #include "debug/IdeDisk.hh"
-#include "dev/sparc/mm_disk.hh"
 #include "dev/platform.hh"
 #include "mem/packet_access.hh"
 #include "mem/port.hh"

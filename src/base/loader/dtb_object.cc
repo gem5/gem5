@@ -35,9 +35,9 @@
 
 #include <cassert>
 
-#include "sim/byteswap.hh"
 #include "fdt.h"
 #include "libfdt.h"
+#include "sim/byteswap.hh"
 
 ObjectFile *
 DtbObject::tryFile(const std::string &fname, size_t len, uint8_t *data)

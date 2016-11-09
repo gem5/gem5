@@ -37,8 +37,9 @@
  * Authors: Andreas Sandberg
  */
 
-#include "debug/VIOBlock.hh"
 #include "dev/virtio/block.hh"
+
+#include "debug/VIOBlock.hh"
 #include "params/VirtIOBlock.hh"
 #include "sim/system.hh"
 

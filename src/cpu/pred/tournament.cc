@@ -40,9 +40,10 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/pred/tournament.hh"
+
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
-#include "cpu/pred/tournament.hh"
 
 TournamentBP::TournamentBP(const TournamentBPParams *params)
     : BPredUnit(params),

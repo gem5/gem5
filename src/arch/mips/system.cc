@@ -32,6 +32,7 @@
  */
 
 #include "arch/mips/system.hh"
+
 #include "arch/vtophys.hh"
 #include "base/loader/hex_file.hh"
 #include "base/loader/object_file.hh"

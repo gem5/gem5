@@ -47,7 +47,6 @@
 #include "params/GenericPciHost.hh"
 #include "params/PciHost.hh"
 
-
 PciHost::PciHost(const PciHostParams *p)
     : PioDevice(p)
 {

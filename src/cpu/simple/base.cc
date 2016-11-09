@@ -41,21 +41,22 @@
  * Authors: Steve Reinhardt
  */
 
+#include "cpu/simple/base.hh"
+
 #include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
 #include "arch/tlb.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
-#include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
+#include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "cpu/simple/base.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"

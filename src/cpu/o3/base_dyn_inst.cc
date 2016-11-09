@@ -28,9 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/base_dyn_inst_impl.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/isa_specific.hh"
-#include "cpu/base_dyn_inst_impl.hh"
 
 // Explicit instantiation
 template class BaseDynInst<O3CPUImpl>;

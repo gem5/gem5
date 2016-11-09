@@ -33,6 +33,7 @@
  */
 
 #include "arch/power/utility.hh"
+
 #include "base/misc.hh"
 
 namespace PowerISA {

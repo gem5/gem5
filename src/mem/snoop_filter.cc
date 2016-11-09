@@ -42,10 +42,11 @@
  * Implementation of a snoop filter.
  */
 
+#include "mem/snoop_filter.hh"
+
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/SnoopFilter.hh"
-#include "mem/snoop_filter.hh"
 #include "sim/system.hh"
 
 void

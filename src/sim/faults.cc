@@ -29,13 +29,14 @@
  *          Gabe Black
  */
 
+#include "sim/faults.hh"
+
 #include "arch/isa_traits.hh"
 #include "base/misc.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Fault.hh"
 #include "mem/page_table.hh"
-#include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 

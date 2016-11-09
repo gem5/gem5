@@ -45,6 +45,8 @@
  *          Andreas Sandberg
  */
 
+#include "sim/serialize.hh"
+
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -63,7 +65,6 @@
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "sim/eventq.hh"
-#include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"

@@ -29,20 +29,20 @@
  *          Kevin Lim
  */
 
+#include "arch/sparc/faults.hh"
+
 #include <algorithm>
 
-#include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
-#include "sim/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
-#include "sim/process.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 
 using namespace std;
 

@@ -44,13 +44,14 @@
  *          Wendy Elsasser
  */
 
+#include "mem/dram_ctrl.hh"
+
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "debug/DRAM.hh"
 #include "debug/DRAMPower.hh"
 #include "debug/DRAMState.hh"
 #include "debug/Drain.hh"
-#include "mem/dram_ctrl.hh"
 #include "sim/system.hh"
 
 using namespace std;

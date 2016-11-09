@@ -42,10 +42,11 @@
  */
 
 #include "arch/arm/insts/static_inst.hh"
+
 #include "arch/arm/faults.hh"
-#include "base/loader/symtab.hh"
 #include "base/condcodes.hh"
 #include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/reg_class.hh"
 
 namespace ArmISA

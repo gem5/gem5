@@ -34,6 +34,8 @@
  * Malta I/O including PIC, PIT, RTC, DMA
  */
 
+#include "dev/mips/malta_io.hh"
+
 #include <sys/time.h>
 
 #include <deque>
@@ -46,7 +48,6 @@
 #include "debug/Malta.hh"
 #include "dev/mips/malta.hh"
 #include "dev/mips/malta_cchip.hh"
-#include "dev/mips/malta_io.hh"
 #include "dev/mips/maltareg.h"
 #include "dev/rtcreg.h"
 #include "mem/packet.hh"

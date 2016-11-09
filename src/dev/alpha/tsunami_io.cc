@@ -34,6 +34,8 @@
  * Tsunami I/O including PIC, PIT, RTC, DMA
  */
 
+#include "dev/alpha/tsunami_io.hh"
+
 #include <sys/time.h>
 
 #include <deque>
@@ -46,7 +48,6 @@
 #include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
-#include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunamireg.h"
 #include "dev/rtcreg.h"
 #include "mem/packet.hh"

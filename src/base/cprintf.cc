@@ -28,12 +28,12 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/cprintf.hh"
+
 #include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-
-#include "base/cprintf.hh"
 
 using namespace std;
 

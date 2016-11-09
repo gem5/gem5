@@ -39,6 +39,7 @@
  */
 
 #include "arch/arm/insts/misc.hh"
+
 #include "cpu/reg_class.hh"
 
 std::string

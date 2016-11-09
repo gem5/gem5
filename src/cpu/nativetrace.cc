@@ -28,8 +28,9 @@
  * Authors: Gabe Black
  */
 
-#include "base/socket.hh"
 #include "cpu/nativetrace.hh"
+
+#include "base/socket.hh"
 #include "cpu/static_inst.hh"
 #include "debug/GDBMisc.hh"
 #include "params/NativeTrace.hh"

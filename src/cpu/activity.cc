@@ -28,9 +28,10 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/activity.hh"
+
 #include <string>
 
-#include "cpu/activity.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 

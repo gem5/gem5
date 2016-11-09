@@ -31,11 +31,12 @@
  *          Steve Raasch
  */
 
+#include "cpu/inteltrace.hh"
+
 #include <iomanip>
 
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
-#include "cpu/inteltrace.hh"
 #include "cpu/static_inst.hh"
 
 using namespace std;

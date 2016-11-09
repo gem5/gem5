@@ -41,12 +41,13 @@
  *          Prakash Ramrakhyani
  */
 
+#include "dev/arm/gic_pl390.hh"
+
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/GIC.hh"
 #include "debug/IPI.hh"
 #include "debug/Interrupt.hh"
-#include "dev/arm/gic_pl390.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

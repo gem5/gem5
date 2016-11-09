@@ -43,6 +43,8 @@
  *          Ali Saidi
  */
 
+#include "sim/process.hh"
+
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -50,19 +52,18 @@
 #include <map>
 #include <string>
 
+#include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
-#include "base/intmath.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
-#include "mem/page_table.hh"
 #include "mem/multi_level_page_table.hh"
+#include "mem/page_table.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "params/LiveProcess.hh"
 #include "params/Process.hh"
 #include "sim/debug.hh"
-#include "sim/process.hh"
 #include "sim/process_impl.hh"
 #include "sim/stats.hh"
 #include "sim/syscall_emul.hh"

@@ -40,7 +40,6 @@
 #include "sim/sub_system.hh"
 
 #include "params/SubSystem.hh"
-#include "sim/sub_system.hh"
 #include "sim/power/power_model.hh"
 #include "sim/power/thermal_domain.hh"
 

@@ -30,10 +30,11 @@
  *          Ali Saidi
  */
 
+#include "arch/alpha/vtophys.hh"
+
 #include <string>
 
 #include "arch/alpha/ev5.hh"
-#include "arch/alpha/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

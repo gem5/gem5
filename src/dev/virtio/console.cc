@@ -37,11 +37,11 @@
  * Authors: Andreas Sandberg
  */
 
-#include "debug/VIOConsole.hh"
 #include "dev/virtio/console.hh"
+
+#include "debug/VIOConsole.hh"
 #include "params/VirtIOConsole.hh"
 #include "sim/system.hh"
-
 
 VirtIOConsole::VirtIOConsole(Params *params)
     : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),

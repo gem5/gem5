@@ -40,9 +40,9 @@
 
 #include "dev/arm/hdlcd.hh"
 
-#include "base/vnc/vncinput.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "base/vnc/vncinput.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/HDLcd.hh"
 #include "dev/arm/amba_device.hh"

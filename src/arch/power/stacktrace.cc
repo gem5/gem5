@@ -28,9 +28,10 @@
  * Authors: Nathan Binkert
  */
 
+#include "arch/power/stacktrace.hh"
+
 #include <string>
 
-#include "arch/power/stacktrace.hh"
 #include "base/trace.hh"
 
 using namespace std;

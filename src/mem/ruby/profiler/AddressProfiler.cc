@@ -26,11 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/profiler/AddressProfiler.hh"
+
 #include <vector>
 
 #include "base/stl_helpers.hh"
 #include "mem/protocol/RubyRequest.hh"
-#include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 
 using namespace std;

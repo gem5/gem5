@@ -35,12 +35,13 @@
  *          Timothy M. Jones
  */
 
+#include "arch/power/tlb.hh"
+
 #include <string>
 #include <vector>
 
 #include "arch/power/faults.hh"
 #include "arch/power/pagetable.hh"
-#include "arch/power/tlb.hh"
 #include "arch/power/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"

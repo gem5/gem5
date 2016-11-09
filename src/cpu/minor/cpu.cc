@@ -37,8 +37,9 @@
  * Authors: Andrew Bardsley
  */
 
-#include "arch/utility.hh"
 #include "cpu/minor/cpu.hh"
+
+#include "arch/utility.hh"
 #include "cpu/minor/dyn_inst.hh"
 #include "cpu/minor/fetch1.hh"
 #include "cpu/minor/pipeline.hh"

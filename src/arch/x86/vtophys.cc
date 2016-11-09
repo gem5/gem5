@@ -37,11 +37,12 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/vtophys.hh"
+
 #include <string>
 
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/tlb.hh"
-#include "arch/x86/vtophys.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/VtoPhys.hh"

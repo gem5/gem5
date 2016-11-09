@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/socket.hh"
+
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
@@ -37,7 +39,6 @@
 #include <cerrno>
 
 #include "base/misc.hh"
-#include "base/socket.hh"
 #include "base/types.hh"
 
 using namespace std;

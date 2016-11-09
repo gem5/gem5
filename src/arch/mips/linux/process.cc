@@ -30,9 +30,10 @@
  *          Korey Sewell
  */
 
-#include "arch/mips/linux/linux.hh"
 #include "arch/mips/linux/process.hh"
+
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/linux/linux.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"

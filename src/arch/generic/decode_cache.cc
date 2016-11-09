@@ -29,6 +29,7 @@
  */
 
 #include "arch/generic/decode_cache.hh"
+
 #include "arch/decoder.hh"
 #include "arch/types.hh"
 #include "config/the_isa.hh"

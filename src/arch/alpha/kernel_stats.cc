@@ -29,13 +29,14 @@
  *          Nathan Binkert
  */
 
+#include "arch/alpha/kernel_stats.hh"
+
 #include <map>
 #include <stack>
 #include <string>
 
-#include "arch/generic/linux/threadinfo.hh"
-#include "arch/alpha/kernel_stats.hh"
 #include "arch/alpha/osfpal.hh"
+#include "arch/generic/linux/threadinfo.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Context.hh"

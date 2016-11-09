@@ -39,8 +39,9 @@
  *          Stephan Diestelhorst
  */
 
-#include "debug/EnergyCtrl.hh"
 #include "dev/arm/energy_ctrl.hh"
+
+#include "debug/EnergyCtrl.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/EnergyCtrl.hh"

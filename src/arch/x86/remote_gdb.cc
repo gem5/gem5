@@ -40,17 +40,18 @@
  *          Boris Shingarov
  */
 
+#include "arch/x86/remote_gdb.hh"
+
 #include <sys/signal.h>
 #include <unistd.h>
 
 #include <string>
 
-#include "arch/x86/regs/int.hh"
-#include "arch/x86/regs/misc.hh"
+#include "arch/vtophys.hh"
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/process.hh"
-#include "arch/x86/remote_gdb.hh"
-#include "arch/vtophys.hh"
+#include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"

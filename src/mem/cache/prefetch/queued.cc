@@ -37,8 +37,9 @@
  * Authors: Mitch Hayenga
  */
 
-#include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/queued.hh"
+
+#include "debug/HWPrefetch.hh"
 #include "mem/cache/base.hh"
 
 QueuedPrefetcher::QueuedPrefetcher(const QueuedPrefetcherParams *p)

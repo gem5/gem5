@@ -38,8 +38,9 @@
  *          Giacomo Gabrielli
  */
 
-#include "arch/arm/faults.hh"
 #include "arch/arm/stage2_lookup.hh"
+
+#include "arch/arm/faults.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"

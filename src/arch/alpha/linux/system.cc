@@ -41,6 +41,7 @@
  */
 
 #include "arch/alpha/linux/system.hh"
+
 #include "arch/alpha/idle_event.hh"
 #include "arch/alpha/system.hh"
 #include "arch/generic/linux/threadinfo.hh"

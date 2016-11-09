@@ -26,9 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/filters/BlockBloomFilter.hh"
+
 #include "base/intmath.hh"
 #include "base/str.hh"
-#include "mem/ruby/filters/BlockBloomFilter.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;

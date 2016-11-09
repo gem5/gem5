@@ -28,8 +28,9 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/base.hh"
 #include "cpu/quiesce_event.hh"
+
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Quiesce.hh"
 

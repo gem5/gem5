@@ -28,10 +28,11 @@
  * Authors: Ali Saidi
  */
 
+#include "arch/sparc/vtophys.hh"
+
 #include <string>
 
 #include "arch/sparc/tlb.hh"
-#include "arch/sparc/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"

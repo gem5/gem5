@@ -29,6 +29,7 @@
  */
 
 #include "arch/generic/mmapped_ipr.hh"
+
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/pseudo_inst.hh"

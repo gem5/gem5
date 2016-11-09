@@ -29,8 +29,9 @@
  *          Ali Saidi
  */
 
-#include "arch/sparc/faults.hh"
 #include "arch/sparc/utility.hh"
+
+#include "arch/sparc/faults.hh"
 #include "arch/sparc/vtophys.hh"
 #include "mem/fs_translating_port_proxy.hh"
 

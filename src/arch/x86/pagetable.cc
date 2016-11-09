@@ -37,9 +37,11 @@
  * Authors: Gabe Black
  */
 
-#include <cmath>
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
+
+#include <cmath>
+
+#include "arch/x86/isa_traits.hh"
 #include "sim/serialize.hh"
 
 namespace X86ISA

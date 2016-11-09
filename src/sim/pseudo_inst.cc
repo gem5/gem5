@@ -41,6 +41,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "sim/pseudo_inst.hh"
+
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -50,9 +52,9 @@
 #include <vector>
 
 #include "arch/kernel_stats.hh"
+#include "arch/pseudo_inst.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
-#include "arch/pseudo_inst.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
@@ -68,7 +70,6 @@
 #include "sim/full_system.hh"
 #include "sim/initparam_keys.hh"
 #include "sim/process.hh"
-#include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"

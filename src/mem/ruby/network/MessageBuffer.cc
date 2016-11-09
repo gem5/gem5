@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/network/MessageBuffer.hh"
+
 #include <cassert>
 
 #include "base/cprintf.hh"
@@ -33,7 +35,6 @@
 #include "base/random.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyQueue.hh"
-#include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;

@@ -41,6 +41,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "sim/init.hh"
+
 #include <Python.h>
 
 #include <marshal.h>
@@ -56,10 +58,10 @@
 #include "config/have_protobuf.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
-#include "sim/init.hh"
 
 #if HAVE_PROTOBUF
 #include <google/protobuf/stubs/common.h>
+
 #endif
 
 using namespace std;

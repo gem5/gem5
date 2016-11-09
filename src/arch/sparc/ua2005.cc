@@ -35,8 +35,8 @@
 #include "cpu/thread_context.hh"
 #include "debug/Quiesce.hh"
 #include "debug/Timer.hh"
-#include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "sim/system.hh"
 
 using namespace SparcISA;
 using namespace std;

@@ -28,9 +28,10 @@
  * Authors: Gabe Black
  */
 
+#include "arch/sparc/isa.hh"
+
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/decoder.hh"
-#include "arch/sparc/isa.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

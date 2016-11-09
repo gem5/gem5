@@ -40,9 +40,10 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/arm/linux/atag.hh"
 #include "arch/arm/linux/system.hh"
+
 #include "arch/arm/isa_traits.hh"
+#include "arch/arm/linux/atag.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/linux/threadinfo.hh"
 #include "base/loader/dtb_object.hh"

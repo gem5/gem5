@@ -38,17 +38,18 @@
  * Authors: Andreas Sandberg
  */
 
+#include "cpu/kvm/vm.hh"
+
+#include <fcntl.h>
 #include <linux/kvm.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <memory>
 
-#include "cpu/kvm/vm.hh"
 #include "debug/Kvm.hh"
 #include "params/KvmVM.hh"
 #include "sim/system.hh"

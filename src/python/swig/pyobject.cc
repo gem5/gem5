@@ -35,13 +35,16 @@
 #include "base/inifile.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
+
 #if THE_ISA != NULL_ISA
 #include "dev/net/etherdevice.hh"
 #include "dev/net/etherobject.hh"
+
 #endif
-#include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/mem_object.hh"
 #include "python/swig/pyobject.hh"
+
+#include "mem/mem_object.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "sim/full_system.hh"
 #include "sim/sim_object.hh"
 

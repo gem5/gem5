@@ -29,6 +29,7 @@
  */
 
 #include "base/loader/raw_object.hh"
+
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "debug/Loader.hh"

@@ -30,9 +30,13 @@
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
+
 #if defined(__sun__) || defined(__SUNPRO_CC)
 #include <sys/file.h>
+
 #endif
+
+#include "base/pollevent.hh"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -40,7 +44,6 @@
 #include <csignal>
 
 #include "base/misc.hh"
-#include "base/pollevent.hh"
 #include "base/types.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"

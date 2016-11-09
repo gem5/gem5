@@ -37,9 +37,10 @@
  * Authors: Ali Saidi
  */
 
+#include "dev/arm/a9scu.hh"
+
 #include "base/intmath.hh"
 #include "base/trace.hh"
-#include "dev/arm/a9scu.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"

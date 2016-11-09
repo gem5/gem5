@@ -41,13 +41,14 @@
  * Authors: Steve Reinhardt
  */
 
+#include "cpu/simple/atomic.hh"
+
 #include "arch/locked_mem.hh"
 #include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
-#include "cpu/simple/atomic.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
@@ -57,8 +58,8 @@
 #include "mem/physical.hh"
 #include "params/AtomicSimpleCPU.hh"
 #include "sim/faults.hh"
-#include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;

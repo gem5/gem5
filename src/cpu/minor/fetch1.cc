@@ -37,12 +37,13 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/fetch1.hh"
+
 #include <cstring>
 #include <iomanip>
 #include <sstream>
 
 #include "base/cast.hh"
-#include "cpu/minor/fetch1.hh"
 #include "cpu/minor/pipeline.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"

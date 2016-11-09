@@ -33,6 +33,8 @@
  * Emulation of the Malta CChip CSRs
  */
 
+#include "dev/mips/malta_cchip.hh"
+
 #include <deque>
 #include <string>
 #include <vector>
@@ -43,7 +45,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Malta.hh"
 #include "dev/mips/malta.hh"
-#include "dev/mips/malta_cchip.hh"
 #include "dev/mips/maltareg.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

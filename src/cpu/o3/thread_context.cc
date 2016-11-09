@@ -28,8 +28,9 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/impl.hh"
 #include "cpu/o3/thread_context.hh"
+
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/thread_context_impl.hh"
 
 template class O3ThreadContext<O3CPUImpl>;

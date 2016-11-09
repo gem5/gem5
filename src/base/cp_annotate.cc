@@ -28,11 +28,12 @@
  * Authors: Ali Saidi
  */
 
+#include "base/cp_annotate.hh"
+
 #include "arch/generic/linux/threadinfo.hh"
 #include "arch/utility.hh"
-#include "base/loader/object_file.hh"
 #include "base/callback.hh"
-#include "base/cp_annotate.hh"
+#include "base/loader/object_file.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"

@@ -41,13 +41,14 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/thread_context.hh"
+
 #include "arch/kernel_stats.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/quiesce_event.hh"
-#include "cpu/thread_context.hh"
 #include "debug/Context.hh"
 #include "debug/Quiesce.hh"
 #include "params/BaseCPU.hh"

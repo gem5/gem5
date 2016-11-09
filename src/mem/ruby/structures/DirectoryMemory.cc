@@ -26,11 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/structures/DirectoryMemory.hh"
+
 #include "base/intmath.hh"
 #include "debug/RubyCache.hh"
 #include "debug/RubyStats.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
-#include "mem/ruby/structures/DirectoryMemory.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;

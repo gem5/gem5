@@ -46,6 +46,8 @@
 // This file will contain default statistics for the simulator that
 // don't really belong to a specific simulator object
 
+#include "sim/stat_control.hh"
+
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -56,7 +58,6 @@
 #include "base/time.hh"
 #include "cpu/base.hh"
 #include "sim/global_event.hh"
-#include "sim/stat_control.hh"
 
 using namespace std;
 

@@ -38,6 +38,7 @@
  */
 
 #include "arch/x86/bios/acpi.hh"
+
 #include "mem/port.hh"
 #include "params/X86ACPIRSDP.hh"
 #include "params/X86ACPIRSDT.hh"

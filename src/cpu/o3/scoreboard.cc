@@ -30,8 +30,9 @@
  *          Kevin Lim
  */
 
-#include "config/the_isa.hh"
 #include "cpu/o3/scoreboard.hh"
+
+#include "config/the_isa.hh"
 #include "debug/Scoreboard.hh"
 
 Scoreboard::Scoreboard(const std::string &_my_name,

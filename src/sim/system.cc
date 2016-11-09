@@ -45,6 +45,8 @@
  *          Rick Strong
  */
 
+#include "sim/system.hh"
+
 #include "arch/remote_gdb.hh"
 #include "arch/utility.hh"
 #include "base/loader/object_file.hh"
@@ -60,7 +62,6 @@
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
-#include "sim/system.hh"
 
 /**
  * To avoid linking errors with LTO, only include the header if we
@@ -68,6 +69,7 @@
  */
 #if THE_ISA != NULL_ISA
 #include "kern/kernel_stats.hh"
+
 #endif
 
 using namespace std;

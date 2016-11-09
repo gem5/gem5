@@ -32,6 +32,8 @@
  * Implements a 8250 UART
  */
 
+#include "dev/uart8250.hh"
+
 #include <string>
 #include <vector>
 
@@ -41,7 +43,6 @@
 #include "debug/Uart.hh"
 #include "dev/platform.hh"
 #include "dev/terminal.hh"
-#include "dev/uart8250.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 

@@ -26,11 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/common/Histogram.hh"
+
 #include <cmath>
 #include <iomanip>
 
 #include "base/intmath.hh"
-#include "mem/ruby/common/Histogram.hh"
 
 using namespace std;
 

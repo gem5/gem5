@@ -37,10 +37,12 @@
  * Authors: Andreas Hansson
  */
 
+#include "mem/physical.hh"
+
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/user.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <zlib.h>
 
@@ -54,7 +56,6 @@
 #include "debug/AddrRanges.hh"
 #include "debug/Checkpoint.hh"
 #include "mem/abstract_mem.hh"
-#include "mem/physical.hh"
 
 /**
  * On Linux, MAP_NORESERVE allow us to simulate a very large memory

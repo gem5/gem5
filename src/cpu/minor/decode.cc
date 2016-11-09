@@ -38,6 +38,7 @@
  */
 
 #include "cpu/minor/decode.hh"
+
 #include "cpu/minor/pipeline.hh"
 #include "debug/Decode.hh"
 

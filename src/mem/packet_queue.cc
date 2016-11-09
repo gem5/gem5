@@ -41,10 +41,11 @@
  *          Andreas Hansson
  */
 
+#include "mem/packet_queue.hh"
+
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/PacketQueue.hh"
-#include "mem/packet_queue.hh"
 
 using namespace std;
 

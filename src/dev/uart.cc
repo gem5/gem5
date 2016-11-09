@@ -32,9 +32,10 @@
  * Implements a base class for UARTs
  */
 
+#include "dev/uart.hh"
+
 #include "dev/platform.hh"
 #include "dev/terminal.hh"
-#include "dev/uart.hh"
 
 using namespace std;
 

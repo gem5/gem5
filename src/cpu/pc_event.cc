@@ -29,6 +29,8 @@
  *          Steve Reinhardt
  */
 
+#include "cpu/pc_event.hh"
+
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -36,7 +38,6 @@
 #include "base/debug.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/pc_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/PCEvent.hh"
 #include "sim/core.hh"

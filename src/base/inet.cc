@@ -43,13 +43,14 @@
  *          Geoffrey Blake
  */
 
+#include "base/inet.hh"
+
 #include <cstddef>
 #include <cstdio>
 #include <sstream>
 #include <string>
 
 #include "base/cprintf.hh"
-#include "base/inet.hh"
 #include "base/types.hh"
 
 using namespace std;

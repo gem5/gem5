@@ -29,6 +29,7 @@
  */
 
 #include "dev/x86/i8237.hh"
+
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 

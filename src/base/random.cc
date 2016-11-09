@@ -42,10 +42,11 @@
  *          Andreas Hansson
  */
 
+#include "base/random.hh"
+
 #include <sstream>
 
 #include "base/misc.hh"
-#include "base/random.hh"
 #include "sim/serialize.hh"
 
 Random::Random()

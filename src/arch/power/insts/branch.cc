@@ -29,6 +29,7 @@
  */
 
 #include "arch/power/insts/branch.hh"
+
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 

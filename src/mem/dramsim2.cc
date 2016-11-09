@@ -37,12 +37,13 @@
  * Authors: Andreas Hansson
  */
 
+#include "mem/dramsim2.hh"
+
 #include "DRAMSim2/Callback.h"
 #include "base/callback.hh"
 #include "base/trace.hh"
 #include "debug/DRAMSim2.hh"
 #include "debug/Drain.hh"
-#include "mem/dramsim2.hh"
 #include "sim/system.hh"
 
 DRAMSim2::DRAMSim2(const Params* p) :

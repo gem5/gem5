@@ -46,9 +46,10 @@
  * @file
  * Port object definitions.
  */
+#include "mem/port.hh"
+
 #include "base/trace.hh"
 #include "mem/mem_object.hh"
-#include "mem/port.hh"
 
 Port::Port(const std::string &_name, MemObject& _owner, PortID _id)
     : portName(_name), id(_id), owner(_owner)

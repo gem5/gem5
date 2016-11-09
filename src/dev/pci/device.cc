@@ -63,7 +63,6 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
-
 PciDevice::PciDevice(const PciDeviceParams *p)
     : DmaDevice(p),
       _busAddr(p->pci_bus, p->pci_dev, p->pci_func),

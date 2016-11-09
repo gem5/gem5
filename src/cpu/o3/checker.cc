@@ -40,8 +40,9 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/checker/cpu_impl.hh"
 #include "cpu/o3/checker.hh"
+
+#include "cpu/checker/cpu_impl.hh"
 #include "params/O3Checker.hh"
 
 class MemObject;

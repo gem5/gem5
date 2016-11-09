@@ -37,11 +37,12 @@
  * Authors: Andrew Bardsley
  */
 
+#include "mem/external_slave.hh"
+
 #include <cctype>
 #include <iomanip>
 
 #include "debug/ExternalPort.hh"
-#include "mem/external_slave.hh"
 
 /** Implement a `stub' port which just responds to requests by printing
  *  a message.  The stub port can be used to configure and test a system

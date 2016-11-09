@@ -29,6 +29,7 @@
  */
 
 #include "arch/x86/decoder.hh"
+
 #include "arch/x86/regs/misc.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"

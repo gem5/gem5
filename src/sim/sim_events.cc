@@ -42,12 +42,13 @@
  * Authors: Nathan Binkert
  */
 
+#include "sim/sim_events.hh"
+
 #include <string>
 
 #include "base/callback.hh"
 #include "base/hostinfo.hh"
 #include "sim/eventq_impl.hh"
-#include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 

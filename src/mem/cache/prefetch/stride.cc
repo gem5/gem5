@@ -46,9 +46,10 @@
  * Stride Prefetcher template instantiations.
  */
 
+#include "mem/cache/prefetch/stride.hh"
+
 #include "base/random.hh"
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/stride.hh"
 
 StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
     : QueuedPrefetcher(p),

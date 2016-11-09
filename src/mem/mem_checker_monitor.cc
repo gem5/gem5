@@ -39,12 +39,13 @@
  *          Marco Elver
  */
 
+#include "mem/mem_checker_monitor.hh"
+
 #include <memory>
 
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/MemCheckerMonitor.hh"
-#include "mem/mem_checker_monitor.hh"
 
 using namespace std;
 

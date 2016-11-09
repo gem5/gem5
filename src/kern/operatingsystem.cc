@@ -29,8 +29,9 @@
  */
 
 
-#include "base/misc.hh"
 #include "kern/operatingsystem.hh"
+
+#include "base/misc.hh"
 
 int
 OperatingSystem::openSpecialFile(std::string path, LiveProcess *process,

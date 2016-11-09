@@ -37,10 +37,11 @@
  * Authors: Ali Saidi
  */
 
+#include "dev/ps2.hh"
+
 #include <list>
 
 #include "base/misc.hh"
-#include "dev/ps2.hh"
 #include "x11keysym/keysym.h"
 
 namespace Ps2 {

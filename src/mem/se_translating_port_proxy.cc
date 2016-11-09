@@ -42,13 +42,14 @@
  *          Andreas Hansson
  */
 
+#include "mem/se_translating_port_proxy.hh"
+
 #include <string>
 
 #include "arch/isa_traits.hh"
 #include "base/chunk_generator.hh"
 #include "config/the_isa.hh"
 #include "mem/page_table.hh"
-#include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
 

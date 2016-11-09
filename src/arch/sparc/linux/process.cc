@@ -31,6 +31,7 @@
  */
 
 #include "arch/sparc/linux/process.hh"
+
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
 #include "base/trace.hh"

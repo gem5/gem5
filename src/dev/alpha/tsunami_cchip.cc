@@ -33,6 +33,8 @@
  * Emulation of the Tsunami CChip CSRs
  */
 
+#include "dev/alpha/tsunami_cchip.hh"
+
 #include <deque>
 #include <string>
 #include <vector>
@@ -45,7 +47,6 @@
 #include "debug/IPI.hh"
 #include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
-#include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunamireg.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

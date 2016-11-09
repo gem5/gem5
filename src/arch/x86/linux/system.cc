@@ -38,9 +38,10 @@
  */
 
 #include "arch/x86/linux/system.hh"
-#include "arch/x86/regs/int.hh"
-#include "arch/x86/isa_traits.hh"
+
 #include "arch/vtophys.hh"
+#include "arch/x86/isa_traits.hh"
+#include "arch/x86/regs/int.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/port_proxy.hh"

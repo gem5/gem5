@@ -41,6 +41,7 @@
  */
 
 #include "arch/x86/bios/smbios.hh"
+
 #include "arch/x86/isa_traits.hh"
 #include "base/types.hh"
 #include "mem/port_proxy.hh"

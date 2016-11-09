@@ -38,6 +38,7 @@
  */
 
 #include "arch/arm/insts/mem64.hh"
+
 #include "arch/arm/tlb.hh"
 #include "base/loader/symtab.hh"
 #include "mem/request.hh"

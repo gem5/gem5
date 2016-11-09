@@ -30,6 +30,7 @@
  */
 
 #include "arch/power/insts/static_inst.hh"
+
 #include "cpu/reg_class.hh"
 
 using namespace PowerISA;

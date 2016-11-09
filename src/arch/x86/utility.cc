@@ -38,10 +38,11 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/utility.hh"
+
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/registers.hh"
 #include "arch/x86/tlb.hh"
-#include "arch/x86/utility.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/base.hh"
 #include "fputils/fp80.h"

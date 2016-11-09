@@ -35,6 +35,8 @@
  * @file
  * Definitions of functional page table.
  */
+#include "mem/page_table.hh"
+
 #include <fstream>
 #include <map>
 #include <memory>
@@ -45,7 +47,6 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/MMU.hh"
-#include "mem/page_table.hh"
 #include "sim/faults.hh"
 #include "sim/sim_object.hh"
 

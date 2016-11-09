@@ -38,9 +38,9 @@
  *          Marco Elver
  */
 
-#include <cassert>
-
 #include "mem/mem_checker.hh"
+
+#include <cassert>
 
 void
 MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,

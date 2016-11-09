@@ -33,13 +33,14 @@
  *          Deyuan Guo
  */
 
+#include "arch/mips/tlb.hh"
+
 #include <string>
 #include <vector>
 
 #include "arch/mips/faults.hh"
 #include "arch/mips/pagetable.hh"
 #include "arch/mips/pra_constants.hh"
-#include "arch/mips/tlb.hh"
 #include "arch/mips/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"

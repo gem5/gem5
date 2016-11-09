@@ -29,9 +29,11 @@
  *          Steve Reinhardt
  */
 
+#include "base/loader/object_file.hh"
+
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <zlib.h>
 
@@ -39,14 +41,13 @@
 #include <list>
 #include <string>
 
+#include "base/cprintf.hh"
 #include "base/loader/aout_object.hh"
 #include "base/loader/dtb_object.hh"
 #include "base/loader/ecoff_object.hh"
 #include "base/loader/elf_object.hh"
-#include "base/loader/object_file.hh"
 #include "base/loader/raw_object.hh"
 #include "base/loader/symtab.hh"
-#include "base/cprintf.hh"
 #include "mem/port_proxy.hh"
 
 using namespace std;

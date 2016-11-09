@@ -28,10 +28,11 @@
  * Authors: Nathan Binkert
  */
 
+#include "arch/alpha/stacktrace.hh"
+
 #include <string>
 
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/stacktrace.hh"
 #include "arch/alpha/vtophys.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"

@@ -39,6 +39,8 @@
  *          Stephan Diestelhorst
  */
 
+#include "sim/dvfs_handler.hh"
+
 #include <set>
 #include <utility>
 
@@ -46,7 +48,6 @@
 #include "debug/DVFS.hh"
 #include "params/DVFSHandler.hh"
 #include "sim/clock_domain.hh"
-#include "sim/dvfs_handler.hh"
 #include "sim/stat_control.hh"
 #include "sim/voltage_domain.hh"
 

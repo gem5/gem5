@@ -45,18 +45,19 @@
  *          Rick Strong
  */
 
+#include "cpu/base.hh"
+
 #include <iostream>
 #include <sstream>
 #include <string>
 
 #include "arch/tlb.hh"
-#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"

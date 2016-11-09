@@ -38,9 +38,10 @@
  *          Andreas Hansson
  */
 
+#include "mem/comm_monitor.hh"
+
 #include "base/trace.hh"
 #include "debug/CommMonitor.hh"
-#include "mem/comm_monitor.hh"
 #include "sim/stats.hh"
 
 CommMonitor::CommMonitor(Params* params)

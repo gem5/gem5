@@ -26,8 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/intmath.hh"
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
+
+#include "base/intmath.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;

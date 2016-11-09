@@ -41,6 +41,7 @@
 #define __DEV_PS2_HH__
 
 #include <stdint.h>
+#include <list>
 
 #include "base/bitunion.hh"
 

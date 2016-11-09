@@ -27,6 +27,7 @@
  */
 
 #include "mem/ruby/profiler/StoreTrace.hh"
+
 #include "sim/core.hh"
 
 using namespace std;

@@ -32,6 +32,7 @@
  */
 
 #include "arch/mips/interrupts.hh"
+
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/pra_constants.hh"
 #include "base/trace.hh"

@@ -29,9 +29,10 @@
  *          Ali Saidi
  */
 
-#include "arch/alpha/linux/linux.hh"
 #include "arch/alpha/linux/process.hh"
+
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/linux/linux.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"

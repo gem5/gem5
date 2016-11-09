@@ -29,10 +29,11 @@
  *          Nathan Binkert
  */
 
+#include "arch/alpha/system.hh"
+
 #include <sys/signal.h>
 
 #include "arch/alpha/ev5.hh"
-#include "arch/alpha/system.hh"
 #include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"

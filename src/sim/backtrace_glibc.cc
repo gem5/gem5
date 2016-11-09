@@ -37,12 +37,11 @@
  * Authors: Andreas Sandberg
  */
 
-#include "sim/backtrace.hh"
-
 #include <execinfo.h>
 #include <unistd.h>
 
 #include "base/atomicio.hh"
+#include "sim/backtrace.hh"
 
 #define SAFE_MSG(m)                                             \
     do {                                                        \

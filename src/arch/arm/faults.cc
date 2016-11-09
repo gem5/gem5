@@ -45,9 +45,10 @@
  */
 
 #include "arch/arm/faults.hh"
+
+#include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
-#include "arch/arm/insts/static_inst.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

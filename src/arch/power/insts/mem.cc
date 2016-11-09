@@ -29,6 +29,7 @@
  */
 
 #include "arch/power/insts/mem.hh"
+
 #include "base/loader/symtab.hh"
 
 using namespace PowerISA;

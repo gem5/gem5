@@ -37,13 +37,14 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/pipeline.hh"
+
 #include <algorithm>
 
 #include "cpu/minor/decode.hh"
 #include "cpu/minor/execute.hh"
 #include "cpu/minor/fetch1.hh"
 #include "cpu/minor/fetch2.hh"
-#include "cpu/minor/pipeline.hh"
 #include "debug/Drain.hh"
 #include "debug/MinorCPU.hh"
 #include "debug/MinorTrace.hh"

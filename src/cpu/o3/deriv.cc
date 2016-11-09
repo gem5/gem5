@@ -28,9 +28,10 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/o3/deriv.hh"
+
 #include <string>
 
-#include "cpu/o3/deriv.hh"
 #include "params/DerivO3CPU.hh"
 
 DerivO3CPU *

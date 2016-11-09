@@ -33,23 +33,27 @@
 #endif
 
 #if defined(__sun)
-#include <math.h>
+#include <cmath>
+
 #endif
 
 #include <cassert>
+
 #ifdef __SUNPRO_CC
-#include <math.h>
+#include <cmath>
+
 #endif
+#include "base/stats/text.hh"
+
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "base/stats/info.hh"
-#include "base/stats/text.hh"
 #include "base/cast.hh"
 #include "base/misc.hh"
+#include "base/stats/info.hh"
 #include "base/str.hh"
 
 using namespace std;

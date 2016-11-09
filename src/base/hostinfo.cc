@@ -34,7 +34,10 @@
 #include <mach/mach_init.h>
 #include <mach/shared_region.h>
 #include <mach/task.h>
+
 #endif
+
+#include "base/hostinfo.hh"
 
 #include <cctype>
 #include <cerrno>
@@ -44,7 +47,6 @@
 #include <cstring>
 #include <string>
 
-#include "base/hostinfo.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
 #include "base/types.hh"

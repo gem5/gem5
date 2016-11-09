@@ -29,6 +29,8 @@
  *          Ali Saidi
  */
 
+#include "sim/syscall_emul.hh"
+
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -47,7 +49,6 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/sim_exit.hh"
-#include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
 using namespace std;

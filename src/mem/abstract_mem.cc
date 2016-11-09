@@ -42,13 +42,14 @@
  *          Andreas Hansson
  */
 
+#include "mem/abstract_mem.hh"
+
 #include <vector>
 
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
-#include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 

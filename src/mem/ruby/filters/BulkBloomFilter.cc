@@ -26,11 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/filters/BulkBloomFilter.hh"
+
 #include <cassert>
 
 #include "base/intmath.hh"
 #include "base/str.hh"
-#include "mem/ruby/filters/BulkBloomFilter.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 using namespace std;

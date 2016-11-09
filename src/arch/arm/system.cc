@@ -40,14 +40,15 @@
  * Authors: Ali Saidi
  */
 
+#include "arch/arm/system.hh"
+
 #include <iostream>
 
-#include "arch/arm/system.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
-#include "mem/physical.hh"
 #include "mem/fs_translating_port_proxy.hh"
+#include "mem/physical.hh"
 #include "sim/full_system.hh"
 
 using namespace std;

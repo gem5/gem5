@@ -26,8 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/intmath.hh"
 #include "mem/ruby/filters/H3BloomFilter.hh"
+
+#include "base/intmath.hh"
 
 using namespace std;
 

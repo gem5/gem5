@@ -37,11 +37,12 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/func_unit.hh"
+
 #include <iomanip>
 #include <sstream>
 #include <typeinfo>
 
-#include "cpu/minor/func_unit.hh"
 #include "debug/MinorTiming.hh"
 #include "enums/OpClass.hh"
 

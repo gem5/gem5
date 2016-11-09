@@ -35,6 +35,8 @@
  * Alpha Console Backdoor Definition
  */
 
+#include "dev/alpha/backdoor.hh"
+
 #include <cstddef>
 #include <string>
 
@@ -45,7 +47,6 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/AlphaBackdoor.hh"
-#include "dev/alpha/backdoor.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_io.hh"

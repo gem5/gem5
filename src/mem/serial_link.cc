@@ -56,7 +56,6 @@
 #include "debug/SerialLink.hh"
 #include "params/SerialLink.hh"
 
-
 SerialLink::SerialLinkSlavePort::SerialLinkSlavePort(const std::string& _name,
                                          SerialLink& _serial_link,
                                          SerialLinkMasterPort& _masterPort,

@@ -37,8 +37,9 @@
  * Authors: Andreas Sandberg
  */
 
-#include "debug/VIOPci.hh"
 #include "dev/virtio/pci.hh"
+
+#include "debug/VIOPci.hh"
 #include "mem/packet_access.hh"
 #include "params/PciVirtIO.hh"
 

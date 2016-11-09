@@ -26,11 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
+
 #include <vector>
 
 #include "base/intmath.hh"
 #include "base/str.hh"
-#include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
 using namespace std;
 

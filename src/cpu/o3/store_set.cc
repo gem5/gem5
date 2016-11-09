@@ -28,10 +28,11 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/o3/store_set.hh"
+
 #include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "cpu/o3/store_set.hh"
 #include "debug/StoreSet.hh"
 
 StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)

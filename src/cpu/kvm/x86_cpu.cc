@@ -28,18 +28,19 @@
  * Authors: Andreas Sandberg
  */
 
+#include "cpu/kvm/x86_cpu.hh"
+
 #include <linux/kvm.h>
 
 #include <algorithm>
 #include <cerrno>
 #include <memory>
 
-#include "arch/x86/regs/msr.hh"
-#include "arch/x86/cpuid.hh"
-#include "arch/x86/utility.hh"
 #include "arch/registers.hh"
+#include "arch/x86/cpuid.hh"
+#include "arch/x86/regs/msr.hh"
+#include "arch/x86/utility.hh"
 #include "cpu/kvm/base.hh"
-#include "cpu/kvm/x86_cpu.hh"
 #include "debug/Drain.hh"
 #include "debug/Kvm.hh"
 #include "debug/KvmContext.hh"

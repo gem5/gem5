@@ -28,10 +28,11 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/pred/2bit_local.hh"
+
 #include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "cpu/pred/2bit_local.hh"
 #include "debug/Fetch.hh"
 
 LocalBP::LocalBP(const LocalBPParams *params)

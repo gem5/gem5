@@ -29,6 +29,7 @@
  */
 
 #include "arch/sparc/system.hh"
+
 #include "arch/vtophys.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"

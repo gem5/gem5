@@ -37,13 +37,14 @@
  * Authors: Andrew Bardsley
  */
 
+#include "sim/cxx_manager.hh"
+
 #include <cstdlib>
 #include <sstream>
 
 #include "base/str.hh"
 #include "debug/CxxConfig.hh"
 #include "mem/mem_object.hh"
-#include "sim/cxx_manager.hh"
 #include "sim/serialize.hh"
 
 CxxConfigManager::CxxConfigManager(CxxConfigFileBase &configFile_) :

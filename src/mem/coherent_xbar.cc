@@ -47,11 +47,12 @@
  * Definition of a crossbar object.
  */
 
+#include "mem/coherent_xbar.hh"
+
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"
 #include "debug/CoherentXBar.hh"
-#include "mem/coherent_xbar.hh"
 #include "sim/system.hh"
 
 CoherentXBar::CoherentXBar(const CoherentXBarParams *p)

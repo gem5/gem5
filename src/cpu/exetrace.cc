@@ -31,6 +31,8 @@
  *          Steve Raasch
  */
 
+#include "cpu/exetrace.hh"
+
 #include <iomanip>
 
 #include "arch/isa_traits.hh"
@@ -38,7 +40,6 @@
 #include "base/loader/symtab.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-#include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecAll.hh"

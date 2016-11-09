@@ -28,12 +28,13 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/loader/symtab.hh"
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
 #include "base/types.hh"

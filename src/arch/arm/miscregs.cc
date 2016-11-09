@@ -39,8 +39,9 @@
  *          Giacomo Gabrielli
  */
 
-#include "arch/arm/isa.hh"
 #include "arch/arm/miscregs.hh"
+
+#include "arch/arm/isa.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"

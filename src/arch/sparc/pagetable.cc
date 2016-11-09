@@ -29,6 +29,7 @@
  */
 
 #include "arch/sparc/pagetable.hh"
+
 #include "sim/serialize.hh"
 
 namespace SparcISA

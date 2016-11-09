@@ -28,10 +28,11 @@
  * Authors: Gabe Black
  */
 
+#include "unittest/unittest.hh"
+
 #include <cstdlib>
 
 #include "base/cprintf.hh"
-#include "unittest/unittest.hh"
 
 namespace {
 

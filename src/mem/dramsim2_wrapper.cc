@@ -48,12 +48,13 @@
 #undef DEBUG
 #endif
 
+#include "mem/dramsim2_wrapper.hh"
+
 #include <fstream>
 
 #include "DRAMSim2/MultiChannelMemorySystem.h"
 #include "base/compiler.hh"
 #include "base/misc.hh"
-#include "mem/dramsim2_wrapper.hh"
 
 /**
  * DRAMSim2 requires SHOW_SIM_OUTPUT to be defined (declared extern in

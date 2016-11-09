@@ -30,9 +30,10 @@
 
 #include "debug/RubyQueue.hh"
 #include "mem/protocol/MemoryMsg.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/system/GPUCoalescer.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/GPUCoalescer.hh"
 #include "sim/system.hh"
 
 AbstractController::AbstractController(const Params *p)

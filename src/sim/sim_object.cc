@@ -30,6 +30,8 @@
  *          Nathan Binkert
  */
 
+#include "sim/sim_object.hh"
+
 #include <cassert>
 
 #include "base/callback.hh"
@@ -40,7 +42,6 @@
 #include "base/types.hh"
 #include "debug/Checkpoint.hh"
 #include "sim/probe/probe.hh"
-#include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
 using namespace std;

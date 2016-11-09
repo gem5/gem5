@@ -37,11 +37,12 @@
  * Authors: Matt Evans
  */
 
+#include "dev/arm/vgic.hh"
+
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/VGIC.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/arm/vgic.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

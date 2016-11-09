@@ -37,12 +37,13 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/execute.hh"
+
 #include "arch/locked_mem.hh"
 #include "arch/registers.hh"
 #include "arch/utility.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/exec_context.hh"
-#include "cpu/minor/execute.hh"
 #include "cpu/minor/fetch1.hh"
 #include "cpu/minor/lsq.hh"
 #include "cpu/op_class.hh"

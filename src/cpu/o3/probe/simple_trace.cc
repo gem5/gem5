@@ -37,8 +37,9 @@
  * Authors: Matt Horsnell
  */
 
-#include "base/trace.hh"
 #include "cpu/o3/probe/simple_trace.hh"
+
+#include "base/trace.hh"
 #include "debug/SimpleTrace.hh"
 
 void SimpleTrace::traceCommit(const O3CPUImpl::DynInstPtr &dynInst)

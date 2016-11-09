@@ -26,8 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
+
+#include "mem/ruby/common/Histogram.hh"
 
 AccessTraceForAddress::~AccessTraceForAddress()
 {

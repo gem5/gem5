@@ -37,11 +37,12 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/fetch2.hh"
+
 #include <string>
 
 #include "arch/decoder.hh"
 #include "arch/utility.hh"
-#include "cpu/minor/fetch2.hh"
 #include "cpu/minor/pipeline.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "debug/Branch.hh"

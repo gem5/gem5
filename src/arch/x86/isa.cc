@@ -28,8 +28,9 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/decoder.hh"
 #include "arch/x86/isa.hh"
+
+#include "arch/x86/decoder.hh"
 #include "arch/x86/tlb.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"

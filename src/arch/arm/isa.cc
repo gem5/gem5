@@ -39,10 +39,11 @@
  */
 
 #include "arch/arm/isa.hh"
+
 #include "arch/arm/pmu.hh"
 #include "arch/arm/system.hh"
-#include "cpu/checker/cpu.hh"
 #include "cpu/base.hh"
+#include "cpu/checker/cpu.hh"
 #include "debug/Arm.hh"
 #include "debug/MiscRegs.hh"
 #include "dev/arm/generic_timer.hh"

@@ -32,13 +32,14 @@
  * Implementation of T1000 platform.
  */
 
+#include "dev/sparc/t1000.hh"
+
 #include <deque>
 #include <string>
 #include <vector>
 
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
-#include "dev/sparc/t1000.hh"
 #include "dev/terminal.hh"
 #include "sim/system.hh"
 

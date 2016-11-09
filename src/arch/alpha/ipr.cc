@@ -28,10 +28,10 @@
  * Authors: Gabe Black
  */
 
+#include "arch/alpha/ipr.hh"
+
 #include <cassert>
 #include <cstring>
-
-#include "arch/alpha/ipr.hh"
 
 namespace AlphaISA {
 

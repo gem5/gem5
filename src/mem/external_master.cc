@@ -38,11 +38,12 @@
  *          Curtis Dunham
  */
 
+#include "mem/external_master.hh"
+
 #include <cctype>
 #include <iomanip>
 
 #include "debug/ExternalPort.hh"
-#include "mem/external_master.hh"
 
 std::map<std::string, ExternalMaster::Handler *>
     ExternalMaster::portHandlers;

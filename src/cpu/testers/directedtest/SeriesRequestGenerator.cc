@@ -27,10 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
+
 #include "base/random.hh"
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
-#include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
 #include "debug/DirectedTest.hh"
 
 SeriesRequestGenerator::SeriesRequestGenerator(const Params *p)

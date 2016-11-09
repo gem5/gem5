@@ -31,12 +31,13 @@
  *          Steve Reinhardt
  */
 
+#include "sim/core.hh"
+
 #include <iostream>
 #include <string>
 
 #include "base/callback.hh"
 #include "base/output.hh"
-#include "sim/core.hh"
 #include "sim/eventq.hh"
 
 using namespace std;

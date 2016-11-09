@@ -37,8 +37,9 @@
  * Authors: Andreas Sandberg
  */
 
-#include "debug/VIO.hh"
 #include "dev/virtio/base.hh"
+
+#include "debug/VIO.hh"
 #include "params/VirtIODeviceBase.hh"
 
 VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, VirtQueue &_queue,

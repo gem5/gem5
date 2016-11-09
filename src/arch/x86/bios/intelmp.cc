@@ -38,6 +38,7 @@
  */
 
 #include "arch/x86/bios/intelmp.hh"
+
 #include "arch/x86/isa_traits.hh"
 #include "base/misc.hh"
 #include "base/types.hh"

@@ -37,8 +37,9 @@
  * Authors: Andreas Hansson
  */
 
-#include "base/chunk_generator.hh"
 #include "mem/port_proxy.hh"
+
+#include "base/chunk_generator.hh"
 
 void
 PortProxy::readBlob(Addr addr, uint8_t *p, int size) const

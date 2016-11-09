@@ -1,6 +1,7 @@
+#include "mem/hmc_controller.hh"
+
 #include "base/random.hh"
 #include "debug/HMCController.hh"
-#include "mem/hmc_controller.hh"
 
 HMCController::HMCController(const HMCControllerParams* p) :
     NoncoherentXBar(p),

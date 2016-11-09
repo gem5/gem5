@@ -41,13 +41,14 @@
  *          Andreas Sandberg
  */
 
+#include "base/misc.hh"
+
 #include <cstdlib>
 #include <cstring>
 #include <string>
 
 #include "base/cprintf.hh"
 #include "base/hostinfo.hh"
-#include "base/misc.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "base/types.hh"

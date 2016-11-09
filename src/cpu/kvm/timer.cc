@@ -37,15 +37,17 @@
  * Authors: Andreas Sandberg
  */
 
+#include "cpu/kvm/timer.hh"
+
+#include <sys/syscall.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <csignal>
 #include <ctime>
-#include <unistd.h>
-#include <sys/syscall.h>
 
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "cpu/kvm/timer.hh"
 #include "debug/KvmTimer.hh"
 
 /* According to timer_create(2), the value SIGEV_THREAD_ID can be used

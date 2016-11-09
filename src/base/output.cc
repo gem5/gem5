@@ -44,10 +44,13 @@
  *          Sascha Bischoff
  */
 
+#include "base/output.hh"
+
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <unistd.h>
+#include <zfstream.h>
 
 #include <cassert>
 #include <cerrno>
@@ -55,10 +58,7 @@
 #include <cstdlib>
 #include <fstream>
 
-#include <zfstream.h>
-
 #include "base/misc.hh"
-#include "base/output.hh"
 
 using namespace std;
 

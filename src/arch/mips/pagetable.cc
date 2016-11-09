@@ -32,6 +32,7 @@
  */
 
 #include "arch/mips/pagetable.hh"
+
 #include "sim/serialize.hh"
 
 namespace MipsISA

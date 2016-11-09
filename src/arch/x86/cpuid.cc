@@ -29,6 +29,7 @@
  */
 
 #include "arch/x86/cpuid.hh"
+
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 

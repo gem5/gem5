@@ -29,6 +29,7 @@
  */
 
 #include "arch/x86/pseudo_inst.hh"
+
 #include "arch/x86/system.hh"
 #include "debug/PseudoInst.hh"
 #include "sim/process.hh"

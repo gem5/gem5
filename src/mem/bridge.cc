@@ -48,9 +48,10 @@
  * and a slave through a request and response queue.
  */
 
+#include "mem/bridge.hh"
+
 #include "base/trace.hh"
 #include "debug/Bridge.hh"
-#include "mem/bridge.hh"
 #include "params/Bridge.hh"
 
 Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,

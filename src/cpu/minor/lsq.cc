@@ -37,6 +37,8 @@
  * Authors: Andrew Bardsley
  */
 
+#include "cpu/minor/lsq.hh"
+
 #include <iomanip>
 #include <sstream>
 
@@ -45,7 +47,6 @@
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/exec_context.hh"
 #include "cpu/minor/execute.hh"
-#include "cpu/minor/lsq.hh"
 #include "cpu/minor/pipeline.hh"
 #include "debug/Activity.hh"
 #include "debug/MinorMem.hh"

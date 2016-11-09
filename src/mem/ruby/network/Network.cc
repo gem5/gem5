@@ -26,9 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/network/Network.hh"
+
 #include "base/misc.hh"
 #include "mem/ruby/network/BasicLink.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 uint32_t Network::m_virtual_networks;

@@ -40,9 +40,10 @@
  * Authors: Ali Saidi
  */
 
+#include "dev/arm/amba_fake.hh"
+
 #include "base/trace.hh"
 #include "debug/AMBA.hh"
-#include "dev/arm/amba_fake.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 

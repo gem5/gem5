@@ -28,9 +28,10 @@
  * Authors: Nathan Binkert
  */
 
+#include "python/swig/pyevent.hh"
+
 #include <Python.h>
 
-#include "python/swig/pyevent.hh"
 #include "sim/async.hh"
 #include "sim/eventq.hh"
 

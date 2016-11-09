@@ -32,6 +32,7 @@
 #define __PYTHON_SWIG_PYEVENT_HH__
 
 #include "sim/eventq.hh"
+#include "sim/init.hh"
 #include "sim/sim_events.hh"
 
 class PythonEvent : public Event

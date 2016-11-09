@@ -29,15 +29,16 @@
  *          Kevin Lim
  */
 
-#include "arch/alpha/ev5.hh"
 #include "arch/alpha/faults.hh"
+
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/tlb.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
-#include "sim/process.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 
 namespace AlphaISA {
 

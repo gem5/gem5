@@ -31,9 +31,9 @@
  *          Steve Reinhardt
  */
 
-#include "cpu/o3/free_list.hh"
 #include "cpu/o3/regfile.hh"
 
+#include "cpu/o3/free_list.hh"
 
 PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
                          unsigned _numPhysicalFloatRegs,

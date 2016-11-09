@@ -34,6 +34,7 @@
  */
 
 #include "arch/mips/faults.hh"
+
 #include "arch/mips/pra_constants.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"

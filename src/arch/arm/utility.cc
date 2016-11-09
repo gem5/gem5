@@ -37,16 +37,17 @@
  * Authors: Ali Saidi
  */
 
+#include "arch/arm/utility.hh"
+
 #include <memory>
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
-#include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
-#include "cpu/checker/cpu.hh"
 #include "cpu/base.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "sim/full_system.hh"

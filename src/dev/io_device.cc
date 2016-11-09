@@ -41,9 +41,10 @@
  *          Nathan Binkert
  */
 
+#include "dev/io_device.hh"
+
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"
-#include "dev/io_device.hh"
 #include "sim/system.hh"
 
 PioPort::PioPort(PioDevice *dev)

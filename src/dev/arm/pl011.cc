@@ -51,8 +51,8 @@
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/sim_exit.hh"
 #include "params/Pl011.hh"
+#include "sim/sim_exit.hh"
 
 Pl011::Pl011(const Pl011Params *p)
     : Uart(p, 0xfff),

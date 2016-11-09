@@ -41,8 +41,9 @@
  *          Andreas Hansson
  */
 
-#include "mem/mem_object.hh"
 #include "mem/tport.hh"
+
+#include "mem/mem_object.hh"
 
 SimpleTimingPort::SimpleTimingPort(const std::string& _name,
                                    MemObject* _owner) :

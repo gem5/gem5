@@ -40,9 +40,9 @@
  * Authors: Stephen Hines
  */
 
-#include <sstream>
-
 #include "arch/arm/insts/macromem.hh"
+
+#include <sstream>
 
 #include "arch/arm/generated/decoder.hh"
 #include "arch/arm/insts/neon64_mem.hh"

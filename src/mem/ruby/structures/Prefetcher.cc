@@ -26,9 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/structures/Prefetcher.hh"
+
 #include "debug/RubyPrefetcher.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/structures/Prefetcher.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 Prefetcher*

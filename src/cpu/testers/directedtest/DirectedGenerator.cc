@@ -28,6 +28,7 @@
  */
 
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
+
 #include "sim/system.hh"
 
 DirectedGenerator::DirectedGenerator(const Params *p)

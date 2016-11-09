@@ -29,13 +29,14 @@
  *          Steve Reinhardt
  */
 
+#include "base/inifile.hh"
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "base/inifile.hh"
 #include "base/str.hh"
 
 using namespace std;

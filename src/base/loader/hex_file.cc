@@ -28,14 +28,15 @@
  * Authors: Jaidev Patwardhan
  */
 
+#include "base/loader/hex_file.hh"
+
 #include <cctype>
 #include <cstdio>
 #include <list>
 #include <string>
 
-#include "base/loader/hex_file.hh"
-#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
 #include "mem/port_proxy.hh"
 
 using namespace std;

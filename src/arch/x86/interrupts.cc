@@ -49,19 +49,20 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/interrupts.hh"
+
 #include <memory>
 
-#include "arch/x86/regs/apic.hh"
-#include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
+#include "arch/x86/regs/apic.hh"
 #include "cpu/base.hh"
 #include "debug/LocalApic.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge.hh"
 #include "mem/packet_access.hh"
-#include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "sim/system.hh"
 
 int
 divideFromConf(uint32_t conf)

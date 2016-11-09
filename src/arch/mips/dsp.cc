@@ -29,6 +29,7 @@
  */
 
 #include "arch/mips/dsp.hh"
+
 #include "arch/mips/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"

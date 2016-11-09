@@ -470,6 +470,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
+#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 ''')

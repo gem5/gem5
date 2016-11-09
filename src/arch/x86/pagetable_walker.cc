@@ -49,10 +49,11 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/pagetable_walker.hh"
+
 #include <memory>
 
 #include "arch/x86/pagetable.hh"
-#include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/vtophys.hh"
 #include "base/bitfield.hh"

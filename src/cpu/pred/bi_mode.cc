@@ -32,9 +32,10 @@
  * Implementation of a bi-mode branch predictor
  */
 
+#include "cpu/pred/bi_mode.hh"
+
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
-#include "cpu/pred/bi_mode.hh"
 
 BiModeBP::BiModeBP(const BiModeBPParams *params)
     : BPredUnit(params),

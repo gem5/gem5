@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "base/statistics.hh"
+
 #include <fstream>
 #include <iomanip>
 #include <list>
@@ -39,7 +41,6 @@
 #include "base/debug.hh"
 #include "base/hostinfo.hh"
 #include "base/misc.hh"
-#include "base/statistics.hh"
 #include "base/str.hh"
 #include "base/time.hh"
 #include "base/trace.hh"

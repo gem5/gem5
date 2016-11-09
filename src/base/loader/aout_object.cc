@@ -28,9 +28,10 @@
  * Authors: Steve Reinhardt
  */
 
+#include "base/loader/aout_object.hh"
+
 #include <string>
 
-#include "base/loader/aout_object.hh"
 #include "base/loader/exec_aout.h"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"

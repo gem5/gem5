@@ -47,12 +47,13 @@
  * Definition of a crossbar object.
  */
 
+#include "mem/xbar.hh"
+
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"
 #include "debug/Drain.hh"
 #include "debug/XBar.hh"
-#include "mem/xbar.hh"
 
 BaseXBar::BaseXBar(const BaseXBarParams *p)
     : MemObject(p),

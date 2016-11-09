@@ -43,12 +43,13 @@
  *          Stephen Hines
  */
 
+#include "arch/arm/vtophys.hh"
+
 #include <string>
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
-#include "arch/arm/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

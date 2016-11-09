@@ -37,16 +37,17 @@
  * Authors: Andreas Sandberg
  */
 
+#include "dev/virtio/fs9p.hh"
+
+#include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <fcntl.h>
-#include <netdb.h>
 #include <unistd.h>
 
 #include "debug/VIO9P.hh"
 #include "debug/VIO9PData.hh"
-#include "dev/virtio/fs9p.hh"
 #include "params/VirtIO9PBase.hh"
 #include "params/VirtIO9PDiod.hh"
 #include "params/VirtIO9PProxy.hh"
