@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2016 Advanced Micro Devices, Inc.
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,6 +28,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Brandon Potter
  */
 
 #ifndef __PROCESS_HH__
@@ -35,7 +36,6 @@
 
 #include <inttypes.h>
 
-#include <array>
 #include <map>
 #include <string>
 #include <vector>
@@ -45,6 +45,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "mem/se_translating_port_proxy.hh"
+#include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
 #include "sim/sim_object.hh"
 
@@ -115,41 +116,8 @@ class Process : public SimObject
     Addr getStartPC();
     ObjectFile *getInterpreter();
 
-    // inherit file descriptor map from another process (necessary for clone)
-    void inheritFDArray(Process *p);
-
     // override of virtual SimObject method: register statistics
     void regStats() override;
-
-    // generate new target fd for sim_fd
-    int allocFD(int sim_fd, const std::string& filename, int flags, int mode,
-                bool pipe);
-
-    // disassociate target fd with simulator fd and cleanup subsidiary fields
-    void resetFDEntry(int tgt_fd);
-
-    // look up simulator fd for given target fd
-    int getSimFD(int tgt_fd);
-
-    // look up fd entry for a given target fd
-    FDEntry *getFDEntry(int tgt_fd);
-
-    // look up target fd for given host fd
-    // Assumes a 1:1 mapping between target file descriptor and host file
-    // descriptor. Given the current API, this must be true given that it's
-    // not possible to map multiple target file descriptors to the same host
-    // file descriptor
-    int getTgtFD(int sim_fd);
-
-    // fix all offsets for currently open files and save them
-    void fixFileOffsets();
-
-    // find all offsets for currently open files and save them
-    void findFileOffsets();
-
-    // set the source of this read pipe for a checkpoint resume
-    void setReadPipeSource(int read_pipe_fd, int source_fd);
-
 
     void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
 
@@ -216,15 +184,6 @@ class Process : public SimObject
 
     SETranslatingPortProxy initVirtMem; // memory proxy for initial image load
 
-    static const int NUM_FDS = 1024;
-
-    // File descriptor remapping support.
-    std::shared_ptr<std::array<FDEntry, NUM_FDS>> fd_array;
-
-    // Standard file descriptor options for initialization and checkpoints.
-    std::map<std::string, int> imap;
-    std::map<std::string, int> oemap;
-
     ObjectFile *objFile;
     std::vector<std::string> argv;
     std::vector<std::string> envp;
@@ -243,6 +202,8 @@ class Process : public SimObject
 
     // Emulated drivers available to this process
     std::vector<EmulatedDriver *> drivers;
+
+    std::shared_ptr<FDArray> fds;
 };
 
 #endif // __PROCESS_HH__

@@ -172,16 +172,7 @@ closeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->getSimFD(tgt_fd);
-    if (sim_fd < 0)
-        return -EBADF;
-
-    int status = 0;
-    if (sim_fd > 2)
-        status = close(sim_fd);
-    if (status >= 0)
-        p->resetFDEntry(tgt_fd);
-    return status;
+    return p->fds->closeFDEntry(tgt_fd);
 }
 
 
@@ -192,12 +183,13 @@ readFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     int tgt_fd = p->getSyscallArg(tc, index);
     Addr bufPtr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
-    BufferArg bufArg(bufPtr, nbytes);
 
-    int sim_fd = p->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+    if (!hbfdp)
         return -EBADF;
+    int sim_fd = hbfdp->getSimFD();
 
+    BufferArg bufArg(bufPtr, nbytes);
     int bytes_read = read(sim_fd, bufArg.bufferPtr(), nbytes);
 
     if (bytes_read > 0)
@@ -213,12 +205,13 @@ writeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     int tgt_fd = p->getSyscallArg(tc, index);
     Addr bufPtr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
-    BufferArg bufArg(bufPtr, nbytes);
 
-    int sim_fd = p->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+    if (!hbfdp)
         return -EBADF;
+    int sim_fd = hbfdp->getSimFD();
 
+    BufferArg bufArg(bufPtr, nbytes);
     bufArg.copyIn(tc->getMemProxy());
 
     int bytes_written = write(sim_fd, bufArg.bufferPtr(), nbytes);
@@ -237,9 +230,10 @@ lseekFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     uint64_t offs = p->getSyscallArg(tc, index);
     int whence = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     off_t result = lseek(sim_fd, offs, whence);
 
@@ -257,9 +251,10 @@ _llseekFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     Addr result_ptr = p->getSyscallArg(tc, index);
     int whence = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     uint64_t offset = (offset_high << 32) | offset_low;
 
@@ -322,7 +317,7 @@ getcwdFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
         strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
         result = cwd.length();
     } else {
-        if (getcwd((char *)buf.bufferPtr(), size) != NULL) {
+        if (getcwd((char *)buf.bufferPtr(), size)) {
             result = strlen((char *)buf.bufferPtr());
         } else {
             result = -1;
@@ -484,16 +479,16 @@ truncateFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 }
 
 SyscallReturn
-ftruncateFunc(SyscallDesc *desc, int num,
-              Process *process, ThreadContext *tc)
+ftruncateFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    off_t length = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    off_t length = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     int result = ftruncate(sim_fd, length);
     return (result == -1) ? -errno : result;
@@ -523,16 +518,16 @@ truncate64Func(SyscallDesc *desc, int num,
 }
 
 SyscallReturn
-ftruncate64Func(SyscallDesc *desc, int num,
-                Process *process, ThreadContext *tc)
+ftruncate64Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    int64_t length = process->getSyscallArg(tc, index, 64);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    int64_t length = p->getSyscallArg(tc, index, 64);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
 #if NO_STAT64
     int result = ftruncate(sim_fd, length);
@@ -576,19 +571,20 @@ chownFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 }
 
 SyscallReturn
-fchownFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
+fchownFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     /* XXX endianess */
-    uint32_t owner = process->getSyscallArg(tc, index);
+    uint32_t owner = p->getSyscallArg(tc, index);
     uid_t hostOwner = owner;
-    uint32_t group = process->getSyscallArg(tc, index);
+    uint32_t group = p->getSyscallArg(tc, index);
     gid_t hostGroup = group;
 
     int result = fchown(sim_fd, hostOwner, hostGroup);
@@ -596,36 +592,47 @@ fchownFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
 }
 
 
+/**
+ * TODO: there's a bit more involved here since file descriptors created with
+ * dup are supposed to share a file description. So, there is a problem with
+ * maintaining fields like file offset or flags since an update to such a
+ * field won't be reflected in the metadata for the fd entries that we
+ * maintain to hold metadata for checkpoint restoration.
+ */
 SyscallReturn
-dupFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
+dupFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto old_hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+    if (!old_hbfdp)
         return -EBADF;
-
-    FDEntry *fde = process->getFDEntry(tgt_fd);
+    int sim_fd = old_hbfdp->getSimFD();
 
     int result = dup(sim_fd);
-    return (result == -1) ? -errno :
-        process->allocFD(result, fde->filename, fde->flags, fde->mode, false);
+    int local_errno = errno;
+
+    std::shared_ptr<FDEntry> new_fdep = old_hbfdp->clone();
+    auto new_hbfdp = std::dynamic_pointer_cast<HBFDEntry>(new_fdep);
+    new_hbfdp->setSimFD(result);
+
+    return (result == -1) ? -local_errno : p->fds->allocFD(new_fdep);
 }
 
 
 SyscallReturn
-fcntlFunc(SyscallDesc *desc, int num, Process *process,
-          ThreadContext *tc)
+fcntlFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+    if (!hbfdp)
         return -EBADF;
+    int sim_fd = hbfdp->getSimFD();
 
-    int cmd = process->getSyscallArg(tc, index);
+    int cmd = p->getSyscallArg(tc, index);
     switch (cmd) {
       case 0: // F_DUPFD
         // if we really wanted to support this, we'd need to do it
@@ -659,17 +666,17 @@ fcntlFunc(SyscallDesc *desc, int num, Process *process,
 }
 
 SyscallReturn
-fcntl64Func(SyscallDesc *desc, int num, Process *process,
-            ThreadContext *tc)
+fcntl64Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+    if (!hbfdp)
         return -EBADF;
+    int sim_fd = hbfdp->getSimFD();
 
-    int cmd = process->getSyscallArg(tc, index);
+    int cmd = p->getSyscallArg(tc, index);
     switch (cmd) {
       case 33: //F_GETLK64
         warn("fcntl64(%d, F_GETLK64) not supported, error returned\n", tgt_fd);
@@ -694,21 +701,32 @@ SyscallReturn
 pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
                ThreadContext *tc)
 {
-    int fds[2], sim_fds[2];
-    int pipe_retval = pipe(fds);
+    int sim_fds[2], tgt_fds[2];
 
-    if (pipe_retval < 0) {
-        // error
+    int pipe_retval = pipe(sim_fds);
+    if (pipe_retval < 0)
         return pipe_retval;
-    }
 
-    sim_fds[0] = process->allocFD(fds[0], "PIPE-READ", O_WRONLY, -1, true);
-    sim_fds[1] = process->allocFD(fds[1], "PIPE-WRITE", O_RDONLY, -1, true);
+    auto rend = PipeFDEntry::EndType::read;
+    auto rpfd = std::make_shared<PipeFDEntry>(sim_fds[0], O_WRONLY, rend);
 
-    process->setReadPipeSource(sim_fds[0], sim_fds[1]);
-    // Alpha Linux convention for pipe() is that fd[0] is returned as
-    // the return value of the function, and fd[1] is returned in r20.
-    tc->setIntReg(SyscallPseudoReturnReg, sim_fds[1]);
+    auto wend = PipeFDEntry::EndType::write;
+    auto wpfd = std::make_shared<PipeFDEntry>(sim_fds[1], O_RDONLY, wend);
+
+    tgt_fds[0] = process->fds->allocFD(rpfd);
+    tgt_fds[1] = process->fds->allocFD(wpfd);
+
+    /**
+     * Now patch the read object to record the target file descriptor chosen
+     * as the write end of the pipe.
+     */
+    rpfd->setPipeReadSource(tgt_fds[1]);
+
+    /**
+     * Alpha Linux convention for pipe() is that fd[0] is returned as
+     * the return value of the function, and fd[1] is returned in r20.
+     */
+    tc->setIntReg(SyscallPseudoReturnReg, tgt_fds[1]);
     return sim_fds[0];
 }
 
@@ -828,7 +846,7 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 
     ThreadContext* ctc; // child thread context
-    if ( ( ctc = process->findFreeContext() ) != NULL ) {
+    if ((ctc = process->findFreeContext())) {
         DPRINTF(SyscallVerbose, " Found unallocated thread context\n");
 
         ctc->clearArchRegs();
@@ -890,21 +908,21 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 SyscallReturn
-fallocateFunc(SyscallDesc *desc, int callnum, Process *process,
-              ThreadContext *tc)
+fallocateFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
 #if NO_FALLOCATE
     warn("Host OS cannot support calls to fallocate. Ignoring syscall");
 #else
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    int mode = process->getSyscallArg(tc, index);
-    off_t offset = process->getSyscallArg(tc, index);
-    off_t len = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    int mode = p->getSyscallArg(tc, index);
+    off_t offset = p->getSyscallArg(tc, index);
+    off_t len = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     int result = fallocate(sim_fd, mode, offset, len);
     if (result < 0)

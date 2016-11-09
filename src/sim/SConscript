@@ -78,6 +78,7 @@ if env['TARGET_ISA'] != 'null':
     Source('aux_vector.cc')
     Source('faults.cc')
     Source('process.cc')
+    Source('fd_array.cc')
     Source('fd_entry.cc')
     Source('pseudo_inst.cc')
     Source('syscall_emul.cc')

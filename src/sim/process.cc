@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2016 Advanced Micro Devices, Inc.
  * Copyright (c) 2012 ARM Limited
  * All rights reserved
  *
@@ -41,6 +41,7 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Ali Saidi
+ *          Brandon Potter
  */
 
 #include "sim/process.hh"
@@ -63,6 +64,8 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "params/Process.hh"
 #include "sim/emul_driver.hh"
+#include "sim/fd_array.hh"
+#include "sim/fd_entry.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
@@ -90,27 +93,6 @@
 using namespace std;
 using namespace TheISA;
 
-static int
-openFile(const string& filename, int flags, mode_t mode)
-{
-    int sim_fd = open(filename.c_str(), flags, mode);
-    if (sim_fd != -1)
-        return sim_fd;
-    fatal("Unable to open %s with mode %O", filename, mode);
-}
-
-static int
-openInputFile(const string &filename)
-{
-    return openFile(filename, O_RDONLY, 0);
-}
-
-static int
-openOutputFile(const string &filename)
-{
-    return openFile(filename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
-}
-
 Process::Process(ProcessParams * params, ObjectFile * obj_file)
     : SimObject(params), system(params->system),
       brk_point(0), stack_base(0), stack_size(0), stack_min(0),
@@ -124,58 +106,16 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
         static_cast<PageTableBase *>(new FuncPageTable(name(), params->pid))),
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always),
-      fd_array(make_shared<array<FDEntry, NUM_FDS>>()),
-      imap {{"",       -1},
-            {"cin",    STDIN_FILENO},
-            {"stdin",  STDIN_FILENO}},
-      oemap{{"",       -1},
-            {"cout",   STDOUT_FILENO},
-            {"stdout", STDOUT_FILENO},
-            {"cerr",   STDERR_FILENO},
-            {"stderr", STDERR_FILENO}},
       objFile(obj_file),
       argv(params->cmd), envp(params->env), cwd(params->cwd),
       executable(params->executable),
       _uid(params->uid), _euid(params->euid),
       _gid(params->gid), _egid(params->egid),
       _pid(params->pid), _ppid(params->ppid),
-      drivers(params->drivers)
+      drivers(params->drivers),
+      fds(make_shared<FDArray>(params->input, params->output, params->errout))
 {
-    int sim_fd;
-    std::map<string,int>::iterator it;
-
-    // Search through the input options and set fd if match is found;
-    // otherwise, open an input file and seek to location.
-    FDEntry *fde_stdin = getFDEntry(STDIN_FILENO);
-    if ((it = imap.find(params->input)) != imap.end())
-        sim_fd = it->second;
-    else
-        sim_fd = openInputFile(params->input);
-    fde_stdin->set(sim_fd, params->input, O_RDONLY, -1, false);
-
-    // Search through the output/error options and set fd if match is found;
-    // otherwise, open an output file and seek to location.
-    FDEntry *fde_stdout = getFDEntry(STDOUT_FILENO);
-    if ((it = oemap.find(params->output)) != oemap.end())
-        sim_fd = it->second;
-    else
-        sim_fd = openOutputFile(params->output);
-    fde_stdout->set(sim_fd, params->output, O_WRONLY | O_CREAT | O_TRUNC,
-                    0664, false);
-
-    FDEntry *fde_stderr = getFDEntry(STDERR_FILENO);
-    if (params->output == params->errout)
-        // Reuse the same file descriptor if these match.
-        sim_fd = fde_stdout->fd;
-    else if ((it = oemap.find(params->errout)) != oemap.end())
-        sim_fd = it->second;
-    else
-        sim_fd = openOutputFile(params->errout);
-    fde_stderr->set(sim_fd, params->errout, O_WRONLY | O_CREAT | O_TRUNC,
-                    0664, false);
-
     mmap_end = 0;
-    // other parameters will be initialized when the program is loaded
 
     // load up symbols, if any... these may be used for debugging or
     // profiling.
@@ -202,12 +142,6 @@ Process::regStats()
         .name(name() + ".num_syscalls")
         .desc("Number of system calls")
         ;
-}
-
-void
-Process::inheritFDArray(Process *p)
-{
-    fd_array = p->fd_array;
 }
 
 ThreadContext *
@@ -239,55 +173,8 @@ Process::initState()
 DrainState
 Process::drain()
 {
-    findFileOffsets();
+    fds->updateFileOffsets();
     return DrainState::Drained;
-}
-
-int
-Process::allocFD(int sim_fd, const string& filename, int flags, int mode,
-                 bool pipe)
-{
-    for (int free_fd = 0; free_fd < fd_array->size(); free_fd++) {
-        FDEntry *fde = getFDEntry(free_fd);
-        if (fde->isFree()) {
-            fde->set(sim_fd, filename, flags, mode, pipe);
-            return free_fd;
-        }
-    }
-
-    fatal("Out of target file descriptors");
-}
-
-void
-Process::resetFDEntry(int tgt_fd)
-{
-    FDEntry *fde = getFDEntry(tgt_fd);
-    assert(fde->fd > -1);
-
-    fde->reset();
-}
-
-int
-Process::getSimFD(int tgt_fd)
-{
-    FDEntry *entry = getFDEntry(tgt_fd);
-    return entry ? entry->fd : -1;
-}
-
-FDEntry *
-Process::getFDEntry(int tgt_fd)
-{
-    assert(0 <= tgt_fd && tgt_fd < fd_array->size());
-    return &(*fd_array)[tgt_fd];
-}
-
-int
-Process::getTgtFD(int sim_fd)
-{
-    for (int index = 0; index < fd_array->size(); index++)
-        if ((*fd_array)[index].fd == sim_fd)
-            return index;
-    return -1;
 }
 
 void
@@ -325,127 +212,6 @@ Process::fixupStackFault(Addr vaddr)
 }
 
 void
-Process::fixFileOffsets()
-{
-    auto seek = [] (FDEntry *fde)
-    {
-        if (lseek(fde->fd, fde->fileOffset, SEEK_SET) < 0)
-            fatal("Unable to see to location in %s", fde->filename);
-    };
-
-    std::map<string,int>::iterator it;
-
-    // Search through the input options and set fd if match is found;
-    // otherwise, open an input file and seek to location.
-    FDEntry *fde_stdin = getFDEntry(STDIN_FILENO);
-
-    // Check if user has specified a different input file, and if so, use it
-    // instead of the file specified in the checkpoint. This also resets the
-    // file offset from the checkpointed value
-    string new_in = ((ProcessParams*)params())->input;
-    if (new_in != fde_stdin->filename) {
-        warn("Using new input file (%s) rather than checkpointed (%s)\n",
-             new_in, fde_stdin->filename);
-        fde_stdin->filename = new_in;
-        fde_stdin->fileOffset = 0;
-    }
-
-    if ((it = imap.find(fde_stdin->filename)) != imap.end()) {
-        fde_stdin->fd = it->second;
-    } else {
-        fde_stdin->fd = openInputFile(fde_stdin->filename);
-        seek(fde_stdin);
-    }
-
-    // Search through the output/error options and set fd if match is found;
-    // otherwise, open an output file and seek to location.
-    FDEntry *fde_stdout = getFDEntry(STDOUT_FILENO);
-
-    // Check if user has specified a different output file, and if so, use it
-    // instead of the file specified in the checkpoint. This also resets the
-    // file offset from the checkpointed value
-    string new_out = ((ProcessParams*)params())->output;
-    if (new_out != fde_stdout->filename) {
-        warn("Using new output file (%s) rather than checkpointed (%s)\n",
-             new_out, fde_stdout->filename);
-        fde_stdout->filename = new_out;
-        fde_stdout->fileOffset = 0;
-    }
-
-    if ((it = oemap.find(fde_stdout->filename)) != oemap.end()) {
-        fde_stdout->fd = it->second;
-    } else {
-        fde_stdout->fd = openOutputFile(fde_stdout->filename);
-        seek(fde_stdout);
-    }
-
-    FDEntry *fde_stderr = getFDEntry(STDERR_FILENO);
-
-    // Check if user has specified a different error file, and if so, use it
-    // instead of the file specified in the checkpoint. This also resets the
-    // file offset from the checkpointed value
-    string new_err = ((ProcessParams*)params())->errout;
-    if (new_err != fde_stderr->filename) {
-        warn("Using new error file (%s) rather than checkpointed (%s)\n",
-             new_err, fde_stderr->filename);
-        fde_stderr->filename = new_err;
-        fde_stderr->fileOffset = 0;
-    }
-
-    if (fde_stdout->filename == fde_stderr->filename) {
-        // Reuse the same file descriptor if these match.
-        fde_stderr->fd = fde_stdout->fd;
-    } else if ((it = oemap.find(fde_stderr->filename)) != oemap.end()) {
-        fde_stderr->fd = it->second;
-    } else {
-        fde_stderr->fd = openOutputFile(fde_stderr->filename);
-        seek(fde_stderr);
-    }
-
-    for (int tgt_fd = 3; tgt_fd < fd_array->size(); tgt_fd++) {
-        FDEntry *fde = getFDEntry(tgt_fd);
-        if (fde->fd == -1)
-            continue;
-
-        if (fde->isPipe) {
-            if (fde->filename == "PIPE-WRITE")
-                continue;
-            assert(fde->filename == "PIPE-READ");
-
-            int fds[2];
-            if (pipe(fds) < 0)
-                fatal("Unable to create new pipe");
-
-            fde->fd = fds[0];
-
-            FDEntry *fde_write = getFDEntry(fde->readPipeSource);
-            assert(fde_write->filename == "PIPE-WRITE");
-            fde_write->fd = fds[1];
-        } else {
-            fde->fd = openFile(fde->filename.c_str(), fde->flags, fde->mode);
-            seek(fde);
-        }
-    }
-}
-
-void
-Process::findFileOffsets()
-{
-    for (auto& fde : *fd_array) {
-        if (fde.fd != -1)
-            fde.fileOffset = lseek(fde.fd, 0, SEEK_CUR);
-    }
-}
-
-void
-Process::setReadPipeSource(int read_pipe_fd, int source_fd)
-{
-    FDEntry *fde = getFDEntry(read_pipe_fd);
-    assert(source_fd >= -1);
-    fde->readPipeSource = source_fd;
-}
-
-void
 Process::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(brk_point);
@@ -455,9 +221,16 @@ Process::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(next_thread_stack_base);
     SERIALIZE_SCALAR(mmap_end);
     pTable->serialize(cp);
-    for (int x = 0; x < fd_array->size(); x++) {
-        (*fd_array)[x].serializeSection(cp, csprintf("FDEntry%d", x));
-    }
+    /**
+     * Checkpoints for file descriptors currently do not work. Need to
+     * come back and fix them at a later date.
+     */
+
+    warn("Checkpoints for file descriptors currently do not work.");
+#if 0
+    for (int x = 0; x < fds->getSize(); x++)
+        (*fds)[x].serializeSection(cp, csprintf("FDEntry%d", x));
+#endif
 
 }
 
@@ -471,11 +244,16 @@ Process::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(next_thread_stack_base);
     UNSERIALIZE_SCALAR(mmap_end);
     pTable->unserialize(cp);
-    for (int x = 0; x < fd_array->size(); x++) {
-        FDEntry *fde = getFDEntry(x);
-        fde->unserializeSection(cp, csprintf("FDEntry%d", x));
-    }
-    fixFileOffsets();
+    /**
+     * Checkpoints for file descriptors currently do not work. Need to
+     * come back and fix them at a later date.
+     */
+    warn("Checkpoints for file descriptors currently do not work.");
+#if 0
+    for (int x = 0; x < fds->getSize(); x++)
+        (*fds)[x]->unserializeSection(cp, csprintf("FDEntry%d", x));
+    fds->restoreFileOffsets();
+#endif
     // The above returns a bool so that you could do something if you don't
     // find the param in the checkpoint if you wanted to, like set a default
     // but in this case we'll just stick with the instantiated value if not

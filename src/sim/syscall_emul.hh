@@ -78,6 +78,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <memory>
 #include <string>
 
 #include "base/intmath.hh"
@@ -570,31 +571,35 @@ copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
 /// not TTYs to provide repeatable results.
 template <class OS>
 SyscallReturn
-ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
+ioctlFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    unsigned req = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    unsigned req = p->getSyscallArg(tc, index);
 
     DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", tgt_fd, req);
 
-    FDEntry *fde = process->getFDEntry(tgt_fd);
-
-    if (fde == NULL) {
-        // doesn't map to any simulator fd: not a valid target fd
-        return -EBADF;
-    }
-
-    if (fde->driver != NULL) {
-        return fde->driver->ioctl(process, tc, req);
-    }
-
-    if (OS::isTtyReq(req)) {
+    if (OS::isTtyReq(req))
         return -ENOTTY;
-    }
 
-    warn("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ \n",
+    auto dfdp = std::dynamic_pointer_cast<DeviceFDEntry>((*p->fds)[tgt_fd]);
+    if (!dfdp)
+        return -EBADF;
+
+    /**
+     * If the driver is valid, issue the ioctl through it. Otherwise,
+     * there's an implicit assumption that the device is a TTY type and we
+     * return that we do not have a valid TTY.
+     */
+    EmulatedDriver *emul_driver = dfdp->getDriver();
+    if (emul_driver)
+        return emul_driver->ioctl(p, tc, req);
+
+    /**
+     * For lack of a better return code, return ENOTTY. Ideally, we should
+     * return something better here, but at least we issue the warning.
+     */
+    warn("Unsupported ioctl call (return ENOTTY): ioctl(%d, 0x%x, ...) @ \n",
          tgt_fd, req, tc->pcState());
     return -ENOTTY;
 }
@@ -645,7 +650,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
         }
 
         EmulatedDriver *drv = process->findDriver(filename);
-        if (drv != NULL) {
+        if (drv) {
             // the driver's open method will allocate a fd from the
             // process if necessary.
             return drv->open(process, tc, mode, hostFlags);
@@ -671,7 +676,9 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
     if (fd == -1)
         return -local_errno;
 
-    return process->allocFD(fd, path.c_str(), hostFlags, mode, false);
+    std::shared_ptr<FileFDEntry> ffdp =
+        std::make_shared<FileFDEntry>(fd, hostFlags, path.c_str(), false);
+    return process->fds->allocFD(ffdp);
 }
 
 /// Target open() handler.
@@ -827,28 +834,22 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target fchmod() handler.
 template <class OS>
 SyscallReturn
-fchmodFunc(SyscallDesc *desc, int callnum, Process *process,
-           ThreadContext *tc)
+fchmodFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    uint32_t mode = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    uint32_t mode = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
-    mode_t hostMode = 0;
+    mode_t hostMode = mode;
 
-    // XXX translate mode flags via OS::someting???
-    hostMode = mode;
-
-    // do the fchmod
     int result = fchmod(sim_fd, hostMode);
-    if (result < 0)
-        return -errno;
 
-    return 0;
+    return (result < 0) ? -errno : 0;
 }
 
 /// Target mremap() handler.
@@ -1021,16 +1022,16 @@ fstatat64Func(SyscallDesc *desc, int callnum, Process *process,
 /// Target fstat64() handler.
 template <class OS>
 SyscallReturn
-fstat64Func(SyscallDesc *desc, int callnum, Process *process,
-            ThreadContext *tc)
+fstat64Func(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    Addr bufPtr = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr bufPtr = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
 #if NO_STAT64
     struct stat  hostBuf;
@@ -1115,18 +1116,18 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
 /// Target fstat() handler.
 template <class OS>
 SyscallReturn
-fstatFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
+fstatFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    Addr bufPtr = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr bufPtr = p->getSyscallArg(tc, index);
 
     DPRINTF_SYSCALL(Verbose, "fstat(%d, ...)\n", tgt_fd);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     struct stat hostBuf;
     int result = fstat(sim_fd, &hostBuf);
@@ -1176,16 +1177,16 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target fstatfs() handler.
 template <class OS>
 SyscallReturn
-fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
-            ThreadContext *tc)
+fstatfsFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
-    Addr bufPtr = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr bufPtr = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     struct statfs hostBuf;
     int result = fstatfs(sim_fd, &hostBuf);
@@ -1202,29 +1203,29 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target writev() handler.
 template <class OS>
 SyscallReturn
-writevFunc(SyscallDesc *desc, int callnum, Process *process,
-           ThreadContext *tc)
+writevFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    int tgt_fd = process->getSyscallArg(tc, index);
+    int tgt_fd = p->getSyscallArg(tc, index);
 
-    int sim_fd = process->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
+    if (!hbfdp)
         return -EBADF;
+    int sim_fd = hbfdp->getSimFD();
 
-    SETranslatingPortProxy &p = tc->getMemProxy();
-    uint64_t tiov_base = process->getSyscallArg(tc, index);
-    size_t count = process->getSyscallArg(tc, index);
+    SETranslatingPortProxy &prox = tc->getMemProxy();
+    uint64_t tiov_base = p->getSyscallArg(tc, index);
+    size_t count = p->getSyscallArg(tc, index);
     struct iovec hiov[count];
     for (size_t i = 0; i < count; ++i) {
         typename OS::tgt_iovec tiov;
 
-        p.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
-                   (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
+        prox.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
+                      (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = TheISA::gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        p.readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
-                   hiov[i].iov_len);
+        prox.readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
+                      hiov[i].iov_len);
     }
 
     int result = writev(sim_fd, hiov, count);
@@ -1296,19 +1297,19 @@ mmapImpl(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     int sim_fd = -1;
     uint8_t *pmap = nullptr;
     if (!(tgt_flags & OS::TGT_MAP_ANONYMOUS)) {
-        // Check for EmulatedDriver mmap
-        FDEntry *fde = p->getFDEntry(tgt_fd);
-        if (fde == NULL)
-            return -EBADF;
+        std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
 
-        if (fde->driver != NULL) {
-            return fde->driver->mmap(p, tc, start, length, prot,
+        auto dfdp = std::dynamic_pointer_cast<DeviceFDEntry>(fdep);
+        if (dfdp) {
+            EmulatedDriver *emul_driver = dfdp->getDriver();
+            return emul_driver->mmap(p, tc, start, length, prot,
                                      tgt_flags, tgt_fd, offset);
         }
-        sim_fd = fde->fd;
 
-        if (sim_fd < 0)
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!ffdp)
             return -EBADF;
+        sim_fd = ffdp->getSimFD();
 
         pmap = (decltype(pmap))mmap(NULL, length, PROT_READ, MAP_PRIVATE,
                                     sim_fd, offset);
@@ -1393,9 +1394,9 @@ mmapImpl(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
             Addr pc = tc->pcState().pc();
 
             if (pc >= text_start && pc < text_end) {
-                FDEntry *fde = p->getFDEntry(tgt_fd);
-
-                ObjectFile *lib = createObjectFile(fde->filename);
+                std::shared_ptr<FDEntry> fdep = (*p->fds)[tgt_fd];
+                auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+                ObjectFile *lib = createObjectFile(ffdp->getFileName());
 
                 if (lib) {
                     lib->loadAllSymbols(debugSymbolTable,
@@ -1422,9 +1423,10 @@ pwrite64Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     int nbytes = p->getSyscallArg(tc, index);
     int offset = p->getSyscallArg(tc, index);
 
-    int sim_fd = p->getSimFD(tgt_fd);
-    if (sim_fd < 0)
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
         return -EBADF;
+    int sim_fd = ffdp->getSimFD();
 
     BufferArg bufArg(bufPtr, nbytes);
     bufArg.copyIn(tc->getMemProxy());

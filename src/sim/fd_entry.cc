@@ -1,91 +1,100 @@
 /*
- * Copyright (c) 2015 Advanced Micro Devices, Inc.
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2016 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * For use for simulation and test purposes only
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ * modification, are permitted provided that the following conditions are met:
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Brandon Potter
  */
 
-#include "base/misc.hh"
-#include "fd_entry.hh"
+#include "sim/fd_entry.hh"
 
-using namespace std;
+#include "sim/serialize.hh"
 
 void
 FDEntry::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_SCALAR(fd);
-    if (fd != -1) {
-        SERIALIZE_SCALAR(mode);
-        SERIALIZE_SCALAR(flags);
-        SERIALIZE_SCALAR(isPipe);
-        SERIALIZE_SCALAR(readPipeSource);
-        SERIALIZE_SCALAR(fileOffset);
-        SERIALIZE_SCALAR(filename);
-    }
-    if (driver)
-        warn("EmulatedDriver objects do not currently support checkpoints");
+    SERIALIZE_SCALAR(_closeOnExec);
 }
 
 void
 FDEntry::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_SCALAR(fd);
-    if (fd != -1) {
-        UNSERIALIZE_SCALAR(mode);
-        UNSERIALIZE_SCALAR(flags);
-        UNSERIALIZE_SCALAR(isPipe);
-        UNSERIALIZE_SCALAR(readPipeSource);
-        UNSERIALIZE_SCALAR(fileOffset);
-        UNSERIALIZE_SCALAR(filename);
-    }
-    driver = NULL;
-}
-
-bool
-FDEntry::isFree()
-{
-    return (fd == -1 && driver == NULL);
+    UNSERIALIZE_SCALAR(_closeOnExec);
 }
 
 void
-FDEntry::set(int sim_fd, const string name, int flags, int mode, bool pipe)
+FileFDEntry::serialize(CheckpointOut &cp) const
 {
-    fd = sim_fd;
-    filename = name;
-    this->flags = flags;
-    this->mode = mode;
-    isPipe = pipe;
-    fileOffset = 0;
-    readPipeSource = 0;
-    driver = NULL;
+    SERIALIZE_SCALAR(_closeOnExec);
+    SERIALIZE_SCALAR(_flags);
+    SERIALIZE_SCALAR(_fileName);
+    SERIALIZE_SCALAR(_fileOffset);
 }
 
 void
-FDEntry::reset()
+FileFDEntry::unserialize(CheckpointIn &cp)
 {
-    set(-1, "", 0, 0, false);
+    UNSERIALIZE_SCALAR(_closeOnExec);
+    UNSERIALIZE_SCALAR(_flags);
+    UNSERIALIZE_SCALAR(_fileName);
+    UNSERIALIZE_SCALAR(_fileOffset);
+}
+
+void
+PipeFDEntry::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(_closeOnExec);
+    SERIALIZE_SCALAR(_flags);
+    //SERIALIZE_SCALAR(_pipeEndType);
+}
+
+void
+PipeFDEntry::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(_closeOnExec);
+    UNSERIALIZE_SCALAR(_flags);
+    //UNSERIALIZE_SCALAR(_pipeEndType);
+}
+
+void
+DeviceFDEntry::serialize(CheckpointOut &cp) const
+{
+    SERIALIZE_SCALAR(_closeOnExec);
+    //SERIALIZE_SCALAR(_driver);
+    SERIALIZE_SCALAR(_fileName);
+}
+
+void
+DeviceFDEntry::unserialize(CheckpointIn &cp)
+{
+    UNSERIALIZE_SCALAR(_closeOnExec);
+    //UNSERIALIZE_SCALAR(_driver);
+    UNSERIALIZE_SCALAR(_fileName);
 }
