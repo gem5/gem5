@@ -79,9 +79,6 @@ class Process : public SimObject
     // thread contexts associated with this process
     std::vector<ContextID> contextIds;
 
-    // number of CPUs (esxec contexts, really) assigned to this process.
-    unsigned int numCpus() { return contextIds.size(); }
-
     // record of blocked context
     struct WaitRec
     {
