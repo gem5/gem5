@@ -415,8 +415,6 @@ SparcProcess::argsInit(int pageSize)
 
     // Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);
-
-//    num_processes++;
 }
 
 void

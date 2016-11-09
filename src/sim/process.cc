@@ -90,9 +90,6 @@
 using namespace std;
 using namespace TheISA;
 
-// current number of allocated processes
-int num_processes = 0;
-
 static int
 openFile(const string& filename, int flags, mode_t mode)
 {
