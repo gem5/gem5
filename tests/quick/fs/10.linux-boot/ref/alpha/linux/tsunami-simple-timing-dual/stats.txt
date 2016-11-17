@@ -4,11 +4,11 @@ sim_seconds                                  1.966742                       # Nu
 sim_ticks                                1966741627000                       # Number of ticks simulated
 final_tick                               1966741627000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1743154                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1743154                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                            56239519255                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 337608                       # Number of bytes of host memory used
-host_seconds                                    34.97                       # Real time elapsed on the host
+host_inst_rate                                1661877                       # Simulator instruction rate (inst/s)
+host_op_rate                                  1661877                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                            53617278530                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 335968                       # Number of bytes of host memory used
+host_seconds                                    36.68                       # Real time elapsed on the host
 sim_insts                                    60959478                       # Number of instructions simulated
 sim_ops                                      60959478                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -400,36 +400,6 @@ system.cpu0.kern.ipl_used::22                       1                       # fr
 system.cpu0.kern.ipl_used::30                       1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu0.kern.ipl_used::31                0.680744                       # fraction of swpipl calls that actually changed the ipl
 system.cpu0.kern.ipl_used::total             0.811121                       # fraction of swpipl calls that actually changed the ipl
-system.cpu0.kern.syscall::2                         8      3.42%      3.42% # number of syscalls executed
-system.cpu0.kern.syscall::3                        20      8.55%     11.97% # number of syscalls executed
-system.cpu0.kern.syscall::4                         4      1.71%     13.68% # number of syscalls executed
-system.cpu0.kern.syscall::6                        33     14.10%     27.78% # number of syscalls executed
-system.cpu0.kern.syscall::12                        1      0.43%     28.21% # number of syscalls executed
-system.cpu0.kern.syscall::17                       10      4.27%     32.48% # number of syscalls executed
-system.cpu0.kern.syscall::19                       10      4.27%     36.75% # number of syscalls executed
-system.cpu0.kern.syscall::20                        6      2.56%     39.32% # number of syscalls executed
-system.cpu0.kern.syscall::23                        1      0.43%     39.74% # number of syscalls executed
-system.cpu0.kern.syscall::24                        3      1.28%     41.03% # number of syscalls executed
-system.cpu0.kern.syscall::33                        8      3.42%     44.44% # number of syscalls executed
-system.cpu0.kern.syscall::41                        2      0.85%     45.30% # number of syscalls executed
-system.cpu0.kern.syscall::45                       39     16.67%     61.97% # number of syscalls executed
-system.cpu0.kern.syscall::47                        3      1.28%     63.25% # number of syscalls executed
-system.cpu0.kern.syscall::48                       10      4.27%     67.52% # number of syscalls executed
-system.cpu0.kern.syscall::54                       10      4.27%     71.79% # number of syscalls executed
-system.cpu0.kern.syscall::58                        1      0.43%     72.22% # number of syscalls executed
-system.cpu0.kern.syscall::59                        6      2.56%     74.79% # number of syscalls executed
-system.cpu0.kern.syscall::71                       27     11.54%     86.32% # number of syscalls executed
-system.cpu0.kern.syscall::73                        3      1.28%     87.61% # number of syscalls executed
-system.cpu0.kern.syscall::74                        7      2.99%     90.60% # number of syscalls executed
-system.cpu0.kern.syscall::87                        1      0.43%     91.03% # number of syscalls executed
-system.cpu0.kern.syscall::90                        3      1.28%     92.31% # number of syscalls executed
-system.cpu0.kern.syscall::92                        9      3.85%     96.15% # number of syscalls executed
-system.cpu0.kern.syscall::97                        2      0.85%     97.01% # number of syscalls executed
-system.cpu0.kern.syscall::98                        2      0.85%     97.86% # number of syscalls executed
-system.cpu0.kern.syscall::132                       1      0.43%     98.29% # number of syscalls executed
-system.cpu0.kern.syscall::144                       2      0.85%     99.15% # number of syscalls executed
-system.cpu0.kern.syscall::147                       2      0.85%    100.00% # number of syscalls executed
-system.cpu0.kern.syscall::total                   234                       # number of syscalls executed
 system.cpu0.kern.callpal::cserve                    1      0.00%      0.00% # number of callpals executed
 system.cpu0.kern.callpal::wripir                  525      0.35%      0.36% # number of callpals executed
 system.cpu0.kern.callpal::wrmces                    1      0.00%      0.36% # number of callpals executed
@@ -836,20 +806,6 @@ system.cpu1.kern.ipl_used::22                       1                       # fr
 system.cpu1.kern.ipl_used::30                       1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu1.kern.ipl_used::31                0.627929                       # fraction of swpipl calls that actually changed the ipl
 system.cpu1.kern.ipl_used::total             0.771766                       # fraction of swpipl calls that actually changed the ipl
-system.cpu1.kern.syscall::3                        10     10.87%     10.87% # number of syscalls executed
-system.cpu1.kern.syscall::6                         9      9.78%     20.65% # number of syscalls executed
-system.cpu1.kern.syscall::15                        1      1.09%     21.74% # number of syscalls executed
-system.cpu1.kern.syscall::17                        5      5.43%     27.17% # number of syscalls executed
-system.cpu1.kern.syscall::23                        3      3.26%     30.43% # number of syscalls executed
-system.cpu1.kern.syscall::24                        3      3.26%     33.70% # number of syscalls executed
-system.cpu1.kern.syscall::33                        3      3.26%     36.96% # number of syscalls executed
-system.cpu1.kern.syscall::45                       15     16.30%     53.26% # number of syscalls executed
-system.cpu1.kern.syscall::47                        3      3.26%     56.52% # number of syscalls executed
-system.cpu1.kern.syscall::59                        1      1.09%     57.61% # number of syscalls executed
-system.cpu1.kern.syscall::71                       27     29.35%     86.96% # number of syscalls executed
-system.cpu1.kern.syscall::74                        9      9.78%     96.74% # number of syscalls executed
-system.cpu1.kern.syscall::132                       3      3.26%    100.00% # number of syscalls executed
-system.cpu1.kern.syscall::total                    92                       # number of syscalls executed
 system.cpu1.kern.callpal::cserve                    1      0.00%      0.00% # number of callpals executed
 system.cpu1.kern.callpal::wripir                  433      0.59%      0.59% # number of callpals executed
 system.cpu1.kern.callpal::wrmces                    1      0.00%      0.59% # number of callpals executed
