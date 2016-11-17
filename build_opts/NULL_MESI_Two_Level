@@ -1,0 +1,3 @@
+TARGET_ISA = 'null'
+CPU_MODELS = ''
+PROTOCOL = 'MESI_Two_Level'

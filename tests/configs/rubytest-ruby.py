@@ -40,7 +40,7 @@ from ruby import Ruby
 from common import Options
 
 parser = optparse.OptionParser()
-Options.addCommonOptions(parser)
+Options.addNoISAOptions(parser)
 
 # Add the ruby specific and protocol specific options
 Ruby.define_options(parser)

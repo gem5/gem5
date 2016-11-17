@@ -40,12 +40,13 @@ add_option = optparser.add_option
 add_option('-v', '--verbose', action='store_true', default=False,
            help='echo commands before executing')
 add_option('--builds',
-           default='ALPHA,ALPHA_MOESI_hammer,' \
-           'ALPHA_MESI_Two_Level,'  \
-           'ALPHA_MOESI_CMP_directory,' \
-           'ALPHA_MOESI_CMP_token,' \
+           default='ALPHA,' \
            'MIPS,' \
            'NULL,' \
+           'NULL_MOESI_hammer,' \
+           'NULL_MESI_Two_Level,'  \
+           'NULL_MOESI_CMP_directory,' \
+           'NULL_MOESI_CMP_token,' \
            'POWER,' \
            'SPARC,' \
            'X86,X86_MESI_Two_Level,' \
