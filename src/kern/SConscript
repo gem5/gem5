@@ -44,11 +44,3 @@ Source('system_events.cc')
 
 DebugFlag('DebugPrintf')
 DebugFlag('Printf')
-
-if env['TARGET_ISA'] == 'alpha':
-    Source('tru64/dump_mbuf.cc')
-    Source('tru64/printf.cc')
-    Source('tru64/tru64_events.cc')
-    Source('tru64/tru64_syscalls.cc')
-
-    DebugFlag('BADADDR')

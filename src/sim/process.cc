@@ -70,7 +70,6 @@
 
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/linux/process.hh"
-#include "arch/alpha/tru64/process.hh"
 #elif THE_ISA == SPARC_ISA
 #include "arch/sparc/linux/process.hh"
 #include "arch/sparc/solaris/process.hh"
@@ -591,10 +590,6 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
 
     switch (objFile->getOpSys()) {
-      case ObjectFile::Tru64:
-        process = new AlphaTru64Process(params, objFile);
-        break;
-
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through

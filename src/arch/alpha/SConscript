@@ -52,9 +52,6 @@ if env['TARGET_ISA'] == 'alpha':
     Source('stacktrace.cc')
     Source('system.cc')
     Source('tlb.cc')
-    Source('tru64/process.cc')
-    Source('tru64/system.cc')
-    Source('tru64/tru64.cc')
     Source('utility.cc')
     Source('vtophys.cc')
 

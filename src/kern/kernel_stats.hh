@@ -58,11 +58,6 @@ class Statistics : public Serializable
     Stats::Vector _iplTicks;
     Stats::Formula _iplUsed;
 
-#if THE_ISA == ALPHA_ISA
-    Stats::Vector _syscall;
-#endif
-//    Stats::Vector _faults;
-
   private:
     int iplLast;
     Tick iplLastTick;
