@@ -84,6 +84,7 @@ build_fp64(int sign, uint64_t frac, int exp)
 
 #define BUILD_FP80(sign, frac, exp)                             \
     {                                                           \
+        .repr.pad = { 0 },                                      \
         .repr.se = BUILD_FP80_SE(sign, exp),                    \
         .repr.fi = BUILD_FP80_FI(frac, exp)                     \
     }

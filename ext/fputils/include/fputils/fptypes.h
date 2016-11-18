@@ -69,12 +69,16 @@ typedef union  {
         uint64_t fi;
         /** Raw representation of sign bit and exponent */
         uint16_t se;
+        /** Add explicit padding to ensure this data structure
+         * is properly aligned.
+         */
+        uint16_t pad[3];
     } repr;
     /**
      * Represented as a char array, mainly intended for debug dumping
      * and serialization.
      */
-    char bits[10];
+    char bits[16];
 } fp80_t;
 
 /** @} */
