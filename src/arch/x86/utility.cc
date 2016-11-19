@@ -354,17 +354,17 @@ genX87Tags(uint16_t ftw, uint8_t top, int8_t spm)
 double
 loadFloat80(const void *_mem)
 {
-    const fp80_t *fp80((const fp80_t *)_mem);
+    fp80_t fp80;
+    memcpy(fp80.bits, _mem, 10);
 
-    return fp80_cvtd(*fp80);
+    return fp80_cvtd(fp80);
 }
 
 void
 storeFloat80(void *_mem, double value)
 {
-    fp80_t *fp80((fp80_t *)_mem);
-
-    *fp80 = fp80_cvfd(value);
+    fp80_t fp80 = fp80_cvfd(value);
+    memcpy(_mem, fp80.bits, 10);
 }
 
 } // namespace X86_ISA
