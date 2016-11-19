@@ -287,7 +287,7 @@ structure(SequencerMsg, desc="...", interface="Message") {
   DataBlock DataBlk,         desc="Data";
   int Len,                   desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
-  MessageSizeType MessageSize;
+  MessageSizeType MessageSize, default="MessageSizeType_Request_Control";
 
   bool functionalRead(Packet *pkt) {
     return testAndRead(PhysicalAddress, DataBlk, pkt);
