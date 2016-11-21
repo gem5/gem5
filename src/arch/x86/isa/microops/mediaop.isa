@@ -1220,9 +1220,11 @@ let {{
                 }
 
                 if (destSize == 4) {
-                    argBits = (uint32_t)arg;
+                    int32_t i_arg = (int32_t)arg;
+                    argBits = *((uint32_t*)&i_arg);
                 } else {
-                    argBits = (uint64_t)arg;
+                    int64_t i_arg = (int64_t)arg;
+                    argBits = *((uint64_t*)&i_arg);
                 }
                 int destHiIndex = destStart + (i + 1) * destSizeBits - 1;
                 int destLoIndex = destStart + (i + 0) * destSizeBits;
