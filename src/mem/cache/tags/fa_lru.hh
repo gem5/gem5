@@ -111,19 +111,19 @@ class FALRU : public BaseTags
     FALRUBlk *tail;
 
     /** Hash table type mapping addresses to cache block pointers. */
-    typedef std::unordered_map<Addr, FALRUBlk *, std::hash<Addr> > hash_t;
-    /** Iterator into the address hash table. */
-    typedef hash_t::const_iterator tagIterator;
+    struct PairHash
+    {
+        template <class T1, class T2>
+        std::size_t operator()(const std::pair<T1, T2> &p) const
+        {
+            return std::hash<T1>()(p.first) ^ std::hash<T2>()(p.second);
+        }
+    };
+    typedef std::pair<Addr, bool> TagHashKey;
+    typedef std::unordered_map<TagHashKey, FALRUBlk *, PairHash> TagHash;
 
     /** The address hash table. */
-    hash_t tagHash;
-
-    /**
-     * Find the cache block for the given address.
-     * @param addr The address to find.
-     * @return The cache block of the address, if any.
-     */
-    FALRUBlk * hashLookup(Addr addr) const;
+    TagHash tagHash;
 
     /**
      * Move a cache block to the MRU position.

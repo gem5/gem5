@@ -107,16 +107,6 @@ FALRU::regStats()
     cacheTracking.regStats(name());
 }
 
-FALRUBlk *
-FALRU::hashLookup(Addr addr) const
-{
-    tagIterator iter = tagHash.find(addr);
-    if (iter != tagHash.end()) {
-        return (*iter).second;
-    }
-    return nullptr;
-}
-
 void
 FALRU::invalidate(CacheBlk *blk)
 {
@@ -129,7 +119,7 @@ FALRU::invalidate(CacheBlk *blk)
     moveToTail((FALRUBlk*)blk);
 
     // Erase block entry in the hash table
-    tagHash.erase(blk->tag);
+    tagHash.erase(std::make_pair(blk->tag, blk->isSecure()));
 }
 
 CacheBlk*
@@ -145,7 +135,7 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
     CachesMask mask = 0;
     FALRUBlk* blk = static_cast<FALRUBlk*>(findBlock(addr, is_secure));
 
-    if (blk != nullptr) {
+    if (blk && blk->isValid()) {
         // If a cache hit
         lat = accessLatency;
         // Check if the block to be accessed is available. If not,
@@ -175,15 +165,19 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
 CacheBlk*
 FALRU::findBlock(Addr addr, bool is_secure) const
 {
+    FALRUBlk* blk = nullptr;
+
     Addr tag = extractTag(addr);
-    FALRUBlk* blk = hashLookup(tag);
+    auto iter = tagHash.find(std::make_pair(tag, is_secure));
+    if (iter != tagHash.end()) {
+        blk = (*iter).second;
+    }
 
     if (blk && blk->isValid()) {
         assert(blk->tag == tag);
         assert(blk->isSecure() == is_secure);
-    } else {
-        blk = nullptr;
     }
+
     return blk;
 }
 
@@ -225,7 +219,7 @@ FALRU::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     moveToHead(falruBlk);
 
     // Insert new block in the hash table
-    tagHash[falruBlk->tag] = falruBlk;
+    tagHash[std::make_pair(blk->tag, blk->isSecure())] = falruBlk;
 }
 
 void
@@ -406,7 +400,7 @@ FALRU::CacheTracking::recordAccess(FALRUBlk *blk)
     }
 
     // Record stats for the actual cache too
-    if (blk) {
+    if (blk && blk->isValid()) {
         hits[numTrackedCaches]++;
     } else {
         misses[numTrackedCaches]++;
