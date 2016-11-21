@@ -44,7 +44,7 @@
 #include "params/GarnetExtLink.hh"
 #include "params/GarnetIntLink.hh"
 
-class GarnetIntLink : public BasicLink
+class GarnetIntLink : public BasicIntLink
 {
   public:
     typedef GarnetIntLinkParams Params;
@@ -69,7 +69,7 @@ operator<<(std::ostream& out, const GarnetIntLink& obj)
     return out;
 }
 
-class GarnetExtLink : public BasicLink
+class GarnetExtLink : public BasicExtLink
 {
   public:
     typedef GarnetExtLinkParams Params;

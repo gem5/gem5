@@ -57,7 +57,6 @@ typedef std::string PortDirection;
 struct LinkEntry
 {
     BasicLink *link;
-    LinkDirection direction;
     PortDirection src_outport_dirn;
     PortDirection dst_inport_dirn;
 };

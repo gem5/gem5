@@ -37,7 +37,7 @@
 #include "mem/ruby/network/garnet2.0/NetworkLink.hh"
 
 GarnetIntLink::GarnetIntLink(const Params *p)
-    : BasicLink(p)
+    : BasicIntLink(p)
 {
     // Uni-directional
 
@@ -63,7 +63,7 @@ GarnetIntLinkParams::create()
 }
 
 GarnetExtLink::GarnetExtLink(const Params *p)
-    : BasicLink(p)
+    : BasicExtLink(p)
 {
     // Bi-directional
 
