@@ -55,7 +55,7 @@ class GPUExecContext
   protected:
     ComputeUnit *cu;
     Wavefront *wf;
-    TheGpuISA::GPUISA &gpuISA;
+    TheGpuISA::GPUISA *gpuISA;
 };
 
 #endif // __GPU_EXEC_CONTEXT_HH__

@@ -37,7 +37,7 @@
 #include "gpu-compute/wavefront.hh"
 
 GPUExecContext::GPUExecContext(ComputeUnit *_cu, Wavefront *_wf)
-    : cu(_cu), wf(_wf), gpuISA(_wf->gpuISA())
+    : cu(_cu), wf(_wf), gpuISA(_wf ? &_wf->gpuISA() : nullptr)
 {
 }
 
@@ -56,11 +56,13 @@ GPUExecContext::wavefront()
 TheGpuISA::MiscReg
 GPUExecContext::readMiscReg(int opIdx) const
 {
-    return gpuISA.readMiscReg(opIdx);
+    assert(gpuISA);
+    return gpuISA->readMiscReg(opIdx);
 }
 
 void
 GPUExecContext::writeMiscReg(int opIdx, TheGpuISA::MiscReg operandVal)
 {
-    gpuISA.writeMiscReg(opIdx, operandVal);
+    assert(gpuISA);
+    gpuISA->writeMiscReg(opIdx, operandVal);
 }
