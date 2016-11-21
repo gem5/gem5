@@ -68,7 +68,7 @@ namespace X86ISA
         GpuTlbEntry(Addr asn, Addr _vaddr, Addr _paddr, bool _valid)
           : TlbEntry(asn, _vaddr, _paddr, false, false), valid(_valid) { }
 
-        GpuTlbEntry() : TlbEntry() { }
+        GpuTlbEntry() : TlbEntry(), valid(false) { }
 
         bool valid;
     };
