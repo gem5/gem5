@@ -1902,7 +1902,9 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             blk = tempBlock;
             tempBlock->set = tags->extractSet(addr);
             tempBlock->tag = tags->extractTag(addr);
-            // @todo: set security state as well...
+            if (is_secure) {
+                tempBlock->status |= BlkSecure;
+            }
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
         } else {
