@@ -192,8 +192,19 @@ class Verifier(object):
         return False
 
     @abstractmethod
-    def check(self, filename, regions=all_regions):
+    def check(self, filename, regions=all_regions, fobj=None, silent=False):
         """Check specified regions of file 'filename'.
+
+        Given that it is possible that the current contents of the file
+        differ from the file as 'staged to commit', for those cases, and
+        maybe others, the argument fobj should be a file object open and reset
+        with the contents matching what the file would look like after the
+        commit. This is needed keep the messages using 'filename' meaningful.
+
+        The argument silent is useful to prevent output when we run check in
+        the staged file vs the actual file to detect if the user forgot
+        staging fixes to the commit. This way, we prevent reporting errors
+        twice in stderr.
 
         Line-by-line checks can simply provide a check_line() method
         that returns True if the line is OK and False if it has an
@@ -216,24 +227,29 @@ class Verifier(object):
         pass
 
 class LineVerifier(Verifier):
-    def check(self, filename, regions=all_regions):
-        f = self.open(filename, 'r')
+    def check(self, filename, regions=all_regions, fobj=None, silent=False):
+        close = False
+        if fobj is None:
+            fobj = self.open(filename, 'r')
+            close = True
 
         lang = lang_type(filename)
         assert lang in self.languages
 
         errors = 0
-        for num,line in enumerate(f):
+        for num,line in enumerate(fobj):
             if num not in regions:
                 continue
             line = line.rstrip('\n')
             if not self.check_line(line, language=lang):
-                self.ui.write("invalid %s in %s:%d\n" % \
-                              (self.test_name, filename, num + 1))
-                if self.ui.verbose:
-                    self.ui.write(">>%s<<\n" % line[:-1])
+                if not silent:
+                    self.ui.write("invalid %s in %s:%d\n" % \
+                                  (self.test_name, filename, num + 1))
+                    if self.ui.verbose:
+                        self.ui.write(">>%s<<\n" % line[:-1])
                 errors += 1
-        f.close()
+        if close:
+            fobj.close()
         return errors
 
     @safefix
@@ -329,12 +345,16 @@ class SortedIncludes(Verifier):
         super(SortedIncludes, self).__init__(*args, **kwargs)
         self.sort_includes = sort_includes.SortIncludes()
 
-    def check(self, filename, regions=all_regions):
-        f = self.open(filename, 'r')
+    def check(self, filename, regions=all_regions, fobj=None, silent=False):
+        close = False
+        if fobj is None:
+            fobj = self.open(filename, 'r')
+            close = True
         norm_fname = self.normalize_filename(filename)
 
-        old = [ l.rstrip('\n') for l in f.xreadlines() ]
-        f.close()
+        old = [ l.rstrip('\n') for l in fobj.xreadlines() ]
+        if close:
+            fobj.close()
 
         if len(old) == 0:
             return 0
@@ -345,10 +365,12 @@ class SortedIncludes(Verifier):
         modified = _modified_regions(old, new) & regions
 
         if modified:
-            self.ui.write("invalid sorting of includes in %s\n" % (filename))
-            if self.ui.verbose:
-                for start, end in modified.regions:
-                    self.ui.write("bad region [%d, %d)\n" % (start, end))
+            if not silent:
+                self.ui.write("invalid sorting of includes in %s\n"
+                                % (filename))
+                if self.ui.verbose:
+                    for start, end in modified.regions:
+                        self.ui.write("bad region [%d, %d)\n" % (start, end))
             return 1
 
         return 0
