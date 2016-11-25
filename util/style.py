@@ -41,21 +41,28 @@ import os
 import sys
 
 from style.file_types import lang_type
-from style.verifiers import all_verifiers
+import style.verifiers
 from style.region import all_regions
 
 from style.style import StdioUI
 from style import repo
 
-def verify(filename, regions=all_regions, verbose=False):
+verifier_names = dict([
+    (c.__name__, c) for c in style.verifiers.all_verifiers ])
+
+def verify(filename, regions=all_regions, verbose=False, verifiers=None,
+           auto_fix=False):
     ui = StdioUI()
-    opts = {}
+    opts = {
+        "fix_all" : auto_fix,
+    }
     base = os.path.join(os.path.dirname(__file__), "..")
-    verifiers = [ v(ui, opts, base=base) for v in all_verifiers ]
+    if verifiers is None:
+        verifiers = style.verifiers.all_verifiers
 
     if verbose:
         print "Verifying %s[%s]..." % (filename, regions)
-    for verifier in verifiers:
+    for verifier in [ v(ui, opts, base=base) for v in verifiers ]:
         if verbose:
             print "Applying %s (%s)" % (
                 verifier.test_name, verifier.__class__.__name__)
@@ -95,12 +102,20 @@ if __name__ == '__main__':
     parser.add_argument("--verbose", "-v", action="count",
                         help="Produce verbose output")
 
+    parser.add_argument("--fix", "-f", action="store_true",
+                        help="Automatically fix style violations.")
+
     parser.add_argument("--modifications", "-m", action="store_true",
                         help="""Apply the style checker to modified regions
                         instead of whole files""")
 
     parser.add_argument("--repo-type", choices=repo_types, default="auto",
                         help="Repository type to use to detect changes")
+
+    parser.add_argument("--checker", "-c", choices=verifier_names, default=[],
+                        action="append",
+                        help="""Style checkers to run. Can be specified
+                        multiple times.""")
 
     parser.add_argument("files", metavar="FILE", nargs="*",
                         type=str,
@@ -109,6 +124,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     repo = repo_types[args.repo_type]()
+
+    verifiers = [ verifier_names[name] for name in args.checker ] \
+                if args.checker else None
 
     files = args.files
     if not files and repo:
@@ -122,5 +140,7 @@ if __name__ == '__main__':
             regions = all_regions
 
         if not verify(filename, regions=regions,
-                      verbose=args.verbose):
+                      verbose=args.verbose,
+                      verifiers=verifiers,
+                      auto_fix=args.fix):
             sys.exit(1)
