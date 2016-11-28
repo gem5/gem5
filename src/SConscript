@@ -1085,19 +1085,26 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
                                  '-Wno-maybe-uninitialized',
                                  '-Wno-type-limits'])
 
+
+        # The address sanitizer is available for gcc >= 4.8
+        if GetOption('with_asan'):
+            if GetOption('with_ubsan') and \
+                    compareVersions(env['GCC_VERSION'], '4.9') >= 0:
+                new_env.Append(CCFLAGS=['-fsanitize=address,undefined',
+                                        '-fno-omit-frame-pointer'])
+                new_env.Append(LINKFLAGS='-fsanitize=address,undefined')
+            else:
+                new_env.Append(CCFLAGS=['-fsanitize=address',
+                                        '-fno-omit-frame-pointer'])
+                new_env.Append(LINKFLAGS='-fsanitize=address')
         # Only gcc >= 4.9 supports UBSan, so check both the version
         # and the command-line option before adding the compiler and
         # linker flags.
-        if GetOption('with_ubsan') and \
+        elif GetOption('with_ubsan') and \
                 compareVersions(env['GCC_VERSION'], '4.9') >= 0:
             new_env.Append(CCFLAGS='-fsanitize=undefined')
             new_env.Append(LINKFLAGS='-fsanitize=undefined')
 
-        # The address sanitizer is available for gcc >= 4.8
-        if GetOption('with_asan'):
-            new_env.Append(CCFLAGS=['-fsanitize=address',
-                                    '-fno-omit-frame-pointer'])
-            new_env.Append(LINKFLAGS='-fsanitize=address')
 
     if env['CLANG']:
         swig_env.Append(CCFLAGS=['-Wno-sometimes-uninitialized',
@@ -1107,10 +1114,15 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         # We require clang >= 3.1, so there is no need to check any
         # versions here.
         if GetOption('with_ubsan'):
-            new_env.Append(CCFLAGS='-fsanitize=undefined')
-            new_env.Append(LINKFLAGS='-fsanitize=undefined')
+            if GetOption('with_asan'):
+                new_env.Append(CCFLAGS=['-fsanitize=address,undefined',
+                                        '-fno-omit-frame-pointer'])
+                new_env.Append(LINKFLAGS='-fsanitize=address,undefined')
+            else:
+                new_env.Append(CCFLAGS='-fsanitize=undefined')
+                new_env.Append(LINKFLAGS='-fsanitize=undefined')
 
-        if GetOption('with_asan'):
+        elif GetOption('with_asan'):
             new_env.Append(CCFLAGS=['-fsanitize=address',
                                     '-fno-omit-frame-pointer'])
             new_env.Append(LINKFLAGS='-fsanitize=address')
