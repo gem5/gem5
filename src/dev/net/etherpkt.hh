@@ -55,6 +55,11 @@ class EthPacketData
     uint8_t *data;
 
     /**
+     * Total size of the allocated data buffer.
+     */
+    unsigned bufLength;
+
+    /**
      * Amount of space occupied by the payload in the data buffer
      */
     unsigned length;
@@ -69,11 +74,11 @@ class EthPacketData
     unsigned simLength;
 
     EthPacketData()
-        : data(nullptr), length(0), simLength(0)
+        : data(nullptr), bufLength(0), length(0), simLength(0)
     { }
 
     explicit EthPacketData(unsigned size)
-        : data(new uint8_t[size]), length(0), simLength(0)
+        : data(new uint8_t[size]), bufLength(size), length(0), simLength(0)
     { }
 
     ~EthPacketData() { if (data) delete [] data; }

@@ -2352,7 +2352,7 @@ NSGigE::unserialize(CheckpointIn &cp)
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
-        txPacket = make_shared<EthPacketData>();
+        txPacket = make_shared<EthPacketData>(16384);
         txPacket->unserialize("txPacket", cp);
         uint32_t txPktBufPtr;
         UNSERIALIZE_SCALAR(txPktBufPtr);

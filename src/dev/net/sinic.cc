@@ -1496,7 +1496,7 @@ Device::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(txPacketExists);
     txPacket = 0;
     if (txPacketExists) {
-        txPacket = make_shared<EthPacketData>();
+        txPacket = make_shared<EthPacketData>(16384);
         txPacket->unserialize("txPacket", cp);
         UNSERIALIZE_SCALAR(txPacketOffset);
         UNSERIALIZE_SCALAR(txPacketBytes);

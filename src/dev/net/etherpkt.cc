@@ -42,6 +42,7 @@ void
 EthPacketData::serialize(const string &base, CheckpointOut &cp) const
 {
     paramOut(cp, base + ".simLength", simLength);
+    paramOut(cp, base + ".bufLength", bufLength);
     paramOut(cp, base + ".length", length);
     arrayParamOut(cp, base + ".data", data, length);
 }
@@ -50,11 +51,23 @@ void
 EthPacketData::unserialize(const string &base, CheckpointIn &cp)
 {
     paramIn(cp, base + ".length", length);
-    if (length) {
-        assert(data == nullptr);
-        data = new uint8_t[length];
-        arrayParamIn(cp, base + ".data", data, length);
+    unsigned chkpt_buf_length;
+    if (optParamIn(cp, base + ".bufLength", chkpt_buf_length)) {
+        // If bufLength is in the checkpoint, make sure that the current buffer
+        // is unallocated or that the checkpoint requested size is smaller than
+        // the current buffer.
+        assert(!data || chkpt_buf_length <= bufLength);
+        bufLength = chkpt_buf_length;
+    } else {
+        // If bufLength is not in the checkpoint, try to use the existing
+        // buffer or use length to size the buffer
+        if (!data)
+            bufLength = length;
     }
+    assert(length <= bufLength);
+    if (!data)
+        data = new uint8_t[bufLength];
+    arrayParamIn(cp, base + ".data", data, length);
     if (!optParamIn(cp, base + ".simLength", simLength))
         simLength = length;
 }

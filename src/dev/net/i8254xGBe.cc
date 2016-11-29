@@ -2522,7 +2522,7 @@ IGbE::unserialize(CheckpointIn &cp)
     bool txPktExists;
     UNSERIALIZE_SCALAR(txPktExists);
     if (txPktExists) {
-        txPacket = std::make_shared<EthPacketData>();
+        txPacket = std::make_shared<EthPacketData>(16384);
         txPacket->unserialize("txpacket", cp);
     }
 
