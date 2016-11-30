@@ -93,9 +93,6 @@ class BPredUnit : public SimObject
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                  TheISA::PCState &pc, ThreadID tid);
-    bool predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                        int asid, TheISA::PCState &instPC,
-                        TheISA::PCState &predPC, ThreadID tid);
 
     // @todo: Rename this function.
     virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history) = 0;
