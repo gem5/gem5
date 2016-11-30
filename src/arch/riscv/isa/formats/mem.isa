@@ -1,0 +1,355 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// Memory operation instructions
+//
+output header {{
+    class Load : public RiscvStaticInst
+    {
+      public:
+        /// Displacement for EA calculation (signed).
+        int64_t ldisp;
+
+      protected:
+        /// Memory request flags.  See mem_req_base.hh.
+        Request::Flags memAccessFlags;
+
+        /// Constructor
+        Load(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass), ldisp(IMM12)
+        {
+            if (IMMSIGN > 0)
+                ldisp |= ~((uint64_t)0xFFF);
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+    class Store : public RiscvStaticInst
+    {
+      public:
+        /// Displacement for EA calculation (signed).
+        int64_t sdisp;
+
+      protected:
+        /// Memory request flags.  See mem_req_base.hh.
+        Request::Flags memAccessFlags;
+
+        /// Constructor
+        Store(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass), sdisp(IMM5)
+        {
+            sdisp |= IMM7 << 5;
+            if (IMMSIGN > 0)
+                sdisp |= ~((uint64_t)0xFFF);
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+}};
+
+
+output decoder {{
+    std::string
+    Load::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << regName(_destRegIdx[0]) << ", " << ldisp <<
+            '(' << regName(_srcRegIdx[0]) << ')';
+        return ss.str();
+    }
+
+    std::string
+    Store::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << regName(_srcRegIdx[1]) << ", " << sdisp <<
+            '(' << regName(_srcRegIdx[0]) << ')';
+        return ss.str();
+    }
+}};
+
+def template LoadStoreDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst);
+
+        %(BasicExecDeclare)s
+
+        %(EACompDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
+def template EACompDeclare {{
+    Fault
+    eaComp(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template InitiateAccDeclare {{
+    Fault
+    initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+
+def template CompleteAccDeclare {{
+    Fault
+    completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template LoadStoreConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst):
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template EACompExecute {{
+    Fault
+    %(class_name)s::eaComp(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+let {{
+def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        base_class, postacc_code='', decode_template=BasicDecode,
+        exec_template_base=''):
+    # Make sure flags are in lists (convert to lists if not).
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags) # + ['IsNonSpeculative']
+
+    iop = InstObjParams(name, Name, base_class,
+        { 'ea_code':ea_code, 'memacc_code':memacc_code,
+        'postacc_code':postacc_code }, inst_flags)
+
+    if mem_flags:
+        mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
+        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
+        iop.constructor += s
+
+    # select templates
+
+    fullExecTemplate = eval(exec_template_base + 'Execute')
+    initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
+    completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
+
+    # (header_output, decoder_output, decode_block, exec_output)
+    return (LoadStoreDeclare.subst(iop),
+        LoadStoreConstructor.subst(iop),
+        decode_template.subst(iop),
+        fullExecTemplate.subst(iop) +
+        EACompExecute.subst(iop) +
+        initiateAccTemplate.subst(iop) +
+        completeAccTemplate.subst(iop))
+}};
+
+def template LoadExecute {{
+    Fault
+    %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template LoadInitiateAcc {{
+    Fault
+    %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
+        }
+
+        return fault;
+    }
+}};
+
+def template LoadCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        getMem(pkt, Mem, traceData);
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreExecute {{
+    Fault
+    %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                nullptr);
+        }
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreInitiateAcc {{
+    Fault
+    %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = writeMemTiming(xc, traceData, Mem, EA,
+                memAccessFlags, nullptr);
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def format Load(memacc_code, ea_code = {{EA = Rs1 + ldisp;}}, mem_flags=[],
+        inst_flags=[]) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        'Load', exec_template_base='Load')
+}};
+
+def format Store(memacc_code, ea_code={{EA = Rs1 + sdisp;}}, mem_flags=[],
+        inst_flags=[]) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+        'Store', exec_template_base='Store')
+}};

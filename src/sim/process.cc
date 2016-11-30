@@ -82,6 +82,8 @@
 #include "arch/x86/linux/process.hh"
 #elif THE_ISA == POWER_ISA
 #include "arch/power/linux/process.hh"
+#elif THE_ISA == RISCV_ISA
+#include "arch/riscv/linux/process.hh"
 #else
 #error "THE_ISA not set"
 #endif
@@ -701,6 +703,19 @@ LiveProcess::create(LiveProcessParams * params)
         process = new PowerLinuxProcess(params, objFile);
         break;
 
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#elif THE_ISA == RISCV_ISA
+    if (objFile->getArch() != ObjectFile::Riscv)
+        fatal("Object file architecture does not match compiled ISA (RISCV).");
+    switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
+      case ObjectFile::Linux:
+        process = new RiscvLinuxProcess(params, objFile);
+        break;
       default:
         fatal("Unknown/unsupported operating system.");
     }

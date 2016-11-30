@@ -1,0 +1,332 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// The RISC-V ISA decoder
+//
+
+decode OPCODE default Unknown::unknown() {
+    0x03: decode FUNCT3 {
+        format Load {
+            0x0: lb({{
+                Rd_sd = Mem_sb;
+            }});
+            0x1: lh({{
+                Rd_sd = Mem_sh;
+            }});
+            0x2: lw({{
+                Rd_sd = Mem_sw;
+            }});
+            0x3: ld({{
+                Rd_sd = Mem_sd;
+            }});
+            0x4: lbu({{
+                Rd = Mem_ub;
+            }});
+            0x5: lhu({{
+                Rd = Mem_uh;
+            }});
+            0x6: lwu({{
+                Rd = Mem_uw;
+            }});
+        }
+    }
+
+    0x0f: decode FUNCT3 {
+        format IOp {
+            0x0: fence({{
+            }}, IsNonSpeculative, IsMemBarrier, No_OpClass);
+            0x1: fence_i({{
+            }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+        }
+    }
+
+    0x13: decode FUNCT3 {
+        format IOp {
+            0x0: addi({{
+                Rd_sd = Rs1_sd + imm;
+            }});
+            0x1: slli({{
+                Rd = Rs1 << SHAMT6;
+            }});
+            0x2: slti({{
+                Rd = (Rs1_sd < imm) ? 1 : 0;
+            }});
+            0x3: sltiu({{
+                Rd = (Rs1 < (uint64_t)imm) ? 1 : 0;
+            }});
+            0x4: xori({{
+                Rd = Rs1 ^ (uint64_t)imm;
+            }});
+            0x5: decode SRTYPE {
+                0x0: srli({{
+                    Rd = Rs1 >> SHAMT6;
+                }});
+                0x1: srai({{
+                    Rd_sd = Rs1_sd >> SHAMT6;
+                }});
+            }
+            0x6: ori({{
+                Rd = Rs1 | (uint64_t)imm;
+            }});
+            0x7: andi({{
+                Rd = Rs1 & (uint64_t)imm;
+            }});
+        }
+    }
+
+    0x17: UOp::auipc({{
+        Rd = PC + imm;
+    }});
+
+    0x1b: decode FUNCT3 {
+        format IOp {
+            0x0: addiw({{
+                Rd_sd = (int32_t)Rs1 + (int32_t)imm;
+            }});
+            0x1: slliw({{
+                Rd_sd = Rs1_sw << SHAMT5;
+            }});
+            0x5: decode SRTYPE {
+                0x0: srliw({{
+                    Rd = Rs1_uw >> SHAMT5;
+                }});
+                0x1: sraiw({{
+                    Rd_sd = Rs1_sw >> SHAMT5;
+                }});
+            }
+        }
+    }
+
+    0x23: decode FUNCT3 {
+        format Store {
+            0x0: sb({{
+                Mem_ub = Rs2_ub;
+            }});
+            0x1: sh({{
+                Mem_uh = Rs2_uh;
+            }});
+            0x2: sw({{
+                Mem_uw = Rs2_uw;
+            }});
+            0x3: sd({{
+                Mem_ud = Rs2_ud;
+            }});
+        }
+    }
+
+    0x33: decode FUNCT3 {
+        format ROp {
+            0x0: decode FUNCT7 {
+                0x0: add({{
+                    Rd = Rs1_sd + Rs2_sd;
+                }});
+                0x20: sub({{
+                    Rd = Rs1_sd - Rs2_sd;
+                }});
+            }
+            0x1: decode FUNCT7 {
+                0x0: sll({{
+                    Rd = Rs1 << Rs2<5:0>;
+                }});
+            }
+            0x2: decode FUNCT7 {
+                0x0: slt({{
+                    Rd = (Rs1_sd < Rs2_sd) ? 1 : 0;
+                }});
+            }
+            0x3: decode FUNCT7 {
+                0x0: sltu({{
+                    Rd = (Rs1 < Rs2) ? 1 : 0;
+                }});
+            }
+            0x4: decode FUNCT7 {
+                0x0: xor({{
+                    Rd = Rs1 ^ Rs2;
+                }});
+            }
+            0x5: decode FUNCT7 {
+                0x0: srl({{
+                    Rd = Rs1 >> Rs2<5:0>;
+                }});
+                0x20: sra({{
+                    Rd_sd = Rs1_sd >> Rs2<5:0>;
+                }});
+            }
+            0x6: decode FUNCT7 {
+                0x0: or({{
+                    Rd = Rs1 | Rs2;
+                }});
+            }
+            0x7: decode FUNCT7 {
+                0x0: and({{
+                    Rd = Rs1 & Rs2;
+                }});
+            }
+        }
+    }
+
+    0x37: UOp::lui({{
+        Rd = (uint64_t)imm;
+    }});
+
+    0x3b: decode FUNCT3 {
+        format ROp {
+            0x0: decode FUNCT7 {
+                0x0: addw({{
+                    Rd_sd = Rs1_sw + Rs2_sw;
+                }});
+                0x20: subw({{
+                    Rd_sd = Rs1_sw - Rs2_sw;
+                }});
+            }
+            0x1: sllw({{
+                Rd_sd = Rs1_sw << Rs2<4:0>;
+            }});
+            0x5: decode FUNCT7 {
+                0x0: srlw({{
+                    Rd_uw = Rs1_uw >> Rs2<4:0>;
+                }});
+                0x20: sraw({{
+                    Rd_sd = Rs1_sw >> Rs2<4:0>;
+                }});
+            }
+        }
+    }
+
+    0x63: decode FUNCT3 {
+        format SBOp {
+            0x0: beq({{
+                if (Rs1 == Rs2) {
+                    NPC = PC + imm;
+                } else {
+                    NPC = NPC;
+                }
+            }}, IsDirectControl, IsCondControl);
+            0x1: bne({{
+                if (Rs1 != Rs2) {
+                    NPC = PC + imm;
+                } else {
+                    NPC = NPC;
+                }
+            }}, IsDirectControl, IsCondControl);
+            0x4: blt({{
+                if (Rs1_sd < Rs2_sd) {
+                    NPC = PC + imm;
+                } else {
+                    NPC = NPC;
+                }
+            }}, IsDirectControl, IsCondControl);
+            0x5: bge({{
+                if (Rs1_sd >= Rs2_sd) {
+                    NPC = PC + imm;
+                } else {
+                    NPC = NPC;
+                }
+            }}, IsDirectControl, IsCondControl);
+            0x6: bltu({{
+                if (Rs1 < Rs2) {
+                    NPC = PC + imm;
+                } else {
+                    NPC = NPC;
+                }
+            }}, IsDirectControl, IsCondControl);
+            0x7: bgeu({{
+                if (Rs1 >= Rs2) {
+                    NPC = PC + imm;
+                } else {
+                    NPC = NPC;
+                }
+            }}, IsDirectControl, IsCondControl);
+        }
+    }
+
+    0x67: decode FUNCT3 {
+        0x0: Jump::jalr({{
+            Rd = NPC;
+            NPC = (imm + Rs1) & (~0x1);
+        }}, IsIndirectControl, IsUncondControl, IsCall);
+    }
+
+    0x6f: UJOp::jal({{
+        Rd = NPC;
+        NPC = PC + imm;
+    }}, IsDirectControl, IsUncondControl, IsCall);
+
+    0x73: decode FUNCT3 {
+        format IOp {
+            0x0: decode FUNCT12 {
+                0x0: ecall({{
+                    fault = std::make_shared<SyscallFault>();
+                }}, IsSerializeAfter, IsNonSpeculative, IsSyscall, No_OpClass);
+                0x1: ebreak({{
+                    fault = std::make_shared<BreakpointFault>();
+                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                0x100: eret({{
+                    fault = std::make_shared<UnimplementedFault>("eret");
+                }}, No_OpClass);
+            }
+            0x1: csrrw({{
+                Rd = xc->readMiscReg(FUNCT12);
+                xc->setMiscReg(FUNCT12, Rs1);
+            }}, IsNonSpeculative, No_OpClass);
+            0x2: csrrs({{
+                Rd = xc->readMiscReg(FUNCT12);
+                if (Rs1 != 0) {
+                    xc->setMiscReg(FUNCT12, Rd | Rs1);
+                }
+            }}, IsNonSpeculative, No_OpClass);
+            0x3: csrrc({{
+                Rd = xc->readMiscReg(FUNCT12);
+                if (Rs1 != 0) {
+                    xc->setMiscReg(FUNCT12, Rd & ~Rs1);
+                }
+            }}, IsNonSpeculative, No_OpClass);
+            0x5: csrrwi({{
+                Rd = xc->readMiscReg(FUNCT12);
+                xc->setMiscReg(FUNCT12, ZIMM);
+            }}, IsNonSpeculative, No_OpClass);
+            0x6: csrrsi({{
+                Rd = xc->readMiscReg(FUNCT12);
+                if (ZIMM != 0) {
+                    xc->setMiscReg(FUNCT12, Rd | ZIMM);
+                }
+            }}, IsNonSpeculative, No_OpClass);
+            0x7: csrrci({{
+                Rd = xc->readMiscReg(FUNCT12);
+                if (ZIMM != 0) {
+                    xc->setMiscReg(FUNCT12, Rd & ~ZIMM);
+                }
+            }}, IsNonSpeculative, No_OpClass);
+        }
+    }
+}

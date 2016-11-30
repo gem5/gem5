@@ -56,7 +56,8 @@ class ObjectFile
         Arm64,
         Arm,
         Thumb,
-        Power
+        Power,
+        Riscv
     };
 
     enum OpSys {
