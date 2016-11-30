@@ -63,6 +63,8 @@ using namespace LittleEndianGuest;
 const Addr PageShift = 12;
 const Addr PageBytes = ULL(1) << PageShift;
 
+const ExtMachInst NoopMachInst = 0x00000013;
+
 // Memory accesses can not be unaligned
 const bool HasUnalignedMemAcc = false;
 
