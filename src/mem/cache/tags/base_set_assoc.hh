@@ -208,7 +208,6 @@ public:
         Addr tag = extractTag(addr);
         int set = extractSet(addr);
         BlkType *blk = sets[set].findBlk(tag, is_secure);
-        lat = accessLatency;;
 
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
@@ -223,12 +222,20 @@ public:
         }
 
         if (blk != nullptr) {
-            if (blk->whenReady > curTick()
-                && cache->ticksToCycles(blk->whenReady - curTick())
-                > accessLatency) {
-                lat = cache->ticksToCycles(blk->whenReady - curTick());
+            // If a cache hit
+            lat = accessLatency;
+            // Check if the block to be accessed is available. If not,
+            // apply the accessLatency on top of block->whenReady.
+            if (blk->whenReady > curTick() &&
+                cache->ticksToCycles(blk->whenReady - curTick()) >
+                accessLatency) {
+                lat = cache->ticksToCycles(blk->whenReady - curTick()) +
+                accessLatency;
             }
             blk->refCount += 1;
+        } else {
+            // If a cache miss
+            lat = lookupLatency;
         }
 
         return blk;

@@ -176,7 +176,7 @@ else:
 
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = Cache(size = '32kB', assoc = 4,
-                 hit_latency = 1, response_latency = 1,
+                 tag_latency = 1, data_latency = 1, response_latency = 1,
                  tgts_per_mshr = 8, clusivity = 'mostly_incl',
                  writeback_clean = True)
 
@@ -194,7 +194,8 @@ for scale in cachespec[:-1]:
      prev = cache_proto[0]
      next = prev()
      next.size = prev.size * scale
-     next.hit_latency = prev.hit_latency * 10
+     next.tag_latency = prev.tag_latency * 10
+     next.data_latency = prev.data_latency * 10
      next.response_latency = prev.response_latency * 10
      next.assoc = prev.assoc * scale
      next.mshrs = prev.mshrs * scale

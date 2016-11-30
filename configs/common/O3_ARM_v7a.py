@@ -147,7 +147,8 @@ class O3_ARM_v7a_3(DerivO3CPU):
 
 # Instruction Cache
 class O3_ARM_v7a_ICache(Cache):
-    hit_latency = 1
+    tag_latency = 1
+    data_latency = 1
     response_latency = 1
     mshrs = 2
     tgts_per_mshr = 8
@@ -159,7 +160,8 @@ class O3_ARM_v7a_ICache(Cache):
 
 # Data Cache
 class O3_ARM_v7a_DCache(Cache):
-    hit_latency = 2
+    tag_latency = 2
+    data_latency = 2
     response_latency = 2
     mshrs = 6
     tgts_per_mshr = 8
@@ -172,7 +174,8 @@ class O3_ARM_v7a_DCache(Cache):
 # TLB Cache
 # Use a cache as a L2 TLB
 class O3_ARM_v7aWalkCache(Cache):
-    hit_latency = 4
+    tag_latency = 4
+    data_latency = 4
     response_latency = 4
     mshrs = 6
     tgts_per_mshr = 8
@@ -185,7 +188,8 @@ class O3_ARM_v7aWalkCache(Cache):
 
 # L2 Cache
 class O3_ARM_v7aL2(Cache):
-    hit_latency = 12
+    tag_latency = 12
+    data_latency = 12
     response_latency = 12
     mshrs = 16
     tgts_per_mshr = 8

@@ -53,7 +53,8 @@ class BaseCache(MemObject):
     size = Param.MemorySize("Capacity")
     assoc = Param.Unsigned("Associativity")
 
-    hit_latency = Param.Cycles("Hit latency")
+    tag_latency = Param.Cycles("Tag lookup latency")
+    data_latency = Param.Cycles("Data access latency")
     response_latency = Param.Cycles("Latency for the return path on a miss");
 
     max_miss_count = Param.Counter(0,

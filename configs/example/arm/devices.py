@@ -45,7 +45,8 @@ from common.Caches import *
 from common import CpuConfig
 
 class L1I(L1_ICache):
-    hit_latency = 1
+    tag_latency = 1
+    data_latency = 1
     response_latency = 1
     mshrs = 4
     tgts_per_mshr = 8
@@ -54,7 +55,8 @@ class L1I(L1_ICache):
 
 
 class L1D(L1_DCache):
-    hit_latency = 2
+    tag_latency = 2
+    data_latency = 2
     response_latency = 1
     mshrs = 16
     tgts_per_mshr = 16
@@ -64,7 +66,8 @@ class L1D(L1_DCache):
 
 
 class WalkCache(PageTableWalkerCache):
-    hit_latency = 4
+    tag_latency = 4
+    data_latency = 4
     response_latency = 4
     mshrs = 6
     tgts_per_mshr = 8
@@ -74,7 +77,8 @@ class WalkCache(PageTableWalkerCache):
 
 
 class L2(L2Cache):
-    hit_latency = 12
+    tag_latency = 12
+    data_latency = 12
     response_latency = 5
     mshrs = 32
     tgts_per_mshr = 8
@@ -87,7 +91,8 @@ class L2(L2Cache):
 class L3(Cache):
     size = '16MB'
     assoc = 16
-    hit_latency = 20
+    tag_latency = 20
+    data_latency = 20
     response_latency = 20
     mshrs = 20
     tgts_per_mshr = 12

@@ -56,7 +56,11 @@ using namespace std;
 
 BaseTags::BaseTags(const Params *p)
     : ClockedObject(p), blkSize(p->block_size), size(p->size),
-      accessLatency(p->hit_latency), cache(nullptr), warmupBound(0),
+      lookupLatency(p->tag_latency),
+      accessLatency(p->sequential_access ?
+                    p->tag_latency + p->data_latency :
+                    std::max(p->tag_latency, p->data_latency)),
+      cache(nullptr), warmupBound(0),
       warmedUp(false), numBlocks(0)
 {
 }

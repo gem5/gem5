@@ -72,9 +72,10 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       mshrQueue("MSHRs", p->mshrs, 0, p->demand_mshr_reserve), // see below
       writeBuffer("write buffer", p->write_buffers, p->mshrs), // see below
       blkSize(blk_size),
-      lookupLatency(p->hit_latency),
-      forwardLatency(p->hit_latency),
-      fillLatency(p->response_latency),
+      lookupLatency(p->tag_latency),
+      dataLatency(p->data_latency),
+      forwardLatency(p->tag_latency),
+      fillLatency(p->data_latency),
       responseLatency(p->response_latency),
       numTarget(p->tgts_per_mshr),
       forwardSnoops(true),

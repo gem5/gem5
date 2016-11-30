@@ -69,7 +69,13 @@ class BaseTags : public ClockedObject
     const unsigned blkSize;
     /** The size of the cache. */
     const unsigned size;
-    /** The access latency of the cache. */
+    /** The tag lookup latency of the cache. */
+    const Cycles lookupLatency;
+    /**
+     * The total access latency of the cache. This latency
+     * is different depending on the cache access mode
+     * (parallel or sequential)
+     */
     const Cycles accessLatency;
     /** Pointer to the parent cache. */
     BaseCache *cache;
