@@ -39,6 +39,13 @@
 # Authors: Jason Lowe-Power
 #          Andreas Hansson
 
+import m5
+from m5.objects import *
+
+# the traffic generator is only available if we have protobuf support,
+# so potentially skip this test
+require_sim_object("TrafficGen")
+
 # A wrapper around configs/example/memcheck.py
 
 # For some reason, this is implicitly needed by run.py
