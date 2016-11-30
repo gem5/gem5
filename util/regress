@@ -51,6 +51,7 @@ add_option('--builds',
            'SPARC,' \
            'X86,X86_MESI_Two_Level,' \
            'ARM,' \
+           'RISCV,' \
            'HSAIL_X86',
            help="comma-separated build targets to test (default: '%default')")
 add_option('--modes',
