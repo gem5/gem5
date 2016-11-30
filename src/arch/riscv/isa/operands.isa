@@ -48,6 +48,7 @@ def operands {{
     'Rd': ('IntReg', 'ud', 'RD', 'IsInteger', 1),
     'Rs1': ('IntReg', 'ud', 'RS1', 'IsInteger', 2),
     'Rs2': ('IntReg', 'ud', 'RS2', 'IsInteger', 3),
+    'Rt': ('IntReg', 'ud', 'AMOTempReg', 'IsInteger', 4),
 
     'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
     'Fd_bits': ('FloatReg', 'ud', 'FD', 'IsFloating', 1),

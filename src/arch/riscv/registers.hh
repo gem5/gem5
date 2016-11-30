@@ -68,7 +68,8 @@ typedef uint8_t CCReg; // Not applicable to Riscv
 typedef uint64_t MiscReg;
 
 const int NumIntArchRegs = 32;
-const int NumIntRegs = NumIntArchRegs;
+const int NumMicroIntRegs = 1;
+const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 const int NumFloatRegs = 32;
 const int NumCCRegs = 0;
 const int NumMiscRegs = 4096;
@@ -78,7 +79,6 @@ const int FP_Reg_Base = NumIntRegs;
 const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
 const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs;
 const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
-
 
 // Semantically meaningful register indices
 const int ZeroReg = 0;
@@ -90,6 +90,7 @@ const int FramePointerReg = 8;
 const int ReturnValueRegs[] = {10, 11};
 const int ReturnValueReg = ReturnValueRegs[0];
 const int ArgumentRegs[] = {10, 11, 12, 13, 14, 15, 16, 17};
+const int AMOTempReg = 32;
 
 const char* const RegisterNames[] = {"zero", "ra", "sp", "gp",
     "tp", "t0", "t1", "t2",

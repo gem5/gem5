@@ -1,0 +1,370 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 Riscv Developers
+// Copyright (c) 2016 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// Atomic memory operation instructions
+//
+output header {{
+    class AtomicMemOp : public RiscvMacroInst
+    {
+    protected:
+        /// Constructor
+        // Each AtomicMemOp has a load and a store phase
+        AtomicMemOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+                : RiscvMacroInst(mnem, _machInst, __opClass)
+        {}
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+    };
+
+    class AtomicMemOpMicro : public RiscvMicroInst
+    {
+    protected:
+        /// Memory request flags.  See mem/request.hh.
+        Request::Flags memAccessFlags;
+
+        /// Constructor
+        AtomicMemOpMicro(const char *mnem, ExtMachInst _machInst,
+            OpClass __opClass)
+                : RiscvMicroInst(mnem, _machInst, __opClass)
+        {}
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+    };
+}};
+
+output decoder {{
+    std::string AtomicMemOp::generateDisassembly(Addr pc,
+        const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << csprintf("0x%08x", machInst) << ' ';
+        ss << mnemonic << ' ' << regName(_destRegIdx[0]) << ", "
+                << regName(_srcRegIdx[1]) << ", ("
+                << regName(_srcRegIdx[0]) << ')';
+        return ss.str();
+    }
+
+    std::string AtomicMemOpMicro::generateDisassembly(Addr pc,
+        const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << csprintf("0x%08x", machInst) << ' ' << mnemonic;
+        return ss.str();
+    }
+}};
+
+def template AtomicMemOpDeclare {{
+    /**
+     * Static instruction class for an AtomicMemOp operation
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst);
+
+    protected:
+
+        class %(class_name)sLoad : public %(base_class)sMicro
+        {
+          public:
+            // Constructor
+            %(class_name)sLoad(ExtMachInst machInst, %(class_name)s *_p);
+
+            %(BasicExecDeclare)s
+
+            %(EACompDeclare)s
+
+            %(InitiateAccDeclare)s
+
+            %(CompleteAccDeclare)s
+        };
+
+        class %(class_name)sStore : public %(base_class)sMicro
+        {
+          public:
+            // Constructor
+            %(class_name)sStore(ExtMachInst machInst, %(class_name)s *_p);
+
+            %(BasicExecDeclare)s
+
+            %(EACompDeclare)s
+
+            %(InitiateAccDeclare)s
+
+            %(CompleteAccDeclare)s
+        };
+    };
+}};
+
+def template AtomicMemOpMacroConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+        microops = {new %(class_name)sLoad(machInst, this),
+            new %(class_name)sStore(machInst, this)};
+    }
+}};
+
+def template AtomicMemOpLoadConstructor {{
+    %(class_name)s::%(class_name)sLoad::%(class_name)sLoad(
+        ExtMachInst machInst, %(class_name)s *_p)
+            : %(base_class)s("%(mnemonic)s[l]", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+        flags[IsFirstMicroop] = true;
+        flags[IsDelayedCommit] = true;
+        if (AQ)
+            memAccessFlags = Request::ACQUIRE;
+    }
+}};
+
+def template AtomicMemOpStoreConstructor {{
+    %(class_name)s::%(class_name)sStore::%(class_name)sStore(
+        ExtMachInst machInst, %(class_name)s *_p)
+            : %(base_class)s("%(mnemonic)s[s]", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+        flags[IsLastMicroop] = true;
+        flags[IsNonSpeculative] = true;
+        if (RL)
+            memAccessFlags = Request::RELEASE;
+    }
+}};
+
+def template AtomicMemOpMacroDecode {{
+    return new %(class_name)s(machInst);
+}};
+
+def template AtomicMemOpLoadExecute {{
+    Fault %(class_name)s::%(class_name)sLoad::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
+        }
+
+        if (fault == NoFault) {
+            %(code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpStoreExecute {{
+    Fault %(class_name)s::%(class_name)sStore::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                nullptr);
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpLoadEACompExecute {{
+    Fault %(class_name)s::%(class_name)sLoad::eaComp(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpStoreEACompExecute {{
+    Fault %(class_name)s::%(class_name)sStore::eaComp(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpLoadInitiateAcc {{
+    Fault %(class_name)s::%(class_name)sLoad::initiateAcc(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpStoreInitiateAcc {{
+    Fault %(class_name)s::%(class_name)sStore::initiateAcc(
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+                nullptr);
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpLoadCompleteAcc {{
+    Fault %(class_name)s::%(class_name)sLoad::completeAcc(PacketPtr pkt,
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        getMem(pkt, Mem, traceData);
+
+        if (fault == NoFault) {
+            %(code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template AtomicMemOpStoreCompleteAcc {{
+    Fault %(class_name)s::%(class_name)sStore::completeAcc(PacketPtr pkt,
+        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def format AtomicMemOp(load_code, store_code, ea_code, load_flags=[],
+        store_flags=[], inst_flags=[]) {{
+    macro_iop = InstObjParams(name, Name, 'AtomicMemOp', ea_code, inst_flags)
+    header_output = AtomicMemOpDeclare.subst(macro_iop)
+    decoder_output = AtomicMemOpMacroConstructor.subst(macro_iop)
+    decode_block = AtomicMemOpMacroDecode.subst(macro_iop)
+    exec_output = ''
+
+    load_inst_flags = makeList(inst_flags) + ["IsMemRef", "IsLoad"]
+    load_iop = InstObjParams(name, Name, 'AtomicMemOpMicro',
+        {'ea_code': ea_code, 'code': load_code}, load_inst_flags)
+    decoder_output += AtomicMemOpLoadConstructor.subst(load_iop)
+    exec_output += AtomicMemOpLoadExecute.subst(load_iop) \
+        + AtomicMemOpLoadEACompExecute.subst(load_iop) \
+        + AtomicMemOpLoadInitiateAcc.subst(load_iop) \
+        + AtomicMemOpLoadCompleteAcc.subst(load_iop)
+
+    store_inst_flags = makeList(inst_flags) + ["IsMemRef", "IsStore"]
+    store_iop = InstObjParams(name, Name, 'AtomicMemOpMicro',
+        {'ea_code': ea_code, 'code': store_code}, store_inst_flags)
+    decoder_output += AtomicMemOpStoreConstructor.subst(store_iop)
+    exec_output += AtomicMemOpStoreExecute.subst(store_iop) \
+        + AtomicMemOpStoreEACompExecute.subst(store_iop) \
+        + AtomicMemOpStoreInitiateAcc.subst(store_iop) \
+        + AtomicMemOpStoreCompleteAcc.subst(store_iop)
+}};

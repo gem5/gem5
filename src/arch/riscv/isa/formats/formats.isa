@@ -37,7 +37,7 @@
 ##include "type.isa"
 ##include "mem.isa"
 ##include "fp.isa"
+##include "amo.isa"
 
 // Include the unknown
 ##include "unknown.isa"
-

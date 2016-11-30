@@ -85,3 +85,8 @@ def bitfield FS3 <31:27>;
 def bitfield ROUND_MODE <14:12>;
 def bitfield CONV_SGN <24:20>;
 def bitfield FUNCT2 <26:25>;
+
+// AMO
+def bitfield AMOFUNCT <31:27>;
+def bitfield AQ <26>;
+def bitfield RL <25>;

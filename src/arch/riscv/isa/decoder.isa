@@ -166,6 +166,104 @@ decode OPCODE default Unknown::unknown() {
         }
     }
 
+    0x2f: decode FUNCT3 {
+        0x2: decode AMOFUNCT {
+            0x2: LoadReserved::lr_w({{
+                Rd_sd = Mem_sw;
+            }}, mem_flags=LLSC, aq=AQ, rl=RL);
+            0x3: StoreCond::sc_w({{
+                Mem_uw = Rs2_uw;
+            }}, {{
+                Rd = result;
+            }}, inst_flags=IsStoreConditional, mem_flags=LLSC, aq=AQ, rl=RL);
+            format AtomicMemOp {
+                0x0: amoadd_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = Rs2_sw + Rt_sd;
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x1: amoswap_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = Rs2_uw;
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x4: amoxor_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = Rs2_uw^Rt_sd;
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x8: amoor_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = Rs2_uw | Rt_sd;
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0xc: amoand_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = Rs2_uw&Rt_sd;
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x10: amomin_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = std::min<int32_t>(Rs2_sw, Rt_sd);
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x14: amomax_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = std::max<int32_t>(Rs2_sw, Rt_sd);
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x18: amominu_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = std::min<uint32_t>(Rs2_uw, Rt_sd);
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x1c: amomaxu_w({{Rt_sd = Mem_sw;}}, {{
+                    Mem_sw = std::max<uint32_t>(Rs2_uw, Rt_sd);
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+            }
+        }
+        0x3: decode AMOFUNCT {
+            0x2: LoadReserved::lr_d({{
+                Rd_sd = Mem_sd;
+            }}, aq=AQ, rl=RL);
+            0x3: StoreCond::sc_d({{
+                Mem = Rs2;
+            }}, {{
+                Rd = result;
+            }}, aq=AQ, rl=RL);
+            format AtomicMemOp {
+                0x0: amoadd_d({{Rt_sd = Mem_sd;}}, {{
+                    Mem_sd = Rs2_sd + Rt_sd;
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x1: amoswap_d({{Rt = Mem;}}, {{
+                    Mem = Rs2;
+                    Rd = Rt;
+                }}, {{EA = Rs1;}});
+                0x4: amoxor_d({{Rt = Mem;}}, {{
+                    Mem = Rs2^Rt;
+                    Rd = Rt;
+                }}, {{EA = Rs1;}});
+                0x8: amoor_d({{Rt = Mem;}}, {{
+                    Mem = Rs2 | Rt;
+                    Rd = Rt;
+                }}, {{EA = Rs1;}});
+                0xc: amoand_d({{Rt = Mem;}}, {{
+                    Mem = Rs2&Rt;
+                    Rd = Rt;
+                }}, {{EA = Rs1;}});
+                0x10: amomin_d({{Rt_sd = Mem_sd;}}, {{
+                    Mem_sd = std::min(Rs2_sd, Rt_sd);
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x14: amomax_d({{Rt_sd = Mem_sd;}}, {{
+                    Mem_sd = std::max(Rs2_sd, Rt_sd);
+                    Rd_sd = Rt_sd;
+                }}, {{EA = Rs1;}});
+                0x18: amominu_d({{Rt = Mem;}}, {{
+                    Mem = std::min(Rs2, Rt);
+                    Rd = Rt;
+                }}, {{EA = Rs1;}});
+                0x1c: amomaxu_d({{Rt = Mem;}}, {{
+                    Mem = std::max(Rs2, Rt);
+                    Rd = Rt;
+                }}, {{EA = Rs1;}});
+            }
+        }
+    }
     0x33: decode FUNCT3 {
         format ROp {
             0x0: decode FUNCT7 {
