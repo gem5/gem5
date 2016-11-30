@@ -218,12 +218,12 @@ decode OPCODE default Unknown::unknown() {
         0x3: decode AMOFUNCT {
             0x2: LoadReserved::lr_d({{
                 Rd_sd = Mem_sd;
-            }}, aq=AQ, rl=RL);
+            }}, mem_flags=LLSC, aq=AQ, rl=RL);
             0x3: StoreCond::sc_d({{
                 Mem = Rs2;
             }}, {{
                 Rd = result;
-            }}, aq=AQ, rl=RL);
+            }}, mem_flags=LLSC, inst_flags=IsStoreConditional, aq=AQ, rl=RL);
             format AtomicMemOp {
                 0x0: amoadd_d({{Rt_sd = Mem_sd;}}, {{
                     Mem_sd = Rs2_sd + Rt_sd;

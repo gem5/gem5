@@ -363,6 +363,9 @@ def template StoreCondExecute {{
         if (fault == NoFault) {
             fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
                 &result);
+            // RISC-V has the opposite convention gem5 has for success flags,
+            // so we invert the result here.
+            result = !result;
         }
 
         if (fault == NoFault) {
@@ -385,7 +388,9 @@ def template StoreCondCompleteAcc {{
 
         %(op_dest_decl)s;
 
-        uint64_t result = pkt->req->getExtraData();
+        // RISC-V has the opposite convention gem5 has for success flags,
+        // so we invert the result here.
+        uint64_t result = !pkt->req->getExtraData();
 
         if (fault == NoFault) {
             %(postacc_code)s;

@@ -48,6 +48,8 @@
 #ifndef __ARCH_RISCV_LOCKED_MEM_HH__
 #define __ARCH_RISCV_LOCKED_MEM_HH__
 
+#include <stack>
+
 #include "arch/registers.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -60,80 +62,67 @@
  */
 namespace RiscvISA
 {
-static bool lock_flag = false;
-static Addr lock_addr = 0;
 
-template <class XC>
-inline void handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
+const int WARN_FAILURE = 10000;
+
+// RISC-V allows multiple locks per hart, but each SC has to unlock the most
+// recent one, so we use a stack here.
+static std::stack<Addr> locked_addrs;
+
+template <class XC> inline void
+handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
 {
-    if (!lock_flag)
+    if (locked_addrs.empty())
         return;
-
-    DPRINTF(LLSC, "Locked snoop on address %x.\n",
-            pkt->getAddr()&cacheBlockMask);
-
-    Addr snoop_addr = pkt->getAddr()&cacheBlockMask;
-
-    if ((lock_addr&cacheBlockMask) == snoop_addr)
-        lock_flag = false;
+    Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
+    DPRINTF(LLSC, "Locked snoop on address %x.\n", snoop_addr);
+    if ((locked_addrs.top() & cacheBlockMask) == snoop_addr)
+        locked_addrs.pop();
 }
 
 
-template <class XC>
-inline void handleLockedRead(XC *xc, Request *req)
+template <class XC> inline void
+handleLockedRead(XC *xc, Request *req)
 {
-    lock_addr = req->getPaddr()&~0xF;
-    lock_flag = true;
-    DPRINTF(LLSC, "[cid:%i]: "
-            "Load-Link Flag Set & Load-Link Address set to %x.\n",
-            req->contextId(), req->getPaddr()&~0xF);
+    locked_addrs.push(req->getPaddr() & ~0xF);
+    DPRINTF(LLSC, "[cid:%d]: Reserved address %x.\n",
+            req->contextId(), req->getPaddr() & ~0xF);
 }
 
-template <class XC>
-inline void handleLockedSnoopHit(XC *xc)
+template <class XC> inline void
+handleLockedSnoopHit(XC *xc)
 {}
 
-template <class XC>
-inline bool handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
+template <class XC> inline bool
+handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
 {
-    if (req->isUncacheable()) {
-        // Funky Turbolaser mailbox access...don't update
-        // result register (see stq_c in decoder.isa)
-        req->setExtraData(2);
-    } else {
-        // standard store conditional
-        if (!lock_flag || (req->getPaddr()&~0xF) != lock_addr) {
-            // Lock flag not set or addr mismatch in CPU;
-            // don't even bother sending to memory system
-            req->setExtraData(0);
-            lock_flag = false;
+    // Normally RISC-V uses zero to indicate success and nonzero to indicate
+    // failure (right now only 1 is reserved), but in gem5 zero indicates
+    // failure and one indicates success, so here we conform to that (it should
+    // be switched in the instruction's implementation)
 
-            // the rest of this code is not architectural;
-            // it's just a debugging aid to help detect
-            // livelock by warning on long sequences of failed
-            // store conditionals
-            int stCondFailures = xc->readStCondFailures();
-            stCondFailures++;
-            xc->setStCondFailures(stCondFailures);
-            if (stCondFailures % 100000 == 0) {
-                warn("%i:"" context %d:"
-                        " %d consecutive store conditional failures\n",
-                        curTick(), xc->contextId(), stCondFailures);
-            }
-
-            if (!lock_flag){
-                DPRINTF(LLSC, "[cid:%i]:"
-                        " Lock Flag Set, Store Conditional Failed.\n",
-                        req->contextId());
-            } else if ((req->getPaddr() & ~0xf) != lock_addr) {
-                DPRINTF(LLSC, "[cid:%i]: Load-Link Address Mismatch, "
-                        "Store Conditional Failed.\n", req->contextId());
-            }
-            // store conditional failed already, so don't issue it to mem
-            return false;
-        }
+    DPRINTF(LLSC, "[cid:%d]: locked_addrs empty? %s.\n", req->contextId(),
+            locked_addrs.empty() ? "yes" : "no");
+    if (!locked_addrs.empty()) {
+        DPRINTF(LLSC, "[cid:%d]: addr = %x.\n", req->contextId(),
+                req->getPaddr() & ~0xF);
+        DPRINTF(LLSC, "[cid:%d]: last locked addr = %x.\n", req->contextId(),
+                locked_addrs.top());
     }
-
+    if (locked_addrs.empty()
+            || locked_addrs.top() != ((req->getPaddr() & ~0xF))) {
+        req->setExtraData(0);
+        int stCondFailures = xc->readStCondFailures();
+        xc->setStCondFailures(++stCondFailures);
+        if (stCondFailures % WARN_FAILURE == 0) {
+            warn("%i: context %d: %d consecutive SC failures.\n",
+                    curTick(), xc->contextId(), stCondFailures);
+        }
+        return false;
+    }
+    if (req->isUncacheable()) {
+        req->setExtraData(2);
+    }
     return true;
 }
 
