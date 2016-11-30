@@ -150,6 +150,9 @@ decode OPCODE default Unknown::unknown() {
                 0x0: add({{
                     Rd = Rs1_sd + Rs2_sd;
                 }});
+                0x1: mul({{
+                    Rd = Rs1_sd*Rs2_sd;
+                }}, IntMultOp);
                 0x20: sub({{
                     Rd = Rs1_sd - Rs2_sd;
                 }});
@@ -158,26 +161,93 @@ decode OPCODE default Unknown::unknown() {
                 0x0: sll({{
                     Rd = Rs1 << Rs2<5:0>;
                 }});
+                0x1: mulh({{
+                    bool negate = (Rs1_sd < 0) != (Rs2_sd < 0);
+
+                    uint64_t Rs1_lo = (uint32_t)std::abs(Rs1_sd);
+                    uint64_t Rs1_hi = (uint64_t)std::abs(Rs1_sd) >> 32;
+                    uint64_t Rs2_lo = (uint32_t)std::abs(Rs2_sd);
+                    uint64_t Rs2_hi = (uint64_t)std::abs(Rs2_sd) >> 32;
+
+                    uint64_t hi = Rs1_hi*Rs2_hi;
+                    uint64_t mid1 = Rs1_hi*Rs2_lo;
+                    uint64_t mid2 = Rs1_lo*Rs2_hi;
+                    uint64_t lo = Rs2_lo*Rs1_lo;
+                    uint64_t carry = ((uint64_t)(uint32_t)mid1
+                            + (uint64_t)(uint32_t)mid2 + (lo >> 32)) >> 32;
+
+                    uint64_t res = hi + (mid1 >> 32) + (mid2 >> 32) + carry;
+                    Rd = negate ? ~res + (Rs1_sd*Rs2_sd == 0 ? 1 : 0) : res;
+                }}, IntMultOp);
             }
             0x2: decode FUNCT7 {
                 0x0: slt({{
                     Rd = (Rs1_sd < Rs2_sd) ? 1 : 0;
                 }});
+                0x1: mulhsu({{
+                    bool negate = Rs1_sd < 0;
+                    uint64_t Rs1_lo = (uint32_t)std::abs(Rs1_sd);
+                    uint64_t Rs1_hi = (uint64_t)std::abs(Rs1_sd) >> 32;
+                    uint64_t Rs2_lo = (uint32_t)Rs2;
+                    uint64_t Rs2_hi = Rs2 >> 32;
+
+                    uint64_t hi = Rs1_hi*Rs2_hi;
+                    uint64_t mid1 = Rs1_hi*Rs2_lo;
+                    uint64_t mid2 = Rs1_lo*Rs2_hi;
+                    uint64_t lo = Rs1_lo*Rs2_lo;
+                    uint64_t carry = ((uint64_t)(uint32_t)mid1
+                            + (uint64_t)(uint32_t)mid2 + (lo >> 32)) >> 32;
+
+                    uint64_t res = hi + (mid1 >> 32) + (mid2 >> 32) + carry;
+                    Rd = negate ? ~res + (Rs1_sd*Rs2 == 0 ? 1 : 0) : res;
+                }}, IntMultOp);
             }
             0x3: decode FUNCT7 {
                 0x0: sltu({{
                     Rd = (Rs1 < Rs2) ? 1 : 0;
                 }});
+                0x1: mulhu({{
+                    uint64_t Rs1_lo = (uint32_t)Rs1;
+                    uint64_t Rs1_hi = Rs1 >> 32;
+                    uint64_t Rs2_lo = (uint32_t)Rs2;
+                    uint64_t Rs2_hi = Rs2 >> 32;
+
+                    uint64_t hi = Rs1_hi*Rs2_hi;
+                    uint64_t mid1 = Rs1_hi*Rs2_lo;
+                    uint64_t mid2 = Rs1_lo*Rs2_hi;
+                    uint64_t lo = Rs1_lo*Rs2_lo;
+                    uint64_t carry = ((uint64_t)(uint32_t)mid1
+                            + (uint64_t)(uint32_t)mid2 + (lo >> 32)) >> 32;
+
+                    Rd = hi + (mid1 >> 32) + (mid2 >> 32) + carry;
+                }}, IntMultOp);
             }
             0x4: decode FUNCT7 {
                 0x0: xor({{
                     Rd = Rs1 ^ Rs2;
                 }});
+                0x1: div({{
+                    if (Rs2_sd == 0) {
+                        Rd_sd = -1;
+                    } else if (Rs1_sd == std::numeric_limits<int64_t>::min()
+                            && Rs2_sd == -1) {
+                        Rd_sd = std::numeric_limits<int64_t>::min();
+                    } else {
+                        Rd_sd = Rs1_sd/Rs2_sd;
+                    }
+                }}, IntDivOp);
             }
             0x5: decode FUNCT7 {
                 0x0: srl({{
                     Rd = Rs1 >> Rs2<5:0>;
                 }});
+                0x1: divu({{
+                    if (Rs2 == 0) {
+                        Rd = std::numeric_limits<uint64_t>::max();
+                    } else {
+                        Rd = Rs1/Rs2;
+                    }
+                }}, IntDivOp);
                 0x20: sra({{
                     Rd_sd = Rs1_sd >> Rs2<5:0>;
                 }});
@@ -186,11 +256,28 @@ decode OPCODE default Unknown::unknown() {
                 0x0: or({{
                     Rd = Rs1 | Rs2;
                 }});
+                0x1: rem({{
+                    if (Rs2_sd == 0) {
+                        Rd = Rs1_sd;
+                    } else if (Rs1_sd == std::numeric_limits<int64_t>::min()
+                            && Rs2_sd == -1) {
+                        Rd = 0;
+                    } else {
+                        Rd = Rs1_sd%Rs2_sd;
+                    }
+                }}, IntDivOp);
             }
             0x7: decode FUNCT7 {
                 0x0: and({{
                     Rd = Rs1 & Rs2;
                 }});
+                0x1: remu({{
+                    if (Rs2 == 0) {
+                        Rd = Rs1;
+                    } else {
+                        Rd = Rs1%Rs2;
+                    }
+                }}, IntDivOp);
             }
         }
     }
@@ -205,6 +292,9 @@ decode OPCODE default Unknown::unknown() {
                 0x0: addw({{
                     Rd_sd = Rs1_sw + Rs2_sw;
                 }});
+                0x1: mulw({{
+                    Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
+                }}, IntMultOp);
                 0x20: subw({{
                     Rd_sd = Rs1_sw - Rs2_sw;
                 }});
@@ -212,14 +302,48 @@ decode OPCODE default Unknown::unknown() {
             0x1: sllw({{
                 Rd_sd = Rs1_sw << Rs2<4:0>;
             }});
+            0x4: divw({{
+                if (Rs2_sw == 0) {
+                    Rd_sd = -1;
+                } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
+                        && Rs2_sw == -1) {
+                    Rd_sd = std::numeric_limits<int32_t>::min();
+                } else {
+                    Rd_sd = Rs1_sw/Rs2_sw;
+                }
+            }}, IntDivOp);
             0x5: decode FUNCT7 {
                 0x0: srlw({{
                     Rd_uw = Rs1_uw >> Rs2<4:0>;
                 }});
+                0x1: divuw({{
+                    if (Rs2_uw == 0) {
+                        Rd_sd = std::numeric_limits<IntReg>::max();
+                    } else {
+                        Rd_sd = (int32_t)(Rs1_uw/Rs2_uw);
+                    }
+                }}, IntDivOp);
                 0x20: sraw({{
                     Rd_sd = Rs1_sw >> Rs2<4:0>;
                 }});
             }
+            0x6: remw({{
+                if (Rs2_sw == 0) {
+                    Rd_sd = Rs1_sw;
+                } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
+                        && Rs2_sw == -1) {
+                    Rd_sd = 0;
+                } else {
+                    Rd_sd = Rs1_sw%Rs2_sw;
+                }
+            }}, IntDivOp);
+            0x7: remuw({{
+                if (Rs2_uw == 0) {
+                    Rd_sd = (int32_t)Rs1_uw;
+                } else {
+                    Rd_sd = (int32_t)(Rs1_uw%Rs2_uw);
+                }
+            }}, IntDivOp);
         }
     }
 
