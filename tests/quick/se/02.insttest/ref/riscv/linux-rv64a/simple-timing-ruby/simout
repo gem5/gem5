@@ -1,0 +1,15 @@
+Redirecting stdout to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64a/simple-timing-ruby/simout
+Redirecting stderr to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64a/simple-timing-ruby/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Nov 30 2016 14:33:35
+gem5 started Nov 30 2016 16:18:31
+gem5 executing on zizzer, pid 34069
+command line: /z/powerjg/gem5-upstream/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64a/simple-timing-ruby -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/02.insttest/riscv/linux-rv64a/simple-timing-ruby
+
+Global frequency set at 1000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+lr.w/sc.w: [1;31mFAIL[0m (expected (-1, 0); found (-1, 1))
+Exiting @ tick 796036 because target called exit()

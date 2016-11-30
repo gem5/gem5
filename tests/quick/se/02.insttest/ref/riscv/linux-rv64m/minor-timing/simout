@@ -1,0 +1,51 @@
+Redirecting stdout to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64m/minor-timing/simout
+Redirecting stderr to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64m/minor-timing/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Nov 30 2016 14:33:35
+gem5 started Nov 30 2016 16:18:44
+gem5 executing on zizzer, pid 34094
+command line: /z/powerjg/gem5-upstream/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64m/minor-timing -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/02.insttest/riscv/linux-rv64m/minor-timing
+
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+mul: PASS
+mul, overflow: PASS
+mulh: PASS
+mulh, negative: PASS
+mulh, all bits set: PASS
+mulhsu, all bits set: PASS
+mulhsu: PASS
+mulhu: PASS
+mulhu, all bits set: PASS
+div: PASS
+div/0: PASS
+div, overflow: PASS
+divu: PASS
+divu/0: PASS
+divu, "overflow": PASS
+rem: PASS
+rem/0: PASS
+rem, overflow: PASS
+remu: PASS
+remu/0: PASS
+remu, "overflow": PASS
+mulw, truncate: PASS
+mulw, overflow: PASS
+divw, truncate: PASS
+divw/0: PASS
+divw, overflow: PASS
+divuw, truncate: PASS
+divuw/0: PASS
+divuw, "overflow": PASS
+divuw, sign extend: PASS
+remw, truncate: PASS
+remw/0: PASS
+remw, overflow: PASS
+remuw, truncate: PASS
+remuw/0: PASS
+remuw, "overflow": PASS
+remuw, sign extend: PASS
+Exiting @ tick 165091500 because target called exit()

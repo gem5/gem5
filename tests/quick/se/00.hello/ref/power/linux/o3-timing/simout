@@ -3,10 +3,10 @@ Redirecting stderr to build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-tim
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 13 2016 20:40:28
-gem5 started Oct 13 2016 20:40:51
-gem5 executing on e108600-lin, pid 9917
-command line: /work/curdun01/gem5-external.hg/build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/power/linux/o3-timing
+gem5 compiled Nov 29 2016 18:37:43
+gem5 started Nov 29 2016 18:37:59
+gem5 executing on zizzer, pid 53433
+command line: /z/powerjg/gem5-upstream/build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/o3-timing -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/00.hello/power/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

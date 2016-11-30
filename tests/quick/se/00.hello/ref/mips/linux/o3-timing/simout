@@ -3,10 +3,10 @@ Redirecting stderr to build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timin
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 13 2016 20:36:34
-gem5 started Oct 13 2016 20:36:59
-gem5 executing on e108600-lin, pid 36840
-command line: /work/curdun01/gem5-external.hg/build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/mips/linux/o3-timing
+gem5 compiled Nov 29 2016 18:13:44
+gem5 started Nov 29 2016 18:14:01
+gem5 executing on zizzer, pid 32698
+command line: /z/powerjg/gem5-upstream/build/MIPS/gem5.opt -d build/MIPS/tests/opt/quick/se/00.hello/mips/linux/o3-timing -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/00.hello/mips/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
