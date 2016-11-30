@@ -69,7 +69,7 @@ typedef uint64_t MiscReg;
 
 const int NumIntArchRegs = 32;
 const int NumIntRegs = NumIntArchRegs;
-const int NumFloatRegs = 0;
+const int NumFloatRegs = 32;
 const int NumCCRegs = 0;
 const int NumMiscRegs = 4096;
 

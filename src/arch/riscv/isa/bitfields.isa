@@ -75,3 +75,13 @@ def bitfield UJIMMBITS19TO12 <19:12>;
 // System
 def bitfield FUNCT12 <31:20>;
 def bitfield ZIMM <19:15>;
+
+// Floating point
+def bitfield FD <11:7>;
+def bitfield FS1 <19:15>;
+def bitfield FS2 <24:20>;
+def bitfield FS3 <31:27>;
+
+def bitfield ROUND_MODE <14:12>;
+def bitfield CONV_SGN <24:20>;
+def bitfield FUNCT2 <26:25>;

@@ -56,6 +56,46 @@
 namespace RiscvISA
 {
 
+template<typename T> inline bool
+isquietnan(T val)
+{
+    return false;
+}
+
+template<> inline bool
+isquietnan<float>(float val)
+{
+    return std::isnan(val)
+        && (reinterpret_cast<uint32_t&>(val)&0x00400000);
+}
+
+template<> inline bool
+isquietnan<double>(double val)
+{
+    return std::isnan(val)
+        && (reinterpret_cast<uint64_t&>(val)&0x0008000000000000ULL);
+}
+
+template<typename T> inline bool
+issignalingnan(T val)
+{
+    return false;
+}
+
+template<> inline bool
+issignalingnan<float>(float val)
+{
+    return std::isnan(val)
+        && (reinterpret_cast<uint32_t&>(val)&0x00200000);
+}
+
+template<> inline bool
+issignalingnan<double>(double val)
+{
+    return std::isnan(val)
+        && (reinterpret_cast<uint64_t&>(val)&0x0004000000000000ULL);
+}
+
 inline PCState
 buildRetPC(const PCState &curPC, const PCState &callPC)
 {

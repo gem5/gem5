@@ -68,12 +68,14 @@ using namespace RiscvISA;
 }};
 
 output exec {{
+#include <cfenv>
 #include <cmath>
 #include <string>
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/registers.hh"
+#include "arch/riscv/utility.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

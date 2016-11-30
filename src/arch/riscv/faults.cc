@@ -72,6 +72,13 @@ UnimplementedFault::invoke_se(ThreadContext *tc,
 }
 
 void
+IllegalFrmFault::invoke_se(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    panic("Illegal floating-point rounding mode 0x%x at pc 0x%016llx.",
+            frm, tc->pcState().pc());
+}
+
+void
 BreakpointFault::invoke_se(ThreadContext *tc, const StaticInstPtr &inst)
 {
     schedRelBreak(0);

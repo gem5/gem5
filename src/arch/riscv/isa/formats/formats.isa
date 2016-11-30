@@ -36,6 +36,7 @@
 //Include the type formats
 ##include "type.isa"
 ##include "mem.isa"
+##include "fp.isa"
 
 // Include the unknown
 ##include "unknown.isa"

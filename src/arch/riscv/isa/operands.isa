@@ -39,6 +39,8 @@ def operand_types {{
     'uw' : 'uint32_t',
     'sd' : 'int64_t',
     'ud' : 'uint64_t',
+    'sf' : 'float',
+    'df' : 'double'
 }};
 
 def operands {{
@@ -46,6 +48,15 @@ def operands {{
     'Rd': ('IntReg', 'ud', 'RD', 'IsInteger', 1),
     'Rs1': ('IntReg', 'ud', 'RS1', 'IsInteger', 2),
     'Rs2': ('IntReg', 'ud', 'RS2', 'IsInteger', 3),
+
+    'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
+    'Fd_bits': ('FloatReg', 'ud', 'FD', 'IsFloating', 1),
+    'Fs1': ('FloatReg', 'df', 'FS1', 'IsFloating', 2),
+    'Fs1_bits': ('FloatReg', 'ud', 'FS1', 'IsFloating', 2),
+    'Fs2': ('FloatReg', 'df', 'FS2', 'IsFloating', 3),
+    'Fs2_bits': ('FloatReg', 'ud', 'FS2', 'IsFloating', 3),
+    'Fs3': ('FloatReg', 'df', 'FS3', 'IsFloating', 4),
+    'Fs3_bits': ('FloatReg', 'ud', 'FS3', 'IsFloating', 4),
 
 #Memory Operand
     'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 5),

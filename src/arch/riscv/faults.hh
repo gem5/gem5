@@ -40,6 +40,12 @@
 namespace RiscvISA
 {
 
+const uint32_t FloatInexact = 1 << 0;
+const uint32_t FloatUnderflow = 1 << 1;
+const uint32_t FloatOverflow = 1 << 2;
+const uint32_t FloatDivZero = 1 << 3;
+const uint32_t FloatInvalid = 1 << 4;
+
 enum ExceptionCode {
     INST_ADDR_MISALIGNED = 0,
     INST_ACCESS = 1,
@@ -122,6 +128,20 @@ class UnimplementedFault : public RiscvFault
 
     void
     invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+};
+
+class IllegalFrmFault: public RiscvFault
+{
+  private:
+    const uint8_t frm;
+  public:
+    IllegalFrmFault(uint8_t r)
+        : RiscvFault("Illegal floating-point rounding mode", INST_ILLEGAL,
+                SOFTWARE),
+        frm(r)
+    {}
+
+    void invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
 };
 
 class BreakpointFault : public RiscvFault
