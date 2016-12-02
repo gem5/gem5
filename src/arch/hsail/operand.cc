@@ -224,43 +224,51 @@ findRegDataType(unsigned opOffset, const BrigObject *obj)
         }
         break;
 
+      case BRIG_KIND_OPERAND_WAVESIZE:
+        {
+            BrigRegisterKind reg_kind = BRIG_REGISTER_KIND_DOUBLE;
+            return BrigRegOperandInfo((BrigKind16_t)baseOp->kind, reg_kind);
+        }
+
       case BRIG_KIND_OPERAND_OPERAND_LIST:
         {
-             const BrigOperandOperandList *op =
-                (BrigOperandOperandList*)baseOp;
-             const BrigData *data_p = (BrigData*)obj->getData(op->elements);
+            const BrigOperandOperandList *op =
+               (BrigOperandOperandList*)baseOp;
+            const BrigData *data_p = (BrigData*)obj->getData(op->elements);
 
 
-             int num_operands = 0;
-             BrigRegisterKind reg_kind = (BrigRegisterKind)0;
-             for (int offset = 0; offset < data_p->byteCount; offset += 4) {
-                 const BrigOperand *op_p = (const BrigOperand *)
-                    obj->getOperand(((int *)data_p->bytes)[offset/4]);
+            int num_operands = 0;
+            BrigRegisterKind reg_kind = (BrigRegisterKind)0;
+            for (int offset = 0; offset < data_p->byteCount; offset += 4) {
+                const BrigOperand *op_p = (const BrigOperand *)
+                   obj->getOperand(((int *)data_p->bytes)[offset/4]);
 
-                 if (op_p->kind == BRIG_KIND_OPERAND_REGISTER) {
-                     const BrigOperandRegister *brigRegOp =
-                        (const BrigOperandRegister*)op_p;
-                     reg_kind = (BrigRegisterKind)brigRegOp->regKind;
-                 } else if (op_p->kind == BRIG_KIND_OPERAND_CONSTANT_BYTES) {
-                     uint16_t num_bytes =
-                        ((Brig::BrigOperandConstantBytes*)op_p)->base.byteCount
-                            - sizeof(BrigBase);
-                     if (num_bytes == sizeof(uint32_t)) {
-                         reg_kind = BRIG_REGISTER_KIND_SINGLE;
-                     } else if (num_bytes == sizeof(uint64_t)) {
-                         reg_kind = BRIG_REGISTER_KIND_DOUBLE;
-                     } else {
-                         fatal("OperandList: bad operand size %d\n", num_bytes);
-                     }
-                 } else {
-                     fatal("OperandList: bad operand kind %d\n", op_p->kind);
-                 }
+                if (op_p->kind == BRIG_KIND_OPERAND_REGISTER) {
+                    const BrigOperandRegister *brigRegOp =
+                       (const BrigOperandRegister*)op_p;
+                    reg_kind = (BrigRegisterKind)brigRegOp->regKind;
+                } else if (op_p->kind == BRIG_KIND_OPERAND_CONSTANT_BYTES) {
+                    uint16_t num_bytes =
+                       ((Brig::BrigOperandConstantBytes*)op_p)->base.byteCount
+                           - sizeof(BrigBase);
+                    if (num_bytes == sizeof(uint32_t)) {
+                        reg_kind = BRIG_REGISTER_KIND_SINGLE;
+                    } else if (num_bytes == sizeof(uint64_t)) {
+                        reg_kind = BRIG_REGISTER_KIND_DOUBLE;
+                    } else {
+                        fatal("OperandList: bad operand size %d\n", num_bytes);
+                    }
+                } else if (op_p->kind == BRIG_KIND_OPERAND_WAVESIZE) {
+                    reg_kind = BRIG_REGISTER_KIND_DOUBLE;
+                } else {
+                    fatal("OperandList: bad operand kind %d\n", op_p->kind);
+                }
 
-                 num_operands++;
-             }
-             assert(baseOp->kind == BRIG_KIND_OPERAND_OPERAND_LIST);
+                num_operands++;
+            }
+            assert(baseOp->kind == BRIG_KIND_OPERAND_OPERAND_LIST);
 
-             return BrigRegOperandInfo((BrigKind16_t)baseOp->kind, reg_kind);
+            return BrigRegOperandInfo((BrigKind16_t)baseOp->kind, reg_kind);
         }
         break;
 
