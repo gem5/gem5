@@ -725,6 +725,26 @@ namespace HsailISA
         }
     };
 
+    template<typename DestDataType, typename SrcDataType>
+    class PopcountInst :
+        public CommonInstBase<typename DestDataType::OperandType,
+                              typename SrcDataType::OperandType, 1>
+    {
+      public:
+        std::string opcode_suffix()
+        {
+            return csprintf("_%s_%s", DestDataType::label, SrcDataType::label);
+        }
+
+        PopcountInst(const Brig::BrigInstBase *ib, const BrigObject *obj,
+                     const char *_opcode)
+            : CommonInstBase<typename DestDataType::OperandType,
+                             typename SrcDataType::OperandType,
+                             1>(ib, obj, _opcode)
+        {
+        }
+    };
+
     class SpecialInstNoSrcNoDest : public HsailGPUStaticInst
     {
       public:

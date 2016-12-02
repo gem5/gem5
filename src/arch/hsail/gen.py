@@ -211,6 +211,7 @@ header_templates = {
     'ExtractInsertInst': header_template_1dt,
     'CmpInst': header_template_2dt,
     'CvtInst': header_template_2dt,
+    'PopcountInst': header_template_2dt,
     'LdInst': '',
     'StInst': '',
     'SpecialInstNoSrc': header_template_nodt,
@@ -426,6 +427,7 @@ exec_templates = {
     'ClassInst': exec_template_1dt_2src_1dest,
     'CmpInst': exec_template_2dt,
     'CvtInst': exec_template_2dt,
+    'PopcountInst': exec_template_2dt,
     'LdInst': '',
     'StInst': '',
     'SpecialInstNoSrc': exec_template_nodt_nosrc,
@@ -555,7 +557,7 @@ def gen(brig_opcode, types=None, expr=None, base_class='ArithInst',
         dest_is_src_flag = str(dest_is_src).lower() # for C++
         if base_class in ['ShiftInst']:
             expr = re.sub(r'\bsrc(\d)\b', r'src_val\1', expr)
-        elif base_class in ['ArithInst', 'CmpInst', 'CvtInst']:
+        elif base_class in ['ArithInst', 'CmpInst', 'CvtInst', 'PopcountInst']:
             expr = re.sub(r'\bsrc(\d)\b', r'src_val[\1]', expr)
         else:
             expr = re.sub(r'\bsrc(\d)\b', r'src_val\1', expr)
@@ -674,7 +676,8 @@ gen('Xor', bit_types, 'src0 ^ src1')
 
 gen('Bitselect', bit_types, '(src1 & src0) | (src2 & ~src0)')
 gen('Firstbit',bit_types, 'firstbit(src0)')
-gen('Popcount', ('B32', 'B64'), '__builtin_popcount(src0)')
+gen('Popcount', ('U32',), '__builtin_popcount(src0)', 'PopcountInst', \
+    ('sourceType', ('B32', 'B64')))
 
 gen('Shl', arith_int_types, 'src0 << (unsigned)src1', 'ShiftInst')
 gen('Shr', arith_int_types, 'src0 >> (unsigned)src1', 'ShiftInst')
