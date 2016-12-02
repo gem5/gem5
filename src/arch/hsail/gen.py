@@ -686,7 +686,7 @@ gen('Rem', arith_int_types, 'src0 - ((src0 / src1) * src1)')
 gen('Abs', arith_types, 'std::abs(src0)')
 gen('Neg', arith_types, '-src0')
 
-gen('Mov', bit_types, 'src0')
+gen('Mov', bit_types + arith_types, 'src0')
 gen('Not', bit_types, 'heynot(src0)')
 
 # mad and fma differ only in rounding behavior, which we don't emulate
