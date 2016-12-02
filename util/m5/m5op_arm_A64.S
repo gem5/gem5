@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,12 +45,23 @@
 
 #include "m5ops.h"
 
+#ifdef M5OP_ADDR
+.macro	m5op_func, name, func, subfunc
+        .globl \name
+        \name:
+        ldr x9, m5_mem
+        movz x10, #((\func << 8) | \subfunc)
+        ldr x0, [ x9, x10 ]
+        ret
+.endm
+#else
 .macro	m5op_func, name, func, subfunc
         .globl \name
         \name:
         .long 0xff000110 | (\func << 16) | (\subfunc << 12)
         ret
 .endm
+#endif
 
 .text
 #define M5OP(name, func, subfunc) m5op_func name, func, subfunc
