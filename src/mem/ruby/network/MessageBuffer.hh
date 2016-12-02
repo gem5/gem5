@@ -116,6 +116,8 @@ class MessageBuffer : public SimObject
     void setIncomingLink(int link_id) { m_input_link_id = link_id; }
     void setVnet(int net) { m_vnet_id = net; }
 
+    void regStats();
+
     // Function for figuring out if any of the messages in the buffer need
     // to be updated with the data from the packet.
     // Return value indicates the number of messages that were updated.
@@ -150,8 +152,8 @@ class MessageBuffer : public SimObject
     unsigned int m_size_at_cycle_start;
     unsigned int m_msgs_this_cycle;
 
-    int m_not_avail_count;  // count the # of times I didn't have N
-                            // slots available
+    Stats::Scalar m_not_avail_count;  // count the # of times I didn't have N
+                                      // slots available
     uint64_t m_msg_counter;
     int m_priority_rank;
     const bool m_strict_fifo;

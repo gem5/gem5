@@ -51,7 +51,6 @@ MessageBuffer::MessageBuffer(const Params *p)
     m_size_last_time_size_checked = 0;
     m_size_at_cycle_start = 0;
     m_msgs_this_cycle = 0;
-    m_not_avail_count = 0;
     m_priority_rank = 0;
 
     m_stall_msg_map.clear();
@@ -348,6 +347,15 @@ MessageBuffer::isReady(Tick current_time) const
 {
     return ((m_prio_heap.size() > 0) &&
         (m_prio_heap.front()->getLastEnqueueTime() <= current_time));
+}
+
+void
+MessageBuffer::regStats()
+{
+    m_not_avail_count
+        .name(name() + ".not_avail_count")
+        .desc("Number of times this buffer did not have N slots available")
+        .flags(Stats::nozero);
 }
 
 uint32_t
