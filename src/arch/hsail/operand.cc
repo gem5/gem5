@@ -317,14 +317,25 @@ AddrOperandBase::parseAddr(const BrigOperandAddress *op, const BrigObject *obj)
     const BrigDirective *d =
         (BrigDirective*)obj->getCodeSectionEntry(op->symbol);
 
-    assert(d->kind == BRIG_KIND_DIRECTIVE_VARIABLE);
+    /**
+     * HSAIL does not properly handle immediate offsets for instruction types
+     * that utilize them. It currently only supports instructions that use
+     * variables instead. Again, these pop up in code that is never executed
+     * (i.e. the HCC AMP codes) so we just hack it here to let us pass through
+     * the HSAIL object initialization. If such code is ever called, we would
+     * have to implement this properly.
+     */
+    if (d->kind != BRIG_KIND_DIRECTIVE_VARIABLE) {
+        warn("HSAIL implementation does not support instructions with "
+             "address calculations where the operand is not a variable\n");
+    }
+
     const BrigDirectiveVariable *sym = (BrigDirectiveVariable*)d;
     name = obj->getString(sym->name);
 
     if (sym->segment != BRIG_SEGMENT_ARG) {
         storageElement =
             obj->currentCode->storageMap->findSymbol(sym->segment, name);
-        assert(storageElement);
         offset = 0;
     } else {
         // sym->name does not work for BRIG_SEGMENT_ARG for the following case:
