@@ -176,8 +176,10 @@ BrigObject::processDirectives(const BrigBase *dirPtr, const BrigBase *endPtr,
                         p->firstCodeBlockEntry, p->nextModuleEntry);
 
                 if (p->firstCodeBlockEntry != p->nextModuleEntry) {
-                    panic("Function calls are not fully supported yet!!: %s\n",
-                          getString(p->name));
+                    // Function calls are not supported. We allow the BRIG
+                    // object file to create stubs, but the function calls will
+                    // not work properly if the application makes use of them.
+                    warn("HSA function invocations are unsupported.\n");
 
                     const char *name = getString(p->name);
 
@@ -199,8 +201,8 @@ BrigObject::processDirectives(const BrigBase *dirPtr, const BrigBase *endPtr,
                         panic("Multiple definition of Function!!: %s\n",
                               getString(p->name));
                     }
-
                 }
+
                 nextDirPtr = getCodeSectionEntry(p->nextModuleEntry);
             }
             break;
