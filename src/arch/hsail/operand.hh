@@ -591,7 +591,7 @@ class AddrOperandBase : public BaseOperand
     virtual void calcVector(Wavefront *w, std::vector<Addr> &addrVec) = 0;
     virtual uint64_t calcLane(Wavefront *w, int lane=0) = 0;
 
-    uint64_t offset;
+    int64_t offset;
     const char *name = nullptr;
     StorageElement *storageElement;
 };
@@ -627,14 +627,24 @@ RegAddrOperand<RegOperandType>::init(unsigned opOffset, const BrigObject *obj)
             const BrigOperandAddress *op = (BrigOperandAddress*)baseOp;
             storageElement = nullptr;
 
-            offset = (uint64_t(op->offset.hi) << 32) | uint64_t(op->offset.lo);
             reg.init(op->reg, obj);
 
             if (reg.regFileChar == 's') {
+                // if the address expression is 32b, then the hi
+                // bits of the offset must be set to 0 in the BRIG
+                assert(!op->offset.hi);
+                /**
+                 * the offset field of an HSAIL instruction may be negative
+                 * so here we cast the raw bits we get from the BRIG file to
+                 * a signed type to avoid address calculation errors
+                 */
+                offset = (int32_t)(op->offset.lo);
                 reg.regOperandSize = sizeof(uint32_t);
                 registerType = Enums::RT_VECTOR;
             }
             else if (reg.regFileChar == 'd') {
+                offset = (int64_t)(((uint64_t)(op->offset.hi) << 32)
+                    | (uint64_t)(op->offset.lo));
                 reg.regOperandSize = sizeof(uint64_t);
                 registerType = Enums::RT_VECTOR;
             }
