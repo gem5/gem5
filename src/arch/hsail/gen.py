@@ -105,6 +105,23 @@ exec_code.indent()
 #
 ###############
 
+# Basic header template for an instruction stub.
+header_template_stub = '''
+class $class_name : public $base_class
+{
+  public:
+    typedef $base_class Base;
+
+    $class_name(const Brig::BrigInstBase *ib, const BrigObject *obj)
+       : Base(ib, obj, "$opcode")
+    {
+    }
+
+    void execute(GPUDynInstPtr gpuDynInst);
+};
+
+'''
+
 # Basic header template for an instruction with no template parameters.
 header_template_nodt = '''
 class $class_name : public $base_class
@@ -217,6 +234,7 @@ header_templates = {
     'SpecialInstNoSrc': header_template_nodt,
     'SpecialInst1Src': header_template_nodt,
     'SpecialInstNoSrcNoDest': '',
+    'Stub': header_template_stub,
 }
 
 ###############
@@ -226,6 +244,14 @@ header_templates = {
 ###############
 
 # exec function body
+exec_template_stub = '''
+void
+$class_name::execute(GPUDynInstPtr gpuDynInst)
+{
+    fatal("instruction unimplemented %s\\n", gpuDynInst->disassemble());
+}
+
+'''
 exec_template_nodt_nosrc = '''
 void
 $class_name::execute(GPUDynInstPtr gpuDynInst)
@@ -433,6 +459,7 @@ exec_templates = {
     'SpecialInstNoSrc': exec_template_nodt_nosrc,
     'SpecialInst1Src': exec_template_nodt_1src,
     'SpecialInstNoSrcNoDest': '',
+    'Stub': exec_template_stub,
 }
 
 ###############
@@ -568,7 +595,7 @@ def gen(brig_opcode, types=None, expr=None, base_class='ArithInst',
     base_class_base = re.sub(r'<.*>$', '', base_class)
     header_code(header_templates[base_class_base])
 
-    if base_class.startswith('SpecialInst'):
+    if base_class.startswith('SpecialInst') or base_class.startswith('Stub'):
         exec_code(exec_templates[base_class_base])
     elif base_class.startswith('ShiftInst'):
         header_code(exec_template_shift)
@@ -675,7 +702,6 @@ gen('Or', bit_types,  'src0 | src1')
 gen('Xor', bit_types, 'src0 ^ src1')
 
 gen('Bitselect', bit_types, '(src1 & src0) | (src2 & ~src0)')
-gen('Firstbit',bit_types, 'firstbit(src0)')
 gen('Popcount', ('U32',), '__builtin_popcount(src0)', 'PopcountInst', \
     ('sourceType', ('B32', 'B64')))
 
@@ -773,6 +799,37 @@ gen('MemFence', base_class='SpecialInstNoSrcNoDest')
 # In the future, real HSA kernel system calls can be implemented and coexist
 # with magic instructions.
 gen('Call', base_class='SpecialInstNoSrcNoDest')
+
+# Stubs for unimplemented instructions:
+# These may need to be implemented at some point in the future, but
+# for now we just match the instructions with their operands.
+#
+# By defining stubs for these instructions, we can work with
+# applications that have them in dead/unused code paths.
+#
+# Needed for rocm-hcc compilations for HSA backends since
+# builtins-hsail library is `cat`d onto the generated kernels.
+# The builtins-hsail library consists of handcoded hsail functions
+# that __might__ be needed by the rocm-hcc compiler in certain binaries.
+gen('Bitmask', base_class='Stub')
+gen('Bitrev', base_class='Stub')
+gen('Firstbit', base_class='Stub')
+gen('Lastbit', base_class='Stub')
+gen('Unpacklo', base_class='Stub')
+gen('Unpackhi', base_class='Stub')
+gen('Pack', base_class='Stub')
+gen('Unpack', base_class='Stub')
+gen('Lerp', base_class='Stub')
+gen('Packcvt', base_class='Stub')
+gen('Unpackcvt', base_class='Stub')
+gen('Sad', base_class='Stub')
+gen('Sadhi', base_class='Stub')
+gen('Activelanecount', base_class='Stub')
+gen('Activelaneid', base_class='Stub')
+gen('Activelanemask', base_class='Stub')
+gen('Activelanepermute', base_class='Stub')
+gen('Groupbaseptr', base_class='Stub')
+gen('Signalnoret', base_class='Stub')
 
 ###############
 #

@@ -745,6 +745,38 @@ namespace HsailISA
         }
     };
 
+    class Stub : public HsailGPUStaticInst
+    {
+      public:
+        Stub(const Brig::BrigInstBase *ib, const BrigObject *obj,
+             const char *_opcode)
+            : HsailGPUStaticInst(obj, _opcode)
+        {
+        }
+
+        void generateDisassembly() override
+        {
+            disassembly = csprintf("%s", opcode);
+        }
+
+        bool isVectorRegister(int operandIndex) override { return false; }
+        bool isCondRegister(int operandIndex) override { return false; }
+        bool isScalarRegister(int operandIndex) override { return false; }
+        bool isSrcOperand(int operandIndex) override { return false; }
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override { return 0; }
+
+        int
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+        {
+            return -1;
+        }
+
+        int numSrcRegOperands() override { return 0; }
+        int numDstRegOperands() override { return 0; }
+        int getNumOperands() override { return 0; }
+    };
+
     class SpecialInstNoSrcNoDest : public HsailGPUStaticInst
     {
       public:
@@ -754,22 +786,22 @@ namespace HsailISA
         {
         }
 
-        bool isVectorRegister(int operandIndex) { return false; }
-        bool isCondRegister(int operandIndex) { return false; }
-        bool isScalarRegister(int operandIndex) { return false; }
-        bool isSrcOperand(int operandIndex) { return false; }
-        bool isDstOperand(int operandIndex) { return false; }
-        int getOperandSize(int operandIndex) { return 0; }
+        bool isVectorRegister(int operandIndex) override { return false; }
+        bool isCondRegister(int operandIndex) override { return false; }
+        bool isScalarRegister(int operandIndex) override { return false; }
+        bool isSrcOperand(int operandIndex) override { return false; }
+        bool isDstOperand(int operandIndex) override { return false; }
+        int getOperandSize(int operandIndex) override { return 0; }
 
         int
-        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst)
+        getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
         {
             return -1;
         }
 
-        int numSrcRegOperands() { return 0; }
-        int numDstRegOperands() { return 0; }
-        int getNumOperands() { return 0; }
+        int numSrcRegOperands() override { return 0; }
+        int numDstRegOperands() override { return 0; }
+        int getNumOperands() override { return 0; }
     };
 
     template<typename DestOperandType>
