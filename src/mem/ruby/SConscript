@@ -42,7 +42,6 @@ DebugFlag('RubyCache')
 DebugFlag('RubyCacheTrace')
 DebugFlag('RubyDma')
 DebugFlag('RubyGenerated')
-DebugFlag('RubyMemory')
 DebugFlag('RubyNetwork')
 DebugFlag('RubyPort')
 DebugFlag('RubyPrefetcher')
@@ -56,7 +55,7 @@ DebugFlag('RubyResourceStalls')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',
-    'RubyMemory', 'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
+    'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
     'RubyPrefetcher'])
 
 if env['PROTOCOL'] == 'None':
