@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015-2016 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -188,9 +188,9 @@ cfg_file = open(cfg_file_name, 'w')
 
 # Three states, with random, linear and idle behaviours. The random
 # and linear states access memory in the range [0 : 16 Mbyte] with 8
-# byte accesses.
+# byte and 64 byte accesses respectively.
 cfg_file.write("STATE 0 10000000 RANDOM 65 0 16777216 8 50000 150000 0\n")
-cfg_file.write("STATE 1 10000000 LINEAR 65 0 16777216 8 50000 150000 0\n")
+cfg_file.write("STATE 1 10000000 LINEAR 65 0 16777216 64 50000 150000 0\n")
 cfg_file.write("STATE 2 10000000 IDLE\n")
 cfg_file.write("INIT 0\n")
 cfg_file.write("TRANSITION 0 1 0.5\n")
