@@ -924,7 +924,13 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     // write miss on a shared owned block will generate a ReadExcl,
     // which will clobber the owned copy.
     const bool useUpgrades = true;
-    if (blkValid && useUpgrades) {
+    if (cpu_pkt->cmd == MemCmd::WriteLineReq) {
+        assert(!blkValid || !blk->isWritable());
+        // forward as invalidate to all other caches, this gives us
+        // the line in Exclusive state, and invalidates all other
+        // copies
+        cmd = MemCmd::InvalidateReq;
+    } else if (blkValid && useUpgrades) {
         // only reason to be here is that blk is read only and we need
         // it to be writable
         assert(needsWritable);
@@ -937,11 +943,6 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // where the determination the StoreCond fails is delayed due to
         // all caches not being on the same local bus.
         cmd = MemCmd::SCUpgradeFailReq;
-    } else if (cpu_pkt->cmd == MemCmd::WriteLineReq) {
-        // forward as invalidate to all other caches, this gives us
-        // the line in Exclusive state, and invalidates all other
-        // copies
-        cmd = MemCmd::InvalidateReq;
     } else {
         // block is invalid
         cmd = needsWritable ? MemCmd::ReadExReq :
