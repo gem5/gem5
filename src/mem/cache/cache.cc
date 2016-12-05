@@ -909,7 +909,8 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     bool blkValid = blk && blk->isValid();
 
     if (cpu_pkt->req->isUncacheable() ||
-        (!blkValid && cpu_pkt->isUpgrade())) {
+        (!blkValid && cpu_pkt->isUpgrade()) ||
+        cpu_pkt->cmd == MemCmd::InvalidateReq) {
         // uncacheable requests and upgrades from upper-level caches
         // that missed completely just go through as is
         return nullptr;
@@ -936,8 +937,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // where the determination the StoreCond fails is delayed due to
         // all caches not being on the same local bus.
         cmd = MemCmd::SCUpgradeFailReq;
-    } else if (cpu_pkt->cmd == MemCmd::WriteLineReq ||
-               cpu_pkt->cmd == MemCmd::InvalidateReq) {
+    } else if (cpu_pkt->cmd == MemCmd::WriteLineReq) {
         // forward as invalidate to all other caches, this gives us
         // the line in Exclusive state, and invalidates all other
         // copies
