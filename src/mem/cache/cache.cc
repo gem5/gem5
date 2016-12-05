@@ -1393,6 +1393,17 @@ Cache::recvTimingResp(PacketPtr pkt)
                     pkt->payloadDelay;
                 tgt_pkt->req->setExtraData(0);
             } else {
+                // We are about to send a response to a cache above
+                // that asked for an invalidation; we need to
+                // invalidate our copy immediately as the most
+                // up-to-date copy of the block will now be in the
+                // cache above. It will also prevent this cache from
+                // responding (if the block was previously dirty) to
+                // snoops as they should snoop the caches above where
+                // they will get the response from.
+                if (is_invalidate && blk && blk->isValid()) {
+                    invalidateBlock(blk);
+                }
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
                 // from lower level cahces/memory to the core.
