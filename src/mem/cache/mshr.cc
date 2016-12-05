@@ -74,9 +74,8 @@ MSHR::TargetList::TargetList()
 {}
 
 
-inline void
-MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
-                      Counter order, Target::Source source, bool markPending)
+void
+MSHR::TargetList::updateFlags(PacketPtr pkt, Target::Source source)
 {
     if (source != Target::FromSnoop) {
         if (pkt->needsWritable()) {
@@ -90,7 +89,22 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
             hasUpgrade = true;
         }
     }
+}
 
+void
+MSHR::TargetList::populateFlags()
+{
+    resetFlags();
+    for (auto& t: *this) {
+        updateFlags(t.pkt, t.source);
+    }
+}
+
+inline void
+MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
+                      Counter order, Target::Source source, bool markPending)
+{
+    updateFlags(pkt, source);
     if (markPending) {
         // Iterate over the SenderState stack and see if we find
         // an MSHR entry. If we do, set the downstreamPending

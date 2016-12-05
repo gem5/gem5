@@ -143,7 +143,26 @@ class MSHR : public QueueEntry, public Printable
         bool hasUpgrade;
 
         TargetList();
+
+        /**
+         * Use the provided packet and the source to update the
+         * flags of this TargetList.
+         *
+         * @param pkt Packet considered for the flag update
+         * @param source Indicates the source of the packet
+         */
+        void updateFlags(PacketPtr pkt, Target::Source source);
+
         void resetFlags() { needsWritable = hasUpgrade = false; }
+
+        /**
+         * Goes through the list of targets and uses them to populate
+         * the flags of this TargetList. When the function returns the
+         * flags are consistent with the properties of packets in the
+         * list.
+         */
+        void populateFlags();
+
         bool isReset() const { return !needsWritable && !hasUpgrade; }
         void add(PacketPtr pkt, Tick readyTime, Counter order,
                  Target::Source source, bool markPending);
