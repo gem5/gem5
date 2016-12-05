@@ -4,11 +4,11 @@ sim_seconds                                  0.000126                       # Nu
 sim_ticks                                   125996000                       # Number of ticks simulated
 final_tick                                  125996000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  71299                       # Simulator instruction rate (inst/s)
-host_op_rate                                    71299                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                7711593                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 250104                       # Number of bytes of host memory used
-host_seconds                                    16.34                       # Real time elapsed on the host
+host_inst_rate                                 220398                       # Simulator instruction rate (inst/s)
+host_op_rate                                   220398                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                               23837880                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 265580                       # Number of bytes of host memory used
+host_seconds                                     5.29                       # Real time elapsed on the host
 sim_insts                                     1164916                       # Number of instructions simulated
 sim_ops                                       1164916                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -2880,8 +2880,8 @@ system.membus.reqLayer0.utilization               0.7                       # La
 system.membus.respLayer1.occupancy            3778500                       # Layer occupancy (ticks)
 system.membus.respLayer1.utilization              3.0                       # Layer utilization (%)
 system.toL2Bus.snoop_filter.tot_requests         6307                       # Total number of requests made to the snoop filter.
-system.toL2Bus.snoop_filter.hit_single_requests         1738                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
-system.toL2Bus.snoop_filter.hit_multi_requests         3220                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.toL2Bus.snoop_filter.hit_single_requests         1711                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+system.toL2Bus.snoop_filter.hit_multi_requests         3247                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.toL2Bus.snoop_filter.tot_snoops              0                       # Total number of snoops made to the snoop filter.
 system.toL2Bus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
 system.toL2Bus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
@@ -2918,13 +2918,13 @@ system.toL2Bus.pkt_size::total                 332608                       # Cu
 system.toL2Bus.snoops                            1024                       # Total snoops (count)
 system.toL2Bus.snoopTraffic                     53184                       # Total snoop traffic (bytes)
 system.toL2Bus.snoop_fanout::samples             4190                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::mean            1.288067                       # Request fanout histogram
-system.toL2Bus.snoop_fanout::stdev           1.121770                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::mean            1.302625                       # Request fanout histogram
+system.toL2Bus.snoop_fanout::stdev           1.130775                       # Request fanout histogram
 system.toL2Bus.snoop_fanout::underflows             0      0.00%      0.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::0                   1349     32.20%     32.20% # Request fanout histogram
-system.toL2Bus.snoop_fanout::1                   1142     27.26%     59.45% # Request fanout histogram
-system.toL2Bus.snoop_fanout::2                    842     20.10%     79.55% # Request fanout histogram
-system.toL2Bus.snoop_fanout::3                    857     20.45%    100.00% # Request fanout histogram
+system.toL2Bus.snoop_fanout::1                   1111     26.52%     58.71% # Request fanout histogram
+system.toL2Bus.snoop_fanout::2                    843     20.12%     78.83% # Request fanout histogram
+system.toL2Bus.snoop_fanout::3                    887     21.17%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::4                      0      0.00%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::5                      0      0.00%    100.00% # Request fanout histogram
 system.toL2Bus.snoop_fanout::6                      0      0.00%    100.00% # Request fanout histogram
