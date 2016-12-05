@@ -1437,7 +1437,18 @@ Cache::recvTimingResp(PacketPtr pkt)
             assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
-            assert(!(is_invalidate && !mshr->hasPostInvalidate()));
+            // If the response is invalidating, a snooping target can
+            // be satisfied if it is also invalidating. If the reponse is, not
+            // only invalidating, but more specifically an InvalidateResp, the
+            // MSHR was created due to an InvalidateReq and a cache above is
+            // waiting to satisfy a WriteLineReq. In this case even an
+            // non-invalidating snoop is added as a target here since this is
+            // the ordering point. When the InvalidateResp reaches this cache,
+            // the snooping target will snoop further the cache above with the
+            // WriteLineReq.
+            assert(!(is_invalidate &&
+                     pkt->cmd != MemCmd::InvalidateResp &&
+                     !mshr->hasPostInvalidate()));
             handleSnoop(tgt_pkt, blk, true, true, mshr->hasPostInvalidate());
             break;
 
