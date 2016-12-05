@@ -1330,12 +1330,10 @@ Cache::recvTimingResp(PacketPtr pkt)
     int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
     bool from_cache = false;
-
-    while (mshr->hasTargets()) {
-        MSHR::Target *target = mshr->getTarget();
-        Packet *tgt_pkt = target->pkt;
-
-        switch (target->source) {
+    MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
+    for (auto &target: targets) {
+        Packet *tgt_pkt = target.pkt;
+        switch (target.source) {
           case MSHR::Target::FromCPU:
             Tick completion_time;
             // Here we charge on completion_time the delay of the xbar if the
@@ -1370,7 +1368,7 @@ Cache::recvTimingResp(PacketPtr pkt)
                 mshr->promoteWritable();
                 // NB: we use the original packet here and not the response!
                 blk = handleFill(tgt_pkt, blk, writebacks,
-                                 mshr->allocOnFill());
+                                 targets.allocOnFill);
                 assert(blk != nullptr);
 
                 // treat as a fill, and discard the invalidation
@@ -1400,7 +1398,7 @@ Cache::recvTimingResp(PacketPtr pkt)
 
                 assert(tgt_pkt->req->masterId() < system->maxMasters());
                 missLatency[tgt_pkt->cmdToIndex()][tgt_pkt->req->masterId()] +=
-                    completion_time - target->recvTime;
+                    completion_time - target.recvTime;
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade
                 assert(tgt_pkt->cmd == MemCmd::StoreCondReq ||
@@ -1462,10 +1460,8 @@ Cache::recvTimingResp(PacketPtr pkt)
             break;
 
           default:
-            panic("Illegal target->source enum %d\n", target->source);
+            panic("Illegal target->source enum %d\n", target.source);
         }
-
-        mshr->popTarget();
     }
 
     maintainClusivity(from_cache, blk);

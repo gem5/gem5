@@ -190,6 +190,7 @@ MSHR::TargetList::clearDownstreamPending()
             if (mshr != nullptr) {
                 mshr->clearDownstreamPending();
             }
+            t.markedPending = false;
         }
     }
 }
@@ -455,17 +456,54 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     return true;
 }
 
+MSHR::TargetList
+MSHR::extractServiceableTargets(PacketPtr pkt)
+{
+    TargetList ready_targets;
+    // If the downstream MSHR got an invalidation request then we only
+    // service the first of the FromCPU targets and any other
+    // non-FromCPU target. This way the remaining FromCPU targets
+    // issue a new request and get a fresh copy of the block and we
+    // avoid memory consistency violations.
+    if (pkt->cmd == MemCmd::ReadRespWithInvalidate) {
+        auto it = targets.begin();
+        assert(it->source == Target::FromCPU);
+        ready_targets.push_back(*it);
+        it = targets.erase(it);
+        while (it != targets.end()) {
+            if (it->source == Target::FromCPU) {
+                it++;
+            } else {
+                assert(it->source == Target::FromSnoop);
+                ready_targets.push_back(*it);
+                it = targets.erase(it);
+            }
+        }
+        ready_targets.populateFlags();
+    } else {
+        std::swap(ready_targets, targets);
+    }
+    targets.populateFlags();
+
+    return ready_targets;
+}
 
 bool
 MSHR::promoteDeferredTargets()
 {
-    assert(targets.empty());
-    if (deferredTargets.empty()) {
-        return false;
-    }
+    if (targets.empty())  {
+        if (deferredTargets.empty()) {
+            return false;
+        }
 
-    // swap targets & deferredTargets lists
-    std::swap(targets, deferredTargets);
+        std::swap(targets, deferredTargets);
+    } else {
+        // If the targets list is not empty then we have one targets
+        // from the deferredTargets list to the targets list. A new
+        // request will then service the targets list.
+        targets.splice(targets.end(), deferredTargets);
+        targets.populateFlags();
+    }
 
     // clear deferredTargets flags
     deferredTargets.resetFlags();

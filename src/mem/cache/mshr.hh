@@ -126,8 +126,24 @@ class MSHR : public QueueEntry, public Printable
         const Counter order;  //!< Global order (for memory consistency mgmt)
         const PacketPtr pkt;  //!< Pending request packet.
         const Source source;  //!< Request from cpu, memory, or prefetcher?
-        const bool markedPending; //!< Did we mark upstream MSHR
-                                  //!< as downstreamPending?
+
+        /**
+         * We use this flag to track whether we have cleared the
+         * downstreamPending flag for the MSHR of the cache above
+         * where this packet originates from and guard noninitial
+         * attempts to clear it.
+         *
+         * The flag markedPending needs to be updated when the
+         * TargetList is in service which can be:
+         * 1) during the Target instantiation if the MSHR is in
+         * service and the target is not deferred,
+         * 2) when the MSHR becomes in service if the target is not
+         * deferred,
+         * 3) or when the TargetList is promoted (deferredTargets ->
+         * targets).
+         */
+        bool markedPending;
+
         const bool allocOnFill;   //!< Should the response servicing this
                                   //!< target list allocate in the cache?
 
@@ -295,6 +311,20 @@ class MSHR : public QueueEntry, public Printable
      */
     int getNumTargets() const
     { return targets.size() + deferredTargets.size(); }
+
+    /**
+     * Extracts the subset of the targets that can be serviced given a
+     * received response. This function returns the targets list
+     * unless the response is a ReadRespWithInvalidate. The
+     * ReadRespWithInvalidate is only invalidating response that its
+     * invalidation was not expected when the request (a
+     * ReadSharedReq) was sent out. For ReadRespWithInvalidate we can
+     * safely service only the first FromCPU target and all FromSnoop
+     * targets (inform all snoopers that we no longer have the block).
+     *
+     * @param pkt The response from the downstream memory
+     */
+    TargetList extractServiceableTargets(PacketPtr pkt);
 
     /**
      * Returns true if there are targets left.
