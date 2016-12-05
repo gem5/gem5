@@ -1783,9 +1783,6 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     // dirty as part of satisfyRequest
     if (pkt->cmd == MemCmd::WriteLineReq) {
         assert(!pkt->hasSharers());
-        // at the moment other caches do not respond to the
-        // invalidation requests corresponding to a whole-line write
-        assert(!pkt->cacheResponding());
     }
 
     // here we deal with setting the appropriate state of the line,
@@ -1985,11 +1982,10 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
 
     // We may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
-    // and then do it later. If we find dirty data while snooping for
-    // an invalidate, we don't need to send a response. The
+    // and then do it later. We respond to all snoops that need
+    // responses provided we have the block in dirty state. The
     // invalidation itself is taken care of below.
-    bool respond = blk->isDirty() && pkt->needsResponse() &&
-        pkt->cmd != MemCmd::InvalidateReq;
+    bool respond = blk->isDirty() && pkt->needsResponse();
     bool have_writable = blk->isWritable();
 
     // Invalidate any prefetch's from below that would strip write permissions
@@ -2160,7 +2156,7 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
         // state to determine if it is dirty and writable, we use the
         // command and fields of the writeback packet
         bool respond = wb_pkt->cmd == MemCmd::WritebackDirty &&
-            pkt->needsResponse() && pkt->cmd != MemCmd::InvalidateReq;
+            pkt->needsResponse();
         bool have_writable = !wb_pkt->hasSharers();
         bool invalidate = pkt->isInvalidate();
 

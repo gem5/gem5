@@ -402,8 +402,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 
         // Start by determining if we will eventually respond or not,
         // matching the conditions checked in Cache::handleSnoop
-        bool will_respond = isPendingModified() && pkt->needsResponse() &&
-            pkt->cmd != MemCmd::InvalidateReq;
+        bool will_respond = isPendingModified() && pkt->needsResponse();
 
         // The packet we are snooping may be deleted by the time we
         // actually process the target, and we consequently need to
