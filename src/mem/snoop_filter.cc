@@ -358,11 +358,7 @@ SnoopFilter::updateResponse(const Packet* cpkt, const SlavePort& slave_port)
     panic_if(!(sf_item.requested & slave_mask), "SF value %x.%x missing "\
              "request bit\n", sf_item.requested, sf_item.holder);
 
-    // Update the residency of the cache line. If the response has no
-    // sharers we know that the line has been invalidated in all
-    // branches that are not where we are responding to.
-     if (!cpkt->hasSharers())
-        sf_item.holder = 0;
+    // Update the residency of the cache line.
     sf_item.holder |=  slave_mask;
     sf_item.requested &= ~slave_mask;
     assert(sf_item.holder | sf_item.requested);
