@@ -40,6 +40,7 @@
 #          Andreas Hansson
 
 import optparse
+import random
 import sys
 
 import m5
@@ -97,6 +98,8 @@ parser.add_option("-t", "--testers", type="string", default="1:0:2",
                   help="Colon-separated tester hierarchy specification, "
                   "see script comments for details "
                   "[default: %default]")
+parser.add_option("-r", "--random", action="store_true",
+                  help="Generate a random tree topology")
 parser.add_option("--sys-clock", action="store", type="string",
                   default='1GHz',
                   help = """Top-level clock for blocks running at system
@@ -110,34 +113,42 @@ if args:
 
 # Start by parsing the command line options and do some basic sanity
 # checking
-try:
-     cachespec = [int(x) for x in options.caches.split(':')]
-     testerspec = [int(x) for x in options.testers.split(':')]
-except:
-     print "Error: Unable to parse caches or testers option"
-     sys.exit(1)
-
-if len(cachespec) < 1:
-     print "Error: Must have at least one level of caches"
-     sys.exit(1)
-
-if len(cachespec) != len(testerspec) - 1:
-     print "Error: Testers must have one element more than caches"
-     sys.exit(1)
-
-if testerspec[-1] == 0:
-     print "Error: Must have testers at the uppermost level"
-     sys.exit(1)
-
-for t in testerspec:
-     if t < 0:
-          print "Error: Cannot have a negative number of testers"
+if options.random:
+     # Generate a tree with a valid number of testers
+     tree_depth = random.randint(1, 4)
+     cachespec = [random.randint(1, 3) for i in range(tree_depth)]
+     testerspec = [random.randint(1, 3) for i in range(tree_depth + 1)]
+     print "Generated random tree -c", ':'.join(map(str, cachespec)), \
+         "-t", ':'.join(map(str, testerspec))
+else:
+     try:
+          cachespec = [int(x) for x in options.caches.split(':')]
+          testerspec = [int(x) for x in options.testers.split(':')]
+     except:
+          print "Error: Unable to parse caches or testers option"
           sys.exit(1)
 
-for c in cachespec:
-     if c < 1:
-          print "Error: Must have 1 or more caches at each level"
+     if len(cachespec) < 1:
+          print "Error: Must have at least one level of caches"
           sys.exit(1)
+
+     if len(cachespec) != len(testerspec) - 1:
+          print "Error: Testers must have one element more than caches"
+          sys.exit(1)
+
+     if testerspec[-1] == 0:
+          print "Error: Must have testers at the uppermost level"
+          sys.exit(1)
+
+     for t in testerspec:
+          if t < 0:
+               print "Error: Cannot have a negative number of testers"
+               sys.exit(1)
+
+     for c in cachespec:
+          if c < 1:
+               print "Error: Must have 1 or more caches at each level"
+               sys.exit(1)
 
 # Determine the tester multiplier for each level as the string
 # elements are per subsystem and it fans out
