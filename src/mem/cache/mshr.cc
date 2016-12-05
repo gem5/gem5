@@ -65,17 +65,18 @@ using namespace std;
 MSHR::MSHR() : downstreamPending(false),
                pendingModified(false),
                postInvalidate(false), postDowngrade(false),
-               isForward(false), allocOnFill(false)
+               isForward(false)
 {
 }
 
 MSHR::TargetList::TargetList()
-    : needsWritable(false), hasUpgrade(false)
+    : needsWritable(false), hasUpgrade(false), allocOnFill(false)
 {}
 
 
 void
-MSHR::TargetList::updateFlags(PacketPtr pkt, Target::Source source)
+MSHR::TargetList::updateFlags(PacketPtr pkt, Target::Source source,
+                              bool alloc_on_fill)
 {
     if (source != Target::FromSnoop) {
         if (pkt->needsWritable()) {
@@ -88,6 +89,10 @@ MSHR::TargetList::updateFlags(PacketPtr pkt, Target::Source source)
         if (pkt->isUpgrade() || pkt->cmd == MemCmd::StoreCondReq) {
             hasUpgrade = true;
         }
+
+        // potentially re-evaluate whether we should allocate on a fill or
+        // not
+        allocOnFill = allocOnFill || alloc_on_fill;
     }
 }
 
@@ -96,15 +101,16 @@ MSHR::TargetList::populateFlags()
 {
     resetFlags();
     for (auto& t: *this) {
-        updateFlags(t.pkt, t.source);
+        updateFlags(t.pkt, t.source, t.allocOnFill);
     }
 }
 
 inline void
 MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
-                      Counter order, Target::Source source, bool markPending)
+                      Counter order, Target::Source source, bool markPending,
+                      bool alloc_on_fill)
 {
-    updateFlags(pkt, source);
+    updateFlags(pkt, source, alloc_on_fill);
     if (markPending) {
         // Iterate over the SenderState stack and see if we find
         // an MSHR entry. If we do, set the downstreamPending
@@ -119,7 +125,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         }
     }
 
-    emplace_back(pkt, readyTime, order, source, markPending);
+    emplace_back(pkt, readyTime, order, source, markPending, alloc_on_fill);
 }
 
 
@@ -239,7 +245,6 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     order = _order;
     assert(target);
     isForward = false;
-    allocOnFill = alloc_on_fill;
     _isUncacheable = target->req->isUncacheable();
     inService = false;
     downstreamPending = false;
@@ -248,7 +253,7 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     // snoop (mem-side request), so set source according to request here
     Target::Source source = (target->cmd == MemCmd::HardPFReq) ?
         Target::FromPrefetcher : Target::FromCPU;
-    targets.add(target, when_ready, _order, source, true);
+    targets.add(target, when_ready, _order, source, true, alloc_on_fill);
     assert(deferredTargets.isReset());
 }
 
@@ -305,10 +310,6 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
     // have targets addded if originally allocated uncacheable
     assert(!_isUncacheable);
 
-    // potentially re-evaluate whether we should allocate on a fill or
-    // not
-    allocOnFill = allocOnFill || alloc_on_fill;
-
     // if there's a request already in service for this MSHR, we will
     // have to defer the new target until after the response if any of
     // the following are true:
@@ -326,13 +327,15 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
         // need to put on deferred list
         if (hasPostInvalidate())
             replaceUpgrade(pkt);
-        deferredTargets.add(pkt, whenReady, _order, Target::FromCPU, true);
+        deferredTargets.add(pkt, whenReady, _order, Target::FromCPU, true,
+                            alloc_on_fill);
     } else {
         // No request outstanding, or still OK to append to
         // outstanding request: append to regular target list.  Only
         // mark pending if current request hasn't been issued yet
         // (isn't in service).
-        targets.add(pkt, whenReady, _order, Target::FromCPU, !inService);
+        targets.add(pkt, whenReady, _order, Target::FromCPU, !inService,
+                    alloc_on_fill);
     }
 }
 
@@ -431,7 +434,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
             // recipient does not care there is no harm in doing so
         }
         targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
-                    downstreamPending && targets.needsWritable);
+                    downstreamPending && targets.needsWritable, false);
 
         if (pkt->needsWritable()) {
             // This transaction will take away our pending copy
@@ -527,7 +530,7 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              prefix, blkAddr, blkAddr + blkSize - 1,
              isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
-             allocOnFill ? "AllocOnFill" : "",
+             allocOnFill() ? "AllocOnFill" : "",
              needsWritable() ? "Wrtbl" : "",
              _isUncacheable ? "Unc" : "",
              inService ? "InSvc" : "",

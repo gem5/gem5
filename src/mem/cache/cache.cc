@@ -1318,7 +1318,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
                 pkt->getAddr());
 
-        blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill);
+        blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill());
         assert(blk != nullptr);
     }
 
@@ -1369,7 +1369,8 @@ Cache::recvTimingResp(PacketPtr pkt)
                 // any deferred targets if possible
                 mshr->promoteWritable();
                 // NB: we use the original packet here and not the response!
-                blk = handleFill(tgt_pkt, blk, writebacks, mshr->allocOnFill);
+                blk = handleFill(tgt_pkt, blk, writebacks,
+                                 mshr->allocOnFill());
                 assert(blk != nullptr);
 
                 // treat as a fill, and discard the invalidation
