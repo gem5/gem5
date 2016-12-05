@@ -518,8 +518,7 @@ class BaseCache : public MemObject
         WriteQueueEntry *wq_entry =
             writeBuffer.findMatch(blk_addr, pkt->isSecure());
         if (wq_entry && !wq_entry->inService) {
-            DPRINTF(Cache, "Potential to merge writeback %s to %#llx",
-                    pkt->cmdString(), pkt->getAddr());
+            DPRINTF(Cache, "Potential to merge writeback %s", pkt->print());
         }
 
         writeBuffer.allocate(blk_addr, blkSize, pkt, time, order++);
