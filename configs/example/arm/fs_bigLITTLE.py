@@ -79,14 +79,13 @@ class LittleCluster(devices.CpuCluster):
                                          cpu_voltage, *cpu_config)
 
 
-def createSystem(kernel, bootscript, disks=[]):
-    sys = devices.SimpleSystem(kernel=SysPaths.binary(kernel),
+def createSystem(caches, kernel, bootscript, disks=[]):
+    sys = devices.SimpleSystem(caches, default_mem_size,
+                               kernel=SysPaths.binary(kernel),
                                readfile=bootscript,
                                machine_type="DTOnly")
 
-    mem_region = sys.realview._mem_regions[0]
-    sys.mem_ctrls = SimpleMemory(
-        range=AddrRange(start=mem_region[0], size=default_mem_size))
+    sys.mem_ctrls = SimpleMemory(range=sys._mem_range)
     sys.mem_ctrls.port = sys.membus.master
 
     sys.connect()
@@ -159,8 +158,11 @@ def main():
 
     root = Root(full_system=True)
 
-    disks = default_disk if len(options.disk) == 0 else options.disk
-    system = createSystem(options.kernel, options.bootscript, disks=disks)
+    disks = [default_disk] if len(options.disk) == 0 else options.disk
+    system = createSystem(options.caches,
+                          options.kernel,
+                          options.bootscript,
+                          disks=disks)
 
     root.system = system
     system.boot_osflags = " ".join(kernel_cmd)
