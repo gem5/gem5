@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -152,6 +152,10 @@ class DistIface : public Drainable, public Serializable
          * Tick for the next periodic sync (if the event is not scheduled yet)
          */
         Tick nextAt;
+        /**
+         *  Flag is set if the sync is aborted (e.g. due to connection lost)
+         */
+        bool isAbort;
 
         friend class SyncEvent;
 
@@ -166,16 +170,26 @@ class DistIface : public Drainable, public Serializable
         void init(Tick start, Tick repeat);
         /**
          *  Core method to perform a full dist sync.
+         *
+         * @return true if the sync completes, false if it gets aborted
          */
-        virtual void run(bool same_tick) = 0;
+        virtual bool run(bool same_tick) = 0;
         /**
          * Callback when the receiver thread gets a sync ack message.
+         *
+         * @return false if the receiver thread needs to stop (e.g.
+         * simulation is to exit)
          */
-        virtual void progress(Tick send_tick,
+        virtual bool progress(Tick send_tick,
                               Tick next_repeat,
                               ReqType do_ckpt,
                               ReqType do_exit,
                               ReqType do_stop_sync) = 0;
+        /**
+         * Abort processing an on-going sync event (in case of an error, e.g.
+         * lost connection to a peer gem5)
+         */
+        void abort();
 
         virtual void requestCkpt(ReqType req) = 0;
         virtual void requestExit(ReqType req) = 0;
@@ -207,8 +221,8 @@ class DistIface : public Drainable, public Serializable
 
         SyncNode();
         ~SyncNode() {}
-        void run(bool same_tick) override;
-        void progress(Tick max_req_tick,
+        bool run(bool same_tick) override;
+        bool progress(Tick max_req_tick,
                       Tick next_repeat,
                       ReqType do_ckpt,
                       ReqType do_exit,
@@ -246,8 +260,8 @@ class DistIface : public Drainable, public Serializable
         SyncSwitch(int num_nodes);
         ~SyncSwitch() {}
 
-        void run(bool same_tick) override;
-        void progress(Tick max_req_tick,
+        bool run(bool same_tick) override;
+        bool progress(Tick max_req_tick,
                       Tick next_repeat,
                       ReqType do_ckpt,
                       ReqType do_exit,
