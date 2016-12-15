@@ -503,7 +503,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 282 */ SyscallDesc("signalfd", unimplementedFunc),
     /* 283 */ SyscallDesc("timerfd_create", unimplementedFunc),
     /* 284 */ SyscallDesc("eventfd", unimplementedFunc),
-    /* 285 */ SyscallDesc("fallocate", unimplementedFunc),
+    /* 285 */ SyscallDesc("fallocate", fallocateFunc),
     /* 286 */ SyscallDesc("timerfd_settime", unimplementedFunc),
     /* 287 */ SyscallDesc("timerfd_gettime", unimplementedFunc),
     /* 288 */ SyscallDesc("accept4", unimplementedFunc),

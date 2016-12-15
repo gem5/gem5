@@ -157,6 +157,10 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
 SyscallReturn ignoreFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
 
+// Target fallocateFunc() handler.
+SyscallReturn fallocateFunc(SyscallDesc *desc, int num,
+                            LiveProcess *p, ThreadContext *tc);
+
 /// Target exit() handler: terminate current context.
 SyscallReturn exitFunc(SyscallDesc *desc, int num,
                        LiveProcess *p, ThreadContext *tc);

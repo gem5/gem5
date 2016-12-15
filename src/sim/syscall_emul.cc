@@ -935,6 +935,27 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 SyscallReturn
+fallocateFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+              ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = process->getSyscallArg(tc, index);
+    int mode = process->getSyscallArg(tc, index);
+    off_t offset = process->getSyscallArg(tc, index);
+    off_t len = process->getSyscallArg(tc, index);
+
+    int sim_fd = process->getSimFD(tgt_fd);
+    if (sim_fd < 0)
+        return -EBADF;
+
+    int result = fallocate(sim_fd, mode, offset, len);
+    if (result < 0)
+        return -errno;
+
+    return 0;
+}
+
+SyscallReturn
 accessFunc(SyscallDesc *desc, int callnum, LiveProcess *p, ThreadContext *tc,
         int index)
 {
