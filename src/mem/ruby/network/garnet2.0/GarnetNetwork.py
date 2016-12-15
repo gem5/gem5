@@ -46,6 +46,8 @@ class GarnetNetwork(RubyNetwork):
         "0: Weight-based Table, 1: XY, 2: Custom");
     enable_fault_model = Param.Bool(False, "enable network fault model");
     fault_model = Param.FaultModel(NULL, "network fault model");
+    garnet_deadlock_threshold = Param.UInt32(50000,
+                              "network-level deadlock threshold")
 
 class GarnetNetworkInterface(ClockedObject):
     type = 'GarnetNetworkInterface'
@@ -57,6 +59,8 @@ class GarnetNetworkInterface(ClockedObject):
                              "virtual channels per virtual network")
     virt_nets = Param.UInt32(Parent.number_of_virtual_networks,
                           "number of virtual networks")
+    garnet_deadlock_threshold = Param.UInt32(Parent.garnet_deadlock_threshold,
+                                      "network-level deadlock threshold")
 
 class GarnetRouter(BasicRouter):
     type = 'GarnetRouter'

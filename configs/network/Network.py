@@ -70,6 +70,9 @@ def define_options(parser):
                       default=False,
                       help="""enable network fault model:
                             see src/mem/ruby/network/fault_model/""")
+    parser.add_option("--garnet-deadlock-threshold", action="store",
+                      type="int", default=50000,
+                      help="network-level deadlock threshold.")
 
 
 def create_network(options, ruby):
@@ -103,6 +106,7 @@ def init_network(options, network, InterfaceClass):
         network.vcs_per_vnet = options.vcs_per_vnet
         network.ni_flit_size = options.link_width_bits / 8
         network.routing_algorithm = options.routing_algorithm
+        network.garnet_deadlock_threshold = options.garnet_deadlock_threshold
 
     if options.network == "simple":
         network.setup_buffers()

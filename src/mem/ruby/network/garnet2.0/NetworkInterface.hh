@@ -83,6 +83,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     int m_vc_round_robin; // For round robin scheduling
     flitBuffer *outFlitQueue; // For modeling link contention
     flitBuffer *outCreditQueue;
+    int m_deadlock_threshold;
 
     NetworkLink *inNetLink;
     NetworkLink *outNetLink;
@@ -98,6 +99,8 @@ class NetworkInterface : public ClockedObject, public Consumer
     std::vector<MessageBuffer *> inNode_ptr;
     // The Message buffers that provides messages to the protocol
     std::vector<MessageBuffer *> outNode_ptr;
+    // When a vc stays busy for a long time, it indicates a deadlock
+    std::vector<int> vc_busy_counter;
 
     bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
     int calculateVC(int vnet);
