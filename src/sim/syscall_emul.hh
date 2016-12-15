@@ -775,8 +775,9 @@ sysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     TypedBufferArg<typename OS::tgt_sysinfo>
         sysinfo(process->getSyscallArg(tc, index));
 
-    sysinfo->uptime=seconds_since_epoch;
-    sysinfo->totalram=process->system->memSize();
+    sysinfo->uptime = seconds_since_epoch;
+    sysinfo->totalram = process->system->memSize();
+    sysinfo->mem_unit = 1;
 
     sysinfo.copyOut(tc->getMemProxy());
 
