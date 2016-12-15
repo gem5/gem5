@@ -67,6 +67,24 @@ class X86Linux64 : public Linux
         int64_t unused0[3];
     } tgt_stat64;
 
+    typedef struct {
+        long val[2];
+    } tgt_fsid;
+
+    typedef struct {
+        long f_type;
+        long f_bsize;
+        long f_blocks;
+        long f_bfree;
+        long f_bavail;
+        long f_files;
+        long f_ffree;
+        tgt_fsid f_fsid;
+        long f_namelen;
+        long f_frsize;
+        long f_spare[5];
+    } tgt_statfs;
+
     static const int TGT_SIGHUP         = 0x000001;
     static const int TGT_SIGINT         = 0x000002;
     static const int TGT_SIGQUIT        = 0x000003;

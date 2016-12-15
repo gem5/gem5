@@ -62,6 +62,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -451,6 +452,7 @@ getElapsedTimeNano(T1 &sec, T2 &nsec)
 //
 //////////////////////////////////////////////////////////////////////
 
+    typedef struct statfs hst_statfs;
 #if NO_STAT64
     typedef struct stat hst_stat;
     typedef struct stat hst_stat64;
@@ -553,6 +555,32 @@ copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
     typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
     tgt_stat_buf tgt(addr);
     convertStat64Buf<tgt_stat_buf, hst_stat64>(tgt, host, fakeTTY);
+    tgt.copyOut(mem);
+}
+
+template <class OS>
+static void
+copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
+                 hst_statfs *host)
+{
+    TypedBufferArg<typename OS::tgt_statfs> tgt(addr);
+
+#if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
+    tgt->f_type = 0;
+#else
+    tgt->f_type = TheISA::htog(host->f_type);
+#endif
+    tgt->f_bsize = TheISA::htog(host->f_bsize);
+    tgt->f_blocks = TheISA::htog(host->f_blocks);
+    tgt->f_bfree = TheISA::htog(host->f_bfree);
+    tgt->f_bavail = TheISA::htog(host->f_bavail);
+    tgt->f_files = TheISA::htog(host->f_files);
+    tgt->f_ffree = TheISA::htog(host->f_ffree);
+    memcpy(&tgt->f_fsid, &host->f_fsid, sizeof(host->f_fsid));
+    tgt->f_namelen = TheISA::htog(host->f_namelen);
+    tgt->f_frsize = TheISA::htog(host->f_frsize);
+    memcpy(&tgt->f_spare, &host->f_spare, sizeof(host->f_spare));
+
     tgt.copyOut(mem);
 }
 
@@ -1156,7 +1184,7 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatfsBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1182,7 +1210,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatfsBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
