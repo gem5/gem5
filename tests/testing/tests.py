@@ -156,6 +156,7 @@ generic_configs = (
     'memtest-filter',
     'tgen-simple-mem',
     'tgen-dram-ctrl',
+    'dram-lowp',
 
     'learning-gem5-p1-simple',
     'learning-gem5-p1-two-level',

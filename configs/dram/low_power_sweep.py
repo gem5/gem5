@@ -43,7 +43,7 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.stats import periodicStatDump
 
-addToPath('../common')
+addToPath(os.getcwd() + '/configs/common')
 import MemConfig
 
 # This script aims at triggering low power state transitions in the DRAM
