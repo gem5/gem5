@@ -60,73 +60,6 @@ class EventManager;
 
 namespace ArmISA
 {
-
-    /**
-     * At the moment there are 57 registers which need to be aliased/
-     * translated with other registers in the ISA. This enum helps with that
-     * translation.
-     */
-    enum translateTable {
-        miscRegTranslateCSSELR_EL1,
-        miscRegTranslateSCTLR_EL1,
-        miscRegTranslateSCTLR_EL2,
-        miscRegTranslateACTLR_EL1,
-        miscRegTranslateACTLR_EL2,
-        miscRegTranslateCPACR_EL1,
-        miscRegTranslateCPTR_EL2,
-        miscRegTranslateHCR_EL2,
-        miscRegTranslateMDCR_EL2,
-        miscRegTranslateHSTR_EL2,
-        miscRegTranslateHACR_EL2,
-        miscRegTranslateTTBR0_EL1,
-        miscRegTranslateTTBR1_EL1,
-        miscRegTranslateTTBR0_EL2,
-        miscRegTranslateVTTBR_EL2,
-        miscRegTranslateTCR_EL1,
-        miscRegTranslateTCR_EL2,
-        miscRegTranslateVTCR_EL2,
-        miscRegTranslateAFSR0_EL1,
-        miscRegTranslateAFSR1_EL1,
-        miscRegTranslateAFSR0_EL2,
-        miscRegTranslateAFSR1_EL2,
-        miscRegTranslateESR_EL2,
-        miscRegTranslateFAR_EL1,
-        miscRegTranslateFAR_EL2,
-        miscRegTranslateHPFAR_EL2,
-        miscRegTranslatePAR_EL1,
-        miscRegTranslateMAIR_EL1,
-        miscRegTranslateMAIR_EL2,
-        miscRegTranslateAMAIR_EL1,
-        miscRegTranslateVBAR_EL1,
-        miscRegTranslateVBAR_EL2,
-        miscRegTranslateCONTEXTIDR_EL1,
-        miscRegTranslateTPIDR_EL0,
-        miscRegTranslateTPIDRRO_EL0,
-        miscRegTranslateTPIDR_EL1,
-        miscRegTranslateTPIDR_EL2,
-        miscRegTranslateTEECR32_EL1,
-        miscRegTranslateCNTFRQ_EL0,
-        miscRegTranslateCNTPCT_EL0,
-        miscRegTranslateCNTVCT_EL0,
-        miscRegTranslateCNTVOFF_EL2,
-        miscRegTranslateCNTKCTL_EL1,
-        miscRegTranslateCNTHCTL_EL2,
-        miscRegTranslateCNTP_TVAL_EL0,
-        miscRegTranslateCNTP_CTL_EL0,
-        miscRegTranslateCNTP_CVAL_EL0,
-        miscRegTranslateCNTV_TVAL_EL0,
-        miscRegTranslateCNTV_CTL_EL0,
-        miscRegTranslateCNTV_CVAL_EL0,
-        miscRegTranslateCNTHP_TVAL_EL2,
-        miscRegTranslateCNTHP_CTL_EL2,
-        miscRegTranslateCNTHP_CVAL_EL2,
-        miscRegTranslateDACR32_EL2,
-        miscRegTranslateIFSR32_EL2,
-        miscRegTranslateTEEHBR32_EL1,
-        miscRegTranslateSDER32_EL3,
-        miscRegTranslateMax
-    };
-
     class ISA : public SimObject
     {
       protected:
@@ -164,8 +97,7 @@ namespace ArmISA
         };
 
         /** Register table noting all translations */
-        static const struct MiscRegInitializerEntry
-                            MiscRegSwitch[miscRegTranslateMax];
+        static const struct MiscRegInitializerEntry MiscRegSwitch[];
 
         /** Translation table accessible via the value of the register */
         std::vector<struct MiscRegLUTEntry> lookUpMiscReg;

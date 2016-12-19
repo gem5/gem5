@@ -133,9 +133,9 @@ namespace ArmISA
         MISCREG_DBGDEVID2,              //  72
         MISCREG_DBGDEVID1,              //  73
         MISCREG_DBGDEVID0,              //  74
-        MISCREG_TEECR,                  //  75
+        MISCREG_TEECR,                  //  75, not in ARM DDI 0487A.b+
         MISCREG_JIDR,                   //  76
-        MISCREG_TEEHBR,                 //  77
+        MISCREG_TEEHBR,                 //  77, not in ARM DDI 0487A.b+
         MISCREG_JOSCR,                  //  78
         MISCREG_JMCR,                   //  79
 
@@ -420,8 +420,8 @@ namespace ArmISA
         MISCREG_DBGCLAIMSET_EL1,        // 355
         MISCREG_DBGCLAIMCLR_EL1,        // 356
         MISCREG_DBGAUTHSTATUS_EL1,      // 357
-        MISCREG_TEECR32_EL1,            // 358
-        MISCREG_TEEHBR32_EL1,           // 359
+        MISCREG_TEECR32_EL1,            // 358, not in ARM DDI 0487A.b+
+        MISCREG_TEEHBR32_EL1,           // 359, not in ARM DDI 0487A.b+
 
         // AArch64 registers (Op0=1,3)
         MISCREG_MIDR_EL1,               // 360
