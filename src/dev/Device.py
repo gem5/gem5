@@ -46,7 +46,7 @@ class BasicPioDevice(PioDevice):
 
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
-    cxx_header = "dev/io_device.hh"
+    cxx_header = "dev/dma_device.hh"
     abstract = True
     dma = MasterPort("DMA port")
 
