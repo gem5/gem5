@@ -79,6 +79,7 @@ namespace ArmISA
         std::unique_ptr<BaseISADevice> timer;
 
         // Cached copies of system-level properties
+        bool highestELIs64;
         bool haveSecurity;
         bool haveLPAE;
         bool haveVirtualization;
@@ -328,7 +329,7 @@ namespace ArmISA
                 }
             } else {
                 if (miscRegInfo[reg][MISCREG_BANKED]) {
-                    bool secureReg = haveSecurity &&
+                    bool secureReg = haveSecurity && !highestELIs64 &&
                                      inSecureState(miscRegs[MISCREG_SCR],
                                                    miscRegs[MISCREG_CPSR]);
                     flat_idx += secureReg ? 2 : 1;
@@ -337,11 +338,33 @@ namespace ArmISA
             return flat_idx;
         }
 
+        std::pair<int,int> getMiscIndices(int misc_reg) const
+        {
+            // Note: indexes of AArch64 registers are left unchanged
+            int flat_idx = flattenMiscIndex(misc_reg);
+
+            if (lookUpMiscReg[flat_idx].lower == 0) {
+                return std::make_pair(flat_idx, 0);
+            }
+
+            // do additional S/NS flattenings if mapped to NS while in S
+            bool S = haveSecurity && !highestELIs64 &&
+                     inSecureState(miscRegs[MISCREG_SCR],
+                                   miscRegs[MISCREG_CPSR]);
+            int lower = lookUpMiscReg[flat_idx].lower;
+            int upper = lookUpMiscReg[flat_idx].upper;
+            // upper == 0, which is CPSR, is not MISCREG_BANKED_CHILD (no-op)
+            lower += S && miscRegInfo[lower][MISCREG_BANKED_CHILD];
+            upper += S && miscRegInfo[upper][MISCREG_BANKED_CHILD];
+            return std::make_pair(lower, upper);
+        }
+
         void serialize(CheckpointOut &cp) const
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
             SERIALIZE_ARRAY(miscRegs, NumMiscRegs);
 
+            SERIALIZE_SCALAR(highestELIs64);
             SERIALIZE_SCALAR(haveSecurity);
             SERIALIZE_SCALAR(haveLPAE);
             SERIALIZE_SCALAR(haveVirtualization);
@@ -355,6 +378,7 @@ namespace ArmISA
             CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
             updateRegMap(tmp_cpsr);
 
+            UNSERIALIZE_SCALAR(highestELIs64);
             UNSERIALIZE_SCALAR(haveSecurity);
             UNSERIALIZE_SCALAR(haveLPAE);
             UNSERIALIZE_SCALAR(haveVirtualization);

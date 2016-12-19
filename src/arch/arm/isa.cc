@@ -226,12 +226,14 @@ ISA::ISA(Params *p)
 
     // Cache system-level properties
     if (FullSystem && system) {
+        highestELIs64 = system->highestELIs64();
         haveSecurity = system->haveSecurity();
         haveLPAE = system->haveLPAE();
         haveVirtualization = system->haveVirtualization();
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange64 = system->physAddrRange64();
     } else {
+        highestELIs64 = true; // ArmSystem::highestELIs64 does the same
         haveSecurity = haveLPAE = haveVirtualization = false;
         haveLargeAsid64 = false;
         physAddrRange64 = 32;  // dummy value
@@ -487,22 +489,10 @@ ISA::readMiscRegNoEffect(int misc_reg) const
 {
     assert(misc_reg < NumMiscRegs);
 
-    int flat_idx = flattenMiscIndex(misc_reg);  // Note: indexes of AArch64
-                                                // registers are left unchanged
-    MiscReg val;
-
-    if (lookUpMiscReg[flat_idx].lower == 0 || flat_idx == MISCREG_SPSR) {
-        if (flat_idx == MISCREG_SPSR)
-            flat_idx = flattenMiscIndex(MISCREG_SPSR);
-        val = miscRegs[flat_idx];
-    } else
-        if (lookUpMiscReg[flat_idx].upper > 0)
-            val = ((miscRegs[lookUpMiscReg[flat_idx].lower] & mask(32))
-                    | (miscRegs[lookUpMiscReg[flat_idx].upper] << 32));
-        else
-            val = miscRegs[lookUpMiscReg[flat_idx].lower];
-
-    return val;
+    auto regs = getMiscIndices(misc_reg);
+    int lower = regs.first, upper = regs.second;
+    return !upper ? miscRegs[lower] : ((miscRegs[lower] & mask(32))
+                                      |(miscRegs[upper] << 32));
 }
 
 
@@ -801,25 +791,17 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
     assert(misc_reg < NumMiscRegs);
 
-    int flat_idx = flattenMiscIndex(misc_reg);  // Note: indexes of AArch64
-                                                // registers are left unchanged
-
-    int flat_idx2 = lookUpMiscReg[flat_idx].upper;
-
-    if (flat_idx2 > 0) {
-        miscRegs[lookUpMiscReg[flat_idx].lower] = bits(val, 31, 0);
-        miscRegs[flat_idx2] = bits(val, 63, 32);
+    auto regs = getMiscIndices(misc_reg);
+    int lower = regs.first, upper = regs.second;
+    if (upper > 0) {
+        miscRegs[lower] = bits(val, 31, 0);
+        miscRegs[upper] = bits(val, 63, 32);
         DPRINTF(MiscRegs, "Writing to misc reg %d (%d:%d) : %#x\n",
-                misc_reg, flat_idx, flat_idx2, val);
+                misc_reg, lower, upper, val);
     } else {
-        if (flat_idx == MISCREG_SPSR)
-            flat_idx = flattenMiscIndex(MISCREG_SPSR);
-        else
-            flat_idx = (lookUpMiscReg[flat_idx].lower > 0) ?
-                       lookUpMiscReg[flat_idx].lower : flat_idx;
-        miscRegs[flat_idx] = val;
+        miscRegs[lower] = val;
         DPRINTF(MiscRegs, "Writing to misc reg %d (%d) : %#x\n",
-                misc_reg, flat_idx, val);
+                misc_reg, lower, val);
     }
 }
 
