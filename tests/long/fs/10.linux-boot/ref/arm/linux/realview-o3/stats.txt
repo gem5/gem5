@@ -897,7 +897,7 @@ system.cpu.fp_regfile_reads                      9690                       # nu
 system.cpu.fp_regfile_writes                     2716                       # number of floating regfile writes
 system.cpu.cc_regfile_reads                 502428467                       # number of cc regfile reads
 system.cpu.cc_regfile_writes                 53152553                       # number of cc regfile writes
-system.cpu.misc_regfile_reads               452520947                       # number of misc regfile reads
+system.cpu.misc_regfile_reads               455632805                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                1521018                       # number of misc regfile writes
 system.cpu.dcache.tags.pwrStateResidencyTicks::UNDEFINED 2829116273500                       # Cumulative time (in ticks) in various power states
 system.cpu.dcache.tags.replacements            835071                       # number of replacements

@@ -812,9 +812,9 @@ system.cpu0.iew.iewDispNonSpecInsts            875905                       # Nu
 system.cpu0.iew.iewIQFullEvents                 27780                       # Number of times the IQ has become full, causing a stall
 system.cpu0.iew.iewLSQFullEvents               199746                       # Number of times the LSQ has become full, causing a stall
 system.cpu0.iew.memOrderViolationEvents         19139                       # Number of memory order violations
-system.cpu0.iew.predictedTakenIncorrect        262595                       # Number of branches that were predicted taken incorrectly
+system.cpu0.iew.predictedTakenIncorrect        262593                       # Number of branches that were predicted taken incorrectly
 system.cpu0.iew.predictedNotTakenIncorrect       398520                       # Number of branches that were predicted not taken incorrectly
-system.cpu0.iew.branchMispredicts              661115                       # Number of branch mispredicts detected at execute
+system.cpu0.iew.branchMispredicts              661113                       # Number of branch mispredicts detected at execute
 system.cpu0.iew.iewExecutedInsts            131868425                       # Number of executed instructions
 system.cpu0.iew.iewExecLoadInsts             23910267                       # Number of load instructions executed
 system.cpu0.iew.iewExecSquashedInsts           963966                       # Number of squashed instructions skipped in execute
@@ -917,7 +917,7 @@ system.cpu0.fp_regfile_reads                     8188                       # nu
 system.cpu0.fp_regfile_writes                    2265                       # number of floating regfile writes
 system.cpu0.cc_regfile_reads                465378109                       # number of cc regfile reads
 system.cpu0.cc_regfile_writes                49818068                       # number of cc regfile writes
-system.cpu0.misc_regfile_reads              395692849                       # number of misc regfile reads
+system.cpu0.misc_regfile_reads              399016543                       # number of misc regfile reads
 system.cpu0.misc_regfile_writes               1225433                       # number of misc regfile writes
 system.cpu0.dcache.tags.pwrStateResidencyTicks::UNDEFINED 2826653666000                       # Cumulative time (in ticks) in various power states
 system.cpu0.dcache.tags.replacements           712812                       # number of replacements
@@ -2184,7 +2184,7 @@ system.cpu1.fp_regfile_reads                     1400                       # nu
 system.cpu1.fp_regfile_writes                     516                       # number of floating regfile writes
 system.cpu1.cc_regfile_reads                 74742517                       # number of cc regfile reads
 system.cpu1.cc_regfile_writes                 6682824                       # number of cc regfile writes
-system.cpu1.misc_regfile_reads               68331723                       # number of misc regfile reads
+system.cpu1.misc_regfile_reads               68400417                       # number of misc regfile reads
 system.cpu1.misc_regfile_writes                381677                       # number of misc regfile writes
 system.cpu1.dcache.tags.pwrStateResidencyTicks::UNDEFINED 2826653666000                       # Cumulative time (in ticks) in various power states
 system.cpu1.dcache.tags.replacements           186538                       # number of replacements
