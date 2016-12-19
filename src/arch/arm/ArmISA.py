@@ -106,10 +106,3 @@ class ArmISA(SimObject):
     # Reserved for future expansion
     id_aa64mmfr1_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Memory Model Feature Register 1")
-
-    # !GICv3 CP15 | AdvSIMD | FP | !EL3 | !EL2 | EL1 (AArch64) | EL0 (AArch64)
-    id_aa64pfr0_el1 = Param.UInt64(0x0000000000000022,
-        "AArch64 Processor Feature Register 0")
-    # Reserved for future expansion
-    id_aa64pfr1_el1 = Param.UInt64(0x0000000000000000,
-        "AArch64 Processor Feature Register 1")
