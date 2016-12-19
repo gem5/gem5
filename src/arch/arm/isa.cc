@@ -770,10 +770,13 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         // !ThumbEE | !Jazelle | Thumb | ARM
         return 0x00000031;
       case MISCREG_ID_PFR1:
-        // !Timer | Virti | !M Profile | TrustZone | ARMv4
-        return 0x00000001
-             | (haveSecurity       ? 0x00000010 : 0x0)
-             | (haveVirtualization ? 0x00001000 : 0x0);
+        {   // Timer | Virti | !M Profile | TrustZone | ARMv4
+            bool haveTimer = (system->getGenericTimer() != NULL);
+            return 0x00000001
+                 | (haveSecurity       ? 0x00000010 : 0x0)
+                 | (haveVirtualization ? 0x00001000 : 0x0)
+                 | (haveTimer          ? 0x00010000 : 0x0);
+        }
       case MISCREG_ID_AA64PFR0_EL1:
         return 0x0000000000000002   // AArch{64,32} supported at EL0
              | 0x0000000000000020                             // EL1
