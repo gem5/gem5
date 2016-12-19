@@ -358,10 +358,6 @@ ISA::clear()
 
     miscRegs[MISCREG_CPACR] = 0;
 
-
-    miscRegs[MISCREG_ID_PFR0] = p->id_pfr0;
-    miscRegs[MISCREG_ID_PFR1] = p->id_pfr1;
-
     miscRegs[MISCREG_ID_MMFR0] = p->id_mmfr0;
     miscRegs[MISCREG_ID_MMFR1] = p->id_mmfr1;
     miscRegs[MISCREG_ID_MMFR2] = p->id_mmfr2;
@@ -771,6 +767,15 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_SCTLR_EL3:
       case MISCREG_HSCTLR:
         return (readMiscRegNoEffect(misc_reg) & 0x32CD183F) | 0x30C50830;
+
+      case MISCREG_ID_PFR0:
+        // !ThumbEE | !Jazelle | Thumb | ARM
+        return 0x00000031;
+      case MISCREG_ID_PFR1:
+        // !Timer | Virti | !M Profile | TrustZone | ARMv4
+        return 0x00000001
+             | (haveSecurity       ? 0x00000010 : 0x0)
+             | (haveVirtualization ? 0x00001000 : 0x0);
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:

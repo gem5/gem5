@@ -57,15 +57,6 @@ class ArmISA(SimObject):
 
     midr = Param.UInt32(0x410fc0f0, "MIDR value")
 
-    # See section B4.1.93 - B4.1.94 of the ARM ARM
-    #
-    # !ThumbEE | !Jazelle | Thumb | ARM
-    # Note: ThumbEE is disabled for now since we don't support CP14
-    # config registers and jumping to ThumbEE vectors
-    id_pfr0 = Param.UInt32(0x00000031, "Processor Feature Register 0")
-    # !Timer | Virti | !M Profile | TrustZone | ARMv4
-    id_pfr1 = Param.UInt32(0x00001011, "Processor Feature Register 1")
-
     # See section B4.1.89 - B4.1.92 of the ARM ARM
     #  VMSAv7 support
     id_mmfr0 = Param.UInt32(0x10201103, "Memory Model Feature Register 0")
