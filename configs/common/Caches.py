@@ -38,6 +38,7 @@
 #
 # Authors: Lisa Hsu
 
+from m5.defines import buildEnv
 from m5.objects import *
 
 # Base implementations of L1, L2, IO and TLB-walker caches. There are

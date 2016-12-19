@@ -29,7 +29,6 @@
 #          Rick Strong
 
 from m5.SimObject import SimObject
-from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
