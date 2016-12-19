@@ -776,24 +776,14 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         return readMiscRegNoEffect(MISCREG_IFAR_S);
       case MISCREG_HVBAR: // bottom bits reserved
         return readMiscRegNoEffect(MISCREG_HVBAR) & 0xFFFFFFE0;
-      case MISCREG_SCTLR: // Some bits hardwired
-        // The FI field (bit 21) is common between S/NS versions of the register
-        return (readMiscRegNoEffect(MISCREG_SCTLR_S) & (1 << 21))  |
-               (readMiscRegNoEffect(misc_reg)        & 0x72DD39FF) | 0x00C00818; // V8 SCTLR
+      case MISCREG_SCTLR:
+        return (readMiscRegNoEffect(misc_reg) & 0x72DD39FF) | 0x00C00818;
       case MISCREG_SCTLR_EL1:
-        // The FI field (bit 21) is common between S/NS versions of the register
-        return (readMiscRegNoEffect(MISCREG_SCTLR_S) & (1 << 21))  |
-               (readMiscRegNoEffect(misc_reg)        & 0x37DDDBFF) | 0x30D00800; // V8 SCTLR_EL1
+        return (readMiscRegNoEffect(misc_reg) & 0x37DDDBFF) | 0x30D00800;
       case MISCREG_SCTLR_EL3:
-        // The FI field (bit 21) is common between S/NS versions of the register
-        return (readMiscRegNoEffect(MISCREG_SCTLR_S) & (1 << 21))  |
-               (readMiscRegNoEffect(misc_reg)        & 0x32CD183F) | 0x30C50830; // V8 SCTLR_EL3
-      case MISCREG_HSCTLR: // FI comes from SCTLR
-        {
-            uint32_t mask = 1 << 27;
-            return (readMiscRegNoEffect(MISCREG_HSCTLR) & ~mask) |
-                (readMiscRegNoEffect(MISCREG_SCTLR)  &  mask);
-        }
+        return (readMiscRegNoEffect(misc_reg) & 0x32CD183F) | 0x30C50830;
+      case MISCREG_HSCTLR:
+        return readMiscRegNoEffect(MISCREG_HSCTLR);
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:
@@ -1111,18 +1101,9 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_SCTLR:
             {
                 DPRINTF(MiscRegs, "Writing SCTLR: %#x\n", newVal);
-                MiscRegIndex sctlr_idx;
                 scr = readMiscRegNoEffect(MISCREG_SCR);
-                if (haveSecurity && !scr.ns) {
-                    sctlr_idx = MISCREG_SCTLR_S;
-                } else {
-                    sctlr_idx = MISCREG_SCTLR_NS;
-                    // The FI field (bit 21) is common between S/NS versions
-                    // of the register, we store this in the secure copy of
-                    // the reg
-                    miscRegs[MISCREG_SCTLR_S] &=         ~(1 << 21);
-                    miscRegs[MISCREG_SCTLR_S] |= newVal & (1 << 21);
-                }
+                MiscRegIndex sctlr_idx = (haveSecurity && !scr.ns)
+                                         ? MISCREG_SCTLR_S : MISCREG_SCTLR_NS;
                 SCTLR sctlr = miscRegs[sctlr_idx];
                 SCTLR new_sctlr = newVal;
                 new_sctlr.nmfi =  ((bool)sctlr.nmfi) && !haveVirtualization;
