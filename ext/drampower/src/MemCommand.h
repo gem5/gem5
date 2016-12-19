@@ -53,19 +53,20 @@ class MemCommand {
    * 3. WR - Write
    * 4. PRE - Explicit Precharge per bank
    * 5. REF - Refresh all banks
-   * 6. END - To indicate end of trace
-   * 7. RDA - Read with auto-precharge
-   * 8. WRA - Write with auto-precharge
-   * 9. PREA - Precharge all banks
-   * 10. PDN_F_PRE - Precharge Power-down Entry command (Fast-Exit)
-   * 11. PDN_S_PRE - Precharge Power-down Entry command (Slow-Exit)
-   * 12. PDN_F_ACT - Active Power-down Entry command (Fast-Exit)
-   * 13. PDN_S_ACT - Active Power-down Entry command (Slow-Exit)
-   * 14. PUP_PRE - Precharge Power-down Exit
-   * 15. PUP_ACT - Active Power-down Exit
-   * 16. SREN - Self-Refresh Entry command
-   * 17. SREX - Self-refresh Exit
-   * 18. NOP - To indicate end of trace
+   * 6  REFB- Refresh a particular bank
+   * 7. END - To indicate end of trace
+   * 8. RDA - Read with auto-precharge
+   * 9. WRA - Write with auto-precharge
+   * 10. PREA - Precharge all banks
+   * 11. PDN_F_PRE - Precharge Power-down Entry command (Fast-Exit)
+   * 12. PDN_S_PRE - Precharge Power-down Entry command (Slow-Exit)
+   * 13. PDN_F_ACT - Active Power-down Entry command (Fast-Exit)
+   * 14. PDN_S_ACT - Active Power-down Entry command (Slow-Exit)
+   * 15. PUP_PRE - Precharge Power-down Exit
+   * 16. PUP_ACT - Active Power-down Exit
+   * 17. SREN - Self-Refresh Entry command
+   * 18. SREX - Self-refresh Exit
+   * 19. NOP - To indicate end of trace
    */
 
   enum cmds {
@@ -74,20 +75,21 @@ class MemCommand {
     WR        = 2,
     PRE       = 3,
     REF       = 4,
-    END       = 5,
-    RDA       = 6,
-    WRA       = 7,
-    PREA      = 8,
-    PDN_F_PRE = 9,
-    PDN_S_PRE = 10,
-    PDN_F_ACT = 11,
-    PDN_S_ACT = 12,
-    PUP_PRE   = 13,
-    PUP_ACT   = 14,
-    SREN      = 15,
-    SREX      = 16,
-    NOP       = 17,
-    UNINITIALIZED = 18
+    REFB      = 5,
+    END       = 6,
+    RDA       = 7,
+    WRA       = 8,
+    PREA      = 9,
+    PDN_F_PRE = 10,
+    PDN_S_PRE = 11,
+    PDN_F_ACT = 12,
+    PDN_S_ACT = 13,
+    PUP_PRE   = 14,
+    PUP_ACT   = 15,
+    SREN      = 16,
+    SREX      = 17,
+    NOP       = 18,
+    UNINITIALIZED = 19
   };
 
 //  MemCommand();
@@ -136,7 +138,7 @@ class MemCommand {
     }
   }
 
-  static const unsigned int nCommands = 19;
+  static const unsigned int nCommands = 20;
 
   static std::string* getCommandTypeStrings()
   {
@@ -145,6 +147,7 @@ class MemCommand {
                                                "WR",
                                                "PRE",
                                                "REF",
+                                               "REFB",
                                                "END",
                                                "RDA",
                                                "WRA",

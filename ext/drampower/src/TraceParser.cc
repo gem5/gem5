@@ -42,8 +42,8 @@
 using namespace Data;
 using namespace std;
 
-TraceParser::TraceParser(int64_t nbrOfBanks) :
-  counters(nbrOfBanks)
+TraceParser::TraceParser(const MemorySpecification& memSpec) :
+  counters(memSpec)
 {
 }
 
@@ -80,7 +80,7 @@ void TraceParser::parseFile(MemorySpecification memSpec, std::ifstream& trace,
 {
   ifstream pwr_trace;
 
-  counters = CommandAnalysis(memSpec.memArchSpec.nbrOfBanks);
+  counters = CommandAnalysis(memSpec);
   int  nCommands  = 0;
   bool lastupdate = false;
   if (trans) {
@@ -93,13 +93,13 @@ void TraceParser::parseFile(MemorySpecification memSpec, std::ifstream& trace,
       cmd_list.push_back(cmdline);
       nCommands++;
       if (nCommands == window) {
-        counters.getCommands(memSpec, cmd_list, lastupdate);
+        counters.getCommands(cmd_list, lastupdate);
         nCommands = 0;
         cmd_list.clear();
       }
     }
     lastupdate = true;
-    counters.getCommands(memSpec, cmd_list, lastupdate);
+    counters.getCommands(cmd_list, lastupdate);
     cmd_list.clear();
     pwr_trace.close();
   } else   {
@@ -109,13 +109,13 @@ void TraceParser::parseFile(MemorySpecification memSpec, std::ifstream& trace,
       cmd_list.push_back(cmdline);
       nCommands++;
       if (nCommands == window) {
-        counters.getCommands(memSpec, cmd_list, lastupdate);
+        counters.getCommands(cmd_list, lastupdate);
         nCommands = 0;
         cmd_list.clear();
       }
     }
     lastupdate = true;
-    counters.getCommands(memSpec, cmd_list, lastupdate);
+    counters.getCommands(cmd_list, lastupdate);
     cmd_list.clear();
   }
   counters.clear();

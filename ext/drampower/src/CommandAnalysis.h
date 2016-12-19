@@ -31,7 +31,12 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Karthik Chandrasekar, Matthias Jung, Omar Naji
+ * Authors: Karthik Chandrasekar
+ *          Matthias Jung
+ *          Omar Naji
+ *          Subash Kannoth
+ *          Éder F. Zulian
+ *          Felipe S. Prado
  *
  */
 
@@ -54,27 +59,30 @@ class CommandAnalysis {
  public:
   // Power-Down and Self-refresh related memory states
   enum memstate {
-    MS_PDN_F_ACT = 10, MS_PDN_S_ACT = 11, MS_PDN_F_PRE = 12,
+    MS_NOT_IN_PD = 0, MS_PDN_F_ACT = 10, MS_PDN_S_ACT = 11, MS_PDN_F_PRE = 12,
     MS_PDN_S_PRE = 13, MS_SREF = 14
   };
 
   // Returns number of reads, writes, acts, pres and refs in the trace
-  CommandAnalysis(const int64_t nbrofBanks);
+  CommandAnalysis(const MemorySpecification& memSpec);
 
-  // Number of activate commands
-  int64_t numberofacts;
-  // Number of precharge commands
-  int64_t numberofpres;
-  // Number of reads commands
-  int64_t numberofreads;
-  // Number of writes commands
-  int64_t numberofwrites;
+  // Number of activate commands per bank
+  std::vector<int64_t> numberofactsBanks;
+  // Number of precharge commands per bank
+  std::vector<int64_t> numberofpresBanks;
+  // Number of reads commands per bank
+  std::vector<int64_t> numberofreadsBanks;
+  // Number of writes commands per bank
+  std::vector<int64_t> numberofwritesBanks;
   // Number of refresh commands
   int64_t numberofrefs;
+  // Number of bankwise refresh commands
+  std::vector<int64_t> numberofrefbBanks;
   // Number of precharge cycles
   int64_t precycles;
   // Number of active cycles
   int64_t actcycles;
+  std::vector<int64_t> actcyclesBanks;
   // Number of Idle cycles in the active state
   int64_t idlecycles_act;
   // Number of Idle cycles in the precharge state
@@ -97,7 +105,8 @@ class CommandAnalysis {
   int64_t f_pre_pdcycles;
   // Number of clock cycles in slow-exit precharged power-down mode
   int64_t s_pre_pdcycles;
-  // Number of clock cycles in self-refresh mode
+  // Number of clock cycles in self-refresh mode (excludes the initial
+  // auto-refresh). During this time the current drawn is IDD6.
   int64_t sref_cycles;
   // Number of clock cycles in activate power-up mode
   int64_t pup_act_cycles;
@@ -106,10 +115,15 @@ class CommandAnalysis {
   // Number of clock cycles in self-refresh power-up mode
   int64_t spup_cycles;
 
-  // Number of active auto-refresh cycles in self-refresh mode
+  // Number of active cycles for the initial auto-refresh when entering
+  // self-refresh mode.
   int64_t sref_ref_act_cycles;
+  // Number of active auto-refresh cycles in self-refresh mode already used to calculate the energy of the previous windows
+  int64_t sref_ref_act_cycles_window;
   // Number of precharged auto-refresh cycles in self-refresh mode
   int64_t sref_ref_pre_cycles;
+  // Number of precharged auto-refresh cycles in self-refresh mode already used to calculate the energy of the previous window
+  int64_t sref_ref_pre_cycles_window;
   // Number of active auto-refresh cycles during self-refresh exit
   int64_t spup_ref_act_cycles;
   // Number of precharged auto-refresh cycles during self-refresh exit
@@ -122,11 +136,19 @@ class CommandAnalysis {
   void clear();
 
   // To identify auto-precharges
-  void getCommands(const MemorySpecification& memSpec,
-                   std::vector<MemCommand>&   list,
-                   bool                       lastupdate);
+  void getCommands(std::vector<MemCommand>&   list,
+                   bool                       lastupdate,
+                   int64_t timestamp = 0);
 
  private:
+  MemorySpecification memSpec;
+
+  // Possible bank states are precharged or active
+  enum BankState {
+    BANK_PRECHARGED = 0,
+    BANK_ACTIVE
+  };
+
   int64_t  zero;
   // Cached last read command from the file
   std::vector<MemCommand> cached_cmd;
@@ -134,11 +156,14 @@ class CommandAnalysis {
   // Stores the memory commands for analysis
   std::vector<MemCommand> cmd_list;
 
+  //Stores the memory commands for the next window
+  std::vector<MemCommand> next_window_cmd_list;
+
   // To save states of the different banks, before entering active
   // power-down mode (slow/fast-exit).
-  std::vector<int> last_states;
+  std::vector<BankState> last_bank_state;
   // Bank state vector
-  std::vector<int> bankstate;
+  std::vector<BankState> bank_state;
 
   std::vector<int64_t> activation_cycle;
   // To keep track of the last ACT cycle
@@ -160,43 +185,68 @@ class CommandAnalysis {
   // Clock cycle when self-refresh was issued
   int64_t sref_cycle;
 
+  // Latest Self-Refresh clock cycle used to calculate the energy of the previous window
+  int64_t sref_cycle_window;
+
   // Clock cycle when the latest power-down was issued
   int64_t pdn_cycle;
 
   // Memory State
   unsigned mem_state;
-  unsigned num_active_banks;
+
+  int64_t num_banks;
 
   // Clock cycle of first activate command when memory state changes to ACT
   int64_t first_act_cycle;
+  std::vector<int64_t> first_act_cycle_banks;
 
   // Clock cycle of last precharge command when memory state changes to PRE
   int64_t last_pre_cycle;
 
   // To perform timing analysis of a given set of commands and update command counters
-  void evaluate(const MemorySpecification& memSpec,
-                std::vector<MemCommand>&   cmd_list);
+  void evaluateCommands(std::vector<MemCommand>& cmd_list);
+
+  // Handlers for commands that are getting processed
+  void handleAct(    unsigned bank, int64_t timestamp);
+  void handleRd(     unsigned bank, int64_t timestamp);
+  void handleWr(     unsigned bank, int64_t timestamp);
+  void handleRef(    unsigned bank, int64_t timestamp);
+  void handleRefB(unsigned bank, int64_t timestamp);
+  void handlePre(    unsigned bank, int64_t timestamp);
+  void handlePreA(   unsigned bank, int64_t timestamp);
+  void handlePdnFAct(unsigned bank, int64_t timestamp);
+  void handlePdnSAct(unsigned bank, int64_t timestamp);
+  void handlePdnFPre(unsigned bank, int64_t timestamp);
+  void handlePdnSPre(unsigned bank, int64_t timestamp);
+  void handlePupAct( int64_t timestamp);
+  void handlePupPre( int64_t timestamp);
+  void handleSREn(   unsigned bank, int64_t timestamp);
+  void handleSREx(   unsigned bank, int64_t timestamp);
+  void handleNopEnd( int64_t timestamp);
 
   // To calculate time of completion of any issued command
-  int64_t timeToCompletion(const MemorySpecification& memSpec,
-                       MemCommand::cmds           type);
+  int64_t timeToCompletion(MemCommand::cmds           type);
 
   // To update idle period information whenever active cycles may be idle
-  void idle_act_update(const MemorySpecification& memSpec,
-                       int64_t                     latest_read_cycle,
+  void idle_act_update(int64_t                     latest_read_cycle,
                        int64_t                     latest_write_cycle,
                        int64_t                     latest_act_cycle,
                        int64_t                     timestamp);
 
   // To update idle period information whenever precharged cycles may be idle
-  void idle_pre_update(const MemorySpecification& memSpec,
-                       int64_t                     timestamp,
+  void idle_pre_update(int64_t                     timestamp,
                        int64_t                     latest_pre_cycle);
 
-  void printWarningIfActive(const std::string& warning, int type, int64_t timestamp, int bank);
-  void printWarningIfNotActive(const std::string& warning, int type, int64_t timestamp, int bank);
-  void printWarningIfPoweredDown(const std::string& warning, int type, int64_t timestamp, int bank);
-  void printWarning(const std::string& warning, int type, int64_t timestamp, int bank);
+  // Returns the number of active banks according to the bank_state vector.
+  unsigned get_num_active_banks(void);
+  unsigned nActiveBanks(void);
+
+  bool isPrecharged(unsigned bank);
+
+  void printWarningIfActive(const std::string& warning, int type, int64_t timestamp, unsigned bank);
+  void printWarningIfNotActive(const std::string& warning, int type, int64_t timestamp, unsigned bank);
+  void printWarningIfPoweredDown(const std::string& warning, int type, int64_t timestamp, unsigned bank);
+  void printWarning(const std::string& warning, int type, int64_t timestamp, unsigned bank);
 };
 }
 #endif // ifndef COMMAND_TIMINGS_H

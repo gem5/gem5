@@ -43,6 +43,7 @@
  *          Omar Naji
  *          Matthias Jung
  *          Wendy Elsasser
+ *          Radhika Jagtap
  */
 
 /**
@@ -472,15 +473,12 @@ class DRAMCtrl : public AbstractMemory
         void suspend();
 
         /**
-         * Check if the current rank is available for scheduling.
-         * Rank will be unavailable if refresh is ongoing.
-         * This includes refresh events explicitly scheduled from the the
-         * controller or memory initiated events which will occur during
-         * self-refresh mode.
+         * Check if there is no refresh and no preparation of refresh ongoing
+         * i.e. the refresh state machine is in idle
          *
          * @param Return true if the rank is idle from a refresh point of view
          */
-        bool isAvailable() const { return refreshState == REF_IDLE; }
+        bool inRefIdleState() const { return refreshState == REF_IDLE; }
 
         /**
          * Check if the current rank has all banks closed and is not
@@ -539,6 +537,11 @@ class DRAMCtrl : public AbstractMemory
         void computeStats();
 
         /**
+         * Reset stats on a stats event
+         */
+        void resetStats();
+
+        /**
          * Schedule a transition to power-down (sleep)
          *
          * @param pwr_state Power state to transition to
@@ -575,16 +578,42 @@ class DRAMCtrl : public AbstractMemory
 
     };
 
-    // define the process to compute stats on simulation exit
-    // defined per rank as the per rank stats are based on state
-    // transition and periodically updated, requiring re-sync at
-    // exit.
+    /**
+     * Define the process to compute stats on a stats dump event, e.g. on
+     * simulation exit or intermediate stats dump. This is defined per rank
+     * as the per rank stats are based on state transition and periodically
+     * updated, requiring re-sync at exit.
+     */
     class RankDumpCallback : public Callback
     {
         Rank *ranks;
       public:
         RankDumpCallback(Rank *r) : ranks(r) {}
         virtual void process() { ranks->computeStats(); };
+    };
+
+    /** Define a process to clear power lib counters on a stats reset */
+    class RankResetCallback : public Callback
+    {
+      private:
+        /** Pointer to the rank, thus we instantiate per rank */
+        Rank *rank;
+
+      public:
+        RankResetCallback(Rank *r) : rank(r) {}
+        virtual void process() { rank->resetStats(); };
+    };
+
+    /** Define a process to store the time on a stats reset */
+    class MemResetCallback : public Callback
+    {
+      private:
+        /** A reference to the DRAMCtrl instance */
+        DRAMCtrl *mem;
+
+      public:
+        MemResetCallback(DRAMCtrl *_mem) : mem(_mem) {}
+        virtual void process() { mem->lastStatsResetTick = curTick(); };
     };
 
     /**
@@ -1038,6 +1067,9 @@ class DRAMCtrl : public AbstractMemory
 
     // timestamp offset
     uint64_t timeStampOffset;
+
+    /** The time when stats were last reset used to calculate average power */
+    Tick lastStatsResetTick;
 
     /**
      * Upstream caches need this packet until true is returned, so

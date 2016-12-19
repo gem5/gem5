@@ -42,6 +42,7 @@
  *          Neha Agarwal
  *          Omar Naji
  *          Wendy Elsasser
+ *          Radhika Jagtap
  */
 
 #include "mem/dram_ctrl.hh"
@@ -94,7 +95,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
     busBusyUntil(0), prevArrival(0),
-    nextReqTime(0), activeRank(0), timeStampOffset(0)
+    nextReqTime(0), activeRank(0), timeStampOffset(0),
+    lastStatsResetTick(0)
 {
     // sanity check the ranks since we rely on bit slicing for the
     // address decoding
@@ -742,7 +744,7 @@ DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
     if (queue.size() == 1) {
         DRAMPacket* dram_pkt = queue.front();
         // available rank corresponds to state refresh idle
-        if (ranks[dram_pkt->rank]->isAvailable()) {
+        if (ranks[dram_pkt->rank]->inRefIdleState()) {
             found_packet = true;
             DPRINTF(DRAM, "Single request, going to a free rank\n");
         } else {
@@ -755,7 +757,7 @@ DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
         // check if there is a packet going to a free rank
         for (auto i = queue.begin(); i != queue.end() ; ++i) {
             DRAMPacket* dram_pkt = *i;
-            if (ranks[dram_pkt->rank]->isAvailable()) {
+            if (ranks[dram_pkt->rank]->inRefIdleState()) {
                 queue.erase(i);
                 queue.push_front(dram_pkt);
                 found_packet = true;
@@ -801,8 +803,9 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
         DRAMPacket* dram_pkt = *i;
         const Bank& bank = dram_pkt->bankRef;
 
-        // check if rank is available, if not, jump to the next packet
-        if (dram_pkt->rankRef.isAvailable()) {
+        // check if rank is not doing a refresh and thus is available, if not,
+        // jump to the next packet
+        if (dram_pkt->rankRef.inRefIdleState()) {
             // check if it is a row hit
             if (bank.openRow == dram_pkt->row) {
                 // no additional rank-to-rank or same bank-group
@@ -1268,7 +1271,7 @@ DRAMCtrl::processNextReqEvent()
 {
     int busyRanks = 0;
     for (auto r : ranks) {
-        if (!r->isAvailable()) {
+        if (!r->inRefIdleState()) {
             if (r->pwrState != PWR_SREF) {
                 // rank is busy refreshing
                 DPRINTF(DRAMState, "Rank %d is not available\n", r->rank);
@@ -1385,7 +1388,7 @@ DRAMCtrl::processNextReqEvent()
                 return;
 
             DRAMPacket* dram_pkt = readQueue.front();
-            assert(dram_pkt->rankRef.isAvailable());
+            assert(dram_pkt->rankRef.inRefIdleState());
 
             // here we get a bit creative and shift the bus busy time not
             // just the tWTR, but also a CAS latency to capture the fact
@@ -1442,15 +1445,16 @@ DRAMCtrl::processNextReqEvent()
         found_write = chooseNext(writeQueue,
                                  switched_cmd_type ? std::min(tRTW, tCS) : 0);
 
-        // if no writes to an available rank are found then return.
-        // There could be reads to the available ranks. However, to avoid
-        // adding more complexity to the code, return at this point and wait
-        // for a refresh event to kick things into action again.
+        // if there are no writes to a rank that is available to service
+        // requests (i.e. rank is in refresh idle state) are found then
+        // return. There could be reads to the available ranks. However, to
+        // avoid adding more complexity to the code, return at this point and
+        // wait for a refresh event to kick things into action again.
         if (!found_write)
             return;
 
         DRAMPacket* dram_pkt = writeQueue.front();
-        assert(dram_pkt->rankRef.isAvailable());
+        assert(dram_pkt->rankRef.inRefIdleState());
         // sanity check
         assert(dram_pkt->size <= burstSize);
 
@@ -1542,7 +1546,7 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
     // bank in question
     vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
     for (const auto& p : queue) {
-        if (p->rankRef.isAvailable())
+        if (p->rankRef.inRefIdleState())
             got_waiting[p->bankId] = true;
     }
 
@@ -1556,7 +1560,7 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
             // amongst the first available, update the mask
             if (got_waiting[bank_id]) {
                 // make sure this rank is not currently refreshing.
-                assert(ranks[i]->isAvailable());
+                assert(ranks[i]->inRefIdleState());
                 // simplistic approximation of when the bank can issue
                 // an activate, ignoring any rank-to-rank switching
                 // cost in this calculation
@@ -2178,7 +2182,7 @@ DRAMCtrl::Rank::processPowerEvent()
     } else if (pwrState == PWR_IDLE) {
         DPRINTF(DRAMState, "All banks precharged\n");
         if (prev_state == PWR_SREF) {
-            // set refresh state to REF_SREF_EXIT, ensuring isAvailable
+            // set refresh state to REF_SREF_EXIT, ensuring inRefIdleState
             // continues to return false during tXS after SREF exit
             // Schedule a refresh which kicks things back into action
             // when it finishes
@@ -2235,47 +2239,46 @@ DRAMCtrl::Rank::updatePowerStats()
     // flush cmdList to DRAMPower
     flushCmdList();
 
-    // update the counters for DRAMPower, passing false to
-    // indicate that this is not the last command in the
-    // list. DRAMPower requires this information for the
-    // correct calculation of the background energy at the end
-    // of the simulation. Ideally we would want to call this
-    // function with true once at the end of the
-    // simulation. However, the discarded energy is extremly
-    // small and does not effect the final results.
-    power.powerlib.updateCounters(false);
+    // Call the function that calculates window energy at intermediate update
+    // events like at refresh, stats dump as well as at simulation exit.
+    // Window starts at the last time the calcWindowEnergy function was called
+    // and is upto current time.
+    power.powerlib.calcWindowEnergy(divCeil(curTick(), memory.tCK) -
+                                    memory.timeStampOffset);
 
-    // call the energy function
-    power.powerlib.calcEnergy();
+    // Get the energy from DRAMPower
+    Data::MemoryPowerModel::Energy energy = power.powerlib.getEnergy();
 
-    // Get the energy and power from DRAMPower
-    Data::MemoryPowerModel::Energy energy =
-        power.powerlib.getEnergy();
-    Data::MemoryPowerModel::Power rank_power =
-        power.powerlib.getPower();
+    // The energy components inside the power lib are calculated over
+    // the window so accumulate into the corresponding gem5 stat
+    actEnergy += energy.act_energy * memory.devicesPerRank;
+    preEnergy += energy.pre_energy * memory.devicesPerRank;
+    readEnergy += energy.read_energy * memory.devicesPerRank;
+    writeEnergy += energy.write_energy * memory.devicesPerRank;
+    refreshEnergy += energy.ref_energy * memory.devicesPerRank;
+    actBackEnergy += energy.act_stdby_energy * memory.devicesPerRank;
+    preBackEnergy += energy.pre_stdby_energy * memory.devicesPerRank;
+    actPowerDownEnergy += energy.f_act_pd_energy * memory.devicesPerRank;
+    prePowerDownEnergy += energy.f_pre_pd_energy * memory.devicesPerRank;
+    selfRefreshEnergy += energy.sref_energy * memory.devicesPerRank;
 
-    actEnergy = energy.act_energy * memory.devicesPerRank;
-    preEnergy = energy.pre_energy * memory.devicesPerRank;
-    readEnergy = energy.read_energy * memory.devicesPerRank;
-    writeEnergy = energy.write_energy * memory.devicesPerRank;
-    refreshEnergy = energy.ref_energy * memory.devicesPerRank;
-    actBackEnergy = energy.act_stdby_energy * memory.devicesPerRank;
-    preBackEnergy = energy.pre_stdby_energy * memory.devicesPerRank;
-    actPowerDownEnergy = energy.f_act_pd_energy * memory.devicesPerRank;
-    prePowerDownEnergy = energy.f_pre_pd_energy * memory.devicesPerRank;
-    selfRefreshEnergy = energy.sref_energy * memory.devicesPerRank;
-    totalEnergy = energy.total_energy * memory.devicesPerRank;
-    averagePower = rank_power.average_power * memory.devicesPerRank;
+    // Accumulate window energy into the total energy.
+    totalEnergy += energy.window_energy * memory.devicesPerRank;
+    // Average power must not be accumulated but calculated over the time
+    // since last stats reset. SimClock::Frequency is tick period not tick
+    // frequency.
+    //              energy (pJ)     1e-9
+    // power (mW) = ----------- * ----------
+    //              time (tick)   tick_frequency
+    averagePower = (totalEnergy.value() /
+                    (curTick() - memory.lastStatsResetTick)) *
+                    (SimClock::Frequency / 1000000000.0);
 }
 
 void
 DRAMCtrl::Rank::computeStats()
 {
-    DPRINTF(DRAM,"Computing final stats\n");
-
-    // Force DRAM power to update counters based on time spent in
-    // current state up to curTick()
-    cmdList.push_back(Command(MemCommand::NOP, 0, curTick()));
+    DPRINTF(DRAM,"Computing stats due to a dump callback\n");
 
     // Update the stats
     updatePowerStats();
@@ -2283,6 +2286,16 @@ DRAMCtrl::Rank::computeStats()
     // final update of power state times
     pwrStateTime[pwrState] += (curTick() - pwrStateTick);
     pwrStateTick = curTick();
+
+}
+
+void
+DRAMCtrl::Rank::resetStats() {
+    // The only way to clear the counters in DRAMPower is to call
+    // calcWindowEnergy function as that then calls clearCounters. The
+    // clearCounters method itself is private.
+    power.powerlib.calcWindowEnergy(divCeil(curTick(), memory.tCK) -
+                                    memory.timeStampOffset);
 
 }
 
@@ -2355,6 +2368,7 @@ DRAMCtrl::Rank::regStats()
         .desc("Total Idle time Per DRAM Rank");
 
     registerDumpCallback(new RankDumpCallback(this));
+    registerResetCallback(new RankResetCallback(this));
 }
 void
 DRAMCtrl::regStats()
@@ -2366,6 +2380,8 @@ DRAMCtrl::regStats()
     for (auto r : ranks) {
         r->regStats();
     }
+
+    registerResetCallback(new MemResetCallback(this));
 
     readReqs
         .name(name() + ".readReqs")
@@ -2672,9 +2688,11 @@ DRAMCtrl::allRanksDrained() const
     // true until proven false
     bool all_ranks_drained = true;
     for (auto r : ranks) {
-        // then verify that the power state is IDLE
-        // ensuring all banks are closed and rank is not in a low power state
-        all_ranks_drained = r->inPwrIdleState() && all_ranks_drained;
+        // then verify that the power state is IDLE ensuring all banks are
+        // closed and rank is not in a low power state. Also verify that rank
+        // is idle from a refresh point of view.
+        all_ranks_drained = r->inPwrIdleState() && r->inRefIdleState() &&
+            all_ranks_drained;
     }
     return all_ranks_drained;
 }

@@ -52,7 +52,7 @@ WARNFLAGS := -W -pedantic-errors -Wextra -Werror \
              -Wcast-align -Wconversion -Wall -Werror
 
 # Sum up the flags.
-CXXFLAGS := -O ${WARNFLAGS} ${DBGCXXFLAGS} ${OPTCXXFLAGS} -std=c++98
+CXXFLAGS := -O ${WARNFLAGS} ${DBGCXXFLAGS} ${OPTCXXFLAGS} -std=c++0x
 
 DRAMPOWER_PATH ?= ../..
 MYPATH := ${DRAMPOWER_PATH}/test/libdrampowertest
@@ -60,6 +60,7 @@ USE_XERCES ?= 1
 
 # Name of the generated binary.
 BINARY := ${MYPATH}/library_test
+BINARY2 := ${MYPATH}/window_example
 
 ifeq ($(USE_XERCES),1)
 	LIBS := -lxerces-c -ldrampowerxml -ldrampower
@@ -69,14 +70,17 @@ endif
 
 all:
 	g++ ${MYPATH}/lib_test.cc ${CXXFLAGS} -iquote ${DRAMPOWER_PATH}/src -DUSE_XERCES=${USE_XERCES} -L${DRAMPOWER_PATH}/src/ ${LIBS} -o $(BINARY)
+	g++ ${MYPATH}/window_example.cc ${CXXFLAGS} -iquote ${DRAMPOWER_PATH}/src -DUSE_XERCES=${USE_XERCES} -L${DRAMPOWER_PATH}/src/ ${LIBS} -o $(BINARY2)
 
 clean:
 	rm -f $(BINARY)
+	rm -f $(BINARY2)
 
 coverageclean:
 	$(RM) lib_test.gcno lib_test.gcda
 
 test: all
-	./$(BINARY) ${DRAMPOWER_PATH}/memspecs/MICRON_1Gb_DDR2-1066_16bit_H.xml
+	./$(BINARY)  ${DRAMPOWER_PATH}/memspecs/MICRON_1Gb_DDR2-1066_16bit_H.xml
+	./$(BINARY2) ${DRAMPOWER_PATH}/memspecs/MICRON_1Gb_DDR2-1066_16bit_H.xml
 
 .PHONY: clean test

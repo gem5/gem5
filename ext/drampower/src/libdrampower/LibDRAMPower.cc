@@ -31,7 +31,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Matthias Jung, Omar Naji
+ * Authors: Matthias Jung
+ *          Omar Naji
+ *          Subash Kannoth
+ *          Éder F. Zulian
+ *          Felipe S. Prado
  *
  */
 
@@ -41,8 +45,19 @@ using namespace Data;
 
 libDRAMPower::libDRAMPower(const MemorySpecification& memSpec, bool includeIoAndTermination) :
   memSpec(memSpec),
-  counters(CommandAnalysis(memSpec.memArchSpec.nbrOfBanks)),
-  includeIoAndTermination(includeIoAndTermination)
+  counters(memSpec),
+  includeIoAndTermination(includeIoAndTermination),
+  mpm(MemoryPowerModel())
+{
+    MemBankWiseParams p (100,100,false,0,false,static_cast<unsigned>(memSpec.memArchSpec.nbrOfBanks));
+    libDRAMPower DRAMPower = libDRAMPower(memSpec, 0, p);
+}
+
+libDRAMPower::libDRAMPower(const MemorySpecification& memSpec, bool includeIoAndTermination, const Data::MemBankWiseParams& bwPowerParams) :
+  memSpec(memSpec),
+  counters(CommandAnalysis(memSpec)),
+  includeIoAndTermination(includeIoAndTermination),
+  bwPowerParams(bwPowerParams)
 {
 }
 
@@ -56,16 +71,26 @@ void libDRAMPower::doCommand(MemCommand::cmds type, int bank, int64_t timestamp)
   cmdList.push_back(cmd);
 }
 
-void libDRAMPower::updateCounters(bool lastUpdate)
+void libDRAMPower::updateCounters(bool lastUpdate, int64_t timestamp)
 {
-  counters.getCommands(memSpec, cmdList, lastUpdate);
+  counters.getCommands(cmdList, lastUpdate, timestamp);
   cmdList.clear();
 }
 
 void libDRAMPower::calcEnergy()
 {
-  mpm.power_calc(memSpec, counters, includeIoAndTermination);
+  updateCounters(true);
+  mpm.power_calc(memSpec, counters, includeIoAndTermination, bwPowerParams);
 }
+
+void libDRAMPower::calcWindowEnergy(int64_t timestamp)
+{
+  doCommand(MemCommand::NOP, 0, timestamp);
+  updateCounters(false, timestamp);
+  mpm.power_calc(memSpec, counters, includeIoAndTermination, bwPowerParams);
+  clearCounters(timestamp);
+}
+
 
 void libDRAMPower::clearState()
 {

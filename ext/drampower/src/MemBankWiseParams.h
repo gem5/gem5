@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2012-2014, TU Delft
  * Copyright (c) 2012-2014, TU Eindhoven
- * Copyright (c) 2012-2014, TU Kaiserslautern
+ * Copyright (c) 2012-2016, TU Kaiserslautern
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,51 +31,49 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Karthik Chandrasekar, Sven Goossens
+ * Authors: Subash Kannoth, Matthias Jung, Eder Zulian
  *
  */
+#ifndef MEMBANKWISEPARAMS_H
+#define MEMBANKWISEPARAMS_H
 
 #include <stdint.h>
-
-#include "Parametrisable.h"
+#include <vector>
+#include <algorithm>
+#include <numeric>
 
 namespace Data {
-class MemTimingSpec : public virtual Parametrisable {
- public:
-  MemTimingSpec();
-  void processParameters();
+  class MemBankWiseParams {
+    public:
+      // Set of possible PASR modes
+      enum pasrModes{
+        PASR_0,
+        PASR_1,
+        PASR_2,
+        PASR_3,
+        PASR_4,
+        PASR_5,
+        PASR_6,
+        PASR_7
+      };
+      // List of active banks under the specified PASR mode
+      std::vector<unsigned> activeBanks;
+      // ACT Standby power factor
+      int64_t bwPowerFactRho;
+      // Self-Refresh power factor( true : Bankwise mode)
+      int64_t bwPowerFactSigma;
+      // Bankwise or Normal mode
+      bool bwMode;
+      // Wherther PASR is enabled ( true : enabled )
+      bool flgPASR;
+      //Default constructor
+      MemBankWiseParams();
+      MemBankWiseParams(int64_t factRho, int64_t factSigma,
+                        bool hasPASR, int64_t pasrMode,
+                        bool opMode, unsigned nbrofBanks);
 
-  double clkMhz;
-  int64_t RC;
-  int64_t RCD;
-  int64_t CCD;
-  int64_t CCD_S;
-  int64_t CCD_L;
-  int64_t RRD;
-  int64_t RRD_S;
-  int64_t RRD_L;
-  int64_t FAW;
-  int64_t TAW;
-  int64_t WTR;
-  int64_t WTR_S;
-  int64_t WTR_L;
-  int64_t REFI;
-  int64_t RL;
-  int64_t RP;
-  int64_t RFC;
-  int64_t REFB;
-  int64_t RAS;
-  int64_t WL;
-  int64_t AL;
-  int64_t DQSCK;
-  int64_t RTP;
-  int64_t WR;
-  int64_t XP;
-  int64_t XPDLL;
-  int64_t XS;
-  int64_t XSDLL;
-  int64_t CKE;
-  int64_t CKESR;
-  double   clkPeriod;
-};
+      bool isBankActiveInPasr(const unsigned bankIdx) const;
+  };
 }
+
+#endif // MEMBANKWISEPARAMS_H

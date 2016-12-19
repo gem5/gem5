@@ -31,7 +31,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Matthias Jung, Omar Naji
+ * Authors: Matthias Jung
+ *          Omar Naji
+ *          Subash Kannoth
+ *          Éder F. Zulian
+ *          Felipe S. Prado
  *
  */
 
@@ -44,23 +48,22 @@
 #include "CommandAnalysis.h"
 #include "MemoryPowerModel.h"
 #include "MemCommand.h"
+#include "MemBankWiseParams.h"
+
 
 class libDRAMPower {
  public:
   libDRAMPower(const Data::MemorySpecification& memSpec, bool includeIoAndTermination);
+  libDRAMPower(const Data::MemorySpecification& memSpec, bool includeIoAndTermination,const Data::MemBankWiseParams& bwPowerParams);
   ~libDRAMPower();
 
   void doCommand(Data::MemCommand::cmds type,
                  int                    bank,
                  int64_t                timestamp);
 
-  void updateCounters(bool lastUpdate);
-
-  void clearCounters(int64_t timestamp);
-
-  void clearState();
-
   void calcEnergy();
+
+  void calcWindowEnergy(int64_t timestamp);
 
   const Data::MemoryPowerModel::Energy& getEnergy() const;
   const Data::MemoryPowerModel::Power& getPower() const;
@@ -68,11 +71,19 @@ class libDRAMPower {
   // list of all commands
   std::vector<Data::MemCommand> cmdList;
  private:
+  void updateCounters(bool lastUpdate, int64_t timestamp = 0);
+
+  void clearCounters(int64_t timestamp);
+
+  void clearState();
+
   Data::MemorySpecification memSpec;
  public:
   Data::CommandAnalysis counters;
  private:
   bool includeIoAndTermination;
+  bool bankwiseMode;
+  Data:: MemBankWiseParams bwPowerParams;
   // Object of MemoryPowerModel which contains the results
   // Energies(pJ) stored in energy, Powers(mW) stored in power. Number of
   // each command stored in timings.

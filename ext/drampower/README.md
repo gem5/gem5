@@ -10,7 +10,7 @@ The master branch of the repository should be regarded as the bleeding-edge vers
 
 ## 1. Installation
 
-Clone the repository, or download the zip file of the release you would like to use. The source code is available in src folder. src/cli/drampower.cc file gives the user interface, where the user can specify the memory to be employed and the command/transaction trace to be analyzed. To build, use:
+Clone the repository, or download the zip file of the release you would like to use. The source code is available in src folder. [drampower.cc](src/cli/drampower.cc) file gives the user interface, where the user can specify the memory to be employed and the command/transaction trace to be analyzed. To build, use:
 ```bash
 make -j4
 ```
@@ -36,7 +36,7 @@ An example is given in ```traces/commands.trace```
 
 The format it uses is: ```<timestamp>,<command>,<bank>```.
 For example, "500,ACT,2", where ACT is the command and 2 is the bank. Timestamp is in clock cycles (cc), the list of supported commands is
-mentioned in src/MemCommand.h and the bank is the target bank number. For non-bank-specific commands, bank can be set to 0. Rank need not be
+mentioned in [MemCommand.h](src/MemCommand.h) and the bank is the target bank number. For non-bank-specific commands, bank can be set to 0. Rank need not be
 specified. The timing correctness of the trace is not verified by the tool and is assumed to be accurate. However, warning messages are provided, to identify if the memory or bank state is inconsistent in the trace. A sample command trace is provided in the traces/ folder.
 
 ### Transaction Traces
@@ -53,7 +53,7 @@ Four sample MediaBench application transaction traces have been provided. The Me
 
 ## 5. Usage
 
-src/cli/drampower.cc is the main interface file, which accepts user inputs to specify memory to be employed and the command or transaction trace to be analyzed. If the transaction trace (DRAM command scheduler) is being used, the users can specify the degree of bank interleaving required, the request size and the use of power-down or self-refresh options. Also, for DDR4 memories bank group interleaving can be specified. Dual-rank DRAMs are not yet supported by the command scheduler. Note: Speculative use of power-down or self-refresh modes will increase the trace length due to the power-up latencies of these power-saving modes.
+[drampower.cc](src/cli/drampower.cc) is the main interface file, which accepts user inputs to specify memory to be employed and the command or transaction trace to be analyzed. If the transaction trace (DRAM command scheduler) is being used, the users can specify the degree of bank interleaving required, the request size and the use of power-down or self-refresh options. Also, for DDR4 memories bank group interleaving can be specified. Dual-rank DRAMs are not yet supported by the command scheduler. Note: Speculative use of power-down or self-refresh modes will increase the trace length due to the power-up latencies of these power-saving modes.
 
 To use DRAMPower at the command-level (command trace), after make, use the following:
 ```bash
@@ -108,46 +108,9 @@ To include these XMLs in your simulations, simply use them as the target memory.
 ## 8. Example Usage
 
 An example of using this tool is provided below. To compile the example,
-use the Makefile and make sure the Gcc and Xerces-c are installed. Then, run:
+use the Makefile and make sure the gcc and Xerces-c are installed. Then, run:
 ```
 make -j4
-```
-
-This should show the following compilation message on the screen:
-```
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/xmlparser/MemSpecParser.d -iquote src -o src/xmlparser/MemSpecParser.o -c src/xmlparser/MemSpecParser.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/xmlparser/XMLHandler.d -iquote src -o src/xmlparser/XMLHandler.o -c src/xmlparser/XMLHandler.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/xmlparser/XMLParser.d -iquote src -o src/xmlparser/XMLParser.o -c src/xmlparser/XMLParser.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/CmdScheduler.d -iquote src -o src/CmdScheduler.o -c src/CmdScheduler.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/CommandAnalysis.d -iquote src -o src/CommandAnalysis.o -c src/CommandAnalysis.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/MemArchitectureSpec.d -iquote src -o src/MemArchitectureSpec.o -c src/MemArchitectureSpec.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/MemCommand.d -iquote src -o src/MemCommand.o -c src/MemCommand.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/MemoryPowerModel.d -iquote src -o src/MemoryPowerModel.o -c src/MemoryPowerModel.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/MemorySpecification.d -iquote src -o src/MemorySpecification.o -c src/MemorySpecification.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/MemPowerSpec.d -iquote src -o src/MemPowerSpec.o -c src/MemPowerSpec.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/MemTimingSpec.d -iquote src -o src/MemTimingSpec.o -c src/MemTimingSpec.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/Parameter.d -iquote src -o src/Parameter.o -c src/Parameter.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/Parametrisable.d -iquote src -o src/Parametrisable.o -c src/Parametrisable.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/TraceParser.d -iquote src -o src/TraceParser.o -c src/TraceParser.cc
-g++ -O -W -pedantic-errors -Wextra -Werror -Wformat -Wformat-nonliteral -Wpointer-arith -Wcast-align -Wconversion  -g  -std=c++98 -MMD -MF src/libdrampower/LibDRAMPower.d -iquote src -o src/libdrampower/LibDRAMPower.o -c src/libdrampower/LibDRAMPower.cc
-ar -cvr src/libdrampowerxml.a src/xmlparser/MemSpecParser.o src/xmlparser/XMLHandler.o src/xmlparser/XMLParser.o
-a - src/xmlparser/MemSpecParser.o
-a - src/xmlparser/XMLHandler.o
-a - src/xmlparser/XMLParser.o
-g++ -Wall -o drampower src/xmlparser/MemSpecParser.o src/xmlparser/XMLHandler.o src/xmlparser/XMLParser.o src/CmdScheduler.o src/CommandAnalysis.o src/MemArchitectureSpec.o src/MemCommand.o src/MemoryPowerModel.o src/MemorySpecification.o src/MemPowerSpec.o src/MemTimingSpec.o src/Parameter.o src/Parametrisable.o src/TraceParser.o -L/usr/lib -lxerces-c
-ar -cvr src/libdrampower.a src/CmdScheduler.o src/CommandAnalysis.o src/MemArchitectureSpec.o src/MemCommand.o src/MemoryPowerModel.o src/MemorySpecification.o src/MemPowerSpec.o src/MemTimingSpec.o src/Parameter.o src/Parametrisable.o src/TraceParser.o src/libdrampower/LibDRAMPower.o
-a - src/CmdScheduler.o
-a - src/CommandAnalysis.o
-a - src/MemArchitectureSpec.o
-a - src/MemCommand.o
-a - src/MemoryPowerModel.o
-a - src/MemorySpecification.o
-a - src/MemPowerSpec.o
-a - src/MemTimingSpec.o
-a - src/Parameter.o
-a - src/Parametrisable.o
-a - src/TraceParser.o
-a - src/libdrampower/LibDRAMPower.o
 ```
 After this, run with the command trace or the transaction trace, as described before:
 ```
@@ -157,62 +120,61 @@ The output should be something like this:
 
 ```
 * Parsing memspecs/MICRON_1Gb_DDR3-1066_8bit_G.xml
-* Analysis start time: Thu Nov 14 01:44:24 2013
+* Analysis start time: Thu Aug  4 15:43:52 2016
 * Analyzing the input trace
-* Analysis End Time: Thu Nov 14 01:44:26 2013
-* Power Computation Start time: Thu Nov 14 01:44:26 2013
 * Trace Details:
-Number of Activates: 96984
-Number of Reads: 67179
-Number of Writes: 29805
-Number of Precharges: 96984
-Number of Refreshes: 13168
-Number of Active Cycles: 2519793
-  Number of Active Idle Cycles: 196851
-  Number of Active Power-Up Cycles: 0
-    Number of Auto-Refresh Active cycles during Self-Refresh Power-Up: 0
-Number of Precharged Cycles: 52261474
-  Number of Precharged Idle Cycles: 51649664
-  Number of Precharged Power-Up Cycles: 0
-    Number of Auto-Refresh Precharged cycles during Self-Refresh Power-Up: 0
-  Number of Self-Refresh Power-Up Cycles: 0
-Total Idle Cycles (Active + Precharged): 51846515
-Number of Power-Downs: 0
-  Number of Active Fast-exit Power-Downs: 0
-  Number of Active Slow-exit Power-Downs: 0
-  Number of Precharged Fast-exit Power-Downs: 0
-  Number of Precharged Slow-exit Power-Downs: 0
-Number of Power-Down Cycles: 0
-  Number of Active Fast-exit Power-Down Cycles: 0
-  Number of Active Slow-exit Power-Down Cycles: 0
-    Number of Auto-Refresh Active cycles during Self-Refresh: 0
-  Number of Precharged Fast-exit Power-Down Cycles: 0
-  Number of Precharged Slow-exit Power-Down Cycles: 0
-    Number of Auto-Refresh Precharged cycles during Self-Refresh: 0
-Number of Auto-Refresh Cycles: 776912
-Number of Self-Refreshes: 0
-Number of Self-Refresh Cycles: 0
+
+#ACT commands: 96984
+#RD + #RDA commands: 67179
+#WR + #WRA commands: 29805
+#PRE (+ PREA) commands: 96984
+#REF commands: 13168
+#Active Cycles: 2519793
+  #Active Idle Cycles: 196851
+  #Active Power-Up Cycles: 0
+    #Auto-Refresh Active cycles during Self-Refresh Power-Up: 0
+#Precharged Cycles: 52261474
+  #Precharged Idle Cycles: 51649629
+  #Precharged Power-Up Cycles: 0
+    #Auto-Refresh Precharged cycles during Self-Refresh Power-Up: 0
+  #Self-Refresh Power-Up Cycles: 0
+Total Idle Cycles (Active + Precharged): 51846480
+#Power-Downs: 0
+  #Active Fast-exit Power-Downs: 0
+  #Active Slow-exit Power-Downs: 0
+  #Precharged Fast-exit Power-Downs: 0
+  #Precharged Slow-exit Power-Downs: 0
+#Power-Down Cycles: 0
+  #Active Fast-exit Power-Down Cycles: 0
+  #Active Slow-exit Power-Down Cycles: 0
+    #Auto-Refresh Active cycles during Self-Refresh: 0
+  #Precharged Fast-exit Power-Down Cycles: 0
+  #Precharged Slow-exit Power-Down Cycles: 0
+    #Auto-Refresh Precharged cycles during Self-Refresh: 0
+#Auto-Refresh Cycles: 776912
+#Self-Refreshes: 0
+#Self-Refresh Cycles: 0
 ----------------------------------------
 Total Trace Length (clock cycles): 54781267
 ----------------------------------------
 
 * Trace Power and Energy Estimates:
+
 ACT Cmd Energy: 109175234.52 pJ
 PRE Cmd Energy: 47764165.10 pJ
 RD Cmd Energy: 49155365.85 pJ
-WR Cmd Energy: 23486116.32 pJ
-RD I/O Energy: 22249684.80 pJ
-WR Termination Energy: 50549280.00 pJ
+WR Cmd Energy: 23486116.32 pJRD I/O Energy: 20872124.58 pJ
+WR Termination Energy: 47419587.24 pJ
 ACT Stdby Energy: 283653996.25 pJ
   Active Idle Energy: 22159587.24 pJ
   Active Power-Up Energy: 0.00 pJ
     Active Stdby Energy during Auto-Refresh cycles in Self-Refresh Power-Up: 0.00 pJ
 PRE Stdby Energy: 5147706163.23 pJ
-  Precharge Idle Energy: 5087443452.16 pJ
+  Precharge Idle Energy: 5087440004.69 pJ
   Precharged Power-Up Energy: 0.00 pJ
     Precharge Stdby Energy during Auto-Refresh cycles in Self-Refresh Power-Up: 0.00 pJ
   Self-Refresh Power-Up Energy: 0.00 pJ
-Total Idle Energy (Active + Precharged): 5109603039.40 pJ
+Total Idle Energy (Active + Precharged): 5109599591.93 pJ
 Total Power-Down Energy: 0.00 pJ
   Fast-Exit Active Power-Down Energy: 0.00 pJ
   Slow-Exit Active Power-Down Energy: 0.00 pJ
@@ -223,11 +185,11 @@ Total Power-Down Energy: 0.00 pJ
 Auto-Refresh Energy: 262371782.36 pJ
 Self-Refresh Energy: 0.00 pJ
 ----------------------------------------
-Total Trace Energy: 5996111788.44 pJ
-Average Power: 58.34 mW
+Total Trace Energy: 5991604535.46 pJ
+Average Power: 58.30 mW
 ----------------------------------------
-* Power Computation End time: Thu Nov 14 01:44:27 2013
-* Total Simulation time: 3.51 seconds
+* Power Computation End time: Thu Aug  4 15:43:59 2016
+* Total Simulation time: 7 seconds
 *
 ```
 
@@ -242,13 +204,16 @@ It also reports the simulation start/end times and the total simulation time in 
 ## 9. DRAMPower Library
 
 The DRAMPower tool has an additional feature and can be used as a library.
-In order to use the library run "make lib", include src/libdrampower/LibDRAMPower.h in your project and
+In order to use the library run "make lib", include [LibDRAMPower.h](src/libdrampower/LibDRAMPower.h) in your project and
 link the file src/libdrampower.a with your project.
-An example for the usuage of the library can be found in the folder test/libdrampowertest/lib_test.cc
+Examples for the usage of the library are [lib_test.cc](test/libdrampowertest/lib_test.cc) and [window_example.cc](test/libdrampowertest/window_example.cc).
 
 ## 10. Authors & Acknowledgment
 
-The tool is based on the DRAM power model developed jointly by the Computer Engineering Research Group at TU Delft and the Electronic Systems Group at TU Eindhoven and verified by the Microelectronic System Design Research Group at TU Kaiserslautern with equivalent circuit-level simulations. This tool has been developed by Karthik Chandrasekar with Yonghui Li under the supervision of Dr. Benny Akesson and Prof. Kees Goossens. The IO and Termination Power measures have been employed from Micron's DRAM Power Calculator. If you decide to use DRAMPower in your research, please cite one of the following references:
+The tool is based on the DRAM power model developed jointly by the Computer Engineering Research Group at TU Delft and the Electronic Systems Group at TU Eindhoven
+and verified by the Microelectronic System Design Research Group at TU Kaiserslautern with equivalent circuit-level simulations. This tool has been developed by
+Karthik Chandrasekar with Yonghui Li under the supervision of Dr. Benny Akesson and Prof. Kees Goossens. The IO and Termination Power measures have been employed
+from Micron's DRAM Power Calculator. If you decide to use DRAMPower in your research, please cite one of the following references:
 
 **To cite the DRAMPower Tool:**
 ```
