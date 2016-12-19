@@ -439,8 +439,6 @@ class BaseXBar : public MemObject
 
     BaseXBar(const BaseXBarParams *p);
 
-    virtual ~BaseXBar();
-
     /**
      * Stats for transaction distribution and data passing through the
      * crossbar. The transaction distribution is globally counting
@@ -455,6 +453,8 @@ class BaseXBar : public MemObject
     Stats::Vector2d pktSize;
 
   public:
+
+    virtual ~BaseXBar();
 
     virtual void init();
 
