@@ -42,7 +42,7 @@ import os
 import m5
 from m5.objects import *
 from m5.util import addToPath
-from m5.internal.stats import periodicStatDump
+from m5.stats import periodicStatDump
 
 addToPath('../')
 from common import MemConfig

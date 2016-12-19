@@ -30,9 +30,12 @@
 import m5
 
 from m5 import internal
-from m5.internal.stats import schedStatEvent as schedEvent
 from m5.objects import Root
 from m5.util import attrdict, fatal
+
+# Stat exports
+from m5.internal.stats import schedStatEvent as schedEvent
+from m5.internal.stats import periodicStatDump
 
 outputList = []
 def initText(filename, desc=True):
