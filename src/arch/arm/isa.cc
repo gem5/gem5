@@ -211,9 +211,7 @@ ISA::ISA(Params *p)
       pmu(p->pmu),
       lookUpMiscReg(NUM_MISCREGS, {0,0})
 {
-    SCTLR sctlr;
-    sctlr = 0;
-    miscRegs[MISCREG_SCTLR_RST] = sctlr;
+    miscRegs[MISCREG_SCTLR_RST] = 0;
 
     // Hook up a dummy device if we haven't been configured with a
     // real PMU. By using a dummy device, we don't need to check that
@@ -432,12 +430,14 @@ ISA::clear64(const ArmISAParams *p)
     // Initialize other control registers
     miscRegs[MISCREG_MPIDR_EL1] = 0x80000000;
     if (haveSecurity) {
-        miscRegs[MISCREG_SCTLR_EL3] = 0x30c50870;
+        miscRegs[MISCREG_SCTLR_EL3] = 0x30c50830;
         miscRegs[MISCREG_SCR_EL3]   = 0x00000030;  // RES1 fields
     } else if (haveVirtualization) {
-        miscRegs[MISCREG_SCTLR_EL2] = 0x30c50870;
+        // also  MISCREG_SCTLR_EL2 (by mapping)
+        miscRegs[MISCREG_HSCTLR] = 0x30c50830;
     } else {
-        miscRegs[MISCREG_SCTLR_EL1] = 0x30c50870;
+        // also  MISCREG_SCTLR_EL1 (by mapping)
+        miscRegs[MISCREG_SCTLR_NS] = 0x30d00800 | 0x00050030; // RES1 | init
         // Always non-secure
         miscRegs[MISCREG_SCR_EL3] = 1;
     }
@@ -491,12 +491,9 @@ ISA::readMiscRegNoEffect(int misc_reg) const
                                                 // registers are left unchanged
     MiscReg val;
 
-    if (lookUpMiscReg[flat_idx].lower == 0 || flat_idx == MISCREG_SPSR
-            || flat_idx == MISCREG_SCTLR_EL1) {
+    if (lookUpMiscReg[flat_idx].lower == 0 || flat_idx == MISCREG_SPSR) {
         if (flat_idx == MISCREG_SPSR)
             flat_idx = flattenMiscIndex(MISCREG_SPSR);
-        if (flat_idx == MISCREG_SCTLR_EL1)
-            flat_idx = flattenMiscIndex(MISCREG_SCTLR);
         val = miscRegs[flat_idx];
     } else
         if (lookUpMiscReg[flat_idx].upper > 0)
@@ -779,11 +776,11 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_SCTLR:
         return (readMiscRegNoEffect(misc_reg) & 0x72DD39FF) | 0x00C00818;
       case MISCREG_SCTLR_EL1:
-        return (readMiscRegNoEffect(misc_reg) & 0x37DDDBFF) | 0x30D00800;
+        return (readMiscRegNoEffect(misc_reg) & 0x37DDDBBF) | 0x30D00800;
+      case MISCREG_SCTLR_EL2:
       case MISCREG_SCTLR_EL3:
-        return (readMiscRegNoEffect(misc_reg) & 0x32CD183F) | 0x30C50830;
       case MISCREG_HSCTLR:
-        return readMiscRegNoEffect(MISCREG_HSCTLR);
+        return (readMiscRegNoEffect(misc_reg) & 0x32CD183F) | 0x30C50830;
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTHP_CTL:
@@ -817,8 +814,6 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     } else {
         if (flat_idx == MISCREG_SPSR)
             flat_idx = flattenMiscIndex(MISCREG_SPSR);
-        else if (flat_idx == MISCREG_SCTLR_EL1)
-            flat_idx = flattenMiscIndex(MISCREG_SCTLR);
         else
             flat_idx = (lookUpMiscReg[flat_idx].lower > 0) ?
                        lookUpMiscReg[flat_idx].lower : flat_idx;
