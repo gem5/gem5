@@ -191,7 +191,7 @@ DMASequencer::dataCallback(const DataBlock & dblk, const Addr& address)
 void
 DMASequencer::ackCallback(const Addr& address)
 {
-    assert(m_RequestTable.find(addres) != m_RequestTable.end());
+    assert(m_RequestTable.find(address) != m_RequestTable.end());
     issueNext(address);
 }
 
