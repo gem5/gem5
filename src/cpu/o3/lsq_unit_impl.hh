@@ -176,7 +176,7 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
 
     depCheckShift = params->LSQDepCheckShift;
     checkLoads = params->LSQCheckLoads;
-    cachePorts = params->cachePorts;
+    cacheStorePorts = params->cacheStorePorts;
     needsTSO = params->needsTSO;
 
     resetState();
@@ -193,7 +193,7 @@ LSQUnit<Impl>::resetState()
 
     storeHead = storeWBIdx = storeTail = 0;
 
-    usedPorts = 0;
+    usedStorePorts = 0;
 
     retryPkt = NULL;
     memDepViolator = NULL;
@@ -792,7 +792,7 @@ LSQUnit<Impl>::writebackStores()
            storeQueue[storeWBIdx].inst &&
            storeQueue[storeWBIdx].canWB &&
            ((!needsTSO) || (!storeInFlight)) &&
-           usedPorts < cachePorts) {
+           usedStorePorts < cacheStorePorts) {
 
         if (isStoreBlocked) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
@@ -810,7 +810,7 @@ LSQUnit<Impl>::writebackStores()
             continue;
         }
 
-        ++usedPorts;
+        ++usedStorePorts;
 
         if (storeQueue[storeWBIdx].inst->isDataPrefetch()) {
             incrStIdx(storeWBIdx);
@@ -950,8 +950,8 @@ LSQUnit<Impl>::writebackStores()
                 assert(snd_data_pkt);
 
                 // Ensure there are enough ports to use.
-                if (usedPorts < cachePorts) {
-                    ++usedPorts;
+                if (usedStorePorts < cacheStorePorts) {
+                    ++usedStorePorts;
                     if (sendStore(snd_data_pkt)) {
                         storePostSend(snd_data_pkt);
                     } else {
@@ -975,7 +975,7 @@ LSQUnit<Impl>::writebackStores()
     }
 
     // Not sure this should set it to 0.
-    usedPorts = 0;
+    usedStorePorts = 0;
 
     assert(stores >= 0 && storesToWB >= 0);
 }

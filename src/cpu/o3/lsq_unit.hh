@@ -113,7 +113,7 @@ class LSQUnit {
      * @todo: Move the number of used ports up to the LSQ level so it can
      * be shared by all LSQ units.
      */
-    void tick() { usedPorts = 0; }
+    void tick() { usedStorePorts = 0; }
 
     /** Inserts an instruction. */
     void insert(DynInstPtr &inst);
@@ -429,11 +429,11 @@ class LSQUnit {
     int storeTail;
 
     /// @todo Consider moving to a more advanced model with write vs read ports
-    /** The number of cache ports available each cycle. */
-    int cachePorts;
+    /** The number of cache ports available each cycle (stores only). */
+    int cacheStorePorts;
 
-    /** The number of used cache ports in this cycle. */
-    int usedPorts;
+    /** The number of used cache ports in this cycle by stores. */
+    int usedStorePorts;
 
     //list<InstSeqNum> mshrSeqNums;
 
@@ -765,8 +765,6 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         load_inst->memData = new uint8_t[req->getSize()];
     }
 
-    ++usedPorts;
-
     // if we the cache is not blocked, do cache access
     bool completedFirst = false;
     PacketPtr data_pkt = Packet::createRead(req);
@@ -800,6 +798,11 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         state->mainPkt = data_pkt;
     }
 
+    // For now, load throughput is constrained by the number of
+    // load FUs only, and loads do not consume a cache port (only
+    // stores do).
+    // @todo We should account for cache port contention
+    // and arbitrate between loads and stores.
     bool successful_load = true;
     if (!dcachePort->sendTimingReq(fst_data_pkt)) {
         successful_load = false;
@@ -811,7 +814,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         // load will be squashed, so indicate this to the state object.
         // The first packet will return in completeDataAccess and be
         // handled there.
-        ++usedPorts;
+        // @todo We should also account for cache port contention
+        // here.
         if (!dcachePort->sendTimingReq(snd_data_pkt)) {
             // The main packet will be deleted in completeDataAccess.
             state->complete();
