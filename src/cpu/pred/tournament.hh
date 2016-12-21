@@ -57,9 +57,8 @@
  * used in the 21264.  It has a local predictor, which uses a local history
  * table to index into a table of counters, and a global predictor, which
  * uses a global history to index into a table of counters.  A choice
- * predictor chooses between the two.  Only the global history register
- * is speculatively updated, the rest are updated upon branches committing
- * or misspeculating.
+ * predictor chooses between the two.  Both the global history register
+ * and the selected local history are speculatively updated.
  */
 class TournamentBP : public BPredUnit
 {

@@ -222,8 +222,8 @@ TournamentBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 
     assert(local_history_idx < localHistoryTableSize);
 
-    // Commented code is for doing speculative update of counters and
-    // all histories.
+    // Speculative update of the global history and the
+    // selected local history.
     if (choice_prediction) {
         if (global_prediction) {
             updateGlobalHistTaken(tid);
