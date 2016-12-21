@@ -719,7 +719,11 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         }
 
         // Go ahead and compute any PC-relative branches.
-        if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
+        // This includes direct unconditional control and
+        // direct conditional control that is predicted taken.
+        if (inst->isDirectCtrl() &&
+           (inst->isUncondCtrl() || inst->readPredTaken()))
+        {
             ++decodeBranchResolved;
 
             if (!(inst->branchTarget() == inst->readPredTarg())) {
