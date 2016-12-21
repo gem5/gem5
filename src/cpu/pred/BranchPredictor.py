@@ -86,3 +86,19 @@ class BiModeBP(BranchPredictor):
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
+class LTAGE(BranchPredictor):
+    type = 'LTAGE'
+    cxx_class = 'LTAGE'
+    cxx_header = "cpu/pred/ltage.hh"
+
+    logSizeBiMP = Param.Unsigned(14, "Log size of Bimodal predictor in bits")
+    logSizeTagTables = Param.Unsigned(11, "Log size of tag table in LTAGE")
+    logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
+    nHistoryTables = Param.Unsigned(12, "Number of history tables")
+    tagTableCounterBits = Param.Unsigned(3, "Number of tag table counter bits")
+    histBufferSize = Param.Unsigned(2097152,
+            "A large number to track all branch histories(2MEntries default)")
+    minHist = Param.Unsigned(4, "Minimum history size of LTAGE")
+    maxHist = Param.Unsigned(640, "Maximum history size of LTAGE")
+    minTagWidth = Param.Unsigned(7, "Minimum tag size in tag tables")
+
