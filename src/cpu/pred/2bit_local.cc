@@ -123,6 +123,12 @@ LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
     assert(bp_history == NULL);
     unsigned local_predictor_idx;
 
+    // No state to restore, and we do not update on the wrong
+    // path.
+    if (squashed) {
+        return;
+    }
+
     // Update the local predictor.
     local_predictor_idx = getLocalIndex(branch_addr);
 

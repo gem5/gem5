@@ -162,78 +162,69 @@ void
 BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
                  bool squashed)
 {
-    if (bpHistory) {
-        BPHistory *history = static_cast<BPHistory*>(bpHistory);
+    assert(bpHistory);
 
-        unsigned choiceHistoryIdx = ((branchAddr >> instShiftAmt)
-                                    & choiceHistoryMask);
-        unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
-                                    ^ history->globalHistoryReg)
-                                    & globalHistoryMask);
+    BPHistory *history = static_cast<BPHistory*>(bpHistory);
 
-        assert(choiceHistoryIdx < choicePredictorSize);
-        assert(globalHistoryIdx < globalPredictorSize);
+    // We do not update the counters speculatively on a squash.
+    // We just restore the global history register.
+    if (squashed) {
+        globalHistoryReg[tid] = (history->globalHistoryReg << 1) | taken;
+        return;
+    }
 
-        if (history->takenUsed) {
-            // if the taken array's prediction was used, update it
-            if (taken) {
-                takenCounters[globalHistoryIdx].increment();
-            } else {
-                takenCounters[globalHistoryIdx].decrement();
-            }
+    unsigned choiceHistoryIdx = ((branchAddr >> instShiftAmt)
+                                & choiceHistoryMask);
+    unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
+                                ^ history->globalHistoryReg)
+                                & globalHistoryMask);
+
+    assert(choiceHistoryIdx < choicePredictorSize);
+    assert(globalHistoryIdx < globalPredictorSize);
+
+    if (history->takenUsed) {
+        // if the taken array's prediction was used, update it
+        if (taken) {
+            takenCounters[globalHistoryIdx].increment();
         } else {
-            // if the not-taken array's prediction was used, update it
-            if (taken) {
-                notTakenCounters[globalHistoryIdx].increment();
-            } else {
-                notTakenCounters[globalHistoryIdx].decrement();
-            }
+            takenCounters[globalHistoryIdx].decrement();
         }
-
-        if (history->finalPred == taken) {
-            /* If the final prediction matches the actual branch's
-             * outcome and the choice predictor matches the final
-             * outcome, we update the choice predictor, otherwise it
-             * is not updated. While the designers of the bi-mode
-             * predictor don't explicity say why this is done, one
-             * can infer that it is to preserve the choice predictor's
-             * bias with respect to the branch being predicted; afterall,
-             * the whole point of the bi-mode predictor is to identify the
-             * atypical case when a branch deviates from its bias.
-             */
-            if (history->finalPred == history->takenUsed) {
-                if (taken) {
-                    choiceCounters[choiceHistoryIdx].increment();
-                } else {
-                    choiceCounters[choiceHistoryIdx].decrement();
-                }
-            }
+    } else {
+        // if the not-taken array's prediction was used, update it
+        if (taken) {
+            notTakenCounters[globalHistoryIdx].increment();
         } else {
-            // always update the choice predictor on an incorrect prediction
+            notTakenCounters[globalHistoryIdx].decrement();
+        }
+    }
+
+    if (history->finalPred == taken) {
+       /* If the final prediction matches the actual branch's
+        * outcome and the choice predictor matches the final
+        * outcome, we update the choice predictor, otherwise it
+        * is not updated. While the designers of the bi-mode
+        * predictor don't explicity say why this is done, one
+        * can infer that it is to preserve the choice predictor's
+        * bias with respect to the branch being predicted; afterall,
+        * the whole point of the bi-mode predictor is to identify the
+        * atypical case when a branch deviates from its bias.
+        */
+        if (history->finalPred == history->takenUsed) {
             if (taken) {
                 choiceCounters[choiceHistoryIdx].increment();
             } else {
                 choiceCounters[choiceHistoryIdx].decrement();
             }
         }
-
-        if (squashed) {
-            if (taken) {
-                globalHistoryReg[tid] = (history->globalHistoryReg << 1) | 1;
-            } else {
-                globalHistoryReg[tid] = (history->globalHistoryReg << 1);
-            }
-            globalHistoryReg[tid] &= historyRegisterMask;
+    } else {
+        // always update the choice predictor on an incorrect prediction
+        if (taken) {
+            choiceCounters[choiceHistoryIdx].increment();
         } else {
-            delete history;
+            choiceCounters[choiceHistoryIdx].decrement();
         }
     }
-}
 
-void
-BiModeBP::retireSquashed(ThreadID tid, void *bp_history)
-{
-    BPHistory *history = static_cast<BPHistory*>(bp_history);
     delete history;
 }
 

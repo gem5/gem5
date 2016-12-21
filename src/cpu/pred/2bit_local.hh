@@ -94,9 +94,6 @@ class LocalBP : public BPredUnit
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
                 bool squashed);
 
-    void retireSquashed(ThreadID tid, void *bp_history)
-    { assert(bp_history == NULL); }
-
     void squash(ThreadID tid, void *bp_history)
     { assert(bp_history == NULL); }
 

@@ -330,13 +330,9 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
     while (!predHist[tid].empty() &&
            predHist[tid].back().seqNum <= done_sn) {
         // Update the branch predictor with the correct results.
-        if (!predHist[tid].back().wasSquashed) {
-            update(tid, predHist[tid].back().pc,
-                        predHist[tid].back().predTaken,
-                        predHist[tid].back().bpHistory, false);
-        } else {
-            retireSquashed(tid, predHist[tid].back().bpHistory);
-        }
+        update(tid, predHist[tid].back().pc,
+                    predHist[tid].back().predTaken,
+                    predHist[tid].back().bpHistory, false);
 
         predHist[tid].pop_back();
     }
@@ -430,12 +426,23 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                     tid, hist_it->seqNum);
         }
 
-        // Have to get GHR here because the update deletes bpHistory
+        // Get the underlying Global History Register
         unsigned ghr = getGHR(tid, hist_it->bpHistory);
+
+        // There are separate functions for in-order and out-of-order
+        // branch prediction, but not for update. Therefore, this
+        // call should take into account that the mispredicted branch may
+        // be on the wrong path (i.e., OoO execution), and that the counter
+        // counter table(s) should not be updated. Thus, this call should
+        // restore the state of the underlying predictor, for instance the
+        // local/global histories. The counter tables will be updated when
+        // the branch actually commits.
+
+        // Remember the correct direction for the update at commit.
+        pred_hist.front().predTaken = actually_taken;
 
         update(tid, (*hist_it).pc, actually_taken,
                pred_hist.front().bpHistory, true);
-        hist_it->wasSquashed = true;
 
         if (actually_taken) {
             if (hist_it->wasReturn && !hist_it->usedRAS) {

@@ -267,100 +267,77 @@ void
 TournamentBP::update(ThreadID tid, Addr branch_addr, bool taken,
                      void *bp_history, bool squashed)
 {
-    unsigned local_history_idx;
-    unsigned local_predictor_idx M5_VAR_USED;
-    unsigned local_predictor_hist;
+    assert(bp_history);
 
-    // Get the local predictor's current prediction
-    local_history_idx = calcLocHistIdx(branch_addr);
-    local_predictor_hist = localHistoryTable[local_history_idx];
-    local_predictor_idx = local_predictor_hist & localPredictorMask;
+    BPHistory *history = static_cast<BPHistory *>(bp_history);
 
-    if (bp_history) {
-        BPHistory *history = static_cast<BPHistory *>(bp_history);
-        // Update may also be called if the Branch target is incorrect even if
-        // the prediction is correct. In that case do not update the counters.
-        bool historyPred = false;
-        unsigned old_local_pred_index = history->localHistory &
-                localPredictorMask;
-
-        bool old_local_pred_valid = history->localHistory !=
-            invalidPredictorIndex;
-
-        assert(old_local_pred_index < localPredictorSize);
-
-        if (history->globalUsed) {
-           historyPred = history->globalPredTaken;
-        } else {
-           historyPred = history->localPredTaken;
-        }
-        if (historyPred != taken || !squashed) {
-            // Update the choice predictor to tell it which one was correct if
-            // there was a prediction.
-            if (history->localPredTaken != history->globalPredTaken) {
-                 // If the local prediction matches the actual outcome,
-                 // decerement the counter.  Otherwise increment the
-                 // counter.
-                 unsigned choice_predictor_idx =
-                   history->globalHistory & choiceHistoryMask;
-                 if (history->localPredTaken == taken) {
-                     choiceCtrs[choice_predictor_idx].decrement();
-                 } else if (history->globalPredTaken == taken) {
-                     choiceCtrs[choice_predictor_idx].increment();
-                 }
-
-             }
-
-             // Update the counters and local history with the proper
-             // resolution of the branch.  Global history is updated
-             // speculatively and restored upon squash() calls, so it does not
-             // need to be updated.
-             unsigned global_predictor_idx =
-               history->globalHistory & globalHistoryMask;
-             if (taken) {
-                  globalCtrs[global_predictor_idx].increment();
-                  if (old_local_pred_valid) {
-                          localCtrs[old_local_pred_index].increment();
-                  }
-             } else {
-                  globalCtrs[global_predictor_idx].decrement();
-                  if (old_local_pred_valid) {
-                          localCtrs[old_local_pred_index].decrement();
-                  }
-             }
-        }
-        if (squashed) {
-             if (taken) {
-                globalHistory[tid] = (history->globalHistory << 1) | 1;
-                globalHistory[tid] = globalHistory[tid] & historyRegisterMask;
-                if (old_local_pred_valid) {
-                    localHistoryTable[local_history_idx] =
-                     (history->localHistory << 1) | 1;
-                }
-             } else {
-                globalHistory[tid] = (history->globalHistory << 1);
-                globalHistory[tid] = globalHistory[tid] & historyRegisterMask;
-                if (old_local_pred_valid) {
-                     localHistoryTable[local_history_idx] =
-                     history->localHistory << 1;
-                }
-             }
-
-        } else {
-            // We're done with this history, now delete it.
-            delete history;
-        }
-    }
+    unsigned local_history_idx = calcLocHistIdx(branch_addr);
 
     assert(local_history_idx < localHistoryTableSize);
 
+    // Unconditional branches do not use local history.
+    bool old_local_pred_valid = history->localHistory !=
+            invalidPredictorIndex;
 
-}
+    // If this is a misprediction, restore the speculatively
+    // updated state (global history register and local history)
+    // and update again.
+    if (squashed) {
+        // Global history restore and update
+        globalHistory[tid] = (history->globalHistory << 1) | taken;
+        globalHistory[tid] &= historyRegisterMask;
 
-void
-TournamentBP::retireSquashed(ThreadID tid, void *bp_history)
-{
-    BPHistory *history = static_cast<BPHistory *>(bp_history);
+        // Local history restore and update.
+        if (old_local_pred_valid) {
+            localHistoryTable[local_history_idx] =
+                        (history->localHistory << 1) | taken;
+        }
+
+        return;
+    }
+
+    unsigned old_local_pred_index = history->localHistory &
+        localPredictorMask;
+
+    assert(old_local_pred_index < localPredictorSize);
+
+    // Update the choice predictor to tell it which one was correct if
+    // there was a prediction.
+    if (history->localPredTaken != history->globalPredTaken &&
+        old_local_pred_valid)
+    {
+         // If the local prediction matches the actual outcome,
+         // decrement the counter. Otherwise increment the
+         // counter.
+         unsigned choice_predictor_idx =
+           history->globalHistory & choiceHistoryMask;
+         if (history->localPredTaken == taken) {
+             choiceCtrs[choice_predictor_idx].decrement();
+         } else if (history->globalPredTaken == taken) {
+             choiceCtrs[choice_predictor_idx].increment();
+         }
+    }
+
+    // Update the counters with the proper
+    // resolution of the branch. Histories are updated
+    // speculatively, restored upon squash() calls, and
+    // recomputed upon update(squash = true) calls,
+    // so they do not need to be updated.
+    unsigned global_predictor_idx =
+            history->globalHistory & globalHistoryMask;
+    if (taken) {
+          globalCtrs[global_predictor_idx].increment();
+          if (old_local_pred_valid) {
+                 localCtrs[old_local_pred_index].increment();
+          }
+    } else {
+          globalCtrs[global_predictor_idx].decrement();
+          if (old_local_pred_valid) {
+              localCtrs[old_local_pred_index].decrement();
+          }
+    }
+
+    // We're done with this history, now delete it.
     delete history;
 }
 

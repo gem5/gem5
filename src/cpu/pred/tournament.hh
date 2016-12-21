@@ -105,8 +105,6 @@ class TournamentBP : public BPredUnit
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
                 bool squashed);
 
-    void retireSquashed(ThreadID tid, void *bp_history);
-
     /**
      * Restores the global branch history on a squash.
      * @param bp_history Pointer to the BPHistory object that has the

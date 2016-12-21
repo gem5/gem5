@@ -63,7 +63,6 @@ class BiModeBP : public BPredUnit
     void btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history);
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
                 bool squashed);
-    void retireSquashed(ThreadID tid, void *bp_history);
     unsigned getGHR(ThreadID tid, void *bp_history) const;
 
   private:

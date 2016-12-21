@@ -152,6 +152,10 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         DPRINTF(Branch, "Unpredicted branch seen inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
             branch.target, true, inst->id.threadId);
+        // Update after squashing to accomodate O3CPU
+        // using the branch prediction code.
+        branchPredictor.update(inst->id.fetchSeqNum,
+            inst->id.threadId);
         break;
       case BranchData::CorrectlyPredictedBranch:
         /* Predicted taken, was taken */
@@ -164,6 +168,10 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         DPRINTF(Branch, "Branch mis-predicted inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
             branch.target /* Not used */, false, inst->id.threadId);
+        // Update after squashing to accomodate O3CPU
+        // using the branch prediction code.
+        branchPredictor.update(inst->id.fetchSeqNum,
+            inst->id.threadId);
         break;
       case BranchData::BadlyPredictedBranchTarget:
         /* Predicted taken, was taken but to a different target */
