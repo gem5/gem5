@@ -47,10 +47,6 @@ class BaseKvmCPU(BaseCPU):
     abstract = True
 
     @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('#include "cpu/kvm/base.hh"')
-
-    @classmethod
     def export_methods(cls, code):
         code('''
       void dump() const;

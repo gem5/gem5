@@ -99,10 +99,6 @@ class LinuxArmSystem(GenericArmSystem):
     cxx_header = "arch/arm/linux/system.hh"
 
     @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('#include "arch/arm/linux/system.hh"')
-
-    @classmethod
     def export_methods(cls, code):
         code('''void dumpDmesg();''')
 

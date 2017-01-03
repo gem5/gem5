@@ -44,10 +44,6 @@ class System(MemObject):
     system_port = MasterPort("System port")
 
     @classmethod
-    def export_method_cxx_predecls(cls, code):
-        code('#include "sim/system.hh"')
-
-    @classmethod
     def export_methods(cls, code):
         code('''
       Enums::MemoryMode getMemoryMode() const;
