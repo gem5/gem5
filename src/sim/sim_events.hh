@@ -98,22 +98,6 @@ class LocalSimLoopExitEvent : public Event
                                               const std::string &section);
 };
 
-class CountedDrainEvent : public Event
-{
-  private:
-    // Count of how many objects have not yet drained
-    int count;
-
-  public:
-    CountedDrainEvent();
-
-    void process() override;
-
-    void setCount(int _count) { count = _count; }
-
-    int getCount() const { return count; }
-};
-
 //
 // Event class to terminate simulation after 'n' related events have
 // occurred using a shared counter: used to terminate when *all*
