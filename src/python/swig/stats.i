@@ -46,12 +46,6 @@
 #include "sim/stat_register.hh"
 
 namespace Stats {
-template <class T>
-inline T
-cast_info(Info *info)
-{
-    return dynamic_cast<T>(info);
-}
 
 inline FlagsType
 Stats_Info_flags_get(Info *info)
@@ -123,16 +117,6 @@ namespace std {
 }
 
 namespace Stats {
-
-template <class T> T cast_info(Info *info);
-
-%template(dynamic_ScalarInfo) cast_info<ScalarInfo *>;
-%template(dynamic_VectorInfo) cast_info<VectorInfo *>;
-%template(dynamic_DistInfo) cast_info<DistInfo *>;
-%template(dynamic_VectorDistInfo) cast_info<VectorDistInfo *>;
-%template(dynamic_Vector2dInfo) cast_info<Vector2dInfo *>;
-%template(dynamic_FormulaInfo) cast_info<FormulaInfo *>;
-%template(dynamic_SparseHistInfo) cast_info<SparseHistInfo *>;
 
 void initSimStats();
 Output *initText(const std::string &filename, bool desc);

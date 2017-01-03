@@ -49,25 +49,13 @@ def initSimStats():
 names = []
 stats_dict = {}
 stats_list = []
-raw_stats_list = []
 def enable():
     '''Enable the statistics package.  Before the statistics package is
     enabled, all statistics must be created and initialized and once
     the package is enabled, no more statistics can be created.'''
-    __dynamic_cast = []
-    for k, v in internal.stats.__dict__.iteritems():
-        if k.startswith('dynamic_'):
-            __dynamic_cast.append(v)
 
-    for stat in internal.stats.statsList():
-        for cast in __dynamic_cast:
-            val = cast(stat)
-            if val is not None:
-                stats_list.append(val)
-                raw_stats_list.append(val)
-                break
-        else:
-            fatal("unknown stat type %s", stat)
+    global stats_list
+    stats_list = list(internal.stats.statsList())
 
     for stat in stats_list:
         if not stat.check() or not stat.baseCheck():
@@ -116,7 +104,7 @@ def dump():
         if output.valid():
             output.begin()
             for stat in stats_list:
-                output.visit(stat)
+                stat.visit(output)
             output.end()
 
 def reset():
