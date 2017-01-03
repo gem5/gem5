@@ -1,0 +1,137 @@
+#!/usr/bin/env python
+#
+# This file originated from the moz-git-tools repo on GitHub
+# (https://github.com/mozilla/moz-git-tools), which contains the
+# following LICENSE notice:
+#
+# <quote>
+# Except for git-new-workdir, which is covered under GPLv2, the code
+# in this repository is placed into the public domain via CC0.
+#
+# http://creativecommons.org/publicdomain/zero/1.0/legalcode
+# </quote>
+
+r"""Git format-patch to hg importable patch.
+
+(Who knew this was so complicated?)
+
+>>> process(StringIO('From 3ce1ccc06 Mon Sep 17 00:00:00 2001\nFrom: fromuser\nSubject: subject\n\nRest of patch.\nMore patch.\n'))
+'# HG changeset patch\n# User fromuser\n\nsubject\n\nRest of patch.\nMore patch.\n'
+
+>>> process(StringIO('From: fromuser\nSubject: A very long subject line.  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi faucibus, arcu sit amet\n\nRest of patch.\nMore patch.\n'))
+'# HG changeset patch\n# User fromuser\n\nA very long subject line.  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi faucibus, arcu sit amet\n\nRest of patch.\nMore patch.\n'
+
+>>> process(StringIO('From: f\nSubject: =?UTF-8?q?Bug=20655877=20-=20Dont=20treat=20SVG=20text=20frames=20?= =?UTF-8?q?as=20being=20positioned.=20r=3D=3F?=\n\nPatch.'))
+'# HG changeset patch\n# User f\n\nBug 655877 - Dont treat SVG text frames as being positioned. r=?\n\nPatch.'
+"""
+
+# Original author: bholley
+
+import sys
+import re
+import fileinput
+import email, email.parser, email.header, email.utils
+import math
+from cStringIO import StringIO
+from itertools import takewhile
+
+def decode_header(hdr_string):
+  r"""Clean up weird encoding crap.
+
+  >>> clean_header('[PATCH] =?UTF-8?q?Bug=20655877=20r=3D=3F?=')
+  '[PATCH] Bug 655877 r=?'
+  """
+  rv = []
+  hdr = email.header.Header(hdr_string, maxlinelen=float('inf'))
+  for (part, encoding) in email.header.decode_header(hdr):
+    if encoding is None:
+      rv.append(part)
+    else:
+      rv.append(part.decode(encoding).encode('utf-8'))
+  return ' '.join(rv)
+
+def clean_header(hdr_string):
+  r"""Transform a header split over many lines into a header split only where
+  linebreaks are intended.  This is important because hg cares about the first
+  line of the commit message.
+
+  Also clean up weird encoding crap.
+
+  >>> clean_header('Foo\n bar\n baz')
+  'Foo bar baz'
+  >>> clean_header('Foo\n bar\nSpam\nEggs')
+  'Foo bar\nSpam\nEggs'
+  """
+
+  lines = []
+  curline = ''
+  for line in decode_header(hdr_string).split('\n'):
+    if not line.startswith(' '):
+      lines.append(curline)
+      curline = ''
+    curline += line
+  lines.append(curline)
+  return '\n'.join(lines[1:])
+
+def process(git_patch_file):
+  parser = email.parser.Parser()
+  msg = parser.parse(git_patch_file)
+  from_hdr = clean_header(msg['From'])
+  commit_title = clean_header(msg['subject'])
+  if not len(commit_title) or not len(from_hdr):
+    sys.stderr.write("%s does not look like a valid git patch file, skipping\n"
+                     % git_patch_file.name)
+    return
+
+  parsed_from = email.utils.parseaddr(from_hdr)
+  nuke_prefix = r"\[PATCH( \d+/\d+)?\] "
+  match = re.match(nuke_prefix, commit_title)
+  if match:
+    commit_title = commit_title[match.end():]
+
+  patch_body = msg.get_payload()
+
+  # git format-patch wraps the diff (including trailing whitespace):
+  #   ---
+  #   <diff>
+  #   --
+  #   2.0.3
+  # This doesn't hurt parsing the diff at all, but the version number is
+  # nonsense once the git specific items have been stripped
+  patch_body = re.sub(r'--\s?\n[0-9\.]+\n$', '', patch_body)
+
+  return '\n'.join(['# HG changeset patch',
+                    '# User %s <%s>' % parsed_from,
+                    '',
+                    commit_title,
+                    '',
+                    patch_body])
+
+if __name__ == "__main__":
+  if len(sys.argv) > 1 and sys.argv[1] == '--test':
+    import doctest
+    doctest.testmod()
+    sys.exit(0)
+
+  # If there were no arguments, do stdin->stdout.
+  filelist = sys.argv[1:]
+  if not filelist:
+    lines = process(sys.stdin)
+    sys.stdout.writelines(lines)
+    sys.exit(0)
+
+  # Otherwise, we take a list of files.
+  for filename in filelist:
+
+    # Read the lines.
+    f = open(filename, 'r')
+    lines = process(f)
+    f.close()
+
+    # Process.
+
+    if lines:
+      # Write them back to the same file.
+      f = open(filename, 'w')
+      f.writelines(lines)
+      f.close()
