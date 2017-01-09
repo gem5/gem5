@@ -42,6 +42,7 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Andrew Bardsley
+ *          Matthias Jung
  */
 
 /**
@@ -221,8 +222,8 @@ Module::eventLoop()
 
             /* The next event is scheduled in the future, wait until
              *  then or until externalSchedulingEvent */
-            eventLoopEnterEvent.notify(sc_core::sc_time(
-                sc_dt::uint64(wait_period), 0));
+            eventLoopEnterEvent.notify(sc_core::sc_time::from_value(
+                sc_dt::uint64(wait_period)));
 
             return;
         } else if (gem5_time > next_event_time) {
