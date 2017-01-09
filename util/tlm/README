@@ -35,10 +35,26 @@ without python.
 > scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
 > cd util/tlm
 
+Note: For MAC / OSX this command should be used:
+> scons --with-cxx-config --without-python build/ARM/libgem5_opt.dylib
+
 Set a proper LD_LIBRARY_PATH e.g. for bash:
 > export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
 
-Then edit the Makefile to set the paths for SystemC and run make
+or for MAC / OSX:
+> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+Then edit the Makefile to set the paths for SystemC:
+
+    Linux:
+    SYSTEMC_INC = /opt/systemc/include
+    SYSTEMC_LIB = /opt/systemc/lib-linux64
+
+    MAC / OSX:
+    SYSTEMC_INC = /opt/systemc/include
+    SYSTEMC_LIB = /opt/systemc/lib-macosx64
+
+Then run make:
 
 > make
 

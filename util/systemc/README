@@ -32,9 +32,29 @@ needed):
 > cd ../..
 > scons build/ARM/gem5.opt
 > scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
-> cd util/cxx_config
+> cd util/systemc
 
-Then edit Makefile to set the paths for SystemC and run make
+Note: For MAC / OSX this command should be used:
+> scons --with-cxx-config --without-python build/ARM/libgem5_opt.dylib
+
+Set a proper LD_LIBRARY_PATH e.g. for bash:
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+or for MAC / OSX:
+> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+
+
+Then edit the Makefile to set the paths for SystemC, e.g:
+
+    Linux:
+    SYSTEMC_INC = /opt/systemc/include
+    SYSTEMC_LIB = /opt/systemc/lib-linux64
+
+    MAC / OSX:
+    SYSTEMC_INC = /opt/systemc/include
+    SYSTEMC_LIB = /opt/systemc/lib-macosx64
+
+Then run make:
 
 > make
 
@@ -57,3 +77,6 @@ This should print:
 The .ini file can also be read by the Python .ini file reader example:
 
 > ../../build/ARM/gem5.opt ../../configs/example/read_ini.py m5out/config.ini
+
+If you are interested in SystemC Transaction Level Modeling (TLM2) please have
+a look into /util/tlm.
