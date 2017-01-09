@@ -59,6 +59,7 @@ from common.Benchmarks import *
 from common import Simulation
 from common import CacheConfig
 from common import MemConfig
+from common import CpuConfig
 from common.Caches import *
 from common import Options
 
