@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2013,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,9 +52,9 @@ class SysDC64 : public ArmStaticInst
     uint64_t imm;
 
     SysDC64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-            IntRegIndex _base, IntRegIndex _dest, uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass), base(_base), dest(_dest),
-        imm(_imm)
+            IntRegIndex _base, MiscRegIndex miscReg, uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass), base(_base),
+          dest((IntRegIndex)miscReg), imm(_imm)
     {}
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };

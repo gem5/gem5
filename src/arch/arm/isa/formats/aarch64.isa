@@ -350,6 +350,7 @@ namespace Aarch64
                     if (read) {
                         if ((miscReg == MISCREG_DC_CIVAC_Xt) ||
                             (miscReg == MISCREG_DC_CVAC_Xt) ||
+                            (miscReg == MISCREG_DC_IVAC_Xt)  ||
                             (miscReg == MISCREG_DC_ZVA_Xt)) {
                             return new Unknown64(machInst);
                         }
@@ -365,16 +366,26 @@ namespace Aarch64
                                 return new MsrNZCV64(machInst, (IntRegIndex) miscReg, rt);
                         }
                         uint32_t iss = msrMrs64IssBuild(read, op0, op1, crn, crm, op2, rt);
-                        if (miscReg == MISCREG_DC_ZVA_Xt && !read)
-                            return new Dczva(machInst, rt, (IntRegIndex) miscReg, iss);
-
                         if (read) {
                             StaticInstPtr si = new Mrs64(machInst, rt, miscReg, iss);
                             if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
                                 si->setFlag(StaticInst::IsUnverifiable);
                             return si;
                         } else {
-                            return new Msr64(machInst, miscReg, rt, iss);
+                            switch (miscReg) {
+                              case MISCREG_DC_ZVA_Xt:
+                                return new Dczva(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_CVAU_Xt:
+                                return new Dccvau(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_CVAC_Xt:
+                                return new Dccvac(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_CIVAC_Xt:
+                                return new Dccivac(machInst, rt, miscReg, iss);
+                              case MISCREG_DC_IVAC_Xt:
+                                return new Dcivac(machInst, rt, miscReg, iss);
+                              default:
+                                return new Msr64(machInst, miscReg, rt, iss);
+                            }
                         }
                     } else if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
                         std::string full_mnem = csprintf("%s %s",
