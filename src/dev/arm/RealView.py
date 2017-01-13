@@ -955,7 +955,9 @@ Interrupts:
         self.nvmem.port = mem_bus.master
         cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
         cur_sys.atags_addr = 0x8000000
-        cur_sys.load_addr_mask = 0xfffffff
+        # the old load_add_mask 0xfffffff works for 32-bit kernel
+        # but not the 64-bit one. The new value 0x7ffffff works for both
+        cur_sys.load_addr_mask = 0x7ffffff
         cur_sys.load_offset = 0x80000000
 
         #  Setup m5ops. It's technically not a part of the boot
