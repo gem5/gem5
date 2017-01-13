@@ -53,7 +53,8 @@ os_types = { 'alpha' : [ 'linux' ],
                          'android-gingerbread',
                          'android-ics',
                          'android-jellybean',
-                         'android-kitkat' ],
+                         'android-kitkat',
+                         'android-nougat', ],
            }
 
 class CowIdeDisk(IdeDisk):
@@ -347,7 +348,14 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             # release-specific tweaks
             if 'kitkat' in mdesc.os_type():
                 cmdline += " androidboot.hardware=gem5 qemu=1 qemu.gles=0 " + \
-                           "android.bootanim=0"
+                           "android.bootanim=0 "
+            elif 'nougat' in mdesc.os_type():
+                cmdline += " androidboot.hardware=gem5 qemu=1 qemu.gles=0 " + \
+                           "android.bootanim=0 " + \
+                           "vmalloc=640MB " + \
+                           "android.early.fstab=/fstab.gem5 " + \
+                           "androidboot.selinux=permissive " + \
+                           "video=Virtual-1:1920x1080-16"
 
         self.boot_osflags = fillInCmdline(mdesc, cmdline)
 
