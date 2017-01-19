@@ -70,6 +70,8 @@ NetworkInterface::NetworkInterface(const Params *p)
     for (int i = 0; i < m_virtual_networks; i++) {
         m_vc_allocator[i] = 0;
     }
+
+    m_stall_count.resize(m_virtual_networks);
 }
 
 void
@@ -127,6 +129,41 @@ NetworkInterface::addNode(vector<MessageBuffer *>& in,
     }
 }
 
+void
+NetworkInterface::dequeueCallback()
+{
+    // An output MessageBuffer has dequeued something this cycle and there
+    // is now space to enqueue a stalled message. However, we cannot wake
+    // on the same cycle as the dequeue. Schedule a wake at the soonest
+    // possible time (next cycle).
+    scheduleEventAbsolute(clockEdge(Cycles(1)));
+}
+
+void
+NetworkInterface::incrementStats(flit *t_flit)
+{
+    int vnet = t_flit->get_vnet();
+
+    // Latency
+    m_net_ptr->increment_received_flits(vnet);
+    Cycles network_delay =
+        t_flit->get_dequeue_time() - t_flit->get_enqueue_time() - Cycles(1);
+    Cycles src_queueing_delay = t_flit->get_src_delay();
+    Cycles dest_queueing_delay = (curCycle() - t_flit->get_dequeue_time());
+    Cycles queueing_delay = src_queueing_delay + dest_queueing_delay;
+
+    m_net_ptr->increment_flit_network_latency(network_delay, vnet);
+    m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
+
+    if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
+        m_net_ptr->increment_received_packets(vnet);
+        m_net_ptr->increment_packet_network_latency(network_delay, vnet);
+        m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
+    }
+
+    // Hops
+    m_net_ptr->increment_total_hops(t_flit->get_route().hops_traversed);
+}
 
 /*
  * The NI wakeup checks whether there are any ready messages in the protocol
@@ -166,48 +203,50 @@ NetworkInterface::wakeup()
     scheduleOutputLink();
     checkReschedule();
 
-    /*********** Check the incoming flit link **********/
+    // Check if there are flits stalling a virtual channel. Track if a
+    // message is enqueued to restrict ejection to one message per cycle.
+    bool messageEnqueuedThisCycle = checkStallQueue();
 
+    /*********** Check the incoming flit link **********/
     if (inNetLink->isReady(curCycle())) {
         flit *t_flit = inNetLink->consumeLink();
-        bool free_signal = false;
-        if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
-            free_signal = true;
-
-            // enqueue into the protocol buffers
-            outNode_ptr[t_flit->get_vnet()]->enqueue(
-                t_flit->get_msg_ptr(), curTime, cyclesToTicks(Cycles(1)));
-        }
-        // Simply send a credit back since we are not buffering
-        // this flit in the NI
-        Credit *t_credit = new Credit(t_flit->get_vc(), free_signal,
-                                         curCycle());
-        outCreditQueue->insert(t_credit);
-        outCreditLink->
-            scheduleEventAbsolute(clockEdge(Cycles(1)));
-
         int vnet = t_flit->get_vnet();
+        t_flit->set_dequeue_time(curCycle());
 
-        // Update Stats
-
-        // Latency
-        m_net_ptr->increment_received_flits(vnet);
-        Cycles network_delay = curCycle() - t_flit->get_enqueue_time();
-        Cycles queueing_delay = t_flit->get_src_delay();
-
-        m_net_ptr->increment_flit_network_latency(network_delay, vnet);
-        m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
-
+        // If a tail flit is received, enqueue into the protocol buffers if
+        // space is available. Otherwise, exchange non-tail flits for credits.
         if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
-            m_net_ptr->increment_received_packets(vnet);
-            m_net_ptr->increment_packet_network_latency(network_delay, vnet);
-            m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
+            if (!messageEnqueuedThisCycle &&
+                outNode_ptr[vnet]->areNSlotsAvailable(1, curTime)) {
+                // Space is available. Enqueue to protocol buffer.
+                outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
+                                           cyclesToTicks(Cycles(1)));
+
+                // Simply send a credit back since we are not buffering
+                // this flit in the NI
+                sendCredit(t_flit, true);
+
+                // Update stats and delete flit pointer
+                incrementStats(t_flit);
+                delete t_flit;
+            } else {
+                // No space available- Place tail flit in stall queue and set
+                // up a callback for when protocol buffer is dequeued. Stat
+                // update and flit pointer deletion will occur upon unstall.
+                m_stall_queue.push_back(t_flit);
+                m_stall_count[vnet]++;
+
+                auto cb = std::bind(&NetworkInterface::dequeueCallback, this);
+                outNode_ptr[vnet]->registerDequeueCallback(cb);
+            }
+        } else {
+            // Non-tail flit. Send back a credit but not VC free signal.
+            sendCredit(t_flit, false);
+
+            // Update stats and delete flit pointer.
+            incrementStats(t_flit);
+            delete t_flit;
         }
-
-        // Hops
-        m_net_ptr->increment_total_hops(t_flit->get_route().hops_traversed);
-
-        delete t_flit;
     }
 
     /****************** Check the incoming credit link *******/
@@ -220,8 +259,68 @@ NetworkInterface::wakeup()
         }
         delete t_credit;
     }
+
+
+    // It is possible to enqueue multiple outgoing credit flits if a message
+    // was unstalled in the same cycle as a new message arrives. In this
+    // case, we should schedule another wakeup to ensure the credit is sent
+    // back.
+    if (outCreditQueue->getSize() > 0) {
+        outCreditLink->scheduleEventAbsolute(clockEdge(Cycles(1)));
+    }
 }
 
+void
+NetworkInterface::sendCredit(flit *t_flit, bool is_free)
+{
+    Credit *credit_flit = new Credit(t_flit->get_vc(), is_free, curCycle());
+    outCreditQueue->insert(credit_flit);
+}
+
+bool
+NetworkInterface::checkStallQueue()
+{
+    bool messageEnqueuedThisCycle = false;
+    Tick curTime = clockEdge();
+
+    if (!m_stall_queue.empty()) {
+        for (auto stallIter = m_stall_queue.begin();
+             stallIter != m_stall_queue.end(); ) {
+            flit *stallFlit = *stallIter;
+            int vnet = stallFlit->get_vnet();
+
+            // If we can now eject to the protocol buffer, send back credits
+            if (outNode_ptr[vnet]->areNSlotsAvailable(1, curTime)) {
+                outNode_ptr[vnet]->enqueue(stallFlit->get_msg_ptr(), curTime,
+                                           cyclesToTicks(Cycles(1)));
+
+                // Send back a credit with free signal now that the VC is no
+                // longer stalled.
+                sendCredit(stallFlit, true);
+
+                // Update Stats
+                incrementStats(stallFlit);
+
+                // Flit can now safely be deleted and removed from stall queue
+                delete stallFlit;
+                m_stall_queue.erase(stallIter);
+                m_stall_count[vnet]--;
+
+                // If there are no more stalled messages for this vnet, the
+                // callback on it's MessageBuffer is not needed.
+                if (m_stall_count[vnet] == 0)
+                    outNode_ptr[vnet]->unregisterDequeueCallback();
+
+                messageEnqueuedThisCycle = true;
+                break;
+            } else {
+                ++stallIter;
+            }
+        }
+    }
+
+    return messageEnqueuedThisCycle;
+}
 
 // Embed the protocol message into flits
 bool

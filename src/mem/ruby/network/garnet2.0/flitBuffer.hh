@@ -52,6 +52,7 @@ class flitBuffer
     void print(std::ostream& out) const;
     bool isFull();
     void setMaxSize(int maximum);
+    int getSize() const { return m_buffer.size(); }
 
     flit *
     getTopFlit()

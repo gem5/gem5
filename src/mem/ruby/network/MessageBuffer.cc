@@ -60,6 +60,8 @@ MessageBuffer::MessageBuffer(const Params *p)
 
     m_buf_msgs = 0;
     m_stall_time = 0;
+
+    m_dequeue_callback = nullptr;
 }
 
 unsigned int
@@ -241,7 +243,24 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
         m_buf_msgs--;
     }
 
+    // if a dequeue callback was requested, call it now
+    if (m_dequeue_callback) {
+        m_dequeue_callback();
+    }
+
     return delay;
+}
+
+void
+MessageBuffer::registerDequeueCallback(std::function<void()> callback)
+{
+    m_dequeue_callback = callback;
+}
+
+void
+MessageBuffer::unregisterDequeueCallback()
+{
+    m_dequeue_callback = nullptr;
 }
 
 void

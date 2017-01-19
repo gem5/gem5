@@ -51,6 +51,7 @@ class flit
     int get_outport() {return m_outport; }
     int get_size() { return m_size; }
     Cycles get_enqueue_time() { return m_enqueue_time; }
+    Cycles get_dequeue_time() { return m_dequeue_time; }
     int get_id() { return m_id; }
     Cycles get_time() { return m_time; }
     int get_vnet() { return m_vnet; }
@@ -66,6 +67,7 @@ class flit
     void set_vc(int vc) { m_vc = vc; }
     void set_route(RouteInfo route) { m_route = route; }
     void set_src_delay(Cycles delay) { src_delay = delay; }
+    void set_dequeue_time(Cycles time) { m_dequeue_time = time; }
 
     void increment_hops() { m_route.hops_traversed++; }
     void print(std::ostream& out) const;
@@ -103,7 +105,7 @@ class flit
     int m_vc;
     RouteInfo m_route;
     int m_size;
-    Cycles m_enqueue_time, m_time;
+    Cycles m_enqueue_time, m_dequeue_time, m_time;
     flit_type m_type;
     MsgPtr m_msg_ptr;
     int m_outport;

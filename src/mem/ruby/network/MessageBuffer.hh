@@ -102,6 +102,9 @@ class MessageBuffer : public SimObject
     //! removes it from the queue and returns its total delay.
     Tick dequeue(Tick current_time, bool decrement_messages = true);
 
+    void registerDequeueCallback(std::function<void()> callback);
+    void unregisterDequeueCallback();
+
     void recycle(Tick current_time, Tick recycle_latency);
     bool isEmpty() const { return m_prio_heap.size() == 0; }
     bool isStallMapEmpty() { return m_stall_msg_map.size() == 0; }
@@ -132,6 +135,8 @@ class MessageBuffer : public SimObject
     //! Consumer to signal a wakeup(), can be NULL
     Consumer* m_consumer;
     std::vector<MsgPtr> m_prio_heap;
+
+    std::function<void()> m_dequeue_callback;
 
     // use a std::map for the stalled messages as this container is
     // sorted and ensures a well-defined iteration order
