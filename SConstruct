@@ -1502,6 +1502,9 @@ for variant_path in variant_paths:
                 "target ISA combination"
             env['USE_KVM'] = False
 
+    if env['BUILD_GPU']:
+        env.Append(CPPDEFINES=['BUILD_GPU'])
+
     # Warn about missing optional functionality
     if env['USE_KVM']:
         if not main['HAVE_PERF_ATTR_EXCLUDE_HOST']:

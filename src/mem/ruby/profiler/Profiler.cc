@@ -56,7 +56,24 @@
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
+
+/**
+ * the profiler uses GPUCoalescer code even
+ * though the GPUCoalescer is not built for
+ * all ISAs, which can lead to run/link time
+ * errors. here we guard the coalescer code
+ * with ifdefs as there is no easy way to
+ * refactor this code without removing
+ * GPUCoalescer stats from the profiler.
+ *
+ * eventually we should use probe points
+ * here, but until then these ifdefs will
+ * serve.
+ */
+#ifdef BUILD_GPU
 #include "mem/ruby/system/GPUCoalescer.hh"
+#endif
+
 #include "mem/ruby/system/Sequencer.hh"
 
 using namespace std;
@@ -361,10 +378,12 @@ Profiler::collateStats()
             if (seq != NULL) {
                 m_outstandReqHistSeqr.add(seq->getOutstandReqHist());
             }
+#ifdef BUILD_GPU
             GPUCoalescer *coal = ctr->getGPUCoalescer();
             if (coal != NULL) {
                 m_outstandReqHistCoalsr.add(coal->getOutstandReqHist());
             }
+#endif
         }
     }
 
@@ -423,7 +442,7 @@ Profiler::collateStats()
                     }
                 }
             }
-
+#ifdef BUILD_GPU
             GPUCoalescer *coal = ctr->getGPUCoalescer();
             if (coal != NULL) {
                 // add all the latencies
@@ -464,6 +483,7 @@ Profiler::collateStats()
                     }
                 }
             }
+#endif
         }
     }
 }
