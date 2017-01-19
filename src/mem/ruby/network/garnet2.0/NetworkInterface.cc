@@ -159,8 +159,6 @@ NetworkInterface::wakeup()
             msg_ptr = b->peekMsgPtr();
             if (flitisizeMessage(msg_ptr, vnet)) {
                 b->dequeue(curTime);
-            } else {
-                break;
             }
         }
     }
