@@ -57,6 +57,9 @@ MessageBuffer::MessageBuffer(const Params *p)
     m_stall_msg_map.clear();
     m_input_link_id = 0;
     m_vnet_id = 0;
+
+    m_buf_msgs = 0;
+    m_stall_time = 0;
 }
 
 unsigned int
@@ -196,6 +199,8 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
     // Insert the message into the priority heap
     m_prio_heap.push_back(message);
     push_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
+    // Increment the number of messages statistic
+    m_buf_msgs++;
 
     DPRINTF(RubyQueue, "Enqueue arrival_time: %lld, Message: %s\n",
             arrival_time, *(message.get()));
@@ -207,7 +212,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
 }
 
 Tick
-MessageBuffer::dequeue(Tick current_time)
+MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
 {
     DPRINTF(RubyQueue, "Popping\n");
     assert(isReady(current_time));
@@ -219,6 +224,8 @@ MessageBuffer::dequeue(Tick current_time)
     message->updateDelayedTicks(current_time);
     Tick delay = message->getDelayedTicks();
 
+    m_stall_time = curTick() - message->getTime();
+
     // record previous size and time so the current buffer size isn't
     // adjusted until schd cycle
     if (m_time_last_time_pop < current_time) {
@@ -228,6 +235,11 @@ MessageBuffer::dequeue(Tick current_time)
 
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(), greater<MsgPtr>());
     m_prio_heap.pop_back();
+    if (decrement_messages) {
+        // If the message will be removed from the queue, decrement the
+        // number of message in the queue.
+        m_buf_msgs--;
+    }
 
     return delay;
 }
@@ -324,7 +336,9 @@ MessageBuffer::stallMessage(Addr addr, Tick current_time)
     assert(getOffset(addr) == 0);
     MsgPtr message = m_prio_heap.front();
 
-    dequeue(current_time);
+    // Since the message will just be moved to stall map, indicate that the
+    // buffer should not decrement the m_buf_msgs statistic
+    dequeue(current_time, false);
 
     //
     // Note: no event is scheduled to analyze the map at a later time.
@@ -333,6 +347,7 @@ MessageBuffer::stallMessage(Addr addr, Tick current_time)
     //
     (m_stall_msg_map[addr]).push_back(message);
     m_stall_map_size++;
+    m_stall_count++;
 }
 
 void
@@ -362,6 +377,32 @@ MessageBuffer::regStats()
         .name(name() + ".not_avail_count")
         .desc("Number of times this buffer did not have N slots available")
         .flags(Stats::nozero);
+
+    m_buf_msgs
+        .name(name() + ".avg_buf_msgs")
+        .desc("Average number of messages in buffer")
+        .flags(Stats::nozero);
+
+    m_stall_count
+        .name(name() + ".num_msg_stalls")
+        .desc("Number of times messages were stalled")
+        .flags(Stats::nozero);
+
+    m_occupancy
+        .name(name() + ".avg_buf_occ")
+        .desc("Average occupancy of buffer capacity")
+        .flags(Stats::nozero);
+
+    m_stall_time
+        .name(name() + ".avg_stall_time")
+        .desc("Average number of cycles messages are stalled in this MB")
+        .flags(Stats::nozero);
+
+    if (m_max_size > 0) {
+        m_occupancy = m_buf_msgs / m_max_size;
+    } else {
+        m_occupancy = 0;
+    }
 }
 
 uint32_t
