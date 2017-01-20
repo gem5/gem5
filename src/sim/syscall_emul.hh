@@ -49,6 +49,12 @@
   defined(__FreeBSD__) || defined(__CYGWIN__) || \
   defined(__NetBSD__))
 
+#define NO_STATFS (defined(__APPLE__) || defined(__OpenBSD__) || \
+  defined(__FreeBSD__) || defined(__NetBSD__))
+
+#define NO_FALLOCATE (defined(__APPLE__) || defined(__OpenBSD__) || \
+  defined(__FreeBSD__) || defined(__NetBSD__))
+
 ///
 /// @file syscall_emul.hh
 ///
@@ -62,7 +68,9 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#if (NO_STATFS == 0)
 #include <sys/statfs.h>
+#endif
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -1123,6 +1131,9 @@ SyscallReturn
 statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
+#if NO_STATFS
+    warn("Host OS cannot support calls to statfs. Ignoring syscall");
+#else
     std::string path;
 
     int index = 0;
@@ -1142,7 +1153,7 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -errno;
 
     copyOutStatfsBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
-
+#endif
     return 0;
 }
 

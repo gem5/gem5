@@ -895,6 +895,9 @@ SyscallReturn
 fallocateFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
               ThreadContext *tc)
 {
+#if NO_FALLOCATE
+    warn("Host OS cannot support calls to fallocate. Ignoring syscall");
+#else
     int index = 0;
     int tgt_fd = process->getSyscallArg(tc, index);
     int mode = process->getSyscallArg(tc, index);
@@ -908,7 +911,7 @@ fallocateFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int result = fallocate(sim_fd, mode, offset, len);
     if (result < 0)
         return -errno;
-
+#endif
     return 0;
 }
 
