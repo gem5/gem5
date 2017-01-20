@@ -160,14 +160,14 @@ Pl390::readDistributor(PacketPtr pkt)
     if (GICD_ISACTIVER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISACTIVER.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getPendingInt(ctx, ix));
+        pkt->set<uint32_t>(getActiveInt(ctx, ix));
         goto done;
     }
 
     if (GICD_ICACTIVER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ICACTIVER.start()) >> 2;
         assert(ix < 32);
-        pkt->set<uint32_t>(getPendingInt(ctx, ix));
+        pkt->set<uint32_t>(getActiveInt(ctx, ix));
         goto done;
     }
 
