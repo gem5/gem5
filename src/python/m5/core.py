@@ -26,7 +26,4 @@
 #
 # Authors: Nathan Binkert
 
-import internal
-
-def setOutputDir(dir):
-    internal.core.setOutputDir(dir)
+from _m5.core import setOutputDir

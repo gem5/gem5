@@ -36,6 +36,7 @@
 # Authors: Andreas Sandberg
 
 import m5
+import _m5
 from m5.objects import *
 m5.util.addToPath('../configs/')
 from common.Caches import *
@@ -104,7 +105,7 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
     # Suppress "Entering event queue" messages since we get tons of them.
     # Worse yet, they include the timestamp, which makes them highly
     # variable and unsuitable for comparing as test outputs.
-    m5.internal.core.cvar.want_info = verbose
+    _m5.core.cvar.want_info = verbose
 
     # instantiate configuration
     m5.instantiate()

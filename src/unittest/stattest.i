@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module(package="m5.internal") stattest
+%module(package="_m5") stattest
 
 %inline %{
 extern void stattest_init();

@@ -29,22 +29,22 @@
 
 import m5
 
-from m5 import internal
+import _m5.stats
 from m5.objects import Root
 from m5.util import attrdict, fatal
 
 # Stat exports
-from m5.internal.stats import schedStatEvent as schedEvent
-from m5.internal.stats import periodicStatDump
+from _m5.stats import schedStatEvent as schedEvent
+from _m5.stats import periodicStatDump
 
 outputList = []
 def initText(filename, desc=True):
-    output = internal.stats.initText(filename, desc)
+    output = _m5.stats.initText(filename, desc)
     outputList.append(output)
 
 def initSimStats():
-    internal.stats.initSimStats()
-    internal.stats.registerPythonStatsHandlers()
+    _m5.stats.initSimStats()
+    _m5.stats.registerPythonStatsHandlers()
 
 names = []
 stats_dict = {}
@@ -55,7 +55,7 @@ def enable():
     the package is enabled, no more statistics can be created.'''
 
     global stats_list
-    stats_list = list(internal.stats.statsList())
+    stats_list = list(_m5.stats.statsList())
 
     for stat in stats_list:
         if not stat.check() or not stat.baseCheck():
@@ -75,7 +75,7 @@ def enable():
         stats_dict[stat.name] = stat
         stat.enable()
 
-    internal.stats.enable();
+    _m5.stats.enable();
 
 def prepare():
     '''Prepare all stats for data access.  This must be done before
@@ -96,7 +96,7 @@ def dump():
         return
     lastDump = curTick
 
-    internal.stats.processDumpQueue()
+    _m5.stats.processDumpQueue()
 
     prepare()
 
@@ -119,7 +119,7 @@ def reset():
     for stat in stats_list:
         stat.reset()
 
-    internal.stats.processResetQueue()
+    _m5.stats.processResetQueue()
 
 flags = attrdict({
     'none'    : 0x0000,

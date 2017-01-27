@@ -45,14 +45,15 @@ import os
 import sys
 
 # import the SWIG-wrapped main C++ functions
-import internal
-import core
+import _m5.drain
+import _m5.core
+from _m5.stats import updateEvents as updateStatEvents
+
 import stats
 import SimObject
 import ticks
 import objects
 from m5.util.dot_writer import do_dot, do_dvfs_dot
-from m5.internal.stats import updateEvents as updateStatEvents
 
 from util import fatal
 from util import attrdict
@@ -66,7 +67,7 @@ _memory_modes = {
     "atomic_noncaching" : objects.params.atomic_noncaching,
     }
 
-_drain_manager = internal.drain.DrainManager.instance()
+_drain_manager = _m5.drain.DrainManager.instance()
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
@@ -138,8 +139,8 @@ def instantiate(ckpt_dir=None):
     # Restore checkpoint (if any)
     if ckpt_dir:
         _drain_manager.preCheckpointRestore()
-        ckpt = internal.core.getCheckpoint(ckpt_dir)
-        internal.core.unserializeGlobals(ckpt);
+        ckpt = _m5.core.getCheckpoint(ckpt_dir)
+        _m5.core.unserializeGlobals(ckpt);
         for obj in root.descendants(): obj.loadState(ckpt)
     else:
         for obj in root.descendants(): obj.initState()
@@ -162,7 +163,7 @@ def simulate(*args, **kwargs):
         atexit.register(stats.dump)
 
         # register our C++ exit callback function with Python
-        atexit.register(internal.core.doExitCleanup)
+        atexit.register(_m5.core.doExitCleanup)
 
         # Reset to put the stats in a consistent state.
         stats.reset()
@@ -170,11 +171,7 @@ def simulate(*args, **kwargs):
     if _drain_manager.isDrained():
         _drain_manager.resume()
 
-    return internal.event.simulate(*args, **kwargs)
-
-# Export curTick to user script.
-def curTick():
-    return internal.core.curTick()
+    return _m5.event.simulate(*args, **kwargs)
 
 def drain():
     """Drain the simulator in preparation of a checkpoint or memory mode
@@ -198,7 +195,7 @@ def drain():
 
         # WARNING: if a valid exit event occurs while draining, it
         # will not get returned to the user script
-        exit_event = internal.event.simulate()
+        exit_event = _m5.event.simulate()
         while exit_event.getCause() != 'Finished drain':
             exit_event = simulate()
 
@@ -227,7 +224,7 @@ def checkpoint(dir):
     drain()
     memWriteback(root)
     print "Writing checkpoint"
-    internal.core.serializeAll(dir)
+    _m5.core.serializeAll(dir)
 
 def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
@@ -343,7 +340,7 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
     from m5 import options
     global fork_count
 
-    if not internal.core.listenersDisabled():
+    if not _m5.core.listenersDisabled():
         raise RuntimeError, "Can not fork a simulator with listeners enabled"
 
     drain()
@@ -364,11 +361,11 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
                 "fork_seq" : fork_count,
                 "pid" : os.getpid(),
                 }
-        core.setOutputDir(options.outdir)
+        _m5.core.setOutputDir(options.outdir)
     else:
         fork_count += 1
 
     return pid
 
-from internal.core import disableAllListeners
-from internal.core import listenersDisabled
+from _m5.core import disableAllListeners, listenersDisabled
+from _m5.core import curTick

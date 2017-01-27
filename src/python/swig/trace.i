@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module(package="m5.internal") trace
+%module(package="_m5") trace
 
 %{
 #include "base/trace.hh"

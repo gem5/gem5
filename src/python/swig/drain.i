@@ -37,7 +37,7 @@
  * Authors: Andreas Sandberg
  */
 
-%module(package="m5.internal") drain
+%module(package="_m5") drain
 
 %{
 #include "sim/drain.hh"

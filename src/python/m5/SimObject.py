@@ -656,7 +656,7 @@ class MetaSimObject(type):
 
     # See ParamValue.swig_predecls for description.
     def swig_predecls(cls, code):
-        code('%import "python/m5/internal/param_$cls.i"')
+        code('%import "python/_m5/param_$cls.i"')
 
     # Hook for exporting additional C++ methods to Python via SWIG.
     # Default is none, override using @classmethod in class definition.
@@ -686,7 +686,7 @@ class MetaSimObject(type):
         params = map(lambda (k, v): v, sorted(cls._params.local.items()))
         ports = cls._ports.local
 
-        code('%module(package="m5.internal") param_$cls')
+        code('%module(package="_m5") param_$cls')
         code()
         code('%{')
         code('#include "sim/sim_object.hh"')
@@ -716,7 +716,7 @@ using std::ptrdiff_t;
 
         code()
         if cls._base:
-            code('%import "python/m5/internal/param_${{cls._base}}.i"')
+            code('%import "python/_m5/param_${{cls._base}}.i"')
         code()
 
         for ns in namespaces:

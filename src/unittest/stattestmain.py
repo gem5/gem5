@@ -1,5 +1,5 @@
 def main():
-    from m5.internal.stattest import stattest_init, stattest_run
+    from _m5.stattest import stattest_init, stattest_run
     import m5.stats
 
     stattest_init()

@@ -37,7 +37,7 @@
  * Authors: Andreas Sandberg
  */
 
-%module(package="m5.internal") serialize
+%module(package="_m5") serialize
 
 %{
 #include "sim/serialize.hh"

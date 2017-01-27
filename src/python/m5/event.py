@@ -29,9 +29,9 @@
 # Authors: Nathan Binkert
 
 import m5
-import internal.event
+import _m5.event
 
-from internal.event import PythonEvent, GlobalSimLoopExitEvent as SimExit
+from _m5.event import PythonEvent, GlobalSimLoopExitEvent as SimExit
 
 mainq = None
 
@@ -61,9 +61,9 @@ class ProgressEvent(Event):
         self.eventq.schedule(self, m5.curTick() + self.period)
 
 def getEventQueue(index):
-    return internal.event.getEventQueue(index)
+    return _m5.event.getEventQueue(index)
 
 def setEventQueue(eventq):
-    internal.event.curEventQueue(eventq)
+    _m5.event.curEventQueue(eventq)
 
 __all__ = [ 'create', 'Event', 'ProgressEvent', 'SimExit', 'mainq' ]

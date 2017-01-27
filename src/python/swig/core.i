@@ -29,7 +29,7 @@
  *          Steve Reinhardt
  */
 
-%module(package="m5.internal") core
+%module(package="_m5") core
 
 %{
 #include "base/misc.hh"

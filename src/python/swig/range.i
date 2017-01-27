@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module(package="m5.internal") range
+%module(package="_m5") range
 
 %{
 #include "base/types.hh"

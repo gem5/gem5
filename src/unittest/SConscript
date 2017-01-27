@@ -46,7 +46,7 @@ UnitTest('strnumtest', 'strnumtest.cc')
 UnitTest('trietest', 'trietest.cc')
 
 stattest_py = PySource('m5', 'stattestmain.py', skip_lib=True)
-stattest_swig = SwigSource('m5.internal', 'stattest.i', skip_lib=True)
+stattest_swig = SwigSource('_m5', 'stattest.i', skip_lib=True)
 UnitTest('stattest', 'stattest.cc', stattest_py, stattest_swig, main=True)
 
 UnitTest('symtest', 'symtest.cc')

@@ -26,13 +26,5 @@
 #
 # Authors: Nathan Binkert
 
-import internal
-import util
-
-from internal.trace import output, ignore
-
-def disable():
-    internal.trace.disable()
-
-def enable():
-    internal.trace.enable()
+# Export native methods to Python
+from _m5.trace import output, ignore, disable, enable

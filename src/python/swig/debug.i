@@ -29,7 +29,7 @@
  * Authors: Nathan Binkert
  */
 
-%module(package="m5.internal") debug
+%module(package="_m5") debug
 
 %{
 #include <cassert>

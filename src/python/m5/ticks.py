@@ -34,11 +34,11 @@ tps_fixed = False    # once set to true, can't be changed
 
 # fix the global frequency and tell C++ about it
 def fixGlobalFrequency():
-    import internal
+    import _m5.core
     global tps, tps_fixed
     if not tps_fixed:
         tps_fixed = True
-        internal.core.setClockFrequency(int(tps))
+        _m5.core.setClockFrequency(int(tps))
         print "Global frequency set at %d ticks per second" % int(tps)
 
 def setGlobalFrequency(ticksPerSecond):

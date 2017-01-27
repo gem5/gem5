@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module(package="m5.internal") stats
+%module(package="_m5") stats
 
 %include <std_list.i>
 %include <std_string.i>

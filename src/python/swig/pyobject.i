@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module(package="m5.internal") pyobject
+%module(package="_m5") pyobject
 
 %{
 #include "python/swig/pyobject.hh"

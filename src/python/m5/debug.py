@@ -28,10 +28,9 @@
 
 from UserDict import DictMixin
 
-import internal
-
-from internal.debug import SimpleFlag, CompoundFlag
-from internal.debug import schedBreak, setRemoteGDBPort
+import _m5.debug
+from _m5.debug import SimpleFlag, CompoundFlag
+from _m5.debug import schedBreak, setRemoteGDBPort
 from m5.util import printList
 
 def help():
@@ -61,12 +60,12 @@ class AllFlags(DictMixin):
         self._dict = {}
 
     def _update(self):
-        current_version = internal.debug.getAllFlagsVersion()
+        current_version = _m5.debug.getAllFlagsVersion()
         if self._version == current_version:
             return
 
         self._dict.clear()
-        for flag in internal.debug.getAllFlags():
+        for flag in _m5.debug.getAllFlags():
             self._dict[flag.name()] = flag
         self._version = current_version
 
