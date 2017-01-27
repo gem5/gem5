@@ -393,21 +393,26 @@ class Pl390 : public BaseGic
      * @param pkt packet to respond to
      */
     Tick readDistributor(PacketPtr pkt);
+    uint32_t readDistributor(ContextID ctx, Addr daddr, size_t resp_sz);
 
     /** Handle a read to the cpu portion of the GIC
      * @param pkt packet to respond to
      */
     Tick readCpu(PacketPtr pkt);
+    uint32_t readCpu(ContextID ctx, Addr daddr);
 
     /** Handle a write to the distributor portion of the GIC
      * @param pkt packet to respond to
      */
     Tick writeDistributor(PacketPtr pkt);
+    void writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
+                          size_t data_sz);
 
     /** Handle a write to the cpu portion of the GIC
      * @param pkt packet to respond to
      */
     Tick writeCpu(PacketPtr pkt);
+    void writeCpu(ContextID ctx, Addr daddr, uint32_t data);
 };
 
 #endif //__DEV_ARM_GIC_H__
