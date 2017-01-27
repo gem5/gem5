@@ -43,6 +43,7 @@
 #include <linux/kvm.h>
 
 #include "arch/arm/kvm/base_cpu.hh"
+#include "debug/GIC.hh"
 #include "debug/Interrupt.hh"
 #include "params/MuxingKvmGic.hh"
 
@@ -104,6 +105,63 @@ KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
     vm.setIRQLine(line, high);
 }
 
+uint32_t
+KvmKernelGicV2::getGicReg(unsigned group, unsigned vcpu, unsigned offset)
+{
+    uint64_t reg;
+
+    assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
+    const uint32_t attr(
+        (vcpu << KVM_DEV_ARM_VGIC_CPUID_SHIFT) |
+        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+
+    kdev.getAttrPtr(group, attr, &reg);
+    return (uint32_t) reg;
+}
+
+void
+KvmKernelGicV2::setGicReg(unsigned group, unsigned vcpu, unsigned offset,
+                          unsigned value)
+{
+    uint64_t reg = value;
+
+    assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
+    const uint32_t attr(
+        (vcpu << KVM_DEV_ARM_VGIC_CPUID_SHIFT) |
+        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+
+    kdev.setAttrPtr(group, attr, &reg);
+}
+
+uint32_t
+KvmKernelGicV2::readDistributor(ContextID ctx, Addr daddr)
+{
+    auto vcpu = vm.contextIdToVCpuId(ctx);
+    return getGicReg(KVM_DEV_ARM_VGIC_GRP_DIST_REGS, vcpu, daddr);
+}
+
+uint32_t
+KvmKernelGicV2::readCpu(ContextID ctx, Addr daddr)
+{
+    auto vcpu = vm.contextIdToVCpuId(ctx);
+    return getGicReg(KVM_DEV_ARM_VGIC_GRP_CPU_REGS, vcpu, daddr);
+}
+
+void
+KvmKernelGicV2::writeDistributor(ContextID ctx, Addr daddr, uint32_t data)
+{
+    auto vcpu = vm.contextIdToVCpuId(ctx);
+    setGicReg(KVM_DEV_ARM_VGIC_GRP_DIST_REGS, vcpu, daddr, data);
+}
+
+void
+KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
+{
+    auto vcpu = vm.contextIdToVCpuId(ctx);
+    setGicReg(KVM_DEV_ARM_VGIC_GRP_CPU_REGS, vcpu, daddr, data);
+}
+
+
 
 MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams *p)
     : Pl390(p),
@@ -122,20 +180,38 @@ MuxingKvmGic::~MuxingKvmGic()
 }
 
 void
+MuxingKvmGic::loadState(CheckpointIn &cp)
+{
+    Pl390::loadState(cp);
+}
+
+void
 MuxingKvmGic::startup()
 {
+    Pl390::startup();
     usingKvm = (kernelGic != nullptr) && validKvmEnvironment();
+    if (usingKvm)
+        fromPl390ToKvm();
+}
+
+DrainState
+MuxingKvmGic::drain()
+{
+    if (usingKvm)
+        fromKvmToPl390();
+    return Pl390::drain();
 }
 
 void
 MuxingKvmGic::drainResume()
 {
+    Pl390::drainResume();
     bool use_kvm = (kernelGic != nullptr) && validKvmEnvironment();
     if (use_kvm != usingKvm) {
+        // Should only occur due to CPU switches
         if (use_kvm) // from simulation to KVM emulation
             fromPl390ToKvm();
-        else // from KVM emulation to simulation
-            fromKvmToPl390();
+        // otherwise, drain() already sync'd the state back to the Pl390
 
         usingKvm = use_kvm;
     }
@@ -144,19 +220,14 @@ MuxingKvmGic::drainResume()
 void
 MuxingKvmGic::serialize(CheckpointOut &cp) const
 {
-    if (!usingKvm)
-        return Pl390::serialize(cp);
-
-    panic("Checkpointing unsupported\n");
+    // drain() already ensured Pl390 updated with KvmGic state if necessary
+    Pl390::serialize(cp);
 }
 
 void
 MuxingKvmGic::unserialize(CheckpointIn &cp)
 {
-    if (!usingKvm)
-        return Pl390::unserialize(cp);
-
-    panic("Checkpointing unsupported\n");
+    Pl390::unserialize(cp);
 }
 
 Tick
@@ -231,15 +302,149 @@ MuxingKvmGic::validKvmEnvironment() const
 }
 
 void
+MuxingKvmGic::copyDistRegister(BaseGicRegisters* from, BaseGicRegisters* to,
+                               ContextID ctx, Addr daddr)
+{
+    auto val = from->readDistributor(ctx, daddr);
+    DPRINTF(GIC, "copy dist 0x%x 0x%08x\n", daddr, val);
+    to->writeDistributor(ctx, daddr, val);
+}
+
+void
+MuxingKvmGic::copyCpuRegister(BaseGicRegisters* from, BaseGicRegisters* to,
+                               ContextID ctx, Addr daddr)
+{
+    auto val = from->readCpu(ctx, daddr);
+    DPRINTF(GIC, "copy cpu  0x%x 0x%08x\n", daddr, val);
+    to->writeCpu(ctx, daddr, val);
+}
+
+void
+MuxingKvmGic::copyBankedDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
+                                  Addr daddr, size_t size)
+{
+    for (int ctx = 0; ctx < system._numContexts; ++ctx)
+        for (auto a = daddr; a < daddr + size; a += 4)
+            copyDistRegister(from, to, ctx, a);
+}
+
+void
+MuxingKvmGic::clearBankedDistRange(BaseGicRegisters* to,
+                                   Addr daddr, size_t size)
+{
+    for (int ctx = 0; ctx < system._numContexts; ++ctx)
+        for (auto a = daddr; a < daddr + size; a += 4)
+            to->writeDistributor(ctx, a, 0xFFFFFFFF);
+}
+
+void
+MuxingKvmGic::copyDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
+                            Addr daddr, size_t size)
+{
+    for (auto a = daddr; a < daddr + size; a += 4)
+        copyDistRegister(from, to, 0, a);
+}
+
+void
+MuxingKvmGic::clearDistRange(BaseGicRegisters* to,
+                             Addr daddr, size_t size)
+{
+    for (auto a = daddr; a < daddr + size; a += 4)
+        to->writeDistributor(0, a, 0xFFFFFFFF);
+}
+
+void
+MuxingKvmGic::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
+{
+    Addr set, clear;
+    size_t size;
+
+    /// CPU state (GICC_*)
+    // Copy CPU Interface Control Register (CTLR),
+    //      Interrupt Priority Mask Register (PMR), and
+    //      Binary Point Register (BPR)
+    for (int ctx = 0; ctx < system._numContexts; ++ctx) {
+        copyCpuRegister(from, to, ctx, GICC_CTLR);
+        copyCpuRegister(from, to, ctx, GICC_PMR);
+        copyCpuRegister(from, to, ctx, GICC_BPR);
+    }
+
+
+    /// Distributor state (GICD_*)
+    // Copy Distributor Control Register (CTLR)
+    copyDistRegister(from, to, 0, GICD_CTLR);
+
+    // Copy interrupt-enabled statuses (I[CS]ENABLERn; R0 is per-CPU banked)
+    set   = Pl390::GICD_ISENABLER.start();
+    clear = Pl390::GICD_ICENABLER.start();
+    size  = Pl390::itLines / 8;
+    clearBankedDistRange(to, clear, 4);
+    copyBankedDistRange(from, to, set, 4);
+
+    set += 4, clear += 4, size -= 4;
+    clearDistRange(to, clear, size);
+    copyDistRange(from, to, set, size);
+
+    // Copy pending interrupts (I[CS]PENDRn; R0 is per-CPU banked)
+    set   = Pl390::GICD_ISPENDR.start();
+    clear = Pl390::GICD_ICPENDR.start();
+    size  = Pl390::itLines / 8;
+    clearBankedDistRange(to, clear, 4);
+    copyBankedDistRange(from, to, set, 4);
+
+    set += 4, clear += 4, size -= 4;
+    clearDistRange(to, clear, size);
+    copyDistRange(from, to, set, size);
+
+    // Copy active interrupts (I[CS]ACTIVERn; R0 is per-CPU banked)
+    set   = Pl390::GICD_ISACTIVER.start();
+    clear = Pl390::GICD_ICACTIVER.start();
+    size  = Pl390::itLines / 8;
+    clearBankedDistRange(to, clear, 4);
+    copyBankedDistRange(from, to, set, 4);
+
+    set += 4, clear += 4, size -= 4;
+    clearDistRange(to, clear, size);
+    copyDistRange(from, to, set, size);
+
+    // Copy interrupt priorities (IPRIORITYRn; R0-7 are per-CPU banked)
+    set   = Pl390::GICD_IPRIORITYR.start();
+    copyBankedDistRange(from, to, set, 32);
+
+    set += 32;
+    size = Pl390::itLines - 32;
+    copyDistRange(from, to, set, size);
+
+    // Copy interrupt processor target regs (ITARGETRn; R0-7 are read-only)
+    set = Pl390::GICD_ITARGETSR.start() + 32;
+    size = Pl390::itLines - 32;
+    copyDistRange(from, to, set, size);
+
+    // Copy interrupt configuration registers (ICFGRn)
+    set = Pl390::GICD_ICFGR.start();
+    size = Pl390::itLines / 4;
+    copyDistRange(from, to, set, size);
+}
+
+void
 MuxingKvmGic::fromPl390ToKvm()
 {
-    panic("Gic multiplexing not implemented.\n");
+    copyGicState(static_cast<Pl390*>(this), kernelGic);
 }
 
 void
 MuxingKvmGic::fromKvmToPl390()
 {
-    panic("Gic multiplexing not implemented.\n");
+    copyGicState(kernelGic, static_cast<Pl390*>(this));
+
+    // the values read for the Interrupt Priority Mask Register (PMR)
+    // have been shifted by three bits due to its having been emulated by
+    // a VGIC with only 5 PMR bits in its VMCR register.  Presently the
+    // Linux kernel does not repair this inaccuracy, so we correct it here.
+    for (int cpu = 0; cpu < system._numContexts; ++cpu) {
+       cpuPriority[cpu] <<= 3;
+       assert((cpuPriority[cpu] & ~0xff) == 0);
+    }
 }
 
 MuxingKvmGic *

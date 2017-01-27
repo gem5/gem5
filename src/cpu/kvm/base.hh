@@ -106,6 +106,7 @@ class BaseKvmCPU : public BaseCPU
     void deallocateContext(ThreadID thread_num);
     void haltContext(ThreadID thread_num) override;
 
+    long getVCpuID() const { return vcpuID; }
     ThreadContext *getContext(int tn) override;
 
     Counter totalInsts() const override;

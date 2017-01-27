@@ -48,6 +48,7 @@
 
 // forward declarations
 struct KvmVMParams;
+class BaseKvmCPU;
 class System;
 
 /**
@@ -404,6 +405,11 @@ class KvmVM : public SimObject
      * Initialize system pointer. Invoked by system object.
      */
     void setSystem(System *s);
+
+    /**
+      * Get the VCPUID for a given context
+      */
+    long contextIdToVCpuId(ContextID ctx) const;
 
 #if defined(__aarch64__)
   public: // ARM-specific

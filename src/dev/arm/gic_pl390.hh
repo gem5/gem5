@@ -58,7 +58,7 @@
 #include "dev/platform.hh"
 #include "params/Pl390.hh"
 
-class Pl390 : public BaseGic
+class Pl390 : public BaseGic, public BaseGicRegisters
 {
   protected:
     // distributor memory addresses
@@ -404,26 +404,34 @@ class Pl390 : public BaseGic
      * @param pkt packet to respond to
      */
     Tick readDistributor(PacketPtr pkt);
-    uint32_t readDistributor(ContextID ctx, Addr daddr, size_t resp_sz);
+    uint32_t readDistributor(ContextID ctx, Addr daddr,
+                             size_t resp_sz);
+    uint32_t readDistributor(ContextID ctx, Addr daddr) override {
+        return readDistributor(ctx, daddr, 4);
+    }
 
     /** Handle a read to the cpu portion of the GIC
      * @param pkt packet to respond to
      */
     Tick readCpu(PacketPtr pkt);
-    uint32_t readCpu(ContextID ctx, Addr daddr);
+    uint32_t readCpu(ContextID ctx, Addr daddr) override;
 
     /** Handle a write to the distributor portion of the GIC
      * @param pkt packet to respond to
      */
     Tick writeDistributor(PacketPtr pkt);
-    void writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
-                          size_t data_sz);
+    void writeDistributor(ContextID ctx, Addr daddr,
+                          uint32_t data, size_t data_sz);
+    void writeDistributor(ContextID ctx, Addr daddr,
+                                  uint32_t data) override {
+        return writeDistributor(ctx, daddr, data, 4);
+    }
 
     /** Handle a write to the cpu portion of the GIC
      * @param pkt packet to respond to
      */
     Tick writeCpu(PacketPtr pkt);
-    void writeCpu(ContextID ctx, Addr daddr, uint32_t data);
+    void writeCpu(ContextID ctx, Addr daddr, uint32_t data) override;
 };
 
 #endif //__DEV_ARM_GIC_H__

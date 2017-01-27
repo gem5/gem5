@@ -54,7 +54,7 @@
  * model. It exposes an API that is similar to that of
  * software-emulated GIC models in gem5.
  */
-class KvmKernelGicV2
+class KvmKernelGicV2 : public BaseGicRegisters
 {
   public:
     /**
@@ -117,6 +117,14 @@ class KvmKernelGicV2
     /** Address range for the distributor interface */
     const AddrRange distRange;
 
+    /** BaseGicRegisters interface */
+    uint32_t readDistributor(ContextID ctx, Addr daddr) override;
+    uint32_t readCpu(ContextID ctx, Addr daddr) override;
+
+    void writeDistributor(ContextID ctx, Addr daddr,
+                          uint32_t data) override;
+    void writeCpu(ContextID ctx, Addr daddr, uint32_t data) override;
+
     /* @} */
 
   protected:
@@ -129,6 +137,26 @@ class KvmKernelGicV2
      * @param high True to signal an interrupt, false to clear it.
      */
     void setIntState(unsigned type, unsigned vcpu, unsigned irq, bool high);
+
+    /**
+     * Get value of GIC register "from" a cpu
+     *
+     * @param group Distributor or CPU (KVM_DEV_ARM_VGIC_GRP_{DIST,CPU}_REGS)
+     * @param vcpu CPU id within KVM
+     * @param offset register offset
+     */
+    uint32_t getGicReg(unsigned group, unsigned vcpu, unsigned offset);
+
+    /**
+     * Set value of GIC register "from" a cpu
+     *
+     * @param group Distributor or CPU (KVM_DEV_ARM_VGIC_GRP_{DIST,CPU}_REGS)
+     * @param vcpu CPU id within KVM
+     * @param offset register offset
+     * @param value value to set register to
+     */
+    void setGicReg(unsigned group, unsigned vcpu, unsigned offset,
+                   unsigned value);
 
     /** KVM VM in the parent system */
     KvmVM &vm;
@@ -146,7 +174,10 @@ class MuxingKvmGic : public Pl390
     MuxingKvmGic(const MuxingKvmGicParams *p);
     ~MuxingKvmGic();
 
+    void loadState(CheckpointIn &cp) override;
+
     void startup() override;
+    DrainState drain() override;
     void drainResume() override;
 
     void serialize(CheckpointOut &cp) const override;
@@ -176,9 +207,25 @@ class MuxingKvmGic : public Pl390
   private:
     bool usingKvm;
 
-    /** Multiplexing implementation: state transfer functions */
+    /** Multiplexing implementation */
     void fromPl390ToKvm();
     void fromKvmToPl390();
+
+    void copyGicState(BaseGicRegisters* from, BaseGicRegisters* to);
+
+    void copyDistRegister(BaseGicRegisters* from, BaseGicRegisters* to,
+                          ContextID ctx, Addr daddr);
+    void copyCpuRegister(BaseGicRegisters* from, BaseGicRegisters* to,
+                         ContextID ctx, Addr daddr);
+
+    void copyBankedDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
+                             Addr daddr, size_t size);
+    void clearBankedDistRange(BaseGicRegisters* to,
+                              Addr daddr, size_t size);
+    void copyDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
+                       Addr daddr, size_t size);
+    void clearDistRange(BaseGicRegisters* to,
+                        Addr daddr, size_t size);
 };
 
 #endif // __ARCH_ARM_KVM_GIC_HH__

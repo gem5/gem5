@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -90,6 +90,17 @@ class BaseGic :  public PioDevice
   protected:
     /** Platform this GIC belongs to. */
     Platform *platform;
+};
+
+class BaseGicRegisters
+{
+  public:
+    virtual uint32_t readDistributor(ContextID ctx, Addr daddr) = 0;
+    virtual uint32_t readCpu(ContextID ctx, Addr daddr) = 0;
+
+    virtual void writeDistributor(ContextID ctx, Addr daddr,
+                                  uint32_t data) = 0;
+    virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
 };
 
 #endif

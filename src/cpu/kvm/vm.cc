@@ -50,6 +50,7 @@
 #include <cerrno>
 #include <memory>
 
+#include "cpu/kvm/base.hh"
 #include "debug/Kvm.hh"
 #include "params/KvmVM.hh"
 #include "sim/system.hh"
@@ -528,10 +529,19 @@ KvmVM::createDevice(uint32_t type, uint32_t flags)
 }
 
 void
-KvmVM::setSystem(System *s) {
+KvmVM::setSystem(System *s)
+{
     panic_if(system != nullptr, "setSystem() can only be called once");
     panic_if(s == nullptr, "setSystem() called with null System*");
     system = s;
+}
+
+long
+KvmVM::contextIdToVCpuId(ContextID ctx) const
+{
+    assert(system != nullptr);
+    return dynamic_cast<BaseKvmCPU*>
+        (system->getThreadContext(ctx)->getCpuPtr())->getVCpuID();
 }
 
 int
