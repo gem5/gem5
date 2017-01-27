@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2012-2013,2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -34,6 +34,8 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Andreas Hansson
+
+syntax = "proto2";
 
 // Put all the generated messages in a namespace
 package ProtoMessage;

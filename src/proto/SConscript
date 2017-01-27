@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012,2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -45,3 +45,8 @@ if env['HAVE_PROTOBUF']:
     ProtoBuf('packet.proto')
     ProtoBuf('inst.proto')
     Source('protoio.cc')
+
+    # protoc relies on the fact that undefined preprocessor symbols are
+    # explanded to 0 but since we use -Wundef they end up generating
+    # warnings.
+    env.Append(CCFLAGS='-DPROTOBUF_INLINE_NOT_IN_HEADERS=0')
