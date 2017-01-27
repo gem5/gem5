@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2012-2013, 2015 ARM Limited
- * All rights reserved
+ * Copyright (c) 2016 Google Inc.
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -36,6 +37,7 @@
  *
  * Authors: Thomas Grass
  *          Andreas Hansson
+ *          Rahul Thakur
  */
 
 #ifndef __MEM_COMM_MONITOR_HH__
@@ -357,6 +359,12 @@ class CommMonitor : public MemObject
         /** Disable flag for address distributions. */
         bool disableAddrDists;
 
+        /** Address mask for sources of read accesses to be captured */
+        const Addr readAddrMask;
+
+        /** Address mask for sources of write accesses to be captured */
+        const Addr writeAddrMask;
+
         /**
          * Histogram of number of read accesses to addresses over
          * time.
@@ -385,9 +393,15 @@ class CommMonitor : public MemObject
             outstandingReadReqs(0), outstandingWriteReqs(0),
             disableTransactionHists(params->disable_transaction_hists),
             readTrans(0), writeTrans(0),
-            disableAddrDists(params->disable_addr_dists)
+            disableAddrDists(params->disable_addr_dists),
+            readAddrMask(params->read_addr_mask),
+            writeAddrMask(params->write_addr_mask)
         { }
 
+        void updateReqStats(const ProbePoints::PacketInfo& pkt, bool is_atomic,
+                            bool expects_response);
+        void updateRespStats(const ProbePoints::PacketInfo& pkt, Tick latency,
+                             bool is_atomic);
     };
 
     /** This function is called periodically at the end of each time bin */
@@ -405,12 +419,6 @@ class CommMonitor : public MemObject
     const Tick samplePeriodTicks;
     /** Sample period in seconds */
     const double samplePeriod;
-
-    /** Address mask for sources of read accesses to be captured */
-    const Addr readAddrMask;
-
-    /** Address mask for sources of write accesses to be captured */
-    const Addr writeAddrMask;
 
     /** @} */
 
