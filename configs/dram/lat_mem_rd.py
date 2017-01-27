@@ -252,6 +252,7 @@ system.tgen = TrafficGen(config_file = cfg_file_name,
 
 # add a communication monitor
 system.monitor = CommMonitor()
+system.monitor.footprint = MemFootprintProbe()
 
 # connect the traffic generator to the system
 system.tgen.port = system.monitor.slave

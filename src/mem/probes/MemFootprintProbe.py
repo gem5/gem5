@@ -1,16 +1,15 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2016 Google Inc.
 # All rights reserved.
 #
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# The license below extends only to copyright in the software and
+# shall not be construed as granting a license to any other
+# intellectual property including but not limited to intellectual
+# property relating to a hardware implementation of the
+# functionality of the software licensed hereunder.  You may use the
+# software subject to the license terms below provided that you
+# ensure that this notice is replicated unmodified and in its
+# entirety in all distributions of the software, modified or
+# unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -35,20 +34,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Andreas Sandberg
+# Authors: Rahul Thakur
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from BaseMemProbe import BaseMemProbe
 
-SimObject('BaseMemProbe.py')
-Source('base.cc')
-
-SimObject('StackDistProbe.py')
-Source('stack_dist.cc')
-
-SimObject('MemFootprintProbe.py')
-Source('mem_footprint.cc')
-
-# Packet tracing requires protobuf support
-if env['HAVE_PROTOBUF']:
-    SimObject('MemTraceProbe.py')
-    Source('mem_trace.cc')
+class MemFootprintProbe(BaseMemProbe):
+    type = "MemFootprintProbe"
+    cxx_header = "mem/probes/mem_footprint.hh"
+    system = Param.System(Parent.any,
+                          "System pointer to get cache line and mem size")
+    page_size = Param.Unsigned(4096, "Page size for page-level footprint")
