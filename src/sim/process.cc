@@ -160,6 +160,15 @@ void
 Process::clone(ThreadContext *otc, ThreadContext *ntc,
                Process *np, TheISA::IntReg flags)
 {
+#ifndef CLONE_VM
+#define CLONE_VM 0
+#endif
+#ifndef CLONE_FILES
+#define CLONE_FILES 0
+#endif
+#ifndef CLONE_THREAD
+#define CLONE_THREAD 0
+#endif
     if (CLONE_VM & flags) {
         /**
          * Share the process memory address space between the new process
