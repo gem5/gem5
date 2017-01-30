@@ -209,7 +209,7 @@ termcap = get_termcap(GetOption('use_colors'))
 # export TERM so that clang reports errors in color
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                  'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PROTOC',
-                 'PYTHONPATH', 'RANLIB', 'SWIG', 'TERM' ])
+                 'PYTHONPATH', 'RANLIB', 'TERM' ])
 
 use_prefixes = [
     "ASAN_",           # address sanitizer symbolizer path and settings
@@ -239,11 +239,6 @@ main_dict_keys = main.Dictionary().keys()
 # Check that we have a C/C++ compiler
 if not ('CC' in main_dict_keys and 'CXX' in main_dict_keys):
     print "No C++ compiler installed (package g++ on Ubuntu and RedHat)"
-    Exit(1)
-
-# Check that swig is present
-if not 'SWIG' in main_dict_keys:
-    print "swig is not installed (package swig on Ubuntu and RedHat)"
     Exit(1)
 
 # add useful python code PYTHONPATH so it can be used by subprocesses
@@ -524,7 +519,6 @@ global_vars = Variables(global_vars_file, args=ARGUMENTS)
 global_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
-    ('SWIG', 'SWIG tool', environ.get('SWIG', main['SWIG'])),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
@@ -645,7 +639,6 @@ else:
     main['CCCOMSTR']        = Transform("CC")
     main['CXXCOMSTR']       = Transform("CXX")
     main['ASCOMSTR']        = Transform("AS")
-    main['SWIGCOMSTR']      = Transform("SWIG")
     main['ARCOMSTR']        = Transform("AR", 0)
     main['LINKCOMSTR']      = Transform("LINK", 0)
     main['SHLINKCOMSTR']    = Transform("SHLINK", 0)
@@ -891,40 +884,6 @@ else:
                     'Warning: pkg-config could not get protobuf flags.' + \
                     termcap.Normal
 
-# Check for SWIG
-if not main.has_key('SWIG'):
-    print 'Error: SWIG utility not found.'
-    print '       Please install (see http://www.swig.org) and retry.'
-    Exit(1)
-
-# Check for appropriate SWIG version
-swig_version = readCommand([main['SWIG'], '-version'], exception='').split()
-# First 3 words should be "SWIG Version x.y.z"
-if len(swig_version) < 3 or \
-        swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
-    print 'Error determining SWIG version.'
-    Exit(1)
-
-min_swig_version = '2.0.4'
-if compareVersions(swig_version[2], min_swig_version) < 0:
-    print 'Error: SWIG version', min_swig_version, 'or newer required.'
-    print '       Installed version:', swig_version[2]
-    Exit(1)
-
-# Check for known incompatibilities. The standard library shipped with
-# gcc >= 4.9 does not play well with swig versions prior to 3.0
-if main['GCC'] and compareVersions(gcc_version, '4.9') >= 0 and \
-        compareVersions(swig_version[2], '3.0') < 0:
-    print termcap.Yellow + termcap.Bold + \
-        'Warning: This combination of gcc and swig have' + \
-        ' known incompatibilities.\n' + \
-        '         If you encounter build problems, please update ' + \
-        'swig to 3.0 or later.' + \
-        termcap.Normal
-
-# Set up SWIG flags & scanner
-swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
-main.Append(SWIGFLAGS=swig_flags)
 
 # Check for 'timeout' from GNU coreutils. If present, regressions will
 # be run with a time limit. We require version 8.13 since we rely on
@@ -939,27 +898,6 @@ else:
 timeout_version = timeout_lines[0].split() if timeout_lines else []
 main['TIMEOUT'] =  timeout_version and \
     compareVersions(timeout_version[-1], '8.13') >= 0
-
-# filter out all existing swig scanners, they mess up the dependency
-# stuff for some reason
-scanners = []
-for scanner in main['SCANNERS']:
-    skeys = scanner.skeys
-    if skeys == '.i':
-        continue
-
-    if isinstance(skeys, (list, tuple)) and '.i' in skeys:
-        continue
-
-    scanners.append(scanner)
-
-# add the new swig scanner that we like better
-from SCons.Scanner import ClassicCPP as CPPScanner
-swig_inc_re = '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
-scanners.append(CPPScanner("SwigScan", [ ".i" ], "CPPPATH", swig_inc_re))
-
-# replace the scanners list that has what we want
-main['SCANNERS'] = scanners
 
 # Add a custom Check function to test for structure members.
 def CheckMember(context, include, decl, member, include_quotes="<>"):
