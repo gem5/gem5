@@ -80,7 +80,7 @@ lookupEthPort(SimObject *so, const std::string &name, int i)
 #endif
 
 /**
- * Connect the described MemObject ports.  Called from Python via SWIG.
+ * Connect the described MemObject ports.  Called from Python.
  * The indices i1 & i2 will be -1 for regular ports, >= 0 for vector ports.
  * SimObject1 is the master, and SimObject2 is the slave
  */

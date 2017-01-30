@@ -510,19 +510,6 @@ class MetaSimObject(type):
                 noCxxHeader = True
                 warn("No header file specified for SimObject: %s", name)
 
-        # Export methods are automatically inherited via C++, so we
-        # don't want the method declarations to get inherited on the
-        # python side (and thus end up getting repeated in the wrapped
-        # versions of derived classes).  The code below basicallly
-        # suppresses inheritance by substituting in the base (null)
-        # versions of these methods unless a different version is
-        # explicitly supplied.
-        for method_name in ('export_methods', 'export_method_swig_predecls'):
-            if method_name not in cls.__dict__:
-                base_method = getattr(MetaSimObject, method_name)
-                m = MethodType(base_method, cls, MetaSimObject)
-                setattr(cls, method_name, m)
-
         # Now process the _value_dict items.  They could be defining
         # new (or overriding existing) parameters or ports, setting
         # class keywords (e.g., 'abstract'), or setting parameter
@@ -675,107 +662,6 @@ class MetaSimObject(type):
 
     def pybind_predecls(cls, code):
         code('#include "${{cls.cxx_header}}"')
-
-    # See ParamValue.swig_predecls for description.
-    def swig_predecls(cls, code):
-        code('%import "python/_m5/param_$cls.i"')
-
-    # Hook for exporting additional C++ methods to Python via SWIG.
-    # Default is none, override using @classmethod in class definition.
-    def export_methods(cls, code):
-        pass
-
-    # Generate the code needed as a prerequisite for the C++ methods
-    # exported via export_methods() to be processed by SWIG.
-    # Typically generates one or more %include or %import statements.
-    # If any methods are exported, typically at least the C++ header
-    # declaring the relevant SimObject class must be included.
-    def export_method_swig_predecls(cls, code):
-        pass
-
-    # Generate the declaration for this object for wrapping with SWIG.
-    # Generates code that goes into a SWIG .i file.  Called from
-    # src/SConscript.
-    def swig_decl(cls, code):
-        class_path = cls.cxx_class.split('::')
-        classname = class_path[-1]
-        namespaces = class_path[:-1]
-
-        # The 'local' attribute restricts us to the params declared in
-        # the object itself, not including inherited params (which
-        # will also be inherited from the base class's param struct
-        # here). Sort the params based on their key
-        params = map(lambda (k, v): v, sorted(cls._params.local.items()))
-        ports = cls._ports.local
-
-        code('%module(package="_m5") param_$cls')
-        code()
-        code('%{')
-        code('#include "sim/sim_object.hh"')
-        code('#include "params/$cls.hh"')
-        for param in params:
-            param.cxx_predecls(code)
-        code('#include "${{cls.cxx_header}}"')
-        code('''\
-/**
-  * This is a workaround for bug in swig. Prior to gcc 4.6.1 the STL
-  * headers like vector, string, etc. used to automatically pull in
-  * the cstddef header but starting with gcc 4.6.1 they no longer do.
-  * This leads to swig generated a file that does not compile so we
-  * explicitly include cstddef. Additionally, including version 2.0.4,
-  * swig uses ptrdiff_t without the std:: namespace prefix which is
-  * required with gcc 4.6.1. We explicitly provide access to it.
-  */
-#include <cstddef>
-using std::ptrdiff_t;
-''')
-        code('%}')
-        code()
-
-        for param in params:
-            param.swig_predecls(code)
-        cls.export_method_swig_predecls(code)
-
-        code()
-        if cls._base:
-            code('%import "python/_m5/param_${{cls._base}}.i"')
-        code()
-
-        for ns in namespaces:
-            code('namespace $ns {')
-
-        if namespaces:
-            code('// avoid name conflicts')
-            sep_string = '_COLONS_'
-            flat_name = sep_string.join(class_path)
-            code('%rename($flat_name) $classname;')
-
-        code()
-        code('// stop swig from creating/wrapping default ctor/dtor')
-        code('%nodefault $classname;')
-        code('class $classname')
-        if cls._base:
-            bases = [ cls._base.cxx_class ] + cls.cxx_bases
-        else:
-            bases = cls.cxx_bases
-        base_first = True
-        for base in bases:
-            if base_first:
-                code('    : public ${{base}}')
-                base_first = False
-            else:
-                code('    , public ${{base}}')
-
-        code('{')
-        code('  public:')
-        cls.export_methods(code)
-        code('};')
-
-        for ns in reversed(namespaces):
-            code('} // namespace $ns')
-
-        code()
-        code('%include "params/$cls.hh"')
 
     def pybind_decl(cls, code):
         class_path = cls.cxx_class.split('::')
@@ -1035,30 +921,6 @@ class SimObject(object):
     cxx_bases = [ "Drainable", "Serializable" ]
     eventq_index = Param.UInt32(Parent.eventq_index, "Event Queue Index")
 
-    @classmethod
-    def export_method_swig_predecls(cls, code):
-        code('''
-%include <std_string.i>
-
-%import "python/swig/drain.i"
-%import "python/swig/serialize.i"
-''')
-
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-    void init();
-    void loadState(CheckpointIn &cp);
-    void initState();
-    void memInvalidate();
-    void memWriteback();
-    void regStats();
-    void resetStats();
-    void regProbePoints();
-    void regProbeListeners();
-    void startup();
-''')
-
     cxx_exports = [
         PyBindMethod("init"),
         PyBindMethod("initState"),
@@ -1238,9 +1100,7 @@ class SimObject(object):
 
         # If the attribute exists on the C++ object, transparently
         # forward the reference there.  This is typically used for
-        # SWIG-wrapped methods such as init(), regStats(),
-        # resetStats(), startup(), drain(), and
-        # resume().
+        # methods exported to Python (e.g., init(), and startup())
         if self._ccObject and hasattr(self._ccObject, attr):
             return getattr(self._ccObject, attr)
 

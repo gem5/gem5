@@ -106,13 +106,6 @@ class ParamValue(object):
     def pybind_predecls(cls, code):
         cls.cxx_predecls(code)
 
-    # Generate the code needed as a prerequisite for including a
-    # reference to a C++ object of this type in a SWIG .i file.
-    # Typically generates one or more %import or %include statements.
-    @classmethod
-    def swig_predecls(cls, code):
-        pass
-
     # default for printing to .ini file is regular string conversion.
     # will be overridden in some cases
     def ini_str(self):
@@ -228,9 +221,6 @@ class ParamDesc(object):
 
     def pybind_predecls(self, code):
         self.ptype.pybind_predecls(code)
-
-    def swig_predecls(self, code):
-        self.ptype.swig_predecls(code)
 
     def cxx_decl(self, code):
         code('${{self.ptype.cxx_type}} ${{self.name}};')
@@ -386,31 +376,6 @@ class VectorParamDesc(ParamDesc):
 
         return VectorParamValue(tmp_list)
 
-    def swig_module_name(self):
-        return "%s_vector" % self.ptype_str
-
-    def swig_predecls(self, code):
-        code('%import "${{self.swig_module_name()}}.i"')
-
-    def swig_decl(self, code):
-        code('%module(package="_m5") ${{self.swig_module_name()}}')
-        code('%{')
-        self.ptype.cxx_predecls(code)
-        code('%}')
-        code()
-        # Make sure the SWIGPY_SLICE_ARG is defined through this inclusion
-        code('%include "std_container.i"')
-        code()
-        self.ptype.swig_predecls(code)
-        code()
-        code('%include "std_vector.i"')
-        code()
-
-        ptype = self.ptype_str
-        cxx_type = self.ptype.cxx_type
-
-        code('%template(vector_$ptype) std::vector< $cxx_type >;')
-
     def cxx_predecls(self, code):
         code('#include <vector>')
         self.ptype.cxx_predecls(code)
@@ -468,10 +433,6 @@ class String(ParamValue,str):
     @classmethod
     def cxx_predecls(self, code):
         code('#include <string>')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "std_string.i"')
 
     def __call__(self, value):
         self = value
@@ -595,12 +556,6 @@ class CheckedInt(NumericParamValue):
     def cxx_predecls(cls, code):
         # most derived types require this, so we just do it here once
         code('#include "base/types.hh"')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        # most derived types require this, so we just do it here once
-        code('%import "stdint.i"')
-        code('%import "base/types.hh"')
 
     def getValue(self):
         return long(self.value)
@@ -808,10 +763,6 @@ class AddrRange(ParamValue):
         code('#include "base/addr_range.hh"')
 
     @classmethod
-    def swig_predecls(cls, code):
-        Addr.swig_predecls(code)
-
-    @classmethod
     def cxx_ini_predecls(cls, code):
         code('#include <sstream>')
 
@@ -842,8 +793,7 @@ class AddrRange(ParamValue):
         code('${ret} _ret;')
 
     def getValue(self):
-        # Go from the Python class to the wrapped C++ class generated
-        # by swig
+        # Go from the Python class to the wrapped C++ class
         from _m5.range import AddrRange
 
         return AddrRange(long(self.start), long(self.end),
@@ -925,10 +875,6 @@ class EthernetAddr(ParamValue):
     def cxx_predecls(cls, code):
         code('#include "base/inet.hh"')
 
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/inet.i"')
-
     def __init__(self, value):
         if value == NextEthernetAddr:
             self.value = value
@@ -982,10 +928,6 @@ class IpAddress(ParamValue):
     def cxx_predecls(cls, code):
         code('#include "base/inet.hh"')
 
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/inet.i"')
-
     def __init__(self, value):
         if isinstance(value, IpAddress):
             self.ip = value.ip
@@ -1037,10 +979,6 @@ class IpNetmask(IpAddress):
     @classmethod
     def cxx_predecls(cls, code):
         code('#include "base/inet.hh"')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/inet.i"')
 
     def __init__(self, *args, **kwargs):
         def handle_kwarg(self, kwargs, key, elseVal = None):
@@ -1115,10 +1053,6 @@ class IpWithPort(IpAddress):
     @classmethod
     def cxx_predecls(cls, code):
         code('#include "base/inet.hh"')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/inet.i"')
 
     def __init__(self, *args, **kwargs):
         def handle_kwarg(self, kwargs, key, elseVal = None):
@@ -1227,10 +1161,6 @@ class Time(ParamValue):
     @classmethod
     def cxx_predecls(cls, code):
         code('#include <time.h>')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/time.i"')
 
     def __init__(self, value):
         self.value = parse_time(value)
@@ -1405,18 +1335,6 @@ module_init(py::module &m_internal)
         code()
         code('static EmbeddedPyBind embed_enum("enum_${name}", module_init);')
 
-    def swig_decl(cls, code):
-        name = cls.__name__
-        code('''\
-%module(package="_m5") enum_$name
-
-%{
-#include "enums/$name.hh"
-%}
-
-%include "enums/$name.hh"
-''')
-
 
 # Base class for enum types.
 class Enum(ParamValue):
@@ -1446,10 +1364,6 @@ class Enum(ParamValue):
     @classmethod
     def cxx_predecls(cls, code):
         code('#include "enums/$0.hh"', cls.__name__)
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%import "python/_m5/enum_$0.i"', cls.__name__)
 
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
@@ -1483,11 +1397,6 @@ class TickParamValue(NumericParamValue):
     @classmethod
     def cxx_predecls(cls, code):
         code('#include "base/types.hh"')
-
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%import "stdint.i"')
-        code('%import "base/types.hh"')
 
     def __call__(self, value):
         self.__init__(value)
