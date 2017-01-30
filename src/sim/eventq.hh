@@ -67,13 +67,10 @@ extern uint32_t numMainEventQueues;
 //! Array for main event queues.
 extern std::vector<EventQueue *> mainEventQueue;
 
-#ifndef SWIG
 //! The current event queue for the running thread. Access to this queue
 //! does not require any locking from the thread.
 
 extern __thread EventQueue *_curEventQueue;
-
-#endif
 
 //! Current mode of execution: parallel / serial
 extern bool inParallelMode;
@@ -356,13 +353,10 @@ class Event : public EventBase, public Serializable
     //! NULL.  (Overridden in GlobalEvent::BarrierEvent.)
     virtual BaseGlobalEvent *globalEvent() { return NULL; }
 
-#ifndef SWIG
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-#endif
 };
 
-#ifndef SWIG
 inline bool
 operator<(const Event &l, const Event &r)
 {
@@ -401,7 +395,6 @@ operator!=(const Event &l, const Event &r)
 {
     return l.when() != r.when() || l.priority() != r.priority();
 }
-#endif
 
 /**
  * Queue of events sorted in time order
@@ -489,7 +482,6 @@ class EventQueue
     EventQueue(const EventQueue &);
 
   public:
-#ifndef SWIG
     /**
      * Temporarily migrate execution to a different event queue.
      *
@@ -549,7 +541,6 @@ class EventQueue
       private:
         EventQueue &eq;
     };
-#endif
 
     EventQueue(const std::string &n);
 
@@ -665,7 +656,6 @@ class EventQueue
 
 void dumpMainQueue();
 
-#ifndef SWIG
 class EventManager
 {
   protected:
@@ -778,6 +768,5 @@ class EventWrapper : public Event
 
     const char *description() const { return "EventWrapped"; }
 };
-#endif
 
 #endif // __SIM_EVENTQ_HH__

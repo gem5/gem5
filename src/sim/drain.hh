@@ -46,7 +46,6 @@
 
 class Drainable;
 
-#ifndef SWIG // SWIG doesn't support strongly typed enums
 /**
  * Object drain/handover states
  *
@@ -75,7 +74,6 @@ enum class DrainState {
     Drained,  /** Buffers drained, ready for serialization/handover */
     Resuming, /** Transient state while the simulator is resuming */
 };
-#endif
 
 /**
  * This class coordinates draining of a System.
@@ -97,9 +95,7 @@ class DrainManager
 {
   private:
     DrainManager();
-#ifndef SWIG
     DrainManager(DrainManager &) = delete;
-#endif
     ~DrainManager();
 
   public:

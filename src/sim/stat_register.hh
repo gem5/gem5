@@ -38,7 +38,7 @@
  */
 
 /* Provide a mechanism to register the Python stats reset/dump functions
- * defined in src/swig/python/stats.i with the mechanisms in namespace
+ * defined in src/python/pybind11/stats.cc with the mechanisms in namespace
  * Stats */
 
 #ifndef __SIM_STAT_REGISTER_H__

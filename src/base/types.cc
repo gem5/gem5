@@ -30,14 +30,10 @@
 
 #include "base/types.hh"
 
-#ifndef SWIG // keep the operators away from SWIG
-
 std::ostream&
 operator<<(std::ostream &out, const Cycles & cycles)
 {
     out << cycles.c;
     return out;
 }
-
-#endif // SWIG not touching operators
 

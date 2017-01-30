@@ -80,18 +80,6 @@ struct EmbeddedPython
     static int initAll();
 };
 
-struct EmbeddedSwig
-{
-    void (*initFunc)();
-
-    std::string context;
-
-    EmbeddedSwig(void (*init_func)(), const std::string& _context);
-
-    static std::list<EmbeddedSwig *> &getList();
-    static void initAll();
-};
-
 class EmbeddedPyBind
 {
   public:

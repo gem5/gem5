@@ -119,7 +119,7 @@ registerExitCallback(Callback *callback)
 }
 
 /**
- * Do C++ simulator exit processing.  Exported to SWIG to be invoked
+ * Do C++ simulator exit processing.  Exported to Python to be invoked
  * when simulator terminates via Python's atexit mechanism.
  */
 void

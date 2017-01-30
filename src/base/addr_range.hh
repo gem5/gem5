@@ -346,11 +346,6 @@ class AddrRange
         return false;
     }
 
-/**
- * Keep the operators away from SWIG.
- */
-#ifndef SWIG
-
     /**
      * Less-than operator used to turn an STL map into a binary search
      * tree of non-overlapping address ranges.
@@ -384,7 +379,6 @@ class AddrRange
     {
         return !(*this == r);
     }
-#endif // SWIG
 };
 
 /**

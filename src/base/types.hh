@@ -73,8 +73,7 @@ const Tick MaxTick = ULL(0xffffffffffffffff);
  * typedef, aiming to avoid unintentional mixing of cycles and ticks
  * in the code base.
  *
- * Operators are defined inside an ifndef block to avoid swig touching
- * them. Note that there is no overloading of the bool operator as the
+ * Note that there is no overloading of the bool operator as the
  * compiler is allowed to turn booleans into integers and this causes
  * a whole range of issues in a handful locations. The solution to
  * this problem would be to use the safe bool idiom, but for now we
@@ -91,17 +90,11 @@ class Cycles
 
   public:
 
-#ifndef SWIG // SWIG gets confused by constexpr
     /** Explicit constructor assigning a value. */
     explicit constexpr Cycles(uint64_t _c) : c(_c) { }
-#else
-    explicit Cycles(uint64_t _c) : c(_c) { }
-#endif
 
     /** Default constructor for parameter classes. */
     Cycles() : c(0) { }
-
-#ifndef SWIG // keep the operators away from SWIG
 
     /** Converting back to the value type. */
     constexpr operator uint64_t() const { return c; }
@@ -138,9 +131,6 @@ class Cycles
     { return Cycles(c >> shift); }
 
     friend std::ostream& operator<<(std::ostream &out, const Cycles & cycles);
-
-#endif // SWIG not touching operators
-
 };
 
 /**
@@ -194,11 +184,9 @@ const PortID InvalidPortID = (PortID)-1;
 class FaultBase;
 typedef std::shared_ptr<FaultBase> Fault;
 
-#ifndef SWIG // Swig gets really confused by decltype
 // Rather than creating a shared_ptr instance and assigning it nullptr,
 // we just create an alias.
 constexpr decltype(nullptr) NoFault = nullptr;
-#endif
 
 struct AtomicOpFunctor
 {

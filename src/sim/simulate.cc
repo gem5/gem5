@@ -76,7 +76,7 @@ GlobalSimLoopExitEvent *simulate_limit_event = nullptr;
 
 /** Simulate for num_cycles additional cycles.  If num_cycles is -1
  * (the default), do not limit simulation; some other event must
- * terminate the loop.  Exported to Python via SWIG.
+ * terminate the loop.  Exported to Python.
  * @return The SimLoopExitEvent that caused the loop to exit.
  */
 GlobalSimLoopExitEvent *
