@@ -52,7 +52,6 @@ def upgrader(cpt):
             b_intEnabled = intEnabled[0]
             b_pendingInt = pendingInt[0]
             b_activeInt  = activeInt[0]
-            b_cpuTarget  = cpuTarget[0:32]
 
             del intEnabled[0]
             del pendingInt[0]
@@ -78,4 +77,3 @@ def upgrader(cpt):
                     cpt.set(new_sec, 'pendingInt', b_pendingInt)
                     cpt.set(new_sec, 'activeInt',  b_activeInt)
                     cpt.set(new_sec, 'intPriority',' '.join(intPriority))
-                    cpt.set(new_sec, 'cpuTarget',  ' '.join(b_cpuTarget))

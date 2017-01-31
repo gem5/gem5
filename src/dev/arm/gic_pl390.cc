@@ -217,31 +217,15 @@ Pl390::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
                  int_num);
         assert(int_num < INT_LINES_MAX);
 
-        // First 31 interrupts only target single processor (SGI)
-        if (int_num > 31) {
-            if (resp_sz == 1) {
-                return cpuTarget[int_num];
-            } else {
-                assert(resp_sz == 4);
-                int_num = mbits(int_num, 31, 2);
-                return (cpuTarget[int_num] |
-                        cpuTarget[int_num+1] << 8 |
-                        cpuTarget[int_num+2] << 16 |
-                        cpuTarget[int_num+3] << 24) ;
-            }
+        if (resp_sz == 1) {
+            return getCpuTarget(ctx, int_num);
         } else {
-            assert(ctx < sys->numRunningContexts());
-            uint32_t ctx_mask;
-            if (gem5ExtensionsEnabled) {
-                ctx_mask = ctx;
-            } else {
-            // convert the CPU id number into a bit mask
-                ctx_mask = power(2, ctx);
-            }
-            // replicate the 8-bit mask 4 times in a 32-bit word
-            ctx_mask |= ctx_mask << 8;
-            ctx_mask |= ctx_mask << 16;
-            return ctx_mask;
+            assert(resp_sz == 4);
+            int_num = mbits(int_num, 31, 2);
+            return (getCpuTarget(ctx, int_num) |
+                    getCpuTarget(ctx, int_num+1) << 8 |
+                    getCpuTarget(ctx, int_num+2) << 16 |
+                    getCpuTarget(ctx, int_num+3) << 24) ;
         }
     }
 
@@ -477,18 +461,18 @@ Pl390::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
 
     if (GICD_ITARGETSR.contains(daddr)) {
         Addr int_num = daddr - GICD_ITARGETSR.start();
-        // First 31 interrupts only target single processor
-        if (int_num >= SGI_MAX) {
+        // Interrupts 0-31 are read only
+        unsigned offset = SGI_MAX + PPI_MAX;
+        if (int_num >= offset) {
+            unsigned ix = int_num - offset; // index into cpuTarget array
             if (data_sz == 1) {
-                cpuTarget[int_num] = data & 0xff;
+                cpuTarget[ix] = data & 0xff;
             } else {
                 assert (data_sz == 4);
-                int_num = mbits(int_num, 31, 2);
-                uint32_t tmp = data;
-                cpuTarget[int_num]   = bits(tmp, 7, 0);
-                cpuTarget[int_num+1] = bits(tmp, 15, 8);
-                cpuTarget[int_num+2] = bits(tmp, 23, 16);
-                cpuTarget[int_num+3] = bits(tmp, 31, 24);
+                cpuTarget[ix]   = bits(data, 7, 0);
+                cpuTarget[ix+1] = bits(data, 15, 8);
+                cpuTarget[ix+2] = bits(data, 23, 16);
+                cpuTarget[ix+3] = bits(data, 31, 24);
             }
             updateIntState(int_num >> 2);
         }
@@ -733,8 +717,8 @@ Pl390::updateIntState(int hint)
                         (getIntPriority(cpu, int_nm) < highest_pri))
                         if ((!mp_sys) ||
                             (gem5ExtensionsEnabled
-                               ? (cpuTarget[int_nm] == cpu)
-                               : (cpuTarget[int_nm] & (1 << cpu)))) {
+                               ? (getCpuTarget(cpu, int_nm) == cpu)
+                               : (getCpuTarget(cpu, int_nm) & (1 << cpu)))) {
                             highest_pri = getIntPriority(cpu, int_nm);
                             highest_int = int_nm;
                         }
@@ -792,13 +776,14 @@ Pl390::updateRunPri()
 void
 Pl390::sendInt(uint32_t num)
 {
+    uint8_t target = getCpuTarget(0, num);
     DPRINTF(Interrupt, "Received Interrupt number %d,  cpuTarget %#x: \n",
-            num, cpuTarget[num]);
-    if ((cpuTarget[num] & (cpuTarget[num] - 1)) && !gem5ExtensionsEnabled)
+            num, target);
+    if ((target & (target - 1)) && !gem5ExtensionsEnabled)
         panic("Multiple targets for peripheral interrupts is not supported\n");
     panic_if(num < SGI_MAX + PPI_MAX,
              "sentInt() must only be used for interrupts 32 and higher");
-    getPendingInt(cpuTarget[num], intNumToWord(num)) |= 1 << intNumToBit(num);
+    getPendingInt(target, intNumToWord(num)) |= 1 << intNumToBit(num);
     updateIntState(intNumToWord(num));
 }
 
@@ -896,7 +881,6 @@ Pl390::BankedRegs::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(pendingInt);
     SERIALIZE_SCALAR(activeInt);
     SERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
-    SERIALIZE_ARRAY(cpuTarget, SGI_MAX + PPI_MAX);
 }
 
 void
@@ -955,7 +939,6 @@ Pl390::BankedRegs::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(pendingInt);
     UNSERIALIZE_SCALAR(activeInt);
     UNSERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
-    UNSERIALIZE_ARRAY(cpuTarget, SGI_MAX + PPI_MAX);
 }
 
 Pl390 *

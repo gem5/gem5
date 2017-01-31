@@ -172,16 +172,11 @@ class Pl390 : public BaseGic
          * interrupt priority for SGIs and PPIs */
         uint8_t intPriority[SGI_MAX + PPI_MAX];
 
-        /** GICD_ITARGETSR{0..7}
-         * 8b CPU target ID for each SGI and PPI */
-        uint8_t cpuTarget[SGI_MAX + PPI_MAX];
-
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
         BankedRegs() :
-            intEnabled(0), pendingInt(0), activeInt(0),
-            intPriority {0}, cpuTarget {0}
+            intEnabled(0), pendingInt(0), activeInt(0), intPriority {0}
           {}
     };
     std::vector<BankedRegs*> bankedRegs;
@@ -252,12 +247,23 @@ class Pl390 : public BaseGic
      */
     uint8_t cpuTarget[GLOBAL_INT_LINES];
 
-    uint8_t& getCpuTarget(ContextID ctx, uint32_t ix) {
+    uint8_t getCpuTarget(ContextID ctx, uint32_t ix) {
+        assert(ctx < sys->numRunningContexts());
         assert(ix < INT_LINES_MAX);
         if (ix < SGI_MAX + PPI_MAX) {
-            return getBankedRegs(ctx).cpuTarget[ix];
+            // "GICD_ITARGETSR0 to GICD_ITARGETSR7 are read-only, and each
+            // field returns a value that corresponds only to the processor
+            // reading the register."
+            uint32_t ctx_mask;
+            if (gem5ExtensionsEnabled) {
+                ctx_mask = ctx;
+            } else {
+            // convert the CPU id number into a bit mask
+                ctx_mask = power(2, ctx);
+            }
+            return ctx_mask;
         } else {
-            return cpuTarget[ix - (SGI_MAX + PPI_MAX)];
+            return cpuTarget[ix - 32];
         }
     }
 
