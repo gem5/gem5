@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -60,7 +60,9 @@ BaseISADevice::setISA(ISA *_isa)
 void
 DummyISADevice::setMiscReg(int misc_reg, MiscReg val)
 {
-    warn("Ignoring write to miscreg %s\n", miscRegName[misc_reg]);
+    warn("Ignoring write of 0x%lx to miscreg %s\n",
+          val,
+          miscRegName[misc_reg]);
 }
 
 MiscReg
