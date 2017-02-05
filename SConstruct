@@ -268,10 +268,17 @@ against the gem5 style rules on %s.
 This script will now install the hook in your %s.
 Press enter to continue, or ctrl-c to abort: """
 
-mercurial_style_message = style_message % ("hg commit and qrefresh commands",
-                                           ".hg/hgrc file")
-git_style_message = style_message % ("'git commit'",
-                                     ".git/hooks/ directory")
+mercurial_style_message = """
+You're missing the gem5 style hook, which automatically checks your code
+against the gem5 style rules on hg commit and qrefresh commands.
+This script will now install the hook in your .hg/hgrc file.
+Press enter to continue, or ctrl-c to abort: """
+
+git_style_message = """
+You're missing the gem5 style or commit message hook. These hooks help
+to ensure that your code follows gem5's style rules on git commit.
+This script will now install the hook in your .git/hooks/ directory.
+Press enter to continue, or ctrl-c to abort: """
 
 mercurial_style_upgrade_message = """
 Your Mercurial style hooks are not up-to-date. This script will now
@@ -376,10 +383,34 @@ def install_git_style_hooks():
         return
 
     git_hooks = gitdir.Dir("hooks")
-    git_pre_commit_hook = git_hooks.File("pre-commit")
-    git_style_script = File("util/git-pre-commit.py")
+    def hook_exists(hook_name):
+        hook = git_hooks.File(hook_name)
+        return hook.exists()
 
-    if git_pre_commit_hook.exists():
+    def hook_install(hook_name, script):
+        hook = git_hooks.File(hook_name)
+        if hook.exists():
+            print "Warning: Can't install %s, hook already exists." % hook_name
+            return
+
+        if not git_hooks.exists():
+            mkdir(git_hooks.get_abspath())
+
+        # Use a relative symlink if the hooks live in the source directory
+        if hook.is_under(main.root):
+            script_path = os.path.relpath(
+                script.get_abspath(),
+                hook.Dir(".").get_abspath())
+        else:
+            script_path = script.get_abspath()
+
+        try:
+            os.symlink(script_path, hook.get_abspath())
+        except:
+            print "Error updating git %s hook" % hook_name
+            raise
+
+    if hook_exists("pre-commit") and hook_exists("commit-msg"):
         return
 
     print git_style_message,
@@ -389,22 +420,11 @@ def install_git_style_hooks():
         print "Input exception, exiting scons.\n"
         sys.exit(1)
 
-    if not git_hooks.exists():
-        mkdir(git_hooks.get_abspath())
+    git_style_script = File("util/git-pre-commit.py")
+    git_msg_script = File("ext/git-commit-msg")
 
-    # Use a relative symlink if the hooks live in the source directory
-    if git_pre_commit_hook.is_under(main.root):
-        script_path = os.path.relpath(
-            git_style_script.get_abspath(),
-            git_pre_commit_hook.Dir(".").get_abspath())
-    else:
-        script_path = git_style_script.get_abspath()
-
-    try:
-        os.symlink(script_path, git_pre_commit_hook.get_abspath())
-    except:
-        print "Error updating git pre-commit hook"
-        raise
+    hook_install("pre-commit", git_style_script)
+    hook_install("commit-msg", git_msg_script)
 
 # Try to wire up git to the style hooks
 if not ignore_style and main.root.Entry(".git").exists():
