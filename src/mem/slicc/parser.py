@@ -1,4 +1,5 @@
 # Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2017 Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Lena Olson
 
 import os.path
 import re
@@ -158,7 +160,8 @@ class SLICC(Grammar):
 
     precedence = (
         ('left', 'INCR', 'DECR'),
-        ('left', 'AND', 'OR'),
+        ('left', 'OR'),
+        ('left', 'AND'),
         ('left', 'EQ', 'NE'),
         ('left', 'LT', 'GT', 'LE', 'GE'),
         ('left', 'RIGHTSHIFT', 'LEFTSHIFT'),
