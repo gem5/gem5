@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2017 Google Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +25,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Lena Olson
  */
 
 #include "mem/ruby/structures/DirectoryMemory.hh"
@@ -33,6 +36,7 @@
 #include "debug/RubyStats.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -44,7 +48,14 @@ DirectoryMemory::DirectoryMemory(const Params *p)
     : SimObject(p)
 {
     m_version = p->version;
-    m_size_bytes = p->size;
+    // In X86, there is an IO gap in the 3-4GB range.
+    if (p->system->getArch() == Arch::X86ISA && p->size > 0xc0000000){
+        // We need to add 1GB to the size for the gap
+        m_size_bytes = p->size + 0x40000000;
+    }
+    else {
+        m_size_bytes = p->size;
+    }
     m_size_bits = floorLog2(m_size_bytes);
     m_num_entries = 0;
     m_numa_high_bit = p->numa_high_bit;

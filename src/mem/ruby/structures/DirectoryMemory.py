@@ -40,3 +40,4 @@ class RubyDirectoryMemory(SimObject):
     # the default value of the numa high bit is specified in the command line
     # option and must be passed into the directory memory sim object
     numa_high_bit = Param.Int("numa high bit")
+    system = Param.System(Parent.any, "system object")
